@@ -1,1 +1,17 @@
-/.lake
+/*
+
+# whitelist
+!/HyperbolicGeometry/
+!/.github
+!/Examples/
+!/HyperbolicGeometry.lean
+!/lakefile.toml
+!/lean-toolchain
+!/README.md
+!/.gitignore
+# end of whitelist
+
+.lake/
+
+.DS_Store
+**/.DS_Store
