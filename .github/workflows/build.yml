@@ -14,11 +14,11 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      - name: Install elan and Lean 4.30.0-rc2
+      - name: Install elan and Lean 4.29.0
         run: |
           curl -O --location https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh
           chmod +x elan-init.sh
-          ./elan-init.sh -y --default-toolchain leanprover/lean4:v4.30.0-rc2
+          ./elan-init.sh -y --default-toolchain leanprover/lean4:v4.29.0
           echo "$HOME/.elan/bin" >> $GITHUB_PATH
 
       - name: Build with Lake
