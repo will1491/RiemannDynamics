@@ -73,13 +73,13 @@ The goal of this project is to work towards the formalization of complex dynamic
 The project is a fresh build on top of two mature layers, which are consumed directly rather than re-derived:
 
 1. **Mathlib** — complex analysis (Cauchy theory, `DifferentiableOn ℂ`, locally-uniform limits, Schwarz lemma, Hurwitz), measure / `Lᵖ` machinery, Arzelà–Ascoli, `OnePoint ℂ`, `UpperHalfPlane`, the modular group action, covering-space theory, `FundamentalGroup`.
-2. **RMT4 (Beffara), vendored** — the Riemann mapping theorem on simply connected proper open `Ω ⊊ ℂ`, together with the normal-families / Montel / Hurwitz / Schwarz scaffolding it depends on. Phase 2 and parts of Phase 3 below are largely *porting and repackaging* RMT4's internal lemmas.
+2. **RMT4 (Beffara), vendored** — the Riemann mapping theorem on simply connected proper open `Ω ⊊ ℂ`, together with the normal-families / Montel / Hurwitz / Schwarz scaffolding it depends on. Parts of the dynamics line are largely *porting and repackaging* RMT4's internal lemmas.
 
-**Non-axioms.** No new `axiom`, no `sorry`. Every result comes from Mathlib, from RMT4, or is proved here. The Carleson project (van Doorn et al.) is evaluated for vendoring as the source of the Calderón–Zygmund / Beurling-transform `Lᵖ` theory used in the analytic engine; if its singular-integral API is sufficient we vendor and adapt, otherwise the Beurling-transform theory is built directly.
+**Non-axioms.** No new `axiom`, no `sorry`. Every result comes from Mathlib, from RMT4, or is proved here.
 
 ### Dynamics line — endpoint: Sullivan's No Wandering Domains
 
-A coordinate-aware development on the Riemann sphere `ℂ̂ = ℙ¹(ℂ)`. The dynamics half deliberately stays concrete on `ℂ̂` and does **not** introduce the abstract Riemann-surface structure: the endpoint never consumes it, and the general object hides multi-thousand-line prerequisites (atlas glue, holomorphic-map lemmas, covering-space lifts) that are themselves separate projects. Generality is ascended only when Teichmüller theory genuinely forces it (Phase 12 below).
+A coordinate-aware development on the Riemann sphere `ℂ̂ = ℙ¹(ℂ)`. The dynamics half deliberately stays concrete on `ℂ̂` and does **not** introduce the abstract Riemann-surface structure: the endpoint never consumes it, and the general object hides multi-thousand-line prerequisites (atlas glue, holomorphic-map lemmas, covering-space lifts) that are themselves separate projects. Generality is ascended only when Teichmüller theory genuinely forces it (in the `Uniformization` subfolder).
 
 **Sphere** and **NormalFamilies** provide the dynamical packaging: `ℂ̂` as `OnePoint ℂ` with two explicit charts, the chordal/Fubini–Study metric, rational maps `f = P/Q` extending to `ℂ̂ → ℂ̂`, iterates `f^[n]`, forward / backward / **grand orbits**, the classical Montel theorem (locally uniformly bounded ⇒ normal), and a finite-dimensionality theorem for the parameter space `Ratₐ` of degree-`d` rational maps:
 
@@ -103,7 +103,7 @@ The proof is the *first end-to-end consumer* of the analytic engine: a wandering
 
 ### Analytic engine — quasiconformal maps and MRMT (the shared core)
 
-The engine sits below both endpoints. It is the densest and highest-uncertainty block of the project; the Phase 8 Calderón–Zygmund layer is the long pole.
+The engine sits below both endpoints. It is the densest and highest-uncertainty block of the project; the Calderón–Zygmund layer in `SingularIntegral` is the long pole.
 
 **Sobolev** develops the Wirtinger derivatives `∂ = ½(∂ₓ − i∂ᵧ)`, `∂̄ = ½(∂ₓ + i∂ᵧ)`, with the characterization `f` holomorphic ⇔ `∂̄ f = 0`; weak derivatives, `W^{1,p}_loc(ℂ)`, the ACL (absolutely continuous on lines) characterization, and density of `C^∞_c` via mollification.
 
@@ -127,7 +127,7 @@ The analytic dependence is the lemma both endpoints actually consume — bare ex
 
 ### Teichmüller path — endpoint: Nielsen–Thurston classification
 
-A focused onward route that reuses the analytic engine. **Generality ascent begins here.** Phase 12 (`Uniformization`) is where the abstract Riemann-surface structure deferred since Phase 1 is finally built — the trichotomy (every simply connected Riemann surface is `≅ 𝔻`, `ℂ`, or `ℂ̂`), the hyperbolic metric on hyperbolic surfaces, and Fuchsian models `X ≅ 𝔻 / Γ` for `Γ ≤ PSL₂(ℝ)`. This is also the natural target for Mathlib integration: the trichotomy and uniformization theorems are statements *about* Mathlib-native objects (`SimplyConnectedSpace`, covering spaces, the upper half plane).
+A focused onward route that reuses the analytic engine. **Generality ascent begins here.** `Uniformization` is where the abstract Riemann-surface structure deferred earlier is finally built — the trichotomy (every simply connected Riemann surface is `≅ 𝔻`, `ℂ`, or `ℂ̂`), the hyperbolic metric on hyperbolic surfaces, and Fuchsian models `X ≅ 𝔻 / Γ` for `Γ ≤ PSL₂(ℝ)`. This is also the natural target for Mathlib integration: the trichotomy and uniformization theorems are statements *about* Mathlib-native objects (`SimplyConnectedSpace`, covering spaces, the upper half plane).
 
 **Surface** develops the topology: closed oriented surfaces classified by genus `g`, the fundamental group presentation `π₁(S_g)` from Mathlib's `FundamentalGroup`, and the mapping class group `MCG(S) := π₀(Homeo⁺(S))` with Dehn twists as generators.
 
@@ -152,7 +152,7 @@ We take the **Bers route** for Nielsen–Thurston (analysis of the translation l
 | **JuliaFatou** | Fatou / Julia sets, complete invariance, `J` closed / nonempty / perfect, `J = closure {repelling periodic points}`. |
 | **FatouComponents** | Connected components of `FatouSet f`, wandering vs eventually periodic, periodic classification (attracting / parabolic / Siegel / Herman). |
 | **Sobolev** | Wirtinger derivatives, `W^{1,p}_loc`, ACL characterization, mollification. |
-| **SingularIntegral** | Cauchy transform, Beurling transform, Calderón–Zygmund `Lᵖ` bounds (potentially vendored from the Carleson project). |
+| **SingularIntegral** | Cauchy transform, Beurling transform, Calderón–Zygmund `Lᵖ` bounds. |
 | **QC** | Quasiconformal maps (analytic + geometric definitions with equivalence bridge), composition, compactness, Weyl's lemma, removability. |
 | **QC/MRMT** | Measurable Riemann Mapping Theorem: existence via Neumann series, uniqueness, analytic dependence on parameters. |
 | **Uniformization** | Trichotomy of simply connected Riemann surfaces; hyperbolic metric on hyperbolic surfaces; Fuchsian models. |
@@ -170,11 +170,11 @@ We take the **Bers route** for Nielsen–Thurston (analysis of the translation l
 
 **Shouldn't this be part of Mathlib?**
 
-Substantial portions of the project are appropriate Mathlib targets and are developed with eventual integration in mind. The natural candidates are everything *below* the Teichmüller path: the strong Montel theorem and Montel–Carathéodory, the modular function `λ` and its covering property, Julia / Fatou theory, the trichotomy half of uniformization, and ultimately **Sullivan's No Wandering Domains theorem** — these are all statements about Mathlib-native objects (`OnePoint ℂ`, `DifferentiableOn ℂ`, `IsCoveringMap`, `SimplyConnectedSpace`) and slot in cleanly. The analytic engine (Sobolev, Beurling transform, qc maps, MRMT) is similarly Mathlib-shaped; whether it lands in Mathlib or in a sibling project depends on how the Carleson singular-integral evaluation goes. The Teichmüller path (Phases T1–T5), being built around the bespoke object `Teich(S)` and the Nielsen–Thurston classification, is more likely to live as a downstream library rather than upstream in Mathlib.
+Substantial portions of the project are appropriate Mathlib targets and are developed with eventual integration in mind. The natural candidates are everything *below* the Teichmüller path: the strong Montel theorem and Montel–Carathéodory, the modular function `λ` and its covering property, Julia / Fatou theory, the trichotomy half of uniformization, and ultimately **Sullivan's No Wandering Domains theorem** — these are all statements about Mathlib-native objects (`OnePoint ℂ`, `DifferentiableOn ℂ`, `IsCoveringMap`, `SimplyConnectedSpace`) and slot in cleanly. The analytic engine (Sobolev, Beurling transform, qc maps, MRMT) is similarly Mathlib-shaped. The Teichmüller path, being built around the bespoke object `Teich(S)` and the Nielsen–Thurston classification, is more likely to live as a downstream library rather than upstream in Mathlib.
 
 **What's the dependency on existing Lean projects?**
 
-Mathlib (current) and the **RMT4** project of Beffara, vendored as a `lake` dependency on a pinned commit. RMT4 provides the Riemann mapping theorem and the normal-families / Montel / Hurwitz / Schwarz scaffolding the dynamics line builds on. The **Carleson project** (van Doorn, Becker, et al.) is under evaluation as the source of the Calderón–Zygmund / singular-integral API; if its machinery covers the Beurling-transform `Lᵖ` bound, we vendor it, otherwise that theory is built directly.
+Mathlib (current) and the **RMT4** project of Beffara, vendored as a `lake` dependency on a pinned commit. RMT4 provides the Riemann mapping theorem and the normal-families / Montel / Hurwitz / Schwarz scaffolding the dynamics line builds on.
 
 **Why concrete `ℂ̂` rather than general Riemann surfaces from the start?**
 
@@ -182,7 +182,7 @@ The dynamics half lives entirely on `ℂ̂ = OnePoint ℂ`. Introducing the gene
 
 **Why two definitions of quasiconformal maps?**
 
-MRMT, the Beltrami equation, and Sullivan's deformation argument all speak the **analytic** language (`μ`, `∂̄ f = μ ∂ f`); compactness, removability, and the "`1`-qc ⇒ conformal" Weyl lemma are far cleaner in the **geometric** language (`K`-qc via modulus). Each Phase 9+ result is stated in whichever formulation is cleanest, and a one-time equivalence bridge (`QC/Equivalence.lean`) lets it transfer to the other.
+MRMT, the Beltrami equation, and Sullivan's deformation argument all speak the **analytic** language (`μ`, `∂̄ f = μ ∂ f`); compactness, removability, and the "`1`-qc ⇒ conformal" Weyl lemma are far cleaner in the **geometric** language (`K`-qc via modulus). Each downstream qc result is stated in whichever formulation is cleanest, and a one-time equivalence bridge (`QC/Equivalence.lean`) lets it transfer to the other.
 
 **How can I contribute?**
 
@@ -218,4 +218,3 @@ The abstractions and formalizations in this library are heavily inspired by and 
 - Hubbard, J. H. *Teichmüller Theory and Applications to Geometry, Topology, and Dynamics*, Vol. 1: Teichmüller Theory. Matrix Editions. (ISBN 978-0-9715766-2-9)
 - Farb, B., & Margalit, D. *A Primer on Mapping Class Groups.* Princeton Mathematical Series 49. (ISBN 978-0-691-14794-9)
 - Beffara, V. **RMT4**: a formalization of the Riemann mapping theorem in Lean 4. [github.com/vbeffara/RMT4](https://github.com/vbeffara/RMT4)
-- van Doorn, F., Becker, L., et al. **The Carleson project**: formalization of Carleson's theorem and supporting Calderón–Zygmund theory in Lean 4.
