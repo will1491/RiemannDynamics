@@ -201,8 +201,8 @@ Ensure you have [Lean 4](https://lean-lang.org/lean4/doc/setup.html) installed.
 
 ```bash
 # Clone the repository
-git clone https://github.com/will1491/HyperbolicGeometry
-cd HyperbolicGeometry
+git clone https://github.com/will1491/RiemannDynamics
+cd RiemannDynamics
 
 # Build the library
 lake build

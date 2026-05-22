@@ -1,10 +1,10 @@
 /*
 
 # whitelist
-!/HyperbolicGeometry/
+!/RiemannDynamics/
 !/.github
 !/Examples/
-!/HyperbolicGeometry.lean
+!/RiemannDynamics.lean
 !/lakefile.toml
 !/lean-toolchain
 !/README.md
