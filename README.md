@@ -162,7 +162,7 @@ We take the **Bers route** for Nielsen–Thurston (analysis of the translation l
 
 ## Collaborators
 
-- **Will (Ziang) Li** — project lead; design and formalization.
+- **Will (Ziang) Li** — primary maintainer; design and formalization.
 - **Ziyang Qin** — Lean 4 expert; technical guidance on tactic infrastructure, Mathlib idioms, and large-scale proof engineering. (See also Ziyang's [differential geometry library](https://github.com/qinz1yang/differential-geometry).)
 - **Yusheng Luo** (Cornell, Department of Mathematics) — mathematical advisor; domain expert in complex dynamics, Teichmüller theory, and hyperbolic geometry.
 
