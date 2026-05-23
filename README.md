@@ -86,7 +86,7 @@ The dynamics half is developed directly on the Riemann sphere `ℂ̂ = ℙ¹(ℂ
 
 This is the *contradiction target* for Sullivan.
 
-**Hyperbolic** develops the hyperbolic metric on `𝔻` and `ℍ` (extending Mathlib's `UpperHalfPlane`), the disk automorphism group `mobiusDisk w z = (z − w) / (1 − conj(w) · z)` together with the magic identity `‖1 − conj(w) · z‖² − ‖z − w‖² = (1 − ‖z‖²)(1 − ‖w‖²)`, the **Schwarz–Pick** lemma, the hyperbolic metric on `ℂ ∖ {0, 1}`, and the **elliptic modular function** `λ : 𝔻 → ℂ ∖ {0, 1}` together with its covering property and monodromy under the level-2 modular group:
+**Hyperbolic** develops the hyperbolic metric on `𝔻` and `ℍ` (extending Mathlib's `UpperHalfPlane`), the disk automorphism group `mobiusDisk w z = (z − w) / (1 − conj(w) · z)` together with the Möbius automorphism norm identity `‖1 − conj(w) · z‖² − ‖z − w‖² = (1 − ‖z‖²)(1 − ‖w‖²)`, the **Schwarz–Pick** lemma, the hyperbolic metric on `ℂ ∖ {0, 1}`, and the **elliptic modular function** `λ : 𝔻 → ℂ ∖ {0, 1}` together with its covering property and monodromy under the level-2 modular group:
 
 > `theorem modularLambda_covering : IsCoveringMap (modularLambda : 𝔻 → ℂ ∖ {0, 1})`
 

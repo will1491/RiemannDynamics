@@ -21,7 +21,7 @@ holomorphic automorphism of `𝔻` sending `w` to `0`, with inverse
 `mobiusDisk (-w)`. These automorphisms are the basic building blocks
 for proving Schwarz–Pick from Mathlib's centered Schwarz lemma.
 
-The load-bearing algebraic identity is
+The load-bearing fact is the **Möbius automorphism norm identity**
 
   `‖1 − conj(w) · z‖² − ‖z − w‖² = (1 − ‖z‖²) · (1 − ‖w‖²)`,
 
@@ -37,7 +37,7 @@ open Complex Metric
 noncomputable def mobiusDisk (w z : ℂ) : ℂ :=
   (z - w) / (1 - (starRingEnd ℂ) w * z)
 
-/-- The fundamental algebraic identity:
+/-- **Möbius automorphism norm identity**:
 `‖1 − conj(w) · z‖² − ‖z − w‖² = (1 − ‖z‖²) · (1 − ‖w‖²)`. -/
 theorem mobiusDisk_normSq_identity (z w : ℂ) :
     ‖1 - (starRingEnd ℂ) w * z‖ ^ 2 - ‖z - w‖ ^ 2
@@ -182,7 +182,7 @@ theorem mobiusDisk_norm_div_eq {z w : ℂ}
   have hP_sqrt_pos : 0 < Real.sqrt ((1 - ‖z‖ ^ 2) * (1 - ‖w‖ ^ 2)) := Real.sqrt_pos.mpr hP
   have hD_sq_pos : 0 < ‖(1 : ℂ) - (starRingEnd ℂ) w * z‖ ^ 2 := pow_pos hD_pos 2
   have hD_sq_ne : ‖(1 : ℂ) - (starRingEnd ℂ) w * z‖ ^ 2 ≠ 0 := hD_sq_pos.ne'
-  -- 1 - ‖M_w z‖² = P / D²  (from the magic identity)
+  -- 1 - ‖M_w z‖² = P / D²  (from the Möbius automorphism norm identity)
   have h_one_sub_sq : 1 - ‖mobiusDisk w z‖ ^ 2
       = ((1 - ‖z‖ ^ 2) * (1 - ‖w‖ ^ 2)) / ‖(1 : ℂ) - (starRingEnd ℂ) w * z‖ ^ 2 := by
     have h_id := mobiusDisk_normSq_identity z w
