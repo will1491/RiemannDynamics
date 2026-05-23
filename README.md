@@ -86,7 +86,7 @@ The dynamics half is developed directly on the Riemann sphere `ℂ̂ = ℙ¹(ℂ
 
 This is the *contradiction target* for Sullivan.
 
-**Hyperbolic** develops the hyperbolic metric on `𝔻` and `ℍ` (extending Mathlib's `UpperHalfPlane`), the **Schwarz–Pick** lemma, the hyperbolic metric on `ℂ ∖ {0, 1}`, and the **elliptic modular function** `λ : 𝔻 → ℂ ∖ {0, 1}` together with its covering property and monodromy under the level-2 modular group:
+**Hyperbolic** develops the hyperbolic metric on `𝔻` and `ℍ` (extending Mathlib's `UpperHalfPlane`), the disk automorphism group `mobiusDisk w z = (z − w) / (1 − conj(w) · z)` together with the magic identity `‖1 − conj(w) · z‖² − ‖z − w‖² = (1 − ‖z‖²)(1 − ‖w‖²)`, the **Schwarz–Pick** lemma, the hyperbolic metric on `ℂ ∖ {0, 1}`, and the **elliptic modular function** `λ : 𝔻 → ℂ ∖ {0, 1}` together with its covering property and monodromy under the level-2 modular group:
 
 > `theorem modularLambda_covering : IsCoveringMap (modularLambda : 𝔻 → ℂ ∖ {0, 1})`
 
@@ -146,7 +146,7 @@ We take the **Bers route** for Nielsen–Thurston (analysis of the translation l
 |---|---|
 | **Sphere** | `ℂ̂ = OnePoint ℂ` with two charts, chordal metric, rational maps, iteration, forward / backward / grand orbits, finite-dimensionality of `Ratₐ`. |
 | **NormalFamilies** | Normal families in the locally-uniform topology (Euclidean and spherical), classical Montel via Arzelà–Ascoli. |
-| **Hyperbolic** | Hyperbolic metric on `𝔻`, `ℍ`, and `ℂ ∖ {0, 1}`; Schwarz–Pick; elliptic modular function `λ` and its covering property. |
+| **Hyperbolic** | Hyperbolic metric on `𝔻`, `ℍ`, and `ℂ ∖ {0, 1}`; disk automorphism group `mobiusDisk`; Schwarz–Pick; elliptic modular function `λ` and its covering property. |
 | **StrongMontel** | Montel–Carathéodory theorem via lift through `λ`; Picard's theorems as corollaries. |
 | **JuliaFatou** | Fatou / Julia sets, complete invariance, `J` closed / nonempty / perfect, `J = closure {repelling periodic points}`. |
 | **FatouComponents** | Connected components of `FatouSet f`, wandering vs eventually periodic, periodic classification (attracting / parabolic / Siegel / Herman). |
