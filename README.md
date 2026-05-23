@@ -58,7 +58,6 @@ flowchart BT
     DirNWD --> DirUnif
     DirMRMT --> DirTeich
 
-    DirRMT4 --> DirSphere
     DirRMT4 --> DirNF
     DirRMT4 --> DirHyp
     DirMathlib --> DirSob

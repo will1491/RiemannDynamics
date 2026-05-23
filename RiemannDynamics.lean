@@ -4,3 +4,6 @@ import RiemannDynamics.Sphere.SphericalMetric
 import RiemannDynamics.Sphere.RationalMap
 import RiemannDynamics.Sphere.Iterate
 import RiemannDynamics.Sphere.DegreeFinite
+import RiemannDynamics.NormalFamilies.Basic
+import RiemannDynamics.NormalFamilies.Spherical
+import RiemannDynamics.NormalFamilies.Montel
