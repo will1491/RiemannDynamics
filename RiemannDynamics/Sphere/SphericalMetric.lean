@@ -85,9 +85,7 @@ theorem dist_stereoEmbed_eq_sphericalDist (z w : ℂ̂) :
       show (dist (stereoEmbed (↑w : ℂ̂)) (stereoEmbed ∞)) ^ 2
         = (chordalDistInfty w) ^ 2
       rw [EuclideanSpace.dist_sq_eq]
-      simp only [stereoEmbed, Fin.sum_univ_three, Real.dist_eq, sq_abs,
-        Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val_fin_one,
-        Matrix.head_cons]
+      simp only [stereoEmbed, Fin.sum_univ_three, Real.dist_eq, sq_abs]
       have h0 : ((EuclideanSpace.equiv (Fin 3) ℝ).symm
           ![2 * w.re / (1 + ‖w‖ ^ 2), 2 * w.im / (1 + ‖w‖ ^ 2),
             (‖w‖ ^ 2 - 1) / (1 + ‖w‖ ^ 2)]) 0 = 2 * w.re / (1 + ‖w‖ ^ 2) := rfl
@@ -117,9 +115,7 @@ theorem dist_stereoEmbed_eq_sphericalDist (z w : ℂ̂) :
       show (dist (stereoEmbed ∞) (stereoEmbed (↑w : ℂ̂))) ^ 2
         = (chordalDistInfty w) ^ 2
       rw [EuclideanSpace.dist_sq_eq]
-      simp only [stereoEmbed, Fin.sum_univ_three, Real.dist_eq, sq_abs,
-        Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val_fin_one,
-        Matrix.head_cons]
+      simp only [stereoEmbed, Fin.sum_univ_three, Real.dist_eq, sq_abs]
       have h0 : ((EuclideanSpace.equiv (Fin 3) ℝ).symm
           ![2 * w.re / (1 + ‖w‖ ^ 2), 2 * w.im / (1 + ‖w‖ ^ 2),
             (‖w‖ ^ 2 - 1) / (1 + ‖w‖ ^ 2)]) 0 = 2 * w.re / (1 + ‖w‖ ^ 2) := rfl
@@ -151,9 +147,7 @@ theorem dist_stereoEmbed_eq_sphericalDist (z w : ℂ̂) :
       show (dist (stereoEmbed (↑w₁ : ℂ̂)) (stereoEmbed (↑w₂ : ℂ̂))) ^ 2
         = (chordalDist w₁ w₂) ^ 2
       rw [EuclideanSpace.dist_sq_eq]
-      simp only [stereoEmbed, Fin.sum_univ_three, Real.dist_eq, sq_abs,
-        Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val_fin_one,
-        Matrix.head_cons]
+      simp only [stereoEmbed, Fin.sum_univ_three, Real.dist_eq, sq_abs]
       have h0₁ : ((EuclideanSpace.equiv (Fin 3) ℝ).symm
           ![2 * w₁.re / (1 + ‖w₁‖ ^ 2), 2 * w₁.im / (1 + ‖w₁‖ ^ 2),
             (‖w₁‖ ^ 2 - 1) / (1 + ‖w₁‖ ^ 2)]) 0 = 2 * w₁.re / (1 + ‖w₁‖ ^ 2) := rfl
@@ -320,6 +314,90 @@ theorem sphericalDist_le_two (z w : ℂ̂) : sphericalDist z w ≤ 2 := by
 theorem sphericalDist_inducesTopology :
     ∀ s : Set ℂ̂, IsOpen s ↔
       ∀ z ∈ s, ∃ ε > 0, ∀ w, sphericalDist z w < ε → w ∈ s := by
-  sorry
+  -- Step 1: Continuity of stereoEmbed.
+  have hcont : Continuous stereoEmbed := by
+    rw [OnePoint.continuous_iff]
+    refine ⟨?_, ?_⟩
+    · -- Tendsto at ∞: as ‖w‖ → ∞, stereoEmbed ↑w → stereoEmbed ∞.
+      rw [Filter.coclosedCompact_eq_cocompact, Metric.tendsto_nhds]
+      intro ε hε
+      filter_upwards [tendsto_norm_cocompact_atTop.eventually_gt_atTop (2 / ε)] with w hw
+      have heq : dist (stereoEmbed (↑w : ℂ̂)) (stereoEmbed ∞) = chordalDistInfty w := by
+        rw [dist_stereoEmbed_eq_sphericalDist]; rfl
+      rw [heq]
+      unfold chordalDistInfty
+      have hsqrt : (0 : ℝ) < Real.sqrt (1 + ‖w‖^2) := Real.sqrt_pos.mpr (by positivity)
+      rw [div_lt_iff₀ hsqrt]
+      have h_norm_le : ‖w‖ ≤ Real.sqrt (1 + ‖w‖^2) := by
+        have h_sq : ‖w‖^2 ≤ 1 + ‖w‖^2 := by linarith
+        calc ‖w‖ = Real.sqrt (‖w‖^2) := (Real.sqrt_sq (norm_nonneg w)).symm
+          _ ≤ Real.sqrt (1 + ‖w‖^2) := Real.sqrt_le_sqrt h_sq
+      have h_pos_w : (0 : ℝ) < ‖w‖ := by linarith [hw, div_pos (by norm_num : (0:ℝ) < 2) hε]
+      have h_two_lt : 2 < ε * ‖w‖ := by
+        rw [show (2 : ℝ) = (2 / ε) * ε from by field_simp]
+        nlinarith [hw, hε]
+      have h_mul_le : ε * ‖w‖ ≤ ε * Real.sqrt (1 + ‖w‖^2) :=
+        mul_le_mul_of_nonneg_left h_norm_le hε.le
+      calc (2 : ℝ) < ε * ‖w‖ := h_two_lt
+        _ ≤ ε * Real.sqrt (1 + ‖w‖^2) := h_mul_le
+    · -- Continuity on finite ℂ.
+      unfold stereoEmbed
+      apply Continuous.comp (ContinuousLinearEquiv.continuous _)
+      refine continuous_pi (fun i => ?_)
+      fin_cases i
+      · -- Component 0
+        apply Continuous.div (by fun_prop) (by fun_prop)
+        intro w; positivity
+      · -- Component 1
+        apply Continuous.div (by fun_prop) (by fun_prop)
+        intro w; positivity
+      · -- Component 2
+        apply Continuous.div (by fun_prop) (by fun_prop)
+        intro w; positivity
+  -- Step 2: Injectivity of stereoEmbed.
+  have hinj : Function.Injective stereoEmbed := by
+    intro z w hzw
+    have h1 : dist (stereoEmbed z) (stereoEmbed w) = 0 := by rw [hzw, dist_self]
+    rw [dist_stereoEmbed_eq_sphericalDist] at h1
+    exact (sphericalDist_eq_zero_iff z w).mp h1
+  -- Step 3: IsClosedEmbedding → IsInducing.
+  have hinduce : Topology.IsInducing stereoEmbed :=
+    (hcont.isClosedEmbedding hinj).isInducing
+  -- Step 4: Convert IsOpen via the embedding + metric.
+  intro s
+  rw [hinduce.isOpen_iff]
+  constructor
+  · -- (→) ∃ open t, preimage = s ⟹ chordal ball property
+    rintro ⟨t, htopen, htpre⟩ z hz
+    have hszt : stereoEmbed z ∈ t := by
+      have : z ∈ stereoEmbed ⁻¹' t := htpre.symm ▸ hz
+      exact this
+    rcases Metric.isOpen_iff.mp htopen (stereoEmbed z) hszt with ⟨ε, hε, hball⟩
+    refine ⟨ε, hε, fun w hw => ?_⟩
+    have hdist : dist (stereoEmbed z) (stereoEmbed w) < ε := by
+      rw [dist_stereoEmbed_eq_sphericalDist]; exact hw
+    have hwt : stereoEmbed w ∈ t := hball (by
+      rw [Metric.mem_ball, dist_comm]; exact hdist)
+    have : w ∈ stereoEmbed ⁻¹' t := hwt
+    rwa [htpre] at this
+  · -- (←) chordal ball property ⟹ ∃ open t, preimage = s
+    intro hballs
+    choose εf hε hballs' using hballs
+    refine ⟨⋃ (z : ℂ̂) (hz : z ∈ s), Metric.ball (stereoEmbed z) (εf z hz), ?_, ?_⟩
+    · -- union of open balls is open
+      apply isOpen_iUnion; intro z
+      apply isOpen_iUnion; intro hz
+      exact Metric.isOpen_ball
+    · -- preimage = s
+      ext w
+      simp only [Set.mem_preimage, Set.mem_iUnion, Metric.mem_ball]
+      constructor
+      · rintro ⟨z, hz, hwz⟩
+        have hd : sphericalDist z w < εf z hz := by
+          rw [← dist_stereoEmbed_eq_sphericalDist, dist_comm]; exact hwz
+        exact hballs' z hz w hd
+      · intro hws
+        refine ⟨w, hws, ?_⟩
+        rw [dist_self]; exact hε w hws
 
 end RiemannDynamics

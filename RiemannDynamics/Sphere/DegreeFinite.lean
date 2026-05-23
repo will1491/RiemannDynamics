@@ -93,11 +93,11 @@ theorem toRationalData_degree_le (r : RatMap d) (h : toDenPoly r ≠ 0) :
       _ ≤ d := by omega
   change max (RationalData.numReduced _).natDegree (RationalData.denReduced _).natDegree ≤ d
   apply max_le
-  · calc ((toNumPoly r) / EuclideanDomain.gcd (toNumPoly r) (toDenPoly r)).natDegree
+  · calc ((toNumPoly r) / gcd (toNumPoly r) (toDenPoly r)).natDegree
         ≤ (toNumPoly r).natDegree :=
             Polynomial.natDegree_le_natDegree (Polynomial.degree_div_le _ _)
       _ ≤ d := hN
-  · calc ((toDenPoly r) / EuclideanDomain.gcd (toNumPoly r) (toDenPoly r)).natDegree
+  · calc ((toDenPoly r) / gcd (toNumPoly r) (toDenPoly r)).natDegree
         ≤ (toDenPoly r).natDegree :=
             Polynomial.natDegree_le_natDegree (Polynomial.degree_div_le _ _)
       _ ≤ d := hD
@@ -108,7 +108,91 @@ theorem exists_of_isRational_of_degree_le
     {f : ℂ̂ → ℂ̂} (hf : IsRational f) (hd : degreeOfRational f ≤ d) :
     ∃ r : RatMap d, ∃ h : toDenPoly r ≠ 0,
       f = (toRationalData r h).toSphereMap := by
-  sorry
+  obtain ⟨r₀, hr₀⟩ := hf
+  -- r₀.degree ≤ d
+  have hdeg : r₀.degree ≤ d := by
+    have := degreeOfRational_eq_of_witness f r₀ hr₀
+    omega
+  have hnatNum : r₀.numReduced.natDegree ≤ d := by
+    unfold RationalData.degree at hdeg
+    exact le_trans (le_max_left _ _) hdeg
+  have hnatDen : r₀.denReduced.natDegree ≤ d := by
+    unfold RationalData.degree at hdeg
+    exact le_trans (le_max_right _ _) hdeg
+  have hdenR_ne_zero : r₀.denReduced ≠ 0 := by
+    unfold RationalData.denReduced
+    intro hz
+    have h1 : r₀.den = gcd r₀.num r₀.den * (r₀.den / gcd r₀.num r₀.den) :=
+      (EuclideanDomain.mul_div_cancel' (gcd_ne_zero_of_right r₀.den_ne_zero)
+        (gcd_dvd_right _ _)).symm
+    rw [hz, mul_zero] at h1
+    exact r₀.den_ne_zero h1
+  -- Build the RatMap d from coefficient tuples
+  refine ⟨⟨fun i : Fin (d+1) => r₀.numReduced.coeff i,
+           fun i : Fin (d+1) => r₀.denReduced.coeff i⟩, ?_, ?_⟩
+  · -- toDenPoly ≠ 0 since it equals r₀.denReduced
+    show toDenPoly _ ≠ 0
+    unfold toDenPoly
+    have heq : (∑ i : Fin (d+1), C (r₀.denReduced.coeff (i : ℕ)) * X^(i : ℕ))
+             = r₀.denReduced := by
+      rw [Fin.sum_univ_eq_sum_range (fun i => C (r₀.denReduced.coeff i) * X^i)]
+      exact (Polynomial.as_sum_range_C_mul_X_pow' r₀.denReduced
+        (Nat.lt_succ_of_le hnatDen)).symm
+    rw [heq]
+    exact hdenR_ne_zero
+  · -- f = (toRationalData ...).toSphereMap
+    -- First show toNumPoly = r₀.numReduced, toDenPoly = r₀.denReduced
+    have hNumEq : toNumPoly (d := d) ⟨fun i : Fin (d+1) => r₀.numReduced.coeff i,
+                                       fun i : Fin (d+1) => r₀.denReduced.coeff i⟩
+                = r₀.numReduced := by
+      unfold toNumPoly
+      rw [Fin.sum_univ_eq_sum_range (fun i => C (r₀.numReduced.coeff i) * X^i)]
+      exact (Polynomial.as_sum_range_C_mul_X_pow' r₀.numReduced
+        (Nat.lt_succ_of_le hnatNum)).symm
+    have hDenEq : toDenPoly (d := d) ⟨fun i : Fin (d+1) => r₀.numReduced.coeff i,
+                                       fun i : Fin (d+1) => r₀.denReduced.coeff i⟩
+                = r₀.denReduced := by
+      unfold toDenPoly
+      rw [Fin.sum_univ_eq_sum_range (fun i => C (r₀.denReduced.coeff i) * X^i)]
+      exact (Polynomial.as_sum_range_C_mul_X_pow' r₀.denReduced
+        (Nat.lt_succ_of_le hnatDen)).symm
+    -- r₀.numReduced and r₀.denReduced are coprime, so gcd = 1
+    have hcop : IsCoprime r₀.numReduced r₀.denReduced :=
+      isCoprime_div_gcd_div_gcd r₀.den_ne_zero
+    have hgcd_one : gcd r₀.numReduced r₀.denReduced = 1 := by
+      have hu : IsUnit (gcd r₀.numReduced r₀.denReduced) :=
+        (gcd_isUnit_iff _ _).mpr hcop
+      have hn : normalize (gcd r₀.numReduced r₀.denReduced) = 1 :=
+        normalize_eq_one.mpr hu
+      rwa [normalize_gcd] at hn
+    -- The h needed: toDenPoly r ≠ 0 — proven from hDenEq + hdenR_ne_zero
+    have h_toDen_ne_zero : toDenPoly (d := d) ⟨fun i : Fin (d+1) => r₀.numReduced.coeff i,
+                                        fun i : Fin (d+1) => r₀.denReduced.coeff i⟩ ≠ 0 := by
+      rw [hDenEq]; exact hdenR_ne_zero
+    -- Show (toRationalData ...).numReduced = r₀.numReduced
+    have hNumRedEq : (toRationalData ⟨fun i : Fin (d+1) => r₀.numReduced.coeff i,
+                                       fun i : Fin (d+1) => r₀.denReduced.coeff i⟩
+                                       h_toDen_ne_zero).numReduced
+                   = r₀.numReduced := by
+      change toNumPoly _ / gcd (toNumPoly _) (toDenPoly _) = r₀.numReduced
+      rw [hNumEq, hDenEq, hgcd_one, EuclideanDomain.div_one]
+    have hDenRedEq : (toRationalData ⟨fun i : Fin (d+1) => r₀.numReduced.coeff i,
+                                       fun i : Fin (d+1) => r₀.denReduced.coeff i⟩
+                                       h_toDen_ne_zero).denReduced
+                   = r₀.denReduced := by
+      change toDenPoly _ / gcd (toNumPoly _) (toDenPoly _) = r₀.denReduced
+      rw [hNumEq, hDenEq, hgcd_one, EuclideanDomain.div_one]
+    -- toSphereMap depends only on numReduced and denReduced
+    rw [hr₀]
+    funext z
+    change r₀.toSphereMap z = (toRationalData _ h_toDen_ne_zero).toSphereMap z
+    rcases z with _ | w
+    · -- z = ∞
+      simp only [RationalData.toSphereMap]
+      rw [hNumRedEq, hDenRedEq]
+    · -- z = (w : ℂ̂)
+      simp only [RationalData.toSphereMap]
+      rw [hNumRedEq, hDenRedEq]
 
 end RatMap
 
