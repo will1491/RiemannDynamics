@@ -14,5 +14,10 @@ name = "mathlib"
 scope = "leanprover-community"
 rev = "v4.29.0"
 
+[[require]]
+name = "RMT4"
+git = "https://github.com/will1491/RMT4.git"
+rev = "98a3e70faeb66ca20bf9753db8cd1e132bda9470"
+
 [[lean_lib]]
 name = "RiemannDynamics"
