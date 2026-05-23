@@ -11,6 +11,9 @@ import Mathlib.Data.Complex.Basic
 import Mathlib.RingTheory.Polynomial.Content
 import Mathlib.RingTheory.EuclideanDomain
 import Mathlib.Topology.Algebra.Polynomial
+import Mathlib.Topology.Algebra.Module.Cardinality
+import Mathlib.FieldTheory.IsAlgClosed.Basic
+import Mathlib.Analysis.Complex.Polynomial.Basic
 
 /-!
 # Rational maps `ℂ̂ → ℂ̂`
@@ -74,6 +77,31 @@ of the reduced numerator's and denominator's degrees. -/
 noncomputable def degree : ℕ :=
   max r.numReduced.natDegree r.denReduced.natDegree
 
+/-- Numerator polynomial of the composition `r₁ ∘ r₂`: the homogenization of
+`r₁.numReduced` to degree `r₁.degree` substituted with `(N₂, D₂) = (r₂.numReduced,
+r₂.denReduced)`. -/
+noncomputable def composeNum (r₁ r₂ : RationalData) : ℂ[X] :=
+  ∑ i ∈ Finset.range (r₁.degree + 1),
+    Polynomial.C (r₁.numReduced.coeff i) *
+      r₂.numReduced^i * r₂.denReduced^(r₁.degree - i)
+
+/-- Denominator polynomial of the composition `r₁ ∘ r₂`: the homogenization of
+`r₁.denReduced` to degree `r₁.degree` substituted with `(N₂, D₂)`. -/
+noncomputable def composeDen (r₁ r₂ : RationalData) : ℂ[X] :=
+  ∑ i ∈ Finset.range (r₁.degree + 1),
+    Polynomial.C (r₁.denReduced.coeff i) *
+      r₂.numReduced^i * r₂.denReduced^(r₁.degree - i)
+
+/-- The composition of two rational data as a rational map. When the composed
+denominator is nonzero (which holds whenever `r₂.degree ≥ 1`), it is taken
+directly; otherwise we fall back to `r₁` to keep the type total. The
+`r₂.degree ≥ 1` case is the only one with meaningful semantics; see
+`composeRational_toSphereMap_eq` and `composeRational_degree_eq`. -/
+noncomputable def composeRational (r₁ r₂ : RationalData) : RationalData :=
+  if h : composeDen r₁ r₂ ≠ 0 then
+    ⟨composeNum r₁ r₂, composeDen r₁ r₂, h⟩
+  else r₁
+
 end RationalData
 
 /-- A map `f : ℂ̂ → ℂ̂` is *rational* if it arises from some `RationalData`. -/
@@ -86,9 +114,7 @@ downstream code). -/
 noncomputable def degreeOfRational (f : ℂ̂ → ℂ̂) : ℕ :=
   open Classical in if h : IsRational f then h.choose.degree else 0
 
-/-! ## Basic theorems
-
-These are the Phase 1 statements; proofs land in a later prover pass. -/
+/-! ## Basic theorems -/
 
 /-- A rational map extends uniquely from its `RationalData`: any two
 `RationalData` values producing the same `ℂ̂ → ℂ̂` map have equal `degree`. -/
@@ -632,18 +658,1246 @@ theorem RationalData.toSphereMap_continuous (r : RationalData) :
       rw [hval₀] at hca
       exact hca
 
-/-- The composition of two rational maps is rational, with degree equal to
-the product of the degrees (assuming both are nonconstant). -/
+/-- The composed rational data realizes the composition of the underlying
+rational maps, provided the inner map is nonconstant. -/
+theorem RationalData.composeRational_toSphereMap_eq (r₁ r₂ : RationalData)
+    (h : 1 ≤ r₂.degree) :
+    (r₁.composeRational r₂).toSphereMap = r₁.toSphereMap ∘ r₂.toSphereMap := by
+  -- Setup the constituent polynomials.
+  set N₁ := r₁.numReduced with hN₁_def
+  set D₁ := r₁.denReduced with hD₁_def
+  set N₂ := r₂.numReduced with hN₂_def
+  set D₂ := r₂.denReduced with hD₂_def
+  set n := r₁.degree with hn_def
+  set num_comp : ℂ[X] :=
+    ∑ i ∈ Finset.range (n + 1), Polynomial.C (N₁.coeff i) * N₂^i * D₂^(n - i)
+    with hnum_comp_def
+  set den_comp : ℂ[X] :=
+    ∑ i ∈ Finset.range (n + 1), Polynomial.C (D₁.coeff i) * N₂^i * D₂^(n - i)
+    with hden_comp_def
+  have hD₁_ne_zero : D₁ ≠ 0 := by
+    rw [hD₁_def, RationalData.denReduced]
+    intro hz
+    have h1 : r₁.den = gcd r₁.num r₁.den * (r₁.den / gcd r₁.num r₁.den) :=
+      (EuclideanDomain.mul_div_cancel' (gcd_ne_zero_of_right r₁.den_ne_zero)
+        (gcd_dvd_right _ _)).symm
+    rw [hz, mul_zero] at h1
+    exact r₁.den_ne_zero h1
+  have hD₂_ne_zero : D₂ ≠ 0 := by
+    rw [hD₂_def, RationalData.denReduced]
+    intro hz
+    have h1 : r₂.den = gcd r₂.num r₂.den * (r₂.den / gcd r₂.num r₂.den) :=
+      (EuclideanDomain.mul_div_cancel' (gcd_ne_zero_of_right r₂.den_ne_zero)
+        (gcd_dvd_right _ _)).symm
+    rw [hz, mul_zero] at h1
+    exact r₂.den_ne_zero h1
+  have hcop_g : IsCoprime N₂ D₂ := isCoprime_div_gcd_div_gcd r₂.den_ne_zero
+  have hN₁_natDeg_le_n : N₁.natDegree ≤ n := by
+    rw [hn_def, RationalData.degree]; exact le_max_left _ _
+  have hD₁_natDeg_le_n : D₁.natDegree ≤ n := by
+    rw [hn_def, RationalData.degree]; exact le_max_right _ _
+  have hnum_comp_eval : ∀ z : ℂ, D₂.eval z ≠ 0 →
+      num_comp.eval z = D₂.eval z ^ n * N₁.eval (N₂.eval z / D₂.eval z) := by
+    intro z hz
+    rw [hnum_comp_def]
+    simp only [Polynomial.eval_finset_sum, Polynomial.eval_mul, Polynomial.eval_C,
+               Polynomial.eval_pow]
+    rw [Polynomial.eval_eq_sum_range' (n := n + 1) (by omega)
+        (p := N₁) (x := N₂.eval z / D₂.eval z)]
+    rw [Finset.mul_sum]
+    apply Finset.sum_congr rfl
+    intro i hi
+    rw [Finset.mem_range] at hi
+    have hi_le : i ≤ n := by omega
+    have hpow_i_ne : D₂.eval z ^ i ≠ 0 := pow_ne_zero _ hz
+    have hpow_eq : D₂.eval z ^ i * D₂.eval z ^ (n - i) = D₂.eval z ^ n := by
+      rw [← pow_add]; congr 1; omega
+    have hsub : D₂.eval z ^ (n - i) = D₂.eval z ^ n / D₂.eval z ^ i := by
+      rw [eq_div_iff hpow_i_ne]; linear_combination hpow_eq
+    rw [hsub, div_pow]; ring
+  have hden_comp_eval : ∀ z : ℂ, D₂.eval z ≠ 0 →
+      den_comp.eval z = D₂.eval z ^ n * D₁.eval (N₂.eval z / D₂.eval z) := by
+    intro z hz
+    rw [hden_comp_def]
+    simp only [Polynomial.eval_finset_sum, Polynomial.eval_mul, Polynomial.eval_C,
+               Polynomial.eval_pow]
+    rw [Polynomial.eval_eq_sum_range' (n := n + 1) (by omega)
+        (p := D₁) (x := N₂.eval z / D₂.eval z)]
+    rw [Finset.mul_sum]
+    apply Finset.sum_congr rfl
+    intro i hi
+    rw [Finset.mem_range] at hi
+    have hi_le : i ≤ n := by omega
+    have hpow_i_ne : D₂.eval z ^ i ≠ 0 := pow_ne_zero _ hz
+    have hpow_eq : D₂.eval z ^ i * D₂.eval z ^ (n - i) = D₂.eval z ^ n := by
+      rw [← pow_add]; congr 1; omega
+    have hsub : D₂.eval z ^ (n - i) = D₂.eval z ^ n / D₂.eval z ^ i := by
+      rw [eq_div_iff hpow_i_ne]; linear_combination hpow_eq
+    rw [hsub, div_pow]; ring
+  have hg_nonconst : ∀ c : ℂ, N₂ - Polynomial.C c * D₂ ≠ 0 := by
+    intro c hzero
+    have hN₂_eq : N₂ = Polynomial.C c * D₂ := by linear_combination hzero
+    have hD₂_unit : IsUnit D₂ := by
+      obtain ⟨a, b, hab⟩ := hcop_g
+      have h1 : a * (Polynomial.C c * D₂) + b * D₂ = 1 := by rw [← hN₂_eq]; exact hab
+      have h2 : D₂ * (a * Polynomial.C c + b) = 1 := by linear_combination h1
+      exact IsUnit.of_mul_eq_one _ h2
+    have hD₂_natDeg : D₂.natDegree = 0 := by
+      rcases Polynomial.isUnit_iff.mp hD₂_unit with ⟨c', _, hc'⟩
+      rw [← hc']; exact Polynomial.natDegree_C c'
+    have hN₂_natDeg : N₂.natDegree = 0 := by
+      rcases Polynomial.isUnit_iff.mp hD₂_unit with ⟨d, _, hd⟩
+      rw [hN₂_eq, ← hd, ← Polynomial.C_mul]
+      exact Polynomial.natDegree_C _
+    have hr₂_deg : r₂.degree = 0 := by
+      rw [RationalData.degree, ← hN₂_def, ← hD₂_def, hN₂_natDeg, hD₂_natDeg]; rfl
+    rw [hr₂_deg] at h
+    exact Nat.lt_irrefl 0 h
+  have hden_comp_ne_zero : den_comp ≠ 0 := by
+    intro hzero
+    have hD₁_roots_fin : {α : ℂ | D₁.eval α = 0}.Finite := by
+      have hsub : {α : ℂ | D₁.eval α = 0} ⊆ (D₁.roots.toFinset : Set ℂ) := by
+        intro α hα
+        simp only [Set.mem_setOf_eq] at hα
+        simp [Multiset.mem_toFinset, Polynomial.mem_roots hD₁_ne_zero, hα, Polynomial.IsRoot]
+      exact ((D₁.roots.toFinset : Set ℂ).toFinite).subset hsub
+    have hD₂_roots_fin : {z : ℂ | D₂.eval z = 0}.Finite := by
+      have hsub : {z : ℂ | D₂.eval z = 0} ⊆ (D₂.roots.toFinset : Set ℂ) := by
+        intro z hz
+        simp only [Set.mem_setOf_eq] at hz
+        simp [Multiset.mem_toFinset, Polynomial.mem_roots hD₂_ne_zero, hz, Polynomial.IsRoot]
+      exact ((D₂.roots.toFinset : Set ℂ).toFinite).subset hsub
+    set S : Set ℂ := {z | D₂.eval z = 0} ∪
+        ⋃ α ∈ {α : ℂ | D₁.eval α = 0}, {z : ℂ | N₂.eval z = α * D₂.eval z} with hS_def
+    have hS_fin : S.Finite := by
+      apply Set.Finite.union hD₂_roots_fin
+      apply Set.Finite.biUnion hD₁_roots_fin
+      intro α _
+      have hpoly_ne : N₂ - Polynomial.C α * D₂ ≠ 0 := hg_nonconst α
+      have hsub : {z : ℂ | N₂.eval z = α * D₂.eval z} ⊆
+          ((N₂ - Polynomial.C α * D₂).roots.toFinset : Set ℂ) := by
+        intro z hz
+        simp only [Set.mem_setOf_eq] at hz
+        have heval : (N₂ - Polynomial.C α * D₂).eval z = 0 := by
+          rw [Polynomial.eval_sub, Polynomial.eval_mul, Polynomial.eval_C, hz, sub_self]
+        simp [Multiset.mem_toFinset, Polynomial.mem_roots hpoly_ne, Polynomial.IsRoot, heval]
+      exact (((N₂ - Polynomial.C α * D₂).roots.toFinset : Set ℂ).toFinite).subset hsub
+    have hexists : ∃ z : ℂ, z ∉ S := by
+      by_contra hno
+      push Not at hno
+      exact Set.infinite_univ (hS_fin.subset (fun z _ => hno z))
+    obtain ⟨z, hz_notin⟩ := hexists
+    have hz_D₂ : D₂.eval z ≠ 0 := fun hh => hz_notin (Or.inl hh)
+    have hz_D₁ : D₁.eval (N₂.eval z / D₂.eval z) ≠ 0 := by
+      intro heval
+      apply hz_notin
+      right
+      simp only [Set.mem_iUnion, Set.mem_setOf_eq]
+      refine ⟨N₂.eval z / D₂.eval z, heval, ?_⟩
+      field_simp
+    have hden_eval : den_comp.eval z = D₂.eval z ^ n * D₁.eval (N₂.eval z / D₂.eval z) :=
+      hden_comp_eval z hz_D₂
+    rw [hzero, Polynomial.eval_zero] at hden_eval
+    have hpow_ne : D₂.eval z ^ n ≠ 0 := pow_ne_zero _ hz_D₂
+    exact hz_D₁ ((mul_eq_zero.mp hden_eval.symm).resolve_left hpow_ne)
+  -- Unfold composeRational to the explicit construction.
+  have hcomposeNum_eq : r₁.composeNum r₂ = num_comp := by
+    rw [hnum_comp_def, RationalData.composeNum]
+  have hcomposeDen_eq : r₁.composeDen r₂ = den_comp := by
+    rw [hden_comp_def, RationalData.composeDen]
+  have hcomp_unfold :
+      r₁.composeRational r₂ = ⟨num_comp, den_comp, hden_comp_ne_zero⟩ := by
+    unfold RationalData.composeRational
+    rw [hcomposeDen_eq]
+    rw [dif_pos hden_comp_ne_zero]
+    congr 1
+  rw [hcomp_unfold]
+  -- Show ⟨num_comp, den_comp, _⟩.toSphereMap = r₁.toSphereMap ∘ r₂.toSphereMap
+  -- via continuity on ℂ̂ and density of ℂ.
+  have hcomp_cont : Continuous
+      (⟨num_comp, den_comp, hden_comp_ne_zero⟩ : RationalData).toSphereMap :=
+    RationalData.toSphereMap_continuous _
+  have hfg_cont : Continuous (r₁.toSphereMap ∘ r₂.toSphereMap) :=
+    r₁.toSphereMap_continuous.comp r₂.toSphereMap_continuous
+  symm
+  apply Continuous.ext_on (s := Set.range (OnePoint.some : ℂ → ℂ̂)) ?_ hfg_cont hcomp_cont ?_
+  · exact OnePoint.denseRange_coe
+  · rintro _ ⟨w, rfl⟩
+    have hbad_fin : {w : ℂ | D₂.eval w = 0 ∨ den_comp.eval w = 0}.Finite := by
+      apply Set.Finite.union
+      · have hsub : {w : ℂ | D₂.eval w = 0} ⊆ (D₂.roots.toFinset : Set ℂ) := by
+          intro z hz
+          simp only [Set.mem_setOf_eq] at hz
+          simp [Multiset.mem_toFinset, Polynomial.mem_roots hD₂_ne_zero, hz, Polynomial.IsRoot]
+        exact ((D₂.roots.toFinset : Set ℂ).toFinite).subset hsub
+      · have hsub : {w : ℂ | den_comp.eval w = 0} ⊆ (den_comp.roots.toFinset : Set ℂ) := by
+          intro z hz
+          simp only [Set.mem_setOf_eq] at hz
+          simp [Multiset.mem_toFinset, Polynomial.mem_roots hden_comp_ne_zero, hz,
+                Polynomial.IsRoot]
+        exact ((den_comp.roots.toFinset : Set ℂ).toFinite).subset hsub
+    have hbad_countable : Set.Countable {w : ℂ | D₂.eval w = 0 ∨ den_comp.eval w = 0} :=
+      hbad_fin.countable
+    have hgood_dense : Dense ({w : ℂ | D₂.eval w = 0 ∨ den_comp.eval w = 0}ᶜ) :=
+      Set.Countable.dense_compl ℝ hbad_countable
+    have hfg_finite_cont :
+        Continuous (fun w : ℂ => (r₁.toSphereMap ∘ r₂.toSphereMap) (OnePoint.some w)) :=
+      hfg_cont.comp OnePoint.continuous_coe
+    have hcomp_finite_cont : Continuous (fun w : ℂ =>
+        (⟨num_comp, den_comp, hden_comp_ne_zero⟩ : RationalData).toSphereMap (OnePoint.some w)) :=
+      hcomp_cont.comp OnePoint.continuous_coe
+    have heq_fn :
+        (fun w : ℂ => (r₁.toSphereMap ∘ r₂.toSphereMap) (OnePoint.some w)) =
+        (fun w : ℂ =>
+          (⟨num_comp, den_comp, hden_comp_ne_zero⟩ :
+            RationalData).toSphereMap (OnePoint.some w)) := by
+      apply Continuous.ext_on hgood_dense hfg_finite_cont hcomp_finite_cont
+      intro w hw
+      simp only [Set.mem_compl_iff, Set.mem_setOf_eq, not_or] at hw
+      obtain ⟨hD₂_w, hden_w⟩ := hw
+      have hD₁_quot_ne : D₁.eval (N₂.eval w / D₂.eval w) ≠ 0 := by
+        intro hzero
+        apply hden_w
+        rw [hden_comp_eval w hD₂_w, hzero, mul_zero]
+      have hg_val : r₂.toSphereMap (OnePoint.some w) = ((N₂.eval w / D₂.eval w : ℂ) : ℂ̂) := by
+        simp only [RationalData.toSphereMap, ← hN₂_def, ← hD₂_def, hD₂_w, if_false]
+      have hf_val : r₁.toSphereMap ((N₂.eval w / D₂.eval w : ℂ) : ℂ̂) =
+          ((N₁.eval (N₂.eval w / D₂.eval w) / D₁.eval (N₂.eval w / D₂.eval w) : ℂ) : ℂ̂) := by
+        simp only [RationalData.toSphereMap, ← hN₁_def, ← hD₁_def, hD₁_quot_ne, if_false]
+      let r_comp : RationalData := ⟨num_comp, den_comp, hden_comp_ne_zero⟩
+      have hg_dvd_num : gcd num_comp den_comp ∣ num_comp := gcd_dvd_left _ _
+      have hg_dvd_den : gcd num_comp den_comp ∣ den_comp := gcd_dvd_right _ _
+      have hg_ne_zero : gcd num_comp den_comp ≠ 0 := gcd_ne_zero_of_right hden_comp_ne_zero
+      have hnum_factor : num_comp = gcd num_comp den_comp * r_comp.numReduced := by
+        change num_comp = gcd num_comp den_comp * (num_comp / gcd num_comp den_comp)
+        rw [EuclideanDomain.mul_div_cancel' hg_ne_zero hg_dvd_num]
+      have hden_factor : den_comp = gcd num_comp den_comp * r_comp.denReduced := by
+        change den_comp = gcd num_comp den_comp * (den_comp / gcd num_comp den_comp)
+        rw [EuclideanDomain.mul_div_cancel' hg_ne_zero hg_dvd_den]
+      have hg_eval_ne : (gcd num_comp den_comp).eval w ≠ 0 := by
+        intro hg0
+        apply hden_w
+        rw [hden_factor, Polynomial.eval_mul, hg0, zero_mul]
+      have hden_red_ne : r_comp.denReduced.eval w ≠ 0 := by
+        intro hred0
+        apply hden_w
+        rw [hden_factor, Polynomial.eval_mul, hred0, mul_zero]
+      have hcross : r_comp.numReduced.eval w * den_comp.eval w =
+          num_comp.eval w * r_comp.denReduced.eval w := by
+        have h1 := congrArg (Polynomial.eval w) hnum_factor
+        have h2 := congrArg (Polynomial.eval w) hden_factor
+        simp only [Polynomial.eval_mul] at h1 h2
+        rw [h1, h2]; ring
+      have hcomp_val :
+          r_comp.toSphereMap (OnePoint.some w) =
+            ((num_comp.eval w / den_comp.eval w : ℂ) : ℂ̂) := by
+        change (if r_comp.denReduced.eval w = 0 then ∞
+                else ((r_comp.numReduced.eval w / r_comp.denReduced.eval w : ℂ) : ℂ̂)) = _
+        rw [if_neg hden_red_ne]
+        congr 1
+        rw [div_eq_div_iff hden_red_ne hden_w]
+        linear_combination hcross
+      change r₁.toSphereMap (r₂.toSphereMap (OnePoint.some w)) =
+          r_comp.toSphereMap (OnePoint.some w)
+      rw [hg_val, hf_val, hcomp_val]
+      congr 1
+      rw [hnum_comp_eval w hD₂_w, hden_comp_eval w hD₂_w]
+      have hD₂_pow : D₂.eval w ^ n ≠ 0 := pow_ne_zero _ hD₂_w
+      field_simp
+    exact congrFun heq_fn w
+
+/-- Lower bound on the natural degree of the composed polynomials: at least one
+of `composeNum r₁ r₂` or `composeDen r₁ r₂` achieves the product
+`r₁.degree * r₂.degree`. -/
+theorem RationalData.composeRational_natDegree_lower_bound
+    (r₁ r₂ : RationalData) (h : 1 ≤ r₂.degree) :
+    r₁.degree * r₂.degree ≤
+      max (r₁.composeNum r₂).natDegree (r₁.composeDen r₂).natDegree := by
+  set N₁ := r₁.numReduced with hN₁_def
+  set D₁ := r₁.denReduced with hD₁_def
+  set N₂ := r₂.numReduced with hN₂_def
+  set D₂ := r₂.denReduced with hD₂_def
+  set n := r₁.degree with hn_def
+  set m := r₂.degree with hm_def
+  -- Unfold composeNum/composeDen to explicit sums.
+  set num_comp : ℂ[X] :=
+    ∑ i ∈ Finset.range (n + 1), Polynomial.C (N₁.coeff i) * N₂^i * D₂^(n - i)
+    with hnum_comp_def
+  set den_comp : ℂ[X] :=
+    ∑ i ∈ Finset.range (n + 1), Polynomial.C (D₁.coeff i) * N₂^i * D₂^(n - i)
+    with hden_comp_def
+  have hcomposeNum_eq : r₁.composeNum r₂ = num_comp := by
+    rw [hnum_comp_def, RationalData.composeNum]
+  have hcomposeDen_eq : r₁.composeDen r₂ = den_comp := by
+    rw [hden_comp_def, RationalData.composeDen]
+  rw [hcomposeNum_eq, hcomposeDen_eq]
+  -- D₁, D₂ nonzero (denReduced ≠ 0).
+  have hD₁_ne_zero : D₁ ≠ 0 := by
+    rw [hD₁_def, RationalData.denReduced]
+    intro hz
+    have h1 : r₁.den = gcd r₁.num r₁.den * (r₁.den / gcd r₁.num r₁.den) :=
+      (EuclideanDomain.mul_div_cancel' (gcd_ne_zero_of_right r₁.den_ne_zero)
+        (gcd_dvd_right _ _)).symm
+    rw [hz, mul_zero] at h1
+    exact r₁.den_ne_zero h1
+  have hD₂_ne_zero : D₂ ≠ 0 := by
+    rw [hD₂_def, RationalData.denReduced]
+    intro hz
+    have h1 : r₂.den = gcd r₂.num r₂.den * (r₂.den / gcd r₂.num r₂.den) :=
+      (EuclideanDomain.mul_div_cancel' (gcd_ne_zero_of_right r₂.den_ne_zero)
+        (gcd_dvd_right _ _)).symm
+    rw [hz, mul_zero] at h1
+    exact r₂.den_ne_zero h1
+  have hcop_f : IsCoprime N₁ D₁ := isCoprime_div_gcd_div_gcd r₁.den_ne_zero
+  have hcop_g : IsCoprime N₂ D₂ := isCoprime_div_gcd_div_gcd r₂.den_ne_zero
+  have hN₁_natDeg_le_n : N₁.natDegree ≤ n := by
+    rw [hn_def, RationalData.degree]; exact le_max_left _ _
+  have hD₁_natDeg_le_n : D₁.natDegree ≤ n := by
+    rw [hn_def, RationalData.degree]; exact le_max_right _ _
+  have hN₂_natDeg_le_m : N₂.natDegree ≤ m := by
+    rw [hm_def, RationalData.degree]; exact le_max_left _ _
+  have hD₂_natDeg_le_m : D₂.natDegree ≤ m := by
+    rw [hm_def, RationalData.degree]; exact le_max_right _ _
+  -- m = max(N₂.natDegree, D₂.natDegree).
+  have hm_eq_max : m = max N₂.natDegree D₂.natDegree := by
+    rw [hm_def, RationalData.degree]
+  -- N₂ ≠ 0.
+  have hN₂_ne_zero : N₂ ≠ 0 := by
+    intro hzero
+    have hD₂_unit : IsUnit D₂ := by
+      have := hcop_g; rw [hzero] at this
+      rwa [isCoprime_zero_left] at this
+    have hD₂_natDeg : D₂.natDegree = 0 := by
+      rcases Polynomial.isUnit_iff.mp hD₂_unit with ⟨c, _, hc⟩
+      rw [← hc]; exact Polynomial.natDegree_C _
+    have hr₂_deg : r₂.degree = 0 := by
+      rw [RationalData.degree, ← hN₂_def, ← hD₂_def, hzero, Polynomial.natDegree_zero,
+          hD₂_natDeg]; rfl
+    rw [hm_def, hr₂_deg] at h
+    exact Nat.lt_irrefl 0 h
+  have hlc_N₂_ne : N₂.leadingCoeff ≠ 0 := Polynomial.leadingCoeff_ne_zero.mpr hN₂_ne_zero
+  have hlc_D₂_ne : D₂.leadingCoeff ≠ 0 := Polynomial.leadingCoeff_ne_zero.mpr hD₂_ne_zero
+  -- Coefficient formula for each summand at index (n*m).
+  have hterm_coeff : ∀ (c : ℂ) (i : ℕ), i ≤ n →
+      (Polynomial.C c * N₂^i * D₂^(n-i)).coeff (n * m) =
+        if i * N₂.natDegree + (n-i) * D₂.natDegree = n * m then
+          c * N₂.leadingCoeff^i * D₂.leadingCoeff^(n-i)
+        else 0 := by
+    intro c i hi
+    rw [mul_assoc, Polynomial.coeff_C_mul]
+    have hND_natDeg : (N₂^i * D₂^(n-i)).natDegree =
+        i * N₂.natDegree + (n - i) * D₂.natDegree := by
+      rw [Polynomial.natDegree_mul (pow_ne_zero i hN₂_ne_zero) (pow_ne_zero (n-i) hD₂_ne_zero),
+          Polynomial.natDegree_pow, Polynomial.natDegree_pow]
+    have hND_lc : (N₂^i * D₂^(n-i)).leadingCoeff =
+        N₂.leadingCoeff^i * D₂.leadingCoeff^(n-i) := by
+      rw [Polynomial.leadingCoeff_mul, Polynomial.leadingCoeff_pow, Polynomial.leadingCoeff_pow]
+    have hbd : i * N₂.natDegree + (n-i) * D₂.natDegree ≤ n * m := by
+      have step1 : i * N₂.natDegree + (n - i) * D₂.natDegree ≤ i * m + (n - i) * m :=
+        Nat.add_le_add (Nat.mul_le_mul_left i hN₂_natDeg_le_m)
+          (Nat.mul_le_mul_left (n - i) hD₂_natDeg_le_m)
+      have step2 : i * m + (n - i) * m = n * m := by rw [← Nat.add_mul]; congr 1; omega
+      omega
+    by_cases heq : i * N₂.natDegree + (n - i) * D₂.natDegree = n * m
+    · rw [if_pos heq]
+      have hnatDeg : (N₂^i * D₂^(n-i)).natDegree = n * m := by rw [hND_natDeg, heq]
+      rw [show (N₂^i * D₂^(n-i)).coeff (n*m) = (N₂^i * D₂^(n-i)).leadingCoeff from by
+          rw [← hnatDeg]; exact Polynomial.coeff_natDegree]
+      rw [hND_lc]; ring
+    · rw [if_neg heq]
+      have hlt : (N₂^i * D₂^(n-i)).natDegree < n * m := by rw [hND_natDeg]; omega
+      rw [Polynomial.coeff_eq_zero_of_natDegree_lt hlt, mul_zero]
+  -- Case analysis on N₂.natDegree vs D₂.natDegree.
+  rcases Nat.lt_trichotomy N₂.natDegree D₂.natDegree with hcmp | hcmp | hcmp
+  · -- Case 1: N₂.natDeg < D₂.natDeg, so m = D₂.natDeg.
+    have hm_eq_D₂ : m = D₂.natDegree := by rw [hm_eq_max]; exact max_eq_right hcmp.le
+    -- num_comp.coeff (n*m) = N₁.coeff 0 * (lc D₂)^n.
+    have hnum_coeff : num_comp.coeff (n * m) =
+        N₁.coeff 0 * D₂.leadingCoeff ^ n := by
+      rw [hnum_comp_def, Polynomial.finset_sum_coeff]
+      rw [Finset.sum_eq_single 0]
+      · rw [hterm_coeff (N₁.coeff 0) 0 (Nat.zero_le _)]
+        have h0 : 0 * N₂.natDegree + (n - 0) * D₂.natDegree = n * m := by
+          rw [Nat.sub_zero, hm_eq_D₂]; ring
+        rw [if_pos h0, Nat.sub_zero, pow_zero, mul_one]
+      · intro i hi hi_ne
+        rw [Finset.mem_range] at hi
+        rw [hterm_coeff (N₁.coeff i) i (by omega)]
+        have hi_pos : 0 < i := Nat.pos_of_ne_zero hi_ne
+        have hne : i * N₂.natDegree + (n - i) * D₂.natDegree ≠ n * m := by
+          rw [hm_eq_D₂]
+          have hsum : i * N₂.natDegree + (n - i) * D₂.natDegree
+              < i * D₂.natDegree + (n - i) * D₂.natDegree := by
+            have : i * N₂.natDegree < i * D₂.natDegree :=
+              Nat.mul_lt_mul_of_pos_left hcmp hi_pos
+            omega
+          have hrw : i * D₂.natDegree + (n - i) * D₂.natDegree = n * D₂.natDegree := by
+            rw [← Nat.add_mul]; congr 1; omega
+          omega
+        rw [if_neg hne]
+      · intro h0_ne; exfalso; apply h0_ne; rw [Finset.mem_range]; omega
+    have hden_coeff : den_comp.coeff (n * m) =
+        D₁.coeff 0 * D₂.leadingCoeff ^ n := by
+      rw [hden_comp_def, Polynomial.finset_sum_coeff]
+      rw [Finset.sum_eq_single 0]
+      · rw [hterm_coeff (D₁.coeff 0) 0 (Nat.zero_le _)]
+        have h0 : 0 * N₂.natDegree + (n - 0) * D₂.natDegree = n * m := by
+          rw [Nat.sub_zero, hm_eq_D₂]; ring
+        rw [if_pos h0, Nat.sub_zero, pow_zero, mul_one]
+      · intro i hi hi_ne
+        rw [Finset.mem_range] at hi
+        rw [hterm_coeff (D₁.coeff i) i (by omega)]
+        have hi_pos : 0 < i := Nat.pos_of_ne_zero hi_ne
+        have hne : i * N₂.natDegree + (n - i) * D₂.natDegree ≠ n * m := by
+          rw [hm_eq_D₂]
+          have hsum : i * N₂.natDegree + (n - i) * D₂.natDegree
+              < i * D₂.natDegree + (n - i) * D₂.natDegree := by
+            have : i * N₂.natDegree < i * D₂.natDegree :=
+              Nat.mul_lt_mul_of_pos_left hcmp hi_pos
+            omega
+          have hrw : i * D₂.natDegree + (n - i) * D₂.natDegree = n * D₂.natDegree := by
+            rw [← Nat.add_mul]; congr 1; omega
+          omega
+        rw [if_neg hne]
+      · intro h0_ne; exfalso; apply h0_ne; rw [Finset.mem_range]; omega
+    have hlcD₂n_ne : D₂.leadingCoeff ^ n ≠ 0 := pow_ne_zero _ hlc_D₂_ne
+    -- At least one of N₁.coeff 0 or D₁.coeff 0 is nonzero.
+    have hne_or : num_comp.coeff (n*m) ≠ 0 ∨ den_comp.coeff (n*m) ≠ 0 := by
+      by_contra hboth
+      push Not at hboth
+      obtain ⟨hnum_zero, hden_zero⟩ := hboth
+      rw [hnum_coeff, mul_eq_zero] at hnum_zero
+      rw [hden_coeff, mul_eq_zero] at hden_zero
+      have hN₁0 : N₁.coeff 0 = 0 := hnum_zero.resolve_right hlcD₂n_ne
+      have hD₁0 : D₁.coeff 0 = 0 := hden_zero.resolve_right hlcD₂n_ne
+      have hX_dvd_N₁ : Polynomial.X ∣ N₁ := by rw [Polynomial.X_dvd_iff]; exact hN₁0
+      have hX_dvd_D₁ : Polynomial.X ∣ D₁ := by rw [Polynomial.X_dvd_iff]; exact hD₁0
+      exact Polynomial.not_isUnit_X (hcop_f.isUnit_of_dvd' hX_dvd_N₁ hX_dvd_D₁)
+    rcases hne_or with hne | hne
+    · exact le_max_of_le_left (Polynomial.le_natDegree_of_ne_zero hne)
+    · exact le_max_of_le_right (Polynomial.le_natDegree_of_ne_zero hne)
+  · -- Case 2: N₂.natDeg = D₂.natDeg = m.
+    have hN₂_eq_m : N₂.natDegree = m := by rw [hm_eq_max, hcmp, max_self]
+    have hD₂_eq_m : D₂.natDegree = m := by rw [hm_eq_max, hcmp, max_self]
+    have hall_eq : ∀ i ≤ n, i * N₂.natDegree + (n - i) * D₂.natDegree = n * m := by
+      intro i _
+      rw [hN₂_eq_m, hD₂_eq_m, ← Nat.add_mul]; congr 1; omega
+    set α := N₂.leadingCoeff / D₂.leadingCoeff with hα_def
+    have hnum_coeff : num_comp.coeff (n * m) =
+        D₂.leadingCoeff ^ n * N₁.eval α := by
+      rw [hnum_comp_def, Polynomial.finset_sum_coeff]
+      have hsum : ∑ i ∈ Finset.range (n + 1),
+          (Polynomial.C (N₁.coeff i) * N₂^i * D₂^(n-i)).coeff (n*m) =
+          ∑ i ∈ Finset.range (n + 1),
+            N₁.coeff i * N₂.leadingCoeff^i * D₂.leadingCoeff^(n-i) := by
+        apply Finset.sum_congr rfl
+        intro i hi
+        rw [Finset.mem_range] at hi
+        rw [hterm_coeff (N₁.coeff i) i (by omega), if_pos (hall_eq i (by omega))]
+      rw [hsum]
+      rw [Polynomial.eval_eq_sum_range' (n := n + 1) (by omega) (p := N₁) (x := α)]
+      rw [Finset.mul_sum]
+      apply Finset.sum_congr rfl
+      intro i hi
+      rw [Finset.mem_range] at hi
+      have hi_le : i ≤ n := by omega
+      have hlcD₂_i_ne : D₂.leadingCoeff ^ i ≠ 0 := pow_ne_zero _ hlc_D₂_ne
+      have hpow_split : D₂.leadingCoeff ^ n =
+          D₂.leadingCoeff ^ i * D₂.leadingCoeff ^ (n - i) := by
+        rw [← pow_add]; congr 1; omega
+      have hsub : D₂.leadingCoeff ^ (n - i) =
+          D₂.leadingCoeff ^ n / D₂.leadingCoeff ^ i := by
+        rw [eq_div_iff hlcD₂_i_ne, mul_comm]; exact hpow_split.symm
+      rw [hsub, hα_def, div_pow]; ring
+    have hden_coeff : den_comp.coeff (n * m) =
+        D₂.leadingCoeff ^ n * D₁.eval α := by
+      rw [hden_comp_def, Polynomial.finset_sum_coeff]
+      have hsum : ∑ i ∈ Finset.range (n + 1),
+          (Polynomial.C (D₁.coeff i) * N₂^i * D₂^(n-i)).coeff (n*m) =
+          ∑ i ∈ Finset.range (n + 1),
+            D₁.coeff i * N₂.leadingCoeff^i * D₂.leadingCoeff^(n-i) := by
+        apply Finset.sum_congr rfl
+        intro i hi
+        rw [Finset.mem_range] at hi
+        rw [hterm_coeff (D₁.coeff i) i (by omega), if_pos (hall_eq i (by omega))]
+      rw [hsum]
+      rw [Polynomial.eval_eq_sum_range' (n := n + 1) (by omega) (p := D₁) (x := α)]
+      rw [Finset.mul_sum]
+      apply Finset.sum_congr rfl
+      intro i hi
+      rw [Finset.mem_range] at hi
+      have hi_le : i ≤ n := by omega
+      have hlcD₂_i_ne : D₂.leadingCoeff ^ i ≠ 0 := pow_ne_zero _ hlc_D₂_ne
+      have hpow_split : D₂.leadingCoeff ^ n =
+          D₂.leadingCoeff ^ i * D₂.leadingCoeff ^ (n - i) := by
+        rw [← pow_add]; congr 1; omega
+      have hsub : D₂.leadingCoeff ^ (n - i) =
+          D₂.leadingCoeff ^ n / D₂.leadingCoeff ^ i := by
+        rw [eq_div_iff hlcD₂_i_ne, mul_comm]; exact hpow_split.symm
+      rw [hsub, hα_def, div_pow]; ring
+    have hlcD₂n_ne : D₂.leadingCoeff ^ n ≠ 0 := pow_ne_zero _ hlc_D₂_ne
+    have hne_or : num_comp.coeff (n*m) ≠ 0 ∨ den_comp.coeff (n*m) ≠ 0 := by
+      by_contra hboth
+      push Not at hboth
+      obtain ⟨hnum_zero, hden_zero⟩ := hboth
+      rw [hnum_coeff, mul_eq_zero] at hnum_zero
+      rw [hden_coeff, mul_eq_zero] at hden_zero
+      have hN₁α : N₁.eval α = 0 := hnum_zero.resolve_left hlcD₂n_ne
+      have hD₁α : D₁.eval α = 0 := hden_zero.resolve_left hlcD₂n_ne
+      obtain ⟨a, b, hab⟩ := hcop_f
+      have := congrArg (Polynomial.eval α) hab
+      simp only [Polynomial.eval_add, Polynomial.eval_mul, Polynomial.eval_one] at this
+      rw [hN₁α, hD₁α, mul_zero, mul_zero, add_zero] at this
+      exact zero_ne_one this
+    rcases hne_or with hne | hne
+    · exact le_max_of_le_left (Polynomial.le_natDegree_of_ne_zero hne)
+    · exact le_max_of_le_right (Polynomial.le_natDegree_of_ne_zero hne)
+  · -- Case 3: N₂.natDeg > D₂.natDeg, so m = N₂.natDeg.
+    have hm_eq_N₂ : m = N₂.natDegree := by rw [hm_eq_max]; exact max_eq_left hcmp.le
+    have hnum_coeff : num_comp.coeff (n * m) =
+        N₁.coeff n * N₂.leadingCoeff ^ n := by
+      rw [hnum_comp_def, Polynomial.finset_sum_coeff]
+      rw [Finset.sum_eq_single n]
+      · rw [hterm_coeff (N₁.coeff n) n le_rfl]
+        have h_eq : n * N₂.natDegree + (n - n) * D₂.natDegree = n * m := by
+          rw [Nat.sub_self, hm_eq_N₂]; ring
+        rw [if_pos h_eq, Nat.sub_self, pow_zero, mul_one]
+      · intro i hi hi_ne
+        rw [Finset.mem_range] at hi
+        rw [hterm_coeff (N₁.coeff i) i (by omega)]
+        have hi_lt : i < n := lt_of_le_of_ne (by omega) hi_ne
+        have hne : i * N₂.natDegree + (n - i) * D₂.natDegree ≠ n * m := by
+          rw [hm_eq_N₂]
+          have hsum : i * N₂.natDegree + (n - i) * D₂.natDegree
+              < i * N₂.natDegree + (n - i) * N₂.natDegree := by
+            have : (n - i) * D₂.natDegree < (n - i) * N₂.natDegree :=
+              Nat.mul_lt_mul_of_pos_left hcmp (by omega)
+            omega
+          have hrw : i * N₂.natDegree + (n - i) * N₂.natDegree = n * N₂.natDegree := by
+            rw [← Nat.add_mul]; congr 1; omega
+          omega
+        rw [if_neg hne]
+      · intro hn_ne; exfalso; apply hn_ne; rw [Finset.mem_range]; omega
+    have hden_coeff : den_comp.coeff (n * m) =
+        D₁.coeff n * N₂.leadingCoeff ^ n := by
+      rw [hden_comp_def, Polynomial.finset_sum_coeff]
+      rw [Finset.sum_eq_single n]
+      · rw [hterm_coeff (D₁.coeff n) n le_rfl]
+        have h_eq : n * N₂.natDegree + (n - n) * D₂.natDegree = n * m := by
+          rw [Nat.sub_self, hm_eq_N₂]; ring
+        rw [if_pos h_eq, Nat.sub_self, pow_zero, mul_one]
+      · intro i hi hi_ne
+        rw [Finset.mem_range] at hi
+        rw [hterm_coeff (D₁.coeff i) i (by omega)]
+        have hi_lt : i < n := lt_of_le_of_ne (by omega) hi_ne
+        have hne : i * N₂.natDegree + (n - i) * D₂.natDegree ≠ n * m := by
+          rw [hm_eq_N₂]
+          have hsum : i * N₂.natDegree + (n - i) * D₂.natDegree
+              < i * N₂.natDegree + (n - i) * N₂.natDegree := by
+            have : (n - i) * D₂.natDegree < (n - i) * N₂.natDegree :=
+              Nat.mul_lt_mul_of_pos_left hcmp (by omega)
+            omega
+          have hrw : i * N₂.natDegree + (n - i) * N₂.natDegree = n * N₂.natDegree := by
+            rw [← Nat.add_mul]; congr 1; omega
+          omega
+        rw [if_neg hne]
+      · intro hn_ne; exfalso; apply hn_ne; rw [Finset.mem_range]; omega
+    have hlcN₂n_ne : N₂.leadingCoeff ^ n ≠ 0 := pow_ne_zero _ hlc_N₂_ne
+    have hne_or : num_comp.coeff (n*m) ≠ 0 ∨ den_comp.coeff (n*m) ≠ 0 := by
+      by_contra hboth
+      push Not at hboth
+      obtain ⟨hnum_zero, hden_zero⟩ := hboth
+      rw [hnum_coeff, mul_eq_zero] at hnum_zero
+      rw [hden_coeff, mul_eq_zero] at hden_zero
+      have hN₁n : N₁.coeff n = 0 := hnum_zero.resolve_right hlcN₂n_ne
+      have hD₁n : D₁.coeff n = 0 := hden_zero.resolve_right hlcN₂n_ne
+      have hn_eq_max : n = max N₁.natDegree D₁.natDegree := by
+        rw [hn_def, RationalData.degree]
+      rcases Nat.lt_or_ge N₁.natDegree D₁.natDegree with hND | hND
+      · have hn_D₁ : n = D₁.natDegree := by rw [hn_eq_max]; exact max_eq_right hND.le
+        rw [hn_D₁] at hD₁n
+        exact (Polynomial.leadingCoeff_ne_zero.mpr hD₁_ne_zero) hD₁n
+      · have hn_N₁ : n = N₁.natDegree := by rw [hn_eq_max]; exact max_eq_left hND
+        rw [hn_N₁] at hN₁n
+        by_cases hN₁_ne : N₁ = 0
+        · -- N₁ = 0. Then N₁.coeff n = 0 trivially. Use D₁ coprimality.
+          -- IsCoprime 0 D₁ ⟹ D₁ unit ⟹ D₁.natDegree = 0 ⟹ n = 0
+          have hD₁_unit : IsUnit D₁ := by
+            have := hcop_f; rw [hN₁_ne] at this
+            rwa [isCoprime_zero_left] at this
+          have hD₁_natDeg : D₁.natDegree = 0 := by
+            rcases Polynomial.isUnit_iff.mp hD₁_unit with ⟨c, _, hc⟩
+            rw [← hc]; exact Polynomial.natDegree_C _
+          have hn_zero : n = 0 := by
+            rw [hn_N₁, hN₁_ne, Polynomial.natDegree_zero]
+          -- Then D₁.coeff 0 = D₁.coeff (D₁.natDegree) = lc D₁ ≠ 0
+          rw [hn_zero] at hD₁n
+          have : D₁.coeff 0 = D₁.leadingCoeff := by
+            rw [Polynomial.leadingCoeff, hD₁_natDeg]
+          rw [this] at hD₁n
+          exact (Polynomial.leadingCoeff_ne_zero.mpr hD₁_ne_zero) hD₁n
+        · exact (Polynomial.leadingCoeff_ne_zero.mpr hN₁_ne) hN₁n
+    rcases hne_or with hne | hne
+    · exact le_max_of_le_left (Polynomial.le_natDegree_of_ne_zero hne)
+    · exact le_max_of_le_right (Polynomial.le_natDegree_of_ne_zero hne)
+
+/-- The degree of the composed rational data is the product of degrees, when the
+inner is nonconstant. -/
+theorem RationalData.composeRational_degree_eq (r₁ r₂ : RationalData)
+    (h : 1 ≤ r₂.degree) :
+    (r₁.composeRational r₂).degree = r₁.degree * r₂.degree := by
+  -- Setup, identical to composeRational_toSphereMap_eq.
+  set N₁ := r₁.numReduced with hN₁_def
+  set D₁ := r₁.denReduced with hD₁_def
+  set N₂ := r₂.numReduced with hN₂_def
+  set D₂ := r₂.denReduced with hD₂_def
+  set n := r₁.degree with hn_def
+  set m := r₂.degree with hm_def
+  set num_comp : ℂ[X] :=
+    ∑ i ∈ Finset.range (n + 1), Polynomial.C (N₁.coeff i) * N₂^i * D₂^(n - i)
+    with hnum_comp_def
+  set den_comp : ℂ[X] :=
+    ∑ i ∈ Finset.range (n + 1), Polynomial.C (D₁.coeff i) * N₂^i * D₂^(n - i)
+    with hden_comp_def
+  have hD₁_ne_zero : D₁ ≠ 0 := by
+    rw [hD₁_def, RationalData.denReduced]
+    intro hz
+    have h1 : r₁.den = gcd r₁.num r₁.den * (r₁.den / gcd r₁.num r₁.den) :=
+      (EuclideanDomain.mul_div_cancel' (gcd_ne_zero_of_right r₁.den_ne_zero)
+        (gcd_dvd_right _ _)).symm
+    rw [hz, mul_zero] at h1
+    exact r₁.den_ne_zero h1
+  have hD₂_ne_zero : D₂ ≠ 0 := by
+    rw [hD₂_def, RationalData.denReduced]
+    intro hz
+    have h1 : r₂.den = gcd r₂.num r₂.den * (r₂.den / gcd r₂.num r₂.den) :=
+      (EuclideanDomain.mul_div_cancel' (gcd_ne_zero_of_right r₂.den_ne_zero)
+        (gcd_dvd_right _ _)).symm
+    rw [hz, mul_zero] at h1
+    exact r₂.den_ne_zero h1
+  have hcop_g : IsCoprime N₂ D₂ := isCoprime_div_gcd_div_gcd r₂.den_ne_zero
+  have hcop_f : IsCoprime N₁ D₁ := isCoprime_div_gcd_div_gcd r₁.den_ne_zero
+  have hN₁_natDeg_le_n : N₁.natDegree ≤ n := by
+    rw [hn_def, RationalData.degree]; exact le_max_left _ _
+  have hD₁_natDeg_le_n : D₁.natDegree ≤ n := by
+    rw [hn_def, RationalData.degree]; exact le_max_right _ _
+  have hN₂_natDeg_le_m : N₂.natDegree ≤ m := by
+    rw [hm_def, RationalData.degree]; exact le_max_left _ _
+  have hD₂_natDeg_le_m : D₂.natDegree ≤ m := by
+    rw [hm_def, RationalData.degree]; exact le_max_right _ _
+  -- Algebraic identities at points with D₂(z) ≠ 0.
+  have hnum_comp_eval : ∀ z : ℂ, D₂.eval z ≠ 0 →
+      num_comp.eval z = D₂.eval z ^ n * N₁.eval (N₂.eval z / D₂.eval z) := by
+    intro z hz
+    rw [hnum_comp_def]
+    simp only [Polynomial.eval_finset_sum, Polynomial.eval_mul, Polynomial.eval_C,
+               Polynomial.eval_pow]
+    rw [Polynomial.eval_eq_sum_range' (n := n + 1) (by omega)
+        (p := N₁) (x := N₂.eval z / D₂.eval z)]
+    rw [Finset.mul_sum]
+    apply Finset.sum_congr rfl
+    intro i hi
+    rw [Finset.mem_range] at hi
+    have hi_le : i ≤ n := by omega
+    have hpow_i_ne : D₂.eval z ^ i ≠ 0 := pow_ne_zero _ hz
+    have hpow_eq : D₂.eval z ^ i * D₂.eval z ^ (n - i) = D₂.eval z ^ n := by
+      rw [← pow_add]; congr 1; omega
+    have hsub : D₂.eval z ^ (n - i) = D₂.eval z ^ n / D₂.eval z ^ i := by
+      rw [eq_div_iff hpow_i_ne]; linear_combination hpow_eq
+    rw [hsub, div_pow]; ring
+  have hden_comp_eval : ∀ z : ℂ, D₂.eval z ≠ 0 →
+      den_comp.eval z = D₂.eval z ^ n * D₁.eval (N₂.eval z / D₂.eval z) := by
+    intro z hz
+    rw [hden_comp_def]
+    simp only [Polynomial.eval_finset_sum, Polynomial.eval_mul, Polynomial.eval_C,
+               Polynomial.eval_pow]
+    rw [Polynomial.eval_eq_sum_range' (n := n + 1) (by omega)
+        (p := D₁) (x := N₂.eval z / D₂.eval z)]
+    rw [Finset.mul_sum]
+    apply Finset.sum_congr rfl
+    intro i hi
+    rw [Finset.mem_range] at hi
+    have hi_le : i ≤ n := by omega
+    have hpow_i_ne : D₂.eval z ^ i ≠ 0 := pow_ne_zero _ hz
+    have hpow_eq : D₂.eval z ^ i * D₂.eval z ^ (n - i) = D₂.eval z ^ n := by
+      rw [← pow_add]; congr 1; omega
+    have hsub : D₂.eval z ^ (n - i) = D₂.eval z ^ n / D₂.eval z ^ i := by
+      rw [eq_div_iff hpow_i_ne]; linear_combination hpow_eq
+    rw [hsub, div_pow]; ring
+  have hg_nonconst : ∀ c : ℂ, N₂ - Polynomial.C c * D₂ ≠ 0 := by
+    intro c hzero
+    have hN₂_eq : N₂ = Polynomial.C c * D₂ := by linear_combination hzero
+    have hD₂_unit : IsUnit D₂ := by
+      obtain ⟨a, b, hab⟩ := hcop_g
+      have h1 : a * (Polynomial.C c * D₂) + b * D₂ = 1 := by rw [← hN₂_eq]; exact hab
+      have h2 : D₂ * (a * Polynomial.C c + b) = 1 := by linear_combination h1
+      exact IsUnit.of_mul_eq_one _ h2
+    have hD₂_natDeg : D₂.natDegree = 0 := by
+      rcases Polynomial.isUnit_iff.mp hD₂_unit with ⟨c', _, hc'⟩
+      rw [← hc']; exact Polynomial.natDegree_C c'
+    have hN₂_natDeg : N₂.natDegree = 0 := by
+      rcases Polynomial.isUnit_iff.mp hD₂_unit with ⟨d, _, hd⟩
+      rw [hN₂_eq, ← hd, ← Polynomial.C_mul]
+      exact Polynomial.natDegree_C _
+    have hr₂_deg : r₂.degree = 0 := by
+      rw [RationalData.degree, ← hN₂_def, ← hD₂_def, hN₂_natDeg, hD₂_natDeg]; rfl
+    rw [hm_def, hr₂_deg] at h
+    exact Nat.lt_irrefl 0 h
+  have hden_comp_ne_zero : den_comp ≠ 0 := by
+    intro hzero
+    have hD₁_roots_fin : {α : ℂ | D₁.eval α = 0}.Finite := by
+      have hsub : {α : ℂ | D₁.eval α = 0} ⊆ (D₁.roots.toFinset : Set ℂ) := by
+        intro α hα
+        simp only [Set.mem_setOf_eq] at hα
+        simp [Multiset.mem_toFinset, Polynomial.mem_roots hD₁_ne_zero, hα, Polynomial.IsRoot]
+      exact ((D₁.roots.toFinset : Set ℂ).toFinite).subset hsub
+    have hD₂_roots_fin : {z : ℂ | D₂.eval z = 0}.Finite := by
+      have hsub : {z : ℂ | D₂.eval z = 0} ⊆ (D₂.roots.toFinset : Set ℂ) := by
+        intro z hz
+        simp only [Set.mem_setOf_eq] at hz
+        simp [Multiset.mem_toFinset, Polynomial.mem_roots hD₂_ne_zero, hz, Polynomial.IsRoot]
+      exact ((D₂.roots.toFinset : Set ℂ).toFinite).subset hsub
+    set S : Set ℂ := {z | D₂.eval z = 0} ∪
+        ⋃ α ∈ {α : ℂ | D₁.eval α = 0}, {z : ℂ | N₂.eval z = α * D₂.eval z} with hS_def
+    have hS_fin : S.Finite := by
+      apply Set.Finite.union hD₂_roots_fin
+      apply Set.Finite.biUnion hD₁_roots_fin
+      intro α _
+      have hpoly_ne : N₂ - Polynomial.C α * D₂ ≠ 0 := hg_nonconst α
+      have hsub : {z : ℂ | N₂.eval z = α * D₂.eval z} ⊆
+          ((N₂ - Polynomial.C α * D₂).roots.toFinset : Set ℂ) := by
+        intro z hz
+        simp only [Set.mem_setOf_eq] at hz
+        have heval : (N₂ - Polynomial.C α * D₂).eval z = 0 := by
+          rw [Polynomial.eval_sub, Polynomial.eval_mul, Polynomial.eval_C, hz, sub_self]
+        simp [Multiset.mem_toFinset, Polynomial.mem_roots hpoly_ne, Polynomial.IsRoot, heval]
+      exact (((N₂ - Polynomial.C α * D₂).roots.toFinset : Set ℂ).toFinite).subset hsub
+    have hexists : ∃ z : ℂ, z ∉ S := by
+      by_contra hno
+      push Not at hno
+      exact Set.infinite_univ (hS_fin.subset (fun z _ => hno z))
+    obtain ⟨z, hz_notin⟩ := hexists
+    have hz_D₂ : D₂.eval z ≠ 0 := fun hh => hz_notin (Or.inl hh)
+    have hz_D₁ : D₁.eval (N₂.eval z / D₂.eval z) ≠ 0 := by
+      intro heval
+      apply hz_notin
+      right
+      simp only [Set.mem_iUnion, Set.mem_setOf_eq]
+      refine ⟨N₂.eval z / D₂.eval z, heval, ?_⟩
+      field_simp
+    have hden_eval : den_comp.eval z = D₂.eval z ^ n * D₁.eval (N₂.eval z / D₂.eval z) :=
+      hden_comp_eval z hz_D₂
+    rw [hzero, Polynomial.eval_zero] at hden_eval
+    have hpow_ne : D₂.eval z ^ n ≠ 0 := pow_ne_zero _ hz_D₂
+    exact hz_D₁ ((mul_eq_zero.mp hden_eval.symm).resolve_left hpow_ne)
+  -- Unfold composeRational (for degreeOfRational_comp's proof).
+  have hcomposeNum_eq2 : r₁.composeNum r₂ = num_comp := by
+    rw [hnum_comp_def, RationalData.composeNum]
+  have hcomposeDen_eq2 : r₁.composeDen r₂ = den_comp := by
+    rw [hden_comp_def, RationalData.composeDen]
+  have hcomp_unfold :
+      r₁.composeRational r₂ = ⟨num_comp, den_comp, hden_comp_ne_zero⟩ := by
+    unfold RationalData.composeRational
+    rw [hcomposeDen_eq2]
+    rw [dif_pos hden_comp_ne_zero]
+    congr 1
+  rw [hcomp_unfold]
+  -- Now the new work: compute the degree of ⟨num_comp, den_comp, _⟩.
+  -- Step A: gcd(num_comp, den_comp).natDegree = 0
+  -- We use that ℂ is algebraically closed: a polynomial of positive natDegree
+  -- has a root, which would have to be a common root of num_comp and den_comp,
+  -- contradicting either IsCoprime N₁ D₁ or the maximality of n.
+  set g := gcd num_comp den_comp with hg_def
+  have hg_ne_zero : g ≠ 0 := gcd_ne_zero_of_right hden_comp_ne_zero
+  have hg_natDeg_zero : g.natDegree = 0 := by
+    by_contra hpos
+    have hpos' : 0 < g.natDegree := Nat.pos_of_ne_zero hpos
+    have hdeg_pos : 0 < g.degree := by
+      rw [Polynomial.degree_eq_natDegree hg_ne_zero]
+      exact_mod_cast hpos'
+    have hdeg_ne_zero : g.degree ≠ 0 := ne_of_gt hdeg_pos
+    obtain ⟨α, hα⟩ := IsAlgClosed.exists_root g hdeg_ne_zero
+    -- α is a common root of num_comp and den_comp
+    have hg_dvd_num : g ∣ num_comp := gcd_dvd_left _ _
+    have hg_dvd_den : g ∣ den_comp := gcd_dvd_right _ _
+    have hα_num : num_comp.eval α = 0 := by
+      obtain ⟨k, hk⟩ := hg_dvd_num
+      rw [hk, Polynomial.eval_mul, hα, zero_mul]
+    have hα_den : den_comp.eval α = 0 := by
+      obtain ⟨k, hk⟩ := hg_dvd_den
+      rw [hk, Polynomial.eval_mul, hα, zero_mul]
+    -- Case-split on D₂(α) = 0 or not.
+    by_cases hD₂α : D₂.eval α = 0
+    · -- D₂(α) = 0. Then N₂(α) ≠ 0 (coprime). num_comp(α) = N₁.coeff n · N₂(α)^n etc.
+      have hN₂α_ne : N₂.eval α ≠ 0 := by
+        intro hN₂α
+        obtain ⟨a, b, hab⟩ := hcop_g
+        have := congrArg (Polynomial.eval α) hab
+        simp only [Polynomial.eval_add, Polynomial.eval_mul, Polynomial.eval_one] at this
+        rw [hD₂α, hN₂α, mul_zero, mul_zero, add_zero] at this
+        exact zero_ne_one this
+      -- num_comp(α) at α with D₂(α) = 0: only i = n term survives.
+      have hnum_at_α : num_comp.eval α = N₁.coeff n * N₂.eval α ^ n := by
+        rw [hnum_comp_def]
+        simp only [Polynomial.eval_finset_sum, Polynomial.eval_mul, Polynomial.eval_C,
+                   Polynomial.eval_pow]
+        rw [Finset.sum_eq_single n]
+        · rw [hD₂α, Nat.sub_self, pow_zero, mul_one]
+        · intro i hi hi_ne
+          rw [Finset.mem_range] at hi
+          have hki : 1 ≤ n - i := by omega
+          rw [hD₂α, zero_pow (by omega : n - i ≠ 0), mul_zero]
+        · intro hn_ni
+          exfalso; apply hn_ni; rw [Finset.mem_range]; omega
+      have hden_at_α : den_comp.eval α = D₁.coeff n * N₂.eval α ^ n := by
+        rw [hden_comp_def]
+        simp only [Polynomial.eval_finset_sum, Polynomial.eval_mul, Polynomial.eval_C,
+                   Polynomial.eval_pow]
+        rw [Finset.sum_eq_single n]
+        · rw [hD₂α, Nat.sub_self, pow_zero, mul_one]
+        · intro i hi hi_ne
+          rw [Finset.mem_range] at hi
+          rw [hD₂α, zero_pow (by omega : n - i ≠ 0), mul_zero]
+        · intro hn_ni
+          exfalso; apply hn_ni; rw [Finset.mem_range]; omega
+      -- Both = 0 ⟹ N₁.coeff n = 0 AND D₁.coeff n = 0
+      have hN₂α_pow_ne : N₂.eval α ^ n ≠ 0 := pow_ne_zero _ hN₂α_ne
+      have hN₁coeff_zero : N₁.coeff n = 0 := by
+        have := hnum_at_α ▸ hα_num
+        exact (mul_eq_zero.mp this).resolve_right hN₂α_pow_ne
+      have hD₁coeff_zero : D₁.coeff n = 0 := by
+        have := hden_at_α ▸ hα_den
+        exact (mul_eq_zero.mp this).resolve_right hN₂α_pow_ne
+      -- But n = max(N₁.natDegree, D₁.natDegree); at least one coefficient must be lc.
+      have hn_eq_max : n = max N₁.natDegree D₁.natDegree := by
+        rw [hn_def, RationalData.degree]
+      rcases Nat.lt_or_ge N₁.natDegree D₁.natDegree with hND | hND
+      · -- n = D₁.natDegree
+        have hn_eq_D₁ : n = D₁.natDegree := by rw [hn_eq_max]; exact max_eq_right hND.le
+        rw [hn_eq_D₁] at hD₁coeff_zero
+        exact (Polynomial.leadingCoeff_ne_zero.mpr hD₁_ne_zero) hD₁coeff_zero
+      · -- n = N₁.natDegree
+        have hn_eq_N₁ : n = N₁.natDegree := by
+          rw [hn_eq_max]; exact max_eq_left hND
+        rw [hn_eq_N₁] at hN₁coeff_zero
+        -- N₁ might be zero. If N₁ = 0, derive contradiction from D₁.coeff n = 0 (n = 0).
+        by_cases hN₁_ne : N₁ = 0
+        · have hn_zero : n = 0 := by rw [hn_eq_N₁, hN₁_ne, Polynomial.natDegree_zero]
+          rw [hn_zero] at hD₁coeff_zero
+          have : D₁.coeff 0 = D₁.leadingCoeff := by
+            rw [Polynomial.leadingCoeff]
+            have hD₁_natDeg_zero : D₁.natDegree = 0 := by
+              have := hD₁_natDeg_le_n; rw [hn_zero] at this; omega
+            rw [hD₁_natDeg_zero]
+          rw [this] at hD₁coeff_zero
+          exact (Polynomial.leadingCoeff_ne_zero.mpr hD₁_ne_zero) hD₁coeff_zero
+        · exact (Polynomial.leadingCoeff_ne_zero.mpr hN₁_ne) hN₁coeff_zero
+    · -- D₂(α) ≠ 0. Then num_comp(α) = D₂(α)^n · N₁(N₂(α)/D₂(α)), similarly den_comp.
+      have hnum_at_α : num_comp.eval α = D₂.eval α ^ n * N₁.eval (N₂.eval α / D₂.eval α) :=
+        hnum_comp_eval α hD₂α
+      have hden_at_α : den_comp.eval α = D₂.eval α ^ n * D₁.eval (N₂.eval α / D₂.eval α) :=
+        hden_comp_eval α hD₂α
+      have hD₂α_pow_ne : D₂.eval α ^ n ≠ 0 := pow_ne_zero _ hD₂α
+      have hN₁_at : N₁.eval (N₂.eval α / D₂.eval α) = 0 := by
+        have := hnum_at_α ▸ hα_num
+        exact (mul_eq_zero.mp this).resolve_left hD₂α_pow_ne
+      have hD₁_at : D₁.eval (N₂.eval α / D₂.eval α) = 0 := by
+        have := hden_at_α ▸ hα_den
+        exact (mul_eq_zero.mp this).resolve_left hD₂α_pow_ne
+      -- N₂(α)/D₂(α) is common root of N₁, D₁, contradicting hcop_f.
+      obtain ⟨a, b, hab⟩ := hcop_f
+      have := congrArg (Polynomial.eval (N₂.eval α / D₂.eval α)) hab
+      simp only [Polynomial.eval_add, Polynomial.eval_mul, Polynomial.eval_one] at this
+      rw [hN₁_at, hD₁_at, mul_zero, mul_zero, add_zero] at this
+      exact zero_ne_one this
+  -- Step B: max(num_comp.natDegree, den_comp.natDegree) ≤ n * m
+  -- Each summand has natDegree ≤ i * m + (n-i) * m ≤ n * m.
+  have hnum_natDeg_le : num_comp.natDegree ≤ n * m := by
+    rw [hnum_comp_def]
+    apply Polynomial.natDegree_sum_le_of_forall_le
+    intro i hi
+    rw [Finset.mem_range] at hi
+    refine (Polynomial.natDegree_mul_le).trans ?_
+    refine (add_le_add (Polynomial.natDegree_mul_le) le_rfl).trans ?_
+    rw [Polynomial.natDegree_C, zero_add, Polynomial.natDegree_pow, Polynomial.natDegree_pow]
+    have hbd : i * N₂.natDegree + (n - i) * D₂.natDegree ≤ n * m := by
+      have step1 : i * N₂.natDegree + (n - i) * D₂.natDegree ≤ i * m + (n - i) * m :=
+        Nat.add_le_add (Nat.mul_le_mul_left i hN₂_natDeg_le_m)
+          (Nat.mul_le_mul_left (n - i) hD₂_natDeg_le_m)
+      have step2 : i * m + (n - i) * m = n * m := by rw [← Nat.add_mul]; congr 1; omega
+      omega
+    exact hbd
+  have hden_natDeg_le : den_comp.natDegree ≤ n * m := by
+    rw [hden_comp_def]
+    apply Polynomial.natDegree_sum_le_of_forall_le
+    intro i hi
+    rw [Finset.mem_range] at hi
+    refine (Polynomial.natDegree_mul_le).trans ?_
+    refine (add_le_add (Polynomial.natDegree_mul_le) le_rfl).trans ?_
+    rw [Polynomial.natDegree_C, zero_add, Polynomial.natDegree_pow, Polynomial.natDegree_pow]
+    have hbd : i * N₂.natDegree + (n - i) * D₂.natDegree ≤ n * m := by
+      have step1 : i * N₂.natDegree + (n - i) * D₂.natDegree ≤ i * m + (n - i) * m :=
+        Nat.add_le_add (Nat.mul_le_mul_left i hN₂_natDeg_le_m)
+          (Nat.mul_le_mul_left (n - i) hD₂_natDeg_le_m)
+      have step2 : i * m + (n - i) * m = n * m := by rw [← Nat.add_mul]; congr 1; omega
+      omega
+    exact hbd
+  -- Step C: max(num_comp.natDegree, den_comp.natDegree) ≥ n * m
+  -- via the extracted helper `composeRational_natDegree_lower_bound`.
+  have hlb := RationalData.composeRational_natDegree_lower_bound r₁ r₂ h
+  -- Bridge: composeNum/composeDen unfold to num_comp/den_comp.
+  have hcomposeNum_eq : r₁.composeNum r₂ = num_comp := by
+    rw [hnum_comp_def, RationalData.composeNum]
+  have hcomposeDen_eq : r₁.composeDen r₂ = den_comp := by
+    rw [hden_comp_def, RationalData.composeDen]
+  rw [hcomposeNum_eq, hcomposeDen_eq] at hlb
+  -- We have: max ≤ n*m (from Step B) and max ≥ n*m (from helper).
+  have hmax_eq : max num_comp.natDegree den_comp.natDegree = n * m :=
+    le_antisymm (max_le hnum_natDeg_le hden_natDeg_le) hlb
+  -- Now conclude r_comp.degree = max numReduced.natDeg denReduced.natDeg = n*m
+  -- using gcd.natDeg = 0 and num_comp / gcd preserves natDeg.
+  have hgcd_dvd_num : g ∣ num_comp := gcd_dvd_left _ _
+  have hgcd_dvd_den : g ∣ den_comp := gcd_dvd_right _ _
+  have hnum_factor : num_comp = g * (num_comp / g) :=
+    (EuclideanDomain.mul_div_cancel' hg_ne_zero hgcd_dvd_num).symm
+  have hden_factor : den_comp = g * (den_comp / g) :=
+    (EuclideanDomain.mul_div_cancel' hg_ne_zero hgcd_dvd_den).symm
+  have hnum_red : (⟨num_comp, den_comp, hden_comp_ne_zero⟩ : RationalData).numReduced =
+      num_comp / g := rfl
+  have hden_red : (⟨num_comp, den_comp, hden_comp_ne_zero⟩ : RationalData).denReduced =
+      den_comp / g := rfl
+  have hden_div_ne : den_comp / g ≠ 0 := by
+    intro hzero
+    rw [hzero, mul_zero] at hden_factor
+    exact hden_comp_ne_zero hden_factor
+  have hden_div_natDeg : (den_comp / g).natDegree = den_comp.natDegree := by
+    have := congrArg Polynomial.natDegree hden_factor
+    rw [Polynomial.natDegree_mul hg_ne_zero hden_div_ne] at this
+    omega
+  -- For num_comp, we case-split on whether num_comp = 0.
+  by_cases hnum_zero : num_comp = 0
+  · -- num_comp = 0 case: numReduced = 0/g = 0. Then max = den.natDeg = n*m.
+    have hnumDiv_zero : num_comp / g = 0 := by
+      rw [hnum_zero]; exact EuclideanDomain.zero_div
+    change (⟨num_comp, den_comp, hden_comp_ne_zero⟩ : RationalData).degree = n * m
+    unfold RationalData.degree
+    rw [hnum_red, hden_red, hnumDiv_zero, Polynomial.natDegree_zero, hden_div_natDeg]
+    have : max num_comp.natDegree den_comp.natDegree = den_comp.natDegree := by
+      rw [hnum_zero, Polynomial.natDegree_zero, Nat.zero_max]
+    rw [this] at hmax_eq
+    rw [hmax_eq, Nat.zero_max]
+  · have hnum_div_ne : num_comp / g ≠ 0 := by
+      intro hzero
+      rw [hzero, mul_zero] at hnum_factor
+      exact hnum_zero hnum_factor
+    have hnum_div_natDeg : (num_comp / g).natDegree = num_comp.natDegree := by
+      have := congrArg Polynomial.natDegree hnum_factor
+      rw [Polynomial.natDegree_mul hg_ne_zero hnum_div_ne] at this
+      omega
+    change (⟨num_comp, den_comp, hden_comp_ne_zero⟩ : RationalData).degree = n * m
+    unfold RationalData.degree
+    rw [hnum_red, hden_red, hnum_div_natDeg, hden_div_natDeg]
+    exact hmax_eq
+
+/-- The composition of two rational maps is rational, provided the inner map
+is nonconstant. The nonconstancy of `g` (degree at least one) ensures that the
+image of `g` is not contained in the finite pole set of `f`, so the composition
+is not the (non-representable) constant `∞` map. -/
 theorem isRational_comp {f g : ℂ̂ → ℂ̂}
-    (hf : IsRational f) (hg : IsRational g) :
+    (hf : IsRational f) (hg : IsRational g)
+    (hgd : 1 ≤ degreeOfRational g) :
     IsRational (f ∘ g) := by
-  sorry
+  obtain ⟨r_f, hf_eq⟩ := hf
+  obtain ⟨r_g, hg_eq⟩ := hg
+  -- Setup the constituent polynomials.
+  set N₁ := r_f.numReduced with hN₁_def
+  set D₁ := r_f.denReduced with hD₁_def
+  set N₂ := r_g.numReduced with hN₂_def
+  set D₂ := r_g.denReduced with hD₂_def
+  set n := r_f.degree with hn_def
+  -- Build the composed polynomials: num_comp(z) = Σᵢ N₁.coeff i · N₂(z)ⁱ · D₂(z)ⁿ⁻ⁱ,
+  -- analogously for den_comp. These are the homogenizations of N₁, D₁ via (N₂, D₂).
+  set num_comp : ℂ[X] :=
+    ∑ i ∈ Finset.range (n + 1), Polynomial.C (N₁.coeff i) * N₂^i * D₂^(n - i)
+    with hnum_comp_def
+  set den_comp : ℂ[X] :=
+    ∑ i ∈ Finset.range (n + 1), Polynomial.C (D₁.coeff i) * N₂^i * D₂^(n - i)
+    with hden_comp_def
+  -- Degree bounds and nonzeroness facts.
+  have hD₁_ne_zero : D₁ ≠ 0 := by
+    rw [hD₁_def, RationalData.denReduced]
+    intro hz
+    have h1 : r_f.den = gcd r_f.num r_f.den * (r_f.den / gcd r_f.num r_f.den) :=
+      (EuclideanDomain.mul_div_cancel' (gcd_ne_zero_of_right r_f.den_ne_zero)
+        (gcd_dvd_right _ _)).symm
+    rw [hz, mul_zero] at h1
+    exact r_f.den_ne_zero h1
+  have hD₂_ne_zero : D₂ ≠ 0 := by
+    rw [hD₂_def, RationalData.denReduced]
+    intro hz
+    have h1 : r_g.den = gcd r_g.num r_g.den * (r_g.den / gcd r_g.num r_g.den) :=
+      (EuclideanDomain.mul_div_cancel' (gcd_ne_zero_of_right r_g.den_ne_zero)
+        (gcd_dvd_right _ _)).symm
+    rw [hz, mul_zero] at h1
+    exact r_g.den_ne_zero h1
+  have hcop_g : IsCoprime N₂ D₂ := isCoprime_div_gcd_div_gcd r_g.den_ne_zero
+  have hN₁_natDeg_le_n : N₁.natDegree ≤ n := by
+    rw [hn_def, RationalData.degree]; exact le_max_left _ _
+  have hD₁_natDeg_le_n : D₁.natDegree ≤ n := by
+    rw [hn_def, RationalData.degree]; exact le_max_right _ _
+  -- Key algebraic identity (for evaluation at points where D₂ ≠ 0).
+  have hnum_comp_eval : ∀ z : ℂ, D₂.eval z ≠ 0 →
+      num_comp.eval z = D₂.eval z ^ n * N₁.eval (N₂.eval z / D₂.eval z) := by
+    intro z hz
+    rw [hnum_comp_def]
+    simp only [Polynomial.eval_finset_sum, Polynomial.eval_mul, Polynomial.eval_C,
+               Polynomial.eval_pow]
+    rw [Polynomial.eval_eq_sum_range' (n := n + 1) (by omega)
+        (p := N₁) (x := N₂.eval z / D₂.eval z)]
+    rw [Finset.mul_sum]
+    apply Finset.sum_congr rfl
+    intro i hi
+    rw [Finset.mem_range] at hi
+    have hi_le : i ≤ n := by omega
+    have hpow_ne : D₂.eval z ^ n ≠ 0 := pow_ne_zero _ hz
+    have hpow_i_ne : D₂.eval z ^ i ≠ 0 := pow_ne_zero _ hz
+    have hpow_eq : D₂.eval z ^ i * D₂.eval z ^ (n - i) = D₂.eval z ^ n := by
+      rw [← pow_add]; congr 1; omega
+    have hsub : D₂.eval z ^ (n - i) = D₂.eval z ^ n / D₂.eval z ^ i := by
+      rw [eq_div_iff hpow_i_ne]; linear_combination hpow_eq
+    rw [hsub, div_pow]; ring
+  have hden_comp_eval : ∀ z : ℂ, D₂.eval z ≠ 0 →
+      den_comp.eval z = D₂.eval z ^ n * D₁.eval (N₂.eval z / D₂.eval z) := by
+    intro z hz
+    rw [hden_comp_def]
+    simp only [Polynomial.eval_finset_sum, Polynomial.eval_mul, Polynomial.eval_C,
+               Polynomial.eval_pow]
+    rw [Polynomial.eval_eq_sum_range' (n := n + 1) (by omega)
+        (p := D₁) (x := N₂.eval z / D₂.eval z)]
+    rw [Finset.mul_sum]
+    apply Finset.sum_congr rfl
+    intro i hi
+    rw [Finset.mem_range] at hi
+    have hi_le : i ≤ n := by omega
+    have hpow_ne : D₂.eval z ^ n ≠ 0 := pow_ne_zero _ hz
+    have hpow_i_ne : D₂.eval z ^ i ≠ 0 := pow_ne_zero _ hz
+    have hpow_eq : D₂.eval z ^ i * D₂.eval z ^ (n - i) = D₂.eval z ^ n := by
+      rw [← pow_add]; congr 1; omega
+    have hsub : D₂.eval z ^ (n - i) = D₂.eval z ^ n / D₂.eval z ^ i := by
+      rw [eq_div_iff hpow_i_ne]; linear_combination hpow_eq
+    rw [hsub, div_pow]; ring
+  -- g nonconstant: r_g.degree ≥ 1, so max(N₂.natDeg, D₂.natDeg) ≥ 1.
+  -- Hence either N₂ has degree ≥ 1 or D₂ has degree ≥ 1.
+  have hg_nonconst : ∀ c : ℂ, N₂ - Polynomial.C c * D₂ ≠ 0 := by
+    intro c hzero
+    -- If N₂ = c * D₂, then since N₂, D₂ coprime, D₂ is a unit, so D₂.natDegree = 0.
+    -- Also N₂.natDegree = (C c * D₂).natDegree ≤ D₂.natDegree = 0.
+    -- Thus r_g.degree = max(0, 0) = 0, contradicting hgd.
+    have hN₂_eq : N₂ = Polynomial.C c * D₂ := by linear_combination hzero
+    have hD₂_unit : IsUnit D₂ := by
+      obtain ⟨a, b, hab⟩ := hcop_g
+      have h1 : a * (Polynomial.C c * D₂) + b * D₂ = 1 := by rw [← hN₂_eq]; exact hab
+      have h2 : D₂ * (a * Polynomial.C c + b) = 1 := by linear_combination h1
+      exact IsUnit.of_mul_eq_one _ h2
+    have hD₂_natDeg : D₂.natDegree = 0 := by
+      rcases Polynomial.isUnit_iff.mp hD₂_unit with ⟨c', _, hc'⟩
+      rw [← hc']; exact Polynomial.natDegree_C c'
+    have hN₂_natDeg : N₂.natDegree = 0 := by
+      rcases Polynomial.isUnit_iff.mp hD₂_unit with ⟨d, _, hd⟩
+      rw [hN₂_eq, ← hd, ← Polynomial.C_mul]
+      exact Polynomial.natDegree_C _
+    have hr_g_deg : r_g.degree = 0 := by
+      rw [RationalData.degree, ← hN₂_def, ← hD₂_def, hN₂_natDeg, hD₂_natDeg]; rfl
+    have hgd' : 1 ≤ r_g.degree := by
+      rw [← degreeOfRational_eq_of_witness g r_g hg_eq]; exact hgd
+    rw [hr_g_deg] at hgd'
+    exact Nat.lt_irrefl 0 hgd'
+  -- The set of z where N₂(z)/D₂(z) is a root of D₁ has finitely many points;
+  -- combined with D₂'s roots, give a finite "bad" set. Outside it, den_comp ≠ 0.
+  have hden_comp_ne_zero : den_comp ≠ 0 := by
+    -- Suppose den_comp = 0. Then den_comp.eval z = 0 for all z.
+    -- For z with D₂(z) ≠ 0: D₂(z)^n * D₁(N₂(z)/D₂(z)) = 0, so D₁(N₂(z)/D₂(z)) = 0.
+    -- So N₂(z)/D₂(z) is a root of D₁ for all such z.
+    -- D₁ has finitely many roots; D₂ has finitely many roots.
+    -- So all but finitely many z map to a root of D₁.
+    -- By pigeonhole, some root α of D₁ is hit by infinitely many z,
+    -- i.e., N₂ - α D₂ has infinitely many roots, so N₂ = α D₂.
+    -- But hg_nonconst says N₂ - α D₂ ≠ 0. Contradiction.
+    intro hzero
+    -- D₁ has finitely many roots in ℂ.
+    have hD₁_roots_fin : {α : ℂ | D₁.eval α = 0}.Finite := by
+      have hsub : {α : ℂ | D₁.eval α = 0} ⊆ (D₁.roots.toFinset : Set ℂ) := by
+        intro α hα
+        simp only [Set.mem_setOf_eq] at hα
+        simp [Multiset.mem_toFinset, Polynomial.mem_roots hD₁_ne_zero, hα, Polynomial.IsRoot]
+      exact ((D₁.roots.toFinset : Set ℂ).toFinite).subset hsub
+    -- D₂ has finitely many roots.
+    have hD₂_roots_fin : {z : ℂ | D₂.eval z = 0}.Finite := by
+      have hsub : {z : ℂ | D₂.eval z = 0} ⊆ (D₂.roots.toFinset : Set ℂ) := by
+        intro z hz
+        simp only [Set.mem_setOf_eq] at hz
+        simp [Multiset.mem_toFinset, Polynomial.mem_roots hD₂_ne_zero, hz, Polynomial.IsRoot]
+      exact ((D₂.roots.toFinset : Set ℂ).toFinite).subset hsub
+    -- For each root α of D₁, the polynomial N₂ - α D₂ is nonzero (by hg_nonconst).
+    -- So its zero set is finite.
+    -- Let S := {z : D₂(z) = 0} ∪ ⋃_{α : D₁(α)=0} {z : N₂(z) = α D₂(z)}. Finite.
+    -- Outside S, D₂(z) ≠ 0 and D₁(N₂(z)/D₂(z)) ≠ 0, so den_comp(z) ≠ 0. Contradicts hzero.
+    set S : Set ℂ := {z | D₂.eval z = 0} ∪
+        ⋃ α ∈ {α : ℂ | D₁.eval α = 0}, {z : ℂ | N₂.eval z = α * D₂.eval z} with hS_def
+    have hS_fin : S.Finite := by
+      apply Set.Finite.union hD₂_roots_fin
+      apply Set.Finite.biUnion hD₁_roots_fin
+      intro α _
+      have hpoly_ne : N₂ - Polynomial.C α * D₂ ≠ 0 := hg_nonconst α
+      have hsub : {z : ℂ | N₂.eval z = α * D₂.eval z} ⊆
+          ((N₂ - Polynomial.C α * D₂).roots.toFinset : Set ℂ) := by
+        intro z hz
+        simp only [Set.mem_setOf_eq] at hz
+        have heval : (N₂ - Polynomial.C α * D₂).eval z = 0 := by
+          rw [Polynomial.eval_sub, Polynomial.eval_mul, Polynomial.eval_C, hz, sub_self]
+        simp [Multiset.mem_toFinset, Polynomial.mem_roots hpoly_ne, Polynomial.IsRoot, heval]
+      exact (((N₂ - Polynomial.C α * D₂).roots.toFinset : Set ℂ).toFinite).subset hsub
+    -- Get a point z ∉ S (which exists since ℂ is infinite).
+    have hexists : ∃ z : ℂ, z ∉ S := by
+      by_contra h
+      push Not at h
+      exact Set.infinite_univ (hS_fin.subset (fun z _ => h z))
+    obtain ⟨z, hz_notin⟩ := hexists
+    have hz_D₂ : D₂.eval z ≠ 0 := fun h => hz_notin (Or.inl h)
+    have hz_D₁ : D₁.eval (N₂.eval z / D₂.eval z) ≠ 0 := by
+      intro heval
+      apply hz_notin
+      right
+      simp only [Set.mem_iUnion, Set.mem_setOf_eq]
+      refine ⟨N₂.eval z / D₂.eval z, heval, ?_⟩
+      field_simp
+    have hden_eval : den_comp.eval z = D₂.eval z ^ n * D₁.eval (N₂.eval z / D₂.eval z) :=
+      hden_comp_eval z hz_D₂
+    rw [hzero, Polynomial.eval_zero] at hden_eval
+    have hpow_ne : D₂.eval z ^ n ≠ 0 := pow_ne_zero _ hz_D₂
+    exact hz_D₁ ((mul_eq_zero.mp hden_eval.symm).resolve_left hpow_ne)
+  -- The candidate composed RationalData.
+  refine ⟨⟨num_comp, den_comp, hden_comp_ne_zero⟩, ?_⟩
+  -- Show f ∘ g = composed.toSphereMap.
+  -- Strategy: both are continuous on ℂ̂; agree on cofinite subset of ℂ ⊂ ℂ̂; conclude.
+  have hf_cont : Continuous f := hf_eq ▸ r_f.toSphereMap_continuous
+  have hg_cont : Continuous g := hg_eq ▸ r_g.toSphereMap_continuous
+  have hcomp_cont : Continuous
+      (⟨num_comp, den_comp, hden_comp_ne_zero⟩ : RationalData).toSphereMap :=
+    RationalData.toSphereMap_continuous _
+  have hfg_cont : Continuous (f ∘ g) := hf_cont.comp hg_cont
+  -- The "good" set: z where the equality holds.
+  -- It contains the cofinite subset {↑w : w ∈ ℂ, w ∉ bad set}, which is dense in ℂ̂.
+  apply Continuous.ext_on (s := Set.range (OnePoint.some : ℂ → ℂ̂)) ?_ hfg_cont hcomp_cont ?_
+  · -- Density of ℂ inside ℂ̂.
+    exact OnePoint.denseRange_coe
+  · -- Agreement on ℂ.
+    rintro _ ⟨w, rfl⟩
+    -- Cofinite set where equality holds.
+    have hbad_fin : {w : ℂ | D₂.eval w = 0 ∨ den_comp.eval w = 0}.Finite := by
+      apply Set.Finite.union
+      · have hsub : {w : ℂ | D₂.eval w = 0} ⊆ (D₂.roots.toFinset : Set ℂ) := by
+          intro z hz
+          simp only [Set.mem_setOf_eq] at hz
+          simp [Multiset.mem_toFinset, Polynomial.mem_roots hD₂_ne_zero, hz, Polynomial.IsRoot]
+        exact ((D₂.roots.toFinset : Set ℂ).toFinite).subset hsub
+      · have hsub : {w : ℂ | den_comp.eval w = 0} ⊆ (den_comp.roots.toFinset : Set ℂ) := by
+          intro z hz
+          simp only [Set.mem_setOf_eq] at hz
+          simp [Multiset.mem_toFinset, Polynomial.mem_roots hden_comp_ne_zero, hz,
+                Polynomial.IsRoot]
+        exact ((den_comp.roots.toFinset : Set ℂ).toFinite).subset hsub
+    have hbad_countable : Set.Countable {w : ℂ | D₂.eval w = 0 ∨ den_comp.eval w = 0} :=
+      hbad_fin.countable
+    have hgood_dense : Dense ({w : ℂ | D₂.eval w = 0 ∨ den_comp.eval w = 0}ᶜ) :=
+      Set.Countable.dense_compl ℝ hbad_countable
+    -- Lift to functions on ℂ via OnePoint.some.
+    have hfg_finite_cont : Continuous (fun w : ℂ => (f ∘ g) (OnePoint.some w)) :=
+      hfg_cont.comp OnePoint.continuous_coe
+    have hcomp_finite_cont : Continuous (fun w : ℂ =>
+        (⟨num_comp, den_comp, hden_comp_ne_zero⟩ : RationalData).toSphereMap (OnePoint.some w)) :=
+      hcomp_cont.comp OnePoint.continuous_coe
+    -- Two continuous functions on ℂ that agree on a dense subset are equal.
+    have heq_fn :
+        (fun w : ℂ => (f ∘ g) (OnePoint.some w)) =
+        (fun w : ℂ =>
+          (⟨num_comp, den_comp, hden_comp_ne_zero⟩ :
+            RationalData).toSphereMap (OnePoint.some w)) := by
+      apply Continuous.ext_on hgood_dense hfg_finite_cont hcomp_finite_cont
+      intro w hw
+      simp only [Set.mem_compl_iff, Set.mem_setOf_eq, not_or] at hw
+      obtain ⟨hD₂_w, hden_w⟩ := hw
+      have hD₁_quot_ne : D₁.eval (N₂.eval w / D₂.eval w) ≠ 0 := by
+        intro hzero
+        apply hden_w
+        rw [hden_comp_eval w hD₂_w, hzero, mul_zero]
+      have hg_val : g (OnePoint.some w) = ((N₂.eval w / D₂.eval w : ℂ) : ℂ̂) := by
+        rw [hg_eq]
+        simp only [RationalData.toSphereMap, ← hN₂_def, ← hD₂_def, hD₂_w, if_false]
+      have hf_val : f ((N₂.eval w / D₂.eval w : ℂ) : ℂ̂) =
+          ((N₁.eval (N₂.eval w / D₂.eval w) / D₁.eval (N₂.eval w / D₂.eval w) : ℂ) : ℂ̂) := by
+        rw [hf_eq]
+        simp only [RationalData.toSphereMap, ← hN₁_def, ← hD₁_def, hD₁_quot_ne, if_false]
+      -- Show composed.toSphereMap (↑w) = ↑(num_comp(w) / den_comp(w)).
+      -- Strategy: relate numReduced/denReduced to num_comp/den_comp via the gcd factor.
+      let r_comp : RationalData := ⟨num_comp, den_comp, hden_comp_ne_zero⟩
+      have hg_dvd_num : gcd num_comp den_comp ∣ num_comp := gcd_dvd_left _ _
+      have hg_dvd_den : gcd num_comp den_comp ∣ den_comp := gcd_dvd_right _ _
+      have hg_ne_zero : gcd num_comp den_comp ≠ 0 := gcd_ne_zero_of_right hden_comp_ne_zero
+      have hnum_factor : num_comp = gcd num_comp den_comp * r_comp.numReduced := by
+        change num_comp = gcd num_comp den_comp * (num_comp / gcd num_comp den_comp)
+        rw [EuclideanDomain.mul_div_cancel' hg_ne_zero hg_dvd_num]
+      have hden_factor : den_comp = gcd num_comp den_comp * r_comp.denReduced := by
+        change den_comp = gcd num_comp den_comp * (den_comp / gcd num_comp den_comp)
+        rw [EuclideanDomain.mul_div_cancel' hg_ne_zero hg_dvd_den]
+      have hg_eval_ne : (gcd num_comp den_comp).eval w ≠ 0 := by
+        intro hg0
+        apply hden_w
+        rw [hden_factor, Polynomial.eval_mul, hg0, zero_mul]
+      have hden_red_ne : r_comp.denReduced.eval w ≠ 0 := by
+        intro hred0
+        apply hden_w
+        rw [hden_factor, Polynomial.eval_mul, hred0, mul_zero]
+      have hcross : r_comp.numReduced.eval w * den_comp.eval w =
+          num_comp.eval w * r_comp.denReduced.eval w := by
+        have h1 := congrArg (Polynomial.eval w) hnum_factor
+        have h2 := congrArg (Polynomial.eval w) hden_factor
+        simp only [Polynomial.eval_mul] at h1 h2
+        rw [h1, h2]; ring
+      have hcomp_val :
+          r_comp.toSphereMap (OnePoint.some w) =
+            ((num_comp.eval w / den_comp.eval w : ℂ) : ℂ̂) := by
+        change (if r_comp.denReduced.eval w = 0 then ∞
+                else ((r_comp.numReduced.eval w / r_comp.denReduced.eval w : ℂ) : ℂ̂)) = _
+        rw [if_neg hden_red_ne]
+        congr 1
+        rw [div_eq_div_iff hden_red_ne hden_w]
+        linear_combination hcross
+      -- Combine: (f ∘ g) ↑w = f (g ↑w) = f ↑(N₂/D₂) = ↑(N₁(N₂/D₂)/D₁(N₂/D₂))
+      --                              = ↑(num_comp/den_comp) = r_comp.toSphereMap ↑w
+      change f (g (OnePoint.some w)) = r_comp.toSphereMap (OnePoint.some w)
+      rw [hg_val, hf_val, hcomp_val]
+      congr 1
+      rw [hnum_comp_eval w hD₂_w, hden_comp_eval w hD₂_w]
+      have hD₂_pow : D₂.eval w ^ n ≠ 0 := pow_ne_zero _ hD₂_w
+      field_simp
+    exact congrFun heq_fn w
 
 /-- Degree multiplicativity under composition for nonconstant rational maps. -/
 theorem degreeOfRational_comp {f g : ℂ̂ → ℂ̂}
     (hf : IsRational f) (hg : IsRational g)
-    (hfd : 1 ≤ degreeOfRational f) (hgd : 1 ≤ degreeOfRational g) :
+    (_hfd : 1 ≤ degreeOfRational f) (hgd : 1 ≤ degreeOfRational g) :
     degreeOfRational (f ∘ g) = degreeOfRational f * degreeOfRational g := by
-  sorry
+  obtain ⟨r_f, hf_eq⟩ := hf
+  obtain ⟨r_g, hg_eq⟩ := hg
+  have hg_deg : 1 ≤ r_g.degree := by
+    rw [← degreeOfRational_eq_of_witness g r_g hg_eq]; exact hgd
+  have hfg_eq : f ∘ g = (r_f.composeRational r_g).toSphereMap := by
+    rw [hf_eq, hg_eq]
+    exact (RationalData.composeRational_toSphereMap_eq r_f r_g hg_deg).symm
+  rw [degreeOfRational_eq_of_witness (f ∘ g) (r_f.composeRational r_g) hfg_eq]
+  rw [RationalData.composeRational_degree_eq r_f r_g hg_deg]
+  rw [degreeOfRational_eq_of_witness f r_f hf_eq,
+      degreeOfRational_eq_of_witness g r_g hg_eq]
 
 end RiemannDynamics

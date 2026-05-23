@@ -20,7 +20,7 @@ with two explicit coordinate charts:
 * `chartInfty`, the chart `z ↦ 1/z` (sending `∞ ↦ 0`) on `{z : ℂ̂ | z ≠ 0}`.
 
 We do not introduce an abstract Riemann-surface structure at this point — see
-Phase 12 (`Uniformization/`) for the lift to general Riemann surfaces.
+`Uniformization/` for the lift to general Riemann surfaces.
 -/
 
 open OnePoint Topology

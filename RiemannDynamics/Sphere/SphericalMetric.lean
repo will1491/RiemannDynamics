@@ -16,8 +16,8 @@ to handle `∞` as the corresponding stereographic limit.
 
 This metric is *topologically equivalent* to the one-point-compactification
 topology already on `ℂ̂` (Mathlib's `OnePoint ℂ` instance), but its metric form
-is what the dynamics line uses (Phase 2: spherical-metric normal families;
-Phase 5: Julia/Fatou set hyperbolicity).
+is what the dynamics line uses for spherical-metric normal families and for
+Julia/Fatou set hyperbolicity.
 -/
 
 open OnePoint Real
