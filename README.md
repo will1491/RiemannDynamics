@@ -79,7 +79,7 @@ The project is a fresh build on top of two mature layers, which are consumed dir
 
 ### Dynamics line — endpoint: Sullivan's No Wandering Domains
 
-A coordinate-aware development on the Riemann sphere `ℂ̂ = ℙ¹(ℂ)`. The dynamics half deliberately stays concrete on `ℂ̂` and does **not** introduce the abstract Riemann-surface structure: the endpoint never consumes it, and the general object hides multi-thousand-line prerequisites (atlas glue, holomorphic-map lemmas, covering-space lifts) that are themselves separate projects. Generality is ascended only when Teichmüller theory genuinely forces it (in the `Uniformization` subfolder).
+The dynamics half is developed directly on the Riemann sphere `ℂ̂ = ℙ¹(ℂ)` with two explicit coordinate charts, and **does not define a general Riemann surface**. The endpoint never consumes the general object, and building it would pull in multi-thousand-line prerequisites (atlas glue, holomorphic-map lemmas, covering-space lifts) that are themselves separate projects. Generality is ascended only when Teichmüller theory genuinely forces it (in the `Uniformization` subfolder).
 
 **Sphere** and **NormalFamilies** provide the dynamical packaging: `ℂ̂` as `OnePoint ℂ` with two explicit charts, the chordal/Fubini–Study metric, rational maps `f = P/Q` extending to `ℂ̂ → ℂ̂`, iterates `f^[n]`, forward / backward / **grand orbits**, the classical Montel theorem (locally uniformly bounded ⇒ normal), and a finite-dimensionality theorem for the parameter space `Ratₐ` of degree-`d` rational maps:
 
@@ -97,7 +97,7 @@ This is the *contradiction target* for Sullivan.
 
 The dynamics line culminates in:
 
-> **Sullivan's No Wandering Domains** (`Dynamics/NoWanderingDomains.lean`; McMullen, *Complex Dynamics and Renormalization*, Ch. 7): for a rational map `f : ℂ̂ → ℂ̂` of degree `≥ 2`, every connected component of `FatouSet f` is eventually periodic.
+> **Sullivan's No Wandering Domains** (`RiemannDynamics/Dynamics/NoWanderingDomains.lean`; McMullen, *Riemann surfaces, dynamics and geometry*, Theorem 5.33): for a rational map `f : ℂ̂ → ℂ̂` of degree `≥ 2`, every connected component of `FatouSet f` is eventually periodic.
 
 The proof is the *first end-to-end consumer* of the analytic engine: a wandering component is equipped with an infinite-dimensional family of `f`-invariant Beltrami coefficients, MRMT + analytic dependence (below) produce a holomorphic family of qc conjugacies and hence a holomorphic family of rational maps `f^μ` of fixed degree `d`, and an injective holomorphic map from a polydisk of dimension `> 2d+1` into the `(2d+1)`-dimensional space `Ratₐ` gives the contradiction.
 
@@ -113,9 +113,9 @@ The engine sits below both endpoints. It is the densest and highest-uncertainty 
 
 1. **Analytic track** (the MRMT / Sullivan route): an orientation-preserving homeomorphism `f ∈ W^{1,2}_loc` satisfying the Beltrami equation `∂̄ f = μ · ∂ f` a.e. with `‖μ‖∞ < 1`.
 2. **Geometric track**: `K`-quasiconformality via quasi-invariance of the modulus of quadrilaterals. This track owns compactness of normalized families, removability of small sets, and the **Weyl lemma** (`1`-qc ⇒ conformal), where it is significantly cleaner than the analytic track.
-3. **Equivalence bridge** (`QC/Equivalence.lean`): the two definitions coincide; the hard direction (geometric ⇒ analytic, i.e. `K`-qc ⇒ `W^{1,2}_loc` + a.e. Beltrami) is a genuine theorem scheduled as its own task.
+3. **Equivalence bridge** (`RiemannDynamics/QC/Equivalence.lean`): the two definitions coincide; the hard direction (geometric ⇒ analytic, i.e. `K`-qc ⇒ `W^{1,2}_loc` + a.e. Beltrami) is a genuine theorem scheduled as its own task.
 
-The engine culminates in the **Measurable Riemann Mapping Theorem (Ahlfors–Bers)**:
+The engine culminates in the **Measurable Riemann Mapping Theorem (Ahlfors–Bers)** (`RiemannDynamics/QC/MRMT/`; McMullen, *Riemann surfaces, dynamics and geometry*, Theorem 5.27):
 
 > Existence: `theorem mrmt_exists (b : BeltramiCoeff) : ∃ f, IsQCAnalytic f b`, via the Neumann series `f = id + P h`, `h = ∑ₙ (μ · T)^n μ`.
 >
@@ -137,9 +137,9 @@ A focused onward route that reuses the analytic engine. **Generality ascent begi
 
 The Teichmüller path culminates in two theorems:
 
-> **Teichmüller's theorem**: every homotopy class of homeomorphisms `X → Y` between marked Riemann surfaces contains a unique extremal qc map, which is a Teichmüller map — its Beltrami coefficient has the form `μ = k · (q̄ / |q|)` for a quadratic differential `q` and `k < 1`. (Uses MRMT to realize the stretch; uniqueness is the length-area / Grötzsch argument.)
+> **Teichmüller's theorem** (`RiemannDynamics/Teichmuller/Theorem.lean`; McMullen, *Riemann surfaces, dynamics and geometry*, Theorem 4.11): every homotopy class of homeomorphisms `X → Y` between marked Riemann surfaces contains a unique extremal qc map, which is a Teichmüller map — its Beltrami coefficient has the form `μ = k · (q̄ / |q|)` for a quadratic differential `q` and `k < 1`. (Uses MRMT to realize the stretch; uniqueness is the length-area / Grötzsch argument.)
 >
-> **Nielsen–Thurston classification** (`Teichmuller/NielsenThurston.lean`): every mapping class `φ ∈ MCG(S)` is periodic, reducible, or pseudo-Anosov.
+> **Nielsen–Thurston classification** (`RiemannDynamics/Teichmuller/NielsenThurston.lean`; McMullen, *Riemann surfaces, dynamics and geometry*, Theorem 4.19): every mapping class `φ ∈ MCG(S)` is periodic, reducible, or pseudo-Anosov.
 
 We take the **Bers route** for Nielsen–Thurston (analysis of the translation length of `φ` acting by isometries on `Teich(S)`) rather than Thurston's measured-foliations / train-tracks route, because Bers chains directly off the Teichmüller metric and existence theorem and reuses no new analytic machinery.
 
@@ -182,7 +182,7 @@ The dynamics half lives entirely on `ℂ̂ = OnePoint ℂ`. Introducing the gene
 
 **Why two definitions of quasiconformal maps?**
 
-MRMT, the Beltrami equation, and Sullivan's deformation argument all speak the **analytic** language (`μ`, `∂̄ f = μ ∂ f`); compactness, removability, and the "`1`-qc ⇒ conformal" Weyl lemma are far cleaner in the **geometric** language (`K`-qc via modulus). Each downstream qc result is stated in whichever formulation is cleanest, and a one-time equivalence bridge (`QC/Equivalence.lean`) lets it transfer to the other.
+MRMT, the Beltrami equation, and Sullivan's deformation argument all speak the **analytic** language (`μ`, `∂̄ f = μ ∂ f`); compactness, removability, and the "`1`-qc ⇒ conformal" Weyl lemma are far cleaner in the **geometric** language (`K`-qc via modulus). Each downstream qc result is stated in whichever formulation is cleanest, and a one-time equivalence bridge (`RiemannDynamics/QC/Equivalence.lean`) lets it transfer to the other.
 
 **How can I contribute?**
 
