@@ -7,3 +7,6 @@ import RiemannDynamics.Sphere.DegreeFinite
 import RiemannDynamics.NormalFamilies.Basic
 import RiemannDynamics.NormalFamilies.Spherical
 import RiemannDynamics.NormalFamilies.Montel
+import RiemannDynamics.Hyperbolic.DiskMetric
+import RiemannDynamics.Hyperbolic.MobiusDisk
+import RiemannDynamics.Hyperbolic.SchwarzPick
