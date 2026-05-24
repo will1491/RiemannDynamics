@@ -72,13 +72,29 @@ theorem hyperbolicDistTriplyPunctured_nonneg (w₁ w₂ : ℂ) :
   exact hyperbolicDistDisk_nonneg z₁ z₂
 
 /-- Non-degeneracy: on `ℂ ∖ {0, 1}`, the distance vanishes only on the
-diagonal. -/
+diagonal.
+
+**Deferred proof sketch.** The `←` direction is direct from
+`hyperbolicDistTriplyPunctured_self`. The `→` direction (distance zero
+implies equal) requires the covering map structure of
+`modularLambda : 𝔻 → ℂ ∖ {0, 1}`: distinct fibers
+`λ⁻¹{w₁}` and `λ⁻¹{w₂}` for `w₁ ≠ w₂` are mutually positively
+separated in the disk hyperbolic distance (since the fibers form a
+`Γ(2)`-orbit, which is discrete and properly discontinuous). Status:
+blocked on `modularLambda_isCoveringMapOn`. -/
 theorem hyperbolicDistTriplyPunctured_eq_zero_iff {w₁ w₂ : ℂ}
     (hw₁ : w₁ ≠ 0 ∧ w₁ ≠ 1) (hw₂ : w₂ ≠ 0 ∧ w₂ ≠ 1) :
     hyperbolicDistTriplyPunctured w₁ w₂ = 0 ↔ w₁ = w₂ := by
   sorry
 
-/-- Triangle inequality for the triply-punctured hyperbolic distance. -/
+/-- Triangle inequality for the triply-punctured hyperbolic distance.
+
+**Deferred proof sketch.** Standard infimum-triangle argument requires
+synchronizing preimages: for `ε > 0`, pick near-minimal
+`(z₁, z₂) ∈ λ⁻¹{w₁} × λ⁻¹{w₂}` and `(z₂', z₃) ∈ λ⁻¹{w₂} × λ⁻¹{w₃}`,
+then apply a `Γ(2)`-deck transformation to bring `z₂' = z₂` while
+preserving the disk distance from `z₂'` to `z₃`. Status: blocked on
+`Γ(2)` deck transformations being disk isometries. -/
 theorem hyperbolicDistTriplyPunctured_triangle {w₁ w₂ w₃ : ℂ}
     (hw₁ : w₁ ≠ 0 ∧ w₁ ≠ 1) (hw₂ : w₂ ≠ 0 ∧ w₂ ≠ 1) (hw₃ : w₃ ≠ 0 ∧ w₃ ≠ 1) :
     hyperbolicDistTriplyPunctured w₁ w₃
@@ -90,7 +106,15 @@ theorem hyperbolicDistTriplyPunctured_triangle {w₁ w₂ w₃ : ℂ}
 /-- The covering property of `modularLambda` makes the triply-punctured
 distance non-expansive under holomorphic self-maps of the
 triply-punctured plane. Stated as an architecture placeholder; the
-real consumer is the Montel–Carathéodory lift in `StrongMontel`. -/
+real consumer is the Montel–Carathéodory lift in `StrongMontel`.
+
+**Deferred proof sketch.** Lift `f : U → ℂ ∖ {0, 1}` to
+`f̃ : U → 𝔻` via the universal-cover lifting property of
+`modularLambda : 𝔻 → ℂ ∖ {0, 1}` (using that `U` is simply connected;
+the actual signature should add `SimplyConnectedSpace U` as a
+hypothesis). Then apply Schwarz–Pick to `f̃` on `𝔻`. Status: blocked on
+both `modularLambda_isCoveringMapOn` and `Mathlib.Topology.Homotopy.Lifting`
+adaptation. -/
 theorem hyperbolicDistTriplyPunctured_schwarzPick
     {f : ℂ → ℂ} {U : Set ℂ} (_hU : IsOpen U)
     (_hd : DifferentiableOn ℂ f U)

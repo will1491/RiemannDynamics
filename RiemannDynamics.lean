@@ -13,3 +13,4 @@ import RiemannDynamics.Hyperbolic.SchwarzPick
 import RiemannDynamics.Hyperbolic.ModularFunction
 import RiemannDynamics.Hyperbolic.ModularFormsBridge
 import RiemannDynamics.Hyperbolic.TriplyPunctured
+import RiemannDynamics.Hyperbolic.SchwarzReflection

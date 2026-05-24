@@ -148,6 +148,14 @@ theorem cayleyToHalfPlane_halfPlaneToCayley {τ : ℂ} (hτ : 0 < τ.im) :
   field_simp
   ring
 
+/-- `cayleyToHalfPlane` is a left inverse of `halfPlaneToCayley` on `𝔻`. -/
+theorem halfPlaneToCayley_cayleyToHalfPlane {z : ℂ} (hz : z ∈ ball (0 : ℂ) 1) :
+    halfPlaneToCayley (cayleyToHalfPlane z) = z := by
+  unfold cayleyToHalfPlane halfPlaneToCayley
+  have h_ne : (1 - z) ≠ 0 := one_sub_ne_zero_of_mem_ball hz
+  field_simp
+  ring
+
 /-- For `τ ∈ ℍ`, `‖halfPlaneToCayley τ‖ < 1`, i.e., the image lands in `𝔻`. -/
 theorem halfPlaneToCayley_mem_ball {τ : ℂ} (hτ : 0 < τ.im) :
     halfPlaneToCayley τ ∈ ball (0 : ℂ) 1 := by

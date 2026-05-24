@@ -1553,15 +1553,45 @@ theorem modularLambdaH_ne_one {τ : ℂ} (hτ : 0 < τ.im) :
     (pow_eq_zero_iff (by norm_num : (4 : ℕ) ≠ 0)).mp h_theta4_pow_zero
   exact h4 h_theta4
 
-/-- The image of `λ` on `ℍ` is exactly the triply-punctured plane
-`ℂ ∖ {0, 1}`. -/
+/-- **Surjectivity of `λ : ℍ → ℂ ∖ {0, 1}`.** The image of `λ` on `ℍ`
+is exactly the triply-punctured plane.
+
+**Deferred proof sketch.** The `⊆` direction is direct from
+`modularLambdaH_ne_zero` and `modularLambdaH_ne_one` (both proven).
+The `⊇` direction — surjectivity — is the deep theorem. Two classical
+proof paths:
+* **Via covering theory**: `λ` is a holomorphic covering map onto its
+  image (`modularLambdaH_isCoveringMapOn`); the image is open in
+  `ℂ ∖ {0, 1}`, and since the latter is connected and the image is
+  nonempty, the image equals the whole space.
+* **Via direct construction**: lift any `w ∈ ℂ ∖ {0, 1}` by reflecting
+  the fundamental domain `F` of `Γ(2)` across its boundary, using the
+  Schwarz reflection principle.
+
+Both routes require Mathlib infrastructure not currently available
+(`λ` open map + covering connectedness, or Schwarz reflection on
+`F`). Status: blocked. -/
 theorem modularLambdaH_image :
     modularLambdaH '' { τ : ℂ | 0 < τ.im } = { w : ℂ | w ≠ 0 ∧ w ≠ 1 } := by
   sorry
 
 /-! ## Modular invariance under `Γ(2)` -/
 
-/-- `λ` is invariant under the action of `Γ(2)` on `ℍ`. -/
+/-- **`Γ(2)`-invariance of `λ` on `ℍ`.**
+
+**Deferred proof sketch.** `Γ(2) := { γ ∈ SL₂(ℤ) | γ ≡ I (mod 2) }` is
+generated (in `PSL₂(ℤ)`) by `T² = [[1, 2], [0, 1]]` and
+`ST⁻²S = [[1, 0], [2, 1]]`. We have already proven:
+* `modularLambdaH_two_add : λ(τ + 2) = λ(τ)` (`T²`-invariance);
+* `modularLambdaH_div_two_tau_add_one : λ(τ / (2τ + 1)) = λ(τ)`
+  (`ST⁻²S`-invariance).
+
+The remaining ingredient is the group-theoretic generation result:
+every `γ ∈ Γ(2)` is a product of `T²`, `ST⁻²S`, their inverses, and
+`±I` (with `-I` acting trivially on `λ`). Mathlib does not currently
+carry this generator decomposition for `Γ(2)`; supplying it requires
+either an explicit row-reduction algorithm on `SL₂(ℤ)` modulo 2 or a
+Möbius geometric argument on the fundamental domain. Status: blocked. -/
 theorem modularLambdaH_gamma2_invariant
     (γ : Matrix.SpecialLinearGroup (Fin 2) ℤ)
     (_hγ : γ ∈ CongruenceSubgroup.Gamma 2) (τ : UpperHalfPlane) :
@@ -1586,10 +1616,23 @@ theorem modularLambdaH_differentiableOn :
   · exact (theta2_differentiableAt hτ_pos).pow 4
   · exact (theta3_differentiableAt hτ_pos).pow 4
 
-/-- `λ : ℍ → ℂ ∖ {0, 1}` is a covering map. Stated as `IsCoveringMapOn`
-on the target side `ℂ ∖ {0, 1}`; the preimage under `λ` of this set
-coincides with `ℍ` (using that `λ` takes Lean junk value `0` outside
-`ℍ`). -/
+/-- **Covering map property of `λ : ℍ → ℂ ∖ {0, 1}`.**
+
+**Deferred proof sketch.** This is the central theorem of the
+modular-function track: `λ` is a holomorphic covering map of the
+triply-punctured plane by the upper half-plane. The standard proof
+factors `λ` through the quotient `ℍ → ℍ / Γ(2)` and the
+homeomorphism `ℍ / Γ(2) ≃ ℂ ∖ {0, 1}` induced by `λ`. Required
+ingredients (none currently in Mathlib for `Γ(2)` specifically):
+* `Γ(2)` acts freely and properly discontinuously on `ℍ`;
+* The quotient projection `ℍ → ℍ / Γ(2)` is a covering map;
+* `λ` factors through this quotient as a homeomorphism onto
+  `ℂ ∖ {0, 1}`.
+
+Alternatively, via the inverse function theorem: `λ` is locally
+injective on `ℍ` (its derivative `λ'` is nonzero on `ℍ`), and the
+preimage `λ⁻¹{w}` is discrete (a `Γ(2)`-orbit). This gives the local
+triviality at each `w`. Status: blocked on `Γ(2)` action machinery. -/
 theorem modularLambdaH_isCoveringMapOn :
     IsCoveringMapOn modularLambdaH { w : ℂ | w ≠ 0 ∧ w ≠ 1 } := by
   sorry
@@ -1645,7 +1688,21 @@ theorem modularLambda_differentiableOn :
 
 /-- **Covering property of `λ` on the unit disk.**
 `modularLambda : 𝔻 → ℂ ∖ {0, 1}` is a covering map of the
-triply-punctured plane by the disk. -/
+triply-punctured plane by the disk.
+
+**Deferred proof sketch.** Conditional on `modularLambdaH_isCoveringMapOn`.
+The Cayley transform restricts to a homeomorphism
+`𝔻 ≃ₜ ℍ` (using `cayleyToHalfPlane_image_ball`,
+`halfPlaneToCayley_mem_ball`, `cayleyToHalfPlane_halfPlaneToCayley`,
+`halfPlaneToCayley_cayleyToHalfPlane`). For each `w ∈ ℂ ∖ {0, 1}`, the
+evenly-covered neighborhood `U` of `w` under `modularLambdaH` (and its
+trivialization `H_MH : modularLambdaH ⁻¹' U ≃ₜ U × I_MH`) transports
+through Cayley: `modularLambda ⁻¹' U` lives inside `𝔻` (since
+`modularLambda` is Lean-junk `0` outside `𝔻`), Cayley-restricted gives a
+homeomorphism `modularLambda ⁻¹' U ≃ₜ modularLambdaH ⁻¹' U`, then chain
+with `H_MH` and the fiber Cayley to obtain `H_ML`. Status: structurally
+clear, but ~200 lines of subtype-bookkeeping; deferred for a focused
+session. -/
 theorem modularLambda_isCoveringMapOn :
     IsCoveringMapOn modularLambda { w : ℂ | w ≠ 0 ∧ w ≠ 1 } := by
   sorry
