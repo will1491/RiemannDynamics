@@ -8,6 +8,8 @@ import Mathlib.NumberTheory.ModularForms.LevelOne
 import Mathlib.NumberTheory.ModularForms.Delta
 import Mathlib.LinearAlgebra.Matrix.FixedDetMatrices
 import Mathlib.Geometry.Manifold.Notation
+import Mathlib.Analysis.Real.Pi.Bounds
+import Mathlib.Analysis.Complex.ExponentialBounds
 
 /-!
 # Modular forms bridge: from generator-level data to `Mathlib.CuspForm`
@@ -183,15 +185,145 @@ theorem delta_mdiff : MDiff (delta : ℍ → ℂ) := by
 
 /-- **Boundedness of the eta-related product `∏(1 − qⁿ)` near `+i∞`.**
 For `τ.im ≥ 1`, the infinite product `∏' n, (1 − eta_q n τ)` is
-uniformly bounded by a constant `M`. The proof uses
-`Finset.norm_prod_one_add_sub_one_le` (giving the partial product
-bound `‖∏(1 + fᵢ) − 1‖ ≤ exp(∑‖fᵢ‖) − 1`) applied to `fᵢ = -eta_q i τ`,
-passed to the infinite limit via `Multipliable.norm_tprod` and the
-geometric sum `∑' n, exp(−2π(n+1)·τ.im) ≤ exp(−2π)/(1 − exp(−2π))`. -/
+uniformly bounded by `M = exp(1)`. The proof uses
+`Finset.norm_prod_one_add_sub_one_le` for the partial product bound
+`‖∏(1 + fᵢ) − 1‖ ≤ exp(∑‖fᵢ‖) − 1` (applied with `fᵢ = -eta_q i τ`),
+passed to the infinite limit via the `HasProd` topology and
+`le_of_tendsto`. The geometric sum bound
+`∑' n, exp(−2π(n+1)·τ.im) ≤ exp(−2π)/(1 − exp(−2π)) ≤ 1` keeps the
+constant bounded for all `τ.im ≥ 1`. -/
 theorem tprod_norm_one_sub_eta_q_le :
     ∃ M : ℝ, 0 < M ∧ ∀ τ : ℍ, 1 ≤ τ.im →
       ‖∏' n : ℕ, (1 - eta_q n τ)‖ ≤ M := by
-  sorry
+  refine ⟨Real.exp 1, Real.exp_pos 1, ?_⟩
+  intro τ hτ_im
+  have hτ_pos : 0 < (↑τ : ℂ).im := lt_of_lt_of_le zero_lt_one hτ_im
+  -- Step 1: explicit norm of `eta_q n τ`.
+  have h_norm_eta_q : ∀ n : ℕ,
+      ‖eta_q n (↑τ : ℂ)‖ = Real.exp (-2 * Real.pi * (n + 1) * (↑τ : ℂ).im) := by
+    intro n
+    rw [eta_q_eq_pow, norm_pow, Complex.norm_exp]
+    have h_re : ((2 : ℂ) * (Real.pi : ℂ) * Complex.I * (↑τ : ℂ)).re
+        = -2 * Real.pi * (↑τ : ℂ).im := by
+      simp [Complex.mul_re, Complex.mul_im, Complex.I_re, Complex.I_im]
+    rw [h_re]
+    rw [show -2 * Real.pi * ((n : ℝ) + 1) * (↑τ : ℂ).im
+        = ((n + 1 : ℕ) : ℝ) * (-2 * Real.pi * (↑τ : ℂ).im) from by push_cast; ring]
+    rw [Real.exp_nat_mul]
+  -- Step 2: per-term bound `‖eta_q n τ‖ ≤ exp(-2π(n+1))` for `τ.im ≥ 1`.
+  have h_pi_pos := Real.pi_pos
+  have h_eta_q_bound : ∀ n : ℕ,
+      ‖eta_q n (↑τ : ℂ)‖ ≤ Real.exp (-2 * Real.pi * (n + 1)) := by
+    intro n
+    rw [h_norm_eta_q]
+    apply Real.exp_le_exp.mpr
+    have h_coeff_nonpos : -2 * Real.pi * ((n : ℝ) + 1) ≤ 0 := by
+      have h_n_nn : (0 : ℝ) ≤ (n : ℝ) + 1 := by positivity
+      nlinarith
+    -- `-2π(n+1) · τ.im ≤ -2π(n+1) · 1 = -2π(n+1)` since coeff ≤ 0 and τ.im ≥ 1.
+    have h_mul : -2 * Real.pi * ((n : ℝ) + 1) * (↑τ : ℂ).im
+        ≤ -2 * Real.pi * ((n : ℝ) + 1) * 1 :=
+      mul_le_mul_of_nonpos_left hτ_im h_coeff_nonpos
+    linarith
+  -- Step 3: summable + bound on the sum.
+  have h_summ : Summable fun n : ℕ => ‖-eta_q n (↑τ : ℂ)‖ := by
+    simpa using summable_eta_q τ
+  have h_summ' : Summable fun n : ℕ => ‖eta_q n (↑τ : ℂ)‖ := by
+    simpa using h_summ
+  -- The reference geometric sum: `r := exp(-2π)`, `Σ_n r^(n+1) = r / (1-r)`.
+  set r : ℝ := Real.exp (-2 * Real.pi) with hr_def
+  have hr_pos : 0 < r := Real.exp_pos _
+  have hr_lt_one : r < 1 := by
+    rw [hr_def]
+    exact Real.exp_lt_one_iff.mpr (by nlinarith)
+  have h_geom_summable : Summable fun n : ℕ => r ^ (n + 1) := by
+    exact (summable_geometric_of_lt_one hr_pos.le hr_lt_one).mul_left r |>.congr
+      (fun n => by simp [pow_succ, mul_comm])
+  have h_per_term_le : ∀ n : ℕ, ‖eta_q n (↑τ : ℂ)‖ ≤ r ^ (n + 1) := by
+    intro n
+    refine (h_eta_q_bound n).trans ?_
+    rw [hr_def, ← Real.exp_nat_mul]
+    apply Real.exp_le_exp.mpr
+    push_cast; ring_nf; rfl
+  -- `∑' n, ‖eta_q n τ‖ ≤ ∑' n, r^(n+1) = r / (1 - r)`.
+  have h_tsum_le : ∑' n : ℕ, ‖eta_q n (↑τ : ℂ)‖ ≤ r / (1 - r) := by
+    have h_sum_geom : ∑' n : ℕ, r ^ (n + 1) = r / (1 - r) := by
+      rw [show (fun n : ℕ => r ^ (n + 1)) = (fun n => r * r ^ n) from by
+        funext n; rw [pow_succ, mul_comm]]
+      rw [tsum_mul_left, tsum_geometric_of_lt_one hr_pos.le hr_lt_one]
+      ring
+    refine h_sum_geom ▸ ?_
+    exact h_summ'.tsum_le_tsum h_per_term_le h_geom_summable
+  -- `r / (1 - r) ≤ 1` since `r ≤ exp(-2π) < 1/2`.
+  have h_bound_S : r / (1 - r) ≤ 1 := by
+    have h_one_sub : 0 < 1 - r := by linarith
+    rw [div_le_one h_one_sub]
+    -- need r ≤ 1 - r, i.e., 2r ≤ 1, i.e., r ≤ 1/2.
+    have h_r_le_half : r ≤ 1 / 2 := by
+      rw [hr_def, show (-2 * Real.pi : ℝ) = -(2 * Real.pi) from by ring, Real.exp_neg,
+          inv_le_comm₀ (Real.exp_pos _) (by norm_num : (0:ℝ) < 1/2),
+          show (1/2 : ℝ)⁻¹ = 2 from by norm_num]
+      have h1 : (1 : ℝ) + 1 ≤ Real.exp 1 := by linarith [Real.add_one_le_exp (1 : ℝ)]
+      have h2 : Real.exp 1 < Real.exp (2 * Real.pi) :=
+        Real.exp_lt_exp.mpr (by nlinarith [Real.pi_gt_three])
+      linarith
+    linarith
+  -- Step 4: bound the partial product norm. Define f n := -eta_q n τ.
+  -- Then `1 + f n = 1 - eta_q n τ` and `‖f n‖ = ‖eta_q n τ‖`.
+  -- By `Finset.norm_prod_one_add_sub_one_le`:
+  --   `‖∏ in t, (1 + f n) - 1‖ ≤ exp(∑ in t, ‖f n‖) - 1`.
+  -- Hence `‖∏ in t, (1 + f n)‖ ≤ exp(∑ in t, ‖f n‖) ≤ exp(∑' ‖f n‖) ≤ exp(1)`.
+  have h_partial_bound : ∀ t : Finset ℕ,
+      ‖∏ n ∈ t, ((1 : ℂ) - eta_q n (↑τ : ℂ))‖ ≤ Real.exp 1 := by
+    intro t
+    have h_sum_t_le : ∑ n ∈ t, ‖-eta_q n (↑τ : ℂ)‖ ≤ 1 := by
+      have h_simp_term : ∀ n : ℕ, ‖-eta_q n (↑τ : ℂ)‖ = ‖eta_q n (↑τ : ℂ)‖ :=
+        fun n => norm_neg _
+      have h_sum_le_tsum : ∑ n ∈ t, ‖eta_q n (↑τ : ℂ)‖
+          ≤ ∑' n : ℕ, ‖eta_q n (↑τ : ℂ)‖ :=
+        h_summ'.sum_le_tsum t (fun _ _ => norm_nonneg _)
+      have h_sum_eq : ∑ n ∈ t, ‖-eta_q n (↑τ : ℂ)‖ = ∑ n ∈ t, ‖eta_q n (↑τ : ℂ)‖ :=
+        Finset.sum_congr rfl (fun n _ => h_simp_term n)
+      rw [h_sum_eq]
+      linarith [h_sum_le_tsum, h_tsum_le, h_bound_S]
+    have h_prod_eq : ∀ t : Finset ℕ,
+        ∏ n ∈ t, ((1 : ℂ) - eta_q n (↑τ : ℂ))
+          = ∏ n ∈ t, ((1 : ℂ) + (-eta_q n (↑τ : ℂ))) := by
+      intro t; refine Finset.prod_congr rfl ?_; intros; ring
+    rw [h_prod_eq]
+    have h_finset_bound :
+        ‖(∏ n ∈ t, ((1 : ℂ) + (-eta_q n (↑τ : ℂ)))) - 1‖
+          ≤ Real.exp (∑ n ∈ t, ‖-eta_q n (↑τ : ℂ)‖) - 1 :=
+      Finset.norm_prod_one_add_sub_one_le t (fun n => -eta_q n (↑τ : ℂ))
+    have h_exp_sum_le : Real.exp (∑ n ∈ t, ‖-eta_q n (↑τ : ℂ)‖) ≤ Real.exp 1 :=
+      Real.exp_le_exp.mpr h_sum_t_le
+    have h_prod_le_exp :
+        ‖∏ n ∈ t, ((1 : ℂ) + (-eta_q n (↑τ : ℂ)))‖
+          ≤ Real.exp (∑ n ∈ t, ‖-eta_q n (↑τ : ℂ)‖) := by
+      have h_tri := norm_le_norm_sub_add (∏ n ∈ t, ((1 : ℂ) + (-eta_q n (↑τ : ℂ)))) 1
+      rw [norm_one] at h_tri
+      linarith
+    linarith
+  -- Step 5: pass to the infinite product limit.
+  have h_mul : Multipliable fun n : ℕ => (1 : ℂ) + (-eta_q n (↑τ : ℂ)) :=
+    multipliable_one_add_of_summable h_summ
+  have h_mul' : Multipliable fun n : ℕ => (1 : ℂ) - eta_q n (↑τ : ℂ) := by
+    have h_eq : (fun n : ℕ => (1 : ℂ) - eta_q n (↑τ : ℂ))
+        = fun n : ℕ => (1 : ℂ) + (-eta_q n (↑τ : ℂ)) := by funext n; ring
+    rw [h_eq]; exact h_mul
+  -- `Multipliable.tendsto_prod_tprod_nat` gives convergence of `∏ i ∈ range n` to `∏'`.
+  have h_tendsto :
+      Filter.Tendsto (fun n : ℕ => ∏ i ∈ Finset.range n, ((1 : ℂ) - eta_q i (↑τ : ℂ)))
+        Filter.atTop (nhds (∏' n : ℕ, ((1 : ℂ) - eta_q n (↑τ : ℂ)))) :=
+    h_mul'.tendsto_prod_tprod_nat
+  have h_tendsto_norm :
+      Filter.Tendsto (fun n : ℕ => ‖∏ i ∈ Finset.range n, ((1 : ℂ) - eta_q i (↑τ : ℂ))‖)
+        Filter.atTop (nhds (‖∏' n : ℕ, ((1 : ℂ) - eta_q n (↑τ : ℂ))‖)) :=
+    h_tendsto.norm
+  have h_ev : ∀ᶠ n : ℕ in Filter.atTop,
+      ‖∏ i ∈ Finset.range n, ((1 : ℂ) - eta_q i (↑τ : ℂ))‖ ≤ Real.exp 1 :=
+    Filter.Eventually.of_forall (fun n => h_partial_bound (Finset.range n))
+  exact le_of_tendsto h_tendsto_norm h_ev
 
 /-- **Exponential decay bound for `delta` near the cusp.** For
 `τ.im ≥ 1`, the discriminant `delta τ = q · ∏(1 − qⁿ)²⁴` satisfies
@@ -287,20 +419,413 @@ noncomputable def delta_cuspForm : CuspForm Γ(1) 12 where
     rw [delta_slash_action_eq γ]
     exact delta_isZeroAtImInfty
 
+/-! ### Δ-division route to `dim S₄(SL(2, ℤ)) = 0`
+
+Given a weight-4 cusp form `F`, the quotient `F²/Δ` is a weight `−4`
+modular form (since `F²` has weight 8, `Δ` has weight 12, and the
+quotient is well-defined by `delta_ne_zero`). By Mathlib's
+`ModularFormClass.levelOne_neg_weight_eq_zero`, every weight `< 0`
+modular form for `SL(2,ℤ)` is zero, so `F²/Δ = 0`. Combined with
+`delta_ne_zero`, this gives `F² = 0`, hence `F = 0`. -/
+
+/-- **Slash invariance of `F²/Δ`** under `Γ(1)`. Given a weight-4 cusp
+form `F`, the function `σ ↦ (F σ)² / delta σ` satisfies the weight `−4`
+slash invariance for every `γ ∈ Γ(1)`. The proof combines the
+weight-4 slash invariance of `F` (squared to get weight 8) with the
+weight-12 slash invariance of `Δ` (from `delta_cuspForm`); the
+quotient has weight `8 − 12 = −4`, and the slash equation
+`(F²/Δ)(γ•τ) · (denom γ τ)^4 = (F²/Δ) τ` collapses to identity. -/
+theorem cuspForm_sq_div_delta_slash_invariant (F : CuspForm Γ(1) 4)
+    (γ_GL : GL (Fin 2) ℝ) (hγ : γ_GL ∈ (Γ(1) : Subgroup (GL (Fin 2) ℝ))) :
+    (fun σ : ℍ => (F σ) ^ 2 / delta σ) ∣[(-4 : ℤ)] γ_GL
+      = fun σ : ℍ => (F σ) ^ 2 / delta σ := by
+  funext τ
+  -- F (γ_GL • τ) = denom γ_GL τ ^ 4 * F τ (weight-4 slash invariance of F).
+  have h_F : F (γ_GL • τ) = denom γ_GL τ ^ 4 * F τ :=
+    SlashInvariantForm.slash_action_eqn'' F hγ τ
+  -- delta_cuspForm (γ_GL • τ) = denom γ_GL τ ^ 12 * delta_cuspForm τ.
+  have h_Δ : delta_cuspForm (γ_GL • τ) = denom γ_GL τ ^ 12 * delta_cuspForm τ :=
+    SlashInvariantForm.slash_action_eqn'' delta_cuspForm hγ τ
+  -- `delta_cuspForm τ = delta τ` by definition.
+  have h_Δ' : delta (γ_GL • τ) = denom γ_GL τ ^ 12 * delta τ := h_Δ
+  -- `γ_GL.det = 1` since `γ_GL ∈ Γ(1)-GL` (image of SL).
+  have h_det_eq : Matrix.GeneralLinearGroup.det γ_GL = 1 :=
+    Subgroup.HasDetOne.det_eq hγ
+  have h_det : (γ_GL.det.val : ℝ) = 1 := by
+    rw [show γ_GL.det = Matrix.GeneralLinearGroup.det γ_GL from rfl, h_det_eq]
+    rfl
+  -- `σ γ_GL z = z` (det > 0).
+  have h_sigma_id : ∀ z : ℂ, σ γ_GL z = z := by
+    intro z
+    simp [σ, h_det]
+  -- Nonzero denominators.
+  have h_delta_ne : delta τ ≠ 0 := delta_ne_zero τ
+  have h_denom_ne : (denom γ_GL τ : ℂ) ≠ 0 := denom_ne_zero γ_GL τ
+  -- Compute the slash.
+  rw [ModularForm.slash_apply, h_sigma_id]
+  change ((F (γ_GL • τ)) ^ 2 / delta (γ_GL • τ)) * _ * _ = (F τ) ^ 2 / delta τ
+  rw [h_F, h_Δ', h_det]
+  -- Simplify `|↑1| = 1`, `1 ^ (-5) = 1`, then algebra.
+  simp only [abs_one, Complex.ofReal_one, one_zpow, mul_one, neg_neg]
+  field_simp
+
+/-- **Manifold differentiability of `F²/Δ`.** The quotient of two
+holomorphic functions with the denominator nonvanishing on `ℍ`.
+Uses `UpperHalfPlane.mdifferentiable_iff` to reduce to standard
+`DifferentiableOn`, then chains `DifferentiableOn.pow`,
+`DifferentiableOn.div`, plus `delta_ne_zero` on the open set
+`{z | 0 < z.im}`. -/
+theorem cuspForm_sq_div_delta_mdiff (F : CuspForm Γ(1) 4) :
+    MDiff (fun σ : ℍ => (F σ) ^ 2 / delta σ) := by
+  rw [UpperHalfPlane.mdifferentiable_iff]
+  -- Goal: `DifferentiableOn ℂ ((fun σ => F σ^2 / delta σ) ∘ ↑ofComplex) {z | 0 < z.im}`.
+  -- `F ∘ ofComplex` and `delta ∘ ofComplex` are DifferentiableOn from MDiff.
+  have h_F_mdiff : MDiff (F : ℍ → ℂ) := ModularFormClass.holo F
+  rw [UpperHalfPlane.mdifferentiable_iff] at h_F_mdiff
+  have h_delta_mdiff : MDiff (delta : ℍ → ℂ) := delta_mdiff
+  rw [UpperHalfPlane.mdifferentiable_iff] at h_delta_mdiff
+  -- `delta ∘ ofComplex` is nonzero on `{z | 0 < z.im}`.
+  have h_delta_ne : ∀ z ∈ {z : ℂ | 0 < z.im}, (delta ∘ (↑UpperHalfPlane.ofComplex)) z ≠ 0 := by
+    intro z hz
+    rw [Function.comp_apply]
+    exact delta_ne_zero _
+  -- Compose: (F ∘ ofComplex)^2 / (delta ∘ ofComplex).
+  have h_pow : DifferentiableOn ℂ
+      (fun z => ((F : ℍ → ℂ) ∘ (↑UpperHalfPlane.ofComplex)) z ^ 2)
+      {z : ℂ | 0 < z.im} := h_F_mdiff.pow 2
+  have h_div : DifferentiableOn ℂ
+      (fun z => ((F : ℍ → ℂ) ∘ (↑UpperHalfPlane.ofComplex)) z ^ 2
+              / (delta ∘ (↑UpperHalfPlane.ofComplex)) z)
+      {z : ℂ | 0 < z.im} :=
+    h_pow.div h_delta_mdiff h_delta_ne
+  -- Massage the form to match the goal.
+  convert h_div using 1
+
+/-- **Upper bound: a weight-`k` cusp form is `O(qParam 1)` near `+i∞`.**
+For τ.im sufficiently large, `‖F τ‖ ≤ M · ‖qParam 1 τ‖`. Closure uses
+Mathlib's `CuspFormClass.exp_decay_atImInfty`, which gives the BigO
+bound `F =O[atImInfty] (fun τ => exp(−2π·τ.im/h))`, and the fact that
+`‖qParam 1 τ‖ = exp(−2π·τ.im/1)` via `Function.Periodic.norm_qParam`. -/
+theorem cuspForm_norm_le_qParam (F : CuspForm Γ(1) 4) :
+    ∃ M A : ℝ, 0 < M ∧ ∀ τ : ℍ, A ≤ τ.im →
+      ‖F τ‖ ≤ M * ‖Function.Periodic.qParam 1 (↑τ : ℂ)‖ := by
+  -- `1 ∈ Γ(1).strictPeriods` since `Γ(1) = ⊤` contains `T`.
+  have h_period : (1 : ℝ) ∈ (Γ(1) : Subgroup (GL (Fin 2) ℝ)).strictPeriods :=
+    ModularFormClass.one_mem_strictPeriods_SL2Z
+  -- Mathlib gives `F =O[atImInfty] exp(-2π·τ.im/1)`.
+  have h_decay : (F : ℍ → ℂ) =O[atImInfty]
+      (fun τ : ℍ => Real.exp (-2 * Real.pi * τ.im / 1)) :=
+    CuspFormClass.exp_decay_atImInfty F zero_lt_one h_period
+  -- Extract explicit `M` and eventual bound.
+  obtain ⟨M, hM⟩ := h_decay.bound
+  rw [Filter.eventually_iff_exists_mem] at hM
+  obtain ⟨S, hS_mem, hS⟩ := hM
+  rw [atImInfty_mem] at hS_mem
+  obtain ⟨A, hA⟩ := hS_mem
+  -- Norm of `Real.exp` is just `Real.exp` since it's positive.
+  have h_norm_eq : ∀ τ : ℍ,
+      ‖Real.exp (-2 * Real.pi * τ.im / 1)‖
+        = ‖Function.Periodic.qParam 1 (↑τ : ℂ)‖ := by
+    intro τ
+    rw [Real.norm_eq_abs, abs_of_pos (Real.exp_pos _),
+        Function.Periodic.norm_qParam]
+    rfl
+  -- Choose `M' = max M 1` to ensure positivity.
+  refine ⟨max M 1, A, by positivity, fun τ hτA => ?_⟩
+  have h_in : τ ∈ S := hA τ hτA
+  have h_F := hS τ h_in
+  calc ‖F τ‖
+      ≤ M * ‖Real.exp (-2 * Real.pi * τ.im / 1)‖ := h_F
+    _ = M * ‖Function.Periodic.qParam 1 (↑τ : ℂ)‖ := by rw [h_norm_eq]
+    _ ≤ max M 1 * ‖Function.Periodic.qParam 1 (↑τ : ℂ)‖ :=
+        mul_le_mul_of_nonneg_right (le_max_left _ _) (norm_nonneg _)
+
+/-- **Lower bound: `‖Δ τ‖ ≥ c · ‖qParam 1 τ‖` near `+i∞`.** `Δ` has
+a simple zero at the cusp: `delta τ = qParam 1 τ · ∏'(1 − eta_q n τ)²⁴`,
+and the product is bounded away from `0` for `τ.im ≥ 1` (since each
+factor `1 − eta_q n τ` is close to `1`). The lower bound on the
+product uses the reverse triangle inequality applied to
+`Finset.norm_prod_one_add_sub_one_le` (which gives
+`‖∏(1 + fᵢ) − 1‖ ≤ exp(∑‖fᵢ‖) − 1`), passed to the infinite-product
+limit via `Multipliable.tendsto_prod_tprod_nat` and `ge_of_tendsto'`.
+
+Numeric chain (for `τ.im ≥ 1`):
+* `r := exp(−2π) ≤ 1/3` from `exp(2π) ≥ exp(2) ≥ 3 = 1 + 2`
+  (using `Real.add_one_le_exp 2`).
+* `∑' ≤ r/(1 − r) ≤ (1/3)/(2/3) = 1/2`.
+* `exp(1/2) ≤ 7/4` from `(exp(1/2))² = exp(1) < 2.72 < 49/16`
+  (using `Real.exp_one_lt_d9`).
+* `‖∏ − 1‖ ≤ exp(∑) − 1 ≤ 3/4`, so `‖∏‖ ≥ 1 − 3/4 = 1/4`.
+* `‖Δ τ‖ = ‖qParam 1 τ‖ · ‖∏‖²⁴ ≥ (1/4)²⁴ · ‖qParam 1 τ‖`. -/
+theorem delta_norm_ge_qParam :
+    ∃ c A : ℝ, 0 < c ∧ ∀ τ : ℍ, A ≤ τ.im →
+      c * ‖Function.Periodic.qParam 1 (↑τ : ℂ)‖ ≤ ‖delta τ‖ := by
+  refine ⟨(1/4 : ℝ)^24, 1, by positivity, ?_⟩
+  intro τ hτ_im
+  have hτ_pos : 0 < (↑τ : ℂ).im := lt_of_lt_of_le zero_lt_one hτ_im
+  -- Step 1: explicit norm of eta_q n τ.
+  have h_norm_eta_q : ∀ n : ℕ,
+      ‖eta_q n (↑τ : ℂ)‖ = Real.exp (-2 * Real.pi * (n + 1) * (↑τ : ℂ).im) := by
+    intro n
+    rw [eta_q_eq_pow, norm_pow, Complex.norm_exp]
+    have h_re : ((2 : ℂ) * (Real.pi : ℂ) * Complex.I * (↑τ : ℂ)).re
+        = -2 * Real.pi * (↑τ : ℂ).im := by
+      simp [Complex.mul_re, Complex.mul_im, Complex.I_re, Complex.I_im]
+    rw [h_re]
+    rw [show -2 * Real.pi * ((n : ℝ) + 1) * (↑τ : ℂ).im
+        = ((n + 1 : ℕ) : ℝ) * (-2 * Real.pi * (↑τ : ℂ).im) from by push_cast; ring]
+    rw [Real.exp_nat_mul]
+  have h_pi_pos := Real.pi_pos
+  -- Step 2: per-term bound `‖eta_q n τ‖ ≤ exp(-2π(n+1))` for τ.im ≥ 1.
+  have h_eta_q_bound : ∀ n : ℕ,
+      ‖eta_q n (↑τ : ℂ)‖ ≤ Real.exp (-2 * Real.pi * (n + 1)) := by
+    intro n
+    rw [h_norm_eta_q]
+    apply Real.exp_le_exp.mpr
+    have h_coeff_nonpos : -2 * Real.pi * ((n : ℝ) + 1) ≤ 0 := by
+      have h_n_nn : (0 : ℝ) ≤ (n : ℝ) + 1 := by positivity
+      nlinarith
+    have h_mul : -2 * Real.pi * ((n : ℝ) + 1) * (↑τ : ℂ).im
+        ≤ -2 * Real.pi * ((n : ℝ) + 1) * 1 :=
+      mul_le_mul_of_nonpos_left hτ_im h_coeff_nonpos
+    linarith
+  -- Step 3: summability and bound on ∑'.
+  have h_summ : Summable fun n : ℕ => ‖-eta_q n (↑τ : ℂ)‖ := by
+    simpa using summable_eta_q τ
+  have h_summ' : Summable fun n : ℕ => ‖eta_q n (↑τ : ℂ)‖ := by
+    simpa using h_summ
+  set r : ℝ := Real.exp (-2 * Real.pi) with hr_def
+  have hr_pos : 0 < r := Real.exp_pos _
+  have hr_le_third : r ≤ 1/3 := by
+    rw [hr_def, show (-2 * Real.pi : ℝ) = -(2 * Real.pi) from by ring, Real.exp_neg,
+        inv_le_comm₀ (Real.exp_pos _) (by norm_num : (0:ℝ) < 1/3),
+        show (1/3 : ℝ)⁻¹ = 3 from by norm_num]
+    -- Need 3 ≤ exp(2π).
+    have h1 : (3 : ℝ) ≤ Real.exp 2 := by
+      have := Real.add_one_le_exp (2 : ℝ); linarith
+    have h2 : Real.exp 2 ≤ Real.exp (2 * Real.pi) :=
+      Real.exp_le_exp.mpr (by nlinarith [Real.pi_gt_three])
+    linarith
+  have hr_lt_one : r < 1 := by linarith
+  have h_geom_summable : Summable fun n : ℕ => r ^ (n + 1) := by
+    exact (summable_geometric_of_lt_one hr_pos.le hr_lt_one).mul_left r |>.congr
+      (fun n => by simp [pow_succ, mul_comm])
+  have h_per_term_le : ∀ n : ℕ, ‖eta_q n (↑τ : ℂ)‖ ≤ r ^ (n + 1) := by
+    intro n
+    refine (h_eta_q_bound n).trans ?_
+    rw [hr_def, ← Real.exp_nat_mul]
+    apply Real.exp_le_exp.mpr
+    push_cast; ring_nf; rfl
+  have h_tsum_le : ∑' n : ℕ, ‖eta_q n (↑τ : ℂ)‖ ≤ r / (1 - r) := by
+    have h_sum_geom : ∑' n : ℕ, r ^ (n + 1) = r / (1 - r) := by
+      rw [show (fun n : ℕ => r ^ (n + 1)) = (fun n => r * r ^ n) from by
+        funext n; rw [pow_succ, mul_comm]]
+      rw [tsum_mul_left, tsum_geometric_of_lt_one hr_pos.le hr_lt_one]
+      ring
+    refine h_sum_geom ▸ ?_
+    exact h_summ'.tsum_le_tsum h_per_term_le h_geom_summable
+  have h_S_le_half : r / (1 - r) ≤ 1/2 := by
+    have h_one_sub : 0 < 1 - r := by linarith
+    rw [div_le_iff₀ h_one_sub]
+    linarith
+  -- Step 4: each partial product has ‖·‖ ≥ 1/4.
+  have h_partial_ge : ∀ N : ℕ,
+      (1/4 : ℝ) ≤ ‖∏ n ∈ Finset.range N, ((1 : ℂ) - eta_q n (↑τ : ℂ))‖ := by
+    intro N
+    have h_prod_eq :
+        ∏ n ∈ Finset.range N, ((1 : ℂ) - eta_q n (↑τ : ℂ))
+          = ∏ n ∈ Finset.range N, ((1 : ℂ) + (-eta_q n (↑τ : ℂ))) := by
+      refine Finset.prod_congr rfl ?_; intros; ring
+    rw [h_prod_eq]
+    have h_finset_bound :
+        ‖(∏ n ∈ Finset.range N, ((1 : ℂ) + (-eta_q n (↑τ : ℂ)))) - 1‖
+          ≤ Real.exp (∑ n ∈ Finset.range N, ‖-eta_q n (↑τ : ℂ)‖) - 1 :=
+      Finset.norm_prod_one_add_sub_one_le _ _
+    have h_sum_t_le : ∑ n ∈ Finset.range N, ‖-eta_q n (↑τ : ℂ)‖ ≤ 1/2 := by
+      have h_simp : ∀ n : ℕ, ‖-eta_q n (↑τ : ℂ)‖ = ‖eta_q n (↑τ : ℂ)‖ :=
+        fun n => norm_neg _
+      have h_sum_eq : ∑ n ∈ Finset.range N, ‖-eta_q n (↑τ : ℂ)‖
+          = ∑ n ∈ Finset.range N, ‖eta_q n (↑τ : ℂ)‖ :=
+        Finset.sum_congr rfl (fun n _ => h_simp n)
+      have h_sum_le_tsum : ∑ n ∈ Finset.range N, ‖eta_q n (↑τ : ℂ)‖
+          ≤ ∑' n : ℕ, ‖eta_q n (↑τ : ℂ)‖ :=
+        h_summ'.sum_le_tsum _ (fun _ _ => norm_nonneg _)
+      linarith [h_tsum_le, h_S_le_half]
+    -- exp(1/2) ≤ 7/4 from exp(1) < 3 ≤ 49/16.
+    have h_exp_one_lt : Real.exp 1 < 3 := Real.exp_one_lt_three
+    have h_exp_half_le : Real.exp (1/2) ≤ 7/4 := by
+      have h_pos : (0 : ℝ) < Real.exp (1/2) := Real.exp_pos _
+      have h_sq : Real.exp (1/2) ^ 2 = Real.exp 1 := by
+        rw [show (Real.exp (1/2)) ^ 2 = Real.exp (1/2) * Real.exp (1/2) from sq (Real.exp (1/2)),
+            ← Real.exp_add]
+        norm_num
+      nlinarith [h_pos, h_exp_one_lt, h_sq]
+    have h_exp_sum_le : Real.exp (∑ n ∈ Finset.range N, ‖-eta_q n (↑τ : ℂ)‖)
+        ≤ Real.exp (1/2) :=
+      Real.exp_le_exp.mpr h_sum_t_le
+    have h_prod_diff_le :
+        ‖(∏ n ∈ Finset.range N, ((1 : ℂ) + (-eta_q n (↑τ : ℂ)))) - 1‖ ≤ 3/4 := by
+      linarith
+    -- Reverse triangle: ‖∏‖ ≥ 1 - ‖∏ - 1‖.
+    have h_rev_tri :
+        (1 : ℝ) - ‖(∏ n ∈ Finset.range N, ((1 : ℂ) + (-eta_q n (↑τ : ℂ)))) - 1‖
+          ≤ ‖∏ n ∈ Finset.range N, ((1 : ℂ) + (-eta_q n (↑τ : ℂ)))‖ := by
+      have h := norm_sub_norm_le ((1 : ℂ))
+        (∏ n ∈ Finset.range N, ((1 : ℂ) + (-eta_q n (↑τ : ℂ))))
+      rw [norm_one] at h
+      have h_neg : ((1 : ℂ) - ∏ n ∈ Finset.range N, ((1 : ℂ) + (-eta_q n (↑τ : ℂ))))
+          = -((∏ n ∈ Finset.range N, ((1 : ℂ) + (-eta_q n (↑τ : ℂ)))) - 1) := by ring
+      rw [h_neg, norm_neg] at h
+      linarith
+    linarith
+  -- Step 5: pass to ∏'.
+  have h_mul : Multipliable fun n : ℕ => (1 : ℂ) + (-eta_q n (↑τ : ℂ)) :=
+    multipliable_one_add_of_summable h_summ
+  have h_mul' : Multipliable fun n : ℕ => (1 : ℂ) - eta_q n (↑τ : ℂ) := by
+    have h_eq : (fun n : ℕ => (1 : ℂ) - eta_q n (↑τ : ℂ))
+        = fun n : ℕ => (1 : ℂ) + (-eta_q n (↑τ : ℂ)) := by funext n; ring
+    rw [h_eq]; exact h_mul
+  have h_tendsto :
+      Filter.Tendsto (fun n : ℕ => ∏ i ∈ Finset.range n, ((1 : ℂ) - eta_q i (↑τ : ℂ)))
+        Filter.atTop (nhds (∏' n : ℕ, ((1 : ℂ) - eta_q n (↑τ : ℂ)))) :=
+    h_mul'.tendsto_prod_tprod_nat
+  have h_tendsto_norm :
+      Filter.Tendsto (fun n : ℕ => ‖∏ i ∈ Finset.range n, ((1 : ℂ) - eta_q i (↑τ : ℂ))‖)
+        Filter.atTop (nhds (‖∏' n : ℕ, ((1 : ℂ) - eta_q n (↑τ : ℂ))‖)) :=
+    h_tendsto.norm
+  have h_tprod_ge : (1/4 : ℝ) ≤ ‖∏' n : ℕ, ((1 : ℂ) - eta_q n (↑τ : ℂ))‖ :=
+    ge_of_tendsto' h_tendsto_norm h_partial_ge
+  -- Step 6: combine with delta_eq_q_prod.
+  have h_tprod_pow : ∏' n : ℕ, ((1 : ℂ) - eta_q n (↑τ : ℂ)) ^ 24
+      = (∏' n : ℕ, ((1 : ℂ) - eta_q n (↑τ : ℂ))) ^ 24 :=
+    h_mul'.tprod_pow 24
+  rw [delta_eq_q_prod, h_tprod_pow, norm_mul, norm_pow]
+  -- Goal: (1/4)^24 * ‖qParam‖ ≤ ‖qParam‖ * ‖∏'‖^24.
+  rw [show (1/4 : ℝ)^24 * ‖Function.Periodic.qParam 1 (↑τ : ℂ)‖
+      = ‖Function.Periodic.qParam 1 (↑τ : ℂ)‖ * (1/4 : ℝ)^24 from by ring]
+  apply mul_le_mul_of_nonneg_left _ (norm_nonneg _)
+  exact pow_le_pow_left₀ (by norm_num : (0 : ℝ) ≤ 1/4) h_tprod_ge 24
+
+/-- **`F²/Δ` is bounded at `+i∞`.** Combines the upper bound
+`cuspForm_norm_le_qParam` (gives `‖F‖ ≤ M·‖qParam‖`) with the lower
+bound `delta_norm_ge_qParam` (gives `‖Δ‖ ≥ c·‖qParam‖`) to conclude
+`‖F²/Δ‖ ≤ (M²/c) · ‖qParam‖`, which is bounded since
+`‖qParam 1 τ‖ = exp(−2π·τ.im) ≤ 1` for `τ.im ≥ 0`. -/
+theorem cuspForm_sq_div_delta_isBoundedAtImInfty (F : CuspForm Γ(1) 4) :
+    IsBoundedAtImInfty (fun σ : ℍ => (F σ) ^ 2 / delta σ) := by
+  obtain ⟨M_F, A_F, hM_F_pos, hM_F_bound⟩ := cuspForm_norm_le_qParam F
+  obtain ⟨c_Δ, A_Δ, hc_Δ_pos, hc_Δ_bound⟩ := delta_norm_ge_qParam
+  -- Unfold `IsBoundedAtImInfty` and provide the bound via `IsBigO.of_bound`.
+  unfold IsBoundedAtImInfty Filter.BoundedAtFilter
+  refine Asymptotics.IsBigO.of_bound (M_F ^ 2 / c_Δ) ?_
+  rw [Filter.eventually_iff_exists_mem]
+  refine ⟨{τ : ℍ | max A_F A_Δ ≤ τ.im}, ?_, ?_⟩
+  · rw [atImInfty_mem]
+    exact ⟨max A_F A_Δ, fun _ h => h⟩
+  · intro τ hτ
+    have h_AF : A_F ≤ τ.im := le_trans (le_max_left _ _) hτ
+    have h_AΔ : A_Δ ≤ τ.im := le_trans (le_max_right _ _) hτ
+    have h_F := hM_F_bound τ h_AF
+    have h_Δ := hc_Δ_bound τ h_AΔ
+    have h_qParam_pos : 0 < ‖Function.Periodic.qParam 1 (↑τ : ℂ)‖ := by
+      rw [Function.Periodic.norm_qParam]
+      exact Real.exp_pos _
+    have h_qParam_le_one : ‖Function.Periodic.qParam 1 (↑τ : ℂ)‖ ≤ 1 := by
+      rw [Function.Periodic.norm_qParam, div_one]
+      apply Real.exp_le_one_iff.mpr
+      have h_pi_pos := Real.pi_pos
+      have h_tau_pos : 0 < (↑τ : ℂ).im := τ.2
+      nlinarith
+    have h_delta_pos : 0 < ‖delta τ‖ := by
+      have := hc_Δ_bound τ h_AΔ
+      have h_pos : 0 < c_Δ * ‖Function.Periodic.qParam 1 (↑τ : ℂ)‖ :=
+        mul_pos hc_Δ_pos h_qParam_pos
+      linarith
+    -- Goal: ‖F²/Δ‖ ≤ (M_F²/c_Δ) · ‖1 τ‖, where `(1 : ℍ → ℂ) τ = (1 : ℂ)`.
+    rw [Pi.one_apply, norm_one, mul_one, norm_div, norm_pow]
+    -- Compute: ‖F‖² ≤ (M_F · ‖qParam‖)² = M_F² · ‖qParam‖².
+    have h_F_nn : 0 ≤ ‖F τ‖ := norm_nonneg _
+    have h_F_sq_bound : ‖F τ‖ ^ 2 ≤ M_F ^ 2 * ‖Function.Periodic.qParam 1 (↑τ : ℂ)‖ ^ 2 := by
+      have := pow_le_pow_left₀ h_F_nn h_F 2
+      rw [mul_pow] at this
+      exact this
+    -- ‖F‖² / ‖Δ‖ ≤ M_F²·‖q‖² / (c_Δ · ‖q‖) = (M_F²/c_Δ) · ‖q‖ ≤ M_F²/c_Δ.
+    have h_cq_pos : 0 < c_Δ * ‖Function.Periodic.qParam 1 (↑τ : ℂ)‖ :=
+      mul_pos hc_Δ_pos h_qParam_pos
+    have h_step1 : ‖F τ‖ ^ 2 / ‖delta τ‖
+        ≤ (M_F ^ 2 * ‖Function.Periodic.qParam 1 (↑τ : ℂ)‖ ^ 2)
+          / (c_Δ * ‖Function.Periodic.qParam 1 (↑τ : ℂ)‖) := by
+      rw [div_le_div_iff₀ h_delta_pos h_cq_pos]
+      calc ‖F τ‖ ^ 2 * (c_Δ * ‖Function.Periodic.qParam 1 (↑τ : ℂ)‖)
+          ≤ (M_F ^ 2 * ‖Function.Periodic.qParam 1 (↑τ : ℂ)‖ ^ 2)
+              * (c_Δ * ‖Function.Periodic.qParam 1 (↑τ : ℂ)‖) :=
+            mul_le_mul_of_nonneg_right h_F_sq_bound h_cq_pos.le
+        _ ≤ (M_F ^ 2 * ‖Function.Periodic.qParam 1 (↑τ : ℂ)‖ ^ 2) * ‖delta τ‖ :=
+            mul_le_mul_of_nonneg_left h_Δ (by positivity)
+    have h_step2 : (M_F ^ 2 * ‖Function.Periodic.qParam 1 (↑τ : ℂ)‖ ^ 2)
+        / (c_Δ * ‖Function.Periodic.qParam 1 (↑τ : ℂ)‖)
+          = (M_F ^ 2 / c_Δ) * ‖Function.Periodic.qParam 1 (↑τ : ℂ)‖ := by
+      rw [show ‖Function.Periodic.qParam 1 (↑τ : ℂ)‖ ^ 2
+            = ‖Function.Periodic.qParam 1 (↑τ : ℂ)‖
+              * ‖Function.Periodic.qParam 1 (↑τ : ℂ)‖ from by ring]
+      field_simp
+    rw [h_step2] at h_step1
+    -- Final: (M_F²/c_Δ) · ‖q‖ ≤ M_F²/c_Δ · 1 = M_F²/c_Δ.
+    have h_coeff_nn : 0 ≤ M_F ^ 2 / c_Δ := by positivity
+    have h_final : (M_F ^ 2 / c_Δ) * ‖Function.Periodic.qParam 1 (↑τ : ℂ)‖
+        ≤ M_F ^ 2 / c_Δ := by
+      have := mul_le_mul_of_nonneg_left h_qParam_le_one h_coeff_nn
+      linarith
+    linarith
+
+/-- **Boundedness of `F²/Δ` at every cusp.** Reduces to
+`IsBoundedAtImInfty (F²/Δ)` via the slash invariance
+`cuspForm_sq_div_delta_slash_invariant` and the SL(2, ℤ)-orbit
+reduction `OnePoint.isBoundedAt_iff_forall_SL2Z` (using that
+`Γ(1)` is arithmetic so all cusps are SL(2,ℤ)-equivalent to `+i∞`). -/
+theorem cuspForm_sq_div_delta_bdd_at_cusps (F : CuspForm Γ(1) 4)
+    {c : OnePoint ℝ} (hc : IsCusp c Γ(1)) :
+    c.IsBoundedAt (fun σ : ℍ => (F σ) ^ 2 / delta σ) (-4) := by
+  rw [Subgroup.IsArithmetic.isCusp_iff_isCusp_SL2Z] at hc
+  rw [OnePoint.isBoundedAt_iff_forall_SL2Z hc]
+  intro γ _hγ
+  -- By slash invariance, `(F²/Δ) ∣[(-4)] γ = F²/Δ`.
+  have hγ_GL : (γ : GL (Fin 2) ℝ) ∈ (Γ(1) : Subgroup (GL (Fin 2) ℝ)) := by
+    refine ⟨γ, ?_, rfl⟩
+    rw [CongruenceSubgroup.Gamma_one_top]
+    exact Subgroup.mem_top γ
+  have h_slash : (fun σ : ℍ => (F σ) ^ 2 / delta σ) ∣[(-4 : ℤ)] γ
+        = fun σ : ℍ => (F σ) ^ 2 / delta σ := by
+    have h := cuspForm_sq_div_delta_slash_invariant F (γ : GL (Fin 2) ℝ) hγ_GL
+    rwa [← ModularForm.SL_slash] at h
+  rw [h_slash]
+  exact cuspForm_sq_div_delta_isBoundedAtImInfty F
+
 /-- **Weight-4 cusp form vanishing for `SL(2, ℤ)`.** The space
 `S_4(SL(2, ℤ))` of weight-4 cusp forms for the full modular group is
-zero-dimensional. The standard proof uses the `Δ`-division route:
-given a weight-4 cusp form `F`, the quotient `F² / Δ` is a weight-4·2
-− 12 = −4 modular form (with `Δ ≠ 0` on `ℍ` from `delta_ne_zero`),
-hence identically zero by Mathlib's
-`ModularFormClass.levelOne_neg_weight_eq_zero`. Closing this sorry
-requires constructing the quotient `F² / Δ` as
-`ModularForm Γ(1) (−4)` (no Mathlib API for modular-form division —
-needs custom construction using `delta_ne_zero` and `delta_cuspForm`),
-and the final application of `levelOne_neg_weight_eq_zero`. -/
+zero-dimensional. The proof constructs `G := F²/Δ` as a weight `−4`
+modular form (using the three architectural lemmas above), applies
+Mathlib's `ModularFormClass.levelOne_neg_weight_eq_zero` to get
+`G ≡ 0`, then deduces `F = 0` from `delta_ne_zero`. -/
 theorem weight4_levelOne_cuspForm_vanishes
     (F : CuspForm Γ(1) 4) (τ : ℍ) :
     F τ = 0 := by
-  sorry
+  -- Construct G := F²/Δ as a weight-(-4) modular form.
+  let G : ModularForm Γ(1) (-4) :=
+  { toFun := fun σ : ℍ => (F σ) ^ 2 / delta σ
+    slash_action_eq' := cuspForm_sq_div_delta_slash_invariant F
+    holo' := cuspForm_sq_div_delta_mdiff F
+    bdd_at_cusps' := cuspForm_sq_div_delta_bdd_at_cusps F }
+  -- Apply `levelOne_neg_weight_eq_zero` to get `G ≡ 0`.
+  have hG_zero : ⇑G = 0 :=
+    ModularFormClass.levelOne_neg_weight_eq_zero (show (-4 : ℤ) < 0 by norm_num) G
+  -- Conclude `F τ = 0`.
+  have h_val : G τ = 0 := congrFun hG_zero τ
+  have h_sq_zero : (F τ) ^ 2 / delta τ = 0 := h_val
+  have h_delta_ne : delta τ ≠ 0 := delta_ne_zero τ
+  rw [div_eq_zero_iff] at h_sq_zero
+  rcases h_sq_zero with h_pow | h_delta_zero
+  · exact (pow_eq_zero_iff (by norm_num : (2 : ℕ) ≠ 0)).mp h_pow
+  · exact absurd h_delta_zero h_delta_ne
 
 end RiemannDynamics
