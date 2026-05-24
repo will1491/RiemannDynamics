@@ -129,6 +129,56 @@ noncomputable def diskToHalfPlane {z : ℂ} (hz : z ∈ ball (0 : ℂ) 1) :
     UpperHalfPlane :=
   ⟨cayleyToHalfPlane z, cayleyToHalfPlane_im_pos hz⟩
 
+/-- The inverse Cayley transform `ℍ → 𝔻`: `τ ↦ (τ − i) / (τ + i)`. -/
+noncomputable def halfPlaneToCayley (τ : ℂ) : ℂ := (τ - Complex.I) / (τ + Complex.I)
+
+/-- For `τ ∈ ℍ` (i.e. `0 < τ.im`), `τ + i ≠ 0`. -/
+theorem add_I_ne_zero_of_im_pos {τ : ℂ} (hτ : 0 < τ.im) :
+    τ + Complex.I ≠ 0 := by
+  intro h
+  have h_im : (τ + Complex.I).im = 0 := by rw [h]; simp
+  simp [Complex.add_im, Complex.I_im] at h_im
+  linarith
+
+/-- `halfPlaneToCayley` is a left inverse of `cayleyToHalfPlane` on `ℍ`. -/
+theorem cayleyToHalfPlane_halfPlaneToCayley {τ : ℂ} (hτ : 0 < τ.im) :
+    cayleyToHalfPlane (halfPlaneToCayley τ) = τ := by
+  unfold cayleyToHalfPlane halfPlaneToCayley
+  have h_add_ne : τ + Complex.I ≠ 0 := add_I_ne_zero_of_im_pos hτ
+  field_simp
+  ring
+
+/-- For `τ ∈ ℍ`, `‖halfPlaneToCayley τ‖ < 1`, i.e., the image lands in `𝔻`. -/
+theorem halfPlaneToCayley_mem_ball {τ : ℂ} (hτ : 0 < τ.im) :
+    halfPlaneToCayley τ ∈ ball (0 : ℂ) 1 := by
+  rw [mem_ball, dist_zero_right]
+  unfold halfPlaneToCayley
+  have h_add_ne : τ + Complex.I ≠ 0 := add_I_ne_zero_of_im_pos hτ
+  rw [norm_div]
+  rw [div_lt_one (by positivity)]
+  -- ‖τ − i‖² = (τ.re)² + (τ.im − 1)²; ‖τ + i‖² = (τ.re)² + (τ.im + 1)².
+  -- For τ.im > 0: (τ.im + 1)² > (τ.im − 1)², so ‖τ + i‖ > ‖τ − i‖.
+  have h_sq_lt : ‖τ - Complex.I‖^2 < ‖τ + Complex.I‖^2 := by
+    rw [Complex.sq_norm, Complex.sq_norm]
+    simp [Complex.normSq_apply, Complex.sub_re, Complex.sub_im, Complex.add_re,
+          Complex.add_im, Complex.I_re, Complex.I_im]
+    nlinarith
+  have h_nonneg_left : 0 ≤ ‖τ - Complex.I‖ := norm_nonneg _
+  have h_nonneg_right : 0 ≤ ‖τ + Complex.I‖ := norm_nonneg _
+  exact lt_of_pow_lt_pow_left₀ 2 h_nonneg_right h_sq_lt
+
+/-- **Cayley image of the disk equals `ℍ`.** This is the bijection
+between `𝔻` and `ℍ` at the level of underlying sets in `ℂ`. -/
+theorem cayleyToHalfPlane_image_ball :
+    cayleyToHalfPlane '' ball (0 : ℂ) 1 = { τ : ℂ | 0 < τ.im } := by
+  ext τ
+  constructor
+  · rintro ⟨z, hz, rfl⟩
+    exact cayleyToHalfPlane_im_pos hz
+  · intro hτ_pos
+    refine ⟨halfPlaneToCayley τ, halfPlaneToCayley_mem_ball hτ_pos, ?_⟩
+    exact cayleyToHalfPlane_halfPlaneToCayley hτ_pos
+
 /-- Algebraic difference of Cayley images: `C(z) − C(w) = 2i (z − w) / ((1 − z)(1 − w))`. -/
 theorem cayleyToHalfPlane_sub {z w : ℂ}
     (hz : z ∈ ball (0 : ℂ) 1) (hw : w ∈ ball (0 : ℂ) 1) :

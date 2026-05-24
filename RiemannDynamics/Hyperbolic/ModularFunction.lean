@@ -957,15 +957,13 @@ theorem jacobi_identity {τ : ℂ} (hτ : 0 < τ.im) :
     (pow_eq_zero_iff (by norm_num : (2 : ℕ) ≠ 0)).mp h_zero
   linear_combination h_diff_zero
 
-/-- `θ₂` does not vanish on the upper half-plane. -/
-theorem theta2_ne_zero {τ : ℂ} (hτ : 0 < τ.im) : theta2 τ ≠ 0 := by
-  sorry
+/-! ## Non-vanishing of `θ₂`, `θ₃`, `θ₄` on `ℍ`
 
-/-- `θ₄` does not vanish on the upper half-plane. -/
-theorem theta4_ne_zero {τ : ℂ} (hτ : 0 < τ.im) : theta4 τ ≠ 0 := by
-  sorry
-
-/-! ## Non-vanishing of `θ₃` on `ℍ` -/
+The full-ℍ non-vanishing theorems `theta2_ne_zero`, `theta3_ne_zero`,
+`theta4_ne_zero` are proved later in this file (after the half-regime
+lemmas and the SL(2,ℤ)-reduction infrastructure). They are obtained by
+combining the easy-regime non-vanishing (`theta_i_ne_zero_of_im_ge_half`)
+with the SL(2,ℤ)-invariance of the predicate `all_theta_ne_zero`. -/
 
 /-- For `τ` with imaginary part at least one, the bound
 `‖jacobiTheta τ − 1‖ ≤ 2·exp(−π·τ.im)/(1 − exp(−π·τ.im))` is strictly less
@@ -1006,14 +1004,6 @@ theorem theta3_ne_zero_of_im_ge_one {τ : ℂ} (hτ : 1 ≤ τ.im) :
   rw [h_zero, zero_sub, norm_neg, norm_one] at h_norm_lt
   exact lt_irrefl 1 h_norm_lt
 
-/-- The theta nullwert `θ₃ = jacobiTheta` does not vanish on the upper
-half-plane. The general claim follows from `theta3_ne_zero_of_im_ge_one`
-combined with a Γ_θ-reduction algorithm bringing arbitrary `τ ∈ ℍ` to
-`im ≥ 1` via `S` and `T²`, together with `jacobiTheta_S_smul` and
-`jacobiTheta_T_sq_smul`. Reduction is deferred. -/
-theorem theta3_ne_zero {τ : ℂ} (hτ : 0 < τ.im) : theta3 τ ≠ 0 := by
-  sorry
-
 /-- Easy-regime non-vanishing for `θ₄`. Reduces to
 `theta3_ne_zero_of_im_ge_one` via `θ₄ τ = θ₃ (τ + 1)` and the fact that
 `Im(τ + 1) = Im τ`. -/
@@ -1022,6 +1012,498 @@ theorem theta4_ne_zero_of_im_ge_one {τ : ℂ} (hτ : 1 ≤ τ.im) :
   rw [show theta4 τ = theta3 (τ + 1) from (theta3_add_one τ).symm]
   apply theta3_ne_zero_of_im_ge_one
   simp [Complex.add_im, hτ]
+
+/-- **Easy-regime non-vanishing for `θ₂`.** For `τ.im ≥ 1`,
+`θ₂(τ) = exp(πiτ/4) · jacobiTheta₂(τ/2, τ)`, where the leading two
+terms of `jacobiTheta₂(τ/2, τ)` at `n = 0, −1` both equal `1`, giving
+`jacobiTheta₂(τ/2, τ) = 2 + r(τ)`. The remainder is bounded by the
+geometric series `2·s/(1 − s) ≤ 1` where `s = exp(−2π·τ.im) ≤ 1/3`
+(via `Real.add_one_le_exp 2 ⇒ exp(2π) ≥ 3`), so
+`‖jacobiTheta₂(τ/2, τ)‖ ≥ 2 − 1 = 1 > 0` and `θ₂ ≠ 0` since
+`exp(πiτ/4) ≠ 0`. -/
+theorem theta2_ne_zero_of_im_ge_one {τ : ℂ} (hτ : 1 ≤ τ.im) :
+    theta2 τ ≠ 0 := by
+  have hτim_pos : 0 < τ.im := lt_of_lt_of_le zero_lt_one hτ
+  have hπ_pos := Real.pi_pos
+  -- `s = exp(−2π·τ.im) ≤ 1/3` for τ.im ≥ 1.
+  set s : ℝ := Real.exp (-2 * Real.pi * τ.im) with hs_def
+  have hs_pos : 0 < s := Real.exp_pos _
+  have hs_le_third : s ≤ 1/3 := by
+    rw [hs_def, show (-2 * Real.pi * τ.im : ℝ) = -(2 * Real.pi * τ.im) from by ring,
+        Real.exp_neg,
+        inv_le_comm₀ (Real.exp_pos _) (by norm_num : (0:ℝ) < 1/3),
+        show (1/3 : ℝ)⁻¹ = 3 from by norm_num]
+    have h_3_le_exp_2 : (3 : ℝ) ≤ Real.exp 2 := by
+      have := Real.add_one_le_exp (2 : ℝ); linarith
+    have h_2_le_2piτ : (2 : ℝ) ≤ 2 * Real.pi * τ.im := by
+      have h_pi_3 : (3 : ℝ) ≤ Real.pi := le_of_lt Real.pi_gt_three
+      have h_2pi_pos : 0 < 2 * Real.pi := by positivity
+      nlinarith
+    linarith [Real.exp_le_exp.mpr h_2_le_2piτ]
+  have hs_lt_one : s < 1 := by linarith
+  have h_one_sub_s_pos : 0 < 1 - s := by linarith
+  -- 2·((1-s)⁻¹ - 1) ≤ 1.
+  have h_int_sum_le_one : (1 - s)⁻¹ - 1 + ((1 - s)⁻¹ - 1) ≤ 1 := by
+    have h_inv_eq : (1 - s)⁻¹ - 1 = s / (1 - s) := by
+      field_simp; ring
+    rw [h_inv_eq]
+    rw [show s/(1-s) + s/(1-s) = 2*s/(1-s) from by ring]
+    rw [div_le_one h_one_sub_s_pos]; linarith
+  -- HasSum for the (skipped) geometric series.
+  have h_geo : HasSum (fun m : ℕ => s ^ m) ((1 - s)⁻¹) :=
+    hasSum_geometric_of_lt_one hs_pos.le hs_lt_one
+  have h_skip_geo : HasSum (fun m : ℕ => if m = 0 then (0 : ℝ) else s ^ m)
+                          ((1 - s)⁻¹ - 1) := by
+    have h_step := hasSum_ite_sub_hasSum h_geo 0
+    simp only [pow_zero] at h_step
+    exact h_step
+  -- Sum over ℤ via Int.rec.
+  have h_int_rec : HasSum
+      (fun n : ℤ => Int.rec (fun m : ℕ => if m = 0 then (0 : ℝ) else s ^ m)
+                            (fun m : ℕ => if m = 0 then (0 : ℝ) else s ^ m) n)
+      ((1 - s)⁻¹ - 1 + ((1 - s)⁻¹ - 1)) :=
+    HasSum.int_rec h_skip_geo h_skip_geo
+  -- HasSum for jacobiTheta₂ - 2, by skipping terms at n=0 and n=-1.
+  have h_jt_hasSum := hasSum_jacobiTheta₂_term (τ / 2) hτim_pos
+  have h_zim : (τ / 2 : ℂ).im = τ.im / 2 := by simp
+  -- Show term_0 = 1 and term_{-1} = 1.
+  have h_term_0 : jacobiTheta₂_term 0 (τ / 2) τ = 1 := by
+    simp [jacobiTheta₂_term]
+  have h_term_neg1 : jacobiTheta₂_term (-1) (τ / 2) τ = 1 := by
+    rw [jacobiTheta₂_term]
+    have h_zero : 2 * (Real.pi : ℂ) * Complex.I * ((-1 : ℤ) : ℂ) * (τ/2)
+        + (Real.pi : ℂ) * Complex.I * (((-1 : ℤ) : ℂ)) ^ 2 * τ = 0 := by
+      push_cast; ring
+    rw [h_zero]; exact Complex.exp_zero
+  -- Skip n=0 from jacobiTheta₂.
+  have h_skip_0 : HasSum
+      (fun n : ℤ => if n = 0 then (0 : ℂ) else jacobiTheta₂_term n (τ / 2) τ)
+      (jacobiTheta₂ (τ / 2) τ - 1) := by
+    have h_step := hasSum_ite_sub_hasSum h_jt_hasSum 0
+    rw [h_term_0] at h_step
+    exact h_step
+  -- Skip n=-1 from the result.
+  have h_skip_both : HasSum
+      (fun n : ℤ => if n = -1 then (0 : ℂ)
+                    else if n = 0 then (0 : ℂ) else jacobiTheta₂_term n (τ / 2) τ)
+      (jacobiTheta₂ (τ / 2) τ - 1 - 1) := by
+    have h_step := hasSum_ite_sub_hasSum h_skip_0 (-1)
+    have h_at_neg1 :
+        (if ((-1 : ℤ)) = 0 then (0 : ℂ) else jacobiTheta₂_term (-1) (τ / 2) τ) = 1 := by
+      simp [h_term_neg1]
+    rw [h_at_neg1] at h_step
+    exact h_step
+  -- Per-term norm bound.
+  have h_term_bound : ∀ n : ℤ,
+      ‖(if n = -1 then (0 : ℂ)
+        else if n = 0 then (0 : ℂ) else jacobiTheta₂_term n (τ / 2) τ)‖
+        ≤ Int.rec (fun m : ℕ => if m = 0 then (0 : ℝ) else s ^ m)
+                  (fun m : ℕ => if m = 0 then (0 : ℝ) else s ^ m) n := by
+    intro n
+    cases n with
+    | ofNat m =>
+      by_cases hm : m = 0
+      · subst hm; simp
+      · have hn_ne_neg1 : (Int.ofNat m : ℤ) ≠ -1 := by
+          have h_nn : (0 : ℤ) ≤ Int.ofNat m := Int.natCast_nonneg m
+          omega
+        have hn_ne_0 : (Int.ofNat m : ℤ) ≠ 0 := by
+          change ((m : ℕ) : ℤ) ≠ 0
+          exact_mod_cast hm
+        rw [if_neg hn_ne_neg1, if_neg hn_ne_0]
+        change ‖jacobiTheta₂_term (Int.ofNat m) (τ/2) τ‖ ≤
+               (if m = 0 then (0 : ℝ) else s ^ m)
+        rw [if_neg hm, norm_jacobiTheta₂_term, h_zim,
+            hs_def, ← Real.exp_nat_mul]
+        apply Real.exp_le_exp.mpr
+        have h_cast : ((Int.ofNat m : ℤ) : ℝ) = (m : ℝ) := by simp
+        rw [h_cast]
+        have h_m_pos : 1 ≤ (m : ℝ) := by
+          have : 1 ≤ m := Nat.one_le_iff_ne_zero.mpr hm
+          exact_mod_cast this
+        -- Goal: -π·m²·τ.im - 2π·m·(τ.im/2) ≤ m·(-2π·τ.im)
+        -- ⟺ π·m·τ.im·(m - 1) ≥ 0.
+        have h_key : 0 ≤ Real.pi * (m : ℝ) * τ.im * ((m : ℝ) - 1) := by
+          have h_m_nn : (0 : ℝ) ≤ (m : ℝ) := by exact_mod_cast Nat.zero_le m
+          have h_m_sub_nn : (0 : ℝ) ≤ (m : ℝ) - 1 := by linarith
+          exact mul_nonneg (mul_nonneg (mul_nonneg hπ_pos.le h_m_nn) hτim_pos.le) h_m_sub_nn
+        nlinarith [h_key]
+    | negSucc m =>
+      by_cases hm : m = 0
+      · subst hm; simp
+      · have hn_ne_neg1 : (Int.negSucc m : ℤ) ≠ -1 := by
+          intro h
+          have : Int.negSucc m = -↑(m + 1) := rfl
+          rw [this] at h; omega
+        have hn_ne_0 : (Int.negSucc m : ℤ) ≠ 0 := by
+          intro h
+          have : Int.negSucc m = -↑(m + 1) := rfl
+          rw [this] at h; omega
+        rw [if_neg hn_ne_neg1, if_neg hn_ne_0]
+        change ‖jacobiTheta₂_term (Int.negSucc m) (τ/2) τ‖ ≤
+               (if m = 0 then (0 : ℝ) else s ^ m)
+        rw [if_neg hm, norm_jacobiTheta₂_term, h_zim,
+            hs_def, ← Real.exp_nat_mul]
+        apply Real.exp_le_exp.mpr
+        have h_cast : ((Int.negSucc m : ℤ) : ℝ) = -((m : ℝ) + 1) := by
+          rw [Int.cast_negSucc]; push_cast; ring
+        rw [h_cast]
+        have h_m_pos : 1 ≤ (m : ℝ) := by
+          have : 1 ≤ m := Nat.one_le_iff_ne_zero.mpr hm
+          exact_mod_cast this
+        -- After substituting, LHS = -π·τ.im·(m+1)·m, RHS = -2π·τ.im·m.
+        -- Need: -π·τ.im·m·(m+1) ≤ -2π·τ.im·m ⟺ m+1 ≥ 2 ⟺ m ≥ 1.
+        have h_key : 0 ≤ Real.pi * (m : ℝ) * τ.im * ((m : ℝ) - 1) := by
+          have h_m_nn : (0 : ℝ) ≤ (m : ℝ) := by exact_mod_cast Nat.zero_le m
+          have h_m_sub_nn : (0 : ℝ) ≤ (m : ℝ) - 1 := by linarith
+          exact mul_nonneg (mul_nonneg (mul_nonneg hπ_pos.le h_m_nn) hτim_pos.le) h_m_sub_nn
+        nlinarith [h_key]
+  -- Apply tsum_of_norm_bounded.
+  have h_norm_le : ‖jacobiTheta₂ (τ / 2) τ - 1 - 1‖
+      ≤ (1 - s)⁻¹ - 1 + ((1 - s)⁻¹ - 1) := by
+    rw [← h_skip_both.tsum_eq]
+    exact tsum_of_norm_bounded h_int_rec h_term_bound
+  have h_norm_diff_le_one : ‖jacobiTheta₂ (τ / 2) τ - 2‖ ≤ 1 := by
+    have h_eq : jacobiTheta₂ (τ / 2) τ - 2 = jacobiTheta₂ (τ / 2) τ - 1 - 1 := by ring
+    rw [h_eq]; linarith
+  -- ‖jacobiTheta₂‖ ≥ 1 via reverse triangle.
+  have h_jt_norm_ge : (1 : ℝ) ≤ ‖jacobiTheta₂ (τ / 2) τ‖ := by
+    have h_rev : ‖(2 : ℂ)‖ - ‖(2 : ℂ) - jacobiTheta₂ (τ / 2) τ‖
+        ≤ ‖(2 : ℂ) - ((2 : ℂ) - jacobiTheta₂ (τ / 2) τ)‖ :=
+      norm_sub_norm_le (2 : ℂ) ((2 : ℂ) - jacobiTheta₂ (τ / 2) τ)
+    have h_simp : (2 : ℂ) - ((2 : ℂ) - jacobiTheta₂ (τ / 2) τ) = jacobiTheta₂ (τ / 2) τ := by ring
+    rw [h_simp] at h_rev
+    have h_two_norm : ‖(2 : ℂ)‖ = 2 := by simp
+    have h_eq_neg : (2 : ℂ) - jacobiTheta₂ (τ / 2) τ = -(jacobiTheta₂ (τ / 2) τ - 2) := by ring
+    rw [h_two_norm, h_eq_neg, norm_neg] at h_rev
+    linarith
+  -- Conclude theta2 ≠ 0.
+  intro h_zero
+  unfold theta2 at h_zero
+  have h_exp_ne : Complex.exp ((Real.pi : ℂ) * Complex.I * τ / 4) ≠ 0 :=
+    Complex.exp_ne_zero _
+  rcases mul_eq_zero.mp h_zero with h | h
+  · exact h_exp_ne h
+  · rw [h, norm_zero] at h_jt_norm_ge
+    linarith
+
+/-- **Extended-regime non-vanishing for `θ₃`** (`im ≥ 1/2`). Same
+proof shape as `theta3_ne_zero_of_im_ge_one`, but the numeric bound
+`exp(−π/2) < 1/3` uses `Real.quadratic_le_exp_of_nonneg` at `π/2`
+to get `exp(π/2) ≥ 1 + π/2 + (π/2)²/2 > 3` from `π > 3`. The lower
+threshold `1/2` is compatible with `SL(2,ℤ)`-reduction
+(`ModularGroup.exists_one_half_le_im_smul`) and is needed for
+bridging to the full upper half-plane via the modular action. -/
+theorem theta3_ne_zero_of_im_ge_half {τ : ℂ} (hτ : 1 / 2 ≤ τ.im) :
+    theta3 τ ≠ 0 := by
+  unfold theta3
+  have hτ_pos : 0 < τ.im := lt_of_lt_of_le (by norm_num : (0:ℝ) < 1/2) hτ
+  have h_bound : ‖jacobiTheta τ - 1‖ ≤
+      2 / (1 - Real.exp (-Real.pi * τ.im)) * Real.exp (-Real.pi * τ.im) :=
+    norm_jacobiTheta_sub_one_le hτ_pos
+  set x := Real.exp (-Real.pi * τ.im) with hx_def
+  have hπ_pos : 0 < Real.pi := Real.pi_pos
+  have h_x_pos : 0 < x := Real.exp_pos _
+  have h_x_le : x ≤ Real.exp (-Real.pi / 2) := by
+    apply Real.exp_le_exp.mpr
+    nlinarith
+  have h_exp_neg_pi_half : Real.exp (-Real.pi / 2) < 1 / 3 := by
+    have h_pi_gt_3 : 3 < Real.pi := Real.pi_gt_three
+    have h_pi_half_nn : (0 : ℝ) ≤ Real.pi / 2 := by linarith
+    have h_quad : 1 + Real.pi/2 + (Real.pi/2)^2 / 2 ≤ Real.exp (Real.pi/2) :=
+      Real.quadratic_le_exp_of_nonneg h_pi_half_nn
+    have h_3_lt_quad : (3 : ℝ) < 1 + Real.pi/2 + (Real.pi/2)^2 / 2 := by nlinarith
+    have h_3_lt_exp_pi_half : (3 : ℝ) < Real.exp (Real.pi/2) :=
+      lt_of_lt_of_le h_3_lt_quad h_quad
+    have h_exp_pi_half_pos : 0 < Real.exp (Real.pi/2) := Real.exp_pos _
+    rw [show (-Real.pi / 2 : ℝ) = -(Real.pi/2) from by ring, Real.exp_neg,
+        inv_lt_comm₀ h_exp_pi_half_pos (by norm_num : (0 : ℝ) < 1 / 3),
+        show (1 / 3 : ℝ)⁻¹ = 3 from by norm_num]
+    exact h_3_lt_exp_pi_half
+  have h_x_lt_third : x < 1 / 3 := lt_of_le_of_lt h_x_le h_exp_neg_pi_half
+  have h_one_sub_x_pos : 0 < 1 - x := by linarith
+  have h_bound_lt_one : 2 / (1 - x) * x < 1 := by
+    rw [div_mul_eq_mul_div, div_lt_one h_one_sub_x_pos]; linarith
+  have h_norm_lt : ‖jacobiTheta τ - 1‖ < 1 := lt_of_le_of_lt h_bound h_bound_lt_one
+  intro h_zero
+  rw [h_zero, zero_sub, norm_neg, norm_one] at h_norm_lt
+  exact lt_irrefl 1 h_norm_lt
+
+/-- Extended-regime non-vanishing for `θ₄`. Reduces to
+`theta3_ne_zero_of_im_ge_half` via `θ₄ τ = θ₃ (τ + 1)`. -/
+theorem theta4_ne_zero_of_im_ge_half {τ : ℂ} (hτ : 1 / 2 ≤ τ.im) :
+    theta4 τ ≠ 0 := by
+  rw [show theta4 τ = theta3 (τ + 1) from (theta3_add_one τ).symm]
+  apply theta3_ne_zero_of_im_ge_half
+  rw [Complex.add_im]; simp; linarith
+
+/-- **Extended-regime non-vanishing for `θ₂`** (`im ≥ 1/2`). Same
+series-decomposition proof as `theta2_ne_zero_of_im_ge_one`, but the
+numeric bound `s ≤ 1/3` (where `s = exp(−2π·τ.im)`) uses the simpler
+`Real.add_one_le_exp π` (giving `exp(π) ≥ 1 + π ≥ 4 > 3`) — for
+`τ.im ≥ 1/2`, `s ≤ exp(−π) ≤ 1/3`. -/
+theorem theta2_ne_zero_of_im_ge_half {τ : ℂ} (hτ : 1 / 2 ≤ τ.im) :
+    theta2 τ ≠ 0 := by
+  have hτim_pos : 0 < τ.im := lt_of_lt_of_le (by norm_num : (0:ℝ) < 1/2) hτ
+  have hπ_pos := Real.pi_pos
+  set s : ℝ := Real.exp (-2 * Real.pi * τ.im) with hs_def
+  have hs_pos : 0 < s := Real.exp_pos _
+  have hs_le_third : s ≤ 1/3 := by
+    rw [hs_def, show (-2 * Real.pi * τ.im : ℝ) = -(2 * Real.pi * τ.im) from by ring,
+        Real.exp_neg,
+        inv_le_comm₀ (Real.exp_pos _) (by norm_num : (0:ℝ) < 1/3),
+        show (1/3 : ℝ)⁻¹ = 3 from by norm_num]
+    have h_pi_gt_3 : 3 < Real.pi := Real.pi_gt_three
+    have h_pi_le_2pi_tau : Real.pi ≤ 2 * Real.pi * τ.im := by nlinarith
+    have h_exp_le : Real.exp Real.pi ≤ Real.exp (2 * Real.pi * τ.im) :=
+      Real.exp_le_exp.mpr h_pi_le_2pi_tau
+    have h_3_le_exp_pi : (3 : ℝ) ≤ Real.exp Real.pi := by
+      have := Real.add_one_le_exp Real.pi; linarith
+    linarith
+  have hs_lt_one : s < 1 := by linarith
+  have h_one_sub_s_pos : 0 < 1 - s := by linarith
+  have h_int_sum_le_one : (1 - s)⁻¹ - 1 + ((1 - s)⁻¹ - 1) ≤ 1 := by
+    have h_inv_eq : (1 - s)⁻¹ - 1 = s / (1 - s) := by field_simp; ring
+    rw [h_inv_eq]
+    rw [show s/(1-s) + s/(1-s) = 2*s/(1-s) from by ring]
+    rw [div_le_one h_one_sub_s_pos]; linarith
+  have h_geo : HasSum (fun m : ℕ => s ^ m) ((1 - s)⁻¹) :=
+    hasSum_geometric_of_lt_one hs_pos.le hs_lt_one
+  have h_skip_geo : HasSum (fun m : ℕ => if m = 0 then (0 : ℝ) else s ^ m)
+                          ((1 - s)⁻¹ - 1) := by
+    have h_step := hasSum_ite_sub_hasSum h_geo 0
+    simp only [pow_zero] at h_step
+    exact h_step
+  have h_int_rec : HasSum
+      (fun n : ℤ => Int.rec (fun m : ℕ => if m = 0 then (0 : ℝ) else s ^ m)
+                            (fun m : ℕ => if m = 0 then (0 : ℝ) else s ^ m) n)
+      ((1 - s)⁻¹ - 1 + ((1 - s)⁻¹ - 1)) :=
+    HasSum.int_rec h_skip_geo h_skip_geo
+  have h_jt_hasSum := hasSum_jacobiTheta₂_term (τ / 2) hτim_pos
+  have h_zim : (τ / 2 : ℂ).im = τ.im / 2 := by simp
+  have h_term_0 : jacobiTheta₂_term 0 (τ / 2) τ = 1 := by
+    simp [jacobiTheta₂_term]
+  have h_term_neg1 : jacobiTheta₂_term (-1) (τ / 2) τ = 1 := by
+    rw [jacobiTheta₂_term]
+    have h_zero : 2 * (Real.pi : ℂ) * Complex.I * ((-1 : ℤ) : ℂ) * (τ/2)
+        + (Real.pi : ℂ) * Complex.I * (((-1 : ℤ) : ℂ)) ^ 2 * τ = 0 := by
+      push_cast; ring
+    rw [h_zero]; exact Complex.exp_zero
+  have h_skip_0 : HasSum
+      (fun n : ℤ => if n = 0 then (0 : ℂ) else jacobiTheta₂_term n (τ / 2) τ)
+      (jacobiTheta₂ (τ / 2) τ - 1) := by
+    have h_step := hasSum_ite_sub_hasSum h_jt_hasSum 0
+    rw [h_term_0] at h_step
+    exact h_step
+  have h_skip_both : HasSum
+      (fun n : ℤ => if n = -1 then (0 : ℂ)
+                    else if n = 0 then (0 : ℂ) else jacobiTheta₂_term n (τ / 2) τ)
+      (jacobiTheta₂ (τ / 2) τ - 1 - 1) := by
+    have h_step := hasSum_ite_sub_hasSum h_skip_0 (-1)
+    have h_at_neg1 :
+        (if ((-1 : ℤ)) = 0 then (0 : ℂ) else jacobiTheta₂_term (-1) (τ / 2) τ) = 1 := by
+      simp [h_term_neg1]
+    rw [h_at_neg1] at h_step
+    exact h_step
+  have h_term_bound : ∀ n : ℤ,
+      ‖(if n = -1 then (0 : ℂ)
+        else if n = 0 then (0 : ℂ) else jacobiTheta₂_term n (τ / 2) τ)‖
+        ≤ Int.rec (fun m : ℕ => if m = 0 then (0 : ℝ) else s ^ m)
+                  (fun m : ℕ => if m = 0 then (0 : ℝ) else s ^ m) n := by
+    intro n
+    cases n with
+    | ofNat m =>
+      by_cases hm : m = 0
+      · subst hm; simp
+      · have hn_ne_neg1 : (Int.ofNat m : ℤ) ≠ -1 := by
+          have h_nn : (0 : ℤ) ≤ Int.ofNat m := Int.natCast_nonneg m
+          omega
+        have hn_ne_0 : (Int.ofNat m : ℤ) ≠ 0 := by
+          change ((m : ℕ) : ℤ) ≠ 0
+          exact_mod_cast hm
+        rw [if_neg hn_ne_neg1, if_neg hn_ne_0]
+        change ‖jacobiTheta₂_term (Int.ofNat m) (τ/2) τ‖ ≤
+               (if m = 0 then (0 : ℝ) else s ^ m)
+        rw [if_neg hm, norm_jacobiTheta₂_term, h_zim,
+            hs_def, ← Real.exp_nat_mul]
+        apply Real.exp_le_exp.mpr
+        have h_cast : ((Int.ofNat m : ℤ) : ℝ) = (m : ℝ) := by simp
+        rw [h_cast]
+        have h_m_pos : 1 ≤ (m : ℝ) := by
+          have : 1 ≤ m := Nat.one_le_iff_ne_zero.mpr hm
+          exact_mod_cast this
+        have h_key : 0 ≤ Real.pi * (m : ℝ) * τ.im * ((m : ℝ) - 1) := by
+          have h_m_nn : (0 : ℝ) ≤ (m : ℝ) := by exact_mod_cast Nat.zero_le m
+          have h_m_sub_nn : (0 : ℝ) ≤ (m : ℝ) - 1 := by linarith
+          exact mul_nonneg (mul_nonneg (mul_nonneg hπ_pos.le h_m_nn) hτim_pos.le) h_m_sub_nn
+        nlinarith [h_key]
+    | negSucc m =>
+      by_cases hm : m = 0
+      · subst hm; simp
+      · have hn_ne_neg1 : (Int.negSucc m : ℤ) ≠ -1 := by
+          intro h
+          have : Int.negSucc m = -↑(m + 1) := rfl
+          rw [this] at h; omega
+        have hn_ne_0 : (Int.negSucc m : ℤ) ≠ 0 := by
+          intro h
+          have : Int.negSucc m = -↑(m + 1) := rfl
+          rw [this] at h; omega
+        rw [if_neg hn_ne_neg1, if_neg hn_ne_0]
+        change ‖jacobiTheta₂_term (Int.negSucc m) (τ/2) τ‖ ≤
+               (if m = 0 then (0 : ℝ) else s ^ m)
+        rw [if_neg hm, norm_jacobiTheta₂_term, h_zim,
+            hs_def, ← Real.exp_nat_mul]
+        apply Real.exp_le_exp.mpr
+        have h_cast : ((Int.negSucc m : ℤ) : ℝ) = -((m : ℝ) + 1) := by
+          rw [Int.cast_negSucc]; push_cast; ring
+        rw [h_cast]
+        have h_m_pos : 1 ≤ (m : ℝ) := by
+          have : 1 ≤ m := Nat.one_le_iff_ne_zero.mpr hm
+          exact_mod_cast this
+        have h_key : 0 ≤ Real.pi * (m : ℝ) * τ.im * ((m : ℝ) - 1) := by
+          have h_m_nn : (0 : ℝ) ≤ (m : ℝ) := by exact_mod_cast Nat.zero_le m
+          have h_m_sub_nn : (0 : ℝ) ≤ (m : ℝ) - 1 := by linarith
+          exact mul_nonneg (mul_nonneg (mul_nonneg hπ_pos.le h_m_nn) hτim_pos.le) h_m_sub_nn
+        nlinarith [h_key]
+  have h_norm_le : ‖jacobiTheta₂ (τ / 2) τ - 1 - 1‖
+      ≤ (1 - s)⁻¹ - 1 + ((1 - s)⁻¹ - 1) := by
+    rw [← h_skip_both.tsum_eq]
+    exact tsum_of_norm_bounded h_int_rec h_term_bound
+  have h_norm_diff_le_one : ‖jacobiTheta₂ (τ / 2) τ - 2‖ ≤ 1 := by
+    have h_eq : jacobiTheta₂ (τ / 2) τ - 2 = jacobiTheta₂ (τ / 2) τ - 1 - 1 := by ring
+    rw [h_eq]; linarith
+  have h_jt_norm_ge : (1 : ℝ) ≤ ‖jacobiTheta₂ (τ / 2) τ‖ := by
+    have h_rev : ‖(2 : ℂ)‖ - ‖(2 : ℂ) - jacobiTheta₂ (τ / 2) τ‖
+        ≤ ‖(2 : ℂ) - ((2 : ℂ) - jacobiTheta₂ (τ / 2) τ)‖ :=
+      norm_sub_norm_le (2 : ℂ) ((2 : ℂ) - jacobiTheta₂ (τ / 2) τ)
+    have h_simp : (2 : ℂ) - ((2 : ℂ) - jacobiTheta₂ (τ / 2) τ) = jacobiTheta₂ (τ / 2) τ := by ring
+    rw [h_simp] at h_rev
+    have h_two_norm : ‖(2 : ℂ)‖ = 2 := by simp
+    have h_eq_neg : (2 : ℂ) - jacobiTheta₂ (τ / 2) τ = -(jacobiTheta₂ (τ / 2) τ - 2) := by ring
+    rw [h_two_norm, h_eq_neg, norm_neg] at h_rev
+    linarith
+  intro h_zero
+  unfold theta2 at h_zero
+  have h_exp_ne : Complex.exp ((Real.pi : ℂ) * Complex.I * τ / 4) ≠ 0 :=
+    Complex.exp_ne_zero _
+  rcases mul_eq_zero.mp h_zero with h | h
+  · exact h_exp_ne h
+  · rw [h, norm_zero] at h_jt_norm_ge
+    linarith
+
+/-! ### `SL(2,ℤ)`-reduction: extending non-vanishing to all of `ℍ` -/
+
+/-- All three theta nullwerte are simultaneously nonzero at `τ`.
+This is the orbit-invariant predicate under the `SL(2,ℤ)`-action,
+since `SL(2,ℤ)` permutes `{θ₂, θ₃, θ₄}` modulo nonzero factors. -/
+def all_theta_ne_zero (τ : ℂ) : Prop :=
+  theta2 τ ≠ 0 ∧ theta3 τ ≠ 0 ∧ theta4 τ ≠ 0
+
+/-- Easy-regime version of `all_theta_ne_zero` for `τ.im ≥ 1/2`. -/
+theorem all_theta_ne_zero_of_im_ge_half {τ : ℂ} (hτ : 1 / 2 ≤ τ.im) :
+    all_theta_ne_zero τ :=
+  ⟨theta2_ne_zero_of_im_ge_half hτ,
+   theta3_ne_zero_of_im_ge_half hτ,
+   theta4_ne_zero_of_im_ge_half hτ⟩
+
+/-- T-invariance: `all_theta_ne_zero (τ + 1) ↔ all_theta_ne_zero τ`.
+Uses `theta2_add_one`, `theta3_add_one`, `theta4_add_one`; the T-shift
+permutes `θ₃ ↔ θ₄` and rescales `θ₂` by the nonzero `exp(πi/4)`. -/
+theorem all_theta_ne_zero_T_iff (τ : ℂ) :
+    all_theta_ne_zero (τ + 1) ↔ all_theta_ne_zero τ := by
+  unfold all_theta_ne_zero
+  rw [theta2_add_one, theta3_add_one, theta4_add_one]
+  have h_exp_ne : Complex.exp ((Real.pi : ℂ) * Complex.I / 4) ≠ 0 :=
+    Complex.exp_ne_zero _
+  constructor
+  · rintro ⟨h2, h3, h4⟩
+    exact ⟨(mul_ne_zero_iff.mp h2).2, h4, h3⟩
+  · rintro ⟨h2, h3, h4⟩
+    exact ⟨mul_ne_zero h_exp_ne h2, h4, h3⟩
+
+/-- S-invariance: `all_theta_ne_zero (-1/τ) ↔ all_theta_ne_zero τ`
+for `τ ∈ ℍ`. Uses `theta2_S_smul`, `theta3_S_smul`, `theta4_S_smul`;
+the S-action permutes `θ₂ ↔ θ₄` (fixing `θ₃`) and rescales by the
+nonzero `(−iτ)^{1/2}`. -/
+theorem all_theta_ne_zero_S_iff {τ : ℂ} (hτ : 0 < τ.im) :
+    all_theta_ne_zero (-1 / τ) ↔ all_theta_ne_zero τ := by
+  unfold all_theta_ne_zero
+  rw [theta2_S_smul hτ, theta3_S_smul hτ, theta4_S_smul hτ]
+  have hτ_ne : τ ≠ 0 := fun h => by simp [h] at hτ
+  have h_mIτ_ne : -Complex.I * τ ≠ 0 :=
+    mul_ne_zero (neg_ne_zero.mpr Complex.I_ne_zero) hτ_ne
+  have h_factor_ne : (-Complex.I * τ) ^ (1 / 2 : ℂ) ≠ 0 :=
+    Complex.cpow_ne_zero_iff.mpr (Or.inl h_mIτ_ne)
+  constructor
+  · rintro ⟨h2, h3, h4⟩
+    refine ⟨(mul_ne_zero_iff.mp h4).2, (mul_ne_zero_iff.mp h3).2, (mul_ne_zero_iff.mp h2).2⟩
+  · rintro ⟨h2, h3, h4⟩
+    exact ⟨mul_ne_zero h_factor_ne h4, mul_ne_zero h_factor_ne h3, mul_ne_zero h_factor_ne h2⟩
+
+/-- **Main SL(2,ℤ)-invariance of `all_theta_ne_zero`.** For any
+`γ ∈ SL(2,ℤ)` and any `τ ∈ ℍ`,
+`all_theta_ne_zero ((γ • τ) : ℂ) ↔ all_theta_ne_zero (τ : ℂ)`. Proved
+by `Subgroup.closure_induction` on `SpecialLinearGroup.SL2Z_generators`,
+using `all_theta_ne_zero_T_iff` and `all_theta_ne_zero_S_iff` on the
+generators. -/
+theorem all_theta_ne_zero_smul_iff_SL2Z (γ : SL(2, ℤ)) :
+    ∀ τ : UpperHalfPlane,
+      all_theta_ne_zero ((γ • τ : UpperHalfPlane) : ℂ) ↔ all_theta_ne_zero (τ : ℂ) := by
+  have hmem : γ ∈ Subgroup.closure ({ModularGroup.S, ModularGroup.T} : Set SL(2, ℤ)) := by
+    simp [SpecialLinearGroup.SL2Z_generators]
+  induction hmem using Subgroup.closure_induction with
+  | one =>
+    intro τ; rw [one_smul]
+  | mem g hg =>
+    intro τ
+    rcases hg with h | h
+    · -- g = S
+      subst h
+      rw [UpperHalfPlane.modular_S_smul]
+      change all_theta_ne_zero ((-(τ : ℂ))⁻¹) ↔ _
+      rw [show (-(τ : ℂ))⁻¹ = -1 / (τ : ℂ) from by field_simp]
+      exact all_theta_ne_zero_S_iff τ.2
+    · -- g = T
+      subst h
+      rw [UpperHalfPlane.modular_T_smul, UpperHalfPlane.coe_vadd]
+      rw [show (((1 : ℝ) : ℂ) + (τ : ℂ)) = (τ : ℂ) + 1 from by push_cast; ring]
+      exact all_theta_ne_zero_T_iff (τ : ℂ)
+  | mul g h _ _ ig ih =>
+    intro τ
+    rw [mul_smul]
+    exact (ig (h • τ)).trans (ih τ)
+  | inv g _ ig =>
+    intro τ
+    have h_id : g • (g⁻¹ • τ : UpperHalfPlane) = τ := by
+      rw [← mul_smul, mul_inv_cancel, one_smul]
+    have h := ig (g⁻¹ • τ)
+    rw [h_id] at h
+    exact h.symm
+
+/-- **Full-`ℍ` theta non-vanishing.** For any `τ ∈ ℍ`, all three theta
+nullwerte are nonzero. Applies `SL(2,ℤ)`-reduction (Mathlib's
+`ModularGroup.exists_one_half_le_im_smul`) to land in the easy regime
+`im ≥ 1/2`, then transports the easy-regime non-vanishing back via
+`all_theta_ne_zero_smul_iff_SL2Z`. -/
+theorem all_theta_ne_zero_on_H {τ : ℂ} (hτ : 0 < τ.im) :
+    all_theta_ne_zero τ := by
+  set τH : UpperHalfPlane := ⟨τ, hτ⟩
+  obtain ⟨γ, hγ⟩ := ModularGroup.exists_one_half_le_im_smul τH
+  have h_at_γτ : all_theta_ne_zero (((γ • τH : UpperHalfPlane)) : ℂ) :=
+    all_theta_ne_zero_of_im_ge_half hγ
+  exact (all_theta_ne_zero_smul_iff_SL2Z γ τH).mp h_at_γτ
+
+/-- `θ₂` does not vanish on the upper half-plane. -/
+theorem theta2_ne_zero {τ : ℂ} (hτ : 0 < τ.im) : theta2 τ ≠ 0 :=
+  (all_theta_ne_zero_on_H hτ).1
+
+/-- `θ₃ = jacobiTheta` does not vanish on the upper half-plane. -/
+theorem theta3_ne_zero {τ : ℂ} (hτ : 0 < τ.im) : theta3 τ ≠ 0 :=
+  (all_theta_ne_zero_on_H hτ).2.1
+
+/-- `θ₄` does not vanish on the upper half-plane. -/
+theorem theta4_ne_zero {τ : ℂ} (hτ : 0 < τ.im) : theta4 τ ≠ 0 :=
+  (all_theta_ne_zero_on_H hτ).2.2
 
 /-- **Easy-regime differentiability of `λ`.** For `τ` with `1 ≤ τ.im`,
 `modularLambdaH` is differentiable at `τ` (since `θ₃(τ) ≠ 0` and both
@@ -1038,16 +1520,38 @@ theorem modularLambdaH_differentiableAt_of_im_ge_one {τ : ℂ} (hτ : 1 ≤ τ.
 
 /-! ## Range and omitted values of `λ` -/
 
-/-- `λ(τ) ≠ 0` for `τ ∈ ℍ`. (Equivalent to `θ₂(τ) ≠ 0` on `ℍ`.) -/
+/-- `λ(τ) ≠ 0` for `τ ∈ ℍ`. Directly from `θ₂(τ) ≠ 0` and
+`θ₃(τ) ≠ 0`: `λ(τ) = θ₂⁴/θ₃⁴`, and `θ₂⁴ ≠ 0`. -/
 theorem modularLambdaH_ne_zero {τ : ℂ} (hτ : 0 < τ.im) :
     modularLambdaH τ ≠ 0 := by
-  sorry
+  unfold modularLambdaH
+  have h2 := theta2_ne_zero hτ
+  have h3 := theta3_ne_zero hτ
+  exact div_ne_zero (pow_ne_zero 4 h2) (pow_ne_zero 4 h3)
 
-/-- `λ(τ) ≠ 1` for `τ ∈ ℍ`. (Equivalent to `θ₄(τ) ≠ 0` on `ℍ` via
-`λ + (θ₄/θ₃)⁴ = 1`, the Jacobi identity.) -/
+/-- `λ(τ) ≠ 1` for `τ ∈ ℍ`. Combines Jacobi's identity
+`θ₂⁴ + θ₄⁴ = θ₃⁴` (giving `λ = 1 − (θ₄/θ₃)⁴`) with `θ₄(τ) ≠ 0`. -/
 theorem modularLambdaH_ne_one {τ : ℂ} (hτ : 0 < τ.im) :
     modularLambdaH τ ≠ 1 := by
-  sorry
+  unfold modularLambdaH
+  have h2 := theta2_ne_zero hτ
+  have h3 := theta3_ne_zero hτ
+  have h4 := theta4_ne_zero hτ
+  have h3_pow : (theta3 τ)^4 ≠ 0 := pow_ne_zero 4 h3
+  have h_jacobi : theta2 τ ^ 4 + theta4 τ ^ 4 = theta3 τ ^ 4 := jacobi_identity hτ
+  intro h_eq
+  -- λ = θ₂⁴/θ₃⁴ = 1 means θ₂⁴ = θ₃⁴.
+  have h_theta2_pow_eq : theta2 τ ^ 4 = theta3 τ ^ 4 := by
+    have h_eq' := h_eq
+    field_simp at h_eq'
+    exact h_eq'
+  -- Combined with Jacobi: θ₄⁴ = 0.
+  have h_theta4_pow_zero : theta4 τ ^ 4 = 0 := by
+    linear_combination h_jacobi - h_theta2_pow_eq
+  -- Hence θ₄ = 0, contradicting theta4_ne_zero.
+  have h_theta4 : theta4 τ = 0 :=
+    (pow_eq_zero_iff (by norm_num : (4 : ℕ) ≠ 0)).mp h_theta4_pow_zero
+  exact h4 h_theta4
 
 /-- The image of `λ` on `ℍ` is exactly the triply-punctured plane
 `ℂ ∖ {0, 1}`. -/
@@ -1067,10 +1571,20 @@ theorem modularLambdaH_gamma2_invariant
 
 /-! ## Holomorphy and the covering map property -/
 
-/-- `λ` is holomorphic on the upper half-plane. -/
+/-- `λ` is holomorphic on the upper half-plane. Follows from
+`theta3_ne_zero` on `ℍ` together with the differentiability of the
+theta nullwerte. -/
 theorem modularLambdaH_differentiableOn :
     DifferentiableOn ℂ modularLambdaH { τ : ℂ | 0 < τ.im } := by
-  sorry
+  intro τ hτ
+  have hτ_pos : 0 < τ.im := hτ
+  have h3 : theta3 τ ≠ 0 := theta3_ne_zero hτ_pos
+  have h3_pow : (theta3 τ)^4 ≠ 0 := pow_ne_zero 4 h3
+  unfold modularLambdaH
+  apply DifferentiableAt.differentiableWithinAt
+  refine DifferentiableAt.div ?_ ?_ h3_pow
+  · exact (theta2_differentiableAt hτ_pos).pow 4
+  · exact (theta3_differentiableAt hτ_pos).pow 4
 
 /-- `λ : ℍ → ℂ ∖ {0, 1}` is a covering map. Stated as `IsCoveringMapOn`
 on the target side `ℂ ∖ {0, 1}`; the preimage under `λ` of this set
@@ -1082,20 +1596,52 @@ theorem modularLambdaH_isCoveringMapOn :
 
 /-! ## Disk version `modularLambda : 𝔻 → ℂ ∖ {0, 1}` -/
 
-/-- The disk modular function takes values in the triply-punctured plane. -/
+/-- The disk modular function takes values in the triply-punctured plane.
+Reduces to `modularLambdaH_ne_zero` and `modularLambdaH_ne_one` via the
+Cayley transform: `cayleyToHalfPlane` sends `𝔻` to `ℍ`, so
+`(cayleyToHalfPlane z).im > 0`. -/
 theorem modularLambda_omits {z : ℂ} (hz : z ∈ ball (0 : ℂ) 1) :
     modularLambda z ≠ 0 ∧ modularLambda z ≠ 1 := by
-  sorry
+  unfold modularLambda
+  have hτ_pos : 0 < (cayleyToHalfPlane z).im := cayleyToHalfPlane_im_pos hz
+  exact ⟨modularLambdaH_ne_zero hτ_pos, modularLambdaH_ne_one hτ_pos⟩
 
-/-- The image of `modularLambda` on `𝔻` is exactly `ℂ ∖ {0, 1}`. -/
+/-- The image of `modularLambda` on `𝔻` is exactly `ℂ ∖ {0, 1}`.
+Combines `cayleyToHalfPlane_image_ball` (Cayley sends `𝔻` onto `ℍ`)
+with `modularLambdaH_image` (surjectivity of `λ` onto the
+triply-punctured plane). -/
 theorem modularLambda_image :
     modularLambda '' ball (0 : ℂ) 1 = { w : ℂ | w ≠ 0 ∧ w ≠ 1 } := by
-  sorry
+  unfold modularLambda
+  rw [show (fun z => modularLambdaH (cayleyToHalfPlane z))
+        = modularLambdaH ∘ cayleyToHalfPlane from rfl,
+      Set.image_comp, cayleyToHalfPlane_image_ball]
+  exact modularLambdaH_image
 
-/-- `modularLambda` is holomorphic on the unit disk. -/
+/-- `modularLambda` is holomorphic on the unit disk. Composition of
+`cayleyToHalfPlane : 𝔻 → ℍ` (Möbius, hence differentiable on `𝔻`) with
+`modularLambdaH` (differentiable on `ℍ`). -/
 theorem modularLambda_differentiableOn :
     DifferentiableOn ℂ modularLambda (ball (0 : ℂ) 1) := by
-  sorry
+  intro z hz
+  unfold modularLambda
+  have h_one_sub_ne : (1 - z) ≠ 0 := by
+    simp only [Metric.mem_ball, dist_zero_right] at hz
+    intro h
+    have : z = 1 := by linear_combination -h
+    rw [this] at hz; simp at hz
+  have h_cayley_diff : DifferentiableAt ℂ cayleyToHalfPlane z := by
+    unfold cayleyToHalfPlane
+    fun_prop (disch := exact h_one_sub_ne)
+  have hτ_pos : 0 < (cayleyToHalfPlane z).im := cayleyToHalfPlane_im_pos hz
+  have h_modH_diff : DifferentiableAt ℂ modularLambdaH (cayleyToHalfPlane z) := by
+    have h3 : theta3 (cayleyToHalfPlane z) ≠ 0 := theta3_ne_zero hτ_pos
+    have h3_pow : (theta3 (cayleyToHalfPlane z))^4 ≠ 0 := pow_ne_zero 4 h3
+    unfold modularLambdaH
+    refine DifferentiableAt.div ?_ ?_ h3_pow
+    · exact (theta2_differentiableAt hτ_pos).pow 4
+    · exact (theta3_differentiableAt hτ_pos).pow 4
+  exact (h_modH_diff.comp z h_cayley_diff).differentiableWithinAt
 
 /-- **Covering property of `λ` on the unit disk.**
 `modularLambda : 𝔻 → ℂ ∖ {0, 1}` is a covering map of the
