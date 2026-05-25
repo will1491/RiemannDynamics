@@ -674,6 +674,430 @@ theorem theta4_norm_le_of_im_ge_one {τ : ℂ} (hτ : 1 ≤ τ.im) :
   rw [h_eq]
   exact theta3_norm_le_of_im_ge_one h_im
 
+/-- **Extracted bound `‖θ₃(τ) − 1‖ ≤ 4·exp(−π·τ.im)` for `τ.im ≥ 1`.**
+This is the per-τ specialization of Mathlib's
+`norm_jacobiTheta_sub_one_le`: at `τ.im ≥ 1`, the quotient
+`2/(1 − exp(−π·τ.im))` is bounded by `4`. -/
+theorem theta3_sub_one_norm_le_exp_of_im_ge_one {τ : ℂ} (hτ : 1 ≤ τ.im) :
+    ‖theta3 τ - 1‖ ≤ 4 * Real.exp (-Real.pi * τ.im) := by
+  have hτim_pos : 0 < τ.im := lt_of_lt_of_le zero_lt_one hτ
+  have hπ_pos := Real.pi_pos
+  have h_mathlib : ‖jacobiTheta τ - 1‖ ≤
+      2 / (1 - Real.exp (-Real.pi * τ.im)) * Real.exp (-Real.pi * τ.im) :=
+    norm_jacobiTheta_sub_one_le hτim_pos
+  have h_exp_at_one : Real.exp (-Real.pi * τ.im) ≤ Real.exp (-Real.pi) := by
+    apply Real.exp_le_exp.mpr; nlinarith
+  have h_exp_neg_pi_lt_half : Real.exp (-Real.pi) < 1/2 := by
+    rw [Real.exp_neg, inv_lt_comm₀ (Real.exp_pos _) (by norm_num : (0:ℝ) < 1/2),
+        show (1/2 : ℝ)⁻¹ = 2 from by norm_num]
+    have h1 : (1 : ℝ) + 1 ≤ Real.exp 1 := by linarith [Real.add_one_le_exp (1 : ℝ)]
+    have h2 : Real.exp 1 < Real.exp Real.pi :=
+      Real.exp_lt_exp.mpr (by linarith [Real.pi_gt_three])
+    linarith
+  have h_exp_lt_half : Real.exp (-Real.pi * τ.im) < 1/2 :=
+    lt_of_le_of_lt h_exp_at_one h_exp_neg_pi_lt_half
+  have h_one_sub_pos : 0 < 1 - Real.exp (-Real.pi * τ.im) := by linarith
+  have h_quot_le : 2 / (1 - Real.exp (-Real.pi * τ.im)) ≤ 4 := by
+    rw [div_le_iff₀ h_one_sub_pos]; linarith
+  have h_exp_pos : 0 < Real.exp (-Real.pi * τ.im) := Real.exp_pos _
+  unfold theta3
+  exact h_mathlib.trans (mul_le_mul_of_nonneg_right h_quot_le h_exp_pos.le)
+
+/-- **Lower bound `1/2 ≤ ‖θ₃(τ)‖` for `τ.im ≥ 1`.** Follows from
+`theta3_sub_one_norm_le_exp_of_im_ge_one` since
+`4·exp(−π·τ.im) ≤ 4·exp(−π) < 1/2`. -/
+theorem theta3_norm_ge_half_of_im_ge_one {τ : ℂ} (hτ : 1 ≤ τ.im) :
+    (1 : ℝ)/2 ≤ ‖theta3 τ‖ := by
+  have h_sub_one := theta3_sub_one_norm_le_exp_of_im_ge_one hτ
+  -- 4 exp(-π τ.im) ≤ 4 exp(-π) < 1/2. Need exp(π) > 8.
+  have h_exp_at_one : Real.exp (-Real.pi * τ.im) ≤ Real.exp (-Real.pi) := by
+    apply Real.exp_le_exp.mpr; nlinarith [Real.pi_pos]
+  -- exp(π) > 8 via exp(π) ≥ exp(3) > 2.7^3 > 8.
+  have h_e_gt : (2.7182818283 : ℝ) < Real.exp 1 := Real.exp_one_gt_d9
+  have h_exp3_gt_8 : (8 : ℝ) < Real.exp 3 := by
+    have h_eq : Real.exp 3 = Real.exp 1 * Real.exp 1 * Real.exp 1 := by
+      rw [show (3 : ℝ) = 1 + 1 + 1 from by norm_num, Real.exp_add, Real.exp_add]
+    rw [h_eq]
+    nlinarith [h_e_gt, Real.exp_pos (1 : ℝ)]
+  have h_pi_gt_3 : (3 : ℝ) < Real.pi := Real.pi_gt_three
+  have h_exp_pi_gt_8 : (8 : ℝ) < Real.exp Real.pi :=
+    h_exp3_gt_8.trans_le (Real.exp_le_exp.mpr h_pi_gt_3.le)
+  have h_exp_neg_pi_lt : Real.exp (-Real.pi) < 1/8 := by
+    rw [Real.exp_neg, inv_lt_comm₀ (Real.exp_pos _) (by norm_num : (0:ℝ) < 1/8),
+        show (1/8 : ℝ)⁻¹ = 8 from by norm_num]
+    exact h_exp_pi_gt_8
+  have h_four_exp_lt : 4 * Real.exp (-Real.pi * τ.im) < 1/2 := by
+    have h1 : Real.exp (-Real.pi * τ.im) ≤ Real.exp (-Real.pi) := h_exp_at_one
+    have h2 : Real.exp (-Real.pi) < 1/8 := h_exp_neg_pi_lt
+    linarith
+  have h_norm_sub_one_lt : ‖theta3 τ - 1‖ < 1/2 := lt_of_le_of_lt h_sub_one h_four_exp_lt
+  -- ‖θ₃‖ ≥ 1 - ‖θ₃ - 1‖ > 1/2.
+  have h_rev := norm_sub_norm_le (1 : ℂ) (1 - theta3 τ)
+  have h_eq1 : (1 : ℂ) - (1 - theta3 τ) = theta3 τ := by ring
+  have h_eq2 : ‖(1 : ℂ) - theta3 τ‖ = ‖theta3 τ - 1‖ := by
+    rw [show (1 : ℂ) - theta3 τ = -(theta3 τ - 1) from by ring, norm_neg]
+  rw [h_eq1, h_eq2, norm_one] at h_rev
+  linarith
+
+/-- **Uniform cusp `i∞` bound for `λ`.** For `τ.im ≥ 1`,
+`‖λ(τ)‖ ≤ 160000·exp(−π·τ.im)`. Chains `‖θ₂(τ)‖⁴ ≤ 10⁴·exp(−π·τ.im)`
+(from `theta2_norm_le_of_im_ge_one`) with the lower bound
+`‖θ₃(τ)‖ ≥ 1/2` from `theta3_norm_ge_half_of_im_ge_one`. The bound is
+not sharp; the actual leading term is `16·exp(−π·τ.im)`. -/
+theorem modularLambdaH_norm_le_exp_of_im_ge_one {τ : ℂ} (hτ : 1 ≤ τ.im) :
+    ‖modularLambdaH τ‖ ≤ 160000 * Real.exp (-Real.pi * τ.im) := by
+  have hτim_pos : 0 < τ.im := lt_of_lt_of_le zero_lt_one hτ
+  have h2 := theta2_norm_le_of_im_ge_one hτ
+  have h3_ge_half := theta3_norm_ge_half_of_im_ge_one hτ
+  -- θ₃(τ) ≠ 0 because ‖θ₃(τ)‖ ≥ 1/2 > 0.
+  have h3_ne : theta3 τ ≠ 0 := by
+    intro h
+    rw [h, norm_zero] at h3_ge_half
+    linarith
+  have h3_pow_ne : (theta3 τ)^4 ≠ 0 := pow_ne_zero 4 h3_ne
+  have h2_nn : 0 ≤ ‖theta2 τ‖ := norm_nonneg _
+  have h_exp_pos : 0 < Real.exp (-Real.pi * τ.im / 4) := Real.exp_pos _
+  have h2_pow4 : ‖theta2 τ‖^4 ≤ 10000 * Real.exp (-Real.pi * τ.im) := by
+    have h_pow_le : ‖theta2 τ‖^4 ≤ (10 * Real.exp (-Real.pi * τ.im / 4))^4 :=
+      pow_le_pow_left₀ h2_nn h2 4
+    have h_simp : (10 * Real.exp (-Real.pi * τ.im / 4))^4 =
+        10000 * Real.exp (-Real.pi * τ.im) := by
+      rw [mul_pow]
+      ring_nf
+      rw [← Real.exp_nat_mul]
+      ring_nf
+    linarith [h_pow_le, h_simp.symm.le]
+  have h3_pow4 : (1 : ℝ)/16 ≤ ‖theta3 τ‖^4 := by
+    have h_half_nn : (0 : ℝ) ≤ 1/2 := by norm_num
+    have := pow_le_pow_left₀ h_half_nn h3_ge_half 4
+    have h_simp : ((1 : ℝ)/2)^4 = 1/16 := by norm_num
+    linarith
+  unfold modularLambdaH
+  rw [norm_div, norm_pow, norm_pow]
+  -- ‖θ₂⁴‖ / ‖θ₃⁴‖ = ‖θ₂‖⁴ / ‖θ₃‖⁴ ≤ (10⁴ exp) / (1/16) = 16 · 10⁴ exp.
+  have h_denom_pos : 0 < ‖theta3 τ‖^4 := by
+    have : 0 < ‖theta3 τ‖ := norm_pos_iff.mpr h3_ne
+    positivity
+  rw [div_le_iff₀ h_denom_pos]
+  -- Goal: ‖θ₂‖⁴ ≤ 160000 e^(-π τ.im) · ‖θ₃‖⁴.
+  -- Use ‖θ₃‖⁴ ≥ 1/16 to get RHS ≥ 160000 e^(-π τ.im) · (1/16) = 10000 e^(-π τ.im) ≥ ‖θ₂‖⁴.
+  have h_exp_nn : 0 ≤ Real.exp (-Real.pi * τ.im) := (Real.exp_pos _).le
+  have h_factor_nn : 0 ≤ 160000 * Real.exp (-Real.pi * τ.im) := by positivity
+  have h_lower : 10000 * Real.exp (-Real.pi * τ.im) ≤
+      160000 * Real.exp (-Real.pi * τ.im) * ‖theta3 τ‖^4 := by
+    have h_rewrite : 10000 * Real.exp (-Real.pi * τ.im) =
+        160000 * Real.exp (-Real.pi * τ.im) * (1/16) := by ring
+    rw [h_rewrite]
+    exact mul_le_mul_of_nonneg_left h3_pow4 h_factor_nn
+  linarith
+
+/-- **Norm of a `jacobiTheta₂_term` at `z = τ/2`.** For each integer `n`,
+`‖jacobiTheta₂_term n (τ/2) τ‖ = exp(-π · n·(n+1) · τ.im)`. The argument
+of the exponential simplifies via `2π i n · (τ/2) + π i n² τ = π i n(n+1) τ`. -/
+theorem jacobiTheta₂_term_half_norm (n : ℤ) (τ : ℂ) :
+    ‖jacobiTheta₂_term n (τ / 2) τ‖ =
+      Real.exp (-(Real.pi * (n : ℝ) * ((n : ℝ) + 1) * τ.im)) := by
+  unfold jacobiTheta₂_term
+  rw [Complex.norm_exp]
+  -- Rewrite argument as πi · (n*(n+1) : ℝ) · τ.
+  have h_arg :
+      (2 : ℂ) * Real.pi * Complex.I * (n : ℂ) * (τ / 2) +
+        Real.pi * Complex.I * (n : ℂ) ^ 2 * τ =
+      ((Real.pi * (n : ℝ) * ((n : ℝ) + 1) : ℝ) : ℂ) * (Complex.I * τ) := by
+    push_cast; ring
+  rw [h_arg, Complex.mul_re]
+  simp [Complex.ofReal_re, Complex.ofReal_im, Complex.mul_re, Complex.mul_im,
+    Complex.I_re, Complex.I_im]
+
+/-- **Tail bound for `jacobiTheta₂(τ/2, τ)`.** For `τ.im ≥ 1`,
+`‖jacobiTheta₂(τ/2, τ) - 2‖ ≤ 8·exp(-2π·τ.im)`.
+
+This is the leading-term estimate. The series
+`jacobiTheta₂(τ/2, τ) = Σ_n jacobiTheta₂_term n (τ/2) τ` has each term
+of norm `exp(-π · n·(n+1) · τ.im)` (by `jacobiTheta₂_term_half_norm`).
+At `n ∈ {0, -1}`, `n(n+1) = 0` and the term is `exp(0) = 1`, so the
+finite portion `∑_{n ∈ {0,-1}} term n = 2`.
+
+**Proof outline:**
+
+1. Set `s := {-2, -1, 0, 1} : Finset ℤ`. Then
+   `∑ n ∈ s, term n = 2 + 2 · exp(2πi τ)` (since `term ±1 = term (-2) = exp(2πi τ)`).
+2. By `Summable.sum_add_tsum_subtype_compl`:
+   `∑'_{n ∉ s} term n = jacobiTheta₂(τ/2, τ) - (2 + 2·exp(2πi τ))`.
+3. By `norm_tsum_le_tsum_norm` and `norm_jacobiTheta₂_term_le` (with
+   `T = τ.im`, `S = τ.im/2`):
+   `‖∑'_{n ∉ s} term n‖ ≤ ∑'_{n ∉ s} exp(-π τ.im (n² - |n|))`.
+4. For `n ∉ s` (i.e., `|n| ≥ 2`): `n² - |n| ≥ |n|`. So
+   `‖term n‖ ≤ exp(-π τ.im |n|)`, summing geometrically gives
+   `Σ_{|n|≥2} exp(-π|n|·τ.im) ≤ 3·exp(-2π·τ.im)` for `τ.im ≥ 1`.
+5. Triangle inequality:
+   `‖jacobiTheta₂(τ/2, τ) - 2‖ = ‖(j₂ - 2 - 2 e^(2πi τ)) + 2 e^(2πi τ)‖`
+   `≤ ‖j₂ - 2 - 2 e^(2πi τ)‖ + ‖2 e^(2πi τ)‖`
+   `≤ 3·exp(-2π·τ.im) + 2·exp(-2π·τ.im) = 5·exp(-2π·τ.im) ≤ 8·exp(-2π·τ.im)`.
+
+The key sub-step is the geometric tail bound (#4), which uses the
+exponential decay of the loose Mathlib bound on `‖jacobiTheta₂_term n‖`.
+-/
+theorem jacobiTheta₂_half_sub_two_norm_le_of_im_ge_one {τ : ℂ} (hτ : 1 ≤ τ.im) :
+    ‖jacobiTheta₂ (τ / 2) τ - 2‖ ≤ 8 * Real.exp (-2 * Real.pi * τ.im) := by
+  sorry
+
+/-- **Leading-term bound for `θ₂`.** For `τ.im ≥ 1`,
+`‖θ₂(τ) - 2 · exp(πi τ/4)‖ ≤ 8·exp(-9π τ.im/4)`. Follows from
+`jacobiTheta₂_half_sub_two_norm_le_of_im_ge_one` and
+`θ₂(τ) = exp(πi τ/4) · jacobiTheta₂(τ/2, τ)`, factoring out
+`exp(πi τ/4)` with `|exp(πi τ/4)| = exp(-π τ.im/4)`. -/
+theorem theta2_norm_sub_lead_le_of_im_ge_one {τ : ℂ} (hτ : 1 ≤ τ.im) :
+    ‖theta2 τ - 2 * Complex.exp (Real.pi * Complex.I * τ / 4)‖ ≤
+      8 * Real.exp (-(9 * Real.pi * τ.im / 4)) := by
+  unfold theta2
+  -- theta2 τ - 2 exp(πi τ/4) = exp(πi τ/4) · (jacobiTheta₂(τ/2, τ) - 2).
+  have h_factor :
+      Complex.exp (Real.pi * Complex.I * τ / 4) * jacobiTheta₂ (τ / 2) τ -
+        2 * Complex.exp (Real.pi * Complex.I * τ / 4) =
+      Complex.exp (Real.pi * Complex.I * τ / 4) * (jacobiTheta₂ (τ / 2) τ - 2) := by
+    ring
+  rw [h_factor, norm_mul]
+  -- |exp(πi τ/4)| = exp(-π τ.im/4).
+  have h_norm_exp :
+      ‖Complex.exp (Real.pi * Complex.I * τ / 4)‖ = Real.exp (-(Real.pi * τ.im / 4)) := by
+    rw [Complex.norm_exp]
+    congr 1
+    have h_eq : (Real.pi * Complex.I * τ / 4 : ℂ) =
+        ((Real.pi / 4 : ℝ) : ℂ) * (Complex.I * τ) := by push_cast; ring
+    rw [h_eq, Complex.mul_re]
+    simp [Complex.ofReal_re, Complex.ofReal_im, Complex.mul_re, Complex.mul_im,
+      Complex.I_re, Complex.I_im]
+    ring
+  rw [h_norm_exp]
+  -- Tail bound on jacobiTheta₂(τ/2, τ) - 2.
+  have h_tail := jacobiTheta₂_half_sub_two_norm_le_of_im_ge_one hτ
+  have h_exp_nn : 0 ≤ Real.exp (-(Real.pi * τ.im / 4)) := (Real.exp_pos _).le
+  -- Combine: exp(-π τ.im/4) * 8 exp(-2π τ.im) = 8 exp(-9π τ.im/4).
+  have h_combine :
+      Real.exp (-(Real.pi * τ.im / 4)) * (8 * Real.exp (-2 * Real.pi * τ.im)) =
+      8 * Real.exp (-(9 * Real.pi * τ.im / 4)) := by
+    rw [show (8 * Real.exp (-2 * Real.pi * τ.im) : ℝ) =
+        8 * Real.exp (-2 * Real.pi * τ.im) from rfl]
+    rw [show Real.exp (-(Real.pi * τ.im / 4)) * (8 * Real.exp (-2 * Real.pi * τ.im)) =
+        8 * (Real.exp (-(Real.pi * τ.im / 4)) * Real.exp (-2 * Real.pi * τ.im)) from by ring]
+    rw [← Real.exp_add]
+    congr 1
+    ring
+  calc Real.exp (-(Real.pi * τ.im / 4)) * ‖jacobiTheta₂ (τ / 2) τ - 2‖
+      ≤ Real.exp (-(Real.pi * τ.im / 4)) * (8 * Real.exp (-2 * Real.pi * τ.im)) :=
+        mul_le_mul_of_nonneg_left h_tail h_exp_nn
+    _ = 8 * Real.exp (-(9 * Real.pi * τ.im / 4)) := h_combine
+
+/-- **Leading-term bound for `λ`.** For `τ.im ≥ 1`,
+`‖λ(τ) - 16 · exp(πi τ)‖ ≤ 4096 · exp(-2π τ.im)`.
+
+Combines `theta2_norm_sub_lead_le_of_im_ge_one` (`|θ₂ - 2 e^(πi τ/4)|`
+bound) with `theta3_sub_one_norm_le_exp_of_im_ge_one` and
+`theta3_norm_ge_half_of_im_ge_one`, then expands `(a/b)⁴` algebraically.
+
+**Proof outline:**
+* Set `r₂ := (θ₂ - 2 e^(πi τ/4))/(2 e^(πi τ/4))` so `|r₂| ≤ 4·exp(-2π τ.im)`.
+* Set `r₃ := θ₃ - 1` so `|r₃| ≤ 4·exp(-π τ.im)`.
+* `λ = (θ₂)⁴/(θ₃)⁴ = (2 e^(πi τ/4))⁴ · (1+r₂)⁴/(1+r₃)⁴ = 16 e^(πi τ) · ((1+r₂)/(1+r₃))⁴`.
+* Let `s := (1+r₂)/(1+r₃) - 1 = (r₂ - r₃)/(1+r₃)`. For `τ.im ≥ 1`,
+  `|1+r₃| ≥ 1/2` (from `theta3_norm_ge_half`), so `|s| ≤ 2(|r₂|+|r₃|) ≤ 16·exp(-π τ.im)`.
+* `((1+r₂)/(1+r₃))⁴ - 1 = (1+s)⁴ - 1 = s(4 + 6s + 4s² + s³)`, with
+  `|4 + 6s + 4s² + s³| ≤ 4 + 6|s| + 4|s|² + |s|³ ≤ 16` for `|s| ≤ 1`.
+* So `|((1+r₂)/(1+r₃))⁴ - 1| ≤ 16|s| ≤ 256·exp(-π τ.im)`.
+* Hence `‖λ - 16 e^(πi τ)‖ = 16·|e^(πi τ)|·|((1+r₂)/(1+r₃))⁴ - 1|`
+  `≤ 16·exp(-π τ.im)·256·exp(-π τ.im) = 4096·exp(-2π τ.im)`.
+
+This bound is loose; the actual leading correction is `-128 q²`. The
+constant `4096 = 2^12` is chosen as a safety margin around the actual
+coefficient. The bound suffices for the witness at `τ = (1+4i)/2`
+(`τ.im = 2`): `Im(16 e^(πi τ)) = 16·exp(-2π) ≈ 0.030`,
+`error ≤ 4096·exp(-4π) ≈ 0.014`, so `Im(λ) ≥ 0.016 > 0`. -/
+theorem modularLambdaH_norm_sub_lead_le_of_im_ge_one {τ : ℂ} (hτ : 1 ≤ τ.im) :
+    ‖modularLambdaH τ - 16 * Complex.exp (Real.pi * Complex.I * τ)‖ ≤
+      4096 * Real.exp (-2 * Real.pi * τ.im) := by
+  have hτim_pos : 0 < τ.im := lt_of_lt_of_le zero_lt_one hτ
+  have hπ_pos := Real.pi_pos
+  -- A := 2·exp(πi τ/4); A^4 = 16·exp(πi τ).
+  set A : ℂ := 2 * Complex.exp (Real.pi * Complex.I * τ / 4) with hA_def
+  have hA_pow : A^4 = 16 * Complex.exp (Real.pi * Complex.I * τ) := by
+    rw [hA_def, mul_pow]
+    rw [show (Complex.exp (Real.pi * Complex.I * τ / 4))^4 =
+        Complex.exp (4 * (Real.pi * Complex.I * τ / 4)) from by
+      rw [← Complex.exp_nat_mul]; norm_cast]
+    rw [show (4 : ℂ) * (Real.pi * Complex.I * τ / 4) = Real.pi * Complex.I * τ from by ring]
+    norm_num
+  rw [← hA_pow]
+  -- ‖A‖ = 2·exp(-π τ.im/4).
+  have hA_norm : ‖A‖ = 2 * Real.exp (-(Real.pi * τ.im / 4)) := by
+    rw [hA_def, norm_mul, Complex.norm_exp]
+    have h_re : (Real.pi * Complex.I * τ / 4 : ℂ).re = -(Real.pi * τ.im / 4) := by
+      have h_eq : (Real.pi * Complex.I * τ / 4 : ℂ) =
+          ((Real.pi / 4 : ℝ) : ℂ) * (Complex.I * τ) := by push_cast; ring
+      rw [h_eq, Complex.mul_re]
+      simp [Complex.ofReal_re, Complex.ofReal_im, Complex.mul_re, Complex.mul_im,
+        Complex.I_re, Complex.I_im]
+      ring
+    rw [h_re]
+    simp [Complex.norm_ofNat]
+  have hA_norm_pos : 0 < ‖A‖ := by rw [hA_norm]; positivity
+  have hA_ne : A ≠ 0 := norm_ne_zero_iff.mp hA_norm_pos.ne'
+  -- ‖A‖^4 = 16·exp(-π τ.im).
+  have hA_pow_norm : ‖A^4‖ = 16 * Real.exp (-(Real.pi * τ.im)) := by
+    rw [norm_pow, hA_norm, mul_pow]
+    have h_2_pow : (2 : ℝ)^4 = 16 := by norm_num
+    have h_exp_pow : Real.exp (-(Real.pi * τ.im / 4)) ^ 4 = Real.exp (-(Real.pi * τ.im)) := by
+      rw [← Real.exp_nat_mul]
+      congr 1; ring
+    rw [h_2_pow, h_exp_pow]
+  -- r₂ := (θ₂ - A)/A; |r₂| ≤ 4·exp(-2π τ.im).
+  set r₂ : ℂ := (theta2 τ - A) / A with hr2_def
+  have h_th2_sub_A := theta2_norm_sub_lead_le_of_im_ge_one hτ
+  have hr2_bound : ‖r₂‖ ≤ 4 * Real.exp (-(2 * Real.pi * τ.im)) := by
+    rw [hr2_def, norm_div, hA_norm]
+    have h_denom_pos : 0 < 2 * Real.exp (-(Real.pi * τ.im / 4)) := by positivity
+    rw [div_le_iff₀ h_denom_pos]
+    have h_target_eq :
+        4 * Real.exp (-(2 * Real.pi * τ.im)) * (2 * Real.exp (-(Real.pi * τ.im / 4))) =
+        8 * Real.exp (-(9 * Real.pi * τ.im / 4)) := by
+      rw [show (4 * Real.exp (-(2 * Real.pi * τ.im)) * (2 * Real.exp (-(Real.pi * τ.im / 4))) : ℝ) =
+          8 * (Real.exp (-(2 * Real.pi * τ.im)) * Real.exp (-(Real.pi * τ.im / 4))) from by ring]
+      rw [← Real.exp_add]
+      congr 1; ring
+    rw [h_target_eq]; exact h_th2_sub_A
+  -- r₃ := θ₃ - 1; |r₃| ≤ 4·exp(-π τ.im).
+  set r₃ : ℂ := theta3 τ - 1 with hr3_def
+  have hr3_bound : ‖r₃‖ ≤ 4 * Real.exp (-Real.pi * τ.im) :=
+    theta3_sub_one_norm_le_exp_of_im_ge_one hτ
+  -- θ₂ = A·(1 + r₂); θ₃ = 1 + r₃.
+  have h_th2_eq : theta2 τ = A * (1 + r₂) := by
+    rw [hr2_def]; field_simp; ring
+  have h_th3_eq : theta3 τ = 1 + r₃ := by rw [hr3_def]; ring
+  -- ‖θ₃‖ ≥ 1/2, so 1+r₃ ≠ 0 and ‖1+r₃‖ ≥ 1/2.
+  have h_th3_norm_ge := theta3_norm_ge_half_of_im_ge_one hτ
+  have h_1pr3_norm_ge : (1/2 : ℝ) ≤ ‖(1 + r₃ : ℂ)‖ := by rw [← h_th3_eq]; exact h_th3_norm_ge
+  have h_1pr3_pos : 0 < ‖(1 + r₃ : ℂ)‖ := lt_of_lt_of_le (by norm_num : (0:ℝ) < 1/2) h_1pr3_norm_ge
+  have h_1pr3_ne : (1 + r₃ : ℂ) ≠ 0 := norm_ne_zero_iff.mp h_1pr3_pos.ne'
+  -- λ = A^4 · ((1+r₂)/(1+r₃))^4.
+  have h_lambda_eq : modularLambdaH τ = A^4 * ((1 + r₂)/(1 + r₃))^4 := by
+    unfold modularLambdaH
+    rw [h_th2_eq, h_th3_eq, mul_pow, div_pow]
+    ring
+  rw [h_lambda_eq]
+  -- Factor out A^4.
+  rw [show (A^4 * ((1 + r₂)/(1 + r₃))^4 - A^4 : ℂ) =
+      A^4 * (((1 + r₂)/(1 + r₃))^4 - 1) from by ring]
+  rw [norm_mul, hA_pow_norm]
+  -- Let v := (1+r₂)/(1+r₃) - 1.
+  set v : ℂ := (1 + r₂)/(1 + r₃) - 1 with hv_def
+  have hv_add : (1 + r₂)/(1 + r₃) = 1 + v := by rw [hv_def]; ring
+  -- v = (r₂ - r₃)/(1 + r₃).
+  have hv_alt : v = (r₂ - r₃)/(1 + r₃) := by
+    rw [hv_def]; field_simp; ring
+  -- |v| ≤ 16·exp(-π τ.im).
+  have hv_bound : ‖v‖ ≤ 16 * Real.exp (-(Real.pi * τ.im)) := by
+    rw [hv_alt, norm_div]
+    -- ‖r₂ - r₃‖ ≤ ‖r₂‖ + ‖r₃‖ ≤ 4·exp(-2π τ.im) + 4·exp(-π τ.im) ≤ 8·exp(-π τ.im).
+    have h_r3_pos : (Real.exp (-Real.pi * τ.im) : ℝ) = Real.exp (-(Real.pi * τ.im)) := by
+      congr 1; ring
+    have h_r3_bound' : ‖r₃‖ ≤ 4 * Real.exp (-(Real.pi * τ.im)) := by
+      rw [← h_r3_pos]; exact hr3_bound
+    have h_r2_relax : Real.exp (-(2 * Real.pi * τ.im)) ≤ Real.exp (-(Real.pi * τ.im)) := by
+      apply Real.exp_le_exp.mpr; nlinarith
+    have h_r2_bound' : ‖r₂‖ ≤ 4 * Real.exp (-(Real.pi * τ.im)) := by
+      refine hr2_bound.trans ?_
+      have : (0 : ℝ) ≤ 4 := by norm_num
+      nlinarith
+    have h_num_le : ‖r₂ - r₃‖ ≤ 8 * Real.exp (-(Real.pi * τ.im)) := by
+      calc ‖r₂ - r₃‖ ≤ ‖r₂‖ + ‖r₃‖ := norm_sub_le _ _
+        _ ≤ 4 * Real.exp (-(Real.pi * τ.im)) + 4 * Real.exp (-(Real.pi * τ.im)) := by
+            linarith
+        _ = 8 * Real.exp (-(Real.pi * τ.im)) := by ring
+    -- ‖r₂ - r₃‖/‖1+r₃‖ ≤ 8 exp(-π τ.im)/(1/2) = 16 exp(-π τ.im).
+    rw [div_le_iff₀ h_1pr3_pos]
+    have h_calc : 16 * Real.exp (-(Real.pi * τ.im)) * ‖(1 + r₃ : ℂ)‖ ≥
+        16 * Real.exp (-(Real.pi * τ.im)) * (1/2) := by
+      apply mul_le_mul_of_nonneg_left h_1pr3_norm_ge
+      positivity
+    linarith
+  -- |v| ≤ 1 (since 16·exp(-π) < 1 because exp(π) > 16).
+  have hv_le_one : ‖v‖ ≤ 1 := by
+    refine hv_bound.trans ?_
+    -- 16 · exp(-π τ.im) ≤ 16 · exp(-π) ≤ 1.
+    have h_exp_le : Real.exp (-(Real.pi * τ.im)) ≤ Real.exp (-Real.pi) := by
+      apply Real.exp_le_exp.mpr; nlinarith
+    -- exp(π) > exp(3) > 16: exp(1) > 2.71828, exp(3) > 2.71828^3 > 20 > 16.
+    have h_e_gt : (2.7182818283 : ℝ) < Real.exp 1 := Real.exp_one_gt_d9
+    have h_exp3_gt_16 : (16 : ℝ) < Real.exp 3 := by
+      have h_eq : Real.exp 3 = Real.exp 1 * Real.exp 1 * Real.exp 1 := by
+        rw [show (3 : ℝ) = 1 + 1 + 1 from by norm_num, Real.exp_add, Real.exp_add]
+      rw [h_eq]
+      nlinarith [h_e_gt, Real.exp_pos (1 : ℝ)]
+    have h_pi_gt_3 : (3 : ℝ) < Real.pi := Real.pi_gt_three
+    have h_exp_pi_gt_16 : (16 : ℝ) < Real.exp Real.pi :=
+      h_exp3_gt_16.trans_le (Real.exp_le_exp.mpr h_pi_gt_3.le)
+    have h_16_exp_neg_pi : 16 * Real.exp (-Real.pi) ≤ 1 := by
+      rw [Real.exp_neg, mul_inv_le_iff₀ (Real.exp_pos _)]
+      linarith
+    linarith [h_exp_le, h_16_exp_neg_pi, mul_le_mul_of_nonneg_left h_exp_le (by norm_num : (0:ℝ) ≤ 16)]
+  -- (1+v)^4 - 1 = v · (4 + 6v + 4v² + v³).
+  rw [hv_add]
+  rw [show ((1 + v)^4 - 1 : ℂ) = v * (4 + 6*v + 4*v^2 + v^3) from by ring]
+  rw [norm_mul]
+  -- ‖4 + 6v + 4v² + v³‖ ≤ 4 + 6 + 4 + 1 = 15.
+  have h_poly_bound : ‖(4 + 6*v + 4*v^2 + v^3 : ℂ)‖ ≤ 15 := by
+    have h_v_sq : ‖v‖^2 ≤ 1 := by
+      have := pow_le_pow_left₀ (norm_nonneg v) hv_le_one 2
+      simpa using this
+    have h_v_cube : ‖v‖^3 ≤ 1 := by
+      have := pow_le_pow_left₀ (norm_nonneg v) hv_le_one 3
+      simpa using this
+    have h_4_eq : ‖((4 : ℂ))‖ = 4 := by norm_num
+    have h_6v_eq : ‖((6 * v : ℂ))‖ = 6 * ‖v‖ := by
+      rw [show ((6 * v : ℂ)) = (((6 : ℝ) : ℂ)) * v from by push_cast; ring]
+      rw [norm_mul, Complex.norm_real]
+      simp
+    have h_4v2_eq : ‖((4 * v^2 : ℂ))‖ = 4 * ‖v‖^2 := by
+      rw [show ((4 * v^2 : ℂ)) = (((4 : ℝ) : ℂ)) * v^2 from by push_cast; ring]
+      rw [norm_mul, Complex.norm_real, norm_pow]
+      simp
+    have h_v3_eq : ‖(v^3)‖ = ‖v‖^3 := norm_pow v 3
+    have h_chain :
+        ‖(4 + 6*v + 4*v^2 + v^3 : ℂ)‖ ≤
+          ‖((4 : ℂ))‖ + ‖((6*v : ℂ))‖ + ‖((4*v^2 : ℂ))‖ + ‖(v^3 : ℂ)‖ := by
+      have h1 := norm_add_le ((4 + 6*v + 4*v^2 : ℂ)) ((v^3 : ℂ))
+      have h2 := norm_add_le ((4 + 6*v : ℂ)) ((4*v^2 : ℂ))
+      have h3 := norm_add_le ((4 : ℂ)) ((6*v : ℂ))
+      linarith
+    rw [h_4_eq, h_6v_eq, h_4v2_eq, h_v3_eq] at h_chain
+    linarith [hv_le_one, h_v_sq, h_v_cube]
+  -- ‖v‖ · ‖4 + 6v + 4v² + v³‖ ≤ 16·exp(-π τ.im) · 15 = 240·exp(-π τ.im).
+  -- And 16·exp(-π τ.im) · 240·exp(-π τ.im) = 3840·exp(-2π τ.im) ≤ 4096·exp(-2π τ.im).
+  have h_step1 : ‖v‖ * ‖(4 + 6*v + 4*v^2 + v^3 : ℂ)‖ ≤
+      (16 * Real.exp (-(Real.pi * τ.im))) * 15 :=
+    mul_le_mul hv_bound h_poly_bound (norm_nonneg _) (by positivity)
+  have h_step2 : 16 * Real.exp (-(Real.pi * τ.im)) *
+      ((16 * Real.exp (-(Real.pi * τ.im))) * 15) =
+      3840 * Real.exp (-(2 * Real.pi * τ.im)) := by
+    rw [show (16 * Real.exp (-(Real.pi * τ.im)) *
+        (16 * Real.exp (-(Real.pi * τ.im)) * 15) : ℝ) =
+        3840 * (Real.exp (-(Real.pi * τ.im)) * Real.exp (-(Real.pi * τ.im))) from by ring]
+    rw [← Real.exp_add]
+    congr 1; ring
+  have h_exp_eq : Real.exp (-(2 * Real.pi * τ.im)) = Real.exp (-2 * Real.pi * τ.im) := by
+    congr 1; ring
+  have h_target_le : 3840 * Real.exp (-(2 * Real.pi * τ.im)) ≤
+      4096 * Real.exp (-2 * Real.pi * τ.im) := by
+    rw [h_exp_eq]
+    have h_exp_nn : 0 ≤ Real.exp (-2 * Real.pi * τ.im) := (Real.exp_pos _).le
+    nlinarith
+  calc 16 * Real.exp (-(Real.pi * τ.im)) * (‖v‖ * ‖(4 + 6*v + 4*v^2 + v^3 : ℂ)‖)
+      ≤ 16 * Real.exp (-(Real.pi * τ.im)) *
+        ((16 * Real.exp (-(Real.pi * τ.im))) * 15) :=
+        mul_le_mul_of_nonneg_left h_step1 (by positivity)
+    _ = 3840 * Real.exp (-(2 * Real.pi * τ.im)) := h_step2
+    _ ≤ 4096 * Real.exp (-2 * Real.pi * τ.im) := h_target_le
+
 /-- `‖θ₃(τ) − θ₄(τ)‖ ≤ 100 · exp(−π·τ.im)` for `τ.im ≥ 1`. The
 constant terms `1` in `θ₃` and `θ₄` cancel, leaving the leading-`q¹`
 piece `4q + O(q⁹)`; this gives full `exp(−π·τ.im)` decay. -/

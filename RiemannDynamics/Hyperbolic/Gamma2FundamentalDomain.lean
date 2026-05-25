@@ -6,6 +6,7 @@ Authors: Will (Ziang) Li
 import RiemannDynamics.Hyperbolic.ModularFunction
 import RiemannDynamics.Hyperbolic.SchwarzReflection
 import RiemannDynamics.Hyperbolic.ArgumentPrinciple
+import Mathlib.Analysis.Complex.OpenMapping
 
 /-!
 # Fundamental domain of `Γ(2)` for the level-2 modular function `λ`
@@ -625,51 +626,598 @@ theorem modularLambdaH_one_add_iy_tendsto_neg_infty_atZeroPos :
     field_simp
   exact h_prod.congr' h_id
 
-/-! ## Biholomorphism (deferred)
+/-! ## Biholomorphism of `λ` on `F^o`
 
-The remaining deep step for the surjectivity of `modularLambdaH_image`.
-Combined with `modularLambdaH_conj_symmetry` (giving `λ(F''^o) = lower half`)
-and the three boundary-real arc theorems, this closes the surjectivity.
+The modular function `λ` restricted to the open fundamental domain
+`F^o` maps onto the open upper half of `ℂ`. The proof is topological,
+with three steps:
 
-The biholomorphism splits into two inclusion-style sorries
-(`modularLambdaH_image_F_subset_upperHalf` and
-`modularLambdaH_image_F_supset_upperHalf`), each closed via the
-argument-principle / winding-number infrastructure architected in
-`ArgumentPrinciple.lean`. -/
+* `modularLambdaH_F_im_pos` (Step A): `λ(F^o) ⊆ {Im w > 0}` (the image
+  lies entirely in the upper half-plane).
+* `modularLambdaH_F_image_isOpen` (Step B): `λ(F^o)` is open in `ℂ`
+  (open-mapping theorem for non-constant analytic functions on a
+  connected open set).
+* `modularLambdaH_F_image_isClosed_in_upperHalf` (Step C): `λ(F^o)` is
+  closed when viewed inside the upper half-plane (properness: as
+  `τ → ∂F^o`, `λ(τ) → ℝ ∪ {∞}` by the four cusp asymptotic theorems
+  and the three boundary-real arc theorems).
+* `modularLambdaH_image_fundamentalDomainInterior` (Step D): combining
+  the above with connectedness of the upper half-plane and
+  non-emptiness of `F^o`. -/
 
-/-- **Biholomorphism of `λ` on `F^o`.** The modular function `λ`
-restricted to the open fundamental domain `F^o` maps bijectively
-and holomorphically onto the open upper half of `ℂ ∖ {0, 1}`.
+/-- **Witness for Step A.** The specific point `(1+4i)/2 ∈ F^o` has
+`Im(λ((1+4i)/2)) > 0`. At `τ = 1/2 + 2i`, `Re(πi·τ) = -2π` and
+`Im(πi·τ) = π/2`, so `exp(πi·τ) = i · exp(-2π)` and
+`16·exp(πi·τ) = 16i·exp(-2π)` has `Im = 16·exp(-2π) ≈ 0.030`.
+By `modularLambdaH_norm_sub_lead_le_of_im_ge_one`, the error is
+bounded by `4096·exp(-4π) ≈ 0.014`. Hence `Im(λ) ≥ 0.030 - 0.014 > 0`. -/
+theorem modularLambdaH_im_pos_at_witness :
+    0 < (modularLambdaH ((1 + 4 * Complex.I) / 2)).im := by
+  set τ : ℂ := (1 + 4 * Complex.I) / 2 with hτ_def
+  -- τ.re = 1/2, τ.im = 2.
+  have hτ_re : τ.re = 1/2 := by
+    rw [hτ_def]
+    simp [Complex.add_re, Complex.mul_re, Complex.I_im, Complex.I_re]
+  have hτ_im : τ.im = 2 := by
+    rw [hτ_def]
+    simp [Complex.add_im, Complex.mul_im, Complex.I_im, Complex.I_re]
+    norm_num
+  have hτ_im_ge_one : 1 ≤ τ.im := by rw [hτ_im]; norm_num
+  -- (πi · τ).re = -2π, (πi · τ).im = π/2.
+  have h_arg_re : (Real.pi * Complex.I * τ).re = -(2 * Real.pi) := by
+    rw [show ((Real.pi : ℂ) * Complex.I * τ : ℂ) =
+        ((Real.pi : ℝ) : ℂ) * (Complex.I * τ) from by ring]
+    rw [Complex.mul_re, Complex.mul_re, Complex.mul_im]
+    simp [Complex.I_re, Complex.I_im, Complex.ofReal_re, Complex.ofReal_im, hτ_re, hτ_im]
+    ring
+  have h_arg_im : (Real.pi * Complex.I * τ).im = Real.pi / 2 := by
+    rw [show ((Real.pi : ℂ) * Complex.I * τ : ℂ) =
+        ((Real.pi : ℝ) : ℂ) * (Complex.I * τ) from by ring]
+    rw [Complex.mul_im, Complex.mul_re, Complex.mul_im]
+    simp [Complex.I_re, Complex.I_im, Complex.ofReal_re, Complex.ofReal_im, hτ_re, hτ_im]
+    ring
+  -- (exp(πi · τ)).im = exp(-2π) · sin(π/2) = exp(-2π).
+  have h_exp_im_compute :
+      (Complex.exp (Real.pi * Complex.I * τ)).im = Real.exp (-(2 * Real.pi)) := by
+    rw [Complex.exp_im, h_arg_re, h_arg_im, Real.sin_pi_div_two, mul_one]
+  -- 16 · exp(πi · τ) has Im = 16 · exp(-2π).
+  have h_16exp_im :
+      ((16 : ℂ) * Complex.exp (Real.pi * Complex.I * τ)).im =
+        16 * Real.exp (-2 * Real.pi) := by
+    rw [Complex.mul_im]
+    simp [h_exp_im_compute]
+  -- Apply leading-term bound.
+  have h_bound := modularLambdaH_norm_sub_lead_le_of_im_ge_one hτ_im_ge_one
+  -- |Im(λ - 16 exp)| ≤ ‖λ - 16 exp‖ ≤ 4096 exp(-4π) (since τ.im = 2).
+  have h_im_le_norm :
+      |(modularLambdaH τ - 16 * Complex.exp (Real.pi * Complex.I * τ)).im| ≤
+        ‖modularLambdaH τ - 16 * Complex.exp (Real.pi * Complex.I * τ)‖ :=
+    Complex.abs_im_le_norm _
+  have h_im_ge_neg_bound :
+      -(4096 * Real.exp (-2 * Real.pi * τ.im)) ≤
+        (modularLambdaH τ - 16 * Complex.exp (Real.pi * Complex.I * τ)).im := by
+    have := abs_le.mp h_im_le_norm
+    linarith [this.1, h_bound]
+  -- τ.im = 2, so exp(-2π · τ.im) = exp(-4π).
+  have hτ_im_eq : (-2 * Real.pi * τ.im : ℝ) = -4 * Real.pi := by rw [hτ_im]; ring
+  rw [hτ_im_eq] at h_im_ge_neg_bound
+  -- Im(λ) = Im(λ - 16 exp) + Im(16 exp).
+  have h_lambda_im_decomp :
+      (modularLambdaH τ).im =
+        (modularLambdaH τ - 16 * Complex.exp (Real.pi * Complex.I * τ)).im +
+        ((16 : ℂ) * Complex.exp (Real.pi * Complex.I * τ)).im := by
+    rw [Complex.sub_im]; ring
+  rw [h_lambda_im_decomp, h_16exp_im]
+  -- Im(λ) ≥ -(4096 exp(-4π)) + 16 exp(-2π).
+  -- Show 16 exp(-2π) > 4096 exp(-4π), i.e., exp(2π) > 256 = exp(π)² > 16².
+  have h_exp_pi_gt_16 : (16 : ℝ) < Real.exp Real.pi := by
+    have h_e_gt : (2.7182818283 : ℝ) < Real.exp 1 := Real.exp_one_gt_d9
+    have h_exp3_gt_16 : (16 : ℝ) < Real.exp 3 := by
+      have h_eq : Real.exp 3 = Real.exp 1 * Real.exp 1 * Real.exp 1 := by
+        rw [show (3 : ℝ) = 1 + 1 + 1 from by norm_num, Real.exp_add, Real.exp_add]
+      rw [h_eq]
+      nlinarith [h_e_gt, Real.exp_pos (1 : ℝ)]
+    exact h_exp3_gt_16.trans_le (Real.exp_le_exp.mpr Real.pi_gt_three.le)
+  have h_exp_2pi_gt_256 : (256 : ℝ) < Real.exp (2 * Real.pi) := by
+    have h_eq : Real.exp (2 * Real.pi) = Real.exp Real.pi * Real.exp Real.pi := by
+      rw [show (2 * Real.pi : ℝ) = Real.pi + Real.pi from by ring, Real.exp_add]
+    rw [h_eq]
+    nlinarith [h_exp_pi_gt_16, Real.exp_pos Real.pi]
+  -- 4096 exp(-4π) = (4096 / exp(2π)) · exp(-2π) < 16 · exp(-2π).
+  have h_exp_neg_4pi : Real.exp (-4 * Real.pi) =
+      Real.exp (-2 * Real.pi) * Real.exp (-2 * Real.pi) := by
+    rw [show (-4 * Real.pi : ℝ) = (-2 * Real.pi) + (-2 * Real.pi) from by ring, Real.exp_add]
+  have h_exp_neg_2pi_lt : Real.exp (-2 * Real.pi) < 1 / 256 := by
+    have h_eq : Real.exp (-2 * Real.pi) = (Real.exp (2 * Real.pi))⁻¹ := by
+      rw [show (-2 * Real.pi : ℝ) = -(2 * Real.pi) from by ring, Real.exp_neg]
+    rw [h_eq, inv_lt_comm₀ (Real.exp_pos _) (by norm_num : (0:ℝ) < 1/256),
+      show (1/256 : ℝ)⁻¹ = 256 from by norm_num]
+    exact h_exp_2pi_gt_256
+  have h_exp_2pi_pos : 0 < Real.exp (-2 * Real.pi) := Real.exp_pos _
+  -- Combine.
+  have h_4096_lt : 4096 * Real.exp (-4 * Real.pi) < 16 * Real.exp (-2 * Real.pi) := by
+    rw [h_exp_neg_4pi]
+    -- 4096 * exp(-2π) * exp(-2π) < 16 * exp(-2π) iff 4096 * exp(-2π) < 16
+    -- iff exp(-2π) < 16/4096 = 1/256.
+    have h_step : 4096 * Real.exp (-2 * Real.pi) < 16 := by
+      have : (4096 : ℝ) * (1/256) = 16 := by norm_num
+      calc 4096 * Real.exp (-2 * Real.pi)
+          < 4096 * (1/256 : ℝ) := by
+            apply mul_lt_mul_of_pos_left h_exp_neg_2pi_lt
+            norm_num
+        _ = 16 := this
+    calc 4096 * (Real.exp (-2 * Real.pi) * Real.exp (-2 * Real.pi))
+        = (4096 * Real.exp (-2 * Real.pi)) * Real.exp (-2 * Real.pi) := by ring
+      _ < 16 * Real.exp (-2 * Real.pi) :=
+          mul_lt_mul_of_pos_right h_step h_exp_2pi_pos
+  linarith
 
-Deferred proof sketch: by the argument principle applied to the
-boundary contour of `F^o` (truncated at `Im ≤ R`, then `R → ∞`).
-The contour `∂F^o_R` is the piecewise concatenation of:
-* Left edge `Re = 0` (vertical), image `λ(iy) ∈ (0, 1)` with
-  `λ(iy) → 0` as `y → ∞` (`modularLambdaH_iy_tendsto_zero_atTop`)
-  and `λ(iy) → 1` as `y → 0⁺` (`modularLambdaH_iy_tendsto_one_atZeroPos`).
-* Semicircle `|2τ−1| = 1`, image `λ(τ) ∈ (1, ∞)` real
-  (`modularLambdaH_semicircle_real`).
-* Right edge `Re = 1` (vertical), image `λ(1 + iy) ∈ (−∞, 0)` with
-  `λ(1+iy) → 0` as `y → ∞` (`modularLambdaH_one_add_iy_tendsto_zero_atTop`)
-  and `Re(λ(1+iy)) → −∞` as `y → 0⁺`
-  (`modularLambdaH_one_add_iy_tendsto_neg_infty_atZeroPos`).
-* Top truncation `Im = R`, image near `0` (from cusp asymptotics).
-The image curve `λ(∂F^o_R)` is a closed real curve traversing
-`0 → (0,1) → 1 → (1,∞) → ∞ → (−∞,0) → 0`, winding exactly once
-counterclockwise around any `w ∈ {Im > 0}` and zero times around any
-`w ∈ {Im < 0}`. Combined with `argumentPrinciple_rectangle_preimage_finite`
-(finite preimages on rectangles inside F^o), the winding-equals-count
-identity gives `card(λ⁻¹{w} ∩ F^o) = 1` for `w ∈ {Im > 0}` and
-`= 0` for `w ∈ {Im < 0} ∪ ℝ \ {0, 1}`, yielding the image equality.
+/-- **Sub-lemma for Step A: F^o is preconnected.** The open fundamental
+domain is connected as a topological subspace of `ℂ`. Geometrically,
+F^o is the open strip `0 < Re τ < 1, Im τ > 0` with the closed
+semi-disk `|2τ − 1| ≤ 1` (which touches the strip's boundary tangentially)
+removed. This is path-connected: any two points can be joined via
+the "high cap" `{τ : Im τ ≥ 2}` which is convex (hence path-connected).
 
-This deep content requires winding-number / argument-principle
-infrastructure (~500-700 LOC across multiple sessions) and is left
-as a single focused sorry; the two inclusion directions
-(`modularLambdaH_image_F_subset_upperHalf` and
-`modularLambdaH_image_F_supset_upperHalf` below) derive from it. -/
+**Proof outline:**
+* The "top" `T := {z : 0 < Re z < 1, 1 < Im z}` is convex (intersection
+  of three open half-planes), hence path-connected.
+* `T ⊆ F^o` because for `Im z > 1`, `|2z − 1|² ≥ (2 Im z)² > 4 > 1`.
+* For any `τ ∈ F^o`, the vertical line from `τ` to `τ + 2i` stays in
+  `F^o` (since `Re` is constant in `(0,1)`, `Im` increases, and
+  `|2(τ + 2ti) − 1|² ≥ |2τ − 1|² > 1` because the imaginary part of
+  `2(τ + 2ti) − 1 = 2τ − 1 + 4ti` is shifted up by `4t ≥ 0`, increasing
+  the absolute value).
+* `τ + 2i` lies in `T` (with `Im (τ + 2i) = Im τ + 2 ≥ 2 > 1`).
+* Hence every `τ ∈ F^o` can be joined to `τ + 2i ∈ T` by a vertical
+  line in `F^o`, and `T` is convex/path-connected.
+* `JoinedIn.trans` chains these segments to give path-connectedness. -/
+theorem Gamma2FundamentalDomainInterior_isPreconnected :
+    IsPreconnected Gamma2FundamentalDomainInterior := by
+  suffices h : IsPathConnected Gamma2FundamentalDomainInterior from
+    h.isConnected.isPreconnected
+  -- Base point: τ₀ = (1+4i)/2 = 1/2 + 2i.
+  set τ₀ : ℂ := (1 + 4 * Complex.I) / 2 with hτ₀_def
+  have hτ₀_im : τ₀.im = 2 := by
+    rw [hτ₀_def]
+    simp [Complex.add_im, Complex.mul_im, Complex.I_im, Complex.I_re]
+    norm_num
+  have hτ₀_re : τ₀.re = 1/2 := by
+    rw [hτ₀_def]
+    simp [Complex.add_re, Complex.mul_re, Complex.I_im, Complex.I_re]
+  -- τ₀ ∈ F^o.
+  have hτ₀_in_F : τ₀ ∈ Gamma2FundamentalDomainInterior := by
+    refine ⟨?_, ?_, ?_, ?_⟩
+    · rw [hτ₀_im]; norm_num
+    · rw [hτ₀_re]; norm_num
+    · rw [hτ₀_re]; norm_num
+    · -- |2τ₀ - 1| = |1 + 4i - 1| = |4i| = 4 > 1.
+      have heq : 2 * τ₀ - 1 = 4 * Complex.I := by rw [hτ₀_def]; ring
+      rw [heq]
+      simp
+  refine ⟨τ₀, hτ₀_in_F, ?_⟩
+  intro τ hτ
+  -- Construct JoinedIn F^o τ₀ τ.
+  -- Step 1: vertical line from τ₀ to (1/2 + i(Im τ + 3)) - stays in F^o.
+  -- Step 2: horizontal line from (1/2 + i(Im τ + 3)) to (Re τ + i(Im τ + 3)) - stays in F^o.
+  -- Step 3: vertical line from (Re τ + i(Im τ + 3)) to τ - stays in F^o.
+  set M : ℝ := τ.im + 3 with hM_def
+  have hM_ge_2 : (2 : ℝ) ≤ M := by rw [hM_def]; linarith [hτ.1]
+  -- Top half-strip T := {z : 0 < Re z < 1, 1 < Im z}.
+  set T : Set ℂ := { z : ℂ | 0 < z.re ∧ z.re < 1 ∧ 1 < z.im } with hT_def
+  -- T ⊆ F^o.
+  have hT_sub_F : T ⊆ Gamma2FundamentalDomainInterior := by
+    intro z hz
+    refine ⟨?_, hz.1, hz.2.1, ?_⟩
+    · linarith [hz.2.2]
+    · -- |2z - 1| > 1: (2 Re - 1)² + (2 Im)² > 1, since (2 Im)² > 4.
+      have h_norm_sq : ‖2 * z - 1‖^2 = (2 * z.re - 1)^2 + (2 * z.im)^2 := by
+        rw [Complex.sq_norm]
+        simp [Complex.normSq_apply, Complex.sub_re, Complex.sub_im, Complex.mul_re,
+          Complex.mul_im]
+        ring
+      have h_im_sq : 4 < (2 * z.im)^2 := by nlinarith [hz.2.2]
+      have h_sum : 1 < (2 * z.re - 1)^2 + (2 * z.im)^2 := by nlinarith [sq_nonneg (2 * z.re - 1)]
+      have h_norm_pos : 0 < ‖2 * z - 1‖ := by
+        rcases lt_or_eq_of_le (norm_nonneg (2 * z - 1)) with h | h
+        · exact h
+        · exfalso
+          rw [← h] at h_norm_sq
+          nlinarith
+      nlinarith [sq_nonneg (‖2 * z - 1‖ - 1)]
+  -- T is convex.
+  have hT_convex : Convex ℝ T := by
+    intro z₁ hz₁ z₂ hz₂ s t hs ht hst
+    rcases hz₁ with ⟨hz₁_re_pos, hz₁_re_lt, hz₁_im⟩
+    rcases hz₂ with ⟨hz₂_re_pos, hz₂_re_lt, hz₂_im⟩
+    refine ⟨?_, ?_, ?_⟩
+    · change 0 < (s • z₁ + t • z₂).re
+      rw [Complex.add_re, Complex.smul_re, Complex.smul_re, smul_eq_mul, smul_eq_mul]
+      rcases lt_or_eq_of_le hs with hs_pos | hs_zero
+      · nlinarith
+      · have ht_pos : 0 < t := by linarith
+        nlinarith
+    · change (s • z₁ + t • z₂).re < 1
+      rw [Complex.add_re, Complex.smul_re, Complex.smul_re, smul_eq_mul, smul_eq_mul]
+      rcases lt_or_eq_of_le hs with hs_pos | hs_zero
+      · have h1 : s * z₁.re < s * 1 := mul_lt_mul_of_pos_left hz₁_re_lt hs_pos
+        have h2 : t * z₂.re ≤ t * 1 := mul_le_mul_of_nonneg_left hz₂_re_lt.le ht
+        linarith
+      · have ht_pos : 0 < t := by linarith
+        have h1 : s * z₁.re ≤ s * 1 := mul_le_mul_of_nonneg_left hz₁_re_lt.le hs
+        have h2 : t * z₂.re < t * 1 := mul_lt_mul_of_pos_left hz₂_re_lt ht_pos
+        linarith
+    · change 1 < (s • z₁ + t • z₂).im
+      rw [Complex.add_im, Complex.smul_im, Complex.smul_im, smul_eq_mul, smul_eq_mul]
+      rcases lt_or_eq_of_le hs with hs_pos | hs_zero
+      · nlinarith
+      · have ht_pos : 0 < t := by linarith
+        nlinarith
+  -- T is nonempty (contains τ₀).
+  have hτ₀_in_T : τ₀ ∈ T := ⟨by rw [hτ₀_re]; norm_num,
+    by rw [hτ₀_re]; norm_num, by rw [hτ₀_im]; norm_num⟩
+  -- T is path-connected.
+  have hT_pc : IsPathConnected T := hT_convex.isPathConnected ⟨τ₀, hτ₀_in_T⟩
+  -- Build intermediate points.
+  set p₁ : ℂ := ⟨(1 : ℝ)/2, M⟩ with hp₁_def
+  set p₂ : ℂ := ⟨τ.re, M⟩ with hp₂_def
+  have hp₁_re : p₁.re = 1/2 := rfl
+  have hp₁_im : p₁.im = M := rfl
+  have hp₂_re : p₂.re = τ.re := rfl
+  have hp₂_im : p₂.im = M := rfl
+  -- p₁ ∈ T.
+  have hp₁_in_T : p₁ ∈ T := by
+    refine ⟨?_, ?_, ?_⟩
+    · rw [hp₁_re]; norm_num
+    · rw [hp₁_re]; norm_num
+    · rw [hp₁_im]; linarith
+  -- p₂ ∈ T.
+  have hp₂_in_T : p₂ ∈ T := by
+    refine ⟨?_, ?_, ?_⟩
+    · rw [hp₂_re]; exact hτ.2.1
+    · rw [hp₂_re]; exact hτ.2.2.1
+    · rw [hp₂_im]; linarith
+  -- Step 1: JoinedIn T τ₀ p₁.
+  have h_joined_τ₀_p₁ : JoinedIn T τ₀ p₁ := hT_pc.joinedIn _ hτ₀_in_T _ hp₁_in_T
+  -- Step 2: JoinedIn T p₁ p₂.
+  have h_joined_p₁_p₂ : JoinedIn T p₁ p₂ := hT_pc.joinedIn _ hp₁_in_T _ hp₂_in_T
+  -- Step 3: JoinedIn F^o p₂ τ via vertical line at Re = τ.re.
+  -- Use Convex.isPathConnected on segment ℝ p₂ τ.
+  have h_joined_p₂_τ : JoinedIn Gamma2FundamentalDomainInterior p₂ τ := by
+    have h_seg_convex : Convex ℝ (segment ℝ p₂ τ) := convex_segment p₂ τ
+    have h_seg_nonempty : (segment ℝ p₂ τ).Nonempty := ⟨p₂, left_mem_segment ℝ p₂ τ⟩
+    have h_seg_pc : IsPathConnected (segment ℝ p₂ τ) :=
+      h_seg_convex.isPathConnected h_seg_nonempty
+    have h_p₂_mem : p₂ ∈ segment ℝ p₂ τ := left_mem_segment ℝ p₂ τ
+    have h_τ_mem : τ ∈ segment ℝ p₂ τ := right_mem_segment ℝ p₂ τ
+    have h_joined_seg : JoinedIn (segment ℝ p₂ τ) p₂ τ :=
+      h_seg_pc.joinedIn _ h_p₂_mem _ h_τ_mem
+    -- Show segment ⊆ F^o.
+    have h_seg_sub_F : segment ℝ p₂ τ ⊆ Gamma2FundamentalDomainInterior := by
+      intro z hz
+      rcases hz with ⟨a, b, ha, hb, hab, h_eq⟩
+      -- z = a • p₂ + b • τ.
+      -- z.re = a · τ.re + b · τ.re = τ.re (since p₂.re = τ.re).
+      have hz_re : z.re = τ.re := by
+        rw [← h_eq, Complex.add_re, Complex.smul_re, Complex.smul_re,
+          smul_eq_mul, smul_eq_mul, hp₂_re]
+        linear_combination τ.re * hab
+      -- z.im = a · M + b · τ.im.
+      have hz_im : z.im = a * M + b * τ.im := by
+        rw [← h_eq, Complex.add_im, Complex.smul_im, Complex.smul_im,
+          smul_eq_mul, smul_eq_mul, hp₂_im]
+      -- z.im ≥ τ.im.
+      have hz_im_ge : τ.im ≤ z.im := by
+        rw [hz_im, hM_def]
+        nlinarith [hτ.1]
+      refine ⟨?_, ?_, ?_, ?_⟩
+      · linarith [hτ.1]
+      · rw [hz_re]; exact hτ.2.1
+      · rw [hz_re]; exact hτ.2.2.1
+      · -- |2z - 1|² ≥ |2τ - 1|² > 1.
+        have h_norm_sq_z : ‖2 * z - 1‖^2 = (2 * z.re - 1)^2 + (2 * z.im)^2 := by
+          rw [Complex.sq_norm]
+          simp [Complex.normSq_apply, Complex.sub_re, Complex.sub_im, Complex.mul_re,
+            Complex.mul_im]
+          ring
+        have h_norm_sq_τ : ‖2 * τ - 1‖^2 = (2 * τ.re - 1)^2 + (2 * τ.im)^2 := by
+          rw [Complex.sq_norm]
+          simp [Complex.normSq_apply, Complex.sub_re, Complex.sub_im, Complex.mul_re,
+            Complex.mul_im]
+          ring
+        have h_norm_τ_gt : 1 < ‖2 * τ - 1‖ := hτ.2.2.2
+        have h_im_sq_ge : (2 * τ.im)^2 ≤ (2 * z.im)^2 := by
+          have h_im_nn : 0 ≤ τ.im := hτ.1.le
+          have h_z_im_nn : 0 ≤ z.im := h_im_nn.trans hz_im_ge
+          nlinarith
+        have h_re_eq : (2 * z.re - 1)^2 = (2 * τ.re - 1)^2 := by rw [hz_re]
+        have h_norm_sq_ge : ‖2 * τ - 1‖^2 ≤ ‖2 * z - 1‖^2 := by
+          rw [h_norm_sq_z, h_norm_sq_τ, h_re_eq]
+          linarith
+        have h_norm_pos_τ : 0 ≤ ‖2 * τ - 1‖ := norm_nonneg _
+        have h_norm_pos_z : 0 ≤ ‖2 * z - 1‖ := norm_nonneg _
+        have h_z_ge_τ : ‖2 * τ - 1‖ ≤ ‖2 * z - 1‖ := by
+          have h1 := sq_nonneg (‖2 * τ - 1‖ - ‖2 * z - 1‖)
+          nlinarith
+        linarith
+    exact h_joined_seg.mono h_seg_sub_F
+  -- Combine.
+  have h_joined_τ₀_p₂ : JoinedIn Gamma2FundamentalDomainInterior τ₀ p₂ := by
+    apply JoinedIn.trans
+    · exact (h_joined_τ₀_p₁.mono hT_sub_F)
+    · exact (h_joined_p₁_p₂.mono hT_sub_F)
+  exact h_joined_τ₀_p₂.trans h_joined_p₂_τ
+
+/-- **Sub-lemma for Step A: `Im(λ) ≠ 0` on `F^o`.** The modular function
+`λ` takes no real values on the open fundamental domain. This is the
+deep step in Step A's proof; it follows from the fundamental-domain
+property (λ is injective on F^o up to Γ(2), and λ takes real values
+only on the Γ(2)-orbit of the boundary arcs, which doesn't intersect
+F^o). Equivalently: F^o ∩ λ⁻¹(ℝ) = ∅. -/
+theorem modularLambdaH_im_ne_zero_on_F :
+    ∀ τ ∈ Gamma2FundamentalDomainInterior, (modularLambdaH τ).im ≠ 0 := by
+  sorry
+
+/-- **Step A: `λ(F^o) ⊆ {Im w > 0}`.** The image of `F^o` under `λ` lies
+in the open upper half-plane. Combines the witness
+`modularLambdaH_im_pos_at_witness` with the "Im(λ) ≠ 0 on F^o" claim
+via preconnectedness of F^o. The set
+`U := F^o ∩ {Im(λ z) > 0}` is open and non-empty (by the witness); the
+set `V := F^o ∩ {Im(λ z) < 0}` is open and disjoint from `U`. By
+`modularLambdaH_im_ne_zero_on_F`, the two sets cover F^o. By
+`IsPreconnected.subset_left_of_subset_union`, F^o ⊆ U. -/
+theorem modularLambdaH_F_im_pos :
+    ∀ τ ∈ Gamma2FundamentalDomainInterior, 0 < (modularLambdaH τ).im := by
+  -- Set up the "good" set U and "bad" set V.
+  set U : Set ℂ := Gamma2FundamentalDomainInterior ∩ {z : ℂ | 0 < (modularLambdaH z).im}
+    with hU_def
+  set V : Set ℂ := Gamma2FundamentalDomainInterior ∩ {z : ℂ | (modularLambdaH z).im < 0}
+    with hV_def
+  -- U and V are open in ℂ.
+  have hF_open : IsOpen Gamma2FundamentalDomainInterior :=
+    Gamma2FundamentalDomainInterior_isOpen
+  have hF_sub_H : Gamma2FundamentalDomainInterior ⊆ { z : ℂ | 0 < z.im } :=
+    Gamma2FundamentalDomainInterior_subset_upperHalf
+  have h_cont_lam :
+      ContinuousOn modularLambdaH Gamma2FundamentalDomainInterior :=
+    modularLambdaH_differentiableOn.continuousOn.mono hF_sub_H
+  have h_cont_im :
+      ContinuousOn (fun z => (modularLambdaH z).im) Gamma2FundamentalDomainInterior :=
+    Complex.continuous_im.continuousOn.comp h_cont_lam (Set.mapsTo_univ _ _)
+  have hU_open : IsOpen U :=
+    h_cont_im.isOpen_inter_preimage hF_open isOpen_Ioi
+  have hV_open : IsOpen V :=
+    h_cont_im.isOpen_inter_preimage hF_open isOpen_Iio
+  -- U and V are disjoint.
+  have hUV_disj : Disjoint U V := by
+    rw [Set.disjoint_iff_inter_eq_empty]
+    apply Set.eq_empty_of_forall_notMem
+    intro z hz
+    have h1 : 0 < (modularLambdaH z).im := hz.1.2
+    have h2 : (modularLambdaH z).im < 0 := hz.2.2
+    linarith
+  -- F^o ⊆ U ∪ V (using Im(λ) ≠ 0 on F^o).
+  have hF_sub_UV : Gamma2FundamentalDomainInterior ⊆ U ∪ V := by
+    intro z hz
+    have h_ne := modularLambdaH_im_ne_zero_on_F z hz
+    rcases lt_or_gt_of_ne h_ne with h_neg | h_pos
+    · right; exact ⟨hz, h_neg⟩
+    · left; exact ⟨hz, h_pos⟩
+  -- F^o ∩ U is non-empty (witness (1+4i)/2 ∈ F^o with Im(λ) > 0).
+  have h_witness_in_F : ((1 + 4 * Complex.I) / 2) ∈ Gamma2FundamentalDomainInterior := by
+    refine ⟨?_, ?_, ?_, ?_⟩
+    · simp [Complex.add_im, Complex.mul_im, Complex.I_im, Complex.I_re]
+    · simp [Complex.add_re, Complex.mul_re, Complex.I_im, Complex.I_re]
+    · change ((1 + 4 * Complex.I) / 2 : ℂ).re < 1
+      rw [show ((1 + 4 * Complex.I) / 2 : ℂ) = (1 : ℂ) / 2 + 2 * Complex.I from by ring]
+      simp [Complex.add_re, Complex.mul_re, Complex.I_im, Complex.I_re,
+        Complex.normSq_ofNat]
+      norm_num
+    · have heq : 2 * (((1 : ℂ) + 4 * Complex.I) / 2) - 1 = 4 * Complex.I := by ring
+      rw [heq]
+      simp
+  have hF_inter_U_nonempty : (Gamma2FundamentalDomainInterior ∩ U).Nonempty := by
+    refine ⟨((1 + 4 * Complex.I) / 2), h_witness_in_F, h_witness_in_F, ?_⟩
+    exact modularLambdaH_im_pos_at_witness
+  -- F^o is preconnected.
+  have hF_preconn := Gamma2FundamentalDomainInterior_isPreconnected
+  -- By IsPreconnected.subset_left_of_subset_union, F^o ⊆ U.
+  have hF_sub_U : Gamma2FundamentalDomainInterior ⊆ U :=
+    hF_preconn.subset_left_of_subset_union hU_open hV_open hUV_disj hF_sub_UV
+      hF_inter_U_nonempty
+  -- Hence for any τ ∈ F^o, 0 < (modularLambdaH τ).im.
+  intro τ hτ
+  exact (hF_sub_U hτ).2
+
+/-- **Step B: `λ(F^o)` is open.** By the open-mapping theorem for
+non-constant analytic functions on the preconnected open set `F^o`. -/
+theorem modularLambdaH_F_image_isOpen :
+    IsOpen (modularLambdaH '' Gamma2FundamentalDomainInterior) := by
+  -- Apply the open-mapping theorem globally on the upper half-plane ℍ.
+  set ℍ : Set ℂ := { τ : ℂ | 0 < τ.im }
+  -- λ is analytic on ℍ.
+  have hℍ_open : IsOpen ℍ := by
+    have : ℍ = Complex.im ⁻¹' Set.Ioi 0 := by ext τ; simp [ℍ]
+    rw [this]
+    exact isOpen_Ioi.preimage Complex.continuous_im
+  have h_lam_an : AnalyticOnNhd ℂ modularLambdaH ℍ :=
+    modularLambdaH_differentiableOn.analyticOnNhd hℍ_open
+  -- ℍ is preconnected (convex).
+  have hℍ_preconn : IsPreconnected ℍ := by
+    have hconv : Convex ℝ ℍ := by
+      intro w₁ hw₁ w₂ hw₂ s t hs ht hst
+      change 0 < (s • w₁ + t • w₂).im
+      rw [Complex.add_im, Complex.smul_im, Complex.smul_im, smul_eq_mul, smul_eq_mul]
+      rcases lt_or_eq_of_le hs with hs_pos | hs_zero
+      · have h1 : 0 < s * w₁.im := mul_pos hs_pos hw₁
+        have h2 : 0 ≤ t * w₂.im := mul_nonneg ht hw₂.le
+        linarith
+      · have ht_pos : 0 < t := by linarith
+        have h1 : 0 ≤ s * w₁.im := mul_nonneg hs hw₁.le
+        have h2 : 0 < t * w₂.im := mul_pos ht_pos hw₂
+        linarith
+    exact hconv.isPreconnected
+  -- λ is not constant on ℍ (cusp limits force two different values).
+  have h_lam_not_const : ¬ (∃ w, ∀ z ∈ ℍ, modularLambdaH z = w) := by
+    rintro ⟨w, hconst⟩
+    have hI_im : Complex.I.im = 1 := Complex.I_im
+    -- λ(iy) → 0 as y → ∞ but λ(iy) → 1 as y → 0+. If λ ≡ w, then w = 0 = 1.
+    have h_mul_in : ∀ y : ℝ, 0 < y → (Complex.I * (y : ℂ)) ∈ ℍ := by
+      intro y hy_pos
+      change 0 < (Complex.I * (y : ℂ)).im
+      rw [Complex.mul_im, Complex.I_re, Complex.I_im, Complex.ofReal_re,
+          Complex.ofReal_im]
+      simpa using hy_pos
+    have hlim_zero := modularLambdaH_iy_tendsto_zero_atTop
+    have hlim_one := modularLambdaH_iy_tendsto_one_atZeroPos
+    have hw_zero : w = 0 := by
+      have hcst :
+          Tendsto (fun y : ℝ => modularLambdaH (Complex.I * (y : ℂ))) atTop (𝓝 w) := by
+        apply tendsto_const_nhds.congr'
+        filter_upwards [Filter.eventually_gt_atTop (0 : ℝ)] with y hy_pos
+        exact (hconst (Complex.I * (y : ℂ)) (h_mul_in y hy_pos)).symm
+      exact tendsto_nhds_unique hcst hlim_zero
+    have hw_one : w = 1 := by
+      have hcst :
+          Tendsto (fun y : ℝ => modularLambdaH (Complex.I * (y : ℂ))) (𝓝[>] (0 : ℝ)) (𝓝 w) := by
+        apply tendsto_const_nhds.congr'
+        filter_upwards [self_mem_nhdsWithin] with y hy_pos
+        exact (hconst (Complex.I * (y : ℂ)) (h_mul_in y hy_pos)).symm
+      exact tendsto_nhds_unique hcst hlim_one
+    -- 0 = w = 1, contradiction.
+    have : (0 : ℂ) = 1 := hw_zero.symm.trans hw_one
+    exact one_ne_zero this.symm
+  -- Apply open-mapping.
+  rcases AnalyticOnNhd.is_constant_or_isOpen h_lam_an hℍ_preconn with h_const | h_open
+  · exact absurd h_const h_lam_not_const
+  · apply h_open
+    · intro τ hτ
+      exact hτ.1
+    · exact Gamma2FundamentalDomainInterior_isOpen
+
+/-- **Step C: `λ(F^o)` is closed in the upper half-plane.** Properness
+of `λ|F^o → {Im w > 0}`: as `τ` approaches the boundary of `F^o`, the
+image `λ(τ)` tends to `ℝ ∪ {∞}` (combined from the four cusp
+asymptotic lemmas and the three boundary-real arc theorems), so the
+preimage of any compact set in `{Im w > 0}` is compact in `F^o`.
+
+**Proof strategy (sequential).** Suppose `wₙ → w` in `{Im w > 0}`,
+with `wₙ = λ(τₙ)` for some `τₙ ∈ F^o`. Show `w ∈ λ(F^o)`. Case-split
+on the sequence `(τₙ)`:
+
+* **Bounded with limit in `F^o`**: by continuity, `λ(τ) = w ∈ λ(F^o)`.
+* **Bounded with limit `τ* ∈ ∂F^o ∩ ℍ`** (on a boundary arc):
+  `λ(τ*) ∈ ℝ` by the boundary-real lemmas; but `wₙ → w` with
+  `Im w > 0`, contradicting `w = λ(τ*) ∈ ℝ`.
+* **Bounded with limit `τ* = 0`** (cusp 0): need `λ(τₙ) → 1` for any
+  approach to `0` in `F^o`. Uses the S-shift identity `λ(τ) + λ(-1/τ) = 1`
+  plus `Im(-1/τₙ) → ∞` (which holds because the constraint
+  `|2τ−1| > 1` in `F^o` forces `|τ|² > Re τ`, giving `|τ|² < 2 (Im τ)²`
+  for `τ` near `0`, hence `Im(-1/τ) = Im τ / |τ|² > 1/(2 Im τ) → ∞`).
+* **Bounded with limit `τ* = 1`** (cusp 1): need `|λ(τₙ)| → ∞`. Use
+  the T-shift identity `λ(τ+1) = λ(τ)/(λ(τ)−1)` to reduce to cusp 0
+  case (since `λ(τₙ - 1) → 1` as `τₙ → 1`, then
+  `λ(τₙ) → 1/0 = ∞`); contradicts `wₙ → w ∈ ℂ` finite.
+* **Unbounded** (`τₙ.im → ∞`, since `Re τₙ ∈ (0,1)` is bounded):
+  need uniform cusp ∞ bound `|λ(τ)| ≤ C exp(-π τ.im)` on
+  `{τ : τ.im ≥ 1}`. Follows from existing
+  `theta2_norm_le_of_im_ge_one : ‖θ₂(τ)‖ ≤ 10 exp(-π τ.im/4)`
+  and the implicit lower bound `‖θ₃(τ)‖ ≥ 1/2` (derivable from
+  `‖θ₃ - 1‖ ≤ 4 exp(-π τ.im) ≤ 4 exp(-π) < 1/2` for `τ.im ≥ 1`).
+  Gives `λ(τₙ) → 0`, contradicting `w ∈ {Im w > 0}`.
+
+All four contradictions rule out the "limit outside `F^o`" cases,
+leaving only the "limit in `F^o`" case, which gives `w ∈ λ(F^o)`.
+
+This is held as an architectural `sorry` pending dedicated work to
+establish the uniform cusp asymptotics in F^o (specifically, the
+non-trivial cusp 0 limit via S-shift and the cusp ∞ norm bound via
+existing theta-norm lemmas). -/
+theorem modularLambdaH_F_image_isClosed_in_upperHalf :
+    IsClosed (((↑) : { w : ℂ // 0 < w.im } → ℂ) ⁻¹'
+      (modularLambdaH '' Gamma2FundamentalDomainInterior)) := by
+  sorry
+
+/-- **Step D — biholomorphism of `λ` on `F^o`.** Combining Steps A, B,
+C and the connectedness of the upper half-plane: `λ(F^o)` is a
+nonempty clopen subset of the connected upper half-plane, hence
+equals the entire upper half-plane. -/
 theorem modularLambdaH_image_fundamentalDomainInterior :
     modularLambdaH '' Gamma2FundamentalDomainInterior = { w : ℂ | 0 < w.im } := by
-  sorry
+  -- Set up the subset and the connected ambient space.
+  set U : Set ℂ := { w : ℂ | 0 < w.im } with hU_def
+  set S : Set ℂ := modularLambdaH '' Gamma2FundamentalDomainInterior with hS_def
+  -- Step A: S ⊆ U.
+  have hSU : S ⊆ U := by
+    rintro w ⟨τ, hτ, rfl⟩
+    exact modularLambdaH_F_im_pos τ hτ
+  -- Step B: S is open in ℂ.
+  have hS_open : IsOpen S := modularLambdaH_F_image_isOpen
+  -- Step C: S is closed in U (subspace topology).
+  have hS_closed_in_U :
+      IsClosed (((↑) : U → ℂ) ⁻¹' S) := modularLambdaH_F_image_isClosed_in_upperHalf
+  -- S is open in U (from S open in ℂ, restrict).
+  have hS_open_in_U :
+      IsOpen (((↑) : U → ℂ) ⁻¹' S) := hS_open.preimage continuous_subtype_val
+  -- U is preconnected (the upper half-plane is convex).
+  have hU_preconn : IsPreconnected U := by
+    have hconv : Convex ℝ U := by
+      intro w₁ hw₁ w₂ hw₂ s t hs ht hst
+      simp only [hU_def, Set.mem_setOf_eq] at hw₁ hw₂ ⊢
+      change 0 < (s • w₁ + t • w₂).im
+      rw [Complex.add_im, Complex.smul_im, Complex.smul_im, smul_eq_mul, smul_eq_mul]
+      rcases lt_or_eq_of_le hs with hs_pos | hs_zero
+      · have h1 : 0 < s * w₁.im := mul_pos hs_pos hw₁
+        have h2 : 0 ≤ t * w₂.im := mul_nonneg ht hw₂.le
+        linarith
+      · have ht_pos : 0 < t := by linarith
+        have h1 : 0 ≤ s * w₁.im := mul_nonneg hs hw₁.le
+        have h2 : 0 < t * w₂.im := mul_pos ht_pos hw₂
+        linarith
+    exact hconv.isPreconnected
+  -- S is nonempty: pick the explicit witness (1 + 4i)/2 ∈ F^o.
+  have hS_nonempty : S.Nonempty := by
+    have hw_in_F : (((1 : ℂ) + 4 * Complex.I) / 2) ∈ Gamma2FundamentalDomainInterior := by
+      refine ⟨?_, ?_, ?_, ?_⟩
+      · simp [Complex.add_im, Complex.mul_im, Complex.I_im, Complex.I_re]
+      · simp [Complex.add_re, Complex.mul_re, Complex.I_im, Complex.I_re]
+      · change ((1 + 4 * Complex.I) / 2 : ℂ).re < 1
+        rw [show ((1 + 4 * Complex.I) / 2 : ℂ) = (1 : ℂ) / 2 + 2 * Complex.I from by ring]
+        simp [Complex.add_re, Complex.mul_re, Complex.I_im, Complex.I_re,
+          Complex.normSq_ofNat]
+        norm_num
+      · have heq : 2 * (((1 : ℂ) + 4 * Complex.I) / 2) - 1 = 4 * Complex.I := by ring
+        rw [heq]
+        simp
+    exact ⟨modularLambdaH _, _, hw_in_F, rfl⟩
+  -- The preimage of S in U is nonempty.
+  have hSU_pre_nonempty : (((↑) : U → ℂ) ⁻¹' S).Nonempty := by
+    obtain ⟨w, hw⟩ := hS_nonempty
+    exact ⟨⟨w, hSU hw⟩, hw⟩
+  -- Extract a closed set `C` in ℂ such that `C ∩ U = S` (from `hS_closed_in_U`
+  -- via the subspace topology induced by `Subtype.val`).
+  rw [isClosed_induced_iff] at hS_closed_in_U
+  obtain ⟨C, hC_closed, hC_eq⟩ := hS_closed_in_U
+  have hCU_eq_S : ∀ w ∈ U, w ∈ C ↔ w ∈ S := by
+    intro w hw
+    exact iff_of_eq (congrArg (· (⟨w, hw⟩ : U)) hC_eq)
+  -- The open complement `Cᶜ` together with `S` covers `U` disjointly.
+  have hSC : S ⊆ C := fun w hw => (hCU_eq_S w (hSU hw)).mpr hw
+  have hUSC : U ⊆ S ∪ Cᶜ := by
+    intro w hwU
+    by_cases hwC : w ∈ C
+    · exact Or.inl ((hCU_eq_S w hwU).mp hwC)
+    · exact Or.inr hwC
+  have hSC_disj : Disjoint S Cᶜ := by
+    rw [Set.disjoint_iff_inter_eq_empty]
+    apply Set.eq_empty_of_forall_notMem
+    intro w hw
+    exact hw.2 (hSC hw.1)
+  -- Apply IsPreconnected.subset_left_of_subset_union to conclude U ⊆ S.
+  have hU_sub_S : U ⊆ S :=
+    hU_preconn.subset_left_of_subset_union hS_open hC_closed.isOpen_compl
+      hSC_disj hUSC ((Set.inter_eq_self_of_subset_right hSU).symm ▸ hS_nonempty)
+  exact Set.eq_of_subset_of_subset hSU hU_sub_S
 
 /-- **`⊆` direction of the biholomorphism:** the image of `F^o` under
 `λ` lies in the upper half-plane. Derived from
