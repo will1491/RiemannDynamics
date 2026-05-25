@@ -1556,24 +1556,33 @@ theorem modularLambdaH_ne_one {τ : ℂ} (hτ : 0 < τ.im) :
 /-- **Surjectivity of `λ : ℍ → ℂ ∖ {0, 1}`.** The image of `λ` on `ℍ`
 is exactly the triply-punctured plane.
 
-**Deferred proof sketch.** The `⊆` direction is direct from
-`modularLambdaH_ne_zero` and `modularLambdaH_ne_one` (both proven).
-The `⊇` direction — surjectivity — is the deep theorem. Two classical
-proof paths:
-* **Via covering theory**: `λ` is a holomorphic covering map onto its
-  image (`modularLambdaH_isCoveringMapOn`); the image is open in
-  `ℂ ∖ {0, 1}`, and since the latter is connected and the image is
-  nonempty, the image equals the whole space.
-* **Via direct construction**: lift any `w ∈ ℂ ∖ {0, 1}` by reflecting
-  the fundamental domain `F` of `Γ(2)` across its boundary, using the
-  Schwarz reflection principle.
-
-Both routes require Mathlib infrastructure not currently available
-(`λ` open map + covering connectedness, or Schwarz reflection on
-`F`). Status: blocked. -/
+The `⊆` direction is direct from `modularLambdaH_ne_zero` and
+`modularLambdaH_ne_one` and is closed below. The `⊇` direction —
+surjectivity — is the deep classical theorem. The intended proof
+path uses the **Schwarz reflection principle**
+(`schwarzReflect_differentiableOn`, now closed in
+`SchwarzReflection.lean`): identify a fundamental domain `F` of
+`Γ(2)` on `ℍ` whose interior is mapped biholomorphically by `λ` onto
+one open half of `ℂ ∖ {0, 1}` (say the upper half), with the three
+boundary arcs of `F` mapping to the three real-axis intervals
+`(-∞, 0), (0, 1), (1, +∞)`. The Schwarz reflection principle then
+extends `λ` across each boundary arc to a reflected fundamental
+domain, with image covering the complementary lower half. Iterating
+the reflections tiles all of `ℍ` and the image covers all of
+`ℂ ∖ {0, 1}`. Required infrastructure (still pending):
+explicit `F`, the boundary-correspondence biholomorphism
+`F^o → upper half of ℂ ∖ {0, 1}`, and the Möbius-conjugated Schwarz
+reflection across the two semi-circular boundary arcs. -/
 theorem modularLambdaH_image :
     modularLambdaH '' { τ : ℂ | 0 < τ.im } = { w : ℂ | w ≠ 0 ∧ w ≠ 1 } := by
-  sorry
+  refine Set.eq_of_subset_of_subset ?_ ?_
+  · -- `⊆`: `λ(ℍ) ⊆ ℂ ∖ {0, 1}` from `modularLambdaH_ne_zero/_ne_one`.
+    rintro w ⟨τ, hτ, rfl⟩
+    exact ⟨modularLambdaH_ne_zero hτ, modularLambdaH_ne_one hτ⟩
+  · -- `⊇`: surjectivity via Schwarz reflection across the fundamental-
+    -- domain boundary arcs of `Γ(2)`. Pending the fundamental-domain
+    -- infrastructure (see doc-comment above).
+    sorry
 
 /-! ## Modular invariance under `Γ(2)` -/
 

@@ -23,12 +23,11 @@ standard `DifferentiableOn ℂ` holomorphy on the upper half-plane, and
 an explicit exponential decay at `+i∞`. This file bridges the two
 APIs.
 
-The eventual consumer is `holomorphic_weight4_modform_cusp_vanishes`
-in `ModularFunction.lean`, which closes the deferred Jacobi identity
-sorry once a bundled `CuspForm Γ(1) 4` is in hand. The classical
-endpoint `dim S_4(SL(2, ℤ)) = 0` is captured here as
-`weight4_levelOne_cuspForm_vanishes`, an architectural sorry pending
-the `Δ`-division route (or any equivalent dimension argument).
+The endpoint `dim S_4(SL(2, ℤ)) = 0` is captured here as
+`weight4_levelOne_cuspForm_vanishes`, via the `Δ`-division route:
+construct `F²/Δ` as a negative-weight modular form (which must vanish
+by Mathlib's `ModularFormClass.levelOne_neg_weight_eq_zero`), then
+deduce `F = 0` from `delta_ne_zero`.
 -/
 
 namespace RiemannDynamics
@@ -158,14 +157,14 @@ Mathlib provides `delta : ℍ → ℂ` along with `delta_T_invariant`,
 `delta_S_invariant`, `delta_ne_zero`, and the q-product expansion
 `delta_eq_q_prod`, but does not bundle the discriminant as a
 `CuspForm Γ(1) 12`. We do so here. The three components are:
-- Slash invariance for every `γ ∈ SL(2, ℤ)`, closed via the
-  generator-level invariances and `slashInvariant_via_S_T_in_SL2Z`.
-- Manifold holomorphy `MDiff delta` (deferred — needs
-  `MDiff` on `eta z ^ 24` from Mathlib's η-machinery).
+- Slash invariance for every `γ ∈ SL(2, ℤ)`, via the generator-level
+  invariances and `slashInvariant_via_S_T_in_SL2Z`.
+- Manifold holomorphy `MDiff delta`, via `Δ = η²⁴` and Mathlib's
+  `differentiableAt_eta_of_mem_upperHalfPlaneSet`.
 - Vanishing at every cusp, reduced to `IsZeroAtImInfty delta` via
-  the `IsArithmetic` cusp-iff-SL2Z lemma + slash invariance. The
-  `IsZeroAtImInfty delta` step is itself deferred — it follows from
-  the leading `q¹` factor in the q-expansion `Δ = q · ∏(1 − qⁿ)²⁴`. -/
+  the `IsArithmetic` cusp-iff-SL2Z lemma + slash invariance, with
+  the `IsZeroAtImInfty delta` step following from the leading
+  `q¹` factor in the q-expansion `Δ = q · ∏(1 − qⁿ)²⁴`. -/
 
 /-- The slash-action equation for `delta` under every `γ ∈ SL(2, ℤ)`,
 extending the two-generator invariance via `SL2Z_generators`. -/
@@ -804,9 +803,9 @@ theorem cuspForm_sq_div_delta_bdd_at_cusps (F : CuspForm Γ(1) 4)
 /-- **Weight-4 cusp form vanishing for `SL(2, ℤ)`.** The space
 `S_4(SL(2, ℤ))` of weight-4 cusp forms for the full modular group is
 zero-dimensional. The proof constructs `G := F²/Δ` as a weight `−4`
-modular form (using the three architectural lemmas above), applies
-Mathlib's `ModularFormClass.levelOne_neg_weight_eq_zero` to get
-`G ≡ 0`, then deduces `F = 0` from `delta_ne_zero`. -/
+modular form (using the three slash/holomorphy/cusp-bound helpers
+above), applies Mathlib's `ModularFormClass.levelOne_neg_weight_eq_zero`
+to get `G ≡ 0`, then deduces `F = 0` from `delta_ne_zero`. -/
 theorem weight4_levelOne_cuspForm_vanishes
     (F : CuspForm Γ(1) 4) (τ : ℍ) :
     F τ = 0 := by

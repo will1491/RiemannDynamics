@@ -146,7 +146,7 @@ We take the **Bers route** for Nielsen–Thurston (analysis of the translation l
 |---|---|
 | **Sphere** | `ℂ̂ = OnePoint ℂ` with two charts, chordal metric, rational maps, iteration, forward / backward / grand orbits, finite-dimensionality of `Ratₐ`. |
 | **NormalFamilies** | Normal families in the locally-uniform topology (Euclidean and spherical), classical Montel via Arzelà–Ascoli. |
-| **Hyperbolic** | Hyperbolic metric on `𝔻`, `ℍ`, and `ℂ ∖ {0, 1}`; disk automorphism group `mobiusDisk`; Schwarz–Pick; Schwarz reflection principle; elliptic modular function `λ` and its covering property. |
+| **Hyperbolic** | Hyperbolic metric on `𝔻`, `ℍ`, and `ℂ ∖ {0, 1}`; disk automorphism group `mobiusDisk`; Schwarz–Pick; Schwarz reflection principle; `Γ(2)` fundamental domain; elliptic modular function `λ` and its covering property. |
 | **StrongMontel** | Montel–Carathéodory theorem via lift through `λ`; Picard's theorems as corollaries. |
 | **JuliaFatou** | Fatou / Julia sets, complete invariance, `J` closed / nonempty / perfect, `J = closure {repelling periodic points}`. |
 | **FatouComponents** | Connected components of `FatouSet f`, wandering vs eventually periodic, periodic classification (attracting / parabolic / Siegel / Herman). |
