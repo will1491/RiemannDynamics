@@ -948,15 +948,369 @@ theorem Gamma2FundamentalDomainInterior_isPreconnected :
     · exact (h_joined_p₁_p₂.mono hT_sub_F)
   exact h_joined_τ₀_p₂.trans h_joined_p₂_τ
 
-/-- **Sub-lemma for Step A: `Im(λ) ≠ 0` on `F^o`.** The modular function
-`λ` takes no real values on the open fundamental domain. This is the
-deep step in Step A's proof; it follows from the fundamental-domain
-property (λ is injective on F^o up to Γ(2), and λ takes real values
-only on the Γ(2)-orbit of the boundary arcs, which doesn't intersect
-F^o). Equivalently: F^o ∩ λ⁻¹(ℝ) = ∅. -/
+/-! ## Cusp asymptotics for `λ` inside `F^o`
+
+Two cusp asymptotics needed for the Phragmén–Lindelöf-style closure of
+Step A. These are stronger than the existing left-edge-only limits
+(`modularLambdaH_iy_tendsto_*`) because the `F^o` constraint
+`‖2τ − 1‖ > 1` forces every approach to `0` (resp. `1`) inside `F^o`
+to satisfy `Im(−1/(τ − 1)) → ∞` (resp. the q'-expansion gives
+`Im λ > 0` for `τ` near `1`). -/
+
+/-- **Cusp 0 limit inside `F^o`.** As `τ → 0` along any path in `F^o`,
+`λ(τ) → 1`. This is stronger than `modularLambdaH_iy_tendsto_one_atZeroPos`
+(which gives the limit only along the imaginary axis): in `F^o`, the
+constraint `‖2τ − 1‖ > 1` (equivalently `(Re τ)² + (Im τ)² > Re τ`)
+forces `Re τ < (Im τ)²` near `0`, so `Im(−1/τ) = Im τ / |τ|² → ∞` as
+`τ → 0` in `F^o`, and the S-shift identity
+`λ(τ) = 1 − λ(−1/τ)` combined with the cusp `i∞` uniform bound
+`modularLambdaH_norm_le_exp_of_im_ge_one` gives `λ(τ) → 1`. -/
+theorem modularLambdaH_cusp_zero_tendsto_one_in_F :
+    Filter.Tendsto modularLambdaH
+      (nhdsWithin (0 : ℂ) Gamma2FundamentalDomainInterior) (𝓝 1) := by
+  rw [Metric.tendsto_nhdsWithin_nhds]
+  intro ε hε_pos
+  have hπ_pos := Real.pi_pos
+  -- Set K := max 1 (log(160000/ε)/π + 1), δ := 1/(3·K).
+  set K : ℝ := max 1 (Real.log (160000 / ε) / Real.pi + 1) with hK_def
+  have hK_ge_one : 1 ≤ K := le_max_left _ _
+  have hK_pos : 0 < K := by linarith
+  have hK_ge_log : Real.log (160000 / ε) / Real.pi + 1 ≤ K := le_max_right _ _
+  set δ : ℝ := 1 / (3 * K) with hδ_def
+  have h_3K_pos : 0 < 3 * K := by linarith
+  have hδ_pos : 0 < δ := by rw [hδ_def]; positivity
+  refine ⟨δ, hδ_pos, ?_⟩
+  intro τ hτ_F hτ_dist
+  rw [dist_zero_right] at hτ_dist
+  obtain ⟨hτ_im_pos, hτ_re_pos, hτ_re_lt_one, hτ_semicircle⟩ := hτ_F
+  -- Standard bounds.
+  have hτ_im_le_norm : τ.im ≤ ‖τ‖ := by
+    have h_sq : τ.im ^ 2 ≤ ‖τ‖ ^ 2 := by
+      rw [Complex.sq_norm, Complex.normSq_apply]; nlinarith [sq_nonneg τ.re]
+    have h_norm_nn : 0 ≤ ‖τ‖ := norm_nonneg _
+    nlinarith [hτ_im_pos.le, sq_nonneg (τ.im - ‖τ‖)]
+  have hτ_re_le_norm : τ.re ≤ ‖τ‖ := by
+    have h_sq : τ.re ^ 2 ≤ ‖τ‖ ^ 2 := by
+      rw [Complex.sq_norm, Complex.normSq_apply]; nlinarith [sq_nonneg τ.im]
+    have h_norm_nn : 0 ≤ ‖τ‖ := norm_nonneg _
+    nlinarith [hτ_re_pos.le, sq_nonneg (τ.re - ‖τ‖)]
+  have hτ_im_lt_δ : τ.im < δ := lt_of_le_of_lt hτ_im_le_norm hτ_dist
+  have hτ_re_lt_δ : τ.re < δ := lt_of_le_of_lt hτ_re_le_norm hτ_dist
+  -- δ ≤ 1/3 since K ≥ 1.
+  have hδ_le_third : δ ≤ 1/3 := by
+    rw [hδ_def]
+    rw [div_le_div_iff₀ h_3K_pos (by norm_num : (0:ℝ) < 3)]
+    linarith
+  have hτ_im_lt_third : τ.im < 1/3 := lt_of_lt_of_le hτ_im_lt_δ hδ_le_third
+  have hτ_re_lt_third : τ.re < 1/3 := lt_of_lt_of_le hτ_re_lt_δ hδ_le_third
+  -- |τ|² > Re τ (from F^o constraint ‖2τ-1‖ > 1).
+  have hτ_normSq_gt_re : τ.re ^ 2 + τ.im ^ 2 > τ.re := by
+    have h_sq_lt : 1 < ‖2 * τ - 1‖ ^ 2 := by
+      have h_norm_nn : 0 ≤ ‖2 * τ - 1‖ := norm_nonneg _
+      nlinarith
+    have h_norm_sq_eq : ‖2 * τ - 1‖ ^ 2 = (2 * τ.re - 1) ^ 2 + (2 * τ.im) ^ 2 := by
+      rw [Complex.sq_norm]
+      simp [Complex.normSq_apply, Complex.sub_re, Complex.sub_im, Complex.mul_re,
+        Complex.mul_im]
+      ring
+    rw [h_norm_sq_eq] at h_sq_lt
+    nlinarith
+  -- Hence Im²τ > Re·(1-Re) ≥ Re·(2/3) for Re < 1/3.
+  have h_im_sq_gt : τ.im ^ 2 > τ.re * (2/3) := by
+    have h_one_sub : 2/3 < 1 - τ.re := by linarith
+    nlinarith [hτ_re_pos.le, hτ_normSq_gt_re]
+  -- Hence Re < (3/2)·Im²τ.
+  have h_re_lt_3_2_im : τ.re < (3/2) * τ.im ^ 2 := by linarith
+  -- |τ|² = Re² + Im² ≤ Re·(1/3) + Im² (since Re < 1/3, Re² ≤ Re·(1/3)).
+  -- Re² ≤ Re · Re ≤ Re · (1/3).
+  have h_re_sq_le : τ.re ^ 2 ≤ τ.re * (1/3) := by
+    have := mul_le_mul_of_nonneg_left hτ_re_lt_third.le hτ_re_pos.le
+    nlinarith [sq_nonneg τ.re]
+  -- |τ|² ≤ Re·(1/3) + Im²τ ≤ (3/2·Im²τ)·(1/3) + Im²τ = (1/2)·Im²τ + Im²τ = (3/2)·Im²τ.
+  -- So |τ|² ≤ (3/2)·Im²τ, hence 1/|τ|² ≥ 2/(3·Im²τ).
+  -- Wait actually we want a stronger ratio. Let me redo.
+  -- |τ|² = Re² + Im² ≤ (Re·1/3) + Im² ≤ ((3/2·Im²)·1/3) + Im² = (1/2)·Im² + Im² = (3/2)·Im².
+  have h_normSq_le : τ.re ^ 2 + τ.im ^ 2 ≤ (3/2) * τ.im ^ 2 := by
+    have h_re_sq_bound : τ.re ^ 2 ≤ (1/2) * τ.im ^ 2 := by
+      calc τ.re ^ 2 ≤ τ.re * (1/3) := h_re_sq_le
+        _ ≤ ((3/2) * τ.im ^ 2) * (1/3) :=
+            mul_le_mul_of_nonneg_right h_re_lt_3_2_im.le (by norm_num)
+        _ = (1/2) * τ.im ^ 2 := by ring
+    linarith
+  -- |τ|² ≤ (3/2)·Im²τ. So Im(-1/τ) = Im τ / |τ|² ≥ Im τ / ((3/2)·Im²τ) = 2/(3·Im τ).
+  -- For Im τ < 1/3: 2/(3·Im τ) > 2 > 1.
+  have hτ_normSq_pos : 0 < τ.re ^ 2 + τ.im ^ 2 := by positivity
+  have hτ_normSq_eq : Complex.normSq τ = τ.re ^ 2 + τ.im ^ 2 := by
+    rw [Complex.normSq_apply]; ring
+  have h_inv_im : (-1 / τ).im = τ.im / Complex.normSq τ := by
+    rw [show (-1 / τ : ℂ) = -(τ⁻¹) from by ring]
+    rw [Complex.neg_im, Complex.inv_im]
+    ring
+  have h_inv_im_lower : 2 / (3 * τ.im) ≤ (-1 / τ).im := by
+    rw [h_inv_im, hτ_normSq_eq]
+    have h_3im_pos : 0 < 3 * τ.im := by linarith
+    rw [div_le_div_iff₀ h_3im_pos hτ_normSq_pos]
+    have : 2 * (τ.re ^ 2 + τ.im ^ 2) ≤ 2 * ((3/2) * τ.im ^ 2) :=
+      mul_le_mul_of_nonneg_left h_normSq_le (by norm_num)
+    have h_simp : 2 * ((3/2) * τ.im ^ 2) = τ.im * (3 * τ.im) := by ring
+    linarith
+  -- 2/(3·Im τ) ≥ 2·K when Im τ ≤ 1/(3·K).
+  have h_inv_im_ge_2K : 2 * K ≤ (-1 / τ).im := by
+    have h_2_K : 2 / (3 * τ.im) ≥ 2 * K := by
+      rw [ge_iff_le]
+      have h_3im_pos : 0 < 3 * τ.im := by linarith
+      rw [le_div_iff₀ h_3im_pos]
+      have h_imK : τ.im < 1 / (3 * K) := hτ_im_lt_δ
+      have h_mul_lt : 2 * K * (3 * τ.im) < 2 * K * (1 / (3 * K) * 3) := by
+        have : 2 * K * (3 * τ.im) < 2 * K * (3 * (1/(3*K))) := by
+          have h_im_lt : 3 * τ.im < 3 * (1/(3*K)) :=
+            mul_lt_mul_of_pos_left h_imK (by norm_num)
+          exact mul_lt_mul_of_pos_left h_im_lt (by linarith : (0:ℝ) < 2 * K)
+        linarith
+      have h_simp : 2 * K * (1 / (3 * K) * 3) = 2 := by
+        field_simp
+      linarith
+    linarith
+  -- Apply cusp ∞ bound at -1/τ.
+  have h_inv_im_ge_one : 1 ≤ (-1 / τ).im := le_trans (by linarith) h_inv_im_ge_2K
+  have h_lam_bound : ‖modularLambdaH (-1 / τ)‖ ≤
+      160000 * Real.exp (-Real.pi * (-1 / τ).im) :=
+    modularLambdaH_norm_le_exp_of_im_ge_one h_inv_im_ge_one
+  -- S-shift.
+  have h_S := modularLambdaH_add_S_smul_eq_one hτ_im_pos
+  have h_lam_sub : modularLambdaH τ - 1 = -(modularLambdaH (-1 / τ)) := by
+    linear_combination h_S
+  rw [dist_eq_norm, h_lam_sub, norm_neg]
+  -- We have ‖λ(-1/τ)‖ ≤ 160000·exp(-π·Im(-1/τ)) ≤ 160000·exp(-π·2K) ≤ 160000·exp(-2π·K).
+  have h_exp_le : Real.exp (-Real.pi * (-1 / τ).im) ≤ Real.exp (-Real.pi * (2 * K)) := by
+    apply Real.exp_le_exp.mpr
+    have : -Real.pi * (-1 / τ).im ≤ -Real.pi * (2 * K) := by
+      have h := h_inv_im_ge_2K
+      nlinarith [Real.pi_pos]
+    exact this
+  -- 160000·exp(-π·2K) ≤ 160000·exp(-π·(log(160000/ε)/π + 1)·1)
+  --                 ≤ 160000·exp(-(log(160000/ε) + π))
+  --                 = 160000·(ε/160000)·exp(-π)
+  --                 = ε·exp(-π) < ε.
+  have h_K_ge : 2 * K ≥ Real.log (160000 / ε) / Real.pi + 1 := by
+    have h1 : K ≥ Real.log (160000 / ε) / Real.pi + 1 := hK_ge_log
+    linarith
+  have h_pi_2K : -Real.pi * (2 * K) ≤ -(Real.log (160000 / ε) + Real.pi) := by
+    have h_lhs_eq : -Real.pi * (2 * K) = -(Real.pi * (2 * K)) := by ring
+    have h_rhs : Real.pi * (Real.log (160000 / ε) / Real.pi + 1) =
+        Real.log (160000 / ε) + Real.pi := by
+      field_simp
+    have h_step : Real.pi * (Real.log (160000 / ε) / Real.pi + 1) ≤ Real.pi * (2 * K) :=
+      mul_le_mul_of_nonneg_left h_K_ge hπ_pos.le
+    rw [h_rhs] at h_step
+    linarith
+  have h_exp_neg_le : Real.exp (-Real.pi * (2 * K)) ≤
+      ε / 160000 * Real.exp (-Real.pi) := by
+    have h_exp_le' : Real.exp (-Real.pi * (2 * K)) ≤
+        Real.exp (-(Real.log (160000 / ε) + Real.pi)) :=
+      Real.exp_le_exp.mpr h_pi_2K
+    have h_eq : Real.exp (-(Real.log (160000 / ε) + Real.pi)) =
+        ε / 160000 * Real.exp (-Real.pi) := by
+      rw [show (-(Real.log (160000 / ε) + Real.pi) : ℝ) =
+          -Real.log (160000 / ε) + -Real.pi from by ring]
+      rw [Real.exp_add]
+      have h_160_div_pos : 0 < 160000 / ε := by positivity
+      rw [show -Real.log (160000 / ε) = Real.log (160000 / ε)⁻¹ from
+          (Real.log_inv _).symm]
+      rw [Real.exp_log (by positivity : (0:ℝ) < (160000/ε)⁻¹)]
+      rw [show ((160000 / ε)⁻¹ : ℝ) = ε / 160000 from by
+        rw [inv_div]]
+    linarith [h_exp_le', h_eq.le]
+  -- exp(-π) < 1.
+  have h_exp_neg_pi_lt : Real.exp (-Real.pi) < 1 := by
+    rw [show (-Real.pi : ℝ) = -(Real.pi) from rfl]
+    rw [Real.exp_neg]
+    have h_exp_pi_gt : 1 < Real.exp Real.pi := by
+      have h1 : (0:ℝ) < Real.pi := hπ_pos
+      have h := Real.add_one_le_exp Real.pi
+      linarith
+    have h_inv_lt : (Real.exp Real.pi)⁻¹ < 1 := by
+      rw [inv_lt_one_iff₀]
+      right; exact h_exp_pi_gt
+    exact h_inv_lt
+  calc ‖modularLambdaH (-1 / τ)‖
+      ≤ 160000 * Real.exp (-Real.pi * (-1 / τ).im) := h_lam_bound
+    _ ≤ 160000 * Real.exp (-Real.pi * (2 * K)) :=
+        mul_le_mul_of_nonneg_left h_exp_le (by norm_num)
+    _ ≤ 160000 * (ε / 160000 * Real.exp (-Real.pi)) :=
+        mul_le_mul_of_nonneg_left h_exp_neg_le (by norm_num)
+    _ = ε * Real.exp (-Real.pi) := by field_simp
+    _ < ε * 1 := mul_lt_mul_of_pos_left h_exp_neg_pi_lt hε_pos
+    _ = ε := by ring
+
+/-- **Cusp 1 asymptotic in `F^o` (the deep step).** There is a
+neighbourhood of `1` in which every point of `F^o` has `Im λ ≥ 0`.
+
+The proof uses the T-shift identity
+`λ(τ) = λ(τ − 1)/(λ(τ − 1) − 1)`, the cusp-0 limit `λ(τ−1) → 1` for
+`τ − 1` approaching `0` from the `F^o`-shifted region (i.e., from the
+upper-left quadrant minus the reflected semicircle), and the
+q'-expansion `δ := λ(τ−1) − 1 = −λ(−1/(τ−1)) ≈ −16 q'` where
+`q' := exp(πi · (−1/(τ−1)))`. The `F^o`-shifted constraint
+`‖2(τ−1) + 1‖ > 1` forces `arg(q') ∈ (0, π)` (equivalently,
+`Re(−1/(τ−1)) ∈ (0, 1)`), so `Im(q') > 0` in the leading order.
+
+**Status.** The three-term q-expansion
+`‖λ(z) − 16q + 128q² − 704q³‖ ≤ 32768·exp(−4π·z.im)` (the lemma
+`modularLambdaH_norm_sub_three_term_le_of_im_ge_one`) provides
+useful cancellation but is still insufficient near the F^o-shifted
+boundary semicircle. Writing `u := 1 − z.re` with `z := −1/(τ−1)`,
+the leading positive contribution to `Im λ(z)` factorizes as
+`πu · |q| · (16 + 256|q| + 2112|q|² + 12288|q|³ + …)` (all
+coefficients positive due to alternating signs in the q-expansion
+`λ = 16q − 128q² + 704q³ − 3072q⁴ + …`), while the loose error
+bound from a finite N-term truncation scales as `K_N · |q|^(N+1)`.
+For `τ ∈ F^o` arbitrarily close to the F^o-shifted boundary
+semicircle, `u` can decay exponentially in `1/r` at a slower rate
+than `|q|^(N+1)`, making any FINITE truncation insufficient.
+
+**Closure path.** A correct proof needs either (a) tighter sign-aware
+bounds on `Im(e_N)` exploiting the alternating-sign structure of the
+q-expansion, (b) the Schwarz reflection principle through the F^o
+boundary semicircle (where `λ` is real-valued), or (c) a direct
+infinite-series argument using the explicit coefficient pattern.
+None of these is currently in the codebase. -/
+theorem modularLambdaH_cusp_one_im_nonneg_nbhd_in_F :
+    ∃ δ : ℝ, 0 < δ ∧ ∀ τ ∈ Gamma2FundamentalDomainInterior,
+      ‖τ - 1‖ ≤ δ → 0 ≤ (modularLambdaH τ).im := by
+  sorry
+
+/-- **Sub-lemma for Step A (Phragmén–Lindelöf statement): `Im(λ) ≥ 0`
+on `F^o`.**
+
+`Im λ` is harmonic on `F^o`, vanishes on the three boundary arcs
+(`modularLambdaH_pure_imag_real`, `modularLambdaH_one_add_imag_real`,
+`modularLambdaH_semicircle_real`), and tends to `0` at the cusps
+`i∞` and `0` (via `modularLambdaH_iy_tendsto_zero_atTop` and
+`modularLambdaH_iy_tendsto_one_atZeroPos`).
+
+**Cusp-1 asymptotic (the deep step).** At cusp `1`, the modular
+identity `λ(τ) = λ(τ−1)/(λ(τ)−1)` together with the cusp-`0`
+limit `λ(τ−1) → 1` gives `|λ(τ)| → ∞`. The sign of `Im λ(τ)` as
+`τ → 1` in `F^o` is determined by the q'-expansion at cusp 0:
+writing `δ := λ(τ−1) − 1 = −λ(−1/(τ−1))` and `q' = exp(πi·(−1/(τ−1)))`,
+one has `δ ≈ −16 q'`, so `Im λ(τ) = Im[1/δ + 1] = −Im(δ)/|δ|²`. For
+`τ−1 = re^{iθ}` with `θ ∈ (π/2, π)` and `r > |cos θ|` (the
+F^o constraint near cusp 1), one verifies `arg(q') ∈ (0, π)`, hence
+`Im(q') > 0`, so `Im(δ) < 0` and `Im λ(τ) > 0`. Quantitatively,
+`Im λ(τ) ∼ sin(arg q')/(16|q'|) → +∞` as `r → 0`.
+
+**Phragmén–Lindelöf assembly.** With `Im λ → +∞` at cusp 1 and
+`Im λ → 0` at the other cusps and on the boundary arcs, the minimum
+principle for the harmonic function `Im λ` on the simply-connected
+`F^o` (via the bounded function `h(τ) := exp(−i·λ(τ))` whose norm
+`‖h(τ)‖ = exp(Im λ(τ))` is bounded below by `1` on all four boundary
+contributions) gives `Im λ ≥ 0` throughout.
+
+Mathlib's `PhragmenLindelof.vertical_strip` does not apply directly:
+`λ` has dense singularities on `ℝ` from the `Γ(2)` action, so it
+cannot be extended via Schwarz reflection to the strip
+`{0 < Re < 1}` in the form PL requires. The proof must instead
+proceed by truncation of `F^o` away from the cusps, max-modulus on
+the bounded truncation, and a limit argument as the truncation
+exhausts `F^o`. -/
+theorem modularLambdaH_im_nonneg_on_F :
+    ∀ τ ∈ Gamma2FundamentalDomainInterior, 0 ≤ (modularLambdaH τ).im := by
+  sorry
+
+/-- **Sub-lemma for Step A: `Im(λ) ≠ 0` on `F^o`.** The modular
+function `λ` takes no real values on the open fundamental domain.
+Derived from `modularLambdaH_im_nonneg_on_F` (`Im λ ≥ 0`) together
+with the open-mapping theorem: if `λ(τ_*)` were real for some
+`τ_* ∈ F^o`, then `λ(F^o)` is open and `λ(τ_*) ∈ λ(F^o)` would
+admit a small ball, so some interior point `τ'` would have
+`Im(λ(τ')) < 0`, contradicting `Im λ ≥ 0`. -/
 theorem modularLambdaH_im_ne_zero_on_F :
     ∀ τ ∈ Gamma2FundamentalDomainInterior, (modularLambdaH τ).im ≠ 0 := by
-  sorry
+  intro τstar hτstar h_im_zero
+  -- Setup ℍ.
+  set ℍ : Set ℂ := { τ : ℂ | 0 < τ.im }
+  have hℍ_open : IsOpen ℍ := isOpen_lt continuous_const Complex.continuous_im
+  -- λ is analytic on ℍ.
+  have h_lam_an : AnalyticOnNhd ℂ modularLambdaH ℍ :=
+    modularLambdaH_differentiableOn.analyticOnNhd hℍ_open
+  -- ℍ is preconnected (convex).
+  have hℍ_preconn : IsPreconnected ℍ := by
+    have hconv : Convex ℝ ℍ := by
+      intro w₁ hw₁ w₂ hw₂ s t hs ht hst
+      change 0 < (s • w₁ + t • w₂).im
+      rw [Complex.add_im, Complex.smul_im, Complex.smul_im, smul_eq_mul, smul_eq_mul]
+      rcases lt_or_eq_of_le hs with hs_pos | hs_zero
+      · have h1 : 0 < s * w₁.im := mul_pos hs_pos hw₁
+        have h2 : 0 ≤ t * w₂.im := mul_nonneg ht hw₂.le
+        linarith
+      · have ht_pos : 0 < t := by linarith
+        have h1 : 0 ≤ s * w₁.im := mul_nonneg hs hw₁.le
+        have h2 : 0 < t * w₂.im := mul_pos ht_pos hw₂
+        linarith
+    exact hconv.isPreconnected
+  -- λ is non-constant on ℍ (cusp limits give two different values).
+  have h_lam_not_const : ¬ (∃ w, ∀ z ∈ ℍ, modularLambdaH z = w) := by
+    rintro ⟨w, hconst⟩
+    have h_mul_in : ∀ y : ℝ, 0 < y → (Complex.I * (y : ℂ)) ∈ ℍ := by
+      intro y hy_pos
+      change 0 < (Complex.I * (y : ℂ)).im
+      rw [Complex.mul_im, Complex.I_re, Complex.I_im, Complex.ofReal_re, Complex.ofReal_im]
+      simpa using hy_pos
+    have hlim_zero := modularLambdaH_iy_tendsto_zero_atTop
+    have hlim_one := modularLambdaH_iy_tendsto_one_atZeroPos
+    have hw_zero : w = 0 := by
+      have hcst :
+          Tendsto (fun y : ℝ => modularLambdaH (Complex.I * (y : ℂ))) atTop (𝓝 w) := by
+        apply tendsto_const_nhds.congr'
+        filter_upwards [Filter.eventually_gt_atTop (0 : ℝ)] with y hy_pos
+        exact (hconst (Complex.I * (y : ℂ)) (h_mul_in y hy_pos)).symm
+      exact tendsto_nhds_unique hcst hlim_zero
+    have hw_one : w = 1 := by
+      have hcst :
+          Tendsto (fun y : ℝ => modularLambdaH (Complex.I * (y : ℂ))) (𝓝[>] (0 : ℝ)) (𝓝 w) := by
+        apply tendsto_const_nhds.congr'
+        filter_upwards [self_mem_nhdsWithin] with y hy_pos
+        exact (hconst (Complex.I * (y : ℂ)) (h_mul_in y hy_pos)).symm
+      exact tendsto_nhds_unique hcst hlim_one
+    have h_eq : (0 : ℂ) = 1 := hw_zero.symm.trans hw_one
+    exact one_ne_zero h_eq.symm
+  -- Open mapping on F^o: λ(F^o) is open.
+  rcases h_lam_an.is_constant_or_isOpen hℍ_preconn with h_const | h_open
+  · exact absurd h_const h_lam_not_const
+  have hF_sub_ℍ : Gamma2FundamentalDomainInterior ⊆ ℍ :=
+    Gamma2FundamentalDomainInterior_subset_upperHalf
+  have hF_open : IsOpen Gamma2FundamentalDomainInterior :=
+    Gamma2FundamentalDomainInterior_isOpen
+  have h_image_open : IsOpen (modularLambdaH '' Gamma2FundamentalDomainInterior) :=
+    h_open _ hF_sub_ℍ hF_open
+  -- λ(τstar) ∈ image.
+  have h_lam_in : modularLambdaH τstar ∈ modularLambdaH '' Gamma2FundamentalDomainInterior :=
+    ⟨τstar, hτstar, rfl⟩
+  -- Get a ball around λ(τstar) inside the image.
+  rcases Metric.isOpen_iff.mp h_image_open _ h_lam_in with ⟨ε, hε_pos, hball⟩
+  -- Choose w = λ(τstar) − i·ε/2.
+  set w : ℂ := modularLambdaH τstar - Complex.I * ((ε / 2 : ℝ) : ℂ) with hw_def
+  have h_eps_half_pos : (0 : ℝ) < ε / 2 := by linarith
+  have hw_in_ball : w ∈ Metric.ball (modularLambdaH τstar) ε := by
+    rw [Metric.mem_ball, dist_eq_norm, hw_def]
+    have h_simplify :
+        modularLambdaH τstar - Complex.I * ((ε / 2 : ℝ) : ℂ) - modularLambdaH τstar =
+          -(Complex.I * ((ε / 2 : ℝ) : ℂ)) := by ring
+    rw [h_simplify, norm_neg, norm_mul, Complex.norm_I, one_mul, Complex.norm_real]
+    rw [Real.norm_eq_abs, abs_of_pos h_eps_half_pos]
+    linarith
+  -- Get preimage τ' ∈ F^o.
+  obtain ⟨τ', hτ'_F, hτ'_eq⟩ := hball hw_in_ball
+  -- Compute Im(λ(τ')) = −ε/2 < 0.
+  have h_im_τ' : (modularLambdaH τ').im = -(ε / 2) := by
+    rw [hτ'_eq, hw_def]
+    rw [Complex.sub_im, h_im_zero, zero_sub]
+    rw [Complex.mul_im, Complex.I_re, Complex.I_im, Complex.ofReal_re, Complex.ofReal_im]
+    ring
+  -- But Im(λ(τ')) ≥ 0 by modularLambdaH_im_nonneg_on_F. Contradiction.
+  have h_nonneg' := modularLambdaH_im_nonneg_on_F τ' hτ'_F
+  linarith
 
 /-- **Step A: `λ(F^o) ⊆ {Im w > 0}`.** The image of `F^o` under `λ` lies
 in the open upper half-plane. Combines the witness
