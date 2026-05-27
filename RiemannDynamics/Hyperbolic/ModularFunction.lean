@@ -1052,8 +1052,7 @@ theorem theta2_norm_sub_lead_le_of_im_ge_one {τ : ℂ} (hτ : 1 ≤ τ.im) :
     rw [show Real.exp (-(Real.pi * τ.im / 4)) * (8 * Real.exp (-2 * Real.pi * τ.im)) =
         8 * (Real.exp (-(Real.pi * τ.im / 4)) * Real.exp (-2 * Real.pi * τ.im)) from by ring]
     rw [← Real.exp_add]
-    congr 1
-    ring
+    exact congr_arg (fun x => 8 * Real.exp x) (by ring)
   calc Real.exp (-(Real.pi * τ.im / 4)) * ‖jacobiTheta₂ (τ / 2) τ - 2‖
       ≤ Real.exp (-(Real.pi * τ.im / 4)) * (8 * Real.exp (-2 * Real.pi * τ.im)) :=
         mul_le_mul_of_nonneg_left h_tail h_exp_nn
@@ -1109,7 +1108,7 @@ theorem modularLambdaH_norm_sub_lead_le_of_im_ge_one {τ : ℂ} (hτ : 1 ≤ τ.
         Complex.I_re, Complex.I_im]
       ring
     rw [h_re]
-    simp [Complex.norm_ofNat]
+    simp
   have hA_norm_pos : 0 < ‖A‖ := by rw [hA_norm]; positivity
   have hA_ne : A ≠ 0 := norm_ne_zero_iff.mp hA_norm_pos.ne'
   -- ‖A‖^4 = 16·exp(-π τ.im).
@@ -1133,7 +1132,7 @@ theorem modularLambdaH_norm_sub_lead_le_of_im_ge_one {τ : ℂ} (hτ : 1 ≤ τ.
       rw [show (4 * Real.exp (-(2 * Real.pi * τ.im)) * (2 * Real.exp (-(Real.pi * τ.im / 4))) : ℝ) =
           8 * (Real.exp (-(2 * Real.pi * τ.im)) * Real.exp (-(Real.pi * τ.im / 4))) from by ring]
       rw [← Real.exp_add]
-      congr 1; ring
+      exact congr_arg (fun x => 8 * Real.exp x) (by ring)
     rw [h_target_eq]; exact h_th2_sub_A
   -- r₃ := θ₃ - 1; |r₃| ≤ 4·exp(-π τ.im).
   set r₃ : ℂ := theta3 τ - 1 with hr3_def
@@ -1209,7 +1208,8 @@ theorem modularLambdaH_norm_sub_lead_le_of_im_ge_one {τ : ℂ} (hτ : 1 ≤ τ.
     have h_16_exp_neg_pi : 16 * Real.exp (-Real.pi) ≤ 1 := by
       rw [Real.exp_neg, mul_inv_le_iff₀ (Real.exp_pos _)]
       linarith
-    linarith [h_exp_le, h_16_exp_neg_pi, mul_le_mul_of_nonneg_left h_exp_le (by norm_num : (0:ℝ) ≤ 16)]
+    have h_mul := mul_le_mul_of_nonneg_left h_exp_le (by norm_num : (0:ℝ) ≤ 16)
+    linarith [h_exp_le, h_16_exp_neg_pi, h_mul]
   -- (1+v)^4 - 1 = v · (4 + 6v + 4v² + v³).
   rw [hv_add]
   rw [show ((1 + v)^4 - 1 : ℂ) = v * (4 + 6*v + 4*v^2 + v^3) from by ring]
@@ -1253,9 +1253,9 @@ theorem modularLambdaH_norm_sub_lead_le_of_im_ge_one {τ : ℂ} (hτ : 1 ≤ τ.
         (16 * Real.exp (-(Real.pi * τ.im)) * 15) : ℝ) =
         3840 * (Real.exp (-(Real.pi * τ.im)) * Real.exp (-(Real.pi * τ.im))) from by ring]
     rw [← Real.exp_add]
-    congr 1; ring
-  have h_exp_eq : Real.exp (-(2 * Real.pi * τ.im)) = Real.exp (-2 * Real.pi * τ.im) := by
-    congr 1; ring
+    exact congr_arg (fun x => 3840 * Real.exp x) (by ring)
+  have h_exp_eq : Real.exp (-(2 * Real.pi * τ.im)) = Real.exp (-2 * Real.pi * τ.im) :=
+    congr_arg Real.exp (by ring)
   have h_target_le : 3840 * Real.exp (-(2 * Real.pi * τ.im)) ≤
       4096 * Real.exp (-2 * Real.pi * τ.im) := by
     rw [h_exp_eq]
@@ -1897,12 +1897,10 @@ theorem jacobiTheta₂_half_sub_three_term_norm_le_of_im_ge_one
     ring
   rw [h_norm_exp_12]
   -- Termwise bound: for n : ℕ, ‖term(n+4) + term(-(n+4))‖ ≤ 2 r⁶ (r⁴)^n.
-  -- For k = n+4 ≥ 4: k(k+1) ≥ 20, k(k-1) ≥ 12.
-  -- Bound: k(k-1) ≥ 12 + 8(k-4) for k ≥ 4. So |term(-k)| ≤ r^{(k(k-1))/2}... wait.
-  -- Actually with r = exp(-2π τ.im), ‖term(n)‖ = exp(-π·n(n+1)·τ.im) = exp(-2π·n(n+1)/2·τ.im) = r^{n(n+1)/2}.
+  -- For k = n+4 ≥ 4: k(k+1) ≥ 20, k(k-1) ≥ 12. With r = exp(-2π τ.im),
+  -- ‖term(n)‖ = r^{n(n+1)/2}.
   -- So ‖term(n+4)‖ ≤ r^{(n+4)(n+5)/2}, ‖term(-(n+4))‖ ≤ r^{(n+4)(n+3)/2}.
-  -- We want bounds ≤ r^6 · (r^4)^n in some form.
-  -- (n+4)(n+3)/2 ≥ 6 + 4n (verify: (n+4)(n+3)/2 - 6 - 4n = (n²+7n+12-12)/2 - 4n = (n²+7n)/2 - 4n = (n² + 7n - 8n)/2 = (n²-n)/2 = n(n-1)/2 ≥ 0 for n ≥ 1; for n=0: 0). ✓
+  -- (n+4)(n+3)/2 ≥ 6 + 4n: verify (n+4)(n+3)/2 - 6 - 4n = (n²-n)/2 ≥ 0.
   -- (n+4)(n+5)/2 ≥ (n+4)(n+3)/2 ≥ 6 + 4n.
   have h_termwise : ∀ n : ℕ,
       ‖jacobiTheta₂_term (((n + 4) : ℕ) : ℤ) (τ/2) τ +
@@ -1997,7 +1995,8 @@ theorem theta2_norm_sub_two_term_le_of_im_ge_one {τ : ℂ} (hτ : 1 ≤ τ.im) 
         (1 + Complex.exp (2 * Real.pi * Complex.I * τ))‖ ≤
       8 * Real.exp (-(25 * Real.pi * τ.im / 4)) := by
   unfold theta2
-  -- theta2 τ - 2 exp(πi τ/4)(1 + exp(2πi τ)) = exp(πi τ/4) · (jacobiTheta₂(τ/2, τ) - 2 - 2 exp(2πi τ)).
+  -- theta2 τ - 2 exp(πi τ/4)(1 + exp(2πi τ)) =
+  --   exp(πi τ/4) · (jacobiTheta₂(τ/2, τ) - 2 - 2 exp(2πi τ)).
   have h_factor :
       Complex.exp (Real.pi * Complex.I * τ / 4) * jacobiTheta₂ (τ / 2) τ -
         2 * Complex.exp (Real.pi * Complex.I * τ / 4) *
@@ -2027,7 +2026,7 @@ theorem theta2_norm_sub_two_term_le_of_im_ge_one {τ : ℂ} (hτ : 1 ≤ τ.im) 
     rw [show (Real.exp (-(Real.pi * τ.im / 4)) * (8 * Real.exp (-6 * Real.pi * τ.im)) : ℝ) =
         8 * (Real.exp (-(Real.pi * τ.im / 4)) * Real.exp (-6 * Real.pi * τ.im)) from by ring]
     rw [← Real.exp_add]
-    congr 1; ring
+    exact congr_arg (fun x => 8 * Real.exp x) (by ring)
   calc Real.exp (-(Real.pi * τ.im / 4)) *
         ‖jacobiTheta₂ (τ / 2) τ - 2 - 2 * Complex.exp (2 * Real.pi * Complex.I * τ)‖
       ≤ Real.exp (-(Real.pi * τ.im / 4)) * (8 * Real.exp (-6 * Real.pi * τ.im)) :=
@@ -2074,7 +2073,7 @@ theorem theta2_norm_sub_three_term_le_of_im_ge_one {τ : ℂ} (hτ : 1 ≤ τ.im
     rw [show (Real.exp (-(Real.pi * τ.im / 4)) * (8 * Real.exp (-12 * Real.pi * τ.im)) : ℝ) =
         8 * (Real.exp (-(Real.pi * τ.im / 4)) * Real.exp (-12 * Real.pi * τ.im)) from by ring]
     rw [← Real.exp_add]
-    congr 1; ring
+    exact congr_arg (fun x => 8 * Real.exp x) (by ring)
   calc Real.exp (-(Real.pi * τ.im / 4)) *
         ‖jacobiTheta₂ (τ / 2) τ - 2 -
           2 * Complex.exp (2 * Real.pi * Complex.I * τ) -
@@ -2113,7 +2112,7 @@ theorem modularLambdaH_norm_sub_two_term_le_of_im_ge_one {τ : ℂ} (hτ : 1 ≤
     rw [hq_def, Complex.norm_exp, hrq_def]
     congr 1
     have h_eq : (Real.pi * Complex.I * τ : ℂ) = ((Real.pi : ℝ) : ℂ) * (Complex.I * τ) := by
-      push_cast; ring
+      ring
     rw [h_eq, Complex.mul_re]
     simp [Complex.ofReal_re, Complex.ofReal_im, Complex.mul_re, Complex.mul_im,
       Complex.I_re, Complex.I_im]
@@ -2158,7 +2157,7 @@ theorem modularLambdaH_norm_sub_two_term_le_of_im_ge_one {τ : ℂ} (hτ : 1 ≤
         Complex.I_re, Complex.I_im]
       ring
     rw [h_re]
-    simp [Complex.norm_ofNat]
+    simp
   have hA_pow_norm : ‖A^4‖ = 16 * rq := by
     rw [hA_pow, norm_mul, hq_norm]; simp
   have hA_norm_pos : 0 < ‖A‖ := by rw [hA_norm]; positivity
@@ -2183,7 +2182,7 @@ theorem modularLambdaH_norm_sub_two_term_le_of_im_ge_one {τ : ℂ} (hτ : 1 ≤
           (2 * Real.exp (-(Real.pi * τ.im / 4))) : ℝ) =
           8 * (Real.exp (-(6 * Real.pi * τ.im)) * Real.exp (-(Real.pi * τ.im / 4))) from by ring]
       rw [← Real.exp_add]
-      congr 1; ring
+      exact congr_arg (fun x => 8 * Real.exp x) (by ring)
     rw [h_target_eq, ← h_unfold_A1Q2]
     exact h_th2_sub
   have hr3_bound : ‖r₃'‖ ≤ 4 * rq^4 := by
@@ -2268,11 +2267,8 @@ theorem modularLambdaH_norm_sub_two_term_le_of_im_ge_one {τ : ℂ} (hτ : 1 ≤
     rw [hv_def]
     field_simp
     ring
-  -- ‖Q2 + r₂' - r₃' + 4q² + 2q r₃'‖ ≤ rq² + rq² + rq + 4 rq² + 2 rq · rq = 6 rq² + rq + 2 rq² = ... let me redo.
-  -- |Q2| ≤ rq²; |r₂'| ≤ rq²; |r₃'| ≤ rq; |4q²| = 4 rq²; |2q r₃'| ≤ 2 rq · rq = 2 rq².
-  -- Sum ≤ rq² + rq² + rq + 4 rq² + 2 rq² = 8 rq² + rq.
-  -- Hmm, rq is not ≤ rq², so we can't simplify. We need ‖r₃'‖ ≤ rq², not ≤ rq.
-  -- Actually we have ‖r₃'‖ ≤ 4 rq^4 ≤ rq² (since 4 rq² ≤ 1 for rq ≤ 1/2).
+  -- |Q2| ≤ rq²; |r₂'| ≤ rq²; |r₃'| ≤ rq²; |4q²| = 4 rq²; |2q r₃'| ≤ 2 rq².
+  -- We have ‖r₃'‖ ≤ 4 rq^4 ≤ rq² (since 4 rq² ≤ 1 for rq ≤ 1/2).
   have hr3_bound_better : ‖r₃'‖ ≤ rq^2 := by
     refine hr3_bound.trans ?_
     -- 4 rq^4 ≤ rq² ⟺ 4 rq² ≤ 1. We have rq < 1/16, so rq² < 1/256 < 1/4.
@@ -2487,9 +2483,9 @@ theorem modularLambda_three_term_bracket_identity (v q : ℂ) :
 /-- Norm bound on `v := (1 + q² + q⁶ + r₂') / D − 1` with
 `D := 1 + 2q + 2q⁴ + r₃'`. Used in the three-term `λ` bound. -/
 theorem modularLambda_three_term_v_bound (q r₂' r₃' : ℂ) (rq : ℝ)
-    (hq_norm : ‖q‖ = rq) (hrq_pos : 0 < rq) (hrq_lt : rq < 1/16)
-    (hr2_loose : ‖r₂'‖ ≤ rq^3) (hr3_loose : ‖r₃'‖ ≤ rq^3)
-    (hD_norm : (1/2 : ℝ) ≤ ‖(1 + 2*q + 2*q^4 + r₃' : ℂ)‖) :
+    (hq_norm : ‖q‖ = rq) (hrq_pos : 0 < rq) (hrq_lt : rq < 1 / 16)
+    (hr2_loose : ‖r₂'‖ ≤ rq ^ 3) (hr3_loose : ‖r₃'‖ ≤ rq ^ 3)
+    (hD_norm : (1 / 2 : ℝ) ≤ ‖(1 + 2 * q + 2 * q ^ 4 + r₃' : ℂ)‖) :
     ‖(1 + q^2 + q^6 + r₂') / (1 + 2*q + 2*q^4 + r₃') - 1‖ ≤ 6 * rq := by
   have hrq_nn : 0 ≤ rq := hrq_pos.le
   have hrq_le_one : rq ≤ 1 := by linarith
@@ -2546,9 +2542,9 @@ theorem modularLambda_three_term_v_bound (q r₂' r₃' : ℂ) (rq : ℝ)
 
 /-- Norm bound on `s := v + 2q − 5q²` for the three-term `λ` setup. -/
 theorem modularLambda_three_term_s_bound (q r₂' r₃' : ℂ) (rq : ℝ)
-    (hq_norm : ‖q‖ = rq) (hrq_pos : 0 < rq) (hrq_lt : rq < 1/16)
-    (hr2_loose : ‖r₂'‖ ≤ rq^3) (hr3_loose : ‖r₃'‖ ≤ rq^3)
-    (hD_norm : (1/2 : ℝ) ≤ ‖(1 + 2*q + 2*q^4 + r₃' : ℂ)‖) :
+    (hq_norm : ‖q‖ = rq) (hrq_pos : 0 < rq) (hrq_lt : rq < 1 / 16)
+    (hr2_loose : ‖r₂'‖ ≤ rq ^ 3) (hr3_loose : ‖r₃'‖ ≤ rq ^ 3)
+    (hD_norm : (1 / 2 : ℝ) ≤ ‖(1 + 2 * q + 2 * q ^ 4 + r₃' : ℂ)‖) :
     ‖((1 + q^2 + q^6 + r₂') / (1 + 2*q + 2*q^4 + r₃') - 1) + 2*q - 5*q^2‖ ≤ 64 * rq^3 := by
   have hrq_nn : 0 ≤ rq := hrq_pos.le
   have hrq_le_one : rq ≤ 1 := by linarith
@@ -2676,7 +2672,7 @@ theorem modularLambdaH_norm_sub_three_term_le_of_im_ge_one {τ : ℂ} (hτ : 1 �
     rw [hq_def, Complex.norm_exp, hrq_def]
     congr 1
     have h_eq : (Real.pi * Complex.I * τ : ℂ) = ((Real.pi : ℝ) : ℂ) * (Complex.I * τ) := by
-      push_cast; ring
+      ring
     rw [h_eq, Complex.mul_re]
     simp [Complex.ofReal_re, Complex.ofReal_im, Complex.mul_re, Complex.mul_im,
       Complex.I_re, Complex.I_im]
@@ -2729,7 +2725,7 @@ theorem modularLambdaH_norm_sub_three_term_le_of_im_ge_one {τ : ℂ} (hτ : 1 �
       simp [Complex.ofReal_re, Complex.ofReal_im, Complex.mul_re, Complex.mul_im,
         Complex.I_re, Complex.I_im]
       ring
-    rw [h_re]; simp [Complex.norm_ofNat]
+    rw [h_re]; simp
   have hA_pow_norm : ‖A^4‖ = 16 * rq := by
     rw [hA_pow, norm_mul, hq_norm]; simp
   have hA_norm_pos : 0 < ‖A‖ := by rw [hA_norm]; positivity
@@ -2750,7 +2746,8 @@ theorem modularLambdaH_norm_sub_three_term_le_of_im_ge_one {τ : ℂ} (hτ : 1 �
           (2 * Real.exp (-(Real.pi * τ.im / 4))) : ℝ) =
           8 * (Real.exp (-(12 * Real.pi * τ.im)) *
             Real.exp (-(Real.pi * τ.im / 4))) from by ring]
-      rw [← Real.exp_add]; congr 1; ring
+      rw [← Real.exp_add]
+      exact congr_arg (fun x => 8 * Real.exp x) (by ring)
     rw [h_target_eq]
     have h_eq_A : A * (1 + Q2 + Q6) =
         2 * Complex.exp (Real.pi * Complex.I * τ / 4) *
