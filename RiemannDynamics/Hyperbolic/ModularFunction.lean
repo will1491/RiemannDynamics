@@ -3928,6 +3928,274 @@ theorem modularLambda_four_term_bracket_bound (v q : ℂ) (rq : ℝ)
     (6 * (1 + (-2*q + 5*q^2 - 10*q^3))^2 * (v + 2*q - 5*q^2 + 10*q^3)^2)
   linarith [h_a1, h_a2, h_a3, h_a4, h_term1_le, h_term2_le, h_term3_le, h_term4_le, h_qrem]
 
+/-- **Tightened four-term bracket bound.** Same hypotheses as
+`modularLambda_four_term_bracket_bound`, but uses the sharper
+`‖1 + (−2q + 5q² − 10q³)‖ ≤ 5/4` (provable from `rq < 1/16`) to give the
+tighter total `2100·rq^4`. Required for the widened `λ` bound
+`modularLambdaH_norm_sub_four_term_le_of_im_ge_nine_tenths`: the
+constant `35000 = 16 · K` forces `K ≤ 2187.5`, so the looser `4406`
+of the standard bracket bound does not suffice. -/
+theorem modularLambda_four_term_bracket_bound_widened (v q : ℂ) (rq : ℝ)
+    (hq_norm : ‖q‖ = rq) (hrq_pos : 0 < rq) (hrq_lt : rq < 1 / 16)
+    (ht_bound : ‖v + 2 * q - 5 * q ^ 2 + 10 * q ^ 3‖ ≤ 100 * rq ^ 4) :
+    ‖4 * (1 + (-2*q + 5*q^2 - 10*q^3))^3 * (v + 2*q - 5*q^2 + 10*q^3) +
+      6 * (1 + (-2*q + 5*q^2 - 10*q^3))^2 * (v + 2*q - 5*q^2 + 10*q^3)^2 +
+      4 * (1 + (-2*q + 5*q^2 - 10*q^3)) * (v + 2*q - 5*q^2 + 10*q^3)^3 +
+      (v + 2*q - 5*q^2 + 10*q^3)^4 +
+      646*q^4 - 1840*q^5 + 4420*q^6 - 8800*q^7 + 15025*q^8 -
+        21000*q^9 + 23000*q^10 - 20000*q^11 + 10000*q^12‖ ≤ 2100 * rq^4 := by
+  have hrq_nn : 0 ≤ rq := hrq_pos.le
+  have hrq_le_one : rq ≤ 1 := by linarith
+  have hrq4_nn : 0 ≤ rq^4 := by positivity
+  have hq_pow_norm (k : ℕ) : ‖q^k‖ = rq^k := by rw [norm_pow, hq_norm]
+  -- Sharper inner bound: ‖1 + u‖ ≤ 5/4.
+  have h_1pu_norm_le : ‖(1 + (-2*q + 5*q^2 - 10*q^3) : ℂ)‖ ≤ 5/4 := by
+    have h_eq : (1 + (-2*q + 5*q^2 - 10*q^3) : ℂ) = ((1 - 2*q) + 5*q^2) - 10*q^3 := by ring
+    rw [h_eq]
+    have h_t1 := norm_sub_le ((1 - 2*q : ℂ) + 5*q^2) (10*q^3)
+    have h_t2 := norm_add_le ((1 : ℂ) - 2*q) (5*q^2)
+    have h_t3 := norm_sub_le ((1 : ℂ)) (2*q)
+    have h_1_norm : ‖((1 : ℂ))‖ = 1 := norm_one
+    have h_2q_norm : ‖((2 : ℂ) * q)‖ = 2 * rq := by
+      rw [show ((2 * q : ℂ)) = (((2 : ℝ) : ℂ)) * q from by push_cast; ring]
+      rw [norm_mul, Complex.norm_real, hq_norm]; simp
+    have h_5q2_norm : ‖((5 : ℂ) * q^2)‖ = 5 * rq^2 := by
+      rw [show ((5 * q^2 : ℂ)) = (((5 : ℝ) : ℂ)) * q^2 from by push_cast; ring]
+      rw [norm_mul, Complex.norm_real, hq_pow_norm 2]; simp
+    have h_10q3_norm : ‖((10 : ℂ) * q^3)‖ = 10 * rq^3 := by
+      rw [show ((10 * q^3 : ℂ)) = (((10 : ℝ) : ℂ)) * q^3 from by push_cast; ring]
+      rw [norm_mul, Complex.norm_real, hq_pow_norm 3]; simp
+    have h_2rq_le : 2 * rq ≤ 1/8 := by linarith
+    have h_rq2_le : rq^2 ≤ 1/256 := by
+      have h_rq2 : rq^2 ≤ (1/16:ℝ)^2 := pow_le_pow_left₀ hrq_nn hrq_lt.le 2
+      have : ((1/16:ℝ))^2 = 1/256 := by norm_num
+      linarith
+    have h_5rq2_le : 5 * rq^2 ≤ 5/256 := by linarith
+    have h_rq3_le : rq^3 ≤ 1/4096 := by
+      have h_rq3 : rq^3 ≤ (1/16:ℝ)^3 := pow_le_pow_left₀ hrq_nn hrq_lt.le 3
+      have : ((1/16 : ℝ))^3 = 1/4096 := by norm_num
+      linarith
+    have h_10rq3_le : 10 * rq^3 ≤ 10/4096 := by linarith
+    linarith [h_t1, h_t2, h_t3, h_1_norm, h_2q_norm, h_5q2_norm, h_10q3_norm]
+  -- ‖1+u‖^2 ≤ (5/4)^2 = 25/16.
+  have h_1pu_sq_le : ‖(1 + (-2*q + 5*q^2 - 10*q^3) : ℂ)‖^2 ≤ 25/16 := by
+    have h := pow_le_pow_left₀ (norm_nonneg _) h_1pu_norm_le 2
+    have h_eq : ((5/4:ℝ))^2 = 25/16 := by norm_num
+    linarith
+  -- ‖1+u‖^3 ≤ (5/4)^3 = 125/64.
+  have h_1pu_cube_le : ‖(1 + (-2*q + 5*q^2 - 10*q^3) : ℂ)‖^3 ≤ 125/64 := by
+    have h := pow_le_pow_left₀ (norm_nonneg _) h_1pu_norm_le 3
+    have h_eq : ((5/4:ℝ))^3 = 125/64 := by norm_num
+    linarith
+  -- Term 1: ‖4(1+u)^3 t‖ ≤ 4 · 125/64 · 100 · rq^4 = 781.25 rq^4 ≤ 800 rq^4.
+  have h_term1_le : ‖4 * (1 + (-2*q + 5*q^2 - 10*q^3))^3 * (v + 2*q - 5*q^2 + 10*q^3)‖ ≤
+      800 * rq^4 := by
+    have h_eq : (4 * (1 + (-2*q + 5*q^2 - 10*q^3))^3 * (v + 2*q - 5*q^2 + 10*q^3) : ℂ) =
+        (((4 : ℝ) : ℂ)) * ((1 + (-2*q + 5*q^2 - 10*q^3))^3 *
+          (v + 2*q - 5*q^2 + 10*q^3)) := by push_cast; ring
+    rw [h_eq, norm_mul]
+    have h_4 : ‖(((4 : ℝ) : ℂ))‖ = 4 := by simp
+    rw [h_4, norm_mul, norm_pow]
+    have h_prod : ‖(1 + (-2*q + 5*q^2 - 10*q^3) : ℂ)‖^3 * ‖v + 2*q - 5*q^2 + 10*q^3‖ ≤
+        (125/64) * (100 * rq^4) :=
+      mul_le_mul h_1pu_cube_le ht_bound (norm_nonneg _) (by norm_num)
+    calc 4 * (‖(1 + (-2*q + 5*q^2 - 10*q^3) : ℂ)‖^3 * ‖v + 2*q - 5*q^2 + 10*q^3‖)
+        ≤ 4 * ((125/64) * (100 * rq^4)) :=
+          mul_le_mul_of_nonneg_left h_prod (by norm_num)
+      _ ≤ 800 * rq^4 := by nlinarith
+  -- Term 2: ‖6(1+u)^2 t²‖ ≤ 6 · 25/16 · 10000 · rq^8 ≤ 2 rq^4.
+  have h_rq4_small : rq^4 ≤ 1/65536 := by
+    have h_rq4_le : rq^4 ≤ (1/16:ℝ)^4 := pow_le_pow_left₀ hrq_nn hrq_lt.le 4
+    have : ((1/16 : ℝ))^4 = 1/65536 := by norm_num
+    linarith
+  have h_term2_le : ‖6 * (1 + (-2*q + 5*q^2 - 10*q^3))^2 * (v + 2*q - 5*q^2 + 10*q^3)^2‖ ≤
+      2 * rq^4 := by
+    have h_eq : (6 * (1 + (-2*q + 5*q^2 - 10*q^3))^2 * (v + 2*q - 5*q^2 + 10*q^3)^2 : ℂ) =
+        (((6 : ℝ) : ℂ)) * ((1 + (-2*q + 5*q^2 - 10*q^3))^2 *
+          (v + 2*q - 5*q^2 + 10*q^3)^2) := by push_cast; ring
+    rw [h_eq, norm_mul]
+    have h_6 : ‖(((6 : ℝ) : ℂ))‖ = 6 := by simp
+    rw [h_6, norm_mul, norm_pow, norm_pow]
+    have h_t_sq : ‖v + 2*q - 5*q^2 + 10*q^3‖^2 ≤ (100 * rq^4)^2 :=
+      pow_le_pow_left₀ (norm_nonneg _) ht_bound 2
+    have h_prod : ‖(1 + (-2*q + 5*q^2 - 10*q^3) : ℂ)‖^2 * ‖v + 2*q - 5*q^2 + 10*q^3‖^2 ≤
+        (25/16) * (100 * rq^4)^2 :=
+      mul_le_mul h_1pu_sq_le h_t_sq (by positivity) (by norm_num)
+    have h_rq8_le : rq^8 ≤ rq^4 * (1/65536) := by
+      have h_eq : rq^8 = rq^4 * rq^4 := by ring
+      rw [h_eq]; exact mul_le_mul_of_nonneg_left h_rq4_small hrq4_nn
+    calc 6 * (‖(1 + (-2*q + 5*q^2 - 10*q^3) : ℂ)‖^2 * ‖v + 2*q - 5*q^2 + 10*q^3‖^2)
+        ≤ 6 * ((25/16) * (100 * rq^4)^2) :=
+          mul_le_mul_of_nonneg_left h_prod (by norm_num)
+      _ = 93750 * rq^8 := by ring
+      _ ≤ 93750 * (rq^4 * (1/65536)) := mul_le_mul_of_nonneg_left h_rq8_le (by norm_num)
+      _ = (93750 / 65536) * rq^4 := by ring
+      _ ≤ 2 * rq^4 := by
+          have h_ratio : (93750 / 65536 : ℝ) ≤ 2 := by norm_num
+          exact mul_le_mul_of_nonneg_right h_ratio hrq4_nn
+  -- Term 3: same as standard, ≤ rq^4. Use ‖1+u‖ ≤ 5/4 (looser is also OK).
+  have h_rq8_small : rq^8 ≤ 1/4294967296 := by
+    have h_rq8_le : rq^8 ≤ (1/16:ℝ)^8 := pow_le_pow_left₀ hrq_nn hrq_lt.le 8
+    have : ((1/16 : ℝ))^8 = 1/4294967296 := by norm_num
+    linarith
+  have h_term3_le : ‖4 * (1 + (-2*q + 5*q^2 - 10*q^3)) * (v + 2*q - 5*q^2 + 10*q^3)^3‖ ≤
+      rq^4 := by
+    have h_eq : (4 * (1 + (-2*q + 5*q^2 - 10*q^3)) * (v + 2*q - 5*q^2 + 10*q^3)^3 : ℂ) =
+        (((4 : ℝ) : ℂ)) * ((1 + (-2*q + 5*q^2 - 10*q^3)) *
+          (v + 2*q - 5*q^2 + 10*q^3)^3) := by push_cast; ring
+    rw [h_eq, norm_mul]
+    have h_4 : ‖(((4 : ℝ) : ℂ))‖ = 4 := by simp
+    rw [h_4, norm_mul, norm_pow]
+    have h_t_cube : ‖v + 2*q - 5*q^2 + 10*q^3‖^3 ≤ (100 * rq^4)^3 :=
+      pow_le_pow_left₀ (norm_nonneg _) ht_bound 3
+    have h_prod : ‖(1 + (-2*q + 5*q^2 - 10*q^3) : ℂ)‖ * ‖v + 2*q - 5*q^2 + 10*q^3‖^3 ≤
+        (5/4) * (100 * rq^4)^3 :=
+      mul_le_mul h_1pu_norm_le h_t_cube (by positivity) (by norm_num)
+    have h_rq12_le : rq^12 ≤ rq^4 * (1/4294967296) := by
+      have h_eq : rq^12 = rq^4 * rq^8 := by ring
+      rw [h_eq]; exact mul_le_mul_of_nonneg_left h_rq8_small hrq4_nn
+    calc 4 * (‖(1 + (-2*q + 5*q^2 - 10*q^3) : ℂ)‖ * ‖v + 2*q - 5*q^2 + 10*q^3‖^3)
+        ≤ 4 * ((5/4) * (100 * rq^4)^3) :=
+          mul_le_mul_of_nonneg_left h_prod (by norm_num)
+      _ = 5000000 * rq^12 := by ring
+      _ ≤ 5000000 * (rq^4 * (1/4294967296)) :=
+            mul_le_mul_of_nonneg_left h_rq12_le (by norm_num)
+      _ = (5000000 / 4294967296) * rq^4 := by ring
+      _ ≤ rq^4 := by
+          have : (5000000 / 4294967296 : ℝ) ≤ 1 := by norm_num
+          calc (5000000 / 4294967296) * rq^4 ≤ 1 * rq^4 :=
+                mul_le_mul_of_nonneg_right this hrq4_nn
+            _ = rq^4 := one_mul _
+  -- Term 4: same as standard, ≤ rq^4.
+  have h_term4_le : ‖(v + 2*q - 5*q^2 + 10*q^3)^4‖ ≤ rq^4 := by
+    rw [norm_pow]
+    have h_t_4 : ‖v + 2*q - 5*q^2 + 10*q^3‖^4 ≤ (100 * rq^4)^4 :=
+      pow_le_pow_left₀ (norm_nonneg _) ht_bound 4
+    have h_rq12_small : rq^12 ≤ 1/281474976710656 := by
+      have h_rq12_le : rq^12 ≤ (1/16:ℝ)^12 := pow_le_pow_left₀ hrq_nn hrq_lt.le 12
+      have : ((1/16 : ℝ))^12 = 1/281474976710656 := by norm_num
+      linarith
+    have h_rq16_le : rq^16 ≤ rq^4 * (1/281474976710656) := by
+      have h_eq : rq^16 = rq^4 * rq^12 := by ring
+      rw [h_eq]; exact mul_le_mul_of_nonneg_left h_rq12_small hrq4_nn
+    calc ‖v + 2*q - 5*q^2 + 10*q^3‖^4
+        ≤ (100 * rq^4)^4 := h_t_4
+      _ = 100000000 * rq^16 := by ring
+      _ ≤ 100000000 * (rq^4 * (1/281474976710656)) :=
+            mul_le_mul_of_nonneg_left h_rq16_le (by norm_num)
+      _ = (100000000 / 281474976710656) * rq^4 := by ring
+      _ ≤ rq^4 := by
+          have : (100000000 / 281474976710656 : ℝ) ≤ 1 := by norm_num
+          calc (100000000 / 281474976710656) * rq^4 ≤ 1 * rq^4 :=
+                mul_le_mul_of_nonneg_right this hrq4_nn
+            _ = rq^4 := one_mul _
+  -- q-remainder bound (same as standard ≤ 1200 rq^4).
+  have h_const_norm (n : ℕ) (k : ℕ) :
+      ‖((n : ℂ) * q^k)‖ = n * rq^k := by
+    rw [show ((n : ℂ) * q^k) = (((n : ℝ) : ℂ)) * q^k from by push_cast; ring]
+    rw [norm_mul, Complex.norm_real, norm_pow, hq_norm]; simp
+  have h_646q4_norm : ‖((646 : ℂ) * q^4)‖ = 646 * rq^4 := h_const_norm 646 4
+  have h_1840q5_norm : ‖((1840 : ℂ) * q^5)‖ = 1840 * rq^5 := h_const_norm 1840 5
+  have h_4420q6_norm : ‖((4420 : ℂ) * q^6)‖ = 4420 * rq^6 := h_const_norm 4420 6
+  have h_8800q7_norm : ‖((8800 : ℂ) * q^7)‖ = 8800 * rq^7 := h_const_norm 8800 7
+  have h_15025q8_norm : ‖((15025 : ℂ) * q^8)‖ = 15025 * rq^8 := h_const_norm 15025 8
+  have h_21000q9_norm : ‖((21000 : ℂ) * q^9)‖ = 21000 * rq^9 := h_const_norm 21000 9
+  have h_23000q10_norm : ‖((23000 : ℂ) * q^10)‖ = 23000 * rq^10 := h_const_norm 23000 10
+  have h_20000q11_norm : ‖((20000 : ℂ) * q^11)‖ = 20000 * rq^11 := h_const_norm 20000 11
+  have h_10000q12_norm : ‖((10000 : ℂ) * q^12)‖ = 10000 * rq^12 := h_const_norm 10000 12
+  have h_rq5_to_rq4 : rq^5 ≤ rq^4 / 16 := by
+    have h_eq : rq^5 = rq^4 * rq := by ring
+    rw [h_eq]
+    calc rq^4 * rq ≤ rq^4 * (1/16) := mul_le_mul_of_nonneg_left hrq_lt.le hrq4_nn
+      _ = rq^4 / 16 := by ring
+  have h_rq6_to_rq4 : rq^6 ≤ rq^4 / 256 := by
+    have h_eq : rq^6 = rq^4 * (rq * rq) := by ring
+    rw [h_eq]
+    have h_rq_rq_le : rq * rq ≤ (1/16) * (1/16) :=
+      mul_le_mul hrq_lt.le hrq_lt.le hrq_nn (by norm_num)
+    calc rq^4 * (rq * rq) ≤ rq^4 * ((1/16) * (1/16)) :=
+          mul_le_mul_of_nonneg_left h_rq_rq_le hrq4_nn
+      _ = rq^4 / 256 := by ring
+  have h_rq_high : ∀ k : ℕ, k ≥ 6 → rq^k ≤ rq^4 / 256 := by
+    intro k hk
+    induction k, hk using Nat.le_induction with
+    | base => exact h_rq6_to_rq4
+    | succ n hn ih =>
+      have h_pow_nn : 0 ≤ rq^n := by positivity
+      have h_eq : rq^(n+1) = rq^n * rq := by ring
+      rw [h_eq]
+      calc rq^n * rq ≤ rq^n * 1 := mul_le_mul_of_nonneg_left hrq_le_one h_pow_nn
+        _ = rq^n := mul_one _
+        _ ≤ rq^4 / 256 := ih
+  have h_rq7_to_rq4 : rq^7 ≤ rq^4 / 256 := h_rq_high 7 (by omega)
+  have h_rq8_to_rq4 : rq^8 ≤ rq^4 / 256 := h_rq_high 8 (by omega)
+  have h_rq9_to_rq4 : rq^9 ≤ rq^4 / 256 := h_rq_high 9 (by omega)
+  have h_rq10_to_rq4 : rq^10 ≤ rq^4 / 256 := h_rq_high 10 (by omega)
+  have h_rq11_to_rq4 : rq^11 ≤ rq^4 / 256 := h_rq_high 11 (by omega)
+  have h_rq12_to_rq4 : rq^12 ≤ rq^4 / 256 := h_rq_high 12 (by omega)
+  have h_qrem : ‖(646*q^4 - 1840*q^5 + 4420*q^6 - 8800*q^7 + 15025*q^8 -
+      21000*q^9 + 23000*q^10 - 20000*q^11 + 10000*q^12 : ℂ)‖ ≤ 1200 * rq^4 := by
+    have h_eq : (646*q^4 - 1840*q^5 + 4420*q^6 - 8800*q^7 + 15025*q^8 -
+        21000*q^9 + 23000*q^10 - 20000*q^11 + 10000*q^12 : ℂ) =
+        (((((((646*q^4 - 1840*q^5) + 4420*q^6) - 8800*q^7) + 15025*q^8) - 21000*q^9) +
+          23000*q^10) - 20000*q^11) + 10000*q^12 := by ring
+    rw [h_eq]
+    have h_t1 := norm_add_le
+      (((((((646*q^4 - 1840*q^5) + 4420*q^6) - 8800*q^7) + 15025*q^8) - 21000*q^9) +
+        23000*q^10) - 20000*q^11) (10000*q^12)
+    have h_t2 := norm_sub_le
+      ((((((646*q^4 - 1840*q^5) + 4420*q^6) - 8800*q^7) + 15025*q^8) - 21000*q^9) +
+        23000*q^10) (20000*q^11)
+    have h_t3 := norm_add_le
+      (((((646*q^4 - 1840*q^5) + 4420*q^6) - 8800*q^7) + 15025*q^8) - 21000*q^9) (23000*q^10)
+    have h_t4 := norm_sub_le
+      ((((646*q^4 - 1840*q^5) + 4420*q^6) - 8800*q^7) + 15025*q^8) (21000*q^9)
+    have h_t5 := norm_add_le
+      (((646*q^4 - 1840*q^5) + 4420*q^6) - 8800*q^7) (15025*q^8)
+    have h_t6 := norm_sub_le ((646*q^4 - 1840*q^5) + 4420*q^6) (8800*q^7)
+    have h_t7 := norm_add_le (646*q^4 - 1840*q^5) (4420*q^6)
+    have h_t8 := norm_sub_le (646*q^4) (1840*q^5)
+    linarith [h_t1, h_t2, h_t3, h_t4, h_t5, h_t6, h_t7, h_t8,
+              h_646q4_norm.le, h_1840q5_norm.le, h_4420q6_norm.le, h_8800q7_norm.le,
+              h_15025q8_norm.le, h_21000q9_norm.le, h_23000q10_norm.le,
+              h_20000q11_norm.le, h_10000q12_norm.le,
+              h_rq5_to_rq4, h_rq6_to_rq4, h_rq7_to_rq4, h_rq8_to_rq4,
+              h_rq9_to_rq4, h_rq10_to_rq4, h_rq11_to_rq4, h_rq12_to_rq4, hrq4_nn]
+  -- Combine: 800 + 2 + 1 + 1 + 1200 = 2004 ≤ 2100 rq^4.
+  have h_eq : (4 * (1 + (-2*q + 5*q^2 - 10*q^3))^3 * (v + 2*q - 5*q^2 + 10*q^3) +
+      6 * (1 + (-2*q + 5*q^2 - 10*q^3))^2 * (v + 2*q - 5*q^2 + 10*q^3)^2 +
+      4 * (1 + (-2*q + 5*q^2 - 10*q^3)) * (v + 2*q - 5*q^2 + 10*q^3)^3 +
+      (v + 2*q - 5*q^2 + 10*q^3)^4 +
+      646*q^4 - 1840*q^5 + 4420*q^6 - 8800*q^7 + 15025*q^8 - 21000*q^9 + 23000*q^10 -
+        20000*q^11 + 10000*q^12 : ℂ) =
+      ((((4 * (1 + (-2*q + 5*q^2 - 10*q^3))^3 * (v + 2*q - 5*q^2 + 10*q^3) +
+        6 * (1 + (-2*q + 5*q^2 - 10*q^3))^2 * (v + 2*q - 5*q^2 + 10*q^3)^2) +
+        4 * (1 + (-2*q + 5*q^2 - 10*q^3)) * (v + 2*q - 5*q^2 + 10*q^3)^3) +
+        (v + 2*q - 5*q^2 + 10*q^3)^4) +
+        (646*q^4 - 1840*q^5 + 4420*q^6 - 8800*q^7 + 15025*q^8 - 21000*q^9 + 23000*q^10 -
+          20000*q^11 + 10000*q^12)) := by ring
+  rw [h_eq]
+  have h_a1 := norm_add_le
+    ((((4 * (1 + (-2*q + 5*q^2 - 10*q^3))^3 * (v + 2*q - 5*q^2 + 10*q^3) +
+      6 * (1 + (-2*q + 5*q^2 - 10*q^3))^2 * (v + 2*q - 5*q^2 + 10*q^3)^2) +
+      4 * (1 + (-2*q + 5*q^2 - 10*q^3)) * (v + 2*q - 5*q^2 + 10*q^3)^3) +
+      (v + 2*q - 5*q^2 + 10*q^3)^4))
+    ((646*q^4 - 1840*q^5 + 4420*q^6 - 8800*q^7 + 15025*q^8 - 21000*q^9 + 23000*q^10 -
+      20000*q^11 + 10000*q^12 : ℂ))
+  have h_a2 := norm_add_le
+    (((4 * (1 + (-2*q + 5*q^2 - 10*q^3))^3 * (v + 2*q - 5*q^2 + 10*q^3) +
+      6 * (1 + (-2*q + 5*q^2 - 10*q^3))^2 * (v + 2*q - 5*q^2 + 10*q^3)^2) +
+      4 * (1 + (-2*q + 5*q^2 - 10*q^3)) * (v + 2*q - 5*q^2 + 10*q^3)^3))
+    ((v + 2*q - 5*q^2 + 10*q^3)^4)
+  have h_a3 := norm_add_le
+    ((4 * (1 + (-2*q + 5*q^2 - 10*q^3))^3 * (v + 2*q - 5*q^2 + 10*q^3) +
+      6 * (1 + (-2*q + 5*q^2 - 10*q^3))^2 * (v + 2*q - 5*q^2 + 10*q^3)^2))
+    (4 * (1 + (-2*q + 5*q^2 - 10*q^3)) * (v + 2*q - 5*q^2 + 10*q^3)^3)
+  have h_a4 := norm_add_le
+    (4 * (1 + (-2*q + 5*q^2 - 10*q^3))^3 * (v + 2*q - 5*q^2 + 10*q^3))
+    (6 * (1 + (-2*q + 5*q^2 - 10*q^3))^2 * (v + 2*q - 5*q^2 + 10*q^3)^2)
+  linarith [h_a1, h_a2, h_a3, h_a4, h_term1_le, h_term2_le, h_term3_le, h_term4_le, h_qrem]
+
 /-- **Four-term leading bound for `λ`.** For `τ.im ≥ 1`,
 `‖λ(τ) − 16·exp(πi τ) + 128·exp(2πi τ) − 704·exp(3πi τ) + 3072·exp(4πi τ)‖
    ≤ 131072·exp(−5π·τ.im)`. Extends `modularLambdaH_norm_sub_three_term_le_of_im_ge_one`
@@ -4704,7 +4972,256 @@ theorem modularLambdaH_norm_sub_four_term_le_of_im_ge_nine_tenths
         704 * Complex.exp (3 * Real.pi * Complex.I * τ) +
         3072 * Complex.exp (4 * Real.pi * Complex.I * τ)‖ ≤
       35000 * Real.exp (-5 * Real.pi * τ.im) := by
-  sorry
+  have hτim_pos : 0 < τ.im := by nlinarith
+  have hπ_pos := Real.pi_pos
+  set q : ℂ := Complex.exp (Real.pi * Complex.I * τ) with hq_def
+  set Q2 : ℂ := Complex.exp (2 * Real.pi * Complex.I * τ) with hQ2_def
+  set Q3 : ℂ := Complex.exp (3 * Real.pi * Complex.I * τ) with hQ3_def
+  set Q4 : ℂ := Complex.exp (4 * Real.pi * Complex.I * τ) with hQ4_def
+  set Q6 : ℂ := Complex.exp (6 * Real.pi * Complex.I * τ) with hQ6_def
+  set Q9 : ℂ := Complex.exp (9 * Real.pi * Complex.I * τ) with hQ9_def
+  set Q12 : ℂ := Complex.exp (12 * Real.pi * Complex.I * τ) with hQ12_def
+  set rq : ℝ := Real.exp (-Real.pi * τ.im) with hrq_def
+  have hrq_pos : 0 < rq := Real.exp_pos _
+  have hrq_nn : 0 ≤ rq := hrq_pos.le
+  have hq_norm : ‖q‖ = rq := by
+    rw [hq_def, Complex.norm_exp, hrq_def]
+    congr 1
+    have h_eq : (Real.pi * Complex.I * τ : ℂ) = ((Real.pi : ℝ) : ℂ) * (Complex.I * τ) := by ring
+    rw [h_eq, Complex.mul_re]
+    simp [Complex.ofReal_re, Complex.ofReal_im, Complex.mul_re, Complex.mul_im,
+      Complex.I_re, Complex.I_im]
+  have hQ2_eq : Q2 = q^2 := by
+    rw [hQ2_def, hq_def, ← Complex.exp_nat_mul]; congr 1; push_cast; ring
+  have hQ3_eq : Q3 = q^3 := by
+    rw [hQ3_def, hq_def, ← Complex.exp_nat_mul]; congr 1; push_cast; ring
+  have hQ4_eq : Q4 = q^4 := by
+    rw [hQ4_def, hq_def, ← Complex.exp_nat_mul]; congr 1; push_cast; ring
+  have hQ6_eq : Q6 = q^6 := by
+    rw [hQ6_def, hq_def, ← Complex.exp_nat_mul]; congr 1; push_cast; ring
+  have hQ9_eq : Q9 = q^9 := by
+    rw [hQ9_def, hq_def, ← Complex.exp_nat_mul]; congr 1; push_cast; ring
+  have hQ12_eq : Q12 = q^12 := by
+    rw [hQ12_def, hq_def, ← Complex.exp_nat_mul]; congr 1; push_cast; ring
+  -- rq < 1/16 via exp(9π/10) > 16 (from log 16 < 9π/10).
+  have hrq_le_exp_neg : rq ≤ Real.exp (-(9 * Real.pi / 10)) := by
+    rw [hrq_def]; apply Real.exp_le_exp.mpr; nlinarith
+  have h_log2_lt : Real.log 2 < 0.6931471808 := Real.log_two_lt_d9
+  have h_pi_gt_d2 : (3.14 : ℝ) < Real.pi := Real.pi_gt_d2
+  have h_9pi10_gt_4log2 : 4 * Real.log 2 < 9 * Real.pi / 10 := by nlinarith
+  have h_log16_eq : Real.log 16 = 4 * Real.log 2 := by
+    rw [show (16 : ℝ) = 2^(4 : ℕ) from by norm_num, Real.log_pow]; push_cast; ring
+  have h_9pi10_gt_log16 : Real.log 16 < 9 * Real.pi / 10 := by
+    rw [h_log16_eq]; exact h_9pi10_gt_4log2
+  have h_exp_9pi10_gt_16 : (16 : ℝ) < Real.exp (9 * Real.pi / 10) := by
+    have h_eq : (16 : ℝ) = Real.exp (Real.log 16) := by
+      rw [Real.exp_log (by norm_num : (0:ℝ) < 16)]
+    rw [h_eq]; exact Real.exp_lt_exp.mpr h_9pi10_gt_log16
+  have h_exp_neg_9pi10_lt : Real.exp (-(9 * Real.pi / 10)) < 1/16 := by
+    rw [Real.exp_neg, inv_lt_comm₀ (Real.exp_pos _) (by norm_num : (0:ℝ) < 1/16),
+        show (1/16 : ℝ)⁻¹ = 16 from by norm_num]
+    exact h_exp_9pi10_gt_16
+  have hrq_lt : rq < 1/16 := lt_of_le_of_lt hrq_le_exp_neg h_exp_neg_9pi10_lt
+  have hrq_lt_one : rq < 1 := by linarith
+  have hrq_le_one : rq ≤ 1 := hrq_lt_one.le
+  have hrq3_pos : 0 < rq^3 := by positivity
+  have hrq3_nn : 0 ≤ rq^3 := hrq3_pos.le
+  have hrq4_pos : 0 < rq^4 := by positivity
+  have hrq4_nn : 0 ≤ rq^4 := hrq4_pos.le
+  have hrq5_pos : 0 < rq^5 := by positivity
+  have hrq5_nn : 0 ≤ rq^5 := hrq5_pos.le
+  have hrq5_eq : rq^5 = Real.exp (-5 * Real.pi * τ.im) := by
+    rw [hrq_def, ← Real.exp_nat_mul]; congr 1; push_cast; ring
+  -- A := 2 exp(πi τ/4); A⁴ = 16q.
+  set A : ℂ := 2 * Complex.exp (Real.pi * Complex.I * τ / 4) with hA_def
+  have hA_pow : A^4 = 16 * q := by
+    rw [hA_def, hq_def, mul_pow]
+    rw [show (Complex.exp (Real.pi * Complex.I * τ / 4))^4 =
+        Complex.exp (4 * (Real.pi * Complex.I * τ / 4)) from by
+      rw [← Complex.exp_nat_mul]; norm_cast]
+    rw [show (4 : ℂ) * (Real.pi * Complex.I * τ / 4) = Real.pi * Complex.I * τ from by ring]
+    norm_num
+  have hA_norm : ‖A‖ = 2 * Real.exp (-(Real.pi * τ.im / 4)) := by
+    rw [hA_def, norm_mul, Complex.norm_exp]
+    have h_re : (Real.pi * Complex.I * τ / 4 : ℂ).re = -(Real.pi * τ.im / 4) := by
+      have h_eq : (Real.pi * Complex.I * τ / 4 : ℂ) =
+          ((Real.pi / 4 : ℝ) : ℂ) * (Complex.I * τ) := by push_cast; ring
+      rw [h_eq, Complex.mul_re]
+      simp [Complex.ofReal_re, Complex.ofReal_im, Complex.mul_re, Complex.mul_im,
+        Complex.I_re, Complex.I_im]
+      ring
+    rw [h_re]; simp
+  have hA_pow_norm : ‖A^4‖ = 16 * rq := by
+    rw [hA_pow, norm_mul, hq_norm]; simp
+  have hA_norm_pos : 0 < ‖A‖ := by rw [hA_norm]; positivity
+  have hA_ne : A ≠ 0 := norm_ne_zero_iff.mp hA_norm_pos.ne'
+  -- r₂', r₃' bounds (widened).
+  set r₂' : ℂ := (theta2 τ - A * (1 + Q2 + Q6 + Q12)) / A with hr2_def
+  set r₃' : ℂ := theta3 τ - 1 - 2 * q - 2 * Q4 - 2 * Q9 with hr3_def
+  have hr2_bound : ‖r₂'‖ ≤ 4 * rq^20 := by
+    rw [hr2_def, norm_div, hA_norm]
+    have h_denom_pos : 0 < 2 * Real.exp (-(Real.pi * τ.im / 4)) := by positivity
+    rw [div_le_iff₀ h_denom_pos]
+    have hrq20_eq : rq^20 = Real.exp (-(20 * Real.pi * τ.im)) := by
+      rw [hrq_def, ← Real.exp_nat_mul]; congr 1; push_cast; ring
+    have h_target_eq : 4 * rq^20 * (2 * Real.exp (-(Real.pi * τ.im / 4))) =
+        8 * Real.exp (-(81 * Real.pi * τ.im / 4)) := by
+      rw [hrq20_eq]
+      rw [show (4 * Real.exp (-(20 * Real.pi * τ.im)) *
+          (2 * Real.exp (-(Real.pi * τ.im / 4))) : ℝ) =
+          8 * (Real.exp (-(20 * Real.pi * τ.im)) *
+            Real.exp (-(Real.pi * τ.im / 4))) from by ring]
+      rw [← Real.exp_add]
+      exact congr_arg (fun x => 8 * Real.exp x) (by ring)
+    rw [h_target_eq]
+    have h_eq_A : A * (1 + Q2 + Q6 + Q12) =
+        2 * Complex.exp (Real.pi * Complex.I * τ / 4) *
+          (1 + Complex.exp (2 * Real.pi * Complex.I * τ) +
+            Complex.exp (6 * Real.pi * Complex.I * τ) +
+            Complex.exp (12 * Real.pi * Complex.I * τ)) := by
+      rw [hA_def, hQ2_def, hQ6_def, hQ12_def]
+    rw [h_eq_A]
+    exact theta2_norm_sub_four_term_le_of_im_ge_nine_tenths hτ
+  have hr3_bound : ‖r₃'‖ ≤ 4 * rq^16 := by
+    rw [hr3_def, hq_def, hQ4_def, hQ9_def]
+    have hrq16_eq : rq^16 = Real.exp (-16 * Real.pi * τ.im) := by
+      rw [hrq_def, ← Real.exp_nat_mul]; congr 1; push_cast; ring
+    rw [hrq16_eq]
+    exact theta3_sub_four_term_norm_le_of_im_ge_nine_tenths hτ
+  -- Loose bounds.
+  have hr2_loose : ‖r₂'‖ ≤ rq^4 := by
+    refine hr2_bound.trans ?_
+    have h_4rq16_le : (4 : ℝ) * rq^16 ≤ 1 := by
+      have h1 : rq^16 ≤ (1/16 : ℝ)^16 := pow_le_pow_left₀ hrq_nn hrq_lt.le _
+      have h2 : ((1/16:ℝ))^16 ≤ 1/4 := by norm_num
+      linarith
+    have h_eq : (4 : ℝ) * rq^20 = (4 * rq^16) * rq^4 := by ring
+    rw [h_eq]
+    calc (4 * rq^16) * rq^4 ≤ 1 * rq^4 :=
+          mul_le_mul_of_nonneg_right h_4rq16_le hrq4_nn
+      _ = rq^4 := one_mul _
+  have hr3_loose : ‖r₃'‖ ≤ rq^4 := by
+    refine hr3_bound.trans ?_
+    have h_4rq12_le : (4 : ℝ) * rq^12 ≤ 1 := by
+      have h1 : rq^12 ≤ (1/16 : ℝ)^12 := pow_le_pow_left₀ hrq_nn hrq_lt.le _
+      have h2 : ((1/16:ℝ))^12 ≤ 1/4 := by norm_num
+      linarith
+    have h_eq : (4 : ℝ) * rq^16 = (4 * rq^12) * rq^4 := by ring
+    rw [h_eq]
+    calc (4 * rq^12) * rq^4 ≤ 1 * rq^4 :=
+          mul_le_mul_of_nonneg_right h_4rq12_le hrq4_nn
+      _ = rq^4 := one_mul _
+  have h_th2_eq : theta2 τ = A * (1 + Q2 + Q6 + Q12 + r₂') := by
+    rw [hr2_def]; field_simp; ring
+  have h_th3_eq : theta3 τ = 1 + 2 * q + 2 * Q4 + 2 * Q9 + r₃' := by rw [hr3_def]; ring
+  have hq_pow_norm (k : ℕ) : ‖q^k‖ = rq^k := by rw [norm_pow, hq_norm]
+  have hD_sub1_norm_le : ‖(2*q + 2*Q4 + 2*Q9 + r₃' : ℂ)‖ ≤ 1/2 := by
+    have h_2q_norm : ‖((2 : ℂ) * q)‖ = 2 * rq := by
+      rw [show ((2 * q : ℂ)) = (((2 : ℝ) : ℂ)) * q from by push_cast; ring]
+      rw [norm_mul, Complex.norm_real, hq_norm]; simp
+    have h_2Q4_norm : ‖((2 : ℂ) * Q4)‖ = 2 * rq^4 := by
+      rw [show ((2 * Q4 : ℂ)) = (((2 : ℝ) : ℂ)) * Q4 from by push_cast; ring]
+      rw [norm_mul, Complex.norm_real, hQ4_eq, hq_pow_norm]; simp
+    have h_2Q9_norm : ‖((2 : ℂ) * Q9)‖ = 2 * rq^9 := by
+      rw [show ((2 * Q9 : ℂ)) = (((2 : ℝ) : ℂ)) * Q9 from by push_cast; ring]
+      rw [norm_mul, Complex.norm_real, hQ9_eq, hq_pow_norm]; simp
+    have h_t1 := norm_add_le (2*q + 2*Q4 + 2*Q9) r₃'
+    have h_t2 := norm_add_le (2*q + 2*Q4) (2*Q9)
+    have h_t3 := norm_add_le (2*q) (2*Q4)
+    have h_2rq_le : 2 * rq ≤ 1/8 := by linarith
+    have h_rq4_le_rq16 : rq^4 ≤ 1/16 := by
+      have h_rq3_le : rq^3 ≤ (1/16 : ℝ)^3 := pow_le_pow_left₀ hrq_nn hrq_lt.le _
+      have h_eq : rq^4 = rq^3 * rq := by ring
+      rw [h_eq]
+      calc rq^3 * rq ≤ (1/16)^3 * rq := mul_le_mul_of_nonneg_right h_rq3_le hrq_nn
+        _ ≤ (1/16)^3 * (1/16) := by
+              apply mul_le_mul_of_nonneg_left hrq_lt.le
+              positivity
+        _ = (1/16:ℝ)^4 := by ring
+        _ ≤ 1/16 := by norm_num
+    have h_rq9_le_rq16 : rq^9 ≤ 1/16 := by
+      have h_rq8_le : rq^8 ≤ (1/16 : ℝ)^8 := pow_le_pow_left₀ hrq_nn hrq_lt.le _
+      have h_eq : rq^9 = rq^8 * rq := by ring
+      rw [h_eq]
+      calc rq^8 * rq ≤ (1/16)^8 * rq := mul_le_mul_of_nonneg_right h_rq8_le hrq_nn
+        _ ≤ (1/16)^8 * (1/16) := by
+              apply mul_le_mul_of_nonneg_left hrq_lt.le
+              positivity
+        _ ≤ 1/16 := by norm_num
+    linarith [h_t1, h_t2, h_t3, h_2q_norm, h_2Q4_norm, h_2Q9_norm, hr3_loose,
+              h_2rq_le, h_rq4_le_rq16, h_rq9_le_rq16, hrq4_nn]
+  have hD_norm_ge : (1/2 : ℝ) ≤ ‖(1 + 2*q + 2*Q4 + 2*Q9 + r₃' : ℂ)‖ := by
+    have h_eq : (1 + 2*q + 2*Q4 + 2*Q9 + r₃' : ℂ) = 1 + (2*q + 2*Q4 + 2*Q9 + r₃') := by ring
+    rw [h_eq]
+    have h_tri : ‖(1 : ℂ)‖ ≤ ‖(1 + (2*q + 2*Q4 + 2*Q9 + r₃') : ℂ)‖ +
+        ‖(2*q + 2*Q4 + 2*Q9 + r₃' : ℂ)‖ := by
+      have h_one_sub :
+          (1 : ℂ) = (1 + (2*q + 2*Q4 + 2*Q9 + r₃')) - (2*q + 2*Q4 + 2*Q9 + r₃') := by ring
+      conv_lhs => rw [h_one_sub]
+      exact norm_sub_le (1 + (2*q + 2*Q4 + 2*Q9 + r₃') : ℂ) (2*q + 2*Q4 + 2*Q9 + r₃')
+    have h_norm_1 : ‖(1 : ℂ)‖ = 1 := norm_one
+    linarith [h_tri, hD_sub1_norm_le]
+  have h_lambda_eq : modularLambdaH τ =
+      A^4 * ((1 + Q2 + Q6 + Q12 + r₂') / (1 + 2*q + 2*Q4 + 2*Q9 + r₃'))^4 := by
+    unfold modularLambdaH
+    rw [h_th2_eq, h_th3_eq, mul_pow, div_pow]; ring
+  rw [h_lambda_eq]
+  rw [show (16 * Complex.exp (Real.pi * Complex.I * τ) : ℂ) = A^4 from hA_pow.symm]
+  rw [show (128 * Complex.exp (2 * Real.pi * Complex.I * τ) : ℂ) = 8 * q * A^4 from by
+    rw [show Complex.exp (2 * Real.pi * Complex.I * τ) = Q2 from rfl]
+    rw [hA_pow, hQ2_eq]; ring]
+  rw [show (704 * Complex.exp (3 * Real.pi * Complex.I * τ) : ℂ) = 44 * q^2 * A^4 from by
+    rw [show Complex.exp (3 * Real.pi * Complex.I * τ) = Q3 from rfl]
+    rw [hA_pow, hQ3_eq]; ring]
+  rw [show (3072 * Complex.exp (4 * Real.pi * Complex.I * τ) : ℂ) = 192 * q^3 * A^4 from by
+    rw [show Complex.exp (4 * Real.pi * Complex.I * τ) = Q4 from rfl]
+    rw [hA_pow, hQ4_eq]; ring]
+  rw [show (A^4 * ((1 + Q2 + Q6 + Q12 + r₂') / (1 + 2*q + 2*Q4 + 2*Q9 + r₃'))^4 - A^4 +
+      8 * q * A^4 - 44 * q^2 * A^4 + 192 * q^3 * A^4 : ℂ) =
+      A^4 * (((1 + Q2 + Q6 + Q12 + r₂') / (1 + 2*q + 2*Q4 + 2*Q9 + r₃'))^4 - 1 +
+        8 * q - 44 * q^2 + 192 * q^3) from by ring]
+  rw [norm_mul, hA_pow_norm]
+  rw [hQ2_eq, hQ4_eq, hQ6_eq, hQ9_eq, hQ12_eq]
+  have hD_norm_q : (1/2 : ℝ) ≤ ‖(1 + 2*q + 2*q^4 + 2*q^9 + r₃' : ℂ)‖ := by
+    rw [show (1 + 2*q + 2*q^4 + 2*q^9 + r₃' : ℂ) = 1 + 2*q + 2*Q4 + 2*Q9 + r₃' from by
+      rw [hQ4_eq, hQ9_eq]]
+    exact hD_norm_ge
+  set v : ℂ := (1 + q^2 + q^6 + q^12 + r₂') / (1 + 2*q + 2*q^4 + 2*q^9 + r₃') - 1 with hv_def
+  rw [show ((1 + q^2 + q^6 + q^12 + r₂') / (1 + 2*q + 2*q^4 + 2*q^9 + r₃')) = 1 + v from by
+    rw [hv_def]; ring]
+  rw [modularLambda_four_term_bracket_identity v q]
+  have hv_bound : ‖v‖ ≤ 6 * rq :=
+    modularLambda_four_term_v_bound q r₂' r₃' rq hq_norm hrq_pos hrq_lt
+      hr2_loose hr3_loose hD_norm_q
+  have ht_bound : ‖v + 2*q - 5*q^2 + 10*q^3‖ ≤ 100 * rq^4 :=
+    modularLambda_four_term_t_bound q r₂' r₃' rq hq_norm hrq_pos hrq_lt
+      hr2_loose hr3_loose hD_norm_q
+  -- Use the widened bracket bound helper: ≤ 2100 rq^4.
+  have h_bracket_le := modularLambda_four_term_bracket_bound_widened v q rq hq_norm hrq_pos hrq_lt
+    ht_bound
+  -- 16 rq · 2100 rq^4 = 33600 rq^5 ≤ 35000 rq^5.
+  have h_step : (16 * rq) * ‖(4 * (1 + (-2*q + 5*q^2 - 10*q^3))^3 * (v + 2*q - 5*q^2 + 10*q^3) +
+      6 * (1 + (-2*q + 5*q^2 - 10*q^3))^2 * (v + 2*q - 5*q^2 + 10*q^3)^2 +
+      4 * (1 + (-2*q + 5*q^2 - 10*q^3)) * (v + 2*q - 5*q^2 + 10*q^3)^3 +
+      (v + 2*q - 5*q^2 + 10*q^3)^4 +
+      646*q^4 - 1840*q^5 + 4420*q^6 - 8800*q^7 + 15025*q^8 - 21000*q^9 + 23000*q^10 -
+        20000*q^11 + 10000*q^12 : ℂ)‖ ≤ 33600 * rq^5 := by
+    have h_mul : (16 * rq) * ‖(4 * (1 + (-2*q + 5*q^2 - 10*q^3))^3 *
+        (v + 2*q - 5*q^2 + 10*q^3) +
+        6 * (1 + (-2*q + 5*q^2 - 10*q^3))^2 * (v + 2*q - 5*q^2 + 10*q^3)^2 +
+        4 * (1 + (-2*q + 5*q^2 - 10*q^3)) * (v + 2*q - 5*q^2 + 10*q^3)^3 +
+        (v + 2*q - 5*q^2 + 10*q^3)^4 +
+        646*q^4 - 1840*q^5 + 4420*q^6 - 8800*q^7 + 15025*q^8 - 21000*q^9 + 23000*q^10 -
+          20000*q^11 + 10000*q^12 : ℂ)‖ ≤
+        (16 * rq) * (2100 * rq^4) :=
+      mul_le_mul_of_nonneg_left h_bracket_le (by positivity)
+    have h_eq : (16 : ℝ) * rq * (2100 * rq^4) = 33600 * rq^5 := by ring
+    linarith
+  have h_final : 33600 * rq^5 ≤ 35000 * Real.exp (-5 * Real.pi * τ.im) := by
+    rw [← hrq5_eq]
+    have h_pos : 0 ≤ rq^5 := by positivity
+    linarith
+  linarith [h_step, h_final]
 
 /-- `‖θ₃(τ) − θ₄(τ)‖ ≤ 100 · exp(−π·τ.im)` for `τ.im ≥ 1`. The
 constant terms `1` in `θ₃` and `θ₄` cancel, leaving the leading-`q¹`
@@ -5904,7 +6421,52 @@ theorem modularLambdaH_cusp_norm_sub_four_term_le_widened {y : ℂ}
     (hy : ‖y‖ ≤ Real.exp (-(9 * Real.pi / 10))) (hy_ne : y ≠ 0) :
     ‖modularLambdaH_cusp y - 16 * y + 128 * y^2 - 704 * y^3 + 3072 * y^4‖ ≤
       35000 * ‖y‖^5 := by
-  sorry
+  set τ := Function.Periodic.invQParam 2 y with hτ_def
+  have hy_norm_pos : 0 < ‖y‖ := norm_pos_iff.mpr hy_ne
+  have hπ : 0 < Real.pi := Real.pi_pos
+  have h_qParam : Function.Periodic.qParam 2 τ = y :=
+    Function.Periodic.qParam_right_inv (by norm_num : (2 : ℝ) ≠ 0) hy_ne
+  have h_cusp : modularLambdaH_cusp y = modularLambdaH τ := by
+    rw [← h_qParam]; exact modularLambdaH_cusp_qParam τ
+  have hτ_im_eq : τ.im = -Real.log ‖y‖ / Real.pi := by
+    rw [hτ_def, Function.Periodic.im_invQParam]
+    ring
+  have hτ_im_ge : (9 : ℝ) / 10 ≤ τ.im := by
+    rw [hτ_im_eq, le_div_iff₀ hπ]
+    have h_log_le : Real.log ‖y‖ ≤ -(9 * Real.pi / 10) := by
+      have := Real.log_le_log hy_norm_pos hy
+      rwa [Real.log_exp] at this
+    nlinarith
+  have h_exp_eq : Complex.exp (Real.pi * Complex.I * τ) = y := by
+    rw [← h_qParam, Function.Periodic.qParam]
+    congr 1
+    push_cast; ring
+  have h_exp_sq_eq : Complex.exp (2 * Real.pi * Complex.I * τ) = y^2 := by
+    have h_sum : (2 * Real.pi * Complex.I * τ : ℂ) =
+        (Real.pi * Complex.I * τ) + (Real.pi * Complex.I * τ) := by ring
+    rw [h_sum, Complex.exp_add, h_exp_eq, sq]
+  have h_exp_cube_eq_c : Complex.exp (3 * Real.pi * Complex.I * τ) = y^3 := by
+    rw [show (3 * Real.pi * Complex.I * τ : ℂ) =
+      (2 * Real.pi * Complex.I * τ) + (Real.pi * Complex.I * τ) from by ring,
+      Complex.exp_add, h_exp_eq, h_exp_sq_eq]
+    ring
+  have h_exp_quart_eq_c : Complex.exp (4 * Real.pi * Complex.I * τ) = y^4 := by
+    rw [show (4 * Real.pi * Complex.I * τ : ℂ) =
+      (3 * Real.pi * Complex.I * τ) + (Real.pi * Complex.I * τ) from by ring,
+      Complex.exp_add, h_exp_eq, h_exp_cube_eq_c]
+    ring
+  have h_exp_quint_eq : Real.exp (-5 * Real.pi * τ.im) = ‖y‖^5 := by
+    have h_re_eq : (-5 * Real.pi * τ.im : ℝ) = 5 * Real.log ‖y‖ := by
+      rw [hτ_im_eq]; field_simp
+    rw [h_re_eq, show (5 * Real.log ‖y‖ : ℝ) =
+      Real.log ‖y‖ + Real.log ‖y‖ + Real.log ‖y‖ + Real.log ‖y‖ + Real.log ‖y‖ from by ring,
+      Real.exp_add, Real.exp_add, Real.exp_add, Real.exp_add, Real.exp_log hy_norm_pos]
+    ring
+  rw [h_cusp]
+  have h_bound := modularLambdaH_norm_sub_four_term_le_of_im_ge_nine_tenths hτ_im_ge
+  rw [h_exp_eq, h_exp_sq_eq, h_exp_cube_eq_c, h_exp_quart_eq_c] at h_bound
+  rw [h_exp_quint_eq] at h_bound
+  exact h_bound
 
 /-- **Cauchy bound on `deriv cusp q − 16 + 256 q − 2112 q²` at the
 full boundary disk `‖q‖ ≤ exp(−π)`.** For `q ≠ 0` with
@@ -5931,7 +6493,216 @@ requires `‖q‖ ≤ exp(−π)/2`) to the full boundary disk
 theorem modularLambdaH_cusp_deriv_sub_two_term_le_widened {q : ℂ}
     (hq : ‖q‖ ≤ Real.exp (-Real.pi)) (hq_ne : q ≠ 0) :
     ‖deriv modularLambdaH_cusp q - 16 + 256 * q - 2112 * q^2‖ ≤ 31000 * ‖q‖^3 := by
-  sorry
+  set f : ℂ → ℂ := fun z => modularLambdaH_cusp z - 16 * z + 128 * z^2 - 704 * z^3 + 3072 * z^4
+    with hf_def
+  have hq_norm_pos : 0 < ‖q‖ := norm_pos_iff.mpr hq_ne
+  have h_exp_pi_pos : 0 < Real.exp (-Real.pi) := Real.exp_pos _
+  have hπ_pos : 0 < Real.pi := Real.pi_pos
+  set ρ : ℝ := ‖q‖ / 4 with hρ_def
+  have hρ_pos : 0 < ρ := by positivity
+  have h_exp_neg_pi_lt_1 : Real.exp (-Real.pi) < 1 := by
+    rw [Real.exp_lt_one_iff]; linarith
+  have hq_norm_lt_1 : ‖q‖ < 1 := lt_of_le_of_lt hq h_exp_neg_pi_lt_1
+  -- 5/4 ≤ exp(π/10).
+  have h_pi10_ne : Real.pi / 10 ≠ 0 := by positivity
+  have h_add1_lt_pi10 := Real.add_one_lt_exp h_pi10_ne
+  have h_pi_gt_d2 : (3.14 : ℝ) < Real.pi := Real.pi_gt_d2
+  have h_5_4_le_exp_pi10 : (5 : ℝ) / 4 ≤ Real.exp (Real.pi / 10) := by
+    nlinarith [h_add1_lt_pi10, h_pi_gt_d2]
+  have h_5_4_exp_neg_pi : (5 : ℝ) / 4 * Real.exp (-Real.pi) ≤ Real.exp (-(9 * Real.pi / 10)) := by
+    have h_mul : (5 : ℝ) / 4 * Real.exp (-Real.pi) ≤
+        Real.exp (Real.pi / 10) * Real.exp (-Real.pi) :=
+      mul_le_mul_of_nonneg_right h_5_4_le_exp_pi10 h_exp_pi_pos.le
+    have h_exp_sum : Real.exp (Real.pi / 10) * Real.exp (-Real.pi) =
+        Real.exp (-(9 * Real.pi / 10)) := by
+      rw [← Real.exp_add]; congr 1; ring
+    linarith
+  -- For z ∈ closedBall q ρ: ‖z‖ ≤ 5‖q‖/4 ≤ exp(-9π/10) < 1.
+  have hz_norm_le (z : ℂ) (hz : z ∈ Metric.closedBall q ρ) : ‖z‖ ≤ 5 * ‖q‖ / 4 := by
+    rw [Metric.mem_closedBall, Complex.dist_eq] at hz
+    calc ‖z‖ = ‖(z - q) + q‖ := by congr 1; ring
+      _ ≤ ‖z - q‖ + ‖q‖ := norm_add_le _ _
+      _ ≤ ρ + ‖q‖ := by linarith
+      _ = ‖q‖ / 4 + ‖q‖ := rfl
+      _ = 5 * ‖q‖ / 4 := by ring
+  have hz_norm_le_exp (z : ℂ) (hz : z ∈ Metric.closedBall q ρ) :
+      ‖z‖ ≤ Real.exp (-(9 * Real.pi / 10)) := by
+    have h := hz_norm_le z hz
+    have h_5q4_le : 5 * ‖q‖ / 4 ≤ 5 / 4 * Real.exp (-Real.pi) := by
+      have h_mul : (5 : ℝ) / 4 * ‖q‖ ≤ (5 : ℝ) / 4 * Real.exp (-Real.pi) :=
+        mul_le_mul_of_nonneg_left hq (by norm_num)
+      linarith
+    linarith
+  have h_exp_9pi10_lt_1 : Real.exp (-(9 * Real.pi / 10)) < 1 := by
+    rw [Real.exp_lt_one_iff]; nlinarith
+  have hz_norm_lt_1 (z : ℂ) (hz : z ∈ Metric.closedBall q ρ) : ‖z‖ < 1 := by
+    have h := hz_norm_le_exp z hz
+    linarith
+  -- Differentiability of f on a 1-ball around q.
+  have h_diff_cusp_at (z : ℂ) (hz_norm : ‖z‖ < 1) :
+      DifferentiableAt ℂ modularLambdaH_cusp z := by
+    by_cases hz_eq : z = 0
+    · rw [hz_eq]; exact modularLambdaH_cusp_differentiableAt_zero
+    · exact modularLambdaH_cusp_differentiableAt_of_norm_lt_one hz_eq hz_norm
+  have h_f_diff_at (z : ℂ) (hz_norm : ‖z‖ < 1) : DifferentiableAt ℂ f z := by
+    apply DifferentiableAt.add
+    · apply DifferentiableAt.sub
+      · apply DifferentiableAt.add
+        · exact (h_diff_cusp_at z hz_norm).sub
+            ((differentiableAt_const 16).mul differentiableAt_id)
+        · exact (differentiableAt_const 128).mul (differentiableAt_id.pow 2)
+      · exact (differentiableAt_const 704).mul (differentiableAt_id.pow 3)
+    · exact (differentiableAt_const 3072).mul (differentiableAt_id.pow 4)
+  have h_f_diff : DifferentiableOn ℂ f (Metric.ball q ρ) := fun z hz =>
+    (h_f_diff_at z (hz_norm_lt_1 z (Metric.ball_subset_closedBall hz))).differentiableWithinAt
+  have h_f_cont_cl : ContinuousOn f (Metric.closedBall q ρ) := fun z hz =>
+    (h_f_diff_at z (hz_norm_lt_1 z hz)).continuousAt.continuousWithinAt
+  have h_diff_cont : DiffContOnCl ℂ f (Metric.ball q ρ) :=
+    ⟨h_f_diff, by rwa [closure_ball _ hρ_pos.ne']⟩
+  -- Sphere bound: ‖f z‖ ≤ M · ‖q‖^5 where M = 35000 · (5/4)^5 = 109375000/1024.
+  set M : ℝ := 109375000 / 1024 with hM_def
+  have h_sphere_bound : ∀ z ∈ Metric.sphere q ρ, ‖f z‖ ≤ M * ‖q‖^5 := by
+    intro z hz
+    have hz_cl : z ∈ Metric.closedBall q ρ := Metric.sphere_subset_closedBall hz
+    have h_z_le : ‖z‖ ≤ 5 * ‖q‖ / 4 := hz_norm_le z hz_cl
+    have h_z_le_exp : ‖z‖ ≤ Real.exp (-(9 * Real.pi / 10)) := hz_norm_le_exp z hz_cl
+    have h_M_q5_nn : 0 ≤ M * ‖q‖^5 := by positivity
+    by_cases hz_eq : z = 0
+    · have h_f_zero : f z = 0 := by
+        rw [hz_eq, hf_def]
+        change modularLambdaH_cusp 0 - 16 * 0 + 128 * 0^2 - 704 * 0^3 + 3072 * 0^4 = 0
+        rw [modularLambdaH_cusp_zero]; ring
+      rw [h_f_zero, norm_zero]
+      exact h_M_q5_nn
+    · have h_four_term :=
+        modularLambdaH_cusp_norm_sub_four_term_le_widened h_z_le_exp hz_eq
+      calc ‖f z‖ ≤ 35000 * ‖z‖^5 := h_four_term
+        _ ≤ 35000 * (5 * ‖q‖ / 4)^5 := by
+            apply mul_le_mul_of_nonneg_left
+            · exact pow_le_pow_left₀ (norm_nonneg z) h_z_le 5
+            · norm_num
+        _ = M * ‖q‖^5 := by
+            change (35000 : ℝ) * (5 * ‖q‖ / 4)^5 = 109375000 / 1024 * ‖q‖^5
+            ring
+  -- Apply Cauchy's estimate: ‖deriv f q‖ ≤ M · ‖q‖^5 / ρ.
+  have h_cauchy :=
+    Complex.norm_deriv_le_of_forall_mem_sphere_norm_le hρ_pos h_diff_cont h_sphere_bound
+  -- Compute deriv f q via HasDerivAt route.
+  have h_cusp_hasDeriv : HasDerivAt modularLambdaH_cusp (deriv modularLambdaH_cusp q) q :=
+    (h_diff_cusp_at q hq_norm_lt_1).hasDerivAt
+  have h_lin_hasDeriv : HasDerivAt (fun z : ℂ => 16 * z) 16 q := by
+    simpa using (hasDerivAt_id q).const_mul (16 : ℂ)
+  have h_quad_hasDeriv : HasDerivAt (fun z : ℂ => 128 * z^2) (256 * q) q := by
+    have h_pow : HasDerivAt (fun z : ℂ => z^2) (2 * q) q := by
+      have := (hasDerivAt_id q).pow 2
+      simpa using this
+    have := h_pow.const_mul (128 : ℂ)
+    convert this using 1; ring
+  have h_cube_hasDeriv : HasDerivAt (fun z : ℂ => 704 * z^3) (2112 * q^2) q := by
+    have h_pow : HasDerivAt (fun z : ℂ => z^3) (3 * q^2) q := by
+      have := (hasDerivAt_id q).pow 3
+      simpa using this
+    have := h_pow.const_mul (704 : ℂ)
+    convert this using 1; ring
+  have h_quart_hasDeriv : HasDerivAt (fun z : ℂ => 3072 * z^4) (12288 * q^3) q := by
+    have h_pow : HasDerivAt (fun z : ℂ => z^4) (4 * q^3) q := by
+      have := (hasDerivAt_id q).pow 4
+      simpa using this
+    have := h_pow.const_mul (3072 : ℂ)
+    convert this using 1; ring
+  have h_f_hasDeriv : HasDerivAt f
+      (deriv modularLambdaH_cusp q - 16 + 256 * q - 2112 * q^2 + 12288 * q^3) q := by
+    have h1 : HasDerivAt (fun z : ℂ => modularLambdaH_cusp z - 16 * z)
+        (deriv modularLambdaH_cusp q - 16) q :=
+      h_cusp_hasDeriv.sub h_lin_hasDeriv
+    have h2 : HasDerivAt (fun z : ℂ => modularLambdaH_cusp z - 16 * z + 128 * z^2)
+        (deriv modularLambdaH_cusp q - 16 + 256 * q) q :=
+      h1.add h_quad_hasDeriv
+    have h3 : HasDerivAt (fun z : ℂ => modularLambdaH_cusp z - 16 * z + 128 * z^2 - 704 * z^3)
+        (deriv modularLambdaH_cusp q - 16 + 256 * q - 2112 * q^2) q :=
+      h2.sub h_cube_hasDeriv
+    exact h3.add h_quart_hasDeriv
+  have h_deriv_f_eq : deriv f q =
+      deriv modularLambdaH_cusp q - 16 + 256 * q - 2112 * q^2 + 12288 * q^3 :=
+    h_f_hasDeriv.deriv
+  rw [h_deriv_f_eq] at h_cauchy
+  -- Now bound ‖deriv cusp q - 16 + 256 q - 2112 q²‖ via triangle.
+  have h_eq : deriv modularLambdaH_cusp q - 16 + 256 * q - 2112 * q^2 =
+      (deriv modularLambdaH_cusp q - 16 + 256 * q - 2112 * q^2 + 12288 * q^3) - 12288 * q^3 := by
+    ring
+  rw [h_eq]
+  -- M · ‖q‖^5 / ρ = M · ‖q‖^5 · (4/‖q‖) = 4M · ‖q‖^4.
+  have h_quotient_simplify : M * ‖q‖^5 / ρ = 4 * M * ‖q‖^4 := by
+    rw [hρ_def]
+    rw [show ‖q‖^5 = ‖q‖^4 * ‖q‖ from by ring]
+    field_simp
+  rw [h_quotient_simplify] at h_cauchy
+  -- exp(π) > 22.9.
+  have h_exp_pi_gt_22_9 : (22.9 : ℝ) < Real.exp Real.pi := by
+    have h_e : (2.7182818283 : ℝ) < Real.exp 1 := Real.exp_one_gt_d9
+    have h_2718_lt : (2.718 : ℝ) < Real.exp 1 := by linarith
+    have h_2718_pos : (0 : ℝ) < 2.718 := by norm_num
+    have h_pow3 : (2.718 : ℝ)^3 < (Real.exp 1)^3 :=
+      pow_lt_pow_left₀ h_2718_lt h_2718_pos.le (by norm_num)
+    have h_exp3_eq : (Real.exp 1)^3 = Real.exp 3 := by
+      rw [show (3 : ℝ) = 1 + 1 + 1 from by norm_num, Real.exp_add, Real.exp_add]
+      ring
+    have h_2718_cube_num : (2.718 : ℝ)^3 > 20.07 := by norm_num
+    have h_exp3_gt : (20.07 : ℝ) < Real.exp 3 := by
+      rw [← h_exp3_eq]; linarith
+    have h_pi : (3.1415 : ℝ) < Real.pi := Real.pi_gt_d4
+    have h_pi3_ne : Real.pi - 3 ≠ 0 := by intro h; linarith
+    have h_add_lt := Real.add_one_lt_exp h_pi3_ne
+    have h_pi3_pos : (0 : ℝ) < Real.pi - 3 := by linarith
+    have h_exp_pi_eq : Real.exp Real.pi = Real.exp 3 * Real.exp (Real.pi - 3) := by
+      rw [← Real.exp_add]; congr 1; ring
+    have h_exp_pi3_gt : Real.exp (Real.pi - 3) > Real.pi - 2 := by linarith
+    have h_exp3_pos : (0 : ℝ) < Real.exp 3 := Real.exp_pos _
+    have h_pi_m2_gt : (1.1415 : ℝ) < Real.pi - 2 := by linarith
+    have h_pi_m2_pos : (0 : ℝ) < Real.pi - 2 := by linarith
+    rw [h_exp_pi_eq]
+    calc (22.9 : ℝ) < 20.07 * 1.1415 := by norm_num
+      _ < 20.07 * (Real.pi - 2) :=
+          mul_lt_mul_of_pos_left h_pi_m2_gt (by norm_num)
+      _ < Real.exp 3 * (Real.pi - 2) :=
+          mul_lt_mul_of_pos_right h_exp3_gt h_pi_m2_pos
+      _ < Real.exp 3 * Real.exp (Real.pi - 3) :=
+          mul_lt_mul_of_pos_left h_exp_pi3_gt h_exp3_pos
+  -- ‖q‖ ≤ exp(-π) < 1/22.9.
+  have h_exp_pi_pos_real : 0 < Real.exp Real.pi := Real.exp_pos _
+  have h_exp_neg_lt : Real.exp (-Real.pi) < 1 / 22.9 := by
+    rw [Real.exp_neg, show (Real.exp Real.pi)⁻¹ = 1 / Real.exp Real.pi from (one_div _).symm]
+    exact one_div_lt_one_div_of_lt (by norm_num : (0:ℝ) < 22.9) h_exp_pi_gt_22_9
+  have hq_lt : ‖q‖ < 1 / 22.9 := lt_of_le_of_lt hq h_exp_neg_lt
+  -- 4M · ‖q‖ ≤ 4M / 22.9 = (437500000/1024)/22.9 < 18700.
+  have h_4M_pos : 0 < 4 * M := by change (0 : ℝ) < 4 * (109375000 / 1024); norm_num
+  have h_4M_q : 4 * M * ‖q‖ < 4 * M * (1 / 22.9) :=
+    mul_lt_mul_of_pos_left hq_lt h_4M_pos
+  have h_4M_q_le : 4 * M * ‖q‖ ≤ 18700 := by
+    have h_calc : (4 : ℝ) * M * (1 / 22.9) ≤ 18700 := by
+      change (4 : ℝ) * (109375000 / 1024) * (1 / 22.9) ≤ 18700
+      norm_num
+    exact le_trans h_4M_q.le h_calc
+  have hq3_nn : 0 ≤ ‖q‖^3 := by positivity
+  have h_4M_q4 : 4 * M * ‖q‖^4 ≤ 18700 * ‖q‖^3 := by
+    have h_pow_eq : ‖q‖^4 = ‖q‖^3 * ‖q‖ := by ring
+    rw [h_pow_eq]
+    have h_assoc : 4 * M * (‖q‖^3 * ‖q‖) = (4 * M * ‖q‖) * ‖q‖^3 := by ring
+    rw [h_assoc]
+    exact mul_le_mul_of_nonneg_right h_4M_q_le hq3_nn
+  -- Triangle inequality + final arithmetic.
+  have h_norm_12288 : ‖(12288 : ℂ) * q^3‖ = 12288 * ‖q‖^3 := by
+    rw [norm_mul, norm_pow]
+    have : ‖(12288 : ℂ)‖ = 12288 := by
+      rw [show (12288 : ℂ) = ((12288 : ℝ) : ℂ) from by norm_num, Complex.norm_real]
+      simp
+    rw [this]
+  calc ‖(deriv modularLambdaH_cusp q - 16 + 256 * q - 2112 * q^2 + 12288 * q^3) - 12288 * q^3‖
+      ≤ ‖deriv modularLambdaH_cusp q - 16 + 256 * q - 2112 * q^2 + 12288 * q^3‖
+          + ‖(12288 : ℂ) * q^3‖ := norm_sub_le _ _
+    _ ≤ 4 * M * ‖q‖^4 + 12288 * ‖q‖^3 := by linarith [h_norm_12288.le]
+    _ ≤ 18700 * ‖q‖^3 + 12288 * ‖q‖^3 := by linarith
+    _ ≤ 31000 * ‖q‖^3 := by linarith
 
 /-- **Cauchy bound on `deriv cusp q − 16 + 256 q` near `0`.** For `q ≠ 0`
 with `‖q‖ ≤ exp(−π)/2`, `‖deriv cusp q − 16 + 256 q‖ ≤ 65536 · ‖q‖²`.

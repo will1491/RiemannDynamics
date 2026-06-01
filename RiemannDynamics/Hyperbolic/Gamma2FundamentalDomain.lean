@@ -2263,44 +2263,6 @@ theorem modularLambdaH_cusp_zero_tendsto_one_in_F :
     _ < ε * 1 := mul_lt_mul_of_pos_left h_exp_neg_pi_lt hε_pos
     _ = ε := by ring
 
-/-- **Sub-lemma for Step A (Phragmén–Lindelöf statement): `Im(λ) ≥ 0`
-on `F^o`.**
-
-`Im λ` is harmonic on `F^o`, vanishes on the three boundary arcs
-(`modularLambdaH_pure_imag_real`, `modularLambdaH_one_add_imag_real`,
-`modularLambdaH_semicircle_real`), and tends to `0` at the cusps
-`i∞` and `0` (via `modularLambdaH_iy_tendsto_zero_atTop` and
-`modularLambdaH_iy_tendsto_one_atZeroPos`).
-
-**Cusp-1 asymptotic (the deep step).** At cusp `1`, the modular
-identity `λ(τ) = λ(τ−1)/(λ(τ)−1)` together with the cusp-`0`
-limit `λ(τ−1) → 1` gives `|λ(τ)| → ∞`. The sign of `Im λ(τ)` as
-`τ → 1` in `F^o` is determined by the q'-expansion at cusp 0:
-writing `δ := λ(τ−1) − 1 = −λ(−1/(τ−1))` and `q' = exp(πi·(−1/(τ−1)))`,
-one has `δ ≈ −16 q'`, so `Im λ(τ) = Im[1/δ + 1] = −Im(δ)/|δ|²`. For
-`τ−1 = re^{iθ}` with `θ ∈ (π/2, π)` and `r > |cos θ|` (the
-F^o constraint near cusp 1), one verifies `arg(q') ∈ (0, π)`, hence
-`Im(q') > 0`, so `Im(δ) < 0` and `Im λ(τ) > 0`. Quantitatively,
-`Im λ(τ) ∼ sin(arg q')/(16|q'|) → +∞` as `r → 0`.
-
-**Phragmén–Lindelöf assembly.** With `Im λ → +∞` at cusp 1 and
-`Im λ → 0` at the other cusps and on the boundary arcs, the minimum
-principle for the harmonic function `Im λ` on the simply-connected
-`F^o` (via the bounded function `h(τ) := exp(−i·λ(τ))` whose norm
-`‖h(τ)‖ = exp(Im λ(τ))` is bounded below by `1` on all four boundary
-contributions) gives `Im λ ≥ 0` throughout.
-
-Mathlib's `PhragmenLindelof.vertical_strip` does not apply directly:
-`λ` has dense singularities on `ℝ` from the `Γ(2)` action, so it
-cannot be extended via Schwarz reflection to the strip
-`{0 < Re < 1}` in the form PL requires. The proof must instead
-proceed by truncation of `F^o` away from the cusps, max-modulus on
-the bounded truncation, and a limit argument as the truncation
-exhausts `F^o`. -/
-theorem modularLambdaH_im_nonneg_on_F :
-    ∀ τ ∈ Gamma2FundamentalDomainInterior, 0 ≤ (modularLambdaH τ).im := by
-  sorry
-
 /-- Helper for `modularLambdaH_im_nonneg_strip_interior_band`: `exp π > 22`.
 Used to derive `r := exp(−πY) < 1/22` when `Y ≥ 1`. -/
 theorem exp_pi_gt_22 : (22 : ℝ) < Real.exp Real.pi := by
@@ -2817,7 +2779,110 @@ theorem modularLambdaH_deriv_norm_sub_three_term_le_of_im_ge_one
         2112 * (Real.pi : ℂ) * Complex.I *
           Complex.exp (3 * Real.pi * Complex.I * τ)‖ ≤
       100000 * Real.exp (-4 * Real.pi * τ.im) := by
-  sorry
+  set q : ℂ := Complex.exp (Real.pi * Complex.I * τ) with hq_def
+  have hq_ne : q ≠ 0 := Complex.exp_ne_zero _
+  have hτ_im_pos : 0 < τ.im := lt_of_lt_of_le zero_lt_one hτ
+  have hπ_pos : 0 < Real.pi := Real.pi_pos
+  -- ‖q‖ = exp(-π τ.im).
+  have h_q_norm_eq : ‖q‖ = Real.exp (-Real.pi * τ.im) := by
+    rw [hq_def, Complex.norm_exp]
+    congr 1
+    simp [Complex.mul_re, Complex.mul_im, Complex.I_re, Complex.I_im,
+      Complex.ofReal_re, Complex.ofReal_im]
+  have h_q_norm_pos : 0 < ‖q‖ := by rw [h_q_norm_eq]; exact Real.exp_pos _
+  -- ‖q‖ ≤ exp(-π).
+  have h_q_norm_le : ‖q‖ ≤ Real.exp (-Real.pi) := by
+    rw [h_q_norm_eq]
+    apply Real.exp_le_exp.mpr
+    nlinarith
+  -- ‖q‖ < 1 from τ.im ≥ 1.
+  have h_q_lt_1 : ‖q‖ < 1 := by
+    rw [h_q_norm_eq, Real.exp_lt_one_iff]
+    nlinarith
+  -- ‖q‖^4 = exp(-4π τ.im).
+  have h_q_norm_pow4 : ‖q‖^4 = Real.exp (-4 * Real.pi * τ.im) := by
+    rw [h_q_norm_eq]
+    rw [show (-4 * Real.pi * τ.im : ℝ) =
+      (-Real.pi * τ.im) + (-Real.pi * τ.im) + (-Real.pi * τ.im) + (-Real.pi * τ.im) from by ring,
+      Real.exp_add, Real.exp_add, Real.exp_add]
+    ring
+  -- Widened cusp deriv bound at q.
+  have h_widened := modularLambdaH_cusp_deriv_sub_two_term_le_widened h_q_norm_le hq_ne
+  -- Chain rule for q(τ) = exp(πi τ): deriv q τ = πi · q.
+  have h_lin_hasDeriv : HasDerivAt (fun z : ℂ => Real.pi * Complex.I * z)
+      (Real.pi * Complex.I) τ := by
+    simpa using (hasDerivAt_id τ).const_mul (Real.pi * Complex.I : ℂ)
+  have h_q_fn_hasDeriv : HasDerivAt (fun z : ℂ => Complex.exp (Real.pi * Complex.I * z))
+      ((Real.pi * Complex.I) * q) τ := by
+    have h_comp := (Complex.hasDerivAt_exp (Real.pi * Complex.I * τ)).comp τ h_lin_hasDeriv
+    -- h_comp : HasDerivAt (exp ∘ (πi·)) (exp(πi τ) * πi) τ
+    convert h_comp using 1
+    rw [hq_def]; ring
+  -- Cusp differentiable at q.
+  have h_cusp_diff_at_q : DifferentiableAt ℂ modularLambdaH_cusp q :=
+    modularLambdaH_cusp_differentiableAt_of_norm_lt_one hq_ne h_q_lt_1
+  have h_cusp_hasDeriv : HasDerivAt modularLambdaH_cusp (deriv modularLambdaH_cusp q) q :=
+    h_cusp_diff_at_q.hasDerivAt
+  -- Composition.
+  have h_comp_hasDeriv : HasDerivAt
+      (modularLambdaH_cusp ∘ (fun z : ℂ => Complex.exp (Real.pi * Complex.I * z)))
+      (deriv modularLambdaH_cusp q * ((Real.pi * Complex.I) * q)) τ :=
+    h_cusp_hasDeriv.comp τ h_q_fn_hasDeriv
+  -- λ = cusp ∘ (z ↦ exp(πi z)).
+  have h_funeq : (modularLambdaH_cusp ∘ (fun z : ℂ => Complex.exp (Real.pi * Complex.I * z))) =
+      modularLambdaH := by
+    funext τ'
+    change modularLambdaH_cusp (Complex.exp (Real.pi * Complex.I * τ')) = modularLambdaH τ'
+    have h_qParam_eq : Function.Periodic.qParam 2 τ' = Complex.exp (Real.pi * Complex.I * τ') := by
+      unfold Function.Periodic.qParam
+      congr 1
+      push_cast; ring
+    rw [← h_qParam_eq]
+    exact modularLambdaH_cusp_qParam τ'
+  rw [h_funeq] at h_comp_hasDeriv
+  have h_deriv_lam_eq : deriv modularLambdaH τ =
+      deriv modularLambdaH_cusp q * ((Real.pi * Complex.I) * q) := h_comp_hasDeriv.deriv
+  -- Identities exp(2πi τ) = q², exp(3πi τ) = q³.
+  have h_qsq : Complex.exp (2 * Real.pi * Complex.I * τ) = q^2 := by
+    rw [show (2 * Real.pi * Complex.I * τ : ℂ) =
+      (Real.pi * Complex.I * τ) + (Real.pi * Complex.I * τ) from by ring,
+      Complex.exp_add, ← hq_def, sq]
+  have h_qcube : Complex.exp (3 * Real.pi * Complex.I * τ) = q^3 := by
+    rw [show (3 * Real.pi * Complex.I * τ : ℂ) =
+      (2 * Real.pi * Complex.I * τ) + (Real.pi * Complex.I * τ) from by ring,
+      Complex.exp_add, h_qsq, ← hq_def]
+    ring
+  rw [h_qsq, h_qcube, h_deriv_lam_eq]
+  -- Algebraic factoring.
+  have h_factor :
+      deriv modularLambdaH_cusp q * (Real.pi * Complex.I * q) -
+        16 * (Real.pi : ℂ) * Complex.I * q +
+        256 * (Real.pi : ℂ) * Complex.I * q^2 -
+        2112 * (Real.pi : ℂ) * Complex.I * q^3 =
+      (Real.pi : ℂ) * Complex.I * q *
+        (deriv modularLambdaH_cusp q - 16 + 256 * q - 2112 * q^2) := by
+    ring
+  rw [h_factor]
+  -- Norm computation.
+  have h_norm_factor :
+      ‖(Real.pi : ℂ) * Complex.I * q *
+          (deriv modularLambdaH_cusp q - 16 + 256 * q - 2112 * q^2)‖ =
+      Real.pi * ‖q‖ * ‖deriv modularLambdaH_cusp q - 16 + 256 * q - 2112 * q^2‖ := by
+    rw [norm_mul, norm_mul, norm_mul, Complex.norm_I, mul_one, Complex.norm_real,
+      Real.norm_eq_abs, abs_of_pos hπ_pos]
+  rw [h_norm_factor]
+  -- Bound chain.
+  have h_pi_q_nn : (0 : ℝ) ≤ Real.pi * ‖q‖ := by positivity
+  have h_exp_nn : (0 : ℝ) ≤ Real.exp (-4 * Real.pi * τ.im) := (Real.exp_pos _).le
+  calc Real.pi * ‖q‖ * ‖deriv modularLambdaH_cusp q - 16 + 256 * q - 2112 * q^2‖
+      ≤ Real.pi * ‖q‖ * (31000 * ‖q‖^3) :=
+        mul_le_mul_of_nonneg_left h_widened h_pi_q_nn
+    _ = 31000 * Real.pi * ‖q‖^4 := by ring
+    _ = 31000 * Real.pi * Real.exp (-4 * Real.pi * τ.im) := by rw [h_q_norm_pow4]
+    _ ≤ 100000 * Real.exp (-4 * Real.pi * τ.im) := by
+        have h_pi_lt : Real.pi < 3.1416 := Real.pi_lt_d4
+        have h_31000_pi_le : 31000 * Real.pi ≤ 100000 := by nlinarith
+        exact mul_le_mul_of_nonneg_right h_31000_pi_le h_exp_nn
 
 set_option maxHeartbeats 400000 in
 -- The proof accumulates many local hypotheses (q, Q2, Q3 components,
@@ -3536,6 +3601,323 @@ theorem modularLambdaH_cusp_one_im_nonneg_nbhd_in_F :
   rw [neg_div]
   rw [neg_nonpos]
   exact div_nonneg h_strip hlamw_normSq_pos.le
+
+/-- **Cusp 0 nbhd in `F^o`.** Mirror of `modularLambdaH_cusp_one_im_nonneg_nbhd_in_F`
+under the S-shift + conjugation symmetry. For `τ ∈ F^o ∩ B(0, 1/3)`,
+set `w := -1/τ`. The S-shift identity `λ(τ) + λ(w) = 1` gives
+`Im λ(τ) = -Im λ(w)`. Apply conjugation symmetry
+`λ(-conj w) = conj(λ w)` with `w' := -conj w`: then
+`Im λ(w') = -Im λ(w)`, so `Im λ(τ) = Im λ(w')`. The `F^o`-translation
+on `τ` (equivalently `‖2τ - 1‖ > 1`, equivalently `Re²τ + Im²τ > Re τ`)
+gives `Re w' = Re τ / |τ|² < 1`. Combined with `|w'|² = 1/|τ|² ≥ 9`
+(from `‖τ‖ ≤ 1/3`) and `Im w' > 0`, this gives `Im w' ≥ 2√2 > 1`,
+placing `w'` in the strip `{0 < Re < 1, Im ≥ 1}` where the strip claim
+applies. -/
+theorem modularLambdaH_cusp_zero_im_nonneg_nbhd_in_F :
+    ∃ δ : ℝ, 0 < δ ∧ ∀ τ ∈ Gamma2FundamentalDomainInterior,
+      ‖τ‖ ≤ δ → 0 ≤ (modularLambdaH τ).im := by
+  refine ⟨1/3, by norm_num, ?_⟩
+  intro τ hτ_F hτ_dist
+  obtain ⟨hτ_im_pos, hτ_re_pos, hτ_re_lt_one, hτ_semicircle⟩ := hτ_F
+  -- τ ≠ 0.
+  have hτ_ne : τ ≠ 0 := by
+    intro h
+    rw [h] at hτ_im_pos
+    simp at hτ_im_pos
+  have hτ_norm_pos : 0 < ‖τ‖ := norm_pos_iff.mpr hτ_ne
+  have hτ_normSq_eq : Complex.normSq τ = ‖τ‖^2 := by rw [← Complex.sq_norm]
+  have hτ_normSq_pos : 0 < Complex.normSq τ := Complex.normSq_pos.mpr hτ_ne
+  have hτ_normSq_le : Complex.normSq τ ≤ 1/9 := by
+    rw [hτ_normSq_eq]
+    have h_sq : ‖τ‖^2 ≤ (1/3)^2 := by
+      apply sq_le_sq' _ hτ_dist
+      · linarith [norm_nonneg τ]
+    nlinarith
+  -- F^o constraint: ‖2τ - 1‖ > 1 ⟹ Re τ < |τ|².
+  have hτ_F_constraint : τ.re < Complex.normSq τ := by
+    have h_sq : 1 < ‖2 * τ - 1‖^2 := by
+      have h_norm_nn : 0 ≤ ‖2 * τ - 1‖ := norm_nonneg _
+      nlinarith
+    have h_normSq_eq : ‖2 * τ - 1‖^2 = Complex.normSq (2 * τ - 1) := Complex.sq_norm _
+    have h_expand : Complex.normSq (2 * τ - 1) = 4 * Complex.normSq τ - 4 * τ.re + 1 := by
+      simp [Complex.normSq_apply, Complex.sub_re, Complex.sub_im, Complex.mul_re,
+        Complex.mul_im, Complex.one_re, Complex.one_im]
+      ring
+    have h_lt : 1 < 4 * Complex.normSq τ - 4 * τ.re + 1 := by
+      rw [← h_expand, ← h_normSq_eq]; exact h_sq
+    linarith
+  -- Set w := -1/τ.
+  set w : ℂ := -1 / τ with hw_def
+  have hw_eq_neg_inv : w = -τ⁻¹ := by rw [hw_def, neg_div, one_div]
+  have hw_re : w.re = -τ.re / Complex.normSq τ := by
+    rw [hw_eq_neg_inv, Complex.neg_re, Complex.inv_re]; ring
+  have hw_im : w.im = τ.im / Complex.normSq τ := by
+    rw [hw_eq_neg_inv, Complex.neg_im, Complex.inv_im]; ring
+  have hw_im_pos : 0 < w.im := by
+    rw [hw_im]; exact div_pos hτ_im_pos hτ_normSq_pos
+  -- Set w' := -conj w (Schwarz reflection through Re = 0).
+  set w' : ℂ := -(starRingEnd ℂ w) with hw'_def
+  have hw'_re : w'.re = -w.re := by
+    rw [hw'_def, Complex.neg_re, Complex.conj_re]
+  have hw'_im : w'.im = w.im := by
+    rw [hw'_def, Complex.neg_im, Complex.conj_im]; ring
+  have hw'_re_pos : 0 < w'.re := by
+    rw [hw'_re, hw_re, neg_div, neg_neg]
+    exact div_pos hτ_re_pos hτ_normSq_pos
+  have hw'_re_lt_one : w'.re < 1 := by
+    rw [hw'_re, hw_re, neg_div, neg_neg]
+    rw [div_lt_one hτ_normSq_pos]
+    exact hτ_F_constraint
+  have hw'_im_pos : 0 < w'.im := by rw [hw'_im]; exact hw_im_pos
+  -- |w'|² = |w|² = 1/|τ|² ≥ 9.
+  have hw_normSq_eq : Complex.normSq w = 1 / Complex.normSq τ := by
+    have h1 : ‖w‖^2 = Complex.normSq w := Complex.sq_norm _
+    have h2 : ‖τ‖^2 = Complex.normSq τ := Complex.sq_norm _
+    have h3 : ‖w‖ = ‖τ‖⁻¹ := by rw [hw_eq_neg_inv, norm_neg, norm_inv]
+    rw [← h1, h3, inv_pow, h2, one_div]
+  have hw'_normSq_eq : Complex.normSq w' = Complex.normSq w := by
+    rw [hw'_def, Complex.normSq_neg, Complex.normSq_conj]
+  have hw'_normSq_ge : 9 ≤ Complex.normSq w' := by
+    rw [hw'_normSq_eq, hw_normSq_eq]
+    rw [le_div_iff₀ hτ_normSq_pos]
+    nlinarith
+  -- Im w' ≥ 1 from |w'|² ≥ 9 and Re w' < 1.
+  have hw'_im_sq_ge : 1 ≤ w'.im^2 := by
+    have h_normSq_eq : Complex.normSq w' = w'.re^2 + w'.im^2 := by
+      simp [Complex.normSq_apply]; ring
+    have h_re_sq_lt : w'.re^2 < 1 := by
+      have h := hw'_re_lt_one
+      have h_pos := hw'_re_pos
+      nlinarith
+    have h_sum : w'.re^2 + w'.im^2 ≥ 9 := h_normSq_eq ▸ hw'_normSq_ge
+    linarith
+  have hw'_im_ge : 1 ≤ w'.im := by
+    have h_sq : (1:ℝ)^2 ≤ w'.im^2 := by simpa using hw'_im_sq_ge
+    nlinarith [hw'_im_pos]
+  -- S-shift: λ(τ) + λ(w) = 1.
+  have h_S : modularLambdaH τ + modularLambdaH w = 1 := by
+    have := modularLambdaH_add_S_smul_eq_one hτ_im_pos
+    rw [hw_def]; exact this
+  have hlamτ_eq : modularLambdaH τ = 1 - modularLambdaH w := by linear_combination h_S
+  -- Conjugation symmetry: λ(w') = conj(λ(w)).
+  have h_conj : modularLambdaH w' = starRingEnd ℂ (modularLambdaH w) := by
+    rw [hw'_def]; exact modularLambdaH_conj_symmetry hw_im_pos
+  -- Apply strip lemma to w'.
+  have h_strip : 0 ≤ (modularLambdaH w').im :=
+    modularLambdaH_im_nonneg_strip w' hw'_re_pos hw'_re_lt_one hw'_im_ge
+  -- Im λ(w') = -Im λ(w), so Im λ(w) ≤ 0.
+  have hlamw_im_eq : (modularLambdaH w').im = -(modularLambdaH w).im := by
+    rw [h_conj, Complex.conj_im]
+  have hlamw_im_le : (modularLambdaH w).im ≤ 0 := by linarith [hlamw_im_eq ▸ h_strip]
+  -- Conclude Im λ(τ) = -Im λ(w) ≥ 0.
+  rw [hlamτ_eq, Complex.sub_im, Complex.one_im, zero_sub]
+  linarith
+
+/-- **Sub-lemma for Step A (Phragmén–Lindelöf statement): `Im(λ) ≥ 0`
+on `F^o`.**
+
+`Im λ` is harmonic on `F^o`, vanishes on the three boundary arcs
+(`modularLambdaH_pure_imag_real`, `modularLambdaH_one_add_imag_real`,
+`modularLambdaH_semicircle_real`), and tends to `0` at the cusps
+`i∞` and `0`. The four sub-regions of F^o tile it as:
+
+* `F^o ∩ {Im τ ≥ 1}`: strip lemma `modularLambdaH_im_nonneg_strip`.
+* `F^o ∩ B(0, 1/3)`: cusp-0 nbhd
+  `modularLambdaH_cusp_zero_im_nonneg_nbhd_in_F`.
+* `F^o ∩ B(1, 1/3)`: cusp-1 nbhd
+  `modularLambdaH_cusp_one_im_nonneg_nbhd_in_F`.
+* "Middle region" `F^o ∩ {Im τ < 1, ‖τ‖ > 1/3, ‖τ - 1‖ > 1/3}`:
+  bounded, with all frontier conditions giving `Im λ ≥ 0` (the F^o
+  boundary arcs being real, the upper edge handled by the strip lemma,
+  and the cusp-truncation arcs by the cusp nbhd lemmas). Apply the
+  maximum modulus principle to `g(z) := exp(i·λ(z))` (whose norm is
+  `exp(-Im λ z)`) on this bounded open set to conclude `‖g‖ ≤ 1`,
+  i.e. `Im λ ≥ 0`. -/
+theorem modularLambdaH_im_nonneg_on_F :
+    ∀ τ ∈ Gamma2FundamentalDomainInterior, 0 ≤ (modularLambdaH τ).im := by
+  obtain ⟨δ₀, hδ₀_pos, h_cusp0⟩ := modularLambdaH_cusp_zero_im_nonneg_nbhd_in_F
+  obtain ⟨δ₁, hδ₁_pos, h_cusp1⟩ := modularLambdaH_cusp_one_im_nonneg_nbhd_in_F
+  intro τ hτ_F
+  obtain ⟨hτ_im_pos, hτ_re_pos, hτ_re_lt_one, hτ_semicircle⟩ := hτ_F
+  by_cases h_im_case : 1 ≤ τ.im
+  · exact modularLambdaH_im_nonneg_strip τ hτ_re_pos hτ_re_lt_one h_im_case
+  push Not at h_im_case
+  by_cases h_c0_case : ‖τ‖ ≤ δ₀
+  · exact h_cusp0 τ ⟨hτ_im_pos, hτ_re_pos, hτ_re_lt_one, hτ_semicircle⟩ h_c0_case
+  push Not at h_c0_case
+  by_cases h_c1_case : ‖τ - 1‖ ≤ δ₁
+  · exact h_cusp1 τ ⟨hτ_im_pos, hτ_re_pos, hτ_re_lt_one, hτ_semicircle⟩ h_c1_case
+  push Not at h_c1_case
+  -- Middle region: apply maximum modulus to g(z) := exp(i·λ(z)).
+  set M : Set ℂ := { z : ℂ | 0 < z.im ∧ 0 < z.re ∧ z.re < 1 ∧ 1 < ‖2 * z - 1‖ ∧
+    z.im < 1 ∧ δ₀ < ‖z‖ ∧ δ₁ < ‖z - 1‖ } with hM_def
+  have hτ_in_M : τ ∈ M :=
+    ⟨hτ_im_pos, hτ_re_pos, hτ_re_lt_one, hτ_semicircle, h_im_case, h_c0_case, h_c1_case⟩
+  set g : ℂ → ℂ := fun z => Complex.exp (Complex.I * modularLambdaH z) with hg_def
+  have h_g_norm : ∀ z : ℂ, ‖g z‖ = Real.exp (-(modularLambdaH z).im) := by
+    intro z
+    rw [hg_def, Complex.norm_exp]
+    congr 1
+    rw [Complex.mul_re, Complex.I_re, Complex.I_im, zero_mul, one_mul, zero_sub]
+  have h2zm1_cont : Continuous (fun z : ℂ => 2 * z - 1) :=
+    (continuous_const.mul continuous_id).sub continuous_const
+  have hzm1_cont : Continuous (fun z : ℂ => z - 1) :=
+    continuous_id.sub continuous_const
+  have hM_open : IsOpen M := by
+    refine (isOpen_lt continuous_const Complex.continuous_im).inter ?_
+    refine (isOpen_lt continuous_const Complex.continuous_re).inter ?_
+    refine (isOpen_lt Complex.continuous_re continuous_const).inter ?_
+    refine (isOpen_lt continuous_const h2zm1_cont.norm).inter ?_
+    refine (isOpen_lt Complex.continuous_im continuous_const).inter ?_
+    refine (isOpen_lt continuous_const continuous_norm).inter ?_
+    exact isOpen_lt continuous_const hzm1_cont.norm
+  have hM_bdd : Bornology.IsBounded M := by
+    refine Bornology.IsBounded.subset (Metric.isBounded_ball (x := (0 : ℂ)) (r := 2)) ?_
+    intro z hz
+    rw [Metric.mem_ball, dist_zero_right]
+    obtain ⟨h_im_pos, h_re_pos, h_re_lt, _, h_im_lt, _, _⟩ := hz
+    have h_sq : ‖z‖ ^ 2 < 4 := by
+      rw [Complex.sq_norm, Complex.normSq_apply]
+      nlinarith
+    nlinarith [norm_nonneg z, sq_nonneg (2 - ‖z‖)]
+  have h_im_nn_cl : closure M ⊆ { z : ℂ | 0 ≤ z.im } :=
+    closure_minimal (fun z hz => le_of_lt hz.1)
+      (isClosed_le continuous_const Complex.continuous_im)
+  have h_re_nn_cl : closure M ⊆ { z : ℂ | 0 ≤ z.re } :=
+    closure_minimal (fun z hz => le_of_lt hz.2.1)
+      (isClosed_le continuous_const Complex.continuous_re)
+  have h_re_le_cl : closure M ⊆ { z : ℂ | z.re ≤ 1 } :=
+    closure_minimal (fun z hz => le_of_lt hz.2.2.1)
+      (isClosed_le Complex.continuous_re continuous_const)
+  have h_sc_cl : closure M ⊆ { z : ℂ | 1 ≤ ‖2 * z - 1‖ } :=
+    closure_minimal (fun z hz => le_of_lt hz.2.2.2.1)
+      (isClosed_le continuous_const h2zm1_cont.norm)
+  have h_im_le_cl : closure M ⊆ { z : ℂ | z.im ≤ 1 } :=
+    closure_minimal (fun z hz => le_of_lt hz.2.2.2.2.1)
+      (isClosed_le Complex.continuous_im continuous_const)
+  have h_n_ge_cl : closure M ⊆ { z : ℂ | δ₀ ≤ ‖z‖ } :=
+    closure_minimal (fun z hz => le_of_lt hz.2.2.2.2.2.1)
+      (isClosed_le continuous_const continuous_norm)
+  have h_n1_ge_cl : closure M ⊆ { z : ℂ | δ₁ ≤ ‖z - 1‖ } :=
+    closure_minimal (fun z hz => le_of_lt hz.2.2.2.2.2.2)
+      (isClosed_le continuous_const hzm1_cont.norm)
+  have hM_cl_in_H : ∀ z ∈ closure M, 0 < z.im := by
+    intro z hz_cl
+    by_contra h_neg
+    push Not at h_neg
+    have h_im_z_nn : 0 ≤ z.im := h_im_nn_cl hz_cl
+    have h_im_zero : z.im = 0 := le_antisymm h_neg h_im_z_nn
+    have h_sc : 1 ≤ ‖2 * z - 1‖ := h_sc_cl hz_cl
+    have h_sc_sq : 1 ≤ ‖2 * z - 1‖ ^ 2 := by
+      have h_nn : 0 ≤ ‖2 * z - 1‖ := norm_nonneg _
+      nlinarith
+    have h_2zm1_sq : ‖2 * z - 1‖ ^ 2 = (2 * z.re - 1) ^ 2 + (2 * z.im) ^ 2 := by
+      rw [Complex.sq_norm, Complex.normSq_apply]
+      simp [Complex.sub_re, Complex.sub_im, Complex.mul_re, Complex.mul_im,
+        Complex.one_re, Complex.one_im]
+      ring
+    rw [h_2zm1_sq, h_im_zero] at h_sc_sq
+    have h_re_sq : 1 ≤ (2 * z.re - 1) ^ 2 := by linarith
+    have h_re_nn : 0 ≤ z.re := h_re_nn_cl hz_cl
+    have h_re_le : z.re ≤ 1 := h_re_le_cl hz_cl
+    have h_re_outside : z.re ≤ 0 ∨ 1 ≤ z.re := by
+      rcases le_or_gt (2 * z.re - 1) 0 with h | h
+      · left; nlinarith [sq_nonneg (2 * z.re - 1)]
+      · right; nlinarith [sq_nonneg (2 * z.re - 1)]
+    rcases h_re_outside with h_re_le_0 | h_re_ge_1
+    · have h_re_zero : z.re = 0 := le_antisymm h_re_le_0 h_re_nn
+      have h_n_ge : δ₀ ≤ ‖z‖ := h_n_ge_cl hz_cl
+      have h_norm_sq : ‖z‖ ^ 2 = z.re ^ 2 + z.im ^ 2 := by
+        rw [Complex.sq_norm, Complex.normSq_apply]; ring
+      rw [h_re_zero, h_im_zero] at h_norm_sq
+      have h_norm_sq_zero : ‖z‖ ^ 2 = 0 := by linarith
+      have h_nn : 0 ≤ ‖z‖ := norm_nonneg z
+      have h_norm_zero : ‖z‖ = 0 := by nlinarith
+      linarith
+    · have h_re_one : z.re = 1 := le_antisymm h_re_le h_re_ge_1
+      have h_n1_ge : δ₁ ≤ ‖z - 1‖ := h_n1_ge_cl hz_cl
+      have h_zm1_sq : ‖z - 1‖ ^ 2 = (z.re - 1) ^ 2 + z.im ^ 2 := by
+        rw [Complex.sq_norm, Complex.normSq_apply]
+        simp [Complex.sub_re, Complex.sub_im, Complex.one_re, Complex.one_im]
+        ring
+      rw [h_re_one, h_im_zero] at h_zm1_sq
+      have h_zm1_sq_zero : ‖z - 1‖ ^ 2 = 0 := by linarith
+      have h_nn : 0 ≤ ‖z - 1‖ := norm_nonneg _
+      have h_zm1_zero : ‖z - 1‖ = 0 := by nlinarith
+      linarith
+  have hg_diff_at : ∀ z : ℂ, 0 < z.im → DifferentiableAt ℂ g z := by
+    intro z h_im_pos
+    have h_lam_diff : DifferentiableAt ℂ modularLambdaH z :=
+      modularLambdaH_differentiableAt_of_im_pos h_im_pos
+    have h_mul : DifferentiableAt ℂ (fun w => Complex.I * modularLambdaH w) z :=
+      (differentiableAt_const _).mul h_lam_diff
+    exact h_mul.cexp
+  have hg_DCOC : DiffContOnCl ℂ g M := by
+    refine ⟨?_, ?_⟩
+    · intro z hz_M
+      exact (hg_diff_at z hz_M.1).differentiableWithinAt
+    · intro z hz_cl
+      exact (hg_diff_at z (hM_cl_in_H z hz_cl)).continuousAt.continuousWithinAt
+  have hg_frontier_bound : ∀ z ∈ frontier M, ‖g z‖ ≤ 1 := by
+    intro z hz_fr
+    have hz_cl : z ∈ closure M := hz_fr.1
+    have h_im_pos : 0 < z.im := hM_cl_in_H z hz_cl
+    have h_re_nn : 0 ≤ z.re := h_re_nn_cl hz_cl
+    have h_re_le : z.re ≤ 1 := h_re_le_cl hz_cl
+    have h_sc_ge : 1 ≤ ‖2 * z - 1‖ := h_sc_cl hz_cl
+    have h_im_le : z.im ≤ 1 := h_im_le_cl hz_cl
+    have hz_not_M : z ∉ M := by
+      rw [← hM_open.interior_eq]; exact hz_fr.2
+    rw [h_g_norm z]
+    suffices h_im_lam : 0 ≤ (modularLambdaH z).im by
+      rw [show (1 : ℝ) = Real.exp 0 from Real.exp_zero.symm, Real.exp_le_exp]
+      linarith
+    by_cases h_re_z : z.re ≤ 0
+    · have h_re_z_eq : z.re = 0 := le_antisymm h_re_z h_re_nn
+      have h_z_eq : z = Complex.I * ((z.im : ℝ) : ℂ) := by
+        apply Complex.ext
+        · simp [Complex.mul_re, Complex.I_re, Complex.I_im, Complex.ofReal_re,
+            Complex.ofReal_im, h_re_z_eq]
+        · simp [Complex.mul_im, Complex.I_re, Complex.I_im, Complex.ofReal_re,
+            Complex.ofReal_im]
+      rw [h_z_eq]
+      exact le_of_eq (modularLambdaH_pure_imag_real h_im_pos).symm
+    push Not at h_re_z
+    by_cases h_re_z_1 : 1 ≤ z.re
+    · have h_re_z_eq : z.re = 1 := le_antisymm h_re_le h_re_z_1
+      have h_z_eq : z = 1 + Complex.I * ((z.im : ℝ) : ℂ) := by
+        apply Complex.ext
+        · simp [Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
+            Complex.one_re, Complex.ofReal_re, Complex.ofReal_im, h_re_z_eq]
+        · simp [Complex.add_im, Complex.mul_im, Complex.I_re, Complex.I_im,
+            Complex.one_im, Complex.ofReal_re, Complex.ofReal_im]
+      rw [h_z_eq]
+      exact le_of_eq (modularLambdaH_one_add_imag_real h_im_pos).symm
+    push Not at h_re_z_1
+    by_cases h_sc_eq : ‖2 * z - 1‖ ≤ 1
+    · have h_sc_eq' : ‖2 * z - 1‖ = 1 := le_antisymm h_sc_eq h_sc_ge
+      exact le_of_eq (modularLambdaH_semicircle_real h_im_pos h_sc_eq').symm
+    push Not at h_sc_eq
+    have hz_in_F : z ∈ Gamma2FundamentalDomainInterior :=
+      ⟨h_im_pos, h_re_z, h_re_z_1, h_sc_eq⟩
+    by_cases h_im_z_1 : 1 ≤ z.im
+    · exact modularLambdaH_im_nonneg_strip z h_re_z h_re_z_1 h_im_z_1
+    push Not at h_im_z_1
+    by_cases h_norm_z : ‖z‖ ≤ δ₀
+    · exact h_cusp0 z hz_in_F h_norm_z
+    push Not at h_norm_z
+    by_cases h_norm_z_1 : ‖z - 1‖ ≤ δ₁
+    · exact h_cusp1 z hz_in_F h_norm_z_1
+    push Not at h_norm_z_1
+    exfalso
+    exact hz_not_M ⟨h_im_pos, h_re_z, h_re_z_1, h_sc_eq, h_im_z_1, h_norm_z, h_norm_z_1⟩
+  have hg_τ_bound : ‖g τ‖ ≤ 1 :=
+    Complex.norm_le_of_forall_mem_frontier_norm_le hM_bdd hg_DCOC hg_frontier_bound
+      (subset_closure hτ_in_M)
+  rw [h_g_norm τ] at hg_τ_bound
+  have h_le : -(modularLambdaH τ).im ≤ 0 := by
+    rwa [show (1 : ℝ) = Real.exp 0 from Real.exp_zero.symm, Real.exp_le_exp] at hg_τ_bound
+  linarith
 
 /-- **Sub-lemma for Step A: `Im(λ) ≠ 0` on `F^o`.** The modular
 function `λ` takes no real values on the open fundamental domain.
