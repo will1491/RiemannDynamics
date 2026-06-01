@@ -2852,8 +2852,9 @@ theorem modularLambda_four_term_t_bound (q r₂' r₃' : ℂ) (rq : ℝ)
   have h_rq10_le : rq^10 ≤ rq^4 := pow_le_pow_of_le_one hrq_nn hrq_le_one (by omega)
   have h_rq11_le : rq^11 ≤ rq^4 := pow_le_pow_of_le_one hrq_nn hrq_le_one (by omega)
   have h_rq12_le : rq^12 ≤ rq^4 := pow_le_pow_of_le_one hrq_nn hrq_le_one (by omega)
-  -- Numerator bound: 18 + 4 + 9 + 20 + 2 + 4 + 10 + 21 + 1 + 2 = 91 rq^4 ≤ 50 rq^4 actually need tighter.
-  -- Actually: 18 + small + 1 + 2 = 21 dominant, but with all terms loose ≤ 4: 91. Use 100·rq⁴·(1/2) = 50·rq⁴ available budget.
+  -- Numerator bound: 18+4+9+20+2+4+10+21+1+2 = 91 rq^4 ≤ 50 rq^4 actually need tighter.
+  -- Actually: 18 + small + 1 + 2 = 21 dominant. With loose ≤ 4: 91.
+  -- Use 100·rq⁴·(1/2) = 50·rq⁴ available budget.
   -- So we need ‖num‖ ≤ 50 rq^4. With 91 we exceed. Need tighter bounds.
   -- Better: use rq^k ≤ rq^4 · rq^(k-4) ≤ rq^4 · (1/16)^(k-4) for k ≥ 4.
   -- Higher powers ARE much smaller. Let me use that.
@@ -2865,7 +2866,8 @@ theorem modularLambda_four_term_t_bound (q r₂' r₃' : ℂ) (rq : ℝ)
   have h_rq6_tight : rq^6 ≤ rq^4 / 256 := by
     have h_eq : rq^6 = rq^4 * (rq * rq) := by ring
     rw [h_eq]
-    have h_rq_rq_le : rq * rq ≤ (1/16) * (1/16) := mul_le_mul hrq_lt.le hrq_lt.le hrq_nn (by norm_num)
+    have h_rq_rq_le : rq * rq ≤ (1/16) * (1/16) :=
+      mul_le_mul hrq_lt.le hrq_lt.le hrq_nn (by norm_num)
     calc rq^4 * (rq * rq) ≤ rq^4 * ((1/16) * (1/16)) :=
           mul_le_mul_of_nonneg_left h_rq_rq_le hrq4_nn
       _ = rq^4 / 256 := by ring
@@ -3661,7 +3663,7 @@ algebraic identity expansion to bound the bracket
 `4(1+u)³t + 6(1+u)²t² + 4(1+u)t³ + t⁴ + q-remainder` by `4003·rq⁴`. -/
 theorem modularLambda_four_term_bracket_bound (v q : ℂ) (rq : ℝ)
     (hq_norm : ‖q‖ = rq) (hrq_pos : 0 < rq) (hrq_lt : rq < 1 / 16)
-    (ht_bound : ‖v + 2*q - 5*q^2 + 10*q^3‖ ≤ 100 * rq^4) :
+    (ht_bound : ‖v + 2 * q - 5 * q ^ 2 + 10 * q ^ 3‖ ≤ 100 * rq ^ 4) :
     ‖4 * (1 + (-2*q + 5*q^2 - 10*q^3))^3 * (v + 2*q - 5*q^2 + 10*q^3) +
       6 * (1 + (-2*q + 5*q^2 - 10*q^3))^2 * (v + 2*q - 5*q^2 + 10*q^3)^2 +
       4 * (1 + (-2*q + 5*q^2 - 10*q^3)) * (v + 2*q - 5*q^2 + 10*q^3)^3 +
