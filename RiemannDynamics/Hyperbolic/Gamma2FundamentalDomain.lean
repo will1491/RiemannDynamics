@@ -279,9 +279,13 @@ theorem theta3_iy_strictAntitone :
   have hy2' : (0:ℝ) < y2 := hy2
   -- Imaginary parts of the τ's are positive.
   have hτ1_im : 0 < (Complex.I * (y1 : ℂ)).im := by
-    simp [Complex.mul_im, Complex.I_re, Complex.I_im]; exact hy1'
+    simp only [Complex.mul_im, Complex.I_re, Complex.I_im, Complex.ofReal_re,
+      Complex.ofReal_im, zero_mul, one_mul, zero_add]
+    exact hy1'
   have hτ2_im : 0 < (Complex.I * (y2 : ℂ)).im := by
-    simp [Complex.mul_im, Complex.I_re, Complex.I_im]; exact hy2'
+    simp only [Complex.mul_im, Complex.I_re, Complex.I_im, Complex.ofReal_re,
+      Complex.ofReal_im, zero_mul, one_mul, zero_add]
+    exact hy2'
   -- Each complex term equals a real-coerced real exponential.
   have h_arg : ∀ y : ℝ, ∀ n : ℕ,
       (Real.pi : ℂ) * Complex.I * ((n : ℂ) + 1)^2 * (Complex.I * (y : ℂ)) =
@@ -318,13 +322,13 @@ theorem theta3_iy_strictAntitone :
       (fun n : ℕ => Real.exp (-Real.pi * ((n : ℝ) + 1)^2 * y1))
       ((jacobiTheta (Complex.I * (y1 : ℂ)) - 1).re / 2) := by
     have h_map := h_sum1'.map Complex.reCLM Complex.reCLM.continuous
-    simp only [Complex.reCLM_apply, Complex.ofReal_re] at h_map
+    simp only [Complex.reCLM_apply] at h_map
     rwa [Complex.div_ofNat_re] at h_map
   have h_sum2_re : HasSum
       (fun n : ℕ => Real.exp (-Real.pi * ((n : ℝ) + 1)^2 * y2))
       ((jacobiTheta (Complex.I * (y2 : ℂ)) - 1).re / 2) := by
     have h_map := h_sum2'.map Complex.reCLM Complex.reCLM.continuous
-    simp only [Complex.reCLM_apply, Complex.ofReal_re] at h_map
+    simp only [Complex.reCLM_apply] at h_map
     rwa [Complex.div_ofNat_re] at h_map
   -- Each term is strictly larger for y1.
   have h_term_lt : ∀ n : ℕ,
@@ -350,7 +354,7 @@ theorem theta3_iy_strictAntitone :
   have h_eq2 : ∑' n : ℕ, Real.exp (-Real.pi * ((n : ℝ) + 1)^2 * y2) =
       (jacobiTheta (Complex.I * (y2 : ℂ)) - 1).re / 2 := h_sum2_re.tsum_eq
   -- Conclude.
-  show (theta3 (Complex.I * (y2 : ℂ))).re < (theta3 (Complex.I * (y1 : ℂ))).re
+  change (theta3 (Complex.I * (y2 : ℂ))).re < (theta3 (Complex.I * (y1 : ℂ))).re
   unfold theta3
   rw [h_eq1, h_eq2] at h_tsum_lt
   -- (jacobiTheta(τ_k) - 1).re/2 strict comparison gives jacobiTheta(τ_k).re comparison.
@@ -507,12 +511,16 @@ theorem theta4_iy_strictMono_aux_large :
   have hy2' : (1:ℝ) ≤ y2 := hy2
   have hy1_pos : (0:ℝ) < y1 := lt_of_lt_of_le zero_lt_one hy1'
   have hy2_pos : (0:ℝ) < y2 := lt_of_lt_of_le zero_lt_one hy2'
-  show (theta4 (Complex.I * (y1 : ℂ))).re < (theta4 (Complex.I * (y2 : ℂ))).re
+  change (theta4 (Complex.I * (y1 : ℂ))).re < (theta4 (Complex.I * (y2 : ℂ))).re
   -- Translate to jacobiTheta at τ = I·y + 1.
   have hτ1_im : 0 < (Complex.I * (y1 : ℂ) + 1).im := by
-    simp [Complex.add_im, Complex.mul_im, Complex.one_im, Complex.I_re, Complex.I_im, hy1_pos]
+    simp only [Complex.add_im, Complex.mul_im, Complex.one_im, Complex.I_re, Complex.I_im,
+      Complex.ofReal_re, Complex.ofReal_im, zero_mul, one_mul, zero_add, add_zero]
+    exact hy1_pos
   have hτ2_im : 0 < (Complex.I * (y2 : ℂ) + 1).im := by
-    simp [Complex.add_im, Complex.mul_im, Complex.one_im, Complex.I_re, Complex.I_im, hy2_pos]
+    simp only [Complex.add_im, Complex.mul_im, Complex.one_im, Complex.I_re, Complex.I_im,
+      Complex.ofReal_re, Complex.ofReal_im, zero_mul, one_mul, zero_add, add_zero]
+    exact hy2_pos
   -- Each complex term equals `(-1)^(n+1) · exp(-π(n+1)²y)` (real).
   have h_term : ∀ y : ℝ, ∀ n : ℕ,
       Complex.exp ((Real.pi : ℂ) * Complex.I * ((n : ℂ) + 1)^2 *
@@ -569,13 +577,13 @@ theorem theta4_iy_strictMono_aux_large :
       (fun n : ℕ => (-1 : ℝ)^(n+1) * Real.exp (-Real.pi * ((n : ℝ) + 1)^2 * y1))
       ((jacobiTheta (Complex.I * (y1 : ℂ) + 1) - 1).re / 2) := by
     have h_map := h_sum1'.map Complex.reCLM Complex.reCLM.continuous
-    simp only [Complex.reCLM_apply, Complex.ofReal_re] at h_map
+    simp only [Complex.reCLM_apply] at h_map
     rwa [Complex.div_ofNat_re] at h_map
   have h_sum2_re : HasSum
       (fun n : ℕ => (-1 : ℝ)^(n+1) * Real.exp (-Real.pi * ((n : ℝ) + 1)^2 * y2))
       ((jacobiTheta (Complex.I * (y2 : ℂ) + 1) - 1).re / 2) := by
     have h_map := h_sum2'.map Complex.reCLM Complex.reCLM.continuous
-    simp only [Complex.reCLM_apply, Complex.ofReal_re] at h_map
+    simp only [Complex.reCLM_apply] at h_map
     rwa [Complex.div_ofNat_re] at h_map
   -- Define f y n := (-1)^(n+1) · exp(-π·(n+1)²·y).
   set f : ℝ → ℕ → ℝ := fun y n => (-1 : ℝ)^(n+1) * Real.exp (-Real.pi * ((n : ℝ) + 1)^2 * y)
@@ -593,7 +601,7 @@ theorem theta4_iy_strictMono_aux_large :
     have h_eq2 : ((-1 : ℝ))^(2*k+1+1) = 1 := h_2k_plus_2_even.neg_one_pow
     rw [h_eq1, h_eq2]
     push_cast
-    ring
+    ring_nf
   -- Get summability of subseries.
   have h_sum_even1 : Summable (fun k => f y1 (2*k)) :=
     h_sum1_re.summable.comp_injective (fun _ _ hab => by omega)
@@ -691,7 +699,7 @@ theorem theta4_iy_strictMono_aux_large :
     -- h_dec : exp(-α2·y1) - exp(-α2·y2) < exp(-α1·y1) - exp(-α1·y2).
     -- We want: exp(-α1·y2) - exp(-α2·y2) < exp(-α1·y1) - exp(-α2·y1).
     -- These are equivalent after rearrangement.
-    show Real.exp (-Real.pi * ((2 * (k:ℝ)) + 1)^2 * y2) -
+    change Real.exp (-Real.pi * ((2 * (k:ℝ)) + 1)^2 * y2) -
         Real.exp (-Real.pi * ((2 * (k:ℝ)) + 2)^2 * y2) <
         Real.exp (-Real.pi * ((2 * (k:ℝ)) + 1)^2 * y1) -
         Real.exp (-Real.pi * ((2 * (k:ℝ)) + 2)^2 * y1)
@@ -713,7 +721,7 @@ theorem theta4_iy_strictMono_aux_large :
     exact Summable.tsum_lt_tsum h_A_le (h_A_lt 0) h_A2.summable h_A1.summable
   rw [h_A1.tsum_eq, h_A2.tsum_eq] at h_tsum_lt
   -- h_tsum_lt : -(θ₄(iy2) - 1)/2 < -(θ₄(iy1) - 1)/2  ⇒  (θ₄(iy1)).re < (θ₄(iy2)).re.
-  show (theta4 (Complex.I * (y1 : ℂ))).re < (theta4 (Complex.I * (y2 : ℂ))).re
+  change (theta4 (Complex.I * (y1 : ℂ))).re < (theta4 (Complex.I * (y2 : ℂ))).re
   unfold theta4
   have h_re_sub : ∀ y : ℝ, (jacobiTheta (Complex.I * (y : ℂ) + 1) - 1).re =
       (jacobiTheta (Complex.I * (y : ℂ) + 1)).re - 1 := by
@@ -735,8 +743,9 @@ theorem theta4_iy_mul_sqrt_eq_theta2 {y : ℝ} (hy : 0 < y) :
     ring
   have h_inv_im : 0 < (Complex.I / (y : ℂ)).im := by
     rw [h_inv_eq]
-    simp [Complex.mul_im, Complex.I_re, Complex.I_im, Complex.ofReal_re, Complex.ofReal_im]
-    exact hy
+    simp only [Complex.mul_im, Complex.I_re, Complex.I_im, Complex.ofReal_re,
+      Complex.ofReal_im, mul_zero, add_zero]
+    positivity
   -- Apply theta4_S_smul at τ = I/y.
   have h_S := theta4_S_smul h_inv_im
   -- Simplify -1 / (I/y) = I·y.
@@ -787,7 +796,7 @@ theorem theta4_iy_mul_sqrt_eq_theta2 {y : ℝ} (hy : 0 < y) :
 `u₁/u₂ = 1 + (u₁−u₂)/u₂ < exp((u₁−u₂)/u₂)` (from `Real.add_one_lt_exp`),
 hence `√(u₁/u₂) < exp((u₁−u₂)/(2u₂))`. Since `1/(2u₂) ≤ 1/2 ≤ α`,
 this gives `√(u₁/u₂) < exp(α(u₁−u₂))`, i.e., the claim. -/
-private lemma sqrt_exp_strict_dec {α u1 u2 : ℝ} (hα : 1/2 ≤ α) (hu2 : 1 ≤ u2)
+private lemma sqrt_exp_strict_dec {α u1 u2 : ℝ} (hα : 1 / 2 ≤ α) (hu2 : 1 ≤ u2)
     (hu12 : u2 < u1) :
     Real.sqrt u1 * Real.exp (-α * u1) < Real.sqrt u2 * Real.exp (-α * u2) := by
   have hu2_pos : 0 < u2 := lt_of_lt_of_le zero_lt_one hu2
@@ -939,7 +948,7 @@ theorem theta4_iy_strictMono_aux_small :
     -- HasSum representation: √u · θ_2(iu).re = 2 · ∑ √u · exp(-π u/4 - π u n(n+1)).
     -- Define G u n := √u · exp(-π·u/4 - π·u·n(n+1)) = √u · exp(-π·u·(n+1/2)²) (after combining).
     -- We will show G u_2 n > G u_1 n for each n using sqrt_exp_strict_dec.
-    -- First, establish HasSum for √u · θ_2(iu).re / 2 = exp(-π u/4) · jacobiTheta₂(iu/2, iu).re · √u.
+    -- HasSum for √u · θ_2(iu).re / 2 = exp(-π u/4) · jacobiTheta₂(iu/2, iu).re · √u.
     -- This is a HasSum of `(fun n : ℤ => √u · exp(-π·u/4 - π·u·n(n+1)))`.
     set G : ℝ → ℤ → ℝ := fun u n =>
       Real.sqrt u * Real.exp (-Real.pi * u / 4 - Real.pi * u * (n : ℝ) * ((n : ℝ) + 1))
@@ -950,7 +959,7 @@ theorem theta4_iy_strictMono_aux_small :
       intros u n
       simp only [G_def]
       congr 1
-      ring
+      ring_nf
     have h_G_sum : ∀ u : ℝ, 0 < u →
         HasSum (G u)
           (Real.sqrt u * (theta2 (Complex.I * (u : ℂ))).re) := by
@@ -968,7 +977,7 @@ theorem theta4_iy_strictMono_aux_small :
         simp only [G_def]
         rw [mul_assoc, ← Real.exp_add]
         congr 1
-        ring
+        ring_nf
       rw [show (fun n : ℤ => Real.sqrt u * Real.exp (-Real.pi * u / 4) *
           Real.exp (-Real.pi * u * (n : ℝ) * ((n : ℝ) + 1))) = G u from by
             funext n; exact h_eq n] at h_const
@@ -1057,7 +1066,7 @@ theorem theta4_iy_strictMono_aux_small :
       rw [Real.sqrt_div' 1 hy.le, Real.sqrt_one]
     rw [h_solve, h_sqrt_inv]; ring
   -- Apply h_aux with u_1 := 1/y_1 and u_2 := 1/y_2.
-  show (theta4 (Complex.I * (y1 : ℂ))).re < (theta4 (Complex.I * (y2 : ℂ))).re
+  change (theta4 (Complex.I * (y1 : ℂ))).re < (theta4 (Complex.I * (y2 : ℂ))).re
   rw [h_t4 y1 hy1_pos, h_t4 y2 hy2_pos]
   exact h_aux (1/y1) (1/y2) hu2_ge h_u_swap
 
@@ -1151,7 +1160,7 @@ theorem modularLambdaH_iy_strictAntitone :
       have h_pos : 0 ≤ (jacobiTheta (Complex.I * (y : ℂ))).re - 1 := by
         rw [← h_eq]; linarith [h_tsum_nonneg]
       linarith
-    show 1 ≤ (theta3 (Complex.I * (y : ℂ))).re
+    change 1 ≤ (theta3 (Complex.I * (y : ℂ))).re
     unfold theta3; exact h_jt_ge
   -- Positivity helper for `θ_2(iu).re`: it equals `exp(-πu/4)·∑_{n ∈ ℤ} exp(-πu·n(n+1)) > 0`.
   have h_theta2_pos : ∀ u : ℝ, 0 < u → 0 < (theta2 (Complex.I * (u : ℂ))).re := by
@@ -1298,7 +1307,7 @@ theorem modularLambdaH_iy_strictAntitone :
       ((theta4 (Complex.I * (y2 : ℂ))).re / (theta3 (Complex.I * (y2 : ℂ))).re)^4 :=
     pow_lt_pow_left₀ h_ratio_lt h_r1_pos.le (by norm_num)
   -- Conclude.
-  show (modularLambdaH (Complex.I * (y2 : ℂ))).re < (modularLambdaH (Complex.I * (y1 : ℂ))).re
+  change (modularLambdaH (Complex.I * (y2 : ℂ))).re < (modularLambdaH (Complex.I * (y1 : ℂ))).re
   have h_eq1 := h_lambda_eq y1 hy1_pos
   have h_eq2 := h_lambda_eq y2 hy2_pos
   linarith
@@ -2367,7 +2376,7 @@ For `c ≤ cπ8`, `0 < cπ8 ≤ 1`, and `r ∈ (0, 1/22)`, the bracket
 Proof via the algebraic identity
 `B(c, r) − B(cπ8, r) = 256 r² (cπ8 − c)·(1 − 11r(c + cπ8))`. -/
 theorem interior_band_bracket_lower_bound (r c cπ8 : ℝ)
-    (hr_pos : 0 < r) (hr_lt : r < 1/22)
+    (hr_pos : 0 < r) (hr_lt : r < 1 / 22)
     (hcπ8_pos : 0 < cπ8) (hcπ8_le_one : cπ8 ≤ 1)
     (h_cos_ub : c ≤ cπ8) :
     16 * r - 256 * r^2 * c + 704 * r^3 * (4 * c^2 - 1) ≥
@@ -2402,7 +2411,7 @@ For `r ∈ (0, 1/22)`,
 Proof via Horner factorization `r · g(r)` where
 `g(r) := 6.08 − 90.08128 r + 644.7232 r² − 32768 r³ ≥ 0.23`. -/
 theorem interior_band_polynomial_inequality (r : ℝ)
-    (hr_pos : 0 < r) (hr_lt : r < 1/22) :
+    (hr_pos : 0 < r) (hr_lt : r < 1 / 22) :
     0.38 * (16 * r - 237.056 * r^2 + 1696.64 * r^3) ≥ 32768 * r^4 := by
   have hr_le : r ≤ 1/22 := le_of_lt hr_lt
   have h_r2_le : r^2 ≤ 1/484 := by
@@ -2559,7 +2568,7 @@ theorem modularLambdaH_im_nonneg_strip_interior_band (w : ℂ)
   set c : ℝ := Real.cos (Real.pi * X) with hc_def
   have h_lead_im : (16 * q - 128 * Q2 + 704 * Q3).im =
       s * (16 * r - 256 * r^2 * c + 704 * r^3 * (4 * c^2 - 1)) := by
-    simp only [Complex.sub_im, Complex.add_im, Complex.mul_im, Complex.mul_re]
+    simp only [Complex.sub_im, Complex.add_im, Complex.mul_im]
     simp only [show (16 : ℂ).re = 16 from rfl, show (16 : ℂ).im = 0 from rfl,
       show (128 : ℂ).re = 128 from rfl, show (128 : ℂ).im = 0 from rfl,
       show (704 : ℂ).re = 704 from rfl, show (704 : ℂ).im = 0 from rfl]
@@ -2604,7 +2613,7 @@ theorem modularLambdaH_im_nonneg_strip_interior_band (w : ℂ)
       exact Real.sin_le_sin_of_le_of_le_pi_div_two
         h_neg_pi_div_two h_piX_le_half h_piX_lo
     · -- Case X ∈ (1/2, 7/8]: πX ∈ (π/2, 7π/8]. Use symmetry sin(πX) = sin(π − πX).
-      push_neg at h_X_le_half
+      push Not at h_X_le_half
       have h_piX_gt_half : Real.pi / 2 < Real.pi * X := by
         have h_div : Real.pi / 2 = Real.pi * (1 / 2) := by ring
         rw [h_div]
@@ -2675,7 +2684,7 @@ theorem modularLambdaH_im_nonneg_strip_interior_band (w : ℂ)
   have h_im_split : (modularLambdaH w).im =
       (modularLambdaH w - 16 * q + 128 * Q2 - 704 * Q3).im +
         (16 * q - 128 * Q2 + 704 * Q3).im := by
-    simp only [Complex.sub_im, Complex.add_im, Complex.mul_im, Complex.mul_re]
+    simp only [Complex.sub_im, Complex.add_im, Complex.mul_im]
     ring
   -- |err.im| ≤ ‖err‖ ≤ 32768 · r^4.
   have h_err_abs : |(modularLambdaH w - 16 * q + 128 * Q2 - 704 * Q3).im| ≤
@@ -2810,11 +2819,11 @@ theorem modularLambdaH_deriv_norm_sub_three_term_le_of_im_ge_one
       100000 * Real.exp (-4 * Real.pi * τ.im) := by
   sorry
 
+set_option maxHeartbeats 400000 in
 -- The proof accumulates many local hypotheses (q, Q2, Q3 components,
 -- bracket bounds, exp bounds, numerical bounds on √2, cos(π/8)) that
 -- exceed the default 200000-heartbeat ceiling. Raising to 400000
 -- (the project-wide allowed maximum) is the minimal accommodation.
-set_option maxHeartbeats 400000 in
 /-- **Positivity of `Im λ'` on the closed left-edge strip.** For `w`
 with `0 ≤ Re w ≤ 1/8` and `Im w ≥ 1`, `Im (deriv λ w) ≥ 0`.
 
@@ -2925,7 +2934,7 @@ theorem modularLambdaH_deriv_im_nonneg_on_left_edge (w : ℂ)
     set X : ℂ := 16 * q - 256 * Q2 + 2112 * Q3 with hX_def
     have h_im : ((Real.pi : ℂ) * Complex.I * X).im = Real.pi * X.re := by
       rw [show ((Real.pi : ℂ) * Complex.I * X : ℂ) =
-          ((Real.pi : ℝ) : ℂ) * (Complex.I * X) from by push_cast; ring]
+          ((Real.pi : ℝ) : ℂ) * (Complex.I * X) from by ring]
       rw [Complex.mul_im, Complex.ofReal_re, Complex.ofReal_im, zero_mul, add_zero,
           Complex.mul_im, Complex.I_re, Complex.I_im, zero_mul, one_mul, zero_add]
     rw [h_im]
@@ -2933,11 +2942,10 @@ theorem modularLambdaH_deriv_im_nonneg_on_left_edge (w : ℂ)
     have hX_re : X.re = 16 * (r * c) - 256 * (r^2 * (c^2 - s^2)) +
         2112 * (r^3 * (c * (c^2 - 3 * s^2))) := by
       simp only [hX_def, Complex.add_re, Complex.sub_re, Complex.mul_re,
-        Complex.I_re, Complex.I_im, Complex.ofReal_re, Complex.ofReal_im,
         show (16 : ℂ).re = 16 from rfl, show (16 : ℂ).im = 0 from rfl,
         show (256 : ℂ).re = 256 from rfl, show (256 : ℂ).im = 0 from rfl,
         show (2112 : ℂ).re = 2112 from rfl, show (2112 : ℂ).im = 0 from rfl,
-        zero_mul, zero_sub, sub_zero]
+        zero_mul, sub_zero]
       rw [hq_re_eq, hQ2_re, hQ3_re]
     rw [hX_re]; ring
   -- Bounds on c: c ∈ [cos(π/8), 1] for x ∈ [0, 1/8].
@@ -3195,7 +3203,7 @@ theorem modularLambdaH_im_nonneg_strip_left_edge (w : ℂ)
     intro t ht
     apply modularLambdaH_deriv_im_nonneg_on_left_edge
     · simp only [Complex.add_re, Complex.mul_re, Complex.ofReal_re, Complex.I_re, mul_zero,
-        Complex.ofReal_im, Complex.I_im, mul_one, sub_zero, add_zero, zero_sub, neg_zero]
+        Complex.ofReal_im, Complex.I_im, mul_one, sub_zero, add_zero]
       rcases (Set.mem_uIcc.mp ht) with ⟨h1, _⟩ | ⟨h1, _⟩
       · linarith
       · linarith [hx_pos]
@@ -3374,13 +3382,13 @@ theorem modularLambdaH_cusp_one_im_nonneg_nbhd_in_F :
   -- Step 1: σ := τ - 1 has σ.im > 0 and ‖σ‖ ≤ 1/3.
   set σ := τ - 1 with hσ_def
   have hσ_im_pos : 0 < σ.im := by
-    show 0 < (τ - 1).im
+    change 0 < (τ - 1).im
     simp only [Complex.sub_im, Complex.one_im, sub_zero]; exact hτ_im_pos
   have hσ_re_neg : σ.re < 0 := by
-    show (τ - 1).re < 0
+    change (τ - 1).re < 0
     simp only [Complex.sub_re, Complex.one_re]; linarith
   have hσ_re_gt_neg_one : -1 < σ.re := by
-    show -1 < (τ - 1).re
+    change -1 < (τ - 1).re
     simp only [Complex.sub_re, Complex.one_re]; linarith
   have hσ_norm_le : ‖σ‖ ≤ 1/3 := hτ_dist
   -- σ ≠ 0 since σ.im > 0.
