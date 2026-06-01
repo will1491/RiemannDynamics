@@ -502,7 +502,224 @@ gives `A_k(y_1) > A_k(y_2)` for `1 ≤ y_1 < y_2`. Termwise strict
 comparison via `Summable.tsum_lt_tsum` finishes. -/
 theorem theta4_iy_strictMono_aux_large :
     StrictMonoOn (fun y : ℝ => (theta4 (Complex.I * (y : ℂ))).re) (Set.Ici 1) := by
-  sorry
+  intro y1 hy1 y2 hy2 h_y12
+  have hy1' : (1:ℝ) ≤ y1 := hy1
+  have hy2' : (1:ℝ) ≤ y2 := hy2
+  have hy1_pos : (0:ℝ) < y1 := lt_of_lt_of_le zero_lt_one hy1'
+  have hy2_pos : (0:ℝ) < y2 := lt_of_lt_of_le zero_lt_one hy2'
+  show (theta4 (Complex.I * (y1 : ℂ))).re < (theta4 (Complex.I * (y2 : ℂ))).re
+  -- Translate to jacobiTheta at τ = I·y + 1.
+  have hτ1_im : 0 < (Complex.I * (y1 : ℂ) + 1).im := by
+    simp [Complex.add_im, Complex.mul_im, Complex.one_im, Complex.I_re, Complex.I_im, hy1_pos]
+  have hτ2_im : 0 < (Complex.I * (y2 : ℂ) + 1).im := by
+    simp [Complex.add_im, Complex.mul_im, Complex.one_im, Complex.I_re, Complex.I_im, hy2_pos]
+  -- Each complex term equals `(-1)^(n+1) · exp(-π(n+1)²y)` (real).
+  have h_term : ∀ y : ℝ, ∀ n : ℕ,
+      Complex.exp ((Real.pi : ℂ) * Complex.I * ((n : ℂ) + 1)^2 *
+        (Complex.I * (y : ℂ) + 1)) =
+        (((-1 : ℝ)^(n+1) * Real.exp (-Real.pi * ((n : ℝ) + 1)^2 * y) : ℝ) : ℂ) := by
+    intro y n
+    have h_split : (Real.pi : ℂ) * Complex.I * ((↑n : ℂ) + 1) ^ 2 *
+        (Complex.I * (y : ℂ) + 1) =
+        ((-Real.pi * ((n : ℝ) + 1) ^ 2 * y : ℝ) : ℂ) +
+        ((↑n : ℂ) + 1) ^ 2 * ((Real.pi : ℂ) * Complex.I) := by
+      push_cast
+      ring_nf
+      rw [show (Complex.I) ^ 2 = -1 from Complex.I_sq]
+      ring
+    rw [h_split, Complex.exp_add]
+    rw [show ((↑n : ℂ) + 1) ^ 2 = (((n + 1)^2 : ℕ) : ℂ) from by push_cast; ring]
+    rw [Complex.exp_nat_mul, Complex.exp_pi_mul_I]
+    rw [← Complex.ofReal_exp]
+    have h_parity : ((-1 : ℂ))^((n+1)^2) = (((-1 : ℝ)^(n+1) : ℝ) : ℂ) := by
+      rcases Nat.even_or_odd (n+1) with hn | hn
+      · have h2 : Even ((n+1)^2) := by
+          obtain ⟨k, hk⟩ := hn
+          refine ⟨k * (k + k), ?_⟩
+          have heq : (n + 1)^2 = (k + k)^2 := by rw [hk]
+          rw [heq]; ring
+        rw [Even.neg_one_pow h2, Even.neg_one_pow hn]
+        simp
+      · have h2 : Odd ((n+1)^2) := by
+          have hsq : (n+1)^2 = (n+1) * (n+1) := sq (n+1)
+          rw [hsq]
+          exact hn.mul hn
+        rw [Odd.neg_one_pow h2, Odd.neg_one_pow hn]
+        simp
+    rw [h_parity]
+    push_cast
+    ring
+  -- Apply HasSum.
+  have h_sum1 := hasSum_nat_jacobiTheta hτ1_im
+  have h_sum2 := hasSum_nat_jacobiTheta hτ2_im
+  have h_sum1' : HasSum
+      (fun n : ℕ => (((-1 : ℝ)^(n+1) * Real.exp (-Real.pi * ((n : ℝ) + 1)^2 * y1) : ℝ) : ℂ))
+      ((jacobiTheta (Complex.I * (y1 : ℂ) + 1) - 1) / 2) := by
+    convert h_sum1 using 1
+    funext n
+    exact (h_term y1 n).symm
+  have h_sum2' : HasSum
+      (fun n : ℕ => (((-1 : ℝ)^(n+1) * Real.exp (-Real.pi * ((n : ℝ) + 1)^2 * y2) : ℝ) : ℂ))
+      ((jacobiTheta (Complex.I * (y2 : ℂ) + 1) - 1) / 2) := by
+    convert h_sum2 using 1
+    funext n
+    exact (h_term y2 n).symm
+  -- Map to real HasSum.
+  have h_sum1_re : HasSum
+      (fun n : ℕ => (-1 : ℝ)^(n+1) * Real.exp (-Real.pi * ((n : ℝ) + 1)^2 * y1))
+      ((jacobiTheta (Complex.I * (y1 : ℂ) + 1) - 1).re / 2) := by
+    have h_map := h_sum1'.map Complex.reCLM Complex.reCLM.continuous
+    simp only [Complex.reCLM_apply, Complex.ofReal_re] at h_map
+    rwa [Complex.div_ofNat_re] at h_map
+  have h_sum2_re : HasSum
+      (fun n : ℕ => (-1 : ℝ)^(n+1) * Real.exp (-Real.pi * ((n : ℝ) + 1)^2 * y2))
+      ((jacobiTheta (Complex.I * (y2 : ℂ) + 1) - 1).re / 2) := by
+    have h_map := h_sum2'.map Complex.reCLM Complex.reCLM.continuous
+    simp only [Complex.reCLM_apply, Complex.ofReal_re] at h_map
+    rwa [Complex.div_ofNat_re] at h_map
+  -- Define f y n := (-1)^(n+1) · exp(-π·(n+1)²·y).
+  set f : ℝ → ℕ → ℝ := fun y n => (-1 : ℝ)^(n+1) * Real.exp (-Real.pi * ((n : ℝ) + 1)^2 * y)
+    with f_def
+  -- Pair sum: f y (2k) + f y (2k+1) = -A_k(y).
+  have h_pair_eq : ∀ y : ℝ, ∀ k : ℕ,
+      f y (2*k) + f y (2*k+1) =
+        -(Real.exp (-Real.pi * ((2*k:ℝ)+1)^2 * y) -
+          Real.exp (-Real.pi * ((2*k:ℝ)+2)^2 * y)) := by
+    intro y k
+    simp only [f_def]
+    have h_2k_plus_1_odd : Odd (2*k+1) := ⟨k, rfl⟩
+    have h_2k_plus_2_even : Even (2*k+2) := ⟨k+1, by ring⟩
+    have h_eq1 : ((-1 : ℝ))^(2*k+1) = -1 := h_2k_plus_1_odd.neg_one_pow
+    have h_eq2 : ((-1 : ℝ))^(2*k+1+1) = 1 := h_2k_plus_2_even.neg_one_pow
+    rw [h_eq1, h_eq2]
+    push_cast
+    ring
+  -- Get summability of subseries.
+  have h_sum_even1 : Summable (fun k => f y1 (2*k)) :=
+    h_sum1_re.summable.comp_injective (fun _ _ hab => by omega)
+  have h_sum_odd1 : Summable (fun k => f y1 (2*k+1)) :=
+    h_sum1_re.summable.comp_injective (fun _ _ hab => by omega)
+  have h_sum_even2 : Summable (fun k => f y2 (2*k)) :=
+    h_sum2_re.summable.comp_injective (fun _ _ hab => by omega)
+  have h_sum_odd2 : Summable (fun k => f y2 (2*k+1)) :=
+    h_sum2_re.summable.comp_injective (fun _ _ hab => by omega)
+  -- Combine subseries: by HasSum.even_add_odd, even + odd = full.
+  have h_even_odd1 :
+      HasSum (f y1)
+        (∑' k, f y1 (2*k) + ∑' k, f y1 (2*k+1)) :=
+    HasSum.even_add_odd h_sum_even1.hasSum h_sum_odd1.hasSum
+  have h_even_odd2 :
+      HasSum (f y2)
+        (∑' k, f y2 (2*k) + ∑' k, f y2 (2*k+1)) :=
+    HasSum.even_add_odd h_sum_even2.hasSum h_sum_odd2.hasSum
+  have h_unique1 : ∑' k, f y1 (2*k) + ∑' k, f y1 (2*k+1) =
+      (jacobiTheta (Complex.I * (y1 : ℂ) + 1) - 1).re / 2 :=
+    h_even_odd1.unique h_sum1_re
+  have h_unique2 : ∑' k, f y2 (2*k) + ∑' k, f y2 (2*k+1) =
+      (jacobiTheta (Complex.I * (y2 : ℂ) + 1) - 1).re / 2 :=
+    h_even_odd2.unique h_sum2_re
+  -- HasSum of pair sums = full sum.
+  have h_pair_sum1 :
+      HasSum (fun k => f y1 (2*k) + f y1 (2*k+1))
+        ((jacobiTheta (Complex.I * (y1 : ℂ) + 1) - 1).re / 2) := by
+    have h := h_sum_even1.hasSum.add h_sum_odd1.hasSum
+    rwa [h_unique1] at h
+  have h_pair_sum2 :
+      HasSum (fun k => f y2 (2*k) + f y2 (2*k+1))
+        ((jacobiTheta (Complex.I * (y2 : ℂ) + 1) - 1).re / 2) := by
+    have h := h_sum_even2.hasSum.add h_sum_odd2.hasSum
+    rwa [h_unique2] at h
+  -- Rewrite as -A_k(y).
+  set A : ℝ → ℕ → ℝ := fun y k =>
+    Real.exp (-Real.pi * ((2*k:ℝ)+1)^2 * y) - Real.exp (-Real.pi * ((2*k:ℝ)+2)^2 * y)
+    with A_def
+  have h_neg_A1 : HasSum (fun k => -A y1 k)
+      ((jacobiTheta (Complex.I * (y1 : ℂ) + 1) - 1).re / 2) := by
+    convert h_pair_sum1 using 1
+    funext k
+    rw [A_def, h_pair_eq y1 k]
+  have h_neg_A2 : HasSum (fun k => -A y2 k)
+      ((jacobiTheta (Complex.I * (y2 : ℂ) + 1) - 1).re / 2) := by
+    convert h_pair_sum2 using 1
+    funext k
+    rw [A_def, h_pair_eq y2 k]
+  -- HasSum of A_k(y) = - ((θ₄(iy) - 1).re / 2).
+  have h_A1 : HasSum (A y1) (-(jacobiTheta (Complex.I * (y1 : ℂ) + 1) - 1).re / 2) := by
+    have h := h_neg_A1.neg
+    simp only [neg_neg] at h
+    convert h using 1
+    ring
+  have h_A2 : HasSum (A y2) (-(jacobiTheta (Complex.I * (y2 : ℂ) + 1) - 1).re / 2) := by
+    have h := h_neg_A2.neg
+    simp only [neg_neg] at h
+    convert h using 1
+    ring
+  -- Strict comparison of A's: A_k(y2) < A_k(y1).
+  have h_A_lt : ∀ k : ℕ, A y2 k < A y1 k := by
+    intro k
+    simp only [A_def]
+    -- Apply exp_neg_diff_strict_dec with α₁ = π(2k+1)², α₂ = π(2k+2)².
+    set α1 := Real.pi * ((2*k:ℝ) + 1)^2 with α1_def
+    set α2 := Real.pi * ((2*k:ℝ) + 2)^2 with α2_def
+    have hα1_pos : 0 < α1 := by
+      apply mul_pos Real.pi_pos
+      positivity
+    have hα12 : α1 < α2 := by
+      simp only [α1_def, α2_def]
+      apply mul_lt_mul_of_pos_left _ Real.pi_pos
+      have h1 : (0 : ℝ) ≤ (2*k:ℝ) + 1 := by positivity
+      have h2 : (2*k:ℝ) + 1 < (2*k:ℝ) + 2 := by linarith
+      exact pow_lt_pow_left₀ h2 h1 (by norm_num)
+    have hα1_ge : 1 / y1 ≤ α1 := by
+      have h_inv_le_one : 1 / y1 ≤ 1 := by
+        rw [div_le_one hy1_pos]; exact hy1'
+      have h_α1_ge : (1 : ℝ) ≤ α1 := by
+        simp only [α1_def]
+        have h1 : (1 : ℝ) ≤ ((2*k:ℝ) + 1)^2 := by
+          have h_ge_one : (1 : ℝ) ≤ (2*k:ℝ) + 1 := by
+            have : (0 : ℝ) ≤ (2*k:ℝ) := by positivity
+            linarith
+          calc (1 : ℝ) = 1^2 := by norm_num
+            _ ≤ ((2*k:ℝ) + 1)^2 := pow_le_pow_left₀ (by norm_num) h_ge_one 2
+        have h2 : Real.pi * 1 ≤ Real.pi * ((2*k:ℝ) + 1)^2 :=
+          mul_le_mul_of_nonneg_left h1 Real.pi_pos.le
+        have h3 : (1 : ℝ) < Real.pi := Real.pi_gt_three.trans' (by norm_num)
+        linarith
+      linarith
+    -- Apply exp_neg_diff_strict_dec.
+    have h_dec := exp_neg_diff_strict_dec hy1_pos h_y12 hα1_ge hα12
+    -- h_dec : exp(-α2·y1) - exp(-α2·y2) < exp(-α1·y1) - exp(-α1·y2).
+    -- We want: exp(-α1·y2) - exp(-α2·y2) < exp(-α1·y1) - exp(-α2·y1).
+    -- These are equivalent after rearrangement.
+    show Real.exp (-Real.pi * ((2 * (k:ℝ)) + 1)^2 * y2) -
+        Real.exp (-Real.pi * ((2 * (k:ℝ)) + 2)^2 * y2) <
+        Real.exp (-Real.pi * ((2 * (k:ℝ)) + 1)^2 * y1) -
+        Real.exp (-Real.pi * ((2 * (k:ℝ)) + 2)^2 * y1)
+    have h_α1_eq : α1 = Real.pi * ((2 * (k:ℝ)) + 1)^2 := α1_def
+    have h_α2_eq : α2 = Real.pi * ((2 * (k:ℝ)) + 2)^2 := α2_def
+    have h_α1_y1 : -α1 * y1 = -Real.pi * ((2 * (k:ℝ)) + 1)^2 * y1 := by
+      rw [h_α1_eq]; ring
+    have h_α1_y2 : -α1 * y2 = -Real.pi * ((2 * (k:ℝ)) + 1)^2 * y2 := by
+      rw [h_α1_eq]; ring
+    have h_α2_y1 : -α2 * y1 = -Real.pi * ((2 * (k:ℝ)) + 2)^2 * y1 := by
+      rw [h_α2_eq]; ring
+    have h_α2_y2 : -α2 * y2 = -Real.pi * ((2 * (k:ℝ)) + 2)^2 * y2 := by
+      rw [h_α2_eq]; ring
+    rw [h_α1_y1, h_α1_y2, h_α2_y1, h_α2_y2] at h_dec
+    linarith
+  have h_A_le : ∀ k : ℕ, A y2 k ≤ A y1 k := fun k => (h_A_lt k).le
+  -- Apply Summable.tsum_lt_tsum.
+  have h_tsum_lt : ∑' k, A y2 k < ∑' k, A y1 k := by
+    exact Summable.tsum_lt_tsum h_A_le (h_A_lt 0) h_A2.summable h_A1.summable
+  rw [h_A1.tsum_eq, h_A2.tsum_eq] at h_tsum_lt
+  -- h_tsum_lt : -(θ₄(iy2) - 1)/2 < -(θ₄(iy1) - 1)/2  ⇒  (θ₄(iy1)).re < (θ₄(iy2)).re.
+  show (theta4 (Complex.I * (y1 : ℂ))).re < (theta4 (Complex.I * (y2 : ℂ))).re
+  unfold theta4
+  have h_re_sub : ∀ y : ℝ, (jacobiTheta (Complex.I * (y : ℂ) + 1) - 1).re =
+      (jacobiTheta (Complex.I * (y : ℂ) + 1)).re - 1 := by
+    intro y; rw [Complex.sub_re, Complex.one_re]
+  rw [h_re_sub y1, h_re_sub y2] at h_tsum_lt
+  linarith
 
 /-- **Modular transformation specialized to imaginary axis.**
 For `y > 0`, `θ_4(iy)·√y = θ_2(i/y)` (both sides real). Specialization
@@ -564,15 +781,285 @@ theorem theta4_iy_mul_sqrt_eq_theta2 {y : ℝ} (hy : 0 < y) :
   rw [Complex.mul_re, Complex.ofReal_re, Complex.ofReal_im, mul_zero, sub_zero] at h_re
   exact h_re
 
+/-- **Pair helper for the small-`y` regime.** For `α ≥ 1/2` and
+`1 ≤ u₂ < u₁`, the strict bound
+`√u₁ · exp(-α·u₁) < √u₂ · exp(-α·u₂)` holds. Derivation:
+`u₁/u₂ = 1 + (u₁−u₂)/u₂ < exp((u₁−u₂)/u₂)` (from `Real.add_one_lt_exp`),
+hence `√(u₁/u₂) < exp((u₁−u₂)/(2u₂))`. Since `1/(2u₂) ≤ 1/2 ≤ α`,
+this gives `√(u₁/u₂) < exp(α(u₁−u₂))`, i.e., the claim. -/
+private lemma sqrt_exp_strict_dec {α u1 u2 : ℝ} (hα : 1/2 ≤ α) (hu2 : 1 ≤ u2)
+    (hu12 : u2 < u1) :
+    Real.sqrt u1 * Real.exp (-α * u1) < Real.sqrt u2 * Real.exp (-α * u2) := by
+  have hu2_pos : 0 < u2 := lt_of_lt_of_le zero_lt_one hu2
+  have hu1_pos : 0 < u1 := lt_trans hu2_pos hu12
+  have hd_pos : 0 < u1 - u2 := sub_pos.mpr hu12
+  have hsu1_pos : 0 < Real.sqrt u1 := Real.sqrt_pos.mpr hu1_pos
+  have hsu2_pos : 0 < Real.sqrt u2 := Real.sqrt_pos.mpr hu2_pos
+  -- Key inequality: u₁/u₂ < exp((u₁−u₂)/u₂).
+  have hu2_ne0 : u2 ≠ 0 := ne_of_gt hu2_pos
+  have h_div_eq : u1 / u2 = 1 + (u1 - u2) / u2 := by
+    field_simp; ring
+  have hd_div_pos : 0 < (u1 - u2) / u2 := div_pos hd_pos hu2_pos
+  have h_div_ne : (u1 - u2) / u2 ≠ 0 := ne_of_gt hd_div_pos
+  have h_exp_lt_aux : (u1 - u2) / u2 + 1 < Real.exp ((u1 - u2) / u2) :=
+    Real.add_one_lt_exp h_div_ne
+  have h_u_ratio_lt : u1 / u2 < Real.exp ((u1 - u2) / u2) := by
+    rw [h_div_eq]; linarith
+  -- exp((u₁−u₂)/u₂) = (exp((u₁−u₂)/(2u₂)))².
+  have h_exp_sq : Real.exp ((u1 - u2) / u2) = (Real.exp ((u1 - u2) / (2*u2)))^2 := by
+    rw [show ((Real.exp ((u1 - u2) / (2*u2)))^2 : ℝ) =
+        Real.exp ((u1 - u2) / (2*u2)) * Real.exp ((u1 - u2) / (2*u2)) from sq _]
+    rw [← Real.exp_add]
+    congr 1
+    field_simp
+    ring
+  -- √(u₁/u₂) < exp((u₁−u₂)/(2u₂)).
+  have h_sqrt_lt : Real.sqrt (u1/u2) < Real.exp ((u1 - u2) / (2 * u2)) := by
+    have h_pos_u : 0 ≤ u1/u2 := by positivity
+    have h_pos_exp : 0 ≤ Real.exp ((u1 - u2) / (2 * u2)) := (Real.exp_pos _).le
+    have h_eq : Real.exp ((u1 - u2) / (2 * u2)) =
+        Real.sqrt ((Real.exp ((u1 - u2) / (2 * u2)))^2) := (Real.sqrt_sq h_pos_exp).symm
+    rw [h_eq, ← h_exp_sq]
+    exact Real.sqrt_lt_sqrt h_pos_u h_u_ratio_lt
+  -- √u₁ < √u₂ · exp((u₁−u₂)/(2u₂)).
+  have hu2_ne : u2 ≠ 0 := ne_of_gt hu2_pos
+  have h_sqrt_div : Real.sqrt (u1/u2) = Real.sqrt u1 / Real.sqrt u2 :=
+    Real.sqrt_div' u1 hu2_pos.le
+  have h_su1_lt : Real.sqrt u1 < Real.sqrt u2 * Real.exp ((u1 - u2) / (2 * u2)) := by
+    have h := h_sqrt_lt
+    rw [h_sqrt_div, div_lt_iff₀ hsu2_pos] at h
+    linarith
+  -- 1/(2u₂) ≤ α, hence (u₁−u₂)/(2u₂) ≤ α·(u₁−u₂).
+  have h_inv_le_α : 1 / (2 * u2) ≤ α := by
+    have h_inv_le_half : 1 / (2 * u2) ≤ 1 / 2 := by
+      rw [div_le_div_iff₀ (by linarith : (0:ℝ) < 2 * u2) (by norm_num : (0:ℝ) < 2)]
+      nlinarith
+    linarith
+  have h_d_α : (u1 - u2) / (2 * u2) ≤ α * (u1 - u2) := by
+    have h1 : (u1 - u2) / (2 * u2) = (1 / (2 * u2)) * (u1 - u2) := by ring
+    rw [h1]
+    exact mul_le_mul_of_nonneg_right h_inv_le_α hd_pos.le
+  -- √u₁ < √u₂ · exp(α(u₁−u₂)).
+  have h_su1_lt' : Real.sqrt u1 < Real.sqrt u2 * Real.exp (α * (u1 - u2)) := by
+    apply lt_of_lt_of_le h_su1_lt
+    apply mul_le_mul_of_nonneg_left _ hsu2_pos.le
+    exact Real.exp_le_exp.mpr h_d_α
+  -- Multiply by exp(-α u₁) > 0 (positive) to get the desired form.
+  have hex1_pos : 0 < Real.exp (-α * u1) := Real.exp_pos _
+  have h_mul := mul_lt_mul_of_pos_right h_su1_lt' hex1_pos
+  -- LHS: √u₁ · exp(-α u₁). RHS: √u₂ · exp(α(u₁−u₂)) · exp(-α u₁) = √u₂ · exp(-α u₂).
+  have h_rhs_eq : Real.sqrt u2 * Real.exp (α * (u1 - u2)) * Real.exp (-α * u1) =
+      Real.sqrt u2 * Real.exp (-α * u2) := by
+    rw [mul_assoc, ← Real.exp_add]
+    congr 2
+    ring
+  rw [h_rhs_eq] at h_mul
+  exact h_mul
+
 /-- **Auxiliary: strict monotonicity of `θ₄(iy)` for `0 < y ≤ 1`.**
-Modular transformation `θ_4(iy) = θ_2(i/y)/√y` reduces to: for
-`u = 1/y ≥ 1`, the function `u ↦ √u · θ_2(iu).re` is strictly antitone.
-Termwise: `√u · exp(−π (n+1/2)² u)` has derivative
-`exp(−α u)·(1 − 2 α u)/(2√u) < 0` for `u ≥ 1` since
-`2 α u = 2 π (n+1/2)² · u ≥ π/2 · 1 > 1`. -/
+Modular transformation `θ_4(iy) · √y = θ_2(i/y)` reduces the small-`y`
+regime to the large-`u` regime with `u = 1/y ≥ 1`. Expanding
+`θ_2(iu) = 2·exp(-πu/4)·jacobiTheta₂(iu/2, iu)` and combining the
+`exp(-πu/4)` factor with the `n`-th term `exp(-π·n(n+1)·u)` of
+`jacobiTheta₂` gives `√u · θ_2(iu).re = 2·∑_{n ∈ ℤ} √u·exp(-π·(n+1/2)²·u)`.
+Each term `√u·exp(-α·u)` with `α := π(n+1/2)² ≥ π/4 > 1/2` is strictly
+antitone on `[1, ∞)` by `sqrt_exp_strict_dec`. Termwise strict
+comparison via `Summable.tsum_lt_tsum` finishes. -/
 theorem theta4_iy_strictMono_aux_small :
     StrictMonoOn (fun y : ℝ => (theta4 (Complex.I * (y : ℂ))).re) (Set.Ioc 0 1) := by
-  sorry
+  -- Step 1: Auxiliary claim — `u ↦ √u · θ_2(iu).re` is strictly antitone on `[1, ∞)`.
+  -- This is the heart of the proof; everything else is bookkeeping.
+  have h_aux : ∀ u1 u2 : ℝ, 1 ≤ u2 → u2 < u1 →
+      Real.sqrt u1 * (theta2 (Complex.I * (u1 : ℂ))).re <
+        Real.sqrt u2 * (theta2 (Complex.I * (u2 : ℂ))).re := by
+    intros u1 u2 hu2 h_u12
+    have hu2_pos : 0 < u2 := lt_of_lt_of_le zero_lt_one hu2
+    have hu1_pos : 0 < u1 := lt_trans hu2_pos h_u12
+    -- Set up the jacobiTheta₂ HasSum at τ = i·u.
+    have hτ1_im : 0 < (Complex.I * (u1 : ℂ)).im := by
+      simp only [Complex.mul_im, Complex.I_re, Complex.ofReal_im, mul_zero, Complex.I_im,
+        Complex.ofReal_re, one_mul, zero_add]
+      exact hu1_pos
+    have hτ2_im : 0 < (Complex.I * (u2 : ℂ)).im := by
+      simp only [Complex.mul_im, Complex.I_re, Complex.ofReal_im, mul_zero, Complex.I_im,
+        Complex.ofReal_re, one_mul, zero_add]
+      exact hu2_pos
+    -- jacobiTheta₂_term n (iu/2) (iu) = exp(-π·u·n(n+1)) (real positive).
+    have h_jt2_term : ∀ u : ℝ, ∀ n : ℤ,
+        jacobiTheta₂_term n (Complex.I * (u : ℂ) / 2) (Complex.I * (u : ℂ)) =
+          ((Real.exp (-Real.pi * u * (n : ℝ) * ((n : ℝ) + 1)) : ℝ) : ℂ) := by
+      intros u n
+      unfold jacobiTheta₂_term
+      have h_arg : 2 * (Real.pi : ℂ) * Complex.I * (n : ℂ) *
+          (Complex.I * (u : ℂ) / 2) +
+          (Real.pi : ℂ) * Complex.I * (n : ℂ) ^ 2 *
+          (Complex.I * (u : ℂ)) =
+          ((-Real.pi * u * (n : ℝ) * ((n : ℝ) + 1) : ℝ) : ℂ) := by
+        push_cast
+        ring_nf
+        rw [show (Complex.I) ^ 2 = -1 from Complex.I_sq]
+        ring
+      rw [h_arg, ← Complex.ofReal_exp]
+    -- jacobiTheta₂(iu/2, iu) HasSum at τ = iu.
+    have h_jt2_sum : ∀ u : ℝ, 0 < u →
+        HasSum (fun n : ℤ => ((Real.exp (-Real.pi * u * (n : ℝ) * ((n : ℝ) + 1)) : ℝ) : ℂ))
+          (jacobiTheta₂ (Complex.I * (u : ℂ) / 2) (Complex.I * (u : ℂ))) := by
+      intros u hu
+      have hτ_im : 0 < (Complex.I * (u : ℂ)).im := by
+        simp only [Complex.mul_im, Complex.I_re, Complex.ofReal_im, mul_zero, Complex.I_im,
+          Complex.ofReal_re, one_mul, zero_add]
+        exact hu
+      have h_sum := hasSum_jacobiTheta₂_term (Complex.I * (u : ℂ) / 2) hτ_im
+      convert h_sum using 1
+      funext n
+      exact (h_jt2_term u n).symm
+    -- Real version of the HasSum.
+    have h_jt2_sum_re : ∀ u : ℝ, 0 < u →
+        HasSum (fun n : ℤ => Real.exp (-Real.pi * u * (n : ℝ) * ((n : ℝ) + 1)))
+          (jacobiTheta₂ (Complex.I * (u : ℂ) / 2) (Complex.I * (u : ℂ))).re := by
+      intros u hu
+      have h_map := (h_jt2_sum u hu).map Complex.reCLM Complex.reCLM.continuous
+      simpa only [Complex.reCLM_apply, Complex.ofReal_re, Function.comp_def] using h_map
+    -- jacobiTheta₂(iu/2, iu).re = ∑ exp(-π·u·n(n+1)).
+    -- Now θ_2(iu) = exp(πi·iu/4) · jacobiTheta₂(iu/2, iu) = exp(-πu/4) · (the sum).
+    have h_t2_eq : ∀ u : ℝ, 0 < u →
+        (theta2 (Complex.I * (u : ℂ))).re =
+          Real.exp (-Real.pi * u / 4) *
+            (jacobiTheta₂ (Complex.I * (u : ℂ) / 2) (Complex.I * (u : ℂ))).re := by
+      intros u hu
+      unfold theta2
+      have h_arg : (Real.pi : ℂ) * Complex.I * (Complex.I * (u : ℂ)) / 4 =
+          ((-Real.pi * u / 4 : ℝ) : ℂ) := by
+        push_cast
+        ring_nf
+        rw [show (Complex.I) ^ 2 = -1 from Complex.I_sq]
+        ring
+      rw [h_arg, ← Complex.ofReal_exp]
+      rw [Complex.re_ofReal_mul]
+    -- HasSum representation: √u · θ_2(iu).re = 2 · ∑ √u · exp(-π u/4 - π u n(n+1)).
+    -- Define G u n := √u · exp(-π·u/4 - π·u·n(n+1)) = √u · exp(-π·u·(n+1/2)²) (after combining).
+    -- We will show G u_2 n > G u_1 n for each n using sqrt_exp_strict_dec.
+    -- First, establish HasSum for √u · θ_2(iu).re / 2 = exp(-π u/4) · jacobiTheta₂(iu/2, iu).re · √u.
+    -- This is a HasSum of `(fun n : ℤ => √u · exp(-π·u/4 - π·u·n(n+1)))`.
+    set G : ℝ → ℤ → ℝ := fun u n =>
+      Real.sqrt u * Real.exp (-Real.pi * u / 4 - Real.pi * u * (n : ℝ) * ((n : ℝ) + 1))
+      with G_def
+    have h_G_eq : ∀ u : ℝ, ∀ n : ℤ,
+        G u n =
+          Real.sqrt u * Real.exp (-(Real.pi * ((n : ℝ) + 1/2)^2) * u) := by
+      intros u n
+      simp only [G_def]
+      congr 1
+      ring
+    have h_G_sum : ∀ u : ℝ, 0 < u →
+        HasSum (G u)
+          (Real.sqrt u * (theta2 (Complex.I * (u : ℂ))).re) := by
+      intros u hu
+      have hsu_pos : 0 < Real.sqrt u := Real.sqrt_pos.mpr hu
+      -- HasSum of (fun n => exp(-π·u·n(n+1))) = jacobiTheta₂(iu/2, iu).re.
+      have h_inner := h_jt2_sum_re u hu
+      -- Multiply by √u · exp(-π u/4): HasSum of (fun n => √u · exp(-π u/4) · exp(-π·u·n(n+1))).
+      have h_const := h_inner.mul_left (Real.sqrt u * Real.exp (-Real.pi * u / 4))
+      -- Combine: term = √u · exp(-π u/4 - π·u·n(n+1)) = G u n.
+      have h_eq : ∀ n : ℤ,
+          Real.sqrt u * Real.exp (-Real.pi * u / 4) *
+            Real.exp (-Real.pi * u * (n : ℝ) * ((n : ℝ) + 1)) = G u n := by
+        intro n
+        simp only [G_def]
+        rw [mul_assoc, ← Real.exp_add]
+        congr 1
+        ring
+      rw [show (fun n : ℤ => Real.sqrt u * Real.exp (-Real.pi * u / 4) *
+          Real.exp (-Real.pi * u * (n : ℝ) * ((n : ℝ) + 1))) = G u from by
+            funext n; exact h_eq n] at h_const
+      -- h_const : HasSum (G u) (√u · exp(-π u/4) · jacobiTheta₂(iu/2, iu).re)
+      --         = HasSum (G u) (√u · (theta2 iu).re) by h_t2_eq.
+      have h_t2 := h_t2_eq u hu
+      rw [show Real.sqrt u * Real.exp (-Real.pi * u / 4) *
+          (jacobiTheta₂ (Complex.I * (u : ℂ) / 2) (Complex.I * (u : ℂ))).re =
+          Real.sqrt u * ((theta2 (Complex.I * (u : ℂ))).re) from by
+        rw [h_t2]; ring] at h_const
+      exact h_const
+    -- Now use strict comparison for each n.
+    have hu1_ge_one : 1 ≤ u1 := le_of_lt (lt_of_le_of_lt hu2 h_u12)
+    have h_term_lt : ∀ n : ℤ, G u1 n < G u2 n := by
+      intro n
+      rw [h_G_eq u1 n, h_G_eq u2 n]
+      set α := Real.pi * ((n : ℝ) + 1/2)^2 with α_def
+      have hα_ge : 1/2 ≤ α := by
+        simp only [α_def]
+        have h_sq_ge : (1/4 : ℝ) ≤ ((n : ℝ) + 1/2)^2 := by
+          -- ((n : ℝ) + 1/2)^2 ≥ 1/4 since (n+1/2)² ≥ 1/4 for n ∈ ℤ.
+          -- We have (n + 1/2)² = n² + n + 1/4 = n(n+1) + 1/4 ≥ 0 + 1/4 = 1/4.
+          have h1 : (((n : ℝ) + 1/2)^2 : ℝ) = (n : ℝ) * ((n : ℝ) + 1) + 1/4 := by ring
+          rw [h1]
+          -- n(n+1) ≥ 0 for n ∈ ℤ.
+          have h2 : (0 : ℝ) ≤ (n : ℝ) * ((n : ℝ) + 1) := by
+            rcases le_or_gt (0 : ℝ) (n : ℝ) with hn | hn
+            · have hn' : (0 : ℝ) ≤ (n : ℝ) + 1 := by linarith
+              exact mul_nonneg hn hn'
+            · -- n < 0 so n ≤ -1, then n + 1 ≤ 0, so n·(n+1) ≥ 0.
+              have hn_int : n ≤ -1 := by
+                have h_lt : (n : ℝ) < 0 := hn
+                have h_lt' : (n : ℤ) < 0 := by exact_mod_cast h_lt
+                omega
+              have hn'' : ((n : ℝ) + 1) ≤ 0 := by
+                have h_le : (n : ℝ) ≤ -1 := by exact_mod_cast hn_int
+                linarith
+              exact mul_nonneg_iff.mpr (Or.inr ⟨hn.le, hn''⟩)
+          linarith
+        have h_pi_pos : 0 < Real.pi := Real.pi_pos
+        calc (1/2 : ℝ) ≤ Real.pi * (1/4) := by
+                have h1 : Real.pi * (1/4) ≥ 3/4 := by
+                  have h_pi_ge : Real.pi ≥ 3 := Real.pi_gt_three.le
+                  linarith
+                linarith
+          _ ≤ Real.pi * ((n : ℝ) + 1/2)^2 := by
+                exact mul_le_mul_of_nonneg_left h_sq_ge h_pi_pos.le
+      exact sqrt_exp_strict_dec hα_ge hu2 h_u12
+    have h_term_le : ∀ n : ℤ, G u1 n ≤ G u2 n := fun n => (h_term_lt n).le
+    -- Strict comparison of tsums.
+    have h_sum1 := h_G_sum u1 hu1_pos
+    have h_sum2 := h_G_sum u2 hu2_pos
+    have h_tsum_lt : ∑' n : ℤ, G u1 n < ∑' n : ℤ, G u2 n :=
+      Summable.tsum_lt_tsum h_term_le (h_term_lt 0) h_sum1.summable h_sum2.summable
+    rw [h_sum1.tsum_eq, h_sum2.tsum_eq] at h_tsum_lt
+    exact h_tsum_lt
+  -- Step 2: Translate back to (0, 1] via the modular transformation.
+  intro y1 hy1 y2 hy2 h_y12
+  obtain ⟨hy1_pos, hy1_le⟩ := hy1
+  obtain ⟨hy2_pos, hy2_le⟩ := hy2
+  -- Set u_i := 1/y_i; then u_1 > u_2 ≥ 1.
+  have hu2_pos : 0 < 1/y2 := one_div_pos.mpr hy2_pos
+  have hu1_pos : 0 < 1/y1 := one_div_pos.mpr hy1_pos
+  have hu2_ge : 1 ≤ 1/y2 := by rw [le_div_iff₀ hy2_pos]; linarith
+  have hu1_ge : 1 ≤ 1/y1 := by rw [le_div_iff₀ hy1_pos]; linarith
+  have h_u_swap : 1/y2 < 1/y1 := one_div_lt_one_div_of_lt hy1_pos h_y12
+  -- Show θ_4(iy).re = √u · θ_2(iu).re where u = 1/y, using modular transformation.
+  have h_t4 : ∀ y : ℝ, 0 < y →
+      (theta4 (Complex.I * (y : ℂ))).re =
+        Real.sqrt (1/y) * (theta2 (Complex.I * ((1/y : ℝ) : ℂ))).re := by
+    intros y hy
+    -- (theta4 (I·y)).re · √y = (theta2 (I/y)).re from theta4_iy_mul_sqrt_eq_theta2.
+    have h_modular_eq : Complex.I / (y : ℂ) = Complex.I * ((1/y : ℝ) : ℂ) := by
+      have hy_ne : (y : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr (ne_of_gt hy)
+      push_cast; field_simp
+    have h_mod := theta4_iy_mul_sqrt_eq_theta2 hy
+    rw [h_modular_eq] at h_mod
+    have hsqy_pos : 0 < Real.sqrt y := Real.sqrt_pos.mpr hy
+    have hsqy_ne : Real.sqrt y ≠ 0 := ne_of_gt hsqy_pos
+    -- (theta4 (I·y)).re = (theta2 (I · (1/y))).re / √y.
+    have h_solve : (theta4 (Complex.I * (y : ℂ))).re =
+        (theta2 (Complex.I * ((1/y : ℝ) : ℂ))).re / Real.sqrt y := by
+      rw [eq_div_iff hsqy_ne]; exact h_mod
+    -- 1/√y = √(1/y).
+    have h_sqrt_inv : Real.sqrt (1/y) = 1 / Real.sqrt y := by
+      rw [Real.sqrt_div' 1 hy.le, Real.sqrt_one]
+    rw [h_solve, h_sqrt_inv]; ring
+  -- Apply h_aux with u_1 := 1/y_1 and u_2 := 1/y_2.
+  show (theta4 (Complex.I * (y1 : ℂ))).re < (theta4 (Complex.I * (y2 : ℂ))).re
+  rw [h_t4 y1 hy1_pos, h_t4 y2 hy2_pos]
+  exact h_aux (1/y1) (1/y2) hu2_ge h_u_swap
 
 /-- **Strict monotonicity of `θ₄(iy)`.** The function `y ↦ θ₄(iy).re`
 is strictly monotone increasing on `(0, ∞)`. Combine the alternating-
@@ -616,7 +1103,205 @@ decreases), so `(θ₄/θ₃)⁴` is strictly increasing, hence
 `λ(iy) = 1 − (θ₄/θ₃)⁴` is strictly decreasing. -/
 theorem modularLambdaH_iy_strictAntitone :
     StrictAntiOn (fun y : ℝ => (modularLambdaH (Complex.I * (y : ℂ))).re) (Set.Ioi 0) := by
-  sorry
+  intro y1 hy1 y2 hy2 h_y12
+  have hy1_pos : (0 : ℝ) < y1 := hy1
+  have hy2_pos : (0 : ℝ) < y2 := hy2
+  have hτ1_im : 0 < (Complex.I * (y1 : ℂ)).im := by
+    simp only [Complex.mul_im, Complex.I_re, Complex.ofReal_im, mul_zero, Complex.I_im,
+      Complex.ofReal_re, one_mul, zero_add]
+    exact hy1_pos
+  have hτ2_im : 0 < (Complex.I * (y2 : ℂ)).im := by
+    simp only [Complex.mul_im, Complex.I_re, Complex.ofReal_im, mul_zero, Complex.I_im,
+      Complex.ofReal_re, one_mul, zero_add]
+    exact hy2_pos
+  -- Positivity helper for `θ_3(iy).re`: it equals `1 + 2·∑_{n≥0} exp(-π(n+1)²·y) ≥ 1 > 0`.
+  have h_theta3_pos : ∀ y : ℝ, 0 < y → 1 ≤ (theta3 (Complex.I * (y : ℂ))).re := by
+    intros y hy
+    have h_yim : 0 < (Complex.I * (y : ℂ)).im := by
+      simp only [Complex.mul_im, Complex.I_re, Complex.ofReal_im, mul_zero, Complex.I_im,
+        Complex.ofReal_re, one_mul, zero_add]
+      exact hy
+    have h_arg : ∀ n : ℕ, (Real.pi : ℂ) * Complex.I * ((n : ℂ) + 1)^2 *
+        (Complex.I * (y : ℂ)) = ((-Real.pi * ((n : ℝ) + 1)^2 * y : ℝ) : ℂ) := by
+      intro n; push_cast; ring_nf
+      rw [show (Complex.I : ℂ)^2 = -1 from Complex.I_sq]; ring
+    have h_term : ∀ n : ℕ,
+        Complex.exp ((Real.pi : ℂ) * Complex.I * ((n : ℂ) + 1)^2 *
+          (Complex.I * (y : ℂ))) =
+          ((Real.exp (-Real.pi * ((n : ℝ) + 1)^2 * y) : ℝ) : ℂ) := by
+      intro n; rw [h_arg n, ← Complex.ofReal_exp]
+    have h_sum_c := hasSum_nat_jacobiTheta h_yim
+    have h_sum_c' : HasSum
+        (fun n : ℕ => ((Real.exp (-Real.pi * ((n : ℝ) + 1)^2 * y) : ℝ) : ℂ))
+        ((jacobiTheta (Complex.I * (y : ℂ)) - 1) / 2) := by
+      convert h_sum_c using 1; funext n; exact (h_term n).symm
+    have h_sum_re : HasSum
+        (fun n : ℕ => Real.exp (-Real.pi * ((n : ℝ) + 1)^2 * y))
+        ((jacobiTheta (Complex.I * (y : ℂ)) - 1).re / 2) := by
+      have h_map := h_sum_c'.map Complex.reCLM Complex.reCLM.continuous
+      simp only [Complex.reCLM_apply, Complex.ofReal_re, Function.comp_def] at h_map
+      rwa [Complex.div_ofNat_re] at h_map
+    have h_tsum_nonneg : 0 ≤ (jacobiTheta (Complex.I * (y : ℂ)) - 1).re / 2 := by
+      rw [← h_sum_re.tsum_eq]
+      exact tsum_nonneg (fun n => (Real.exp_pos _).le)
+    have h_jt_ge : 1 ≤ (jacobiTheta (Complex.I * (y : ℂ))).re := by
+      have h_eq : (jacobiTheta (Complex.I * (y : ℂ)) - 1).re =
+          (jacobiTheta (Complex.I * (y : ℂ))).re - 1 := by
+        rw [Complex.sub_re, Complex.one_re]
+      have h_pos : 0 ≤ (jacobiTheta (Complex.I * (y : ℂ))).re - 1 := by
+        rw [← h_eq]; linarith [h_tsum_nonneg]
+      linarith
+    show 1 ≤ (theta3 (Complex.I * (y : ℂ))).re
+    unfold theta3; exact h_jt_ge
+  -- Positivity helper for `θ_2(iu).re`: it equals `exp(-πu/4)·∑_{n ∈ ℤ} exp(-πu·n(n+1)) > 0`.
+  have h_theta2_pos : ∀ u : ℝ, 0 < u → 0 < (theta2 (Complex.I * (u : ℂ))).re := by
+    intros u hu
+    have h_uim : 0 < (Complex.I * (u : ℂ)).im := by
+      simp only [Complex.mul_im, Complex.I_re, Complex.ofReal_im, mul_zero, Complex.I_im,
+        Complex.ofReal_re, one_mul, zero_add]
+      exact hu
+    -- jacobiTheta₂_term n (iu/2) (iu) = exp(-π·u·n(n+1)) (real positive).
+    have h_jt2_term : ∀ n : ℤ,
+        jacobiTheta₂_term n (Complex.I * (u : ℂ) / 2) (Complex.I * (u : ℂ)) =
+          ((Real.exp (-Real.pi * u * (n : ℝ) * ((n : ℝ) + 1)) : ℝ) : ℂ) := by
+      intro n
+      unfold jacobiTheta₂_term
+      have h_arg : 2 * (Real.pi : ℂ) * Complex.I * (n : ℂ) *
+          (Complex.I * (u : ℂ) / 2) +
+          (Real.pi : ℂ) * Complex.I * (n : ℂ) ^ 2 *
+          (Complex.I * (u : ℂ)) =
+          ((-Real.pi * u * (n : ℝ) * ((n : ℝ) + 1) : ℝ) : ℂ) := by
+        push_cast; ring_nf
+        rw [show (Complex.I) ^ 2 = -1 from Complex.I_sq]; ring
+      rw [h_arg, ← Complex.ofReal_exp]
+    have h_sum := hasSum_jacobiTheta₂_term (Complex.I * (u : ℂ) / 2) h_uim
+    have h_sum' : HasSum (fun n : ℤ =>
+        ((Real.exp (-Real.pi * u * (n : ℝ) * ((n : ℝ) + 1)) : ℝ) : ℂ))
+        (jacobiTheta₂ (Complex.I * (u : ℂ) / 2) (Complex.I * (u : ℂ))) := by
+      convert h_sum using 1; funext n; exact (h_jt2_term n).symm
+    have h_sum_re : HasSum (fun n : ℤ => Real.exp (-Real.pi * u * (n : ℝ) * ((n : ℝ) + 1)))
+        (jacobiTheta₂ (Complex.I * (u : ℂ) / 2) (Complex.I * (u : ℂ))).re := by
+      have h_map := h_sum'.map Complex.reCLM Complex.reCLM.continuous
+      simp only [Complex.reCLM_apply, Complex.ofReal_re, Function.comp_def] at h_map
+      exact h_map
+    -- Sum of positives > 0 (e.g., term at n=0 is exp(0) = 1).
+    have h_jt2_pos : 0 < (jacobiTheta₂ (Complex.I * (u : ℂ) / 2) (Complex.I * (u : ℂ))).re := by
+      rw [← h_sum_re.tsum_eq]
+      have h_term_nonneg : ∀ n : ℤ,
+          0 ≤ Real.exp (-Real.pi * u * (n : ℝ) * ((n : ℝ) + 1)) := fun n => (Real.exp_pos _).le
+      have h_term0_pos' : 0 < Real.exp (-Real.pi * u * ((0 : ℤ) : ℝ) * (((0 : ℤ) : ℝ) + 1)) :=
+        Real.exp_pos _
+      exact lt_of_lt_of_le h_term0_pos' (Summable.le_tsum h_sum_re.summable 0
+        (fun n _ => h_term_nonneg n))
+    -- θ_2(iu).re = exp(-πu/4) · jacobiTheta₂(iu/2, iu).re > 0.
+    unfold theta2
+    have h_arg : (Real.pi : ℂ) * Complex.I * (Complex.I * (u : ℂ)) / 4 =
+        ((-Real.pi * u / 4 : ℝ) : ℂ) := by
+      push_cast; ring_nf
+      rw [show (Complex.I) ^ 2 = -1 from Complex.I_sq]; ring
+    rw [h_arg, ← Complex.ofReal_exp, Complex.re_ofReal_mul]
+    exact mul_pos (Real.exp_pos _) h_jt2_pos
+  -- Positivity helper for `θ_4(iy).re`: from `θ_4(iy)·√y = θ_2(i/y)` and θ_2 > 0.
+  have h_theta4_pos : ∀ y : ℝ, 0 < y → 0 < (theta4 (Complex.I * (y : ℂ))).re := by
+    intros y hy
+    have h_mod := theta4_iy_mul_sqrt_eq_theta2 hy
+    have hsy_pos : 0 < Real.sqrt y := Real.sqrt_pos.mpr hy
+    have h_uim_eq : Complex.I / (y : ℂ) = Complex.I * ((1/y : ℝ) : ℂ) := by
+      have hy_ne : (y : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr (ne_of_gt hy)
+      push_cast; field_simp
+    rw [h_uim_eq] at h_mod
+    have hu_pos : 0 < 1/y := one_div_pos.mpr hy
+    have h_t2_pos := h_theta2_pos (1/y) hu_pos
+    have h_t4_re_sq_pos : 0 < (theta4 (Complex.I * (y : ℂ))).re * Real.sqrt y := by
+      rw [h_mod]; exact h_t2_pos
+    have h_sy_ne : Real.sqrt y ≠ 0 := ne_of_gt hsy_pos
+    have h_t4_eq : (theta4 (Complex.I * (y : ℂ))).re =
+        ((theta4 (Complex.I * (y : ℂ))).re * Real.sqrt y) / Real.sqrt y := by
+      field_simp
+    rw [h_t4_eq]
+    exact div_pos h_t4_re_sq_pos hsy_pos
+  -- Now combine: 1 - λ(iy).re = (θ_4(iy).re / θ_3(iy).re)^4, and the ratio is strictly increasing.
+  -- Key algebraic step.
+  have h_lambda_eq : ∀ y : ℝ, 0 < y →
+      1 - (modularLambdaH (Complex.I * (y : ℂ))).re =
+        ((theta4 (Complex.I * (y : ℂ))).re / (theta3 (Complex.I * (y : ℂ))).re)^4 := by
+    intros y hy
+    have h_yim : 0 < (Complex.I * (y : ℂ)).im := by
+      simp only [Complex.mul_im, Complex.I_re, Complex.ofReal_im, mul_zero, Complex.I_im,
+        Complex.ofReal_re, one_mul, zero_add]
+      exact hy
+    have h_jacobi : theta2 (Complex.I * (y : ℂ)) ^ 4 +
+        theta4 (Complex.I * (y : ℂ)) ^ 4 =
+        theta3 (Complex.I * (y : ℂ)) ^ 4 := jacobi_identity h_yim
+    have hne3 : theta3 (Complex.I * (y : ℂ)) ≠ 0 := theta3_ne_zero h_yim
+    have h_one_sub : (1 : ℂ) - modularLambdaH (Complex.I * (y : ℂ)) =
+        theta4 (Complex.I * (y : ℂ)) ^ 4 / theta3 (Complex.I * (y : ℂ)) ^ 4 := by
+      unfold modularLambdaH
+      field_simp
+      linear_combination -h_jacobi
+    have h4_im : (theta4 (Complex.I * (y : ℂ))).im = 0 := theta4_pure_imag_real hy
+    have h3_im : (theta3 (Complex.I * (y : ℂ))).im = 0 := theta3_pure_imag_real hy
+    have h_t4_eq : theta4 (Complex.I * (y : ℂ)) =
+        ((theta4 (Complex.I * (y : ℂ))).re : ℂ) := by
+      apply Complex.ext <;> simp [h4_im]
+    have h_t3_eq : theta3 (Complex.I * (y : ℂ)) =
+        ((theta3 (Complex.I * (y : ℂ))).re : ℂ) := by
+      apply Complex.ext <;> simp [h3_im]
+    have h_quot_eq : theta4 (Complex.I * (y : ℂ)) ^ 4 /
+        theta3 (Complex.I * (y : ℂ)) ^ 4 =
+        ((((theta4 (Complex.I * (y : ℂ))).re /
+        (theta3 (Complex.I * (y : ℂ))).re) ^ 4 : ℝ) : ℂ) := by
+      conv_lhs => rw [h_t4_eq, h_t3_eq]
+      push_cast; ring
+    rw [h_quot_eq] at h_one_sub
+    have h_re_eq : ((1 : ℂ) - modularLambdaH (Complex.I * (y : ℂ))).re =
+        (((theta4 (Complex.I * (y : ℂ))).re /
+        (theta3 (Complex.I * (y : ℂ))).re) ^ 4 : ℝ) := by
+      rw [h_one_sub, Complex.ofReal_re]
+    have h_sub_re : ((1 : ℂ) - modularLambdaH (Complex.I * (y : ℂ))).re =
+        1 - (modularLambdaH (Complex.I * (y : ℂ))).re := by simp
+    rw [h_sub_re] at h_re_eq
+    exact h_re_eq
+  -- Apply for y1, y2.
+  have h_t3_1 := h_theta3_pos y1 hy1_pos
+  have h_t3_2 := h_theta3_pos y2 hy2_pos
+  have h_t4_1 := h_theta4_pos y1 hy1_pos
+  have h_t4_2 := h_theta4_pos y2 hy2_pos
+  have h_t3_1_pos : 0 < (theta3 (Complex.I * (y1 : ℂ))).re := lt_of_lt_of_le zero_lt_one h_t3_1
+  have h_t3_2_pos : 0 < (theta3 (Complex.I * (y2 : ℂ))).re := lt_of_lt_of_le zero_lt_one h_t3_2
+  -- θ_4(iy_1).re < θ_4(iy_2).re from `theta4_iy_strictMono`.
+  have h_t4_lt : (theta4 (Complex.I * (y1 : ℂ))).re < (theta4 (Complex.I * (y2 : ℂ))).re :=
+    theta4_iy_strictMono hy1_pos hy2_pos h_y12
+  -- θ_3(iy_2).re < θ_3(iy_1).re from `theta3_iy_strictAntitone`.
+  have h_t3_lt : (theta3 (Complex.I * (y2 : ℂ))).re < (theta3 (Complex.I * (y1 : ℂ))).re :=
+    theta3_iy_strictAntitone hy1_pos hy2_pos h_y12
+  -- Ratio θ_4/θ_3 strictly increases.
+  have h_ratio_lt : (theta4 (Complex.I * (y1 : ℂ))).re / (theta3 (Complex.I * (y1 : ℂ))).re <
+      (theta4 (Complex.I * (y2 : ℂ))).re / (theta3 (Complex.I * (y2 : ℂ))).re := by
+    rw [div_lt_div_iff₀ h_t3_1_pos h_t3_2_pos]
+    -- Goal: θ_4(iy_1) · θ_3(iy_2) < θ_4(iy_2) · θ_3(iy_1).
+    -- Bound θ_4(iy_1) · θ_3(iy_2) < θ_4(iy_2) · θ_3(iy_2) ≤ θ_4(iy_2) · θ_3(iy_1).
+    have h_step1 : (theta4 (Complex.I * (y1 : ℂ))).re * (theta3 (Complex.I * (y2 : ℂ))).re <
+        (theta4 (Complex.I * (y2 : ℂ))).re * (theta3 (Complex.I * (y2 : ℂ))).re :=
+      mul_lt_mul_of_pos_right h_t4_lt h_t3_2_pos
+    have h_step2 : (theta4 (Complex.I * (y2 : ℂ))).re * (theta3 (Complex.I * (y2 : ℂ))).re <
+        (theta4 (Complex.I * (y2 : ℂ))).re * (theta3 (Complex.I * (y1 : ℂ))).re :=
+      mul_lt_mul_of_pos_left h_t3_lt h_t4_2
+    linarith
+  -- The ratios are positive.
+  have h_r1_pos : 0 < (theta4 (Complex.I * (y1 : ℂ))).re / (theta3 (Complex.I * (y1 : ℂ))).re :=
+    div_pos h_t4_1 h_t3_1_pos
+  have h_r2_pos : 0 < (theta4 (Complex.I * (y2 : ℂ))).re / (theta3 (Complex.I * (y2 : ℂ))).re :=
+    div_pos h_t4_2 h_t3_2_pos
+  -- Fourth powers preserve strict order on positives.
+  have h_pow_lt : ((theta4 (Complex.I * (y1 : ℂ))).re / (theta3 (Complex.I * (y1 : ℂ))).re)^4 <
+      ((theta4 (Complex.I * (y2 : ℂ))).re / (theta3 (Complex.I * (y2 : ℂ))).re)^4 :=
+    pow_lt_pow_left₀ h_ratio_lt h_r1_pos.le (by norm_num)
+  -- Conclude.
+  show (modularLambdaH (Complex.I * (y2 : ℂ))).re < (modularLambdaH (Complex.I * (y1 : ℂ))).re
+  have h_eq1 := h_lambda_eq y1 hy1_pos
+  have h_eq2 := h_lambda_eq y2 hy2_pos
+  linarith
 
 /-- **Left boundary arc of `F`: `λ(iy) ∈ ℝ`.** For every `y > 0`,
 `modularLambdaH(iy)` is real. This is the boundary correspondence for
@@ -1569,45 +2254,6 @@ theorem modularLambdaH_cusp_zero_tendsto_one_in_F :
     _ < ε * 1 := mul_lt_mul_of_pos_left h_exp_neg_pi_lt hε_pos
     _ = ε := by ring
 
-/-- **Cusp 1 asymptotic in `F^o` (the deep step).** There is a
-neighbourhood of `1` in which every point of `F^o` has `Im λ ≥ 0`.
-
-The proof uses the T-shift identity
-`λ(τ) = λ(τ − 1)/(λ(τ − 1) − 1)`, the cusp-0 limit `λ(τ−1) → 1` for
-`τ − 1` approaching `0` from the `F^o`-shifted region (i.e., from the
-upper-left quadrant minus the reflected semicircle), and the
-q'-expansion `δ := λ(τ−1) − 1 = −λ(−1/(τ−1)) ≈ −16 q'` where
-`q' := exp(πi · (−1/(τ−1)))`. The `F^o`-shifted constraint
-`‖2(τ−1) + 1‖ > 1` forces `arg(q') ∈ (0, π)` (equivalently,
-`Re(−1/(τ−1)) ∈ (0, 1)`), so `Im(q') > 0` in the leading order.
-
-**Available infrastructure.** Two Schwarz reflection identities for
-`λ` are now closed axiom-clean:
-
-* `modularLambdaH_schwarz_reflect_re_one`: `λ(2 − conj τ) = conj(λ τ)`,
-  Schwarz reflection through the line `Re τ = 1` (composition of
-  `modularLambdaH_conj_symmetry` and `modularLambdaH_sub_two`).
-* `modularLambdaH_schwarz_reflect_semicircle`:
-  `λ(conj τ/(2·conj τ − 1)) = conj(λ τ)`, Schwarz reflection through
-  the F^o boundary semicircle `|τ − 1/2| = 1/2` (composition of
-  `modularLambdaH_div_two_tau_add_one` inverted and
-  `modularLambdaH_conj_symmetry`).
-
-**Remaining work for closure.** With both Schwarz reflections in
-place, the local orientation argument at each boundary point
-determines the sign of `Im λ` on the F^o side via the inverse function
-theorem. For `τ₀ = 1 + iy₀ ∈ Re τ = 1`: `λ` real, `λ'(τ₀) ≠ 0`, so
-`λ` is locally conformal at `τ₀`, mapping the F^o side `Re < 1` to
-one half-plane (the half-plane is determined by the
-`modularLambdaH_im_pos_at_witness`). For `τ₀ ∈ F^o` boundary
-semicircle: analogous orientation argument via the semicircle
-reflection. Combined with preconnectedness of F^o near 1, this gives
-`Im λ ≥ 0` on F^o ∩ B(1, δ). -/
-theorem modularLambdaH_cusp_one_im_nonneg_nbhd_in_F :
-    ∃ δ : ℝ, 0 < δ ∧ ∀ τ ∈ Gamma2FundamentalDomainInterior,
-      ‖τ - 1‖ ≤ δ → 0 ≤ (modularLambdaH τ).im := by
-  sorry
-
 /-- **Sub-lemma for Step A (Phragmén–Lindelöf statement): `Im(λ) ≥ 0`
 on `F^o`.**
 
@@ -1645,6 +2291,1243 @@ exhausts `F^o`. -/
 theorem modularLambdaH_im_nonneg_on_F :
     ∀ τ ∈ Gamma2FundamentalDomainInterior, 0 ≤ (modularLambdaH τ).im := by
   sorry
+
+/-- Helper for `modularLambdaH_im_nonneg_strip_interior_band`: `exp π > 22`.
+Used to derive `r := exp(−πY) < 1/22` when `Y ≥ 1`. -/
+theorem exp_pi_gt_22 : (22 : ℝ) < Real.exp Real.pi := by
+  have he1 : (2.7 : ℝ) < Real.exp 1 := by linarith [Real.exp_one_gt_d9]
+  have he3_pow : (2.7 : ℝ)^3 < (Real.exp 1)^3 :=
+    pow_lt_pow_left₀ he1 (by norm_num) (by norm_num)
+  have he3_eq : (Real.exp 1)^3 = Real.exp 3 := by
+    rw [show (3 : ℝ) = 1 + 1 + 1 from by ring, Real.exp_add, Real.exp_add]
+    ring
+  have he3 : (19.683 : ℝ) < Real.exp 3 := by
+    rw [← he3_eq]
+    have : (2.7 : ℝ)^3 = 19.683 := by norm_num
+    linarith
+  have he014 : (1.14 : ℝ) < Real.exp 0.14 := by
+    have h_add : (0.14 : ℝ) ≠ 0 := by norm_num
+    have h := Real.add_one_lt_exp h_add
+    linarith
+  have he314_eq : Real.exp 3.14 = Real.exp 3 * Real.exp 0.14 := by
+    rw [← Real.exp_add]; congr 1; norm_num
+  have he314 : (22 : ℝ) < Real.exp 3.14 := by
+    rw [he314_eq]
+    have hpos3 : 0 < Real.exp 3 := Real.exp_pos _
+    have h_prod : (19.683 : ℝ) * 1.14 ≤ Real.exp 3 * Real.exp 0.14 := by
+      apply mul_le_mul he3.le he014.le (by norm_num) hpos3.le
+    have h_lt : (22 : ℝ) < 19.683 * 1.14 := by norm_num
+    linarith
+  have h_pi : (3.14 : ℝ) < Real.pi := by linarith [Real.pi_gt_d4]
+  exact lt_of_lt_of_le he314 (Real.exp_le_exp.mpr h_pi.le)
+
+/-- Helper: `√2 < 1.42`. -/
+theorem sqrt_two_lt_142 : Real.sqrt 2 < 1.42 := by
+  have h1 : Real.sqrt 2 < Real.sqrt ((1.42 : ℝ)^2) := by
+    apply Real.sqrt_lt_sqrt (by norm_num : (0:ℝ) ≤ 2)
+    norm_num
+  rwa [Real.sqrt_sq (by norm_num : (0:ℝ) ≤ 1.42)] at h1
+
+/-- Helper: `1.41 < √2`. -/
+theorem sqrt_two_gt_141 : (1.41 : ℝ) < Real.sqrt 2 := by
+  have h1 : Real.sqrt ((1.41 : ℝ)^2) < Real.sqrt 2 := by
+    apply Real.sqrt_lt_sqrt (by positivity : (0:ℝ) ≤ (1.41 : ℝ)^2)
+    norm_num
+  rwa [Real.sqrt_sq (by norm_num : (0:ℝ) ≤ 1.41)] at h1
+
+/-- Helper: `cos(π/8) < 0.926`. Uses `cos(π/8) = √(2 + √2)/2` and `√2 < 1.42`. -/
+theorem cos_pi_div_eight_lt_926 : Real.cos (Real.pi / 8) < 0.926 := by
+  rw [Real.cos_pi_div_eight]
+  have h_inner_nn : (0 : ℝ) ≤ 2 + Real.sqrt 2 := by
+    have := Real.sqrt_nonneg 2; linarith
+  have h_1852_sq : ((1.852 : ℝ))^2 = 3.429904 := by norm_num
+  have h_inner_lt_pow : (2 : ℝ) + Real.sqrt 2 < (1.852 : ℝ)^2 := by
+    rw [h_1852_sq]; linarith [sqrt_two_lt_142]
+  have h_step : Real.sqrt (2 + Real.sqrt 2) < Real.sqrt ((1.852 : ℝ)^2) :=
+    Real.sqrt_lt_sqrt h_inner_nn h_inner_lt_pow
+  rw [Real.sqrt_sq (by norm_num : (0:ℝ) ≤ 1.852)] at h_step
+  linarith
+
+/-- Helper: `sin(π/8) > 0.38`. Uses `sin(π/8) = √(2 − √2)/2` and `√2 < 1.42`. -/
+theorem sin_pi_div_eight_gt_38 : (0.38 : ℝ) < Real.sin (Real.pi / 8) := by
+  rw [Real.sin_pi_div_eight]
+  have h_inner_nn : (0 : ℝ) ≤ 2 - Real.sqrt 2 := by linarith [sqrt_two_lt_142]
+  have h_076_sq : ((0.76 : ℝ))^2 = 0.5776 := by norm_num
+  have h_inner_gt_pow : ((0.76 : ℝ))^2 < 2 - Real.sqrt 2 := by
+    rw [h_076_sq]; linarith [sqrt_two_lt_142]
+  have h_step : Real.sqrt ((0.76 : ℝ)^2) < Real.sqrt (2 - Real.sqrt 2) :=
+    Real.sqrt_lt_sqrt (by positivity : (0:ℝ) ≤ (0.76 : ℝ)^2) h_inner_gt_pow
+  rw [Real.sqrt_sq (by norm_num : (0:ℝ) ≤ 0.76)] at h_step
+  linarith
+
+/-- Helper: bracket lower bound for `modularLambdaH_im_nonneg_strip_interior_band`.
+For `c ≤ cπ8`, `0 < cπ8 ≤ 1`, and `r ∈ (0, 1/22)`, the bracket
+`B(c, r) := 16r − 256 r² c + 704 r³ (4c² − 1)` satisfies
+`B(c, r) ≥ B(cπ8, r)`.
+Proof via the algebraic identity
+`B(c, r) − B(cπ8, r) = 256 r² (cπ8 − c)·(1 − 11r(c + cπ8))`. -/
+theorem interior_band_bracket_lower_bound (r c cπ8 : ℝ)
+    (hr_pos : 0 < r) (hr_lt : r < 1/22)
+    (hcπ8_pos : 0 < cπ8) (hcπ8_le_one : cπ8 ≤ 1)
+    (h_cos_ub : c ≤ cπ8) :
+    16 * r - 256 * r^2 * c + 704 * r^3 * (4 * c^2 - 1) ≥
+      16 * r - 256 * r^2 * cπ8 + 704 * r^3 * (4 * cπ8^2 - 1) := by
+  have h_cπ8_minus_c : 0 ≤ cπ8 - c := by linarith
+  have h_sum_le : c + cπ8 ≤ 2 * cπ8 := by linarith
+  have h_one_minus_pos : 0 ≤ 1 - 11 * r * (c + cπ8) := by
+    have h_step1 : 11 * r * (c + cπ8) ≤ 11 * r * (2 * cπ8) := by
+      have h_11r_pos : 0 ≤ 11 * r := by linarith
+      exact mul_le_mul_of_nonneg_left h_sum_le h_11r_pos
+    have h_step2 : 11 * r * (2 * cπ8) = 22 * r * cπ8 := by ring
+    have h_step3 : 22 * r * cπ8 < 1 * cπ8 := by
+      apply mul_lt_mul_of_pos_right _ hcπ8_pos
+      linarith
+    have h_step4 : 1 * cπ8 ≤ 1 := by linarith
+    linarith
+  have h_r_sq_pos : 0 ≤ 256 * r^2 := by positivity
+  have h_diff_nn : 0 ≤ 256 * r^2 * (cπ8 - c) * (1 - 11 * r * (c + cπ8)) := by
+    apply mul_nonneg
+    · apply mul_nonneg h_r_sq_pos h_cπ8_minus_c
+    · exact h_one_minus_pos
+  have h_identity :
+      (16 * r - 256 * r^2 * c + 704 * r^3 * (4 * c^2 - 1)) -
+      (16 * r - 256 * r^2 * cπ8 + 704 * r^3 * (4 * cπ8^2 - 1)) =
+      256 * r^2 * (cπ8 - c) * (1 - 11 * r * (c + cπ8)) := by
+    ring
+  linarith [h_diff_nn, h_identity]
+
+/-- Helper polynomial inequality for `modularLambdaH_im_nonneg_strip_interior_band`.
+For `r ∈ (0, 1/22)`,
+`0.38 · (16r − 237.056 r² + 1696.64 r³) ≥ 32768 r⁴`.
+Proof via Horner factorization `r · g(r)` where
+`g(r) := 6.08 − 90.08128 r + 644.7232 r² − 32768 r³ ≥ 0.23`. -/
+theorem interior_band_polynomial_inequality (r : ℝ)
+    (hr_pos : 0 < r) (hr_lt : r < 1/22) :
+    0.38 * (16 * r - 237.056 * r^2 + 1696.64 * r^3) ≥ 32768 * r^4 := by
+  have hr_le : r ≤ 1/22 := le_of_lt hr_lt
+  have h_r2_le : r^2 ≤ 1/484 := by
+    have h_step1 : r * r ≤ r * (1/22) :=
+      mul_le_mul_of_nonneg_left hr_le (le_of_lt hr_pos)
+    have h_step2 : r * (1/22 : ℝ) ≤ (1/22) * (1/22) :=
+      mul_le_mul_of_nonneg_right hr_le (by norm_num)
+    have h_eq_sq : r^2 = r * r := sq r
+    have h_eq_const : (1/22 : ℝ) * (1/22) = 1/484 := by norm_num
+    linarith
+  have h_inner_lb : (644.7232 : ℝ) - 32768 * r ≥ -845 := by
+    have h_le : 32768 * r ≤ 32768 * (1/22 : ℝ) :=
+      mul_le_mul_of_nonneg_left hr_le (by norm_num)
+    have h_val : (32768 : ℝ) * (1/22) ≤ 1489.7232 := by norm_num
+    linarith
+  have h_90r : 90.08128 * r ≤ 4.1 := by
+    have h_le : 90.08128 * r ≤ 90.08128 * (1/22 : ℝ) :=
+      mul_le_mul_of_nonneg_left hr_le (by norm_num)
+    have h_val : (90.08128 : ℝ) * (1/22) ≤ 4.1 := by norm_num
+    linarith
+  have h_845r2 : 845 * r^2 ≤ 1.75 := by
+    have h_le : 845 * r^2 ≤ 845 * (1/484 : ℝ) :=
+      mul_le_mul_of_nonneg_left h_r2_le (by norm_num)
+    have h_val : (845 : ℝ) * (1/484) ≤ 1.75 := by norm_num
+    linarith
+  have h_horner_eq : (6.08 : ℝ) - 90.08128 * r + 644.7232 * r^2 - 32768 * r^3 =
+      6.08 + r * (-90.08128 + r * (644.7232 - 32768 * r)) := by ring
+  have h_outer_eq : r * (-90.08128 - 845 * r) = -(90.08128 * r) - 845 * r^2 := by ring
+  have h_middle : -90.08128 + r * (644.7232 - 32768 * r) ≥ -90.08128 - 845 * r := by
+    have h_mul : r * (644.7232 - 32768 * r) ≥ r * (-845) :=
+      mul_le_mul_of_nonneg_left h_inner_lb (le_of_lt hr_pos)
+    have h_eq : r * (-845 : ℝ) = -(845 * r) := by ring
+    linarith
+  have h_outer : r * (-90.08128 + r * (644.7232 - 32768 * r)) ≥
+      r * (-90.08128 - 845 * r) :=
+    mul_le_mul_of_nonneg_left h_middle (le_of_lt hr_pos)
+  have h_g_lb : (6.08 : ℝ) - 90.08128 * r + 644.7232 * r^2 - 32768 * r^3 ≥ 0.23 := by
+    linarith
+  have h_f_eq : (0.38 : ℝ) * (16 * r - 237.056 * r^2 + 1696.64 * r^3) - 32768 * r^4 =
+      r * (6.08 - 90.08128 * r + 644.7232 * r^2 - 32768 * r^3) := by ring
+  have h_f_ge : r * (6.08 - 90.08128 * r + 644.7232 * r^2 - 32768 * r^3) ≥ r * 0.23 :=
+    mul_le_mul_of_nonneg_left h_g_lb (le_of_lt hr_pos)
+  have h_r023_nn : (0 : ℝ) ≤ r * 0.23 :=
+    mul_nonneg (le_of_lt hr_pos) (by norm_num)
+  linarith
+
+/-- **Interior band of the strip claim: `Im λ ≥ 0` on
+`{Re ∈ [1/8, 7/8], Im ≥ 1}`.**
+
+The three-term q-expansion
+`‖λ(w) − 16q + 128q² − 704q³‖ ≤ 32768 exp(−4π·Im w)` combined with the
+algebraic identity `Im(16q − 128q² + 704q³) = sin(πX)·B(Y, X)` where
+`B(Y, X) := 16 exp(−πY) − 256 exp(−2πY)·cos(πX) +
+704 exp(−3πY)·(4cos²(πX) − 1)`.
+
+At the worst case `Y = 1, X = 1/8` (or `X = 7/8` by symmetry):
+* `sin(π/8) = √(2 − √2)/2 > 0.382`
+* `cos(π/8) = √(2 + √2)/2 < 0.925`
+* `B(1, 1/8) > 0.387` (computed via `Real.pi_lt_d6`, `Real.exp_one_gt_d9`).
+* `Im(leading) > 0.382 · 0.387 ≈ 0.148`.
+* Error `32768 · exp(−4π) < 0.117`.
+* Margin `≈ 0.030`, formalizable via Mathlib's tight bounds.
+
+For larger `Y`, the margin grows since the error decays as `exp(−4πY)`
+while the leading decays only as `exp(−πY)`. -/
+theorem modularLambdaH_im_nonneg_strip_interior_band (w : ℂ)
+    (hw_re_lo : (1 : ℝ) / 8 ≤ w.re) (hw_re_hi : w.re ≤ 7 / 8)
+    (hw_im_ge : 1 ≤ w.im) :
+    0 ≤ (modularLambdaH w).im := by
+  -- Strategy: apply three-term q-expansion bound, then verify
+  -- Im(16q − 128q² + 704q³) − error ≥ 0 via tight numerical bounds.
+  set Y := w.im with hY_def
+  set X := w.re with hX_def
+  have hY_pos : 0 < Y := by linarith
+  have hY_one : 1 ≤ Y := hw_im_ge
+  -- The argument of `q := exp(πi·w)` decomposes as
+  -- `exp(πi·w) = exp(−π·Y) · exp(πi·X)`.
+  -- Hence `q.re = exp(−πY)·cos(πX)` and `q.im = exp(−πY)·sin(πX)`.
+  have hπ_pos : 0 < Real.pi := Real.pi_pos
+  -- Set q := exp(π·I·w), then compute real/imaginary parts.
+  set q : ℂ := Complex.exp (Real.pi * Complex.I * w) with hq_def
+  have h_argq : (Real.pi * Complex.I * w).re = -Real.pi * Y := by
+    simp [Complex.mul_re, Complex.mul_im, Complex.I_re, Complex.I_im, hY_def, Complex.ofReal_re,
+      Complex.ofReal_im]
+  have h_argq_im : (Real.pi * Complex.I * w).im = Real.pi * X := by
+    simp [Complex.mul_re, Complex.mul_im, Complex.I_re, Complex.I_im, hX_def, Complex.ofReal_re,
+      Complex.ofReal_im]
+  -- |q| = exp(-πY).
+  have hq_norm : ‖q‖ = Real.exp (-Real.pi * Y) := by
+    rw [hq_def, Complex.norm_exp, h_argq]
+  -- Apply three-term q-expansion bound.
+  set Q2 : ℂ := Complex.exp (2 * Real.pi * Complex.I * w) with hQ2_def
+  set Q3 : ℂ := Complex.exp (3 * Real.pi * Complex.I * w) with hQ3_def
+  have h_three_term : ‖modularLambdaH w - 16 * q + 128 * Q2 - 704 * Q3‖ ≤
+      32768 * Real.exp (-4 * Real.pi * Y) := by
+    have := modularLambdaH_norm_sub_three_term_le_of_im_ge_one (τ := w) hY_one
+    rwa [← hq_def, ← hQ2_def, ← hQ3_def] at this
+  -- Q2 = q^2, Q3 = q^3.
+  have hQ2_eq : Q2 = q^2 := by
+    rw [hQ2_def, hq_def, ← Complex.exp_nat_mul]
+    congr 1; push_cast; ring
+  have hQ3_eq : Q3 = q^3 := by
+    rw [hQ3_def, hq_def, ← Complex.exp_nat_mul]
+    congr 1; push_cast; ring
+  -- Set r := exp(-πY) and the trig values.
+  set r : ℝ := Real.exp (-Real.pi * Y) with hr_def
+  have hr_pos : 0 < r := Real.exp_pos _
+  -- q.re = r·cos(πX), q.im = r·sin(πX).
+  -- The decomposition `π·I·w = (−π·Y) + (π·X)·I` (real/imag parts).
+  have h_decomp : Real.pi * Complex.I * w =
+      ((-Real.pi * Y : ℝ) : ℂ) + ((Real.pi * X : ℝ) : ℂ) * Complex.I := by
+    have hw_decomp : w = (X : ℂ) + (Y : ℂ) * Complex.I := by
+      apply Complex.ext
+      · simp [Complex.add_re, Complex.mul_re, Complex.ofReal_re, Complex.ofReal_im,
+          Complex.I_re, Complex.I_im, hX_def]
+      · simp [Complex.add_im, Complex.mul_im, Complex.ofReal_re, Complex.ofReal_im,
+          Complex.I_re, Complex.I_im, hY_def]
+    rw [hw_decomp]
+    push_cast
+    have hI_sq : Complex.I * Complex.I = -1 := Complex.I_mul_I
+    linear_combination (Real.pi * Y) * hI_sq
+  have hq_re_eq : q.re = r * Real.cos (Real.pi * X) := by
+    rw [hq_def, h_decomp, Complex.exp_add, Complex.exp_ofReal_mul_I,
+      Complex.mul_re, Complex.exp_ofReal_re, Complex.exp_ofReal_im]
+    simp only [Complex.add_re, Complex.add_im, Complex.mul_re, Complex.mul_im,
+      Complex.ofReal_re, Complex.ofReal_im, Complex.I_re, Complex.I_im]
+    rw [show r = Real.exp (-Real.pi * Y) from hr_def]
+    ring
+  have hq_im_eq : q.im = r * Real.sin (Real.pi * X) := by
+    rw [hq_def, h_decomp, Complex.exp_add, Complex.exp_ofReal_mul_I,
+      Complex.mul_im, Complex.exp_ofReal_re, Complex.exp_ofReal_im]
+    simp only [Complex.add_re, Complex.add_im, Complex.mul_re, Complex.mul_im,
+      Complex.ofReal_re, Complex.ofReal_im, Complex.I_re, Complex.I_im]
+    rw [show r = Real.exp (-Real.pi * Y) from hr_def]
+    ring
+  -- Q2.im = r² · sin(2πX) = 2 r² sin(πX) cos(πX).
+  -- Q3.im = r³ · sin(3πX) = r³ sin(πX) (4cos²(πX) − 1).
+  -- These follow from Q2 = q² and Q3 = q³.
+  have hQ2_re_eq : Q2.re = r^2 * (Real.cos (Real.pi * X))^2 -
+      r^2 * (Real.sin (Real.pi * X))^2 := by
+    rw [hQ2_eq, sq, Complex.mul_re, hq_re_eq, hq_im_eq]; ring
+  have hQ2_im_eq : Q2.im = 2 * r^2 * Real.cos (Real.pi * X) * Real.sin (Real.pi * X) := by
+    rw [hQ2_eq, sq, Complex.mul_im, hq_re_eq, hq_im_eq]; ring
+  have hQ3_im_eq : Q3.im = r^3 * Real.sin (Real.pi * X) *
+      (4 * (Real.cos (Real.pi * X))^2 - 1) := by
+    rw [hQ3_eq, show q^3 = q^2 * q from by ring, Complex.mul_im, ← hQ2_eq,
+      hQ2_re_eq, hQ2_im_eq, hq_re_eq, hq_im_eq]
+    have h_pyth : (Real.sin (Real.pi * X))^2 + (Real.cos (Real.pi * X))^2 = 1 :=
+      Real.sin_sq_add_cos_sq (Real.pi * X)
+    linear_combination -r^3 * Real.sin (Real.pi * X) * h_pyth
+  -- The imaginary part of `16q − 128 Q2 + 704 Q3` factors as
+  -- `sin(πX) · Bracket(Y, X)` with explicit bracket.
+  set s : ℝ := Real.sin (Real.pi * X) with hs_def
+  set c : ℝ := Real.cos (Real.pi * X) with hc_def
+  have h_lead_im : (16 * q - 128 * Q2 + 704 * Q3).im =
+      s * (16 * r - 256 * r^2 * c + 704 * r^3 * (4 * c^2 - 1)) := by
+    simp only [Complex.sub_im, Complex.add_im, Complex.mul_im, Complex.mul_re]
+    simp only [show (16 : ℂ).re = 16 from rfl, show (16 : ℂ).im = 0 from rfl,
+      show (128 : ℂ).re = 128 from rfl, show (128 : ℂ).im = 0 from rfl,
+      show (704 : ℂ).re = 704 from rfl, show (704 : ℂ).im = 0 from rfl]
+    rw [hq_re_eq, hq_im_eq, hQ2_re_eq, hQ2_im_eq, hQ3_im_eq]
+    ring
+  -- Lower bound on `s = sin(πX)` for `X ∈ [1/8, 7/8]`.
+  -- We have πX ∈ [π/8, 7π/8], and sin attains its min on this interval at the
+  -- endpoints, both equal to sin(π/8).
+  have h_piX_lo : Real.pi / 8 ≤ Real.pi * X := by
+    have hX_lo : (1 : ℝ) / 8 ≤ X := hw_re_lo
+    have h_div : Real.pi / 8 = Real.pi * (1 / 8) := by ring
+    rw [h_div]
+    exact mul_le_mul_of_nonneg_left hX_lo hπ_pos.le
+  have h_piX_hi : Real.pi * X ≤ 7 * Real.pi / 8 := by
+    have hX_hi : X ≤ 7 / 8 := hw_re_hi
+    have h_div : 7 * Real.pi / 8 = Real.pi * (7 / 8) := by ring
+    rw [h_div]
+    exact mul_le_mul_of_nonneg_left hX_hi hπ_pos.le
+  have h_piX_pos : 0 < Real.pi * X := by
+    have : 0 < Real.pi / 8 := by positivity
+    linarith
+  have h_piX_lt_pi : Real.pi * X < Real.pi := by
+    have : 7 * Real.pi / 8 < Real.pi := by linarith
+    linarith
+  -- sin(πX) ≥ sin(π/8) using `Real.sin_pos_of_pos_of_lt_pi` and monotonicity on
+  -- the two halves of [0, π].
+  have h_sin_pos : 0 < s := by
+    rw [hs_def]
+    exact Real.sin_pos_of_pos_of_lt_pi h_piX_pos h_piX_lt_pi
+  have h_sin_lb : Real.sin (Real.pi / 8) ≤ s := by
+    rw [hs_def]
+    have h_neg_pi_div_two : -(Real.pi / 2) ≤ Real.pi / 8 := by
+      have : 0 < Real.pi / 2 := by positivity
+      have : 0 ≤ Real.pi / 8 := by positivity
+      linarith
+    by_cases h_X_le_half : X ≤ 1 / 2
+    · -- Case X ∈ [1/8, 1/2]: πX ∈ [π/8, π/2]. sin monotone increasing.
+      have h_piX_le_half : Real.pi * X ≤ Real.pi / 2 := by
+        have h_div : Real.pi / 2 = Real.pi * (1 / 2) := by ring
+        rw [h_div]
+        exact mul_le_mul_of_nonneg_left h_X_le_half hπ_pos.le
+      exact Real.sin_le_sin_of_le_of_le_pi_div_two
+        h_neg_pi_div_two h_piX_le_half h_piX_lo
+    · -- Case X ∈ (1/2, 7/8]: πX ∈ (π/2, 7π/8]. Use symmetry sin(πX) = sin(π − πX).
+      push_neg at h_X_le_half
+      have h_piX_gt_half : Real.pi / 2 < Real.pi * X := by
+        have h_div : Real.pi / 2 = Real.pi * (1 / 2) := by ring
+        rw [h_div]
+        exact mul_lt_mul_of_pos_left h_X_le_half hπ_pos
+      -- sin(πX) = sin(π − πX); π − πX ∈ [π/8, π/2).
+      have h_sin_sym : Real.sin (Real.pi * X) = Real.sin (Real.pi - Real.pi * X) := by
+        rw [Real.sin_pi_sub]
+      rw [h_sin_sym]
+      have h_pi_sub_lo : Real.pi / 8 ≤ Real.pi - Real.pi * X := by linarith
+      have h_pi_sub_hi : Real.pi - Real.pi * X ≤ Real.pi / 2 := by linarith
+      exact Real.sin_le_sin_of_le_of_le_pi_div_two
+        h_neg_pi_div_two h_pi_sub_hi h_pi_sub_lo
+  -- Upper bound on `|c| = |cos(πX)|` by `cos(π/8)` for `X ∈ [1/8, 7/8]`.
+  -- cos is monotone decreasing on `[0, π]`, so cos(πX) ≤ cos(π/8) (using X ≥ 1/8)
+  -- and cos(πX) ≥ cos(7π/8) = -cos(π/8) (using X ≤ 7/8).
+  have h_cos_ub : c ≤ Real.cos (Real.pi / 8) := by
+    rw [hc_def]
+    have h_X_pos : 0 < Real.pi * X := h_piX_pos
+    exact Real.cos_le_cos_of_nonneg_of_le_pi (by positivity)
+      (le_of_lt h_piX_lt_pi) h_piX_lo
+  have h_cos_lb : -Real.cos (Real.pi / 8) ≤ c := by
+    rw [hc_def]
+    -- cos(πX) ≥ cos(7π/8) = -cos(π/8) for πX ≤ 7π/8.
+    have h_cos_at_7_pi_8 : Real.cos (7 * Real.pi / 8) = -Real.cos (Real.pi / 8) := by
+      have h_eq : 7 * Real.pi / 8 = Real.pi - Real.pi / 8 := by ring
+      rw [h_eq, Real.cos_pi_sub]
+    rw [← h_cos_at_7_pi_8]
+    exact Real.cos_le_cos_of_nonneg_of_le_pi (by positivity)
+      (by linarith [Real.pi_pos] : 7 * Real.pi / 8 ≤ Real.pi) h_piX_hi
+  -- Bound on r: r = exp(−πY) ≤ exp(−π) for Y ≥ 1.
+  have hr_le : r ≤ Real.exp (-Real.pi) := by
+    rw [hr_def]
+    apply Real.exp_le_exp.mpr
+    nlinarith [hπ_pos]
+  -- Hence r < 1/22, using `exp(π) > 22` (helper lemma).
+  have hr_lt_22 : r < 1 / 22 := by
+    have h_exp_neg : Real.exp (-Real.pi) < 1 / 22 := by
+      rw [Real.exp_neg]
+      rw [show (Real.exp Real.pi)⁻¹ = 1 / Real.exp Real.pi from by rw [inv_eq_one_div]]
+      exact one_div_lt_one_div_of_lt (by norm_num) exp_pi_gt_22
+    linarith
+  -- Bracket lower bound: B(c, r) ≥ B(cos(π/8), r).
+  -- We use the identity B(c, r) - B(cπ8, r) = 256 r² (cπ8 - c) · (1 - 11 r (c + cπ8))
+  -- and show RHS ≥ 0 for c ≤ cπ8 and r < 1/22 with cπ8 ≤ 1.
+  set cπ8 : ℝ := Real.cos (Real.pi / 8) with hcπ8_def
+  have hcπ8_pos : 0 < cπ8 := by
+    rw [hcπ8_def]
+    have : 0 < Real.pi / 8 := by positivity
+    have h_lt_half : Real.pi / 8 < Real.pi / 2 := by linarith
+    exact Real.cos_pos_of_mem_Ioo ⟨by linarith, h_lt_half⟩
+  have hcπ8_le_one : cπ8 ≤ 1 := by
+    rw [hcπ8_def]; exact Real.cos_le_one _
+  have h_bracket_lb : 16 * r - 256 * r^2 * c + 704 * r^3 * (4 * c^2 - 1) ≥
+      16 * r - 256 * r^2 * cπ8 + 704 * r^3 * (4 * cπ8^2 - 1) :=
+    interior_band_bracket_lower_bound r c cπ8 hr_pos hr_lt_22 hcπ8_pos
+      hcπ8_le_one h_cos_ub
+  -- Numerical bounds (from helper lemmas).
+  have h_sqrt2_gt : (1.41 : ℝ) < Real.sqrt 2 := sqrt_two_gt_141
+  have h_cπ8_lt : cπ8 < 0.926 := by rw [hcπ8_def]; exact cos_pi_div_eight_lt_926
+  have h_sπ8_gt : (0.38 : ℝ) < Real.sin (Real.pi / 8) := sin_pi_div_eight_gt_38
+  -- r^4 = exp(-4πY).
+  have hr4_eq : r^4 = Real.exp (-4 * Real.pi * Y) := by
+    have h_cast : (-4 * Real.pi * Y : ℝ) = ((4 : ℕ) : ℝ) * (-Real.pi * Y) := by
+      push_cast; ring
+    rw [hr_def, h_cast]
+    exact (Real.exp_nat_mul _ _).symm
+  -- Decompose Im λ = err.im + lead.im where lead := 16q - 128Q2 + 704Q3.
+  have h_im_split : (modularLambdaH w).im =
+      (modularLambdaH w - 16 * q + 128 * Q2 - 704 * Q3).im +
+        (16 * q - 128 * Q2 + 704 * Q3).im := by
+    simp only [Complex.sub_im, Complex.add_im, Complex.mul_im, Complex.mul_re]
+    ring
+  -- |err.im| ≤ ‖err‖ ≤ 32768 · r^4.
+  have h_err_abs : |(modularLambdaH w - 16 * q + 128 * Q2 - 704 * Q3).im| ≤
+      32768 * r^4 := by
+    rw [hr4_eq]
+    exact le_trans (Complex.abs_im_le_norm _) h_three_term
+  -- Hence err.im ≥ -32768 · r^4.
+  have h_err_lb : -(32768 * r^4) ≤
+      (modularLambdaH w - 16 * q + 128 * Q2 - 704 * Q3).im :=
+    neg_le_of_abs_le h_err_abs
+  -- 4 cπ8² - 1 = 1 + √2 (from cos²(π/8) = (2 + √2)/4).
+  have h_4cπ8_sq : 4 * cπ8^2 - 1 = 1 + Real.sqrt 2 := by
+    rw [hcπ8_def, Real.cos_pi_div_eight]
+    have h_sqrt_nn : (0 : ℝ) ≤ 2 + Real.sqrt 2 := by
+      have := Real.sqrt_nonneg 2; linarith
+    have h_div_sq : (Real.sqrt (2 + Real.sqrt 2) / 2)^2 =
+        (Real.sqrt (2 + Real.sqrt 2))^2 / 4 := by ring
+    rw [h_div_sq, Real.sq_sqrt h_sqrt_nn]
+    ring
+  -- Hence 4 cπ8² - 1 > 2.41.
+  have h_4cπ8_sq_gt : (2.41 : ℝ) < 4 * cπ8^2 - 1 := by
+    rw [h_4cπ8_sq]; linarith
+  -- Positivity of r^2, r^3.
+  have hr2_pos : 0 < r^2 := pow_pos hr_pos 2
+  have hr3_pos : 0 < r^3 := pow_pos hr_pos 3
+  have hr4_pos : 0 < r^4 := pow_pos hr_pos 4
+  -- B(cπ8, r) > 16r - 237.056 r² + 1696.64 r³ (using cπ8 < 0.926, 4cπ8²-1 > 2.41).
+  have h_B_cπ8_lb :
+      16 * r - 256 * r^2 * cπ8 + 704 * r^3 * (4 * cπ8^2 - 1) >
+        16 * r - 237.056 * r^2 + 1696.64 * r^3 := by
+    have h_term2 : -(256 * r^2 * cπ8) > -(256 * r^2 * 0.926) := by
+      have h_pos : 0 < 256 * r^2 := by linarith
+      have h_mul_lt : 256 * r^2 * cπ8 < 256 * r^2 * 0.926 :=
+        mul_lt_mul_of_pos_left h_cπ8_lt h_pos
+      linarith
+    have h_term3 : 704 * r^3 * (4 * cπ8^2 - 1) > 704 * r^3 * 2.41 := by
+      have h_pos : 0 < 704 * r^3 := by linarith
+      exact mul_lt_mul_of_pos_left h_4cπ8_sq_gt h_pos
+    have h_eq1 : (256 : ℝ) * r^2 * 0.926 = 237.056 * r^2 := by ring
+    have h_eq2 : (704 : ℝ) * r^3 * 2.41 = 1696.64 * r^3 := by ring
+    linarith
+  -- B(c, r) ≥ B(cπ8, r) > 16r - 237.056 r² + 1696.64 r³.
+  have h_B_lb_full :
+      16 * r - 256 * r^2 * c + 704 * r^3 * (4 * c^2 - 1) >
+        16 * r - 237.056 * r^2 + 1696.64 * r^3 := by
+    linarith [h_bracket_lb, h_B_cπ8_lb]
+  -- B(c, r) ≥ 0.
+  -- For r ≤ 1/22, 16r - 237.056 r² > 0 (since r · (16 - 237.056/22) > 0).
+  have h_poly_lb_pos : 0 < 16 * r - 237.056 * r^2 + 1696.64 * r^3 := by
+    have h_1 : (16 : ℝ) - 237.056 * r > 0 := by
+      have : (237.056 : ℝ) * r < 237.056 * (1/22) := by
+        exact mul_lt_mul_of_pos_left hr_lt_22 (by norm_num)
+      linarith
+    have h_2 : 16 * r - 237.056 * r^2 > 0 := by
+      have h_factor : 16 * r - 237.056 * r^2 = r * (16 - 237.056 * r) := by ring
+      rw [h_factor]; exact mul_pos hr_pos h_1
+    linarith [mul_pos (by linarith : (0:ℝ) < 1696.64) hr3_pos]
+  have h_B_pos : 0 < 16 * r - 256 * r^2 * c + 704 * r^3 * (4 * c^2 - 1) := by
+    linarith
+  -- lead.im = s · B(c, r) ≥ 0.38 · B(c, r) ≥ 0.38 · (16r - 237.056 r² + 1696.64 r³).
+  have h_s_lb : (0.38 : ℝ) < s := lt_of_lt_of_le h_sπ8_gt h_sin_lb
+  have h_lead_im_lb :
+      (16 * q - 128 * Q2 + 704 * Q3).im >
+        0.38 * (16 * r - 237.056 * r^2 + 1696.64 * r^3) := by
+    rw [h_lead_im]
+    have h_step1 : (0.38 : ℝ) * (16 * r - 256 * r^2 * c + 704 * r^3 * (4 * c^2 - 1)) <
+        s * (16 * r - 256 * r^2 * c + 704 * r^3 * (4 * c^2 - 1)) :=
+      mul_lt_mul_of_pos_right h_s_lb h_B_pos
+    have h_step2 : (0.38 : ℝ) * (16 * r - 237.056 * r^2 + 1696.64 * r^3) <
+        0.38 * (16 * r - 256 * r^2 * c + 704 * r^3 * (4 * c^2 - 1)) :=
+      mul_lt_mul_of_pos_left h_B_lb_full (by norm_num)
+    linarith
+  -- Polynomial inequality: 0.38·(16r - 237.056r² + 1696.64r³) ≥ 32768 r^4 for r ∈ (0, 1/22).
+  -- Expand: 6.08 r - 90.08128 r² + 644.7232 r³ ≥ 32768 r^4.
+  -- Divide by r > 0: 6.08 - 90.08128 r + 644.7232 r² ≥ 32768 r^3.
+  -- For r ≤ 1/22: 90.08128/22 ≈ 4.0946, 32768/22^3 ≈ 3.0779, gap ≈ 2 with r² term help.
+  have h_poly_ineq : 0.38 * (16 * r - 237.056 * r^2 + 1696.64 * r^3) ≥ 32768 * r^4 :=
+    interior_band_polynomial_inequality r hr_pos hr_lt_22
+  -- Now combine: lead.im > 0.38 · (...) ≥ 32768 r^4 ≥ -err.im, so lead.im + err.im > 0.
+  rw [h_im_split]
+  linarith
+
+/-- **General T-shift form for `λ`.** For `τ ∈ ℍ`,
+`λ(τ + 1) = λ(τ)/(λ(τ) − 1)`.
+Derived from `modularLambdaH_T_smul` (`λ(τ + 1) = −θ₂(τ)⁴/θ₄(τ)⁴`)
+and the Jacobi identity `θ₂⁴ + θ₄⁴ = θ₃⁴`. -/
+theorem modularLambdaH_add_one_eq_div_sub_one {τ : ℂ} (hτ : 0 < τ.im) :
+    modularLambdaH (τ + 1) = modularLambdaH τ / (modularLambdaH τ - 1) := by
+  have h_jacobi : theta2 τ ^ 4 + theta4 τ ^ 4 = theta3 τ ^ 4 := jacobi_identity hτ
+  have hne3 : theta3 τ ≠ 0 := theta3_ne_zero hτ
+  have hne4 : theta4 τ ≠ 0 := theta4_ne_zero hτ
+  have h_lam_sub_ne : modularLambdaH τ - 1 ≠ 0 :=
+    sub_ne_zero.mpr (modularLambdaH_ne_one hτ)
+  rw [modularLambdaH_T_smul, eq_div_iff h_lam_sub_ne]
+  unfold modularLambdaH
+  field_simp
+  linear_combination -(theta2 τ ^ 4) * h_jacobi
+
+/-- **Direct three-term q-expansion bound on `λ'` at `τ.im ≥ 1`.**
+For `τ ∈ ℍ` with `τ.im ≥ 1`,
+`‖deriv λ τ − 16πi q + 256πi q² − 2112πi q³‖ ≤ 100000 · exp(−4π·τ.im)`
+where `q := exp(πi τ)`. The bound is derived from the q-expansion
+power series of `λ'` directly. The tight asymptotic value of the
+constant is `π · ∑_{n≥4} n |c_n| · exp(−π(n−4)) ≈ 47995`, evaluated
+at the boundary `τ.im = 1` (the supremum). The chosen constant
+`100000` provides a `≈ 108%` margin over this asymptotic value and
+remains compatible with the closure constraint `K · r^3 < 3π` for
+`r ≤ exp(−π) < 1/22` required by
+`modularLambdaH_deriv_im_nonneg_on_left_edge` (since
+`100000/10648 ≈ 9.391 < 3π ≈ 9.425`).
+
+The closure path goes through the widened four-term cusp-function
+infrastructure in `ModularFunction.lean`: at the boundary `τ.im = 1`,
+`|q| = exp(−π)`, and Cauchy on the standard disk `|z| ≤ exp(−π)`
+collapses to zero radius. The widened bound
+`modularLambdaH_cusp_norm_sub_four_term_le_widened` extends the
+four-term function bound to the strictly larger disk
+`|z| ≤ exp(−9π/10)`, allowing Cauchy at radius
+`ρ = ‖q‖/4` (sphere stays inside `|z| ≤ 5‖q‖/4 ≤ exp(−9π/10)`).
+This yields `modularLambdaH_cusp_deriv_sub_two_term_le_widened`
+on the full disk `‖q‖ ≤ exp(−π)`, which combines with the chain
+rule `deriv λ τ = πi · q · deriv cusp(q)` to give the stated
+derivative bound on `τ.im ≥ 1`. -/
+theorem modularLambdaH_deriv_norm_sub_three_term_le_of_im_ge_one
+    {τ : ℂ} (hτ : 1 ≤ τ.im) :
+    ‖deriv modularLambdaH τ -
+        16 * (Real.pi : ℂ) * Complex.I * Complex.exp (Real.pi * Complex.I * τ) +
+        256 * (Real.pi : ℂ) * Complex.I *
+          Complex.exp (2 * Real.pi * Complex.I * τ) -
+        2112 * (Real.pi : ℂ) * Complex.I *
+          Complex.exp (3 * Real.pi * Complex.I * τ)‖ ≤
+      100000 * Real.exp (-4 * Real.pi * τ.im) := by
+  sorry
+
+-- The proof accumulates many local hypotheses (q, Q2, Q3 components,
+-- bracket bounds, exp bounds, numerical bounds on √2, cos(π/8)) that
+-- exceed the default 200000-heartbeat ceiling. Raising to 400000
+-- (the project-wide allowed maximum) is the minimal accommodation.
+set_option maxHeartbeats 400000 in
+/-- **Positivity of `Im λ'` on the closed left-edge strip.** For `w`
+with `0 ≤ Re w ≤ 1/8` and `Im w ≥ 1`, `Im (deriv λ w) ≥ 0`.
+
+The proof uses the direct three-term derivative bound
+`modularLambdaH_deriv_norm_sub_three_term_le_of_im_ge_one`:
+`λ' = πi (16q − 256q² + 2112q³) + R` with `|R| ≤ 100000·exp(−4π·Im w)`.
+Taking imaginary parts and using `cos(πx)`-bounds:
+`Im λ'(w) = π·(16 cos(πx) e^{−πy} − 256 cos(2πx) e^{−2πy} +
+2112 cos(3πx) e^{−3πy}) + Im R`.
+For `x ∈ [0, 1/8]`, the leading bracket is bounded below by
+`14.72 e^{−πy} − 256 e^{−2πy} + (nonneg) ≥ 3·e^{−πy}` when
+`r = e^{−πy} ≤ 1/22` (using `cos(π/8) > 0.92`). So
+`Im L = π · (bracket) ≥ 3π · r`. The error contributes
+`|Im R| ≤ 100000 · r^4`. Closure: `3π · r − 100000 · r^4 = r · (3π − 100000 · r³) ≥ 0`
+when `100000 · r³ ≤ 100000/10648 ≈ 9.391 < 3π ≈ 9.425`. -/
+theorem modularLambdaH_deriv_im_nonneg_on_left_edge (w : ℂ)
+    (hw_re_nn : 0 ≤ w.re) (hw_re_le : w.re ≤ 1 / 8) (hw_im_ge : 1 ≤ w.im) :
+    0 ≤ (deriv modularLambdaH w).im := by
+  set y := w.im with hy_def
+  set x := w.re with hx_def
+  have hy_pos : (0 : ℝ) < y := lt_of_lt_of_le one_pos hw_im_ge
+  have hπ_pos : (0 : ℝ) < Real.pi := Real.pi_pos
+  -- Setup q, Q2, Q3.
+  set q : ℂ := Complex.exp (Real.pi * Complex.I * w) with hq_def
+  set Q2 : ℂ := Complex.exp (2 * Real.pi * Complex.I * w) with hQ2_def
+  set Q3 : ℂ := Complex.exp (3 * Real.pi * Complex.I * w) with hQ3_def
+  -- Get derivative bound.
+  have h_deriv_bound := modularLambdaH_deriv_norm_sub_three_term_le_of_im_ge_one
+    (τ := w) hw_im_ge
+  rw [← hq_def, ← hQ2_def, ← hQ3_def] at h_deriv_bound
+  -- Compute real/imag parts of q, Q2, Q3.
+  have h_argq_re : (Real.pi * Complex.I * w).re = -Real.pi * y := by
+    simp [Complex.mul_re, Complex.mul_im, Complex.I_re, Complex.I_im, hy_def,
+      Complex.ofReal_re, Complex.ofReal_im]
+  have h_argq_im : (Real.pi * Complex.I * w).im = Real.pi * x := by
+    simp [Complex.mul_re, Complex.mul_im, Complex.I_re, Complex.I_im, hx_def,
+      Complex.ofReal_re, Complex.ofReal_im]
+  set r : ℝ := Real.exp (-Real.pi * y) with hr_def
+  have hr_pos : 0 < r := Real.exp_pos _
+  have h_decomp : Real.pi * Complex.I * w =
+      ((-Real.pi * y : ℝ) : ℂ) + ((Real.pi * x : ℝ) : ℂ) * Complex.I := by
+    have hw_decomp : w = (x : ℂ) + (y : ℂ) * Complex.I := by
+      apply Complex.ext
+      · simp [Complex.add_re, Complex.mul_re, Complex.ofReal_re, Complex.ofReal_im,
+          Complex.I_re, Complex.I_im, hx_def]
+      · simp [Complex.add_im, Complex.mul_im, Complex.ofReal_re, Complex.ofReal_im,
+          Complex.I_re, Complex.I_im, hy_def]
+    rw [hw_decomp]
+    push_cast
+    have hI_sq : Complex.I * Complex.I = -1 := Complex.I_mul_I
+    linear_combination (Real.pi * y) * hI_sq
+  have hq_re_eq : q.re = r * Real.cos (Real.pi * x) := by
+    rw [hq_def, h_decomp, Complex.exp_add, Complex.exp_ofReal_mul_I,
+      Complex.mul_re, Complex.exp_ofReal_re, Complex.exp_ofReal_im]
+    simp only [Complex.add_re, Complex.add_im, Complex.mul_re, Complex.mul_im,
+      Complex.ofReal_re, Complex.ofReal_im, Complex.I_re, Complex.I_im]
+    rw [show r = Real.exp (-Real.pi * y) from hr_def]
+    ring
+  have hq_im_eq : q.im = r * Real.sin (Real.pi * x) := by
+    rw [hq_def, h_decomp, Complex.exp_add, Complex.exp_ofReal_mul_I,
+      Complex.mul_im, Complex.exp_ofReal_re, Complex.exp_ofReal_im]
+    simp only [Complex.add_re, Complex.add_im, Complex.mul_re, Complex.mul_im,
+      Complex.ofReal_re, Complex.ofReal_im, Complex.I_re, Complex.I_im]
+    rw [show r = Real.exp (-Real.pi * y) from hr_def]
+    ring
+  have hQ2_eq : Q2 = q^2 := by
+    rw [hQ2_def, hq_def, ← Complex.exp_nat_mul]
+    congr 1; push_cast; ring
+  have hQ3_eq : Q3 = q^3 := by
+    rw [hQ3_def, hq_def, ← Complex.exp_nat_mul]
+    congr 1; push_cast; ring
+  set s : ℝ := Real.sin (Real.pi * x) with hs_def
+  set c : ℝ := Real.cos (Real.pi * x) with hc_def
+  have h_pyth : s^2 + c^2 = 1 := Real.sin_sq_add_cos_sq (Real.pi * x)
+  have hQ2_re : Q2.re = r^2 * (c^2 - s^2) := by
+    rw [hQ2_eq, sq, Complex.mul_re, hq_re_eq, hq_im_eq]; ring
+  have hQ2_im : Q2.im = r^2 * (2 * c * s) := by
+    rw [hQ2_eq, sq, Complex.mul_im, hq_re_eq, hq_im_eq]; ring
+  have hQ3_re : Q3.re = r^3 * (c * (c^2 - 3 * s^2)) := by
+    rw [hQ3_eq, show q^3 = q^2 * q from by ring, Complex.mul_re, ← hQ2_eq,
+      hQ2_re, hQ2_im, hq_re_eq, hq_im_eq]
+    ring
+  -- Compute Im(πi(16q - 256 Q2 + 2112 Q3)) = π·(16 c r - 256 r²(c² - s²) + 2112 r³ c (c² - 3s²)).
+  -- That is: π·(16 c r - 256(2c² - 1) r² + 2112 c(4c² - 3) r³) using s² + c² = 1.
+  set L : ℂ := 16 * (Real.pi : ℂ) * Complex.I * q -
+    256 * (Real.pi : ℂ) * Complex.I * Q2 +
+    2112 * (Real.pi : ℂ) * Complex.I * Q3 with hL_def
+  set E : ℂ := deriv modularLambdaH w - L with hE_def
+  have hE_norm : ‖E‖ ≤ 100000 * Real.exp (-4 * Real.pi * y) := by
+    have h_eq : E = deriv modularLambdaH w -
+        16 * (Real.pi : ℂ) * Complex.I * q +
+        256 * (Real.pi : ℂ) * Complex.I * Q2 -
+        2112 * (Real.pi : ℂ) * Complex.I * Q3 := by
+      rw [hE_def, hL_def]; ring
+    rw [h_eq]; exact h_deriv_bound
+  -- Im λ' = L.im + E.im.
+  have h_split : (deriv modularLambdaH w).im = L.im + E.im := by
+    have : deriv modularLambdaH w = L + E := by rw [hE_def]; ring
+    rw [this, Complex.add_im]
+  -- L.im = π · (16 c r - 256 r² (c²-s²) + 2112 r³ c (c²-3s²)).
+  have hL_im : L.im = Real.pi * (16 * c * r - 256 * r^2 * (c^2 - s^2) +
+      2112 * r^3 * (c * (c^2 - 3 * s^2))) := by
+    -- L = π I (16 q - 256 Q2 + 2112 Q3). Im(π I · z) = π · Re(z).
+    have hL_factor : L = (Real.pi : ℂ) * Complex.I *
+        (16 * q - 256 * Q2 + 2112 * Q3) := by rw [hL_def]; ring
+    rw [hL_factor]
+    -- Now compute Im(π I · X) where X := 16 q - 256 Q2 + 2112 Q3.
+    set X : ℂ := 16 * q - 256 * Q2 + 2112 * Q3 with hX_def
+    have h_im : ((Real.pi : ℂ) * Complex.I * X).im = Real.pi * X.re := by
+      rw [show ((Real.pi : ℂ) * Complex.I * X : ℂ) =
+          ((Real.pi : ℝ) : ℂ) * (Complex.I * X) from by push_cast; ring]
+      rw [Complex.mul_im, Complex.ofReal_re, Complex.ofReal_im, zero_mul, add_zero,
+          Complex.mul_im, Complex.I_re, Complex.I_im, zero_mul, one_mul, zero_add]
+    rw [h_im]
+    -- Now: X.re = 16 q.re - 256 Q2.re + 2112 Q3.re.
+    have hX_re : X.re = 16 * (r * c) - 256 * (r^2 * (c^2 - s^2)) +
+        2112 * (r^3 * (c * (c^2 - 3 * s^2))) := by
+      simp only [hX_def, Complex.add_re, Complex.sub_re, Complex.mul_re,
+        Complex.I_re, Complex.I_im, Complex.ofReal_re, Complex.ofReal_im,
+        show (16 : ℂ).re = 16 from rfl, show (16 : ℂ).im = 0 from rfl,
+        show (256 : ℂ).re = 256 from rfl, show (256 : ℂ).im = 0 from rfl,
+        show (2112 : ℂ).re = 2112 from rfl, show (2112 : ℂ).im = 0 from rfl,
+        zero_mul, zero_sub, sub_zero]
+      rw [hq_re_eq, hQ2_re, hQ3_re]
+    rw [hX_re]; ring
+  -- Bounds on c: c ∈ [cos(π/8), 1] for x ∈ [0, 1/8].
+  have h_piX_nn : 0 ≤ Real.pi * x := by
+    have : 0 ≤ x := hw_re_nn
+    positivity
+  have h_piX_le : Real.pi * x ≤ Real.pi / 8 := by
+    have hx_le : x ≤ 1 / 8 := hw_re_le
+    have h_div : Real.pi / 8 = Real.pi * (1 / 8) := by ring
+    rw [h_div]
+    exact mul_le_mul_of_nonneg_left hx_le hπ_pos.le
+  have h_piX_lt_half : Real.pi * x < Real.pi / 2 := by
+    have : Real.pi / 8 < Real.pi / 2 := by linarith
+    linarith
+  have hc_ge_cπ8 : Real.cos (Real.pi / 8) ≤ c := by
+    rw [hc_def]
+    exact Real.cos_le_cos_of_nonneg_of_le_pi h_piX_nn (by linarith) h_piX_le
+  have hc_le_one : c ≤ 1 := by rw [hc_def]; exact Real.cos_le_one _
+  have hc_pos : 0 < c := by
+    rw [hc_def]
+    exact Real.cos_pos_of_mem_Ioo ⟨by linarith, h_piX_lt_half⟩
+  -- cos(π/8) < 0.926, so c < 0.926. And cos(π/8) > 0.924 needed; we have > 0.38 via helper.
+  -- For our bound: c ≥ 0.92 (need cos(π/8) ≥ 0.92).
+  -- We have cos_pi_div_eight_lt_926 : cos(π/8) < 0.926. NOT a lower bound!
+  -- We need cos(π/8) ≥ some value. Let me derive.
+  -- cos(π/8) = √(2 + √2)/2. With √2 > 1.41: 2 + √2 > 3.41, so √(3.41) > 1.847, cos(π/8) > 0.923.
+  have h_cπ8_gt_92 : (0.92 : ℝ) < Real.cos (Real.pi / 8) := by
+    rw [Real.cos_pi_div_eight]
+    -- √(2 + √2)/2 > 0.92 ⟺ √(2 + √2) > 1.84 ⟺ 2 + √2 > 1.84² = 3.3856.
+    have h_184_sq : ((1.84 : ℝ))^2 = 3.3856 := by norm_num
+    have h_sqrt2_gt : (1.41 : ℝ) < Real.sqrt 2 := sqrt_two_gt_141
+    have h_inner_gt : ((1.84 : ℝ))^2 < 2 + Real.sqrt 2 := by
+      rw [h_184_sq]; linarith
+    have h_inner_nn : (0 : ℝ) ≤ (1.84 : ℝ)^2 := by positivity
+    have h_step : Real.sqrt ((1.84 : ℝ)^2) < Real.sqrt (2 + Real.sqrt 2) :=
+      Real.sqrt_lt_sqrt h_inner_nn h_inner_gt
+    rw [Real.sqrt_sq (by norm_num : (0:ℝ) ≤ 1.84)] at h_step
+    linarith
+  have hc_gt_92 : (0.92 : ℝ) < c := lt_of_lt_of_le h_cπ8_gt_92 hc_ge_cπ8
+  have hc_sq_ge : (0.8464 : ℝ) ≤ c^2 := by
+    have h1 : (0.92 : ℝ)^2 ≤ c^2 := by
+      apply pow_le_pow_left₀ (by norm_num : (0:ℝ) ≤ 0.92)
+      linarith
+    have h2 : (0.92 : ℝ)^2 = 0.8464 := by norm_num
+    linarith
+  -- r ≤ exp(-π) < 1/22.
+  have hr_le : r ≤ Real.exp (-Real.pi) := by
+    rw [hr_def]
+    apply Real.exp_le_exp.mpr
+    nlinarith
+  have hr_lt_22 : r < 1 / 22 := by
+    have h_exp_neg : Real.exp (-Real.pi) < 1 / 22 := by
+      rw [Real.exp_neg]
+      rw [show (Real.exp Real.pi)⁻¹ = 1 / Real.exp Real.pi from by rw [inv_eq_one_div]]
+      exact one_div_lt_one_div_of_lt (by norm_num) exp_pi_gt_22
+    linarith
+  -- Use 2c² - 1 ≤ 1 (max) and 4c² - 3 ≥ 4·0.8464 - 3 = 0.3856 (min).
+  have h_2c_sq_minus_1_le : 2 * c^2 - 1 ≤ 1 := by nlinarith [h_pyth, sq_nonneg c]
+  have h_4c_sq_minus_3_ge : (0.3856 : ℝ) ≤ 4 * c^2 - 3 := by linarith [hc_sq_ge]
+  have h_c2_minus_s2_eq : c^2 - s^2 = 2 * c^2 - 1 := by linarith [h_pyth]
+  have h_c2_minus_3s2_eq : c^2 - 3 * s^2 = 4 * c^2 - 3 := by linarith [h_pyth]
+  -- Bound the bracket: B := 16 c r - 256 r² (c²-s²) + 2112 r³ c (c²-3s²).
+  -- B = 16 c r - 256 (2c²-1) r² + 2112 c (4c²-3) r³.
+  -- ≥ 16·0.92·r - 256·1·r² + 2112·0.92·0.3856·r³ = 14.72 r - 256 r² + 749.4 r³.
+  have h_bracket : 16 * c * r - 256 * r^2 * (c^2 - s^2) +
+      2112 * r^3 * (c * (c^2 - 3 * s^2)) ≥
+      14.72 * r - 256 * r^2 := by
+    have hr_sq_pos : 0 < r^2 := by positivity
+    have hr_cube_pos : 0 < r^3 := by positivity
+    -- 16 c r ≥ 16 · 0.92 · r = 14.72 r.
+    have h_t1 : 14.72 * r ≤ 16 * c * r := by
+      have : 14.72 * r ≤ 16 * c * r := by
+        have h_step : 14.72 ≤ 16 * c := by linarith
+        nlinarith [hr_pos]
+      exact this
+    -- -256 r² (c² - s²) ≥ -256 r² (since c² - s² ≤ 1).
+    have h_t2 : -(256 * r^2 * (c^2 - s^2)) ≥ -(256 * r^2) := by
+      rw [h_c2_minus_s2_eq]
+      have h_step : 256 * r^2 * (2 * c^2 - 1) ≤ 256 * r^2 * 1 := by
+        apply mul_le_mul_of_nonneg_left _ (by positivity)
+        linarith
+      linarith
+    -- 2112 r³ c (c² - 3s²) ≥ 2112 r³ · 0.92 · 0.3856 = 749.4 r³ ≥ 0.
+    have h_t3 : 0 ≤ 2112 * r^3 * (c * (c^2 - 3 * s^2)) := by
+      rw [h_c2_minus_3s2_eq]
+      have h_c_nn : 0 < c := hc_pos
+      have h_4c_sq_minus_3_pos : 0 < 4 * c^2 - 3 := by linarith
+      positivity
+    linarith
+  -- For r ≤ 1/22: 14.72 r - 256 r² ≥ 14.72 r - 256 r/22 = (14.72 - 256/22) r ≈ 3.09 r.
+  have h_bracket_lb : 14.72 * r - 256 * r^2 ≥ 3 * r := by
+    have h_r_sq_le : 256 * r^2 ≤ 256 * r / 22 := by
+      have : 256 * r^2 = 256 * r * r := by ring
+      have h_step : 256 * r * r ≤ 256 * r * (1/22) := by
+        apply mul_le_mul_of_nonneg_left (le_of_lt hr_lt_22)
+        positivity
+      have h_eq : 256 * r * (1/22 : ℝ) = 256 * r / 22 := by ring
+      linarith
+    have h_step2 : 256 * r / 22 ≤ 11.64 * r := by
+      have h_div : (256 : ℝ) / 22 ≤ 11.64 := by norm_num
+      have : 256 * r / 22 = (256/22) * r := by ring
+      rw [this]
+      exact mul_le_mul_of_nonneg_right h_div (le_of_lt hr_pos)
+    linarith
+  -- Combine: L.im = π · bracket ≥ π · 3r.
+  have h_L_im_lb : L.im ≥ 3 * Real.pi * r := by
+    rw [hL_im]
+    have h_step1 : 16 * c * r - 256 * r^2 * (c^2 - s^2) +
+        2112 * r^3 * (c * (c^2 - 3 * s^2)) ≥ 3 * r := by
+      linarith
+    have h_step2 : Real.pi * (16 * c * r - 256 * r^2 * (c^2 - s^2) +
+        2112 * r^3 * (c * (c^2 - 3 * s^2))) ≥ Real.pi * (3 * r) :=
+      mul_le_mul_of_nonneg_left h_step1 hπ_pos.le
+    have h_eq : Real.pi * (3 * r) = 3 * Real.pi * r := by ring
+    linarith
+  -- Error: |E.im| ≤ ‖E‖ ≤ 100000 · exp(-4π y).
+  have hr4_eq : r^4 = Real.exp (-4 * Real.pi * y) := by
+    have h_cast : (-4 * Real.pi * y : ℝ) = ((4 : ℕ) : ℝ) * (-Real.pi * y) := by
+      push_cast; ring
+    rw [hr_def, h_cast]
+    exact (Real.exp_nat_mul _ _).symm
+  have hE_im_abs : |E.im| ≤ 100000 * r^4 := by
+    rw [hr4_eq]
+    exact le_trans (Complex.abs_im_le_norm _) hE_norm
+  have hE_im_lb : E.im ≥ -(100000 * r^4) := neg_le_of_abs_le hE_im_abs
+  -- Im λ' ≥ L.im + E.im ≥ 3π r - 100000 r^4. Need ≥ 0.
+  -- 3π r - 100000 r^4 = r · (3π - 100000 r^3). Inner ≥ 3π - 100000/10648 ≈ 9.42 - 6.16 > 0.
+  rw [h_split]
+  have h_r3_le : r^3 ≤ (1/22 : ℝ)^3 :=
+    pow_le_pow_left₀ (le_of_lt hr_pos) (le_of_lt hr_lt_22) 3
+  have h_22_cube : ((1/22 : ℝ))^3 = 1/10648 := by norm_num
+  have h_K_r3_le : 100000 * r^3 ≤ 100000 * ((1/22 : ℝ)^3) :=
+    mul_le_mul_of_nonneg_left h_r3_le (by norm_num)
+  -- 100000 · (1/22)^3 = 100000/10648 ≈ 9.391 < 9.4 < 9.42 < 3π (since π > 3.14).
+  have h_K_22_le : 100000 * ((1/22 : ℝ)^3) < 9.4 := by
+    rw [h_22_cube]; norm_num
+  have h_inner_nn : 0 ≤ 3 * Real.pi - 100000 * r^3 := by
+    have h_lt94 : 100000 * r^3 < 9.4 := lt_of_le_of_lt h_K_r3_le h_K_22_le
+    have h_3pi_gt_94 : (9.4 : ℝ) < 3 * Real.pi := by
+      have h_pi_gt_d2 : (3.14 : ℝ) < Real.pi := Real.pi_gt_d2
+      linarith
+    linarith
+  have h_main : 3 * Real.pi * r - 100000 * r^4 ≥ 0 := by
+    have h_factor : 3 * Real.pi * r - 100000 * r^4 = r * (3 * Real.pi - 100000 * r^3) := by
+      ring
+    rw [h_factor]
+    exact mul_nonneg (le_of_lt hr_pos) h_inner_nn
+  linarith
+
+/-- **Strip left edge: `Im λ ≥ 0` on `{Re ∈ (0, 1/8), Im ≥ 1}`.**
+
+The proof linearizes `λ` along horizontal lines `{t + i · y : t ∈ [0, x]}`
+using the fundamental theorem of calculus:
+`λ(x + iy) − λ(iy) = ∫_0^x λ'(t + iy) dt`.
+Since `λ(iy)` is real (`modularLambdaH_pure_imag_real`), taking imaginary
+parts gives
+`Im λ(x + iy) = ∫_0^x Im(λ'(t + iy)) dt`.
+The integrand is nonneg by
+`modularLambdaH_deriv_im_nonneg_on_left_edge`, so the integral is nonneg. -/
+theorem modularLambdaH_im_nonneg_strip_left_edge (w : ℂ)
+    (hw_re_pos : 0 < w.re) (hw_re_lt : w.re < 1 / 8) (hw_im_ge : 1 ≤ w.im) :
+    0 ≤ (modularLambdaH w).im := by
+  set x := w.re with hx_def
+  set y := w.im with hy_def
+  have hy_pos : (0 : ℝ) < y := lt_of_lt_of_le one_pos hw_im_ge
+  have hx_pos : 0 < x := hw_re_pos
+  have hx_lt : x < 1 / 8 := hw_re_lt
+  -- Rewrite w = ↑x + ↑y * I.
+  have hw_eq : w = (↑x : ℂ) + (↑y : ℂ) * Complex.I := by
+    rw [hx_def, hy_def, Complex.re_add_im]
+  -- Define the curve f(t) := λ(↑t + ↑y · I).
+  -- Show f has derivative `deriv λ (↑t + ↑y · I)` at each t ∈ uIcc 0 x.
+  have hf_deriv : ∀ t ∈ Set.uIcc (0 : ℝ) x,
+      HasDerivAt (fun s : ℝ => modularLambdaH ((↑s : ℂ) + (↑y : ℂ) * Complex.I))
+        (deriv modularLambdaH ((↑t : ℂ) + (↑y : ℂ) * Complex.I)) t := by
+    intro t ht
+    -- (↑t + ↑y · I).im = y > 0, so λ is differentiable there.
+    have h_im_pos : 0 < ((↑t : ℂ) + (↑y : ℂ) * Complex.I).im := by
+      simp only [Complex.add_im, Complex.mul_im, Complex.ofReal_re, Complex.I_im, mul_one,
+        Complex.ofReal_im, Complex.I_re, mul_zero, add_zero, zero_add]
+      exact hy_pos
+    have h_lam_diff : DifferentiableAt ℂ modularLambdaH
+        ((↑t : ℂ) + (↑y : ℂ) * Complex.I) := by
+      apply (modularLambdaH_differentiableOn _ h_im_pos).differentiableAt
+      exact (isOpen_lt continuous_const Complex.continuous_im).mem_nhds h_im_pos
+    have h_lam_hda : HasDerivAt modularLambdaH
+        (deriv modularLambdaH ((↑t : ℂ) + (↑y : ℂ) * Complex.I))
+        ((↑t : ℂ) + (↑y : ℂ) * Complex.I) := h_lam_diff.hasDerivAt
+    -- Inner: HasDerivAt (fun s => ↑s + ↑y * I) 1 t.
+    have h_inner : HasDerivAt (fun s : ℝ => (↑s : ℂ) + (↑y : ℂ) * Complex.I) 1 t := by
+      have := Complex.ofRealCLM.hasDerivAt (x := t)
+      simpa using this.add_const ((↑y : ℂ) * Complex.I)
+    -- Chain rule via scomp (explicit IsScalarTower).
+    have hst : IsScalarTower ℝ ℂ ℂ := IsScalarTower.right
+    have h_chain := @HasDerivAt.scomp ℝ _ ℂ _ _ t ℂ _ _ _ hst _ _ _ _ h_lam_hda h_inner
+    simpa using h_chain
+  -- Continuity of the integrand on uIcc.
+  have h_int_cont : ContinuousOn
+      (fun t : ℝ => deriv modularLambdaH ((↑t : ℂ) + (↑y : ℂ) * Complex.I))
+      (Set.uIcc 0 x) := by
+    have h_inner_cont :
+        ContinuousOn (fun t : ℝ => ((↑t : ℂ) + (↑y : ℂ) * Complex.I))
+          (Set.uIcc 0 x) :=
+      (Complex.continuous_ofReal.add continuous_const).continuousOn
+    have h_inner_maps :
+        Set.MapsTo (fun t : ℝ => ((↑t : ℂ) + (↑y : ℂ) * Complex.I))
+          (Set.uIcc 0 x) { z : ℂ | 0 < z.im } := by
+      intro t _
+      simp only [Set.mem_setOf_eq, Complex.add_im, Complex.mul_im, Complex.ofReal_re,
+        Complex.I_im, mul_one, Complex.ofReal_im, Complex.I_re, mul_zero, add_zero, zero_add]
+      exact hy_pos
+    have h_deriv_cont :
+        ContinuousOn (deriv modularLambdaH) { z : ℂ | 0 < z.im } := by
+      have h_diff_on : DifferentiableOn ℂ modularLambdaH { z : ℂ | 0 < z.im } :=
+        modularLambdaH_differentiableOn
+      exact (h_diff_on.analyticOnNhd
+        (isOpen_lt continuous_const Complex.continuous_im)).deriv.continuousOn
+    exact h_deriv_cont.comp h_inner_cont h_inner_maps
+  have h_int_integrable : IntervalIntegrable
+      (fun t : ℝ => deriv modularLambdaH ((↑t : ℂ) + (↑y : ℂ) * Complex.I))
+      MeasureTheory.volume 0 x :=
+    h_int_cont.intervalIntegrable
+  -- FTC.
+  have h_ftc :
+      ∫ t in (0 : ℝ)..x, deriv modularLambdaH ((↑t : ℂ) + (↑y : ℂ) * Complex.I) =
+      modularLambdaH ((↑x : ℂ) + (↑y : ℂ) * Complex.I) -
+        modularLambdaH ((↑(0 : ℝ) : ℂ) + (↑y : ℂ) * Complex.I) :=
+    intervalIntegral.integral_eq_sub_of_hasDerivAt hf_deriv h_int_integrable
+  -- λ(iy) is real (Im = 0).
+  have h_lam_iy_im : (modularLambdaH ((↑(0 : ℝ) : ℂ) + (↑y : ℂ) * Complex.I)).im = 0 := by
+    have h_iy_eq : ((↑(0 : ℝ) : ℂ) + (↑y : ℂ) * Complex.I) = Complex.I * (↑y : ℂ) := by
+      push_cast; ring
+    rw [h_iy_eq]
+    exact modularLambdaH_pure_imag_real hy_pos
+  -- Express Im λ(w) via the integral.
+  have h_lam_w_im_eq : (modularLambdaH w).im =
+      (∫ t in (0 : ℝ)..x, deriv modularLambdaH ((↑t : ℂ) + (↑y : ℂ) * Complex.I)).im := by
+    have h_ftc_im : (modularLambdaH ((↑x : ℂ) + (↑y : ℂ) * Complex.I)).im -
+        (modularLambdaH ((↑(0 : ℝ) : ℂ) + (↑y : ℂ) * Complex.I)).im =
+        (∫ t in (0 : ℝ)..x, deriv modularLambdaH ((↑t : ℂ) + (↑y : ℂ) * Complex.I)).im := by
+      rw [← Complex.sub_im, ← h_ftc]
+    have h_w_eq_im : (modularLambdaH w).im =
+        (modularLambdaH ((↑x : ℂ) + (↑y : ℂ) * Complex.I)).im := by
+      rw [← hw_eq]
+    rw [h_w_eq_im, ← h_ftc_im, h_lam_iy_im, sub_zero]
+  -- Commute Im with the integral.
+  have h_im_commute :
+      (∫ t in (0 : ℝ)..x, deriv modularLambdaH ((↑t : ℂ) + (↑y : ℂ) * Complex.I)).im =
+      ∫ t in (0 : ℝ)..x,
+        (deriv modularLambdaH ((↑t : ℂ) + (↑y : ℂ) * Complex.I)).im :=
+    (Complex.imCLM.intervalIntegral_comp_comm h_int_integrable).symm
+  -- Integrand ≥ 0 by helper.
+  have h_integrand_nonneg : ∀ t ∈ Set.uIcc (0 : ℝ) x,
+      0 ≤ (deriv modularLambdaH ((↑t : ℂ) + (↑y : ℂ) * Complex.I)).im := by
+    intro t ht
+    apply modularLambdaH_deriv_im_nonneg_on_left_edge
+    · simp only [Complex.add_re, Complex.mul_re, Complex.ofReal_re, Complex.I_re, mul_zero,
+        Complex.ofReal_im, Complex.I_im, mul_one, sub_zero, add_zero, zero_sub, neg_zero]
+      rcases (Set.mem_uIcc.mp ht) with ⟨h1, _⟩ | ⟨h1, _⟩
+      · linarith
+      · linarith [hx_pos]
+    · simp only [Complex.add_re, Complex.mul_re, Complex.ofReal_re, Complex.I_re, mul_zero,
+        Complex.ofReal_im, Complex.I_im, mul_one, sub_zero, add_zero]
+      rcases (Set.mem_uIcc.mp ht) with ⟨_, h2⟩ | ⟨_, h2⟩
+      · linarith
+      · linarith [hx_lt]
+    · simp only [Complex.add_im, Complex.mul_im, Complex.ofReal_re, Complex.I_im, mul_one,
+        Complex.ofReal_im, Complex.I_re, mul_zero, add_zero, zero_add]
+      exact hw_im_ge
+  -- Integral of nonneg function is nonneg.
+  rw [h_lam_w_im_eq, h_im_commute]
+  -- Use intervalIntegral.integral_nonneg.
+  have hx_le : (0 : ℝ) ≤ x := le_of_lt hx_pos
+  apply intervalIntegral.integral_nonneg hx_le
+  intro t ht
+  apply h_integrand_nonneg
+  rcases ht with ⟨h1, h2⟩
+  exact Set.mem_uIcc.mpr (Or.inl ⟨h1, h2⟩)
+
+/-- **Strip right edge: `Im λ ≥ 0` on `{Re ∈ (7/8, 1), Im ≥ 1}`.**
+
+Reduces to the left edge via the T-shift identity
+`λ(τ + 1) = λ(τ)/(λ(τ) − 1)` and the conjugation symmetry
+`λ(−conj τ) = conj(λ τ)`.
+Concretely: for `w` with `w.re ∈ (7/8, 1)`, define
+`w_left := (1 − w.re) + i·w.im`, which has `Re w_left ∈ (0, 1/8)` and
+`Im w_left = w.im ≥ 1`. The chain
+`λ(w_left) = λ(−conj(w − 1)) = conj(λ(w − 1))`
+combined with the T-shift `λ(w) = λ(w − 1)/(λ(w − 1) − 1)` gives
+`λ(w) = conj(λ w_left)/(conj(λ w_left) − 1)`.
+A direct computation yields
+`Im λ(w) = (Im λ(w_left)) / |λ(w_left) − 1|²`,
+which is nonneg since `Im λ(w_left) ≥ 0` (left edge) and
+`λ(w_left) ≠ 1` on `ℍ`. -/
+theorem modularLambdaH_im_nonneg_strip_right_edge (w : ℂ)
+    (hw_re_gt : 7 / 8 < w.re) (hw_re_lt : w.re < 1) (hw_im_ge : 1 ≤ w.im) :
+    0 ≤ (modularLambdaH w).im := by
+  -- Build w_left := (1 - w.re) + i · w.im.
+  set w_left : ℂ := ⟨1 - w.re, w.im⟩ with hw_left_def
+  have hw_left_re : w_left.re = 1 - w.re := rfl
+  have hw_left_im : w_left.im = w.im := rfl
+  have hw_left_re_pos : 0 < w_left.re := by rw [hw_left_re]; linarith
+  have hw_left_re_lt : w_left.re < 1 / 8 := by rw [hw_left_re]; linarith
+  have hw_left_im_ge : 1 ≤ w_left.im := by rw [hw_left_im]; exact hw_im_ge
+  have hw_left_im_pos : 0 < w_left.im := lt_of_lt_of_le one_pos hw_left_im_ge
+  -- Apply left edge.
+  have h_left_im : 0 ≤ (modularLambdaH w_left).im :=
+    modularLambdaH_im_nonneg_strip_left_edge w_left hw_left_re_pos hw_left_re_lt
+      hw_left_im_ge
+  -- σ := w - 1, with Im σ = w.im ≥ 1 > 0.
+  have hσ_im_pos : 0 < (w - 1).im := by
+    rw [Complex.sub_im, Complex.one_im, sub_zero]; linarith
+  -- Show -conj(w - 1) = w_left.
+  have h_neg_conj_eq : -(starRingEnd ℂ (w - 1)) = w_left := by
+    apply Complex.ext
+    · simp only [Complex.neg_re, Complex.conj_re, Complex.sub_re, Complex.one_re,
+        hw_left_re]
+      ring
+    · simp only [Complex.neg_im, Complex.conj_im, Complex.sub_im, Complex.one_im,
+        sub_zero, neg_neg, hw_left_im]
+  -- Conjugation symmetry: λ(-conj(w-1)) = conj(λ(w-1)).
+  have h_conj_sym :
+      modularLambdaH (-(starRingEnd ℂ (w - 1))) =
+        starRingEnd ℂ (modularLambdaH (w - 1)) :=
+    modularLambdaH_conj_symmetry hσ_im_pos
+  -- So λ(w_left) = conj(λ(w-1)), hence λ(w-1) = conj(λ(w_left)).
+  rw [h_neg_conj_eq] at h_conj_sym
+  have h_lam_w_sub_1 :
+      modularLambdaH (w - 1) = starRingEnd ℂ (modularLambdaH w_left) := by
+    have h := congrArg (starRingEnd ℂ) h_conj_sym
+    rw [Complex.conj_conj] at h
+    exact h.symm
+  -- T-shift: λ(w) = λ((w-1) + 1) = λ(w-1)/(λ(w-1) - 1).
+  have h_w_eq : w = (w - 1) + 1 := by ring
+  have h_lam_w :
+      modularLambdaH w = modularLambdaH (w - 1) / (modularLambdaH (w - 1) - 1) := by
+    conv_lhs => rw [h_w_eq]
+    exact modularLambdaH_add_one_eq_div_sub_one hσ_im_pos
+  -- Substitute to get λ(w) in terms of conj(λ(w_left)).
+  rw [h_lam_w, h_lam_w_sub_1]
+  set α := modularLambdaH w_left with hα_def
+  -- α - 1 ≠ 0 (since λ ≠ 1 on ℍ).
+  have hα_minus_one_ne : α - 1 ≠ 0 :=
+    sub_ne_zero.mpr (modularLambdaH_ne_one hw_left_im_pos)
+  -- Im(conj α / (conj α - 1)) = α.im / |α - 1|²: use conj-div, then div_im.
+  have h_conj_div :
+      starRingEnd ℂ α / (starRingEnd ℂ α - 1) =
+        starRingEnd ℂ (α / (α - 1)) := by
+    rw [map_div₀, map_sub, map_one]
+  rw [h_conj_div]
+  -- Goal: 0 ≤ (conj(α/(α-1))).im. Im(conj z) = -Im z.
+  rw [Complex.conj_im]
+  -- Goal: 0 ≤ -(α/(α-1)).im.
+  rw [neg_nonneg]
+  -- Compute (α/(α - 1)).im ≤ 0 using `Complex.div_im` and `← sub_div`.
+  rw [Complex.div_im]
+  have h_normSq_pos : 0 < Complex.normSq (α - 1) :=
+    Complex.normSq_pos.mpr hα_minus_one_ne
+  -- Simplify (α - 1).re and (α - 1).im.
+  simp only [Complex.sub_re, Complex.sub_im, Complex.one_re, Complex.one_im, sub_zero]
+  -- Combine the two division terms.
+  rw [← sub_div]
+  -- Numerator algebraic identity.
+  have h_num_eq : α.im * (α.re - 1) - α.re * α.im = -α.im := by ring
+  rw [h_num_eq]
+  -- Goal: -α.im / Complex.normSq (α - 1) ≤ 0.
+  rw [neg_div, neg_nonpos]
+  exact div_nonneg h_left_im h_normSq_pos.le
+
+/-- **Strip claim for `λ`: `Im λ ≥ 0` on `{Re ∈ (0, 1), Im ≥ 1}`.**
+
+The strip `{w ∈ ℂ : 0 < w.re < 1, 1 ≤ w.im}` is contained in `F^o`
+(the F^o constraint `‖2w − 1‖ > 1` is automatic for `Im w ≥ 1` since
+`‖2w − 1‖² = (2 Re w − 1)² + (2 Im w)² ≥ 0 + 4 > 1`), so this is a
+sub-region of Step A. The closure is independent of
+`modularLambdaH_im_nonneg_on_F` to avoid the cyclic dependency
+strip → F^o → cusp-1 → strip.
+
+The proof is a case split on `Re w`:
+* `Re w ∈ [1/8, 7/8]`: three-term q-expansion bound
+  (`modularLambdaH_im_nonneg_strip_interior_band`).
+* `Re w ∈ (0, 1/8)`: linearization at `Re w = 0`
+  (`modularLambdaH_im_nonneg_strip_left_edge`).
+* `Re w ∈ (7/8, 1)`: reduction to the left edge via T-shift +
+  conjugation symmetry (`modularLambdaH_im_nonneg_strip_right_edge`). -/
+theorem modularLambdaH_im_nonneg_strip (w : ℂ) (hw_re_pos : 0 < w.re)
+    (hw_re_lt : w.re < 1) (hw_im_ge : 1 ≤ w.im) :
+    0 ≤ (modularLambdaH w).im := by
+  rcases lt_or_ge w.re ((1 : ℝ) / 8) with h1 | h1
+  · exact modularLambdaH_im_nonneg_strip_left_edge w hw_re_pos h1 hw_im_ge
+  · rcases le_or_gt w.re ((7 : ℝ) / 8) with h2 | h2
+    · exact modularLambdaH_im_nonneg_strip_interior_band w h1 h2 hw_im_ge
+    · exact modularLambdaH_im_nonneg_strip_right_edge w h2 hw_re_lt hw_im_ge
+
+/-- **Cusp 1 asymptotic in `F^o` (the deep step).** There is a
+neighbourhood of `1` in which every point of `F^o` has `Im λ ≥ 0`.
+
+The proof uses the T-shift identity
+`λ(τ) = λ(τ − 1)/(λ(τ − 1) − 1)`, the cusp-0 limit `λ(τ−1) → 1` for
+`τ − 1` approaching `0` from the `F^o`-shifted region (i.e., from the
+upper-left quadrant minus the reflected semicircle), and the
+q'-expansion `δ := λ(τ−1) − 1 = −λ(−1/(τ−1)) ≈ −16 q'` where
+`q' := exp(πi · (−1/(τ−1)))`. The `F^o`-shifted constraint
+`‖2(τ−1) + 1‖ > 1` forces `arg(q') ∈ (0, π)` (equivalently,
+`Re(−1/(τ−1)) ∈ (0, 1)`), so `Im(q') > 0` in the leading order.
+
+**Available infrastructure.** Two Schwarz reflection identities for
+`λ` are now closed axiom-clean:
+
+* `modularLambdaH_schwarz_reflect_re_one`: `λ(2 − conj τ) = conj(λ τ)`,
+  Schwarz reflection through the line `Re τ = 1` (composition of
+  `modularLambdaH_conj_symmetry` and `modularLambdaH_sub_two`).
+* `modularLambdaH_schwarz_reflect_semicircle`:
+  `λ(conj τ/(2·conj τ − 1)) = conj(λ τ)`, Schwarz reflection through
+  the F^o boundary semicircle `|τ − 1/2| = 1/2` (composition of
+  `modularLambdaH_div_two_tau_add_one` inverted and
+  `modularLambdaH_conj_symmetry`).
+
+**Reduction to the strip claim.** The combined T-shift and S-shift
+give the algebraic identity `λ(τ) = 1 − 1/λ(w)` where `w := −1/(τ−1)`.
+Hence `Im λ(τ) = Im λ(w)/|λ(w)|²`, so `Im λ(τ) ≥ 0 ⟺ Im λ(w) ≥ 0`.
+
+For `τ ∈ F^o ∩ B(1, 1/3)`, the image `w = −1/(τ−1)` satisfies
+`Re w ∈ (0, 1)` (F^o constraint) and `Im w > 2√2 > 1` (from
+`‖w‖ ≥ 3` and `Re²w + Im²w = ‖w‖² ≥ 9` with `Re w < 1`). The cusp-1
+lemma thus reduces to the strip claim
+`modularLambdaH_im_nonneg_strip`. -/
+theorem modularLambdaH_cusp_one_im_nonneg_nbhd_in_F :
+    ∃ δ : ℝ, 0 < δ ∧ ∀ τ ∈ Gamma2FundamentalDomainInterior,
+      ‖τ - 1‖ ≤ δ → 0 ≤ (modularLambdaH τ).im := by
+  refine ⟨1/3, by norm_num, ?_⟩
+  intro τ hτ_F hτ_dist
+  obtain ⟨hτ_im_pos, hτ_re_pos, hτ_re_lt_one, hτ_semicircle⟩ := hτ_F
+  -- Step 1: σ := τ - 1 has σ.im > 0 and ‖σ‖ ≤ 1/3.
+  set σ := τ - 1 with hσ_def
+  have hσ_im_pos : 0 < σ.im := by
+    show 0 < (τ - 1).im
+    simp only [Complex.sub_im, Complex.one_im, sub_zero]; exact hτ_im_pos
+  have hσ_re_neg : σ.re < 0 := by
+    show (τ - 1).re < 0
+    simp only [Complex.sub_re, Complex.one_re]; linarith
+  have hσ_re_gt_neg_one : -1 < σ.re := by
+    show -1 < (τ - 1).re
+    simp only [Complex.sub_re, Complex.one_re]; linarith
+  have hσ_norm_le : ‖σ‖ ≤ 1/3 := hτ_dist
+  -- σ ≠ 0 since σ.im > 0.
+  have hσ_ne : σ ≠ 0 := by
+    intro h
+    rw [h] at hσ_im_pos
+    simp at hσ_im_pos
+  have hσ_norm_pos : 0 < ‖σ‖ := norm_pos_iff.mpr hσ_ne
+  -- |σ|² = ‖σ‖² ≤ 1/9.
+  have hσ_normSq_eq : Complex.normSq σ = ‖σ‖^2 := by
+    rw [← Complex.sq_norm]
+  have hσ_normSq_pos : 0 < Complex.normSq σ := Complex.normSq_pos.mpr hσ_ne
+  have hσ_normSq_le : Complex.normSq σ ≤ 1/9 := by
+    rw [hσ_normSq_eq]
+    have h_sq : ‖σ‖^2 ≤ (1/3)^2 := by
+      apply sq_le_sq' _ hσ_norm_le
+      · linarith [norm_nonneg σ]
+    nlinarith
+  -- F^o constraint translates to |σ|² > -σ.re.
+  have hτ_semicircle_norm : 1 < Complex.normSq (2 * τ - 1) := by
+    have h := hτ_semicircle
+    have h_sq : 1 < ‖2 * τ - 1‖^2 := by
+      have h_norm_nn : 0 ≤ ‖2 * τ - 1‖ := norm_nonneg _
+      nlinarith
+    have h_eq : ‖2 * τ - 1‖^2 = Complex.normSq (2 * τ - 1) := Complex.sq_norm _
+    linarith [h_eq ▸ h_sq]
+  have h_2tau_minus_one : (2 * τ - 1) = 2 * σ + 1 := by
+    rw [hσ_def]; ring
+  rw [h_2tau_minus_one] at hτ_semicircle_norm
+  have hσ_F_constraint : -σ.re < Complex.normSq σ := by
+    have h_eq : Complex.normSq (2 * σ + 1) = 4 * Complex.normSq σ + 4 * σ.re + 1 := by
+      simp [Complex.normSq_apply, Complex.add_re, Complex.add_im, Complex.mul_re,
+        Complex.mul_im, Complex.one_re, Complex.one_im]
+      ring
+    rw [h_eq] at hτ_semicircle_norm
+    linarith
+  -- Step 2: Set w := -1/σ. Show w.im > 1, 0 < w.re < 1.
+  set w := -1/σ with hw_def
+  have hw_eq_neg_inv : w = -σ⁻¹ := by
+    rw [hw_def, neg_div, one_div]
+  have hw_re : w.re = -σ.re / Complex.normSq σ := by
+    rw [hw_eq_neg_inv, Complex.neg_re, Complex.inv_re]
+    ring
+  have hw_im : w.im = σ.im / Complex.normSq σ := by
+    rw [hw_eq_neg_inv, Complex.neg_im, Complex.inv_im]
+    ring
+  have hw_re_pos : 0 < w.re := by
+    rw [hw_re]
+    apply div_pos _ hσ_normSq_pos
+    linarith
+  have hw_re_lt_one : w.re < 1 := by
+    rw [hw_re]
+    rw [div_lt_one hσ_normSq_pos]
+    linarith
+  have hw_im_pos : 0 < w.im := by
+    rw [hw_im]
+    exact div_pos hσ_im_pos hσ_normSq_pos
+  -- Im w ≥ 1: from |w|² ≥ 9 and Re w < 1.
+  have hw_normSq_eq : Complex.normSq w = 1 / Complex.normSq σ := by
+    have h1 : ‖w‖^2 = Complex.normSq w := Complex.sq_norm _
+    have h2 : ‖σ‖^2 = Complex.normSq σ := Complex.sq_norm _
+    have h3 : ‖w‖ = ‖σ‖⁻¹ := by
+      rw [hw_eq_neg_inv, norm_neg, norm_inv]
+    rw [← h1, h3]
+    rw [inv_pow, h2]
+    rw [one_div]
+  have hw_normSq_ge : 9 ≤ Complex.normSq w := by
+    rw [hw_normSq_eq]
+    rw [le_div_iff₀ hσ_normSq_pos]
+    nlinarith
+  have hw_im_sq_ge : 1 ≤ w.im^2 := by
+    have h_normSq_eq : Complex.normSq w = w.re^2 + w.im^2 := by
+      simp [Complex.normSq_apply]; ring
+    have h_re_sq_lt : w.re^2 < 1 := by
+      have h := hw_re_lt_one
+      have h_pos := hw_re_pos
+      nlinarith
+    have h_sum : w.re^2 + w.im^2 ≥ 9 := h_normSq_eq ▸ hw_normSq_ge
+    linarith
+  have hw_im_ge : 1 ≤ w.im := by
+    have h_sq : (1:ℝ)^2 ≤ w.im^2 := by simpa using hw_im_sq_ge
+    nlinarith [hw_im_pos]
+  -- Step 3: λ ≠ 0 at w.
+  have hw_im_pos' : 0 < w.im := hw_im_pos
+  have hlamw_ne_zero : modularLambdaH w ≠ 0 := modularLambdaH_ne_zero hw_im_pos'
+  -- Step 4: Identity λ(τ) = 1 - 1/λ(w).
+  -- From T-shift: λ(σ + 1) = -(θ₂(σ)⁴/θ₄(σ)⁴) = λ(σ)/(λ(σ) - 1).
+  -- From S-shift: λ(σ) + λ(w) = 1, so λ(σ) = 1 - λ(w).
+  -- Combine: λ(τ) = (1 - λ(w))/((1 - λ(w)) - 1) = (1 - λ(w))/(-λ(w)) = 1 - 1/λ(w).
+  have hσ_im_for_S : 0 < σ.im := hσ_im_pos
+  have h_S : modularLambdaH σ + modularLambdaH w = 1 := by
+    have := modularLambdaH_add_S_smul_eq_one hσ_im_for_S
+    rw [hw_def]
+    exact this
+  have hlamσ_eq : modularLambdaH σ = 1 - modularLambdaH w := by linear_combination h_S
+  -- T-shift: σ + 1 = τ.
+  have hστ_eq : σ + 1 = τ := by rw [hσ_def]; ring
+  have hlam_Tshift : modularLambdaH τ = -(theta2 σ ^ 4 / theta4 σ ^ 4) := by
+    rw [← hστ_eq]
+    exact modularLambdaH_T_smul σ
+  have hθ_ne : theta3 σ ≠ 0 := theta3_ne_zero hσ_im_for_S
+  have hθ4_ne : theta4 σ ≠ 0 := theta4_ne_zero hσ_im_for_S
+  have h_jacobi : theta2 σ ^ 4 + theta4 σ ^ 4 = theta3 σ ^ 4 := jacobi_identity hσ_im_for_S
+  have hlamσ_minus_one_ne : modularLambdaH σ - 1 ≠ 0 := by
+    have hlamσ_ne_one : modularLambdaH σ ≠ 1 := modularLambdaH_ne_one hσ_im_for_S
+    exact sub_ne_zero.mpr hlamσ_ne_one
+  have hlam_via_lamσ : modularLambdaH τ = modularLambdaH σ / (modularLambdaH σ - 1) := by
+    rw [hlam_Tshift]
+    unfold modularLambdaH
+    have hθ4_pow_ne : theta4 σ ^ 4 ≠ 0 := pow_ne_zero 4 hθ4_ne
+    have hθ3_pow_ne : theta3 σ ^ 4 ≠ 0 := pow_ne_zero 4 hθ_ne
+    -- (θ₂⁴/θ₃⁴) / (θ₂⁴/θ₃⁴ - 1) = (θ₂⁴/θ₃⁴) · θ₃⁴/(θ₂⁴ - θ₃⁴) = θ₂⁴/(θ₂⁴ - θ₃⁴)
+    -- = θ₂⁴/(-θ₄⁴) = -θ₂⁴/θ₄⁴.
+    have h_step : theta2 σ ^ 4 / theta3 σ ^ 4 / (theta2 σ ^ 4 / theta3 σ ^ 4 - 1) =
+        theta2 σ ^ 4 / (theta2 σ ^ 4 - theta3 σ ^ 4) := by
+      rw [div_sub_one hθ3_pow_ne, div_div_div_cancel_right₀]
+      exact hθ3_pow_ne
+    rw [h_step]
+    have h_denom : theta2 σ ^ 4 - theta3 σ ^ 4 = -theta4 σ ^ 4 := by linear_combination h_jacobi
+    rw [h_denom, div_neg]
+  -- Substitute λ(σ) = 1 - λ(w).
+  have hlamτ_via_lamw : modularLambdaH τ = (1 - modularLambdaH w) / (-modularLambdaH w) := by
+    rw [hlam_via_lamσ, hlamσ_eq]
+    have h_denom : (1 - modularLambdaH w) - 1 = -modularLambdaH w := by ring
+    rw [h_denom]
+  -- Simplify: λ(τ) = 1 - 1/λ(w).
+  have hlamτ_simplified : modularLambdaH τ = 1 - 1 / modularLambdaH w := by
+    rw [hlamτ_via_lamw]
+    field_simp
+    ring
+  -- Step 5: Apply strip claim to get Im λ(w) ≥ 0.
+  have h_strip : 0 ≤ (modularLambdaH w).im :=
+    modularLambdaH_im_nonneg_strip w hw_re_pos hw_re_lt_one hw_im_ge
+  -- Step 6: Conclude Im λ(τ) = Im λ(w)/|λ(w)|² ≥ 0.
+  rw [hlamτ_simplified]
+  -- Goal: 0 ≤ (1 - 1/modularLambdaH w).im.
+  simp only [Complex.sub_im, Complex.one_im, zero_sub, neg_nonneg]
+  -- Goal: (1/modularLambdaH w).im ≤ 0.
+  -- 1/z = z̄/|z|², so Im(1/z) = -Im(z)/|z|².
+  have hlamw_normSq_pos : 0 < Complex.normSq (modularLambdaH w) :=
+    Complex.normSq_pos.mpr hlamw_ne_zero
+  rw [show (1 : ℂ) / modularLambdaH w = (modularLambdaH w)⁻¹ from by rw [one_div]]
+  rw [Complex.inv_im]
+  -- Goal: -(modularLambdaH w).im / |λ(w)|² ≤ 0.
+  rw [neg_div]
+  rw [neg_nonpos]
+  exact div_nonneg h_strip hlamw_normSq_pos.le
 
 /-- **Sub-lemma for Step A: `Im(λ) ≠ 0` on `F^o`.** The modular
 function `λ` takes no real values on the open fundamental domain.
