@@ -35,10 +35,35 @@ Composing with the Cayley transform `cayleyToHalfPlane : 𝔻 → ℍ` from
 covering map used in the proof of the Montel–Carathéodory theorem
 (`StrongMontel`).
 
-This file is currently architecture only: all properties (omitting
-`{0, 1}`, Γ(2)-invariance, covering-map property) are stated as
-`sorry`-stubbed theorems pending the full modular-forms / theta
-identity development.
+This file develops the analytic-and-arithmetic machinery for `λ`
+and its theta nullwerte:
+
+* The modular transformations under `T : τ ↦ τ + 1` and `S : τ ↦ −1/τ`
+  for `θ₂`, `θ₃`, `θ₄`, and the derived identities `λ(τ + 2) = λ(τ)`,
+  `λ(τ) + λ(−1/τ) = 1`, `λ(τ/(2τ + 1)) = λ(τ)`.
+* The q-expansion `λ(τ) = 16q − 128q² + 704q³ − 3072q⁴ + O(q⁵)`
+  (`q := exp(πi τ)`) with explicit residual-norm bounds at successive
+  truncations (`modularLambdaH_norm_sub_lead/two/three/four_term_le_of_im_ge_one`)
+  and the matching derivative bounds (`modularLambdaH_cusp_deriv_*`)
+  used downstream in the Step A / Step C cusp-∞ asymptotics.
+* The cusp parameter map `modularLambdaH_cusp : ℂ → ℂ`,
+  `q ↦ λ(log q / (πi))`, with `modularLambdaH_cusp 0 = 0`,
+  `deriv modularLambdaH_cusp 0 = 16`, holomorphy on `𝔻(0, exp(-π))`,
+  and the `IsZeroAtImInfty` property.
+* The omission lemmas `modularLambdaH_ne_zero` and
+  `modularLambdaH_ne_one` (the `⊆` direction of surjectivity), and
+  the differentiability lemmas `modularLambdaH_differentiableAt_of_im_pos`
+  and `modularLambdaH_differentiableOn`.
+
+The deep biholomorphism `λ(F^o) = {Im w > 0}` and the surjectivity
+`λ('') ℍ = ℂ ∖ {0, 1}` live in `Gamma2FundamentalDomain.lean`,
+which imports this file. Two remaining sorries record open
+classical theorems: the `Γ(2)`-invariance
+(`modularLambdaH_gamma2_invariant`, blocked on the generator
+decomposition of `Γ(2)` in `SL₂(ℤ)`) and the covering-map property
+(`modularLambdaH_isCoveringMapOn`, blocked on the `Γ(2)` action
+machinery); the disk version `modularLambda_isCoveringMapOn` is
+conditional on the latter.
 -/
 
 namespace RiemannDynamics
@@ -7165,37 +7190,6 @@ theorem modularLambdaH_ne_one {τ : ℂ} (hτ : 0 < τ.im) :
     (pow_eq_zero_iff (by norm_num : (4 : ℕ) ≠ 0)).mp h_theta4_pow_zero
   exact h4 h_theta4
 
-/-- **Surjectivity of `λ : ℍ → ℂ ∖ {0, 1}`.** The image of `λ` on `ℍ`
-is exactly the triply-punctured plane.
-
-The `⊆` direction is direct from `modularLambdaH_ne_zero` and
-`modularLambdaH_ne_one` and is closed below. The `⊇` direction —
-surjectivity — is the deep classical theorem. The intended proof
-path uses the **Schwarz reflection principle**
-(`schwarzReflect_differentiableOn`, now closed in
-`SchwarzReflection.lean`): identify a fundamental domain `F` of
-`Γ(2)` on `ℍ` whose interior is mapped biholomorphically by `λ` onto
-one open half of `ℂ ∖ {0, 1}` (say the upper half), with the three
-boundary arcs of `F` mapping to the three real-axis intervals
-`(-∞, 0), (0, 1), (1, +∞)`. The Schwarz reflection principle then
-extends `λ` across each boundary arc to a reflected fundamental
-domain, with image covering the complementary lower half. Iterating
-the reflections tiles all of `ℍ` and the image covers all of
-`ℂ ∖ {0, 1}`. Required infrastructure (still pending):
-explicit `F`, the boundary-correspondence biholomorphism
-`F^o → upper half of ℂ ∖ {0, 1}`, and the Möbius-conjugated Schwarz
-reflection across the two semi-circular boundary arcs. -/
-theorem modularLambdaH_image :
-    modularLambdaH '' { τ : ℂ | 0 < τ.im } = { w : ℂ | w ≠ 0 ∧ w ≠ 1 } := by
-  refine Set.eq_of_subset_of_subset ?_ ?_
-  · -- `⊆`: `λ(ℍ) ⊆ ℂ ∖ {0, 1}` from `modularLambdaH_ne_zero/_ne_one`.
-    rintro w ⟨τ, hτ, rfl⟩
-    exact ⟨modularLambdaH_ne_zero hτ, modularLambdaH_ne_one hτ⟩
-  · -- `⊇`: surjectivity via Schwarz reflection across the fundamental-
-    -- domain boundary arcs of `Γ(2)`. Pending the fundamental-domain
-    -- infrastructure (see doc-comment above).
-    sorry
-
 /-! ## Modular invariance under `Γ(2)` -/
 
 /-- **`Γ(2)`-invariance of `λ` on `ℍ`.**
@@ -7269,18 +7263,6 @@ theorem modularLambda_omits {z : ℂ} (hz : z ∈ ball (0 : ℂ) 1) :
   unfold modularLambda
   have hτ_pos : 0 < (cayleyToHalfPlane z).im := cayleyToHalfPlane_im_pos hz
   exact ⟨modularLambdaH_ne_zero hτ_pos, modularLambdaH_ne_one hτ_pos⟩
-
-/-- The image of `modularLambda` on `𝔻` is exactly `ℂ ∖ {0, 1}`.
-Combines `cayleyToHalfPlane_image_ball` (Cayley sends `𝔻` onto `ℍ`)
-with `modularLambdaH_image` (surjectivity of `λ` onto the
-triply-punctured plane). -/
-theorem modularLambda_image :
-    modularLambda '' ball (0 : ℂ) 1 = { w : ℂ | w ≠ 0 ∧ w ≠ 1 } := by
-  unfold modularLambda
-  rw [show (fun z => modularLambdaH (cayleyToHalfPlane z))
-        = modularLambdaH ∘ cayleyToHalfPlane from rfl,
-      Set.image_comp, cayleyToHalfPlane_image_ball]
-  exact modularLambdaH_image
 
 /-- `modularLambda` is holomorphic on the unit disk. Composition of
 `cayleyToHalfPlane : 𝔻 → ℍ` (Möbius, hence differentiable on `𝔻`) with
