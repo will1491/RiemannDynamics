@@ -33,9 +33,8 @@ circular boundary arcs require a Möbius-conjugated version of
 Schwarz reflection.
 
 This file sets up the fundamental domain and its basic topological
-properties. The deep biholomorphism and tiling steps consumed by the
-surjectivity argument for `modularLambdaH_image` are stated here as
-deferred theorems.
+properties, together with the deep biholomorphism and tiling steps
+consumed by the surjectivity argument for `modularLambdaH_image`.
 -/
 
 namespace RiemannDynamics
@@ -2745,6 +2744,164 @@ theorem modularLambdaH_add_one_eq_div_sub_one {τ : ℂ} (hτ : 0 < τ.im) :
   field_simp
   linear_combination -(theta2 τ ^ 4) * h_jacobi
 
+/-- **Cusp 1 norm limit inside `F^o`.** As `τ → 1` along any path in
+`F^o`, `‖λ(τ)‖ → ∞`. Proof: `σ := τ − 1 → 0` with `Re σ < 0` and
+`Im σ > 0`. Set `w := −1/σ`. Then `|w|² = 1/|σ|² → ∞`; the F^o
+constraint `‖2τ − 1‖ > 1` gives `Re w < 1`, hence
+`Im²w ≥ |w|² − 1 → ∞`. The cusp-∞ bound
+`modularLambdaH_norm_le_exp_of_im_ge_one` then gives `λ(w) → 0`, and the
+T-shift identity `λ(τ) = 1 − 1/λ(w)` yields `‖λ(τ)‖ → ∞`. -/
+theorem modularLambdaH_cusp_one_tendsto_norm_atTop_in_F :
+    Filter.Tendsto (fun τ => ‖modularLambdaH τ‖)
+      (nhdsWithin (1 : ℂ) Gamma2FundamentalDomainInterior) Filter.atTop := by
+  rw [Filter.tendsto_atTop]
+  intro N
+  have hπ_pos : (0:ℝ) < Real.pi := Real.pi_pos
+  set M : ℝ := |N| + 2 with hM_def
+  have hM_pos : 0 < M := by rw [hM_def]; have := abs_nonneg N; linarith
+  have hM_minus_one_ge_N : N ≤ M - 1 := by
+    rw [hM_def]; have := le_abs_self N; linarith
+  set K : ℝ := max 1 (Real.log (160000 * M) / Real.pi) with hK_def
+  have hK_ge_one : 1 ≤ K := le_max_left _ _
+  have hK_pos : 0 < K := by linarith
+  have h_K_ge_log : Real.log (160000 * M) / Real.pi ≤ K := le_max_right _ _
+  have h_log_pos : 0 < 160000 * M := by positivity
+  have h_exp_K_pos : 0 < Real.exp (Real.pi * K) := Real.exp_pos _
+  have h_exp_K_ge : 160000 * M ≤ Real.exp (Real.pi * K) := by
+    have h_step : Real.log (160000 * M) ≤ Real.pi * K := by
+      rw [div_le_iff₀ hπ_pos] at h_K_ge_log; linarith
+    have := Real.exp_le_exp.mpr h_step
+    rwa [Real.exp_log h_log_pos] at this
+  have h_exp_neg_K : 160000 * Real.exp (-Real.pi * K) ≤ 1 / M := by
+    rw [show -Real.pi * K = -(Real.pi * K) from by ring, Real.exp_neg, le_div_iff₀ hM_pos]
+    rw [show (160000 * (Real.exp (Real.pi * K))⁻¹ * M : ℝ) =
+      (160000 * M) / Real.exp (Real.pi * K) from by field_simp]
+    rw [div_le_one h_exp_K_pos]
+    exact h_exp_K_ge
+  set δ : ℝ := 1 / (K + 1) with hδ_def
+  have hK_p1_pos : 0 < K + 1 := by linarith
+  have hδ_pos : 0 < δ := by rw [hδ_def]; positivity
+  refine Filter.eventually_iff_exists_mem.mpr
+    ⟨Metric.ball (1 : ℂ) δ ∩ Gamma2FundamentalDomainInterior, ?_, ?_⟩
+  · rw [mem_nhdsWithin]
+    refine ⟨Metric.ball (1 : ℂ) δ, Metric.isOpen_ball, Metric.mem_ball_self hδ_pos, ?_⟩
+    intro y hy; exact hy
+  · intro τ ⟨hτ_ball, hτ_F⟩
+    obtain ⟨hτ_im_pos, hτ_re_pos, hτ_re_lt_one, hτ_semicircle⟩ := hτ_F
+    rw [Metric.mem_ball, Complex.dist_eq] at hτ_ball
+    set σ := τ - 1 with hσ_def
+    have hσ_norm_lt : ‖σ‖ < δ := hτ_ball
+    have hσ_im_pos : 0 < σ.im := by
+      change 0 < (τ - 1).im
+      simp only [Complex.sub_im, Complex.one_im, sub_zero]; exact hτ_im_pos
+    have hσ_re_neg : σ.re < 0 := by
+      change (τ - 1).re < 0
+      simp only [Complex.sub_re, Complex.one_re]; linarith
+    have hσ_ne : σ ≠ 0 := fun h => by rw [h] at hσ_im_pos; simp at hσ_im_pos
+    have hσ_norm_pos : 0 < ‖σ‖ := norm_pos_iff.mpr hσ_ne
+    have hσ_normSq_eq : Complex.normSq σ = ‖σ‖^2 := by rw [← Complex.sq_norm]
+    have hσ_normSq_pos : 0 < Complex.normSq σ := Complex.normSq_pos.mpr hσ_ne
+    have hτ_F_constraint : -σ.re < Complex.normSq σ := by
+      have h_sq_lt : 1 < ‖2 * τ - 1‖^2 := by
+        have h_norm_nn : 0 ≤ ‖2 * τ - 1‖ := norm_nonneg _
+        nlinarith
+      have h_eq : 2 * τ - 1 = 2 * σ + 1 := by rw [hσ_def]; ring
+      have h_normSq_eq : Complex.normSq (2 * τ - 1) > 1 := by
+        rw [← Complex.sq_norm]; exact h_sq_lt
+      rw [h_eq] at h_normSq_eq
+      have h_expand : Complex.normSq (2 * σ + 1) = 4 * Complex.normSq σ + 4 * σ.re + 1 := by
+        simp [Complex.normSq_apply, Complex.add_re, Complex.add_im, Complex.mul_re,
+          Complex.mul_im, Complex.one_re, Complex.one_im]; ring
+      rw [h_expand] at h_normSq_eq
+      linarith
+    set w := -1 / σ with hw_def
+    have hw_eq_neg_inv : w = -σ⁻¹ := by rw [hw_def, neg_div, one_div]
+    have hw_re : w.re = -σ.re / Complex.normSq σ := by
+      rw [hw_eq_neg_inv, Complex.neg_re, Complex.inv_re]; ring
+    have hw_im : w.im = σ.im / Complex.normSq σ := by
+      rw [hw_eq_neg_inv, Complex.neg_im, Complex.inv_im]; ring
+    have hw_im_pos : 0 < w.im := by
+      rw [hw_im]; exact div_pos hσ_im_pos hσ_normSq_pos
+    have hw_re_pos : 0 < w.re := by
+      rw [hw_re]; apply div_pos _ hσ_normSq_pos; linarith
+    have hw_re_lt_one : w.re < 1 := by
+      rw [hw_re]; rw [div_lt_one hσ_normSq_pos]
+      linarith
+    have hw_normSq_eq : Complex.normSq w = 1 / Complex.normSq σ := by
+      have h1 : ‖w‖^2 = Complex.normSq w := Complex.sq_norm _
+      have h2 : ‖σ‖^2 = Complex.normSq σ := Complex.sq_norm _
+      have h3 : ‖w‖ = ‖σ‖⁻¹ := by rw [hw_eq_neg_inv, norm_neg, norm_inv]
+      rw [← h1, h3, inv_pow, h2, one_div]
+    have h_normSq_σ_lt : Complex.normSq σ < δ^2 := by
+      rw [hσ_normSq_eq]
+      apply sq_lt_sq' (by linarith [norm_nonneg σ]) hσ_norm_lt
+    have hw_normSq_gt : Complex.normSq w > (K + 1)^2 := by
+      rw [hw_normSq_eq]
+      rw [gt_iff_lt, lt_div_iff₀ hσ_normSq_pos]
+      have h_pos_sq : 0 < (K + 1)^2 := by positivity
+      have h_step : (K + 1)^2 * Complex.normSq σ < (K + 1)^2 * δ^2 :=
+        mul_lt_mul_of_pos_left h_normSq_σ_lt h_pos_sq
+      have h_δsq_inv : δ^2 = 1 / (K + 1)^2 := by
+        rw [hδ_def, div_pow, one_pow]
+      have h_eq : (K + 1)^2 * δ^2 = 1 := by
+        rw [h_δsq_inv]; field_simp
+      linarith
+    have hw_re_sq_lt : w.re^2 < 1 := by nlinarith [hw_re_pos, hw_re_lt_one]
+    have hw_im_sq_gt : w.im^2 > K^2 := by
+      have h_normSq : Complex.normSq w = w.re^2 + w.im^2 := by
+        simp [Complex.normSq_apply]; ring
+      have h_sum : w.re^2 + w.im^2 > (K + 1)^2 := h_normSq ▸ hw_normSq_gt
+      nlinarith
+    have hw_im_gt_K : K < w.im := by
+      have h_sq : K^2 < w.im^2 := hw_im_sq_gt
+      nlinarith [hw_im_pos]
+    have hw_im_ge_one : 1 ≤ w.im := by linarith
+    have h_lamw_bound : ‖modularLambdaH w‖ ≤ 160000 * Real.exp (-Real.pi * w.im) :=
+      modularLambdaH_norm_le_exp_of_im_ge_one hw_im_ge_one
+    have h_exp_mono : Real.exp (-Real.pi * w.im) ≤ Real.exp (-Real.pi * K) := by
+      apply Real.exp_le_exp.mpr
+      have h_mul : Real.pi * K ≤ Real.pi * w.im :=
+        mul_le_mul_of_nonneg_left hw_im_gt_K.le hπ_pos.le
+      linarith
+    have h_lamw_le : ‖modularLambdaH w‖ ≤ 1 / M := by
+      calc ‖modularLambdaH w‖
+          ≤ 160000 * Real.exp (-Real.pi * w.im) := h_lamw_bound
+        _ ≤ 160000 * Real.exp (-Real.pi * K) :=
+            mul_le_mul_of_nonneg_left h_exp_mono (by norm_num)
+        _ ≤ 1 / M := h_exp_neg_K
+    have hlamw_ne_zero : modularLambdaH w ≠ 0 := modularLambdaH_ne_zero hw_im_pos
+    have hlamw_norm_pos : 0 < ‖modularLambdaH w‖ := norm_pos_iff.mpr hlamw_ne_zero
+    have h_S : modularLambdaH σ + modularLambdaH w = 1 := by
+      have := modularLambdaH_add_S_smul_eq_one hσ_im_pos
+      rw [hw_def]; exact this
+    have hlamσ_eq : modularLambdaH σ = 1 - modularLambdaH w := by linear_combination h_S
+    have hστ_eq : σ + 1 = τ := by rw [hσ_def]; ring
+    have h_T : modularLambdaH τ = modularLambdaH σ / (modularLambdaH σ - 1) := by
+      rw [← hστ_eq]
+      exact modularLambdaH_add_one_eq_div_sub_one hσ_im_pos
+    have hlamτ_check_eq : modularLambdaH τ = 1 - 1 / modularLambdaH w := by
+      rw [h_T, hlamσ_eq]
+      have h_denom_eq : (1 - modularLambdaH w) - 1 = -modularLambdaH w := by ring
+      rw [h_denom_eq]
+      field_simp; ring
+    rw [hlamτ_check_eq]
+    have h_inv_norm : ‖(1 : ℂ) / modularLambdaH w‖ = 1 / ‖modularLambdaH w‖ := by
+      rw [norm_div, norm_one]
+    have h_inv_lower : M ≤ ‖(1 : ℂ) / modularLambdaH w‖ := by
+      rw [h_inv_norm, le_div_iff₀ hlamw_norm_pos]
+      have h_step : ‖modularLambdaH w‖ * M ≤ (1 / M) * M :=
+        mul_le_mul_of_nonneg_right h_lamw_le hM_pos.le
+      rw [div_mul_cancel₀ 1 (ne_of_gt hM_pos)] at h_step
+      linarith
+    have h_tri : ‖(1 : ℂ) / modularLambdaH w‖ - ‖(1 : ℂ)‖ ≤
+        ‖(1 : ℂ) / modularLambdaH w - 1‖ :=
+      norm_sub_norm_le _ _
+    have h_one_norm : ‖(1 : ℂ)‖ = 1 := norm_one
+    have h_eq_neg : (1 : ℂ) / modularLambdaH w - 1 = -((1 : ℂ) - 1 / modularLambdaH w) := by
+      ring
+    rw [h_eq_neg, norm_neg] at h_tri
+    linarith
+
 /-- **Direct three-term q-expansion bound on `λ'` at `τ.im ≥ 1`.**
 For `τ ∈ ℍ` with `τ.im ≥ 1`,
 `‖deriv λ τ − 16πi q + 256πi q² − 2112πi q³‖ ≤ 100000 · exp(−4π·τ.im)`
@@ -4182,16 +4339,290 @@ on the sequence `(τₙ)`:
   Gives `λ(τₙ) → 0`, contradicting `w ∈ {Im w > 0}`.
 
 All four contradictions rule out the "limit outside `F^o`" cases,
-leaving only the "limit in `F^o`" case, which gives `w ∈ λ(F^o)`.
-
-This is held as an architectural `sorry` pending dedicated work to
-establish the uniform cusp asymptotics in F^o (specifically, the
-non-trivial cusp 0 limit via S-shift and the cusp ∞ norm bound via
-existing theta-norm lemmas). -/
+leaving only the "limit in `F^o`" case, which gives `w ∈ λ(F^o)`. -/
 theorem modularLambdaH_F_image_isClosed_in_upperHalf :
     IsClosed (((↑) : { w : ℂ // 0 < w.im } → ℂ) ⁻¹'
       (modularLambdaH '' Gamma2FundamentalDomainInterior)) := by
-  sorry
+  refine IsSeqClosed.isClosed ?_
+  intro xn x_target hxn_in hxn_tendsto
+  -- Choose τₙ ∈ F^o with λ(τₙ) = (xn n).val.
+  have h_exists : ∀ n, ∃ τ, τ ∈ Gamma2FundamentalDomainInterior ∧
+      modularLambdaH τ = (xn n).val := fun n => hxn_in n
+  choose τ hτ_pair using h_exists
+  have hτF : ∀ n, τ n ∈ Gamma2FundamentalDomainInterior := fun n => (hτ_pair n).1
+  have hτlam : ∀ n, modularLambdaH (τ n) = (xn n).val := fun n => (hτ_pair n).2
+  -- λ(τₙ) → x_target.val in ℂ.
+  have h_xn_C : Filter.Tendsto (fun n => (xn n).val) Filter.atTop (nhds x_target.val) :=
+    (continuous_subtype_val.tendsto _).comp hxn_tendsto
+  have h_lamτ_C : Filter.Tendsto (fun n => modularLambdaH (τ n)) Filter.atTop
+      (nhds x_target.val) := by
+    have h_eq : (fun n => modularLambdaH (τ n)) = (fun n => (xn n).val) := funext hτlam
+    rw [h_eq]; exact h_xn_C
+  have h_x_im_pos : 0 < x_target.val.im := x_target.property
+  have h_x_norm_pos : 0 < ‖x_target.val‖ := by
+    calc 0 < x_target.val.im := h_x_im_pos
+      _ ≤ |x_target.val.im| := le_abs_self _
+      _ ≤ ‖x_target.val‖ := Complex.abs_im_le_norm _
+  -- ‖λ(τₙ)‖ → ‖x_target.val‖.
+  have h_norm_lamτ : Filter.Tendsto (fun n => ‖modularLambdaH (τ n)‖) Filter.atTop
+      (nhds ‖x_target.val‖) :=
+    (continuous_norm.tendsto _).comp h_lamτ_C
+  -- Pick Y so that for Im τ ≥ Y, ‖λ τ‖ ≤ ‖x_target.val‖/2.
+  have hπ_pos : 0 < Real.pi := Real.pi_pos
+  set Y : ℝ := max 1 (Real.log (320000 / ‖x_target.val‖) / Real.pi) with hY_def
+  have hY_ge_one : 1 ≤ Y := le_max_left _ _
+  have hY_log_le : Real.log (320000 / ‖x_target.val‖) / Real.pi ≤ Y := le_max_right _ _
+  have h_quot_pos : 0 < 320000 / ‖x_target.val‖ := by positivity
+  have h_exp_Y : 320000 / ‖x_target.val‖ ≤ Real.exp (Real.pi * Y) := by
+    have h_step : Real.log (320000 / ‖x_target.val‖) ≤ Real.pi * Y := by
+      rw [div_le_iff₀ hπ_pos] at hY_log_le; linarith
+    have := Real.exp_le_exp.mpr h_step
+    rwa [Real.exp_log h_quot_pos] at this
+  -- For Im τ ≥ Y: 160000 * exp(-π·Im τ) ≤ ‖x_target.val‖/2.
+  have h_bound_at_Y : 160000 * Real.exp (-Real.pi * Y) ≤ ‖x_target.val‖ / 2 := by
+    rw [show -Real.pi * Y = -(Real.pi * Y) from by ring, Real.exp_neg]
+    have h_exp_pos : 0 < Real.exp (Real.pi * Y) := Real.exp_pos _
+    have h_320 : 320000 ≤ Real.exp (Real.pi * Y) * ‖x_target.val‖ := by
+      have h := h_exp_Y
+      rw [div_le_iff₀ h_x_norm_pos] at h
+      linarith
+    rw [le_div_iff₀ (by norm_num : (0 : ℝ) < 2)]
+    rw [show (160000 * (Real.exp (Real.pi * Y))⁻¹ * 2 : ℝ) =
+      320000 / Real.exp (Real.pi * Y) from by field_simp; ring]
+    rw [div_le_iff₀ h_exp_pos]
+    linarith
+  -- Eventually ‖λ τₙ‖ > ‖x_target.val‖ / 2.
+  have h_eventually_large : ∀ᶠ n in Filter.atTop, ‖x_target.val‖ / 2 < ‖modularLambdaH (τ n)‖ := by
+    have h_half_lt : ‖x_target.val‖ / 2 < ‖x_target.val‖ := by linarith
+    exact h_norm_lamτ.eventually_const_lt h_half_lt
+  -- Define K (eventually contains τₙ).
+  set K : Set ℂ := { z : ℂ | 0 ≤ z.im ∧ z.im ≤ Y ∧ 0 ≤ z.re ∧ z.re ≤ 1 ∧ 1 ≤ ‖2 * z - 1‖ }
+    with hK_def
+  -- Continuity helpers.
+  have h2zm1_cont : Continuous (fun z : ℂ => 2 * z - 1) :=
+    (continuous_const.mul continuous_id).sub continuous_const
+  -- K is closed.
+  have hK_closed : IsClosed K := by
+    refine (isClosed_le continuous_const Complex.continuous_im).inter ?_
+    refine (isClosed_le Complex.continuous_im continuous_const).inter ?_
+    refine (isClosed_le continuous_const Complex.continuous_re).inter ?_
+    refine (isClosed_le Complex.continuous_re continuous_const).inter ?_
+    exact isClosed_le continuous_const h2zm1_cont.norm
+  -- K is bounded.
+  have hK_bdd : Bornology.IsBounded K := by
+    refine Bornology.IsBounded.subset (Metric.isBounded_ball (x := (0 : ℂ)) (r := Y + 2)) ?_
+    intro z hz
+    obtain ⟨h_im_nn, h_im_le, h_re_nn, h_re_le, _⟩ := hz
+    rw [Metric.mem_ball, dist_zero_right]
+    have h_sq : ‖z‖^2 < (Y + 2)^2 := by
+      rw [Complex.sq_norm, Complex.normSq_apply]
+      nlinarith [hY_ge_one]
+    nlinarith [norm_nonneg z, sq_nonneg (Y + 2 - ‖z‖)]
+  -- K is compact.
+  have hK_compact : IsCompact K := Metric.isCompact_of_isClosed_isBounded hK_closed hK_bdd
+  -- Eventually τₙ ∈ K.
+  have h_eventually_in_K : ∀ᶠ n in Filter.atTop, τ n ∈ K := by
+    filter_upwards [h_eventually_large] with n hn_large
+    obtain ⟨hτ_im_pos, hτ_re_pos, hτ_re_lt_one, hτ_semicircle⟩ := hτF n
+    refine ⟨hτ_im_pos.le, ?_, hτ_re_pos.le, hτ_re_lt_one.le, hτ_semicircle.le⟩
+    -- Im τₙ ≤ Y. Otherwise ‖λ τₙ‖ ≤ 160000 exp(-π Im τₙ) ≤ 160000 exp(-π Y) ≤ ‖x‖/2.
+    by_contra h_im_gt
+    push Not at h_im_gt
+    have h_im_ge_Y : Y ≤ (τ n).im := h_im_gt.le
+    have h_im_ge_one : 1 ≤ (τ n).im := le_trans hY_ge_one h_im_ge_Y
+    have h_bound : ‖modularLambdaH (τ n)‖ ≤ 160000 * Real.exp (-Real.pi * (τ n).im) :=
+      modularLambdaH_norm_le_exp_of_im_ge_one h_im_ge_one
+    have h_exp_le : Real.exp (-Real.pi * (τ n).im) ≤ Real.exp (-Real.pi * Y) := by
+      apply Real.exp_le_exp.mpr
+      have h_pi_Y_le : Real.pi * Y ≤ Real.pi * (τ n).im :=
+        mul_le_mul_of_nonneg_left h_im_ge_Y hπ_pos.le
+      linarith
+    have h_chain : ‖modularLambdaH (τ n)‖ ≤ ‖x_target.val‖ / 2 := by
+      calc ‖modularLambdaH (τ n)‖
+          ≤ 160000 * Real.exp (-Real.pi * (τ n).im) := h_bound
+        _ ≤ 160000 * Real.exp (-Real.pi * Y) :=
+            mul_le_mul_of_nonneg_left h_exp_le (by norm_num)
+        _ ≤ ‖x_target.val‖ / 2 := h_bound_at_Y
+    linarith
+  -- Extract n₀ such that τₙ ∈ K for n ≥ n₀.
+  obtain ⟨n₀, hn₀⟩ := Filter.eventually_atTop.mp h_eventually_in_K
+  -- Shifted sequence τ' n := τ (n + n₀).
+  set τ' : ℕ → ℂ := fun n => τ (n + n₀) with hτ'_def
+  have hτ'_in_K : ∀ n, τ' n ∈ K := fun n => hn₀ (n + n₀) (Nat.le_add_left n₀ n)
+  -- Bolzano-Weierstrass on K.
+  obtain ⟨τStar, hτStar_in_K, φ, hφ_mono, hφ_tendsto⟩ :=
+    hK_compact.tendsto_subseq hτ'_in_K
+  -- τStar ∈ K. λ ∘ τ' ∘ φ → x_target.val.
+  have h_lamτ'_tendsto : Filter.Tendsto (fun n => modularLambdaH (τ' (φ n))) Filter.atTop
+      (nhds x_target.val) := by
+    have h_lamτ' : Filter.Tendsto (fun n => modularLambdaH (τ' n)) Filter.atTop
+        (nhds x_target.val) := by
+      have h_shift : (fun n => modularLambdaH (τ' n)) =
+          (fun n => modularLambdaH (τ n)) ∘ (fun n => n + n₀) := by
+        funext n; rfl
+      rw [h_shift]
+      exact h_lamτ_C.comp (Filter.tendsto_add_atTop_nat n₀)
+    exact h_lamτ'.comp hφ_mono.tendsto_atTop
+  -- Extract closure constraints on τStar.
+  obtain ⟨hτs_im_nn, hτs_im_le_Y, hτs_re_nn, hτs_re_le, hτs_sc⟩ := hτStar_in_K
+  -- Case split on τStar.
+  by_cases h_τs_im_pos : 0 < τStar.im
+  · -- τStar.im > 0: cases on which boundary condition (Re, semicircle) is active.
+    by_cases h_re_zero : τStar.re ≤ 0
+    · -- Re τStar = 0. λ(τStar) is real. Contradicts x_target.val.im > 0.
+      exfalso
+      have h_re_eq : τStar.re = 0 := le_antisymm h_re_zero hτs_re_nn
+      have h_z_eq : τStar = Complex.I * ((τStar.im : ℝ) : ℂ) := by
+        apply Complex.ext
+        · simp [Complex.mul_re, Complex.I_re, Complex.I_im, Complex.ofReal_re,
+            Complex.ofReal_im, h_re_eq]
+        · simp [Complex.mul_im, Complex.I_re, Complex.I_im, Complex.ofReal_re,
+            Complex.ofReal_im]
+      have h_lamτs_real : (modularLambdaH τStar).im = 0 := by
+        rw [h_z_eq]; exact modularLambdaH_pure_imag_real h_τs_im_pos
+      -- λ(τ'_{φ n}) → λ(τStar) by continuity.
+      have h_τs_im_pos' : 0 < τStar.im := h_τs_im_pos
+      have h_lam_cont : ContinuousAt modularLambdaH τStar :=
+        (modularLambdaH_differentiableAt_of_im_pos h_τs_im_pos').continuousAt
+      have h_lamτ'φ_to_τs : Filter.Tendsto (fun n => modularLambdaH (τ' (φ n))) Filter.atTop
+          (nhds (modularLambdaH τStar)) := h_lam_cont.tendsto.comp hφ_tendsto
+      have h_lamτs_eq : modularLambdaH τStar = x_target.val :=
+        tendsto_nhds_unique h_lamτ'φ_to_τs h_lamτ'_tendsto
+      have : x_target.val.im = 0 := by rw [← h_lamτs_eq]; exact h_lamτs_real
+      linarith
+    push Not at h_re_zero
+    by_cases h_re_one : 1 ≤ τStar.re
+    · -- Re τStar = 1. λ real. Contradiction.
+      exfalso
+      have h_re_eq : τStar.re = 1 := le_antisymm hτs_re_le h_re_one
+      have h_z_eq : τStar = 1 + Complex.I * ((τStar.im : ℝ) : ℂ) := by
+        apply Complex.ext
+        · simp [Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
+            Complex.one_re, Complex.ofReal_re, Complex.ofReal_im, h_re_eq]
+        · simp [Complex.add_im, Complex.mul_im, Complex.I_re, Complex.I_im,
+            Complex.one_im, Complex.ofReal_re, Complex.ofReal_im]
+      have h_lamτs_real : (modularLambdaH τStar).im = 0 := by
+        rw [h_z_eq]; exact modularLambdaH_one_add_imag_real h_τs_im_pos
+      have h_τs_im_pos' : 0 < τStar.im := h_τs_im_pos
+      have h_lam_cont : ContinuousAt modularLambdaH τStar :=
+        (modularLambdaH_differentiableAt_of_im_pos h_τs_im_pos').continuousAt
+      have h_lamτ'φ_to_τs : Filter.Tendsto (fun n => modularLambdaH (τ' (φ n))) Filter.atTop
+          (nhds (modularLambdaH τStar)) := h_lam_cont.tendsto.comp hφ_tendsto
+      have h_lamτs_eq : modularLambdaH τStar = x_target.val :=
+        tendsto_nhds_unique h_lamτ'φ_to_τs h_lamτ'_tendsto
+      have : x_target.val.im = 0 := by rw [← h_lamτs_eq]; exact h_lamτs_real
+      linarith
+    push Not at h_re_one
+    by_cases h_sc_eq : ‖2 * τStar - 1‖ ≤ 1
+    · -- ‖2τStar - 1‖ = 1: semicircle. λ real. Contradiction.
+      exfalso
+      have h_sc_eq' : ‖2 * τStar - 1‖ = 1 := le_antisymm h_sc_eq hτs_sc
+      have h_lamτs_real : (modularLambdaH τStar).im = 0 :=
+        modularLambdaH_semicircle_real h_τs_im_pos h_sc_eq'
+      have h_lam_cont : ContinuousAt modularLambdaH τStar :=
+        (modularLambdaH_differentiableAt_of_im_pos h_τs_im_pos).continuousAt
+      have h_lamτ'φ_to_τs : Filter.Tendsto (fun n => modularLambdaH (τ' (φ n))) Filter.atTop
+          (nhds (modularLambdaH τStar)) := h_lam_cont.tendsto.comp hφ_tendsto
+      have h_lamτs_eq : modularLambdaH τStar = x_target.val :=
+        tendsto_nhds_unique h_lamτ'φ_to_τs h_lamτ'_tendsto
+      have : x_target.val.im = 0 := by rw [← h_lamτs_eq]; exact h_lamτs_real
+      linarith
+    push Not at h_sc_eq
+    -- τStar ∈ F^o.
+    have hτStar_in_F : τStar ∈ Gamma2FundamentalDomainInterior :=
+      ⟨h_τs_im_pos, h_re_zero, h_re_one, h_sc_eq⟩
+    have h_lam_cont : ContinuousAt modularLambdaH τStar :=
+      (modularLambdaH_differentiableAt_of_im_pos h_τs_im_pos).continuousAt
+    have h_lamτ'φ_to_τs : Filter.Tendsto (fun n => modularLambdaH (τ' (φ n))) Filter.atTop
+        (nhds (modularLambdaH τStar)) := h_lam_cont.tendsto.comp hφ_tendsto
+    have h_lamτs_eq : modularLambdaH τStar = x_target.val :=
+      tendsto_nhds_unique h_lamτ'φ_to_τs h_lamτ'_tendsto
+    -- x_target.val ∈ λ(F^o).
+    exact ⟨τStar, hτStar_in_F, h_lamτs_eq⟩
+  · -- τStar.im = 0. So τStar is on the real axis. K constraints force τStar = 0 or 1.
+    push Not at h_τs_im_pos
+    have h_τs_im_zero : τStar.im = 0 := le_antisymm h_τs_im_pos hτs_im_nn
+    -- ‖2τStar - 1‖² ≥ 1 with Im τStar = 0 gives (2 Re τStar - 1)² ≥ 1.
+    have h_sc_sq : 1 ≤ ‖2 * τStar - 1‖^2 := by
+      have h_nn : 0 ≤ ‖2 * τStar - 1‖ := norm_nonneg _
+      nlinarith [hτs_sc]
+    have h_2zm1_sq : ‖2 * τStar - 1‖^2 = (2 * τStar.re - 1)^2 + (2 * τStar.im)^2 := by
+      rw [Complex.sq_norm, Complex.normSq_apply]
+      simp [Complex.sub_re, Complex.sub_im, Complex.mul_re, Complex.mul_im,
+        Complex.one_re, Complex.one_im]
+      ring
+    rw [h_2zm1_sq, h_τs_im_zero] at h_sc_sq
+    have h_re_sq : 1 ≤ (2 * τStar.re - 1)^2 := by linarith
+    have h_re_outside : τStar.re ≤ 0 ∨ 1 ≤ τStar.re := by
+      rcases le_or_gt (2 * τStar.re - 1) 0 with h | h
+      · left; nlinarith [sq_nonneg (2 * τStar.re - 1)]
+      · right; nlinarith [sq_nonneg (2 * τStar.re - 1)]
+    rcases h_re_outside with h_re_le_0 | h_re_ge_1
+    · -- τStar = 0 (cusp 0).
+      exfalso
+      have h_re_zero : τStar.re = 0 := le_antisymm h_re_le_0 hτs_re_nn
+      have h_τStar_eq_zero : τStar = 0 := by
+        apply Complex.ext
+        · simp [h_re_zero]
+        · simp [h_τs_im_zero]
+      -- τ' ∘ φ → 0 in F^o. So λ(τ' ∘ φ) → 1 by cusp-0 limit.
+      have hτ'φ_tendsto : Filter.Tendsto (fun n => τ' (φ n)) Filter.atTop (nhds (0 : ℂ)) := by
+        rw [← h_τStar_eq_zero]; exact hφ_tendsto
+      have hτ'φ_in_F : ∀ n, τ' (φ n) ∈ Gamma2FundamentalDomainInterior :=
+        fun n => hτF (φ n + n₀)
+      have hτ'φ_tendsto_in_F :
+          Filter.Tendsto (fun n => τ' (φ n)) Filter.atTop
+            (nhdsWithin (0 : ℂ) Gamma2FundamentalDomainInterior) := by
+        rw [nhdsWithin, Filter.tendsto_inf]
+        refine ⟨hτ'φ_tendsto, ?_⟩
+        rw [Filter.tendsto_principal]
+        exact Filter.Eventually.of_forall hτ'φ_in_F
+      have h_cusp0 :
+          Filter.Tendsto (fun n => modularLambdaH (τ' (φ n))) Filter.atTop (nhds 1) :=
+        modularLambdaH_cusp_zero_tendsto_one_in_F.comp hτ'φ_tendsto_in_F
+      have h_x_eq_one : x_target.val = 1 := tendsto_nhds_unique h_lamτ'_tendsto h_cusp0
+      have : x_target.val.im = 0 := by rw [h_x_eq_one]; rfl
+      linarith
+    · -- τStar = 1 (cusp 1).
+      exfalso
+      have h_re_one : τStar.re = 1 := le_antisymm hτs_re_le h_re_ge_1
+      have h_τStar_eq_one : τStar = 1 := by
+        apply Complex.ext
+        · simp [h_re_one]
+        · simp [h_τs_im_zero]
+      have hτ'φ_tendsto : Filter.Tendsto (fun n => τ' (φ n)) Filter.atTop (nhds (1 : ℂ)) := by
+        rw [← h_τStar_eq_one]; exact hφ_tendsto
+      have hτ'φ_in_F : ∀ n, τ' (φ n) ∈ Gamma2FundamentalDomainInterior :=
+        fun n => hτF (φ n + n₀)
+      have hτ'φ_tendsto_in_F :
+          Filter.Tendsto (fun n => τ' (φ n)) Filter.atTop
+            (nhdsWithin (1 : ℂ) Gamma2FundamentalDomainInterior) := by
+        rw [nhdsWithin, Filter.tendsto_inf]
+        refine ⟨hτ'φ_tendsto, ?_⟩
+        rw [Filter.tendsto_principal]
+        exact Filter.Eventually.of_forall hτ'φ_in_F
+      have h_cusp1 :
+          Filter.Tendsto (fun n => ‖modularLambdaH (τ' (φ n))‖) Filter.atTop Filter.atTop :=
+        modularLambdaH_cusp_one_tendsto_norm_atTop_in_F.comp hτ'φ_tendsto_in_F
+      have h_norm_lamτ'φ_tendsto :
+          Filter.Tendsto (fun n => ‖modularLambdaH (τ' (φ n))‖) Filter.atTop
+            (nhds ‖x_target.val‖) := (continuous_norm.tendsto _).comp h_lamτ'_tendsto
+      -- Cannot tend to both atTop and to a finite value: pick conflicting witnesses.
+      have h_at1 := h_cusp1
+      rw [Filter.tendsto_atTop] at h_at1
+      have h_at1_event := h_at1 (‖x_target.val‖ + 1)
+      rw [Metric.tendsto_atTop] at h_norm_lamτ'φ_tendsto
+      obtain ⟨N₂, hN₂⟩ := h_norm_lamτ'φ_tendsto 1 (by norm_num)
+      obtain ⟨N₁, hN₁⟩ := Filter.eventually_atTop.mp h_at1_event
+      set N := max N₁ N₂
+      have h_ge : ‖x_target.val‖ + 1 ≤ ‖modularLambdaH (τ' (φ N))‖ :=
+        hN₁ N (le_max_left _ _)
+      have h_close : dist (‖modularLambdaH (τ' (φ N))‖) (‖x_target.val‖) < 1 :=
+        hN₂ N (le_max_right _ _)
+      rw [Real.dist_eq] at h_close
+      have h_lt : ‖modularLambdaH (τ' (φ N))‖ - ‖x_target.val‖ < 1 :=
+        (abs_lt.mp h_close).2
+      linarith
 
 /-- **Step D — biholomorphism of `λ` on `F^o`.** Combining Steps A, B,
 C and the connectedness of the upper half-plane: `λ(F^o)` is a
