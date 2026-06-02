@@ -9,13 +9,32 @@ import RiemannDynamics.Hyperbolic.ArgumentPrinciple
 import Mathlib.Analysis.Complex.OpenMapping
 
 /-!
-# Fundamental domain of `Γ(2)` and surjectivity of `λ`
+# Half-fundamental-domain triangle of `Γ(2)` and surjectivity of `λ`
 
 The level-2 principal congruence subgroup `Γ(2) ⊂ SL(2, ℤ)` acts on
-the upper half-plane `ℍ`. A standard fundamental domain is the strip
-of width `1` with a semi-circular notch removed:
+the upper half-plane `ℍ`. A strict `Γ(2)`-fundamental domain has
+hyperbolic covolume `2π` (since `[PSL(2, ℤ) : PΓ(2)] = 6` and
+`vol(ℍ/PSL(2, ℤ)) = π/3`). This file works with the *triangle*
 
-  `F := { τ ∈ ℍ : 0 ≤ Re τ ≤ 1, |2τ − 1| ≥ 1 }`.
+  `F := { τ ∈ ℍ : 0 ≤ Re τ ≤ 1, |2τ − 1| ≥ 1 }`,
+
+which is the strip of width `1` with a semi-circular notch removed.
+`F` is an ideal triangle with vertices `0, 1, ∞`; its hyperbolic area
+is
+
+  `∫₀¹ 1/√(1/4 - (x - 1/2)²) dx = π`,
+
+exactly *half* the `Γ(2)`-covolume. So `F` covers half of the
+`Γ(2)`-orbits on `ℍ`. The other half is handled throughout the file
+via the conjugation symmetry
+`modularLambdaH_conj_symmetry : λ(−conj τ) = conj(λ τ)`, which maps
+`F^o` to the reflected triangle `-conj(F^o)` and `{Im w > 0}` to
+`{Im w < 0}`. Together the two triangles tessellate a strict
+`Γ(2)`-fundamental domain.
+
+Despite the loose naming `Gamma2FundamentalDomain`, no theorem in
+this file proves the strict fundamental-domain property; the proven
+content is consistent with the half-triangle interpretation.
 
 The boundary `∂F` consists of three arcs:
 * The vertical line `Re τ = 0` (left edge), `τ ∈ {iy : y > 0}`.
@@ -56,9 +75,16 @@ namespace RiemannDynamics
 
 open Complex Filter Topology Set
 
-/-- The standard fundamental domain of `Γ(2)` acting on the upper
-half-plane: the strip `0 ≤ Re τ ≤ 1` with the half-disk
-`|2τ − 1| < 1` removed. -/
+/-- The half-fundamental-domain triangle of `Γ(2)` acting on the
+upper half-plane: the strip `0 ≤ Re τ ≤ 1` with the half-disk
+`|2τ − 1| < 1` removed. This is an ideal triangle with vertices
+`0, 1, ∞` and hyperbolic area `π`, exactly half the `Γ(2)`-covolume
+`2π`. The remaining half of `Γ(2)`-orbits is reached via the
+conjugation symmetry `modularLambdaH_conj_symmetry`. The name
+`Gamma2FundamentalDomain` is retained for continuity with the
+classical literature, which often uses "fundamental domain" loosely
+when one of the two halves is implicitly identified with the other
+via a real-axis reflection. -/
 def Gamma2FundamentalDomain : Set ℂ :=
   { τ : ℂ | 0 < τ.im ∧ 0 ≤ τ.re ∧ τ.re ≤ 1 ∧ 1 ≤ ‖2 * τ - 1‖ }
 
