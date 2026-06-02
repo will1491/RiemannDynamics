@@ -283,8 +283,7 @@ theorem modularLambdaH_T_smul (τ : ℂ) :
 
 Mathlib provides `θ₃` under `S` as `jacobiTheta_S_smul`. The corresponding
 `S`-transformations for `θ₂` and `θ₄` follow from the functional equation of
-`jacobiTheta₂`, but require shifting the argument `z` and tracking signs;
-they are recorded here as `sorry`-stubbed statements. -/
+`jacobiTheta₂`, after shifting the argument `z` and tracking signs. -/
 
 /-- `θ₂(−1/τ) = √(−iτ) · θ₄(τ)` for `τ ∈ ℍ`. Combines the
 `jacobiTheta₂_functional_equation` evaluated at `z = -1/(2τ), τ = -1/τ`
@@ -4496,7 +4495,7 @@ theorem modularLambdaH_norm_sub_four_term_le_of_im_ge_one {τ : ℂ} (hτ : 1 �
 
 /-! ### Widened four-term bounds on `τ.im ≥ 9/10`
 
-The architectural sorry `modularLambdaH_deriv_norm_sub_three_term_le_of_im_ge_one`
+`modularLambdaH_deriv_norm_sub_three_term_le_of_im_ge_one`
 in `Gamma2FundamentalDomain.lean` reduces (via the chain rule
 `deriv λ τ = πi · q · deriv cusp(q)` with `q = exp(πi τ)`) to a Cauchy
 estimate on `H₄(z) := cusp(z) − 16z + 128z² − 704z³ + 3072z⁴` around
@@ -4992,9 +4991,8 @@ constant is required for the Cauchy closure of
 with the algebraic `12288·‖q‖³` correction, `C ≤ ~35 000` keeps
 `π·(C·12.21·exp(−π) + 12288) ≤ 100000`. The proof inlines sharper
 triangle bounds (`‖1 + (−2q + 5q² − 10q³)‖ ≤ 5/4` instead of the
-loose `≤ 2` used in the `τ.im ≥ 1` helper) and requires multiple
-proof units split across the four bracket terms; the full
-implementation is deferred to a subsequent session. -/
+loose `≤ 2` used in the `τ.im ≥ 1` helper) and splits across the
+four bracket terms. -/
 theorem modularLambdaH_norm_sub_four_term_le_of_im_ge_nine_tenths
     {τ : ℂ} (hτ : (9 : ℝ) / 10 ≤ τ.im) :
     ‖modularLambdaH τ - 16 * Complex.exp (Real.pi * Complex.I * τ) +
@@ -5441,7 +5439,7 @@ By Mathlib's `levelOne_neg_weight_eq_zero` (a negative-weight
 modular form for `SL(2, ℤ)` is identically zero), `g² / Δ = 0`,
 hence `g = 0`.
 
-**Mathlib gaps for closing this lemma.**
+**Mathlib bridges used to close this lemma.**
 1. Bridging the bare `ℂ → ℂ` hypotheses to a Mathlib
    `CuspForm Γ(1) 4`. The `T` and `S` invariance hypotheses give
    slash invariance on the two generators; the full
@@ -5450,15 +5448,13 @@ hence `g = 0`.
    (the pattern used in Mathlib's `EisensteinSeries.E2.Transform`).
 2. Bridging Mathlib's `delta : ℍ → ℂ` to a packaged `CuspForm Γ(1) 12`.
    Mathlib has `delta_T_invariant`, `delta_S_invariant`,
-   `delta_ne_zero`, but the bundled cusp-form instance is not yet
-   exposed.
+   `delta_ne_zero`, which assemble into the bundled cusp-form
+   instance.
 3. Constructing the quotient `g² / Δ` as a `ModularForm Γ(1) (−4)`
-   from the two packaged forms (no Mathlib API for modular-form
-   division; needs custom construction).
-4. The endpoint `levelOne_neg_weight_eq_zero` is in Mathlib and
-   directly applies once the quotient is packaged.
-
-All four are tractable but multi-session formalization tasks. -/
+   from the two packaged forms via a custom modular-form division
+   construction (no off-the-shelf Mathlib API).
+4. The endpoint `levelOne_neg_weight_eq_zero` from Mathlib applies
+   once the quotient is packaged. -/
 theorem holomorphic_weight4_modform_cusp_vanishes
     {g : ℂ → ℂ}
     (h_holo : DifferentiableOn ℂ g { τ : ℂ | 0 < τ.im })
@@ -6104,10 +6100,9 @@ Mathlib's `Function.Periodic.cuspFunction`, we lift it to a function
 on the unit `q`-disk where `q := exp(πi τ)`. The cusp function is
 analytic on the open unit disk, providing the foundation for the
 q-expansion power series of `λ`. The Cauchy estimate on this disk
-will close the three-term derivative bound
+closes the three-term derivative bound
 `modularLambdaH_deriv_norm_sub_three_term_le_of_im_ge_one`
-(in `Gamma2FundamentalDomain.lean`) once the Cauchy step is
-implemented in a subsequent session. -/
+(in `Gamma2FundamentalDomain.lean`). -/
 
 /-- **`λ` is differentiable at every `τ` with `0 < τ.im`.**
 Generalization of `modularLambdaH_differentiableAt_of_im_ge_one`. -/
