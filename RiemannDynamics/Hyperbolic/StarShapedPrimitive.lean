@@ -33,6 +33,40 @@ star center `p ∈ U`, this defines a primitive of `f` on `U`.
 * `Complex.triangleIntegral_eq_zero_of_starShaped`: Cauchy-Goursat for
   triangles with one vertex at the star center.
 
+## Lune-specific support lemmas (consumed by `WindingNumber.lean`)
+
+The following lemmas support the closed-form lune Cauchy-Goursat
+identities in `RiemannDynamics/Hyperbolic/WindingNumber.lean`:
+
+* `Complex.topLeftBoxMinusBall_starConvex`: the upper-left-of-`e` open box
+  minus `closedBall e R₀` is star-convex from the outer corner
+  `(e.re - R₀) + (e.im + R₀)·I`. Geometric content: for any point `Q` in
+  this open set, the segment from the outer corner to `Q` stays outside
+  `closedBall e R₀`. Proof factors through a quadratic non-negativity
+  analysis.
+* `Complex.topRightBoxMinusBall_starConvex`: mirror across `x = e.re`.
+* `Complex.starPrimitive_horizontal_eq_intervalIntegral`: the segment
+  integral from `xV + y·I` to `xZ + y·I` (same imaginary part) equals
+  `∫_{xV}^{xZ} f(x + y·I) dx`. Direct change of variables in the segment
+  parameter.
+* `Complex.starPrimitive_vertical_eq_intervalIntegral`: the segment
+  integral from `x + yV·I` to `x + yZ·I` (same real part) equals
+  `Complex.I · ∫_{yV}^{yZ} f(x + y·I) dy`.
+* `Complex.topLeftLune_arc_integral_eq_starPrimitive_sub`: for the
+  top-left lune setup (open box minus closed disk, star-convex from outer
+  corner), the arc integral over `[π/2, π]` of `f` along
+  `circleMap e R₀ θ` (with the `dz/dθ = I·R₀·exp(I·θ)` factor) equals
+  `starPrimitive V f B − starPrimitive V f T` where
+  `V = (e.re − R₀) + (e.im + R₀)·I`, `T = e + R₀·I`, `B = e − R₀`. The
+  proof factors through the ε-arc limit: for ε > 0, the slightly outer
+  arc `circleMap e (R₀ + ε)` on `[π/2 + ε, π − ε]` lies in the
+  star-convex open set, FTC applies via `hasDerivAt_starPrimitive` and
+  the chain rule with `hasDerivAt_circleMap`, and ε → 0 recovers the
+  full arc integral by dominated convergence and continuity of
+  `starPrimitive` at the endpoints (which uses `Hc`'s continuity of `f`
+  on the closed lune).
+* `Complex.topRightLune_arc_integral_eq_starPrimitive_sub`: mirror.
+
 ## Implementation notes
 
 The proof of `hasDerivAt_starPrimitive` uses a clean d/dt identity:
@@ -414,5 +448,120 @@ theorem triangleIntegral_eq_zero_of_starShaped
   have h3 := intervalIntegral_eq_sub_of_starShaped (p := p) hU hSC hp hf hz₂ hp hseg_z₂p
   -- Sum: (starP z₁ - starP p) + (starP z₂ - starP z₁) + (starP p - starP z₂) = 0.
   linear_combination h1 + h2 + h3
+
+/-! ## Lune-specific support lemmas for `WindingNumber.lean` -/
+
+/-- **Star-convexity of the upper-left-of-`e` open box minus the closed
+ball.** For `e : ℂ`, `R₀ > 0`, `a < e.re - R₀`, `e.im + R₀ < d`, the open
+set `(Set.Ioo a e.re ×ℂ Set.Ioo e.im d) \ Metric.closedBall e R₀` is
+star-convex from the outer corner
+`V := (e.re - R₀ : ℝ) + (e.im + R₀ : ℝ)·I`.
+
+Geometric content: with `q_x := Q.re - e.re ≤ 0` strict (since
+`Q ∈ Ioo a e.re`) and `q_y := Q.im - e.im > 0` strict, the function
+`g(t) := |V + t·(Q - V) - e|² - R₀²` is a quadratic in `t ∈ [0, 1]` whose
+boundary values `g(0) = R₀² ≥ 0` and `g(1) = |Q - e|² - R₀² ≥ 0` are
+non-negative, and whose vertex falls outside `(0, 1)` (or whose minimum
+on `(0, 1)` is non-negative by discriminant analysis). -/
+theorem topLeftBoxMinusBall_starConvex
+    (e : ℂ) (R₀ : ℝ) (_hR₀ : 0 < R₀)
+    (a d : ℝ) (_h_a : a < e.re - R₀) (_h_d : e.im + R₀ < d) :
+    StarConvex ℝ ((↑(e.re - R₀) : ℂ) + (↑(e.im + R₀) : ℂ) * Complex.I)
+      ((Set.Ioo a e.re ×ℂ Set.Ioo e.im d) \ Metric.closedBall e R₀) := by
+  sorry
+
+/-- **Star-convexity of the upper-right-of-`e` open box minus the closed
+ball.** Mirror of `topLeftBoxMinusBall_starConvex` across `x = e.re`. -/
+theorem topRightBoxMinusBall_starConvex
+    (e : ℂ) (R₀ : ℝ) (_hR₀ : 0 < R₀)
+    (b d : ℝ) (_h_b : e.re + R₀ < b) (_h_d : e.im + R₀ < d) :
+    StarConvex ℝ ((↑(e.re + R₀) : ℂ) + (↑(e.im + R₀) : ℂ) * Complex.I)
+      ((Set.Ioo e.re b ×ℂ Set.Ioo e.im d) \ Metric.closedBall e R₀) := by
+  sorry
+
+/-- **Horizontal segment integral via `starPrimitive`.** For
+`V := xV + y·I` and `Z := xZ + y·I` (same imaginary part `y`), the
+segment integral from `V` to `Z` of `f` equals
+`∫_{xV}^{xZ} f(x + y·I) dx`. Direct change of variables
+`x = xV + t·(xZ - xV)` in the segment parameter `t ∈ [0, 1]`. -/
+theorem starPrimitive_horizontal_eq_intervalIntegral
+    (f : ℂ → ℂ) (xV xZ y : ℝ) :
+    Complex.starPrimitive ((xV : ℂ) + (y : ℂ) * Complex.I) f
+        ((xZ : ℂ) + (y : ℂ) * Complex.I) =
+      ∫ x in xV..xZ, f ((x : ℂ) + (y : ℂ) * Complex.I) := by
+  sorry
+
+/-- **Vertical segment integral via `starPrimitive`.** For
+`V := x + yV·I` and `Z := x + yZ·I` (same real part `x`), the segment
+integral from `V` to `Z` of `f` equals
+`Complex.I · ∫_{yV}^{yZ} f(x + y·I) dy`. Direct change of variables
+`y = yV + t·(yZ - yV)`. The `Complex.I` factor comes from `Z - V = (yZ - yV)·I`. -/
+theorem starPrimitive_vertical_eq_intervalIntegral
+    (f : ℂ → ℂ) (x yV yZ : ℝ) :
+    Complex.starPrimitive ((x : ℂ) + (yV : ℂ) * Complex.I) f
+        ((x : ℂ) + (yZ : ℂ) * Complex.I) =
+      Complex.I * ∫ y in yV..yZ, f ((x : ℂ) + (y : ℂ) * Complex.I) := by
+  sorry
+
+/-- **Top-left lune arc identity via `starPrimitive`.** For `f` continuous
+on the closed top-left lune and complex-differentiable on the upper-left
+open box minus closed disk, the arc integral
+`∫_{π/2}^π f(circleMap e R₀ θ) · (I·R₀·exp(I·θ)) dθ` equals
+`starPrimitive V f B − starPrimitive V f T`, where
+`V = (e.re − R₀) + (e.im + R₀)·I`, `T = e.re + (e.im + R₀)·I`,
+`B = (e.re − R₀) + e.im·I`.
+
+Proof factors through the ε-arc limit:
+* For `ε > 0` small, the slightly outer arc
+  `circleMap e (R₀ + ε) θ` on `[π/2 + ε, π − ε]` lies in the
+  star-convex open set `U := (Ioo a e.re ×ℂ Ioo e.im d) \ closedBall e R₀`.
+* `F := starPrimitive V f` has derivative `f` on `U`
+  (`hasDerivAt_starPrimitive` + `topLeftBoxMinusBall_starConvex`).
+* Chain rule + `hasDerivAt_circleMap` gives `(F ∘ z_ε)'(θ) = f(z_ε(θ)) · I · (R₀ + ε) · exp(I·θ)`.
+* FTC `intervalIntegral.integral_eq_sub_of_hasDerivAt_of_le` over
+  `[π/2 + ε, π − ε]` produces the ε-version of the identity.
+* `ε → 0` limit recovers the full arc integral via dominated convergence
+  (`f` bounded on a compact thickening of the arc) and continuity of
+  `starPrimitive V f` at the endpoints `T` and `B` (which uses `Hc`'s
+  continuity of `f` on the closed lune). -/
+theorem topLeftLune_arc_integral_eq_starPrimitive_sub
+    (f : ℂ → ℂ) (e : ℂ) (R₀ : ℝ) (_hR₀ : 0 < R₀)
+    (a d : ℝ) (_h_a : a < e.re - R₀) (_h_d : e.im + R₀ < d)
+    (_Hc : ContinuousOn f
+      ((Set.Icc (e.re - R₀) e.re ×ℂ Set.Icc e.im (e.im + R₀)) \ Metric.ball e R₀))
+    (_Hd : DifferentiableOn ℂ f
+      ((Set.Ioo a e.re ×ℂ Set.Ioo e.im d) \ Metric.closedBall e R₀)) :
+    (∫ θ in (Real.pi / 2)..Real.pi, f (_root_.circleMap e R₀ θ) *
+        (Complex.I * R₀ * Complex.exp (Complex.I * θ))) =
+      Complex.starPrimitive
+          ((↑(e.re - R₀) : ℂ) + (↑(e.im + R₀) : ℂ) * Complex.I) f
+          ((↑(e.re - R₀) : ℂ) + (↑e.im : ℂ) * Complex.I) -
+      Complex.starPrimitive
+          ((↑(e.re - R₀) : ℂ) + (↑(e.im + R₀) : ℂ) * Complex.I) f
+          ((↑e.re : ℂ) + (↑(e.im + R₀) : ℂ) * Complex.I) := by
+  sorry
+
+/-- **Top-right lune arc identity via `starPrimitive`.** Mirror of
+`topLeftLune_arc_integral_eq_starPrimitive_sub` across `x = e.re`. The
+arc integral over `[0, π/2]` of `f` along `circleMap e R₀` equals
+`starPrimitive V_R f T − starPrimitive V_R f W_R`, where
+`V_R = (e.re + R₀) + (e.im + R₀)·I`, `T = e.re + (e.im + R₀)·I`,
+`W_R = (e.re + R₀) + e.im·I`. -/
+theorem topRightLune_arc_integral_eq_starPrimitive_sub
+    (f : ℂ → ℂ) (e : ℂ) (R₀ : ℝ) (_hR₀ : 0 < R₀)
+    (b d : ℝ) (_h_b : e.re + R₀ < b) (_h_d : e.im + R₀ < d)
+    (_Hc : ContinuousOn f
+      ((Set.Icc e.re (e.re + R₀) ×ℂ Set.Icc e.im (e.im + R₀)) \ Metric.ball e R₀))
+    (_Hd : DifferentiableOn ℂ f
+      ((Set.Ioo e.re b ×ℂ Set.Ioo e.im d) \ Metric.closedBall e R₀)) :
+    (∫ θ in (0:ℝ)..(Real.pi / 2), f (_root_.circleMap e R₀ θ) *
+        (Complex.I * R₀ * Complex.exp (Complex.I * θ))) =
+      Complex.starPrimitive
+          ((↑(e.re + R₀) : ℂ) + (↑(e.im + R₀) : ℂ) * Complex.I) f
+          ((↑e.re : ℂ) + (↑(e.im + R₀) : ℂ) * Complex.I) -
+      Complex.starPrimitive
+          ((↑(e.re + R₀) : ℂ) + (↑(e.im + R₀) : ℂ) * Complex.I) f
+          ((↑(e.re + R₀) : ℂ) + (↑e.im : ℂ) * Complex.I) := by
+  sorry
 
 end Complex
