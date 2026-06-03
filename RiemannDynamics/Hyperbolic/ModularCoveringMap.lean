@@ -1784,12 +1784,28 @@ theorem modularLambdaH_eq_iff_gamma2_orbit
 
 /-! ## Main covering-map theorems -/
 
-/-- **Covering map property of `λ : ℍ → ℂ ∖ {0, 1}`.** -/
+/-- **Covering map property of `λ : ℍ → ℂ ∖ {0, 1}`.**
+
+The source space here is `ℂ` (since `modularLambdaH : ℂ → ℂ`), not `ℍ`,
+yet the statement is mathematically correct. Off `ℍ` the defining series
+`theta3 τ = ∑' n, cexp (π·i·n²·τ)` is non-summable, so Mathlib's `tsum`
+returns `0` and the division `theta2 τ ^ 4 / theta3 τ ^ 4` yields the
+junk value `0`. Since the base set explicitly excludes `0`, the preimage
+of any small `U` around a point `w ∈ {w | w ≠ 0 ∧ w ≠ 1}` cannot contain
+any `τ ∉ ℍ`, so `f⁻¹ U ⊆ ℍ`. Because `ℍ` is open in `ℂ`, the subspace
+topology on `f⁻¹ U` from `ℂ` agrees with that from `ℍ`, and the standard
+covering-map property of `λ : ℍ → ℂ ∖ {0, 1}` transports verbatim. -/
 theorem modularLambdaH_isCoveringMapOn :
     IsCoveringMapOn modularLambdaH { w : ℂ | w ≠ 0 ∧ w ≠ 1 } := by
   sorry
 
-/-- **Covering property of `λ` on the unit disk.** -/
+/-- **Covering property of `λ` on the unit disk.**
+
+Same source-topology subtlety as `modularLambdaH_isCoveringMapOn`: the
+Cayley transform composition `modularLambda := modularLambdaH ∘
+cayleyToHalfPlane` is typed as `ℂ → ℂ`, but the junk value off `𝔻` lands
+on the excluded point `0`, so the preimage of any open `U` around a base
+point sits inside `𝔻` and the covering property transports through. -/
 theorem modularLambda_isCoveringMapOn :
     IsCoveringMapOn modularLambda { w : ℂ | w ≠ 0 ∧ w ≠ 1 } := by
   sorry

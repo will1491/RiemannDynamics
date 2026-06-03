@@ -15,12 +15,15 @@ import Mathlib.LinearAlgebra.Complex.FiniteDimensional
 import RiemannDynamics.Hyperbolic.StarShapedPrimitive
 
 /-!
-# Winding number and the argument principle
+# Winding number, Cauchy-Goursat on non-rectangular regions, and the argument principle
 
-Winding-number theory for the `λ : F^o ≅ {Im w > 0}` biholomorphism
-in `Gamma2FundamentalDomain.lean`.
+Winding-number theory and contour-integral infrastructure used by the
+modular-covering proof `modularLambdaH_existsUnique_in_F_interior_of_im_pos`
+in `ModularCoveringMap.lean` (which counts preimages of `w` under
+`λ : F^o ≅ {Im w > 0}` via the argument principle on the truncated
+fundamental domain).
 
-## Definitions
+## Winding-number definitions
 
 * `Complex.circleWindingNumber c R w` — circle case,
   `(2πi)⁻¹ ∮_{|z−c|=R} (z − w)⁻¹ dz`.
@@ -31,13 +34,53 @@ in `Gamma2FundamentalDomain.lean`.
   parameterized path `γ : [a, b] → ℂ` around `w`, defined as
   `(2πi)⁻¹ ∫_a^b γ'(t) / (γ(t) − w) dt`.
 
-## Main results
+## Circle and rectangle winding numbers
 
 * `Complex.circleWindingNumber_inside` — winding number `1` for points
   strictly inside the circle.
 * `Complex.circleWindingNumber_outside` — winding number `0` for
   points strictly outside the closed disk.
 * `Complex.circleWindingNumber_self` — special case `w = c`.
+* `Complex.rectangleWindingNumber_inside_eq_one` — winding number `1`
+  for points strictly inside an axis-aligned rectangle.
+
+## Cauchy-Goursat on lunes and half-annuli
+
+The argument-principle application below needs Cauchy-Goursat for
+**non-rectangular** regions arising from the truncated fundamental
+domain. The four building-block CG theorems are:
+
+* `Complex.integral_boundary_topLeftLune_eq_zero_of_continuousOn_of_differentiableOn`,
+  `Complex.integral_boundary_topRightLune_eq_zero_of_continuousOn_of_differentiableOn`
+  — CG on a **lune** (axis-aligned rectangle corner minus a quarter
+  disk), star-shaped from the outer corner. Closed by combining three
+  `starPrimitive` identities in `StarShapedPrimitive.lean`
+  (horizontal/vertical segment substitutions and the ε-arc limit).
+* `Complex.integral_boundary_topHalfAnnulus_eq_zero_of_differentiableOn`
+  — CG on the top half of a rectangle-minus-disk annular region.
+  Proved by 5-piece decomposition: 3 sub-rectangles (Mathlib's rect CG)
+  plus the two top lunes, with shared edges cancelling and the lune arc
+  contributions combining into the upper semicircle.
+* `Complex.integral_boundary_bottomHalfAnnulus_eq_zero_of_differentiableOn`
+  — CG on the bottom half-annulus. Proved by 180° rotation around `e`:
+  the map `f̃(z) := f(2·e − z)` carries the bottom hypotheses into the
+  top hypotheses, so the top half-annulus CG applied to `f̃` reduces
+  (via `intervalIntegral.integral_comp_sub_left` for the axis edges and
+  `intervalIntegral.integral_comp_add_right` plus `Complex.exp_pi_mul_I`
+  for the arc) to the negative of the bottom identity.
+* `Complex.integral_boundary_rectMinusDisk_eq_zero_of_differentiableOn`
+  — CG on a full rectangle-minus-disk annular region. Obtained by
+  cutting horizontally at `Im z = e.im` and adding the two
+  half-annulus CGs (the cut contributions cancel).
+
+## Argument-principle theorems
+
+* `cIntegralLogDeriv_isNat_of_nonzero_on_rectMinusDisk` — for `g`
+  holomorphic on a neighborhood of a rectangle-minus-disk region and
+  non-vanishing on its boundary, `(2πi)⁻¹ ∮_{∂(R \ D)} g'(z)/g(z) dz`
+  is a non-negative integer counting zeros of `g` inside.
+* Analogous circle and rectangle argument-principle theorems for the
+  simpler closed-disk and closed-rectangle base cases.
 -/
 
 namespace Complex
