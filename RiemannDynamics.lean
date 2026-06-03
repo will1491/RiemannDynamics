@@ -15,6 +15,7 @@ import RiemannDynamics.Hyperbolic.ModularFormsBridge
 import RiemannDynamics.Hyperbolic.TriplyPunctured
 import RiemannDynamics.Hyperbolic.SchwarzReflection
 import RiemannDynamics.Hyperbolic.ArgumentPrinciple
+import RiemannDynamics.Hyperbolic.StarShapedPrimitive
 import RiemannDynamics.Hyperbolic.WindingNumber
 import RiemannDynamics.Hyperbolic.Gamma2FundamentalDomain
 import RiemannDynamics.Hyperbolic.ModularCoveringMap
