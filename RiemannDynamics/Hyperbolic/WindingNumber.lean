@@ -3976,7 +3976,7 @@ theorem cIntegralLogDeriv_isNat_of_nonzero_on_rectMinusDisk
               (div_nonneg (by linarith [h_inside]) (norm_nonneg _)),
             div_mul_cancel₀ _ h_norm_ne]
         linarith [hz_not_cball, hδ_eff_le_δ]
-      · push_neg at h_inside
+      · push Not at h_inside
         refine ⟨z, ⟨?_, ?_⟩, by rw [dist_self]; exact hδ_pos⟩
         · rw [Complex.mem_reProdIm] at hz_box ⊢
           exact ⟨Set.Ioo_subset_Icc_self hz_box.1,
