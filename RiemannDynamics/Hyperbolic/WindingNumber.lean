@@ -1929,8 +1929,8 @@ theorem integral_boundary_topLeftLune_eq_zero_of_continuousOn_of_differentiableO
     (a d : ℝ) (h_a_lune : a < e.re - R₀) (h_d_lune : e.im + R₀ < d)
     (Hc : ContinuousOn f
       ((Set.Icc (e.re - R₀) e.re ×ℂ Set.Icc e.im (e.im + R₀)) \ Metric.ball e R₀))
-    (Hd : DifferentiableOn ℂ f
-      ((Set.Ioo a e.re ×ℂ Set.Ioo e.im d) \ Metric.closedBall e R₀)) :
+    (Hd : ∃ R₀' : ℝ, 0 < R₀' ∧ R₀' < R₀ ∧ DifferentiableOn ℂ f
+      ((Set.Ioo a e.re ×ℂ Set.Ioo e.im d) \ Metric.closedBall e R₀')) :
     -Complex.I * (∫ y in e.im..(e.im + R₀), f ((e.re - R₀ : ℂ) + (y : ℂ) * Complex.I)) -
     (∫ x in (e.re - R₀)..e.re, f ((x : ℂ) + ((e.im + R₀) : ℂ) * Complex.I)) -
     (∫ θ in (Real.pi / 2)..Real.pi, f (_root_.circleMap e R₀ θ) *
@@ -1976,8 +1976,8 @@ theorem integral_boundary_topRightLune_eq_zero_of_continuousOn_of_differentiable
     (b d : ℝ) (h_b_lune : e.re + R₀ < b) (h_d_lune : e.im + R₀ < d)
     (Hc : ContinuousOn f
       ((Set.Icc e.re (e.re + R₀) ×ℂ Set.Icc e.im (e.im + R₀)) \ Metric.ball e R₀))
-    (Hd : DifferentiableOn ℂ f
-      ((Set.Ioo e.re b ×ℂ Set.Ioo e.im d) \ Metric.closedBall e R₀)) :
+    (Hd : ∃ R₀' : ℝ, 0 < R₀' ∧ R₀' < R₀ ∧ DifferentiableOn ℂ f
+      ((Set.Ioo e.re b ×ℂ Set.Ioo e.im d) \ Metric.closedBall e R₀')) :
     Complex.I * (∫ y in e.im..(e.im + R₀), f ((e.re + R₀ : ℂ) + (y : ℂ) * Complex.I)) -
     (∫ x in e.re..(e.re + R₀), f ((x : ℂ) + ((e.im + R₀) : ℂ) * Complex.I)) -
     (∫ θ in (0:ℝ)..(Real.pi / 2), f (_root_.circleMap e R₀ θ) *
@@ -2046,8 +2046,8 @@ theorem integral_boundary_topHalfAnnulus_eq_zero_of_differentiableOn
     (h_a_lt : a < e.re - R₀) (h_lt_b : e.re + R₀ < b)
     (h_e_im_R0_lt_d : e.im + R₀ < d)
     (Hc : ContinuousOn f ((Set.Icc a b ×ℂ Set.Icc e.im d) \ Metric.ball e R₀))
-    (Hd : DifferentiableOn ℂ f
-      ((Set.Ioo a b ×ℂ Set.Ioo e.im d) \ Metric.closedBall e R₀)) :
+    (Hd : ∃ R₀' : ℝ, 0 < R₀' ∧ R₀' < R₀ ∧ DifferentiableOn ℂ f
+      ((Set.Ioo a b ×ℂ Set.Ioo e.im d) \ Metric.closedBall e R₀')) :
     (∫ x in a..(e.re - R₀), f ((x : ℂ) + (e.im : ℂ) * Complex.I)) +
     (∫ x in (e.re + R₀)..b, f ((x : ℂ) + (e.im : ℂ) * Complex.I)) +
     Complex.I * (∫ y in e.im..d, f ((b : ℂ) + (y : ℂ) * Complex.I)) -
@@ -2055,6 +2055,18 @@ theorem integral_boundary_topHalfAnnulus_eq_zero_of_differentiableOn
     Complex.I * (∫ y in e.im..d, f ((a : ℂ) + (y : ℂ) * Complex.I)) -
     (∫ θ in (0:ℝ)..Real.pi, f (_root_.circleMap e R₀ θ) *
       (Complex.I * R₀ * Complex.exp (Complex.I * θ))) = 0 := by
+  -- Strengthened `Hd` is existential: extract the underlying differentiability
+  -- on the slightly enlarged set `(Ioo a b × Ioo e.im d) \ closedBall e R₀'` for
+  -- some `R₀' < R₀`. The rectangle Cauchy-Goursat call only needs the original
+  -- `closedBall e R₀` form, derived by `mono` from the enlargement. The lune
+  -- CG calls take the existential form directly.
+  obtain ⟨R₀', hR₀'_pos, hR₀'_lt, Hd'⟩ := Hd
+  have Hd_orig : DifferentiableOn ℂ f
+      ((Set.Ioo a b ×ℂ Set.Ioo e.im d) \ Metric.closedBall e R₀) := by
+    apply Hd'.mono
+    rintro z ⟨hz_box, hz_not_R0⟩
+    exact ⟨hz_box, fun hz_R0' =>
+      hz_not_R0 (Metric.closedBall_subset_closedBall hR₀'_lt.le hz_R0')⟩
   -- 5-piece decomposition: 3 rectangles + 2 lunes.
   -- All sub-rectangles strictly avoid the disk (distance ≥ R₀ from e via real or
   -- imaginary part of (z - e)).
@@ -2284,7 +2296,7 @@ theorem integral_boundary_topHalfAnnulus_eq_zero_of_differentiableOn
     rw [hA_z_re, hA_z_im, hA_w_re, hA_w_im,
       min_eq_left h_a_lt.le, max_eq_right h_a_lt.le,
       min_eq_left h_e_im_d.le, max_eq_right h_e_im_d.le]
-    exact Hd.mono h_A_open_sub
+    exact Hd_orig.mono h_A_open_sub
   have hA := Complex.integral_boundary_rect_eq_zero_of_continuousOn_of_differentiableOn
     f (((a : ℝ) : ℂ) + ((e.im : ℝ) : ℂ) * Complex.I)
     ((((e.re - R₀) : ℝ) : ℂ) + ((d : ℝ) : ℂ) * Complex.I) hA_Hc hA_Hd
@@ -2323,7 +2335,7 @@ theorem integral_boundary_topHalfAnnulus_eq_zero_of_differentiableOn
     rw [hB_z_re, hB_z_im, hB_w_re, hB_w_im,
       min_eq_left h_lt_b.le, max_eq_right h_lt_b.le,
       min_eq_left h_e_im_d.le, max_eq_right h_e_im_d.le]
-    exact Hd.mono h_B_open_sub
+    exact Hd_orig.mono h_B_open_sub
   have hB := Complex.integral_boundary_rect_eq_zero_of_continuousOn_of_differentiableOn
     f ((((e.re + R₀) : ℝ) : ℂ) + ((e.im : ℝ) : ℂ) * Complex.I)
     (((b : ℝ) : ℂ) + ((d : ℝ) : ℂ) * Complex.I) hB_Hc hB_Hd
@@ -2365,7 +2377,7 @@ theorem integral_boundary_topHalfAnnulus_eq_zero_of_differentiableOn
     rw [hC_z_re, hC_z_im, hC_w_re, hC_w_im,
       min_eq_left h_eRm_le_eRp, max_eq_right h_eRm_le_eRp,
       min_eq_left h_e_im_R0_lt_d.le, max_eq_right h_e_im_R0_lt_d.le]
-    exact Hd.mono h_C_open_sub
+    exact Hd_orig.mono h_C_open_sub
   have hC := Complex.integral_boundary_rect_eq_zero_of_continuousOn_of_differentiableOn
     f ((((e.re - R₀) : ℝ) : ℂ) + (((e.im + R₀) : ℝ) : ℂ) * Complex.I)
     ((((e.re + R₀) : ℝ) : ℂ) + ((d : ℝ) : ℂ) * Complex.I) hC_Hc hC_Hd
@@ -2373,15 +2385,30 @@ theorem integral_boundary_topHalfAnnulus_eq_zero_of_differentiableOn
   simp only [smul_eq_mul] at hC
   -- Step 5: apply lune CG to D, E.
   -- Lune CG hypotheses: each lune CG takes a star-shaped open box
-  -- (Ioo a e.re × Ioo e.im d) or (Ioo e.re b × Ioo e.im d) on which
-  -- `f` is differentiable; this is obtained by `Hd.mono` from the
-  -- half-annulus's `(Ioo a b × Ioo e.im d) \ closedBall`.
+  -- `(Ioo a e.re × Ioo e.im d)` or `(Ioo e.re b × Ioo e.im d)` minus a
+  -- slightly shrunken closed ball `closedBall e R₀'` (strengthened form);
+  -- this is built from `Hd'` (mono'd to the lune-side box) and the
+  -- enlarging existential witness `R₀'`.
   have hD := integral_boundary_topLeftLune_eq_zero_of_continuousOn_of_differentiableOn
     f e R₀ hR₀ a d h_a_lt h_e_im_R0_lt_d
-    (Hc.mono h_D_closed_sub) (Hd.mono h_D_lune_Hd_sub)
+    (Hc.mono h_D_closed_sub)
+    ⟨R₀', hR₀'_pos, hR₀'_lt, Hd'.mono (by
+      rintro z ⟨hz_box, hz_not_cball⟩
+      refine ⟨?_, hz_not_cball⟩
+      rw [Complex.mem_reProdIm] at hz_box ⊢
+      refine ⟨?_, hz_box.2⟩
+      rw [Set.mem_Ioo] at hz_box ⊢
+      exact ⟨hz_box.1.1, by linarith [hz_box.1.2]⟩)⟩
   have hE := integral_boundary_topRightLune_eq_zero_of_continuousOn_of_differentiableOn
     f e R₀ hR₀ b d h_lt_b h_e_im_R0_lt_d
-    (Hc.mono h_E_closed_sub) (Hd.mono h_E_lune_Hd_sub)
+    (Hc.mono h_E_closed_sub)
+    ⟨R₀', hR₀'_pos, hR₀'_lt, Hd'.mono (by
+      rintro z ⟨hz_box, hz_not_cball⟩
+      refine ⟨?_, hz_not_cball⟩
+      rw [Complex.mem_reProdIm] at hz_box ⊢
+      refine ⟨?_, hz_box.2⟩
+      rw [Set.mem_Ioo] at hz_box ⊢
+      exact ⟨by linarith [hz_box.1.1], hz_box.1.2⟩)⟩
   -- Step 6: continuity on each boundary edge for interval combination.
   -- Continuity on top edge `y = d`.
   have h_top_cont : ContinuousOn (fun x : ℝ => f ((x : ℂ) + (d : ℂ) * Complex.I))
@@ -2704,8 +2731,8 @@ theorem integral_boundary_bottomHalfAnnulus_eq_zero_of_differentiableOn
     (h_a_lt : a < e.re - R₀) (h_lt_b : e.re + R₀ < b)
     (h_c_lt_e_im_R0 : c < e.im - R₀)
     (Hc : ContinuousOn f ((Set.Icc a b ×ℂ Set.Icc c e.im) \ Metric.ball e R₀))
-    (Hd : DifferentiableOn ℂ f
-      ((Set.Ioo a b ×ℂ Set.Ioo c e.im) \ Metric.closedBall e R₀)) :
+    (Hd : ∃ R₀' : ℝ, 0 < R₀' ∧ R₀' < R₀ ∧ DifferentiableOn ℂ f
+      ((Set.Ioo a b ×ℂ Set.Ioo c e.im) \ Metric.closedBall e R₀')) :
     (∫ x in a..b, f ((x : ℂ) + (c : ℂ) * Complex.I)) -
     (∫ x in a..(e.re - R₀), f ((x : ℂ) + (e.im : ℂ) * Complex.I)) -
     (∫ x in (e.re + R₀)..b, f ((x : ℂ) + (e.im : ℂ) * Complex.I)) +
@@ -2713,6 +2740,9 @@ theorem integral_boundary_bottomHalfAnnulus_eq_zero_of_differentiableOn
     Complex.I * (∫ y in c..e.im, f ((a : ℂ) + (y : ℂ) * Complex.I)) -
     (∫ θ in (Real.pi:ℝ)..(2 * Real.pi), f (_root_.circleMap e R₀ θ) *
       (Complex.I * R₀ * Complex.exp (Complex.I * θ))) = 0 := by
+  -- Extract the underlying differentiability on the slightly enlarged set
+  -- `(Ioo a b × Ioo c e.im) \ closedBall e R₀'` for some `R₀' < R₀`.
+  obtain ⟨R₀', hR₀'_pos, hR₀'_lt, Hd'⟩ := Hd
   -- Use 180° rotation around `e`: the map `g(z) := 2*e − z` is biholomorphic
   -- and maps the bottom half-annulus to the top half-annulus. Define
   -- `f̃(z) := f(g z) = f(2*e − z)` and apply the (already-proven) top
@@ -2795,17 +2825,48 @@ theorem integral_boundary_bottomHalfAnnulus_eq_zero_of_differentiableOn
       have h_eq : 2 * e - z - e = -(z - e) := by ring
       rw [h_eq, norm_neg] at h_cball
       exact h_cball
+  -- R₀'-analog: reflection also maps the slightly enlarged top
+  -- `(Ioo a' b' × Ioo e.im d') \ closedBall e R₀'` into the slightly enlarged
+  -- bottom `(Ioo a b × Ioo c e.im) \ closedBall e R₀'`.
+  have h_maps_to_open' : Set.MapsTo (fun z : ℂ => 2 * e - z)
+      ((Set.Ioo a' b' ×ℂ Set.Ioo e.im d') \ Metric.closedBall e R₀')
+      ((Set.Ioo a b ×ℂ Set.Ioo c e.im) \ Metric.closedBall e R₀') := by
+    intro z hz
+    obtain ⟨hz_box, hz_not_cball⟩ := hz
+    refine ⟨?_, ?_⟩
+    · rw [Complex.mem_reProdIm] at hz_box ⊢
+      refine ⟨?_, ?_⟩
+      · have h_re : (2 * e - z).re = 2 * e.re - z.re := by
+          simp [Complex.sub_re, Complex.mul_re, Complex.re_ofNat, Complex.im_ofNat]
+        rw [h_re]
+        rw [Set.mem_Ioo] at hz_box ⊢
+        refine ⟨?_, ?_⟩
+        · linarith [hz_box.1.2, hb'_def]
+        · linarith [hz_box.1.1, ha'_def]
+      · have h_im : (2 * e - z).im = 2 * e.im - z.im := by
+          simp [Complex.sub_im, Complex.mul_im, Complex.re_ofNat, Complex.im_ofNat]
+        rw [h_im]
+        rw [Set.mem_Ioo] at hz_box ⊢
+        refine ⟨?_, ?_⟩
+        · linarith [hz_box.2.2, hd'_def]
+        · linarith [hz_box.2.1]
+    · intro h_cball
+      apply hz_not_cball
+      rw [Metric.mem_closedBall, dist_eq_norm] at h_cball ⊢
+      have h_eq : 2 * e - z - e = -(z - e) := by ring
+      rw [h_eq, norm_neg] at h_cball
+      exact h_cball
   -- `f̃` satisfies the top half-annulus CG hypotheses on the box `[a', b'] × [e.im, d']`.
   have h_f_tilde_cont : ContinuousOn f_tilde
       ((Set.Icc a' b' ×ℂ Set.Icc e.im d') \ Metric.ball e R₀) :=
     Hc.comp h_g_cont.continuousOn h_maps_to_closed
-  have h_f_tilde_diff : DifferentiableOn ℂ f_tilde
-      ((Set.Ioo a' b' ×ℂ Set.Ioo e.im d') \ Metric.closedBall e R₀) :=
-    Hd.comp h_g_diff.differentiableOn h_maps_to_open
-  -- Apply the top half-annulus CG to `f̃`.
+  have h_f_tilde_diff' : DifferentiableOn ℂ f_tilde
+      ((Set.Ioo a' b' ×ℂ Set.Ioo e.im d') \ Metric.closedBall e R₀') :=
+    Hd'.comp h_g_diff.differentiableOn h_maps_to_open'
+  -- Apply the top half-annulus CG to `f̃` (existential form).
   have h_top := integral_boundary_topHalfAnnulus_eq_zero_of_differentiableOn
     f_tilde a' b' d' e R₀ h_a'_lt_b' h_e_im_lt_d' hR₀ h_a'_lt h_lt_b' h_e_im_R0_lt_d'
-    h_f_tilde_cont h_f_tilde_diff
+    h_f_tilde_cont ⟨R₀', hR₀'_pos, hR₀'_lt, h_f_tilde_diff'⟩
   -- Now translate each `f̃` integral back to `f` via `integral_comp_sub_left`
   -- (real-axis substitution) and `integral_comp_add_right` (for the arc).
   -- The pointwise identity `f̃(x + y·I) = f((2*e.re − x) + (2*e.im − y)·I)`
@@ -3005,8 +3066,8 @@ theorem integral_boundary_rectMinusDisk_eq_zero_of_differentiableOn
     (hab : a < b) (_hcd : c < d) (hR₀ : 0 < R₀)
     (hdisk_in_rect : Metric.closedBall e R₀ ⊆ Set.Ioo a b ×ℂ Set.Ioo c d)
     (Hc : ContinuousOn f ((Set.Icc a b ×ℂ Set.Icc c d) \ Metric.ball e R₀))
-    (Hd : DifferentiableOn ℂ f
-      ((Set.Ioo a b ×ℂ Set.Ioo c d) \ Metric.closedBall e R₀)) :
+    (Hd : ∃ R₀' : ℝ, 0 < R₀' ∧ R₀' < R₀ ∧ DifferentiableOn ℂ f
+      ((Set.Ioo a b ×ℂ Set.Ioo c d) \ Metric.closedBall e R₀')) :
     ((∫ x in a..b, f ((x : ℂ) + (c : ℂ) * Complex.I)) +
       Complex.I * (∫ y in c..d, f ((b : ℂ) + (y : ℂ) * Complex.I)) -
       (∫ x in a..b, f ((x : ℂ) + (d : ℂ) * Complex.I)) -
@@ -3087,8 +3148,10 @@ theorem integral_boundary_rectMinusDisk_eq_zero_of_differentiableOn
     Hc.mono h_top_subset
   have Hc_bot : ContinuousOn f ((Set.Icc a b ×ℂ Set.Icc c e.im) \ Metric.ball e R₀) :=
     Hc.mono h_bot_subset
-  have h_top_subset_open : (Set.Ioo a b ×ℂ Set.Ioo e.im d) \ Metric.closedBall e R₀ ⊆
-      (Set.Ioo a b ×ℂ Set.Ioo c d) \ Metric.closedBall e R₀ := by
+  -- Extract the R₀'-witnessed differentiability from the existential `Hd`.
+  obtain ⟨R₀', hR₀'_pos, hR₀'_lt, Hd'⟩ := Hd
+  have h_top_subset_open' : (Set.Ioo a b ×ℂ Set.Ioo e.im d) \ Metric.closedBall e R₀' ⊆
+      (Set.Ioo a b ×ℂ Set.Ioo c d) \ Metric.closedBall e R₀' := by
     rintro z ⟨h_rect, h_not_ball⟩
     refine ⟨?_, h_not_ball⟩
     rw [Complex.mem_reProdIm] at h_rect ⊢
@@ -3096,8 +3159,8 @@ theorem integral_boundary_rectMinusDisk_eq_zero_of_differentiableOn
     rw [Set.mem_Ioo] at h_rect ⊢
     refine ⟨?_, h_rect.2.2⟩
     linarith [h_rect.2.1, h_c_lt_e_im_R0]
-  have h_bot_subset_open : (Set.Ioo a b ×ℂ Set.Ioo c e.im) \ Metric.closedBall e R₀ ⊆
-      (Set.Ioo a b ×ℂ Set.Ioo c d) \ Metric.closedBall e R₀ := by
+  have h_bot_subset_open' : (Set.Ioo a b ×ℂ Set.Ioo c e.im) \ Metric.closedBall e R₀' ⊆
+      (Set.Ioo a b ×ℂ Set.Ioo c d) \ Metric.closedBall e R₀' := by
     rintro z ⟨h_rect, h_not_ball⟩
     refine ⟨?_, h_not_ball⟩
     rw [Complex.mem_reProdIm] at h_rect ⊢
@@ -3105,19 +3168,21 @@ theorem integral_boundary_rectMinusDisk_eq_zero_of_differentiableOn
     rw [Set.mem_Ioo] at h_rect ⊢
     refine ⟨h_rect.2.1, ?_⟩
     linarith [h_rect.2.2, h_e_im_R0_lt_d]
-  have Hd_top : DifferentiableOn ℂ f
-      ((Set.Ioo a b ×ℂ Set.Ioo e.im d) \ Metric.closedBall e R₀) :=
-    Hd.mono h_top_subset_open
-  have Hd_bot : DifferentiableOn ℂ f
-      ((Set.Ioo a b ×ℂ Set.Ioo c e.im) \ Metric.closedBall e R₀) :=
-    Hd.mono h_bot_subset_open
-  -- Get the two half-annulus CG results.
+  have Hd_top' : DifferentiableOn ℂ f
+      ((Set.Ioo a b ×ℂ Set.Ioo e.im d) \ Metric.closedBall e R₀') :=
+    Hd'.mono h_top_subset_open'
+  have Hd_bot' : DifferentiableOn ℂ f
+      ((Set.Ioo a b ×ℂ Set.Ioo c e.im) \ Metric.closedBall e R₀') :=
+    Hd'.mono h_bot_subset_open'
+  -- Get the two half-annulus CG results (existential form for `Hd`).
   have h_e_im_lt_d : e.im < d := by linarith
   have h_c_lt_e_im : c < e.im := by linarith
   have hT := integral_boundary_topHalfAnnulus_eq_zero_of_differentiableOn
-    f a b d e R₀ hab h_e_im_lt_d hR₀ h_a_lt_e_re_R0 h_e_re_R0_lt_b h_e_im_R0_lt_d Hc_top Hd_top
+    f a b d e R₀ hab h_e_im_lt_d hR₀ h_a_lt_e_re_R0 h_e_re_R0_lt_b h_e_im_R0_lt_d Hc_top
+    ⟨R₀', hR₀'_pos, hR₀'_lt, Hd_top'⟩
   have hB := integral_boundary_bottomHalfAnnulus_eq_zero_of_differentiableOn
-    f a b c e R₀ hab h_c_lt_e_im hR₀ h_a_lt_e_re_R0 h_e_re_R0_lt_b h_c_lt_e_im_R0 Hc_bot Hd_bot
+    f a b c e R₀ hab h_c_lt_e_im hR₀ h_a_lt_e_re_R0 h_e_re_R0_lt_b h_c_lt_e_im_R0 Hc_bot
+    ⟨R₀', hR₀'_pos, hR₀'_lt, Hd_bot'⟩
   -- Aggregate T + B = 0: cuts at `y = e.im` cancel, the right/left edges
   -- concatenate via `intervalIntegral.integral_add_adjacent_intervals`, and
   -- the two semicircular arcs `0..π` and `π..2π` combine into the full
@@ -3820,6 +3885,107 @@ theorem cIntegralLogDeriv_isNat_of_nonzero_on_rectMinusDisk
     have h_dh_an : AnalyticAt ℂ (deriv h) z := (h_analytic z hz).deriv
     have h_h_an : AnalyticAt ℂ h z := h_analytic z hz
     exact (h_dh_an.div h_h_an hh_ne).differentiableAt.differentiableWithinAt
+  -- Strengthened differentiability hypothesis for `rectMinusDisk` CG:
+  -- `h'/h` is differentiable on the slightly enlarged open set
+  -- `(Ioo a b × Ioo c d) \ closedBall e R₀'` for some `R₀' < R₀`. The proof
+  -- builds an open `V := {z : AnalyticAt ℂ h z ∧ h z ≠ 0}` containing `R_ann`,
+  -- uses `IsCompact.exists_thickening_subset_open` to extract a uniform
+  -- δ > 0 with `Metric.thickening δ R_ann ⊆ V`, and sets
+  -- `R₀' := R₀ − (min R₀ δ) / 2`. For each `z ∈ (Ioo box) \ closedBall e R₀'`,
+  -- either `R₀ ≤ ‖z − e‖` (then `z ∈ R_ann` directly) or `‖z − e‖ < R₀`
+  -- (then the radial projection `w := e + (R₀/‖z−e‖)·(z−e)` is on the
+  -- sphere `⊂ R_ann` via `hdisk_in_rect`, at distance `R₀ − ‖z − e‖ < δ`
+  -- from `z`); hence `z ∈ Metric.thickening δ R_ann ⊆ V`, so `h'/h` is
+  -- analytic at `z`.
+  -- `h'/h` is differentiable on a slightly enlarged open set
+  -- `(Ioo a b × Ioo c d) \ closedBall e R₀'` for some `R₀' < R₀`.
+  --   1. `V := {z : AnalyticAt ℂ h z ∧ h z ≠ 0}` is open (AnalyticAt is open
+  --      under perturbation via `AnalyticAt.eventually_analyticAt`; `h ≠ 0`
+  --      open by `ContinuousAt.eventually_ne`).
+  --   2. `R_ann ⊆ V` (from `h_analytic` and `h_h_ne`).
+  --   3. By `IsCompact.exists_thickening_subset_open` applied to
+  --      `hR_ann_compact`, `hV_open`, get δ > 0 with
+  --      `Metric.thickening δ R_ann ⊆ V`.
+  --   4. Set `R₀' := R₀ − min(R₀, δ)/2`.
+  --   5. For each `z ∈ (Ioo a b × Ioo c d) \ closedBall e R₀'`:
+  --      • if `R₀ ≤ ‖z − e‖`: `z ∈ R_ann` itself.
+  --      • else `R₀' < ‖z − e‖ < R₀`: radial projection
+  --        `w := e + (R₀/‖z − e‖)·(z − e)` lies on the sphere `⊂ R_ann`
+  --        (via `hdisk_in_rect` for the box condition); `dist z w =
+  --        R₀ − ‖z − e‖ < δ_eff/2 ≤ δ`, so `z ∈ Metric.thickening δ R_ann`.
+  --   6. Therefore `z ∈ V`, giving `AnalyticAt h z ∧ h z ≠ 0`, hence
+  --      `AnalyticAt (deriv h / h) z` via `AnalyticAt.deriv.div`.
+  have h_dh_div_h_diff_existential : ∃ R₀' : ℝ, 0 < R₀' ∧ R₀' < R₀ ∧
+      DifferentiableOn ℂ (fun z => deriv h z / h z)
+        ((Set.Ioo a b ×ℂ Set.Ioo c d) \ Metric.closedBall e R₀') := by
+    set V : Set ℂ := {z | AnalyticAt ℂ h z ∧ h z ≠ 0} with hV_def
+    have hV_open : IsOpen V := by
+      rw [isOpen_iff_eventually]
+      intro z hz
+      obtain ⟨h_an, h_ne⟩ := hz
+      have h_an_evt : ∀ᶠ w in nhds z, AnalyticAt ℂ h w := h_an.eventually_analyticAt
+      have h_ne_evt : ∀ᶠ w in nhds z, h w ≠ 0 := h_an.continuousAt.eventually_ne h_ne
+      filter_upwards [h_an_evt, h_ne_evt] with w hw_an hw_ne using ⟨hw_an, hw_ne⟩
+    have hR_ann_sub_V : R_ann ⊆ V := fun z hz =>
+      ⟨h_analytic z hz, h_h_ne z hz⟩
+    obtain ⟨δ, hδ_pos, hδ_sub⟩ :=
+      hR_ann_compact.exists_thickening_subset_open hV_open hR_ann_sub_V
+    set δ_eff := min R₀ δ with hδ_eff_def
+    have hδ_eff_pos : 0 < δ_eff := lt_min hR₀ hδ_pos
+    have hδ_eff_le_R₀ : δ_eff ≤ R₀ := min_le_left _ _
+    have hδ_eff_le_δ : δ_eff ≤ δ := min_le_right _ _
+    refine ⟨R₀ - δ_eff / 2, by linarith, by linarith, ?_⟩
+    intro z hz
+    obtain ⟨hz_box, hz_not_cball⟩ := hz
+    rw [Metric.mem_closedBall, Complex.dist_eq, not_le] at hz_not_cball
+    have hz_in_V : z ∈ V := by
+      apply hδ_sub
+      rw [Metric.mem_thickening_iff]
+      by_cases h_inside : ‖z - e‖ < R₀
+      · have h_norm_pos : 0 < ‖z - e‖ := by
+          linarith [hz_not_cball, hδ_eff_pos]
+        have h_norm_ne : ‖z - e‖ ≠ 0 := ne_of_gt h_norm_pos
+        have h_norm_ne_c : (‖z - e‖ : ℂ) ≠ 0 := by exact_mod_cast h_norm_ne
+        set w : ℂ := e + (R₀ / ‖z - e‖ : ℂ) * (z - e) with hw_def
+        have h_w_sub : w - e = (R₀ / ‖z - e‖ : ℂ) * (z - e) := by
+          rw [hw_def]; ring
+        have h_w_norm : ‖w - e‖ = R₀ := by
+          have h_coerce_div : (R₀ / ‖z - e‖ : ℂ) = ((R₀ / ‖z - e‖ : ℝ) : ℂ) := by
+            push_cast; ring
+          rw [h_w_sub, h_coerce_div, norm_mul, Complex.norm_real,
+              Real.norm_of_nonneg (div_nonneg hR₀.le (norm_nonneg _)),
+              div_mul_cancel₀ _ h_norm_ne]
+        have h_w_in_cb : w ∈ Metric.closedBall e R₀ := by
+          rw [Metric.mem_closedBall, Complex.dist_eq, h_w_norm]
+        have h_w_in_Ioo : w ∈ Set.Ioo a b ×ℂ Set.Ioo c d := hdisk_in_rect h_w_in_cb
+        have h_w_in_Icc : w ∈ Set.Icc a b ×ℂ Set.Icc c d := by
+          rw [Complex.mem_reProdIm] at h_w_in_Ioo ⊢
+          exact ⟨Set.Ioo_subset_Icc_self h_w_in_Ioo.1,
+                 Set.Ioo_subset_Icc_self h_w_in_Ioo.2⟩
+        have h_w_not_in_ball : w ∉ Metric.ball e R₀ := by
+          rw [Metric.mem_ball, Complex.dist_eq, h_w_norm]; exact lt_irrefl R₀
+        refine ⟨w, ⟨h_w_in_Icc, h_w_not_in_ball⟩, ?_⟩
+        rw [dist_comm, Complex.dist_eq]
+        have h_w_minus_z : w - z = ((R₀ - ‖z - e‖) / ‖z - e‖ : ℂ) * (z - e) := by
+          rw [hw_def]; field_simp; ring
+        have h_coerce_diff : ((R₀ - ‖z - e‖) / ‖z - e‖ : ℂ) =
+            (((R₀ - ‖z - e‖) / ‖z - e‖ : ℝ) : ℂ) := by
+          push_cast; ring
+        rw [h_w_minus_z, h_coerce_diff, norm_mul, Complex.norm_real,
+            Real.norm_of_nonneg
+              (div_nonneg (by linarith [h_inside]) (norm_nonneg _)),
+            div_mul_cancel₀ _ h_norm_ne]
+        linarith [hz_not_cball, hδ_eff_le_δ]
+      · push_neg at h_inside
+        refine ⟨z, ⟨?_, ?_⟩, by rw [dist_self]; exact hδ_pos⟩
+        · rw [Complex.mem_reProdIm] at hz_box ⊢
+          exact ⟨Set.Ioo_subset_Icc_self hz_box.1,
+                 Set.Ioo_subset_Icc_self hz_box.2⟩
+        · intro h_in_ball
+          rw [Metric.mem_ball, Complex.dist_eq] at h_in_ball
+          linarith
+    obtain ⟨h_an, h_ne⟩ := hz_in_V
+    exact (h_an.deriv.div h_an h_ne).differentiableAt.differentiableWithinAt
   -- Annular Cauchy-Goursat for `h'/h`.
   have h_annular_h :
       ((∫ x in a..b, deriv h ((x : ℂ) + (c : ℂ) * Complex.I) /
@@ -3833,12 +3999,7 @@ theorem cIntegralLogDeriv_isNat_of_nonzero_on_rectMinusDisk
       (∮ z in C(e, R₀), deriv h z / h z) = 0 :=
     integral_boundary_rectMinusDisk_eq_zero_of_differentiableOn
       (fun z => deriv h z / h z) a b c d e R₀ hab hcd hR₀ hdisk_in_rect
-      h_dh_div_h_diff.continuousOn
-      (h_dh_div_h_diff.mono (fun z hz =>
-        ⟨Complex.mem_reProdIm.mpr
-          ⟨Set.Ioo_subset_Icc_self (Complex.mem_reProdIm.mp hz.1).1,
-            Set.Ioo_subset_Icc_self (Complex.mem_reProdIm.mp hz.1).2⟩,
-          fun hb => hz.2 (Metric.ball_subset_closedBall hb)⟩))
+      h_dh_div_h_diff.continuousOn h_dh_div_h_diff_existential
   -- Express `r` as a Finset product over Dsupp.
   have hpi : (2 * Real.pi * Complex.I : ℂ) ≠ 0 := by
     refine mul_ne_zero (mul_ne_zero ?_ ?_) Complex.I_ne_zero

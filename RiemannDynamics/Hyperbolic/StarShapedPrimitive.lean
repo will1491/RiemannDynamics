@@ -464,20 +464,422 @@ boundary values `g(0) = R₀² ≥ 0` and `g(1) = |Q - e|² - R₀² ≥ 0` are
 non-negative, and whose vertex falls outside `(0, 1)` (or whose minimum
 on `(0, 1)` is non-negative by discriminant analysis). -/
 theorem topLeftBoxMinusBall_starConvex
-    (e : ℂ) (R₀ : ℝ) (_hR₀ : 0 < R₀)
-    (a d : ℝ) (_h_a : a < e.re - R₀) (_h_d : e.im + R₀ < d) :
+    (e : ℂ) (R₀ : ℝ) (hR₀ : 0 < R₀)
+    (a d : ℝ) (h_a : a < e.re - R₀) (h_d : e.im + R₀ < d) :
     StarConvex ℝ ((↑(e.re - R₀) : ℂ) + (↑(e.im + R₀) : ℂ) * Complex.I)
       ((Set.Ioo a e.re ×ℂ Set.Ioo e.im d) \ Metric.closedBall e R₀) := by
-  sorry
+  intro Q hQ s t hs ht hst
+  obtain ⟨hQ_box, hQ_not_ball⟩ := hQ
+  rw [Complex.mem_reProdIm] at hQ_box
+  obtain ⟨hQ_re, hQ_im⟩ := hQ_box
+  rw [Set.mem_Ioo] at hQ_re hQ_im
+  -- Coordinates of the convex combination.
+  set α : ℝ := e.re - Q.re with hα_def
+  set β : ℝ := Q.im - e.im with hβ_def
+  have hα_pos : 0 < α := by rw [hα_def]; linarith [hQ_re.2]
+  have hβ_pos : 0 < β := by rw [hβ_def]; linarith [hQ_im.1]
+  have hα_lt : α < e.re - a := by rw [hα_def]; linarith [hQ_re.1]
+  have hβ_lt : β < d - e.im := by rw [hβ_def]; linarith [hQ_im.2]
+  -- Real/imaginary parts of `P = s • V + t • Q`.
+  set P : ℂ := s • (((↑(e.re - R₀) : ℂ)) + ((↑(e.im + R₀) : ℂ)) * Complex.I) + t • Q with hP_def
+  have hP_re : P.re = s * (e.re - R₀) + t * Q.re := by
+    simp [hP_def, Complex.add_re, Complex.mul_re,
+          Complex.I_re, Complex.I_im, Complex.ofReal_re, Complex.ofReal_im,
+          Complex.real_smul]
+  have hP_im : P.im = s * (e.im + R₀) + t * Q.im := by
+    simp [hP_def, Complex.add_im, Complex.mul_im,
+          Complex.I_re, Complex.I_im, Complex.ofReal_re, Complex.ofReal_im,
+          Complex.real_smul]
+  refine ⟨?_, ?_⟩
+  · -- `P ∈ Ioo a e.re ×ℂ Ioo e.im d`: open intervals are convex.
+    rw [Complex.mem_reProdIm]
+    have hV_re_in_Ioo : (e.re - R₀) ∈ Set.Ioo a e.re :=
+      ⟨h_a, by linarith⟩
+    have hV_im_in_Ioo : (e.im + R₀) ∈ Set.Ioo e.im d :=
+      ⟨by linarith, h_d⟩
+    refine ⟨?_, ?_⟩
+    · rw [hP_re]
+      exact convex_Ioo a e.re hV_re_in_Ioo hQ_re hs ht hst
+    · rw [hP_im]
+      exact convex_Ioo e.im d hV_im_in_Ioo hQ_im hs ht hst
+  · -- `P ∉ closedBall e R₀`: the segment from `V` to `Q` avoids the closed disk.
+    intro hP_in_ball
+    -- From `‖P - e‖ ≤ R₀` derive `‖P - e‖² ≤ R₀²` and contradict.
+    rw [Metric.mem_closedBall, Complex.dist_eq] at hP_in_ball
+    have h_norm_sq_le : ‖P - e‖^2 ≤ R₀^2 := by
+      nlinarith [hP_in_ball, sq_nonneg (‖P - e‖ - R₀), norm_nonneg (P - e), hR₀]
+    -- `‖z‖² = z.re² + z.im²` for `z : ℂ`.
+    have h_norm_sq_eq : ‖P - e‖^2 = (P.re - e.re)^2 + (P.im - e.im)^2 := by
+      rw [← Complex.normSq_eq_norm_sq, Complex.normSq_apply]
+      simp [Complex.sub_re, Complex.sub_im, sq]
+    rw [h_norm_sq_eq] at h_norm_sq_le
+    -- Substitute `P.re - e.re = -(s*R₀ + t*α)` and `P.im - e.im = s*R₀ + t*β`,
+    -- using `s + t = 1` to fold `e.re` and `e.im` into the right form.
+    have h_diff_re : P.re - e.re = -(s * R₀ + t * α) := by
+      rw [hP_re, hα_def]; linear_combination e.re * hst
+    have h_diff_im : P.im - e.im = s * R₀ + t * β := by
+      rw [hP_im, hβ_def]; linear_combination e.im * hst
+    rw [h_diff_re, h_diff_im] at h_norm_sq_le
+    -- `‖Q - e‖ > R₀` ⟹ `α² + β² > R₀²`.
+    have hQ_dist_gt : α^2 + β^2 > R₀^2 := by
+      have h_Q_gt : R₀ < ‖Q - e‖ := by
+        rw [Metric.mem_closedBall, Complex.dist_eq] at hQ_not_ball
+        push Not at hQ_not_ball
+        exact hQ_not_ball
+      have h_norm_Q_sq : ‖Q - e‖^2 = α^2 + β^2 := by
+        rw [← Complex.normSq_eq_norm_sq, Complex.normSq_apply]
+        simp [Complex.sub_re, Complex.sub_im, sq, hα_def, hβ_def]
+        ring
+      nlinarith [h_Q_gt, sq_nonneg (‖Q - e‖ - R₀), norm_nonneg (Q - e),
+                 h_norm_Q_sq, hR₀]
+    -- Key observation: `α + β ≥ R₀` is FORCED by the hypotheses. Otherwise
+    -- `α + β < R₀` with `α, β > 0` would imply `α, β < R₀`, hence
+    -- `α² + β² < R₀(α+β) < R₀²`, contradicting `α² + β² > R₀²`.
+    have h_σ_ge_R₀ : R₀ ≤ α + β := by
+      by_contra h
+      push Not at h
+      have h_α_lt_R₀ : α < R₀ := by linarith [hβ_pos]
+      have h_β_lt_R₀ : β < R₀ := by linarith [hα_pos]
+      nlinarith [hQ_dist_gt, mul_pos hα_pos (sub_pos.mpr h_α_lt_R₀),
+                 mul_pos hβ_pos (sub_pos.mpr h_β_lt_R₀)]
+    -- Now `(s*R₀ + t*α)² + (s*R₀ + t*β)² > R₀²` via the identity
+    -- `LHS - R₀² = s²R₀² + 2stR₀(σ - R₀) + t²(τ - R₀²)` (using `(s+t)² = 1`).
+    -- All three terms are ≥ 0; case-split on `s = 0` vs `s > 0` gives strict.
+    have h_st_sq : (s + t)^2 = 1 := by rw [hst]; ring
+    have h_identity : (s * R₀ + t * α)^2 + (s * R₀ + t * β)^2 - R₀^2 =
+        s^2 * R₀^2 + 2 * s * t * R₀ * (α + β - R₀) + t^2 * (α^2 + β^2 - R₀^2) := by
+      linear_combination R₀^2 * h_st_sq
+    have h_term2_nn : 0 ≤ 2 * s * t * R₀ * (α + β - R₀) := by
+      have h_σ_minus : 0 ≤ α + β - R₀ := by linarith
+      positivity
+    have h_term3_nn : 0 ≤ t^2 * (α^2 + β^2 - R₀^2) := by
+      have : 0 ≤ α^2 + β^2 - R₀^2 := by linarith [hQ_dist_gt]
+      positivity
+    have h_key : (s * R₀ + t * α)^2 + (s * R₀ + t * β)^2 > R₀^2 := by
+      rcases hs.lt_or_eq with hs_pos | hs_zero
+      · -- `s > 0`: `s²R₀² > 0` dominates the other (nonneg) terms.
+        have h_term1_pos : 0 < s^2 * R₀^2 := by positivity
+        linarith [h_identity, h_term1_pos, h_term2_nn, h_term3_nn]
+      · -- `s = 0`, so `t = 1`: `t²(τ - R₀²) > 0`.
+        have ht_one : t = 1 := by linarith
+        have h_term3_pos : 0 < t^2 * (α^2 + β^2 - R₀^2) := by
+          rw [ht_one]
+          have : 0 < α^2 + β^2 - R₀^2 := by linarith [hQ_dist_gt]
+          linarith
+        have h_term1_nn : 0 ≤ s^2 * R₀^2 := by positivity
+        linarith [h_identity, h_term1_nn, h_term2_nn, h_term3_pos]
+    linarith [h_norm_sq_le, h_key]
 
 /-- **Star-convexity of the upper-right-of-`e` open box minus the closed
 ball.** Mirror of `topLeftBoxMinusBall_starConvex` across `x = e.re`. -/
 theorem topRightBoxMinusBall_starConvex
-    (e : ℂ) (R₀ : ℝ) (_hR₀ : 0 < R₀)
-    (b d : ℝ) (_h_b : e.re + R₀ < b) (_h_d : e.im + R₀ < d) :
+    (e : ℂ) (R₀ : ℝ) (hR₀ : 0 < R₀)
+    (b d : ℝ) (h_b : e.re + R₀ < b) (h_d : e.im + R₀ < d) :
     StarConvex ℝ ((↑(e.re + R₀) : ℂ) + (↑(e.im + R₀) : ℂ) * Complex.I)
       ((Set.Ioo e.re b ×ℂ Set.Ioo e.im d) \ Metric.closedBall e R₀) := by
-  sorry
+  intro Q hQ s t hs ht hst
+  obtain ⟨hQ_box, hQ_not_ball⟩ := hQ
+  rw [Complex.mem_reProdIm] at hQ_box
+  obtain ⟨hQ_re, hQ_im⟩ := hQ_box
+  rw [Set.mem_Ioo] at hQ_re hQ_im
+  -- Coordinates: now `α := Q.re - e.re > 0` (mirrored).
+  set α : ℝ := Q.re - e.re with hα_def
+  set β : ℝ := Q.im - e.im with hβ_def
+  have hα_pos : 0 < α := by rw [hα_def]; linarith [hQ_re.1]
+  have hβ_pos : 0 < β := by rw [hβ_def]; linarith [hQ_im.1]
+  -- Real/imaginary parts of `P = s • V_R + t • Q`.
+  set P : ℂ := s • (((↑(e.re + R₀) : ℂ)) + ((↑(e.im + R₀) : ℂ)) * Complex.I) + t • Q with hP_def
+  have hP_re : P.re = s * (e.re + R₀) + t * Q.re := by
+    simp [hP_def, Complex.add_re, Complex.mul_re,
+          Complex.I_re, Complex.I_im, Complex.ofReal_re, Complex.ofReal_im,
+          Complex.real_smul]
+  have hP_im : P.im = s * (e.im + R₀) + t * Q.im := by
+    simp [hP_def, Complex.add_im, Complex.mul_im,
+          Complex.I_re, Complex.I_im, Complex.ofReal_re, Complex.ofReal_im,
+          Complex.real_smul]
+  refine ⟨?_, ?_⟩
+  · -- `P ∈ Ioo e.re b ×ℂ Ioo e.im d`: open intervals are convex.
+    rw [Complex.mem_reProdIm]
+    have hV_re_in_Ioo : (e.re + R₀) ∈ Set.Ioo e.re b :=
+      ⟨by linarith, h_b⟩
+    have hV_im_in_Ioo : (e.im + R₀) ∈ Set.Ioo e.im d :=
+      ⟨by linarith, h_d⟩
+    refine ⟨?_, ?_⟩
+    · rw [hP_re]
+      exact convex_Ioo e.re b hV_re_in_Ioo hQ_re hs ht hst
+    · rw [hP_im]
+      exact convex_Ioo e.im d hV_im_in_Ioo hQ_im hs ht hst
+  · -- `P ∉ closedBall e R₀`: same algebraic argument as the top-left case.
+    intro hP_in_ball
+    rw [Metric.mem_closedBall, Complex.dist_eq] at hP_in_ball
+    have h_norm_sq_le : ‖P - e‖^2 ≤ R₀^2 := by
+      nlinarith [hP_in_ball, sq_nonneg (‖P - e‖ - R₀), norm_nonneg (P - e), hR₀]
+    have h_norm_sq_eq : ‖P - e‖^2 = (P.re - e.re)^2 + (P.im - e.im)^2 := by
+      rw [← Complex.normSq_eq_norm_sq, Complex.normSq_apply]
+      simp [Complex.sub_re, Complex.sub_im, sq]
+    rw [h_norm_sq_eq] at h_norm_sq_le
+    -- Now `P.re - e.re = s*R₀ + t*α` (positive sign, mirrored) and
+    -- `P.im - e.im = s*R₀ + t*β` (same as left case).
+    have h_diff_re : P.re - e.re = s * R₀ + t * α := by
+      rw [hP_re, hα_def]; linear_combination e.re * hst
+    have h_diff_im : P.im - e.im = s * R₀ + t * β := by
+      rw [hP_im, hβ_def]; linear_combination e.im * hst
+    rw [h_diff_re, h_diff_im] at h_norm_sq_le
+    have hQ_dist_gt : α^2 + β^2 > R₀^2 := by
+      have h_Q_gt : R₀ < ‖Q - e‖ := by
+        rw [Metric.mem_closedBall, Complex.dist_eq] at hQ_not_ball
+        push Not at hQ_not_ball
+        exact hQ_not_ball
+      have h_norm_Q_sq : ‖Q - e‖^2 = α^2 + β^2 := by
+        rw [← Complex.normSq_eq_norm_sq, Complex.normSq_apply]
+        simp [Complex.sub_re, Complex.sub_im, sq, hα_def, hβ_def]
+      nlinarith [h_Q_gt, sq_nonneg (‖Q - e‖ - R₀), norm_nonneg (Q - e),
+                 h_norm_Q_sq, hR₀]
+    -- Hypothesis-forcing argument: `α + β ≥ R₀`.
+    have h_σ_ge_R₀ : R₀ ≤ α + β := by
+      by_contra h
+      push Not at h
+      have h_α_lt_R₀ : α < R₀ := by linarith [hβ_pos]
+      have h_β_lt_R₀ : β < R₀ := by linarith [hα_pos]
+      nlinarith [hQ_dist_gt, mul_pos hα_pos (sub_pos.mpr h_α_lt_R₀),
+                 mul_pos hβ_pos (sub_pos.mpr h_β_lt_R₀)]
+    have h_st_sq : (s + t)^2 = 1 := by rw [hst]; ring
+    have h_identity : (s * R₀ + t * α)^2 + (s * R₀ + t * β)^2 - R₀^2 =
+        s^2 * R₀^2 + 2 * s * t * R₀ * (α + β - R₀) + t^2 * (α^2 + β^2 - R₀^2) := by
+      linear_combination R₀^2 * h_st_sq
+    have h_term2_nn : 0 ≤ 2 * s * t * R₀ * (α + β - R₀) := by
+      have h_σ_minus : 0 ≤ α + β - R₀ := by linarith
+      positivity
+    have h_term3_nn : 0 ≤ t^2 * (α^2 + β^2 - R₀^2) := by
+      have : 0 ≤ α^2 + β^2 - R₀^2 := by linarith [hQ_dist_gt]
+      positivity
+    have h_key : (s * R₀ + t * α)^2 + (s * R₀ + t * β)^2 > R₀^2 := by
+      rcases hs.lt_or_eq with hs_pos | hs_zero
+      · have h_term1_pos : 0 < s^2 * R₀^2 := by positivity
+        linarith [h_identity, h_term1_pos, h_term2_nn, h_term3_nn]
+      · have ht_one : t = 1 := by linarith
+        have h_term3_pos : 0 < t^2 * (α^2 + β^2 - R₀^2) := by
+          rw [ht_one]
+          have : 0 < α^2 + β^2 - R₀^2 := by linarith [hQ_dist_gt]
+          linarith
+        have h_term1_nn : 0 ≤ s^2 * R₀^2 := by positivity
+        linarith [h_identity, h_term1_nn, h_term2_nn, h_term3_pos]
+    linarith [h_norm_sq_le, h_key]
+
+/-- **Star-convexity of the upper-left-of-`e` open box minus a shrunken
+closed ball.** Variant of `topLeftBoxMinusBall_starConvex` where the
+excluded closed ball has radius `R₀' ≤ R₀`. The star center remains the
+original `V = (e.re - R₀) + (e.im + R₀) I` built from `R₀`. The same
+chord-avoidance argument generalizes via the identity
+`(sR₀ + tα)² + (sR₀ + tβ)² − R₀'²
+   = s²(2R₀² − R₀'²) + 2st(R₀(α+β) − R₀'²) + t²(α²+β² − R₀'²)`,
+each term ≥ 0 with at least one strict (since `R₀ ≥ R₀' > 0` and
+`α+β ≥ R₀'` forced by `α²+β² > R₀'²` with `α, β > 0`). -/
+theorem topLeftBoxMinusBall_starConvex_of_subradius
+    (e : ℂ) (R₀ : ℝ) (hR₀ : 0 < R₀) (R₀' : ℝ) (hR₀' : 0 < R₀')
+    (hR₀'_le : R₀' ≤ R₀)
+    (a d : ℝ) (h_a : a < e.re - R₀) (h_d : e.im + R₀ < d) :
+    StarConvex ℝ ((↑(e.re - R₀) : ℂ) + (↑(e.im + R₀) : ℂ) * Complex.I)
+      ((Set.Ioo a e.re ×ℂ Set.Ioo e.im d) \ Metric.closedBall e R₀') := by
+  intro Q hQ s t hs ht hst
+  obtain ⟨hQ_box, hQ_not_ball⟩ := hQ
+  rw [Complex.mem_reProdIm] at hQ_box
+  obtain ⟨hQ_re, hQ_im⟩ := hQ_box
+  rw [Set.mem_Ioo] at hQ_re hQ_im
+  set α : ℝ := e.re - Q.re with hα_def
+  set β : ℝ := Q.im - e.im with hβ_def
+  have hα_pos : 0 < α := by rw [hα_def]; linarith [hQ_re.2]
+  have hβ_pos : 0 < β := by rw [hβ_def]; linarith [hQ_im.1]
+  set P : ℂ := s • (((↑(e.re - R₀) : ℂ)) + ((↑(e.im + R₀) : ℂ)) * Complex.I) + t • Q with hP_def
+  have hP_re : P.re = s * (e.re - R₀) + t * Q.re := by
+    simp [hP_def, Complex.add_re, Complex.mul_re,
+          Complex.I_re, Complex.I_im, Complex.ofReal_re, Complex.ofReal_im,
+          Complex.real_smul]
+  have hP_im : P.im = s * (e.im + R₀) + t * Q.im := by
+    simp [hP_def, Complex.add_im, Complex.mul_im,
+          Complex.I_re, Complex.I_im, Complex.ofReal_re, Complex.ofReal_im,
+          Complex.real_smul]
+  refine ⟨?_, ?_⟩
+  · rw [Complex.mem_reProdIm]
+    have hV_re_in_Ioo : (e.re - R₀) ∈ Set.Ioo a e.re :=
+      ⟨h_a, by linarith⟩
+    have hV_im_in_Ioo : (e.im + R₀) ∈ Set.Ioo e.im d :=
+      ⟨by linarith, h_d⟩
+    refine ⟨?_, ?_⟩
+    · rw [hP_re]
+      exact convex_Ioo a e.re hV_re_in_Ioo hQ_re hs ht hst
+    · rw [hP_im]
+      exact convex_Ioo e.im d hV_im_in_Ioo hQ_im hs ht hst
+  · intro hP_in_ball
+    rw [Metric.mem_closedBall, Complex.dist_eq] at hP_in_ball
+    have h_norm_sq_le : ‖P - e‖^2 ≤ R₀'^2 := by
+      nlinarith [hP_in_ball, sq_nonneg (‖P - e‖ - R₀'), norm_nonneg (P - e), hR₀']
+    have h_norm_sq_eq : ‖P - e‖^2 = (P.re - e.re)^2 + (P.im - e.im)^2 := by
+      rw [← Complex.normSq_eq_norm_sq, Complex.normSq_apply]
+      simp [Complex.sub_re, Complex.sub_im, sq]
+    rw [h_norm_sq_eq] at h_norm_sq_le
+    have h_diff_re : P.re - e.re = -(s * R₀ + t * α) := by
+      rw [hP_re, hα_def]; linear_combination e.re * hst
+    have h_diff_im : P.im - e.im = s * R₀ + t * β := by
+      rw [hP_im, hβ_def]; linear_combination e.im * hst
+    rw [h_diff_re, h_diff_im] at h_norm_sq_le
+    have hQ_dist_gt : α^2 + β^2 > R₀'^2 := by
+      have h_Q_gt : R₀' < ‖Q - e‖ := by
+        rw [Metric.mem_closedBall, Complex.dist_eq] at hQ_not_ball
+        push Not at hQ_not_ball
+        exact hQ_not_ball
+      have h_norm_Q_sq : ‖Q - e‖^2 = α^2 + β^2 := by
+        rw [← Complex.normSq_eq_norm_sq, Complex.normSq_apply]
+        simp [Complex.sub_re, Complex.sub_im, sq, hα_def, hβ_def]
+        ring
+      nlinarith [h_Q_gt, sq_nonneg (‖Q - e‖ - R₀'), norm_nonneg (Q - e),
+                 h_norm_Q_sq, hR₀']
+    have h_σ_ge_R₀' : R₀' ≤ α + β := by
+      by_contra h
+      push Not at h
+      have h_α_lt_R₀' : α < R₀' := by linarith [hβ_pos]
+      have h_β_lt_R₀' : β < R₀' := by linarith [hα_pos]
+      nlinarith [hQ_dist_gt, mul_pos hα_pos (sub_pos.mpr h_α_lt_R₀'),
+                 mul_pos hβ_pos (sub_pos.mpr h_β_lt_R₀')]
+    have h_st_pow : s^2 + 2 * s * t + t^2 = 1 := by
+      have h_eq : s^2 + 2 * s * t + t^2 = (s + t)^2 := by ring
+      rw [h_eq, hst]; norm_num
+    have h_identity : (s * R₀ + t * α)^2 + (s * R₀ + t * β)^2 - R₀'^2 =
+        s^2 * (2 * R₀^2 - R₀'^2) + 2 * s * t * (R₀ * (α + β) - R₀'^2) +
+        t^2 * (α^2 + β^2 - R₀'^2) := by
+      have hR' : R₀'^2 = R₀'^2 * (s^2 + 2 * s * t + t^2) := by rw [h_st_pow]; ring
+      conv_lhs => rw [hR']
+      ring
+    have h_2R0_sq_gt : 0 < 2 * R₀^2 - R₀'^2 := by
+      have h_sq_le : R₀'^2 ≤ R₀^2 := pow_le_pow_left₀ hR₀'.le hR₀'_le 2
+      have h_pos : 0 < R₀^2 := by positivity
+      linarith
+    have h_cross_nn : 0 ≤ R₀ * (α + β) - R₀'^2 := by
+      have h1 : R₀'^2 = R₀' * R₀' := by ring
+      have h2 : R₀' * R₀' ≤ R₀ * R₀' := mul_le_mul_of_nonneg_right hR₀'_le hR₀'.le
+      have h3 : R₀ * R₀' ≤ R₀ * (α + β) :=
+        mul_le_mul_of_nonneg_left h_σ_ge_R₀' hR₀.le
+      linarith
+    have h_term1_nn : 0 ≤ s^2 * (2 * R₀^2 - R₀'^2) := by positivity
+    have h_term2_nn : 0 ≤ 2 * s * t * (R₀ * (α + β) - R₀'^2) := by positivity
+    have h_term3_nn : 0 ≤ t^2 * (α^2 + β^2 - R₀'^2) := by
+      have : 0 ≤ α^2 + β^2 - R₀'^2 := by linarith [hQ_dist_gt]
+      positivity
+    have h_key : (s * R₀ + t * α)^2 + (s * R₀ + t * β)^2 > R₀'^2 := by
+      rcases hs.lt_or_eq with hs_pos | hs_zero
+      · have h_term1_pos : 0 < s^2 * (2 * R₀^2 - R₀'^2) := by positivity
+        linarith [h_identity, h_term1_pos, h_term2_nn, h_term3_nn]
+      · have ht_one : t = 1 := by linarith
+        have h_term3_pos : 0 < t^2 * (α^2 + β^2 - R₀'^2) := by
+          rw [ht_one]
+          have : 0 < α^2 + β^2 - R₀'^2 := by linarith
+          linarith
+        linarith [h_identity, h_term1_nn, h_term2_nn, h_term3_pos]
+    linarith [h_norm_sq_le, h_key]
+
+/-- **Star-convexity of the upper-right-of-`e` open box minus a shrunken
+closed ball.** Mirror of `topLeftBoxMinusBall_starConvex_of_subradius`
+across `x = e.re`. -/
+theorem topRightBoxMinusBall_starConvex_of_subradius
+    (e : ℂ) (R₀ : ℝ) (hR₀ : 0 < R₀) (R₀' : ℝ) (hR₀' : 0 < R₀')
+    (hR₀'_le : R₀' ≤ R₀)
+    (b d : ℝ) (h_b : e.re + R₀ < b) (h_d : e.im + R₀ < d) :
+    StarConvex ℝ ((↑(e.re + R₀) : ℂ) + (↑(e.im + R₀) : ℂ) * Complex.I)
+      ((Set.Ioo e.re b ×ℂ Set.Ioo e.im d) \ Metric.closedBall e R₀') := by
+  intro Q hQ s t hs ht hst
+  obtain ⟨hQ_box, hQ_not_ball⟩ := hQ
+  rw [Complex.mem_reProdIm] at hQ_box
+  obtain ⟨hQ_re, hQ_im⟩ := hQ_box
+  rw [Set.mem_Ioo] at hQ_re hQ_im
+  set α : ℝ := Q.re - e.re with hα_def
+  set β : ℝ := Q.im - e.im with hβ_def
+  have hα_pos : 0 < α := by rw [hα_def]; linarith [hQ_re.1]
+  have hβ_pos : 0 < β := by rw [hβ_def]; linarith [hQ_im.1]
+  set P : ℂ := s • (((↑(e.re + R₀) : ℂ)) + ((↑(e.im + R₀) : ℂ)) * Complex.I) + t • Q with hP_def
+  have hP_re : P.re = s * (e.re + R₀) + t * Q.re := by
+    simp [hP_def, Complex.add_re, Complex.mul_re,
+          Complex.I_re, Complex.I_im, Complex.ofReal_re, Complex.ofReal_im,
+          Complex.real_smul]
+  have hP_im : P.im = s * (e.im + R₀) + t * Q.im := by
+    simp [hP_def, Complex.add_im, Complex.mul_im,
+          Complex.I_re, Complex.I_im, Complex.ofReal_re, Complex.ofReal_im,
+          Complex.real_smul]
+  refine ⟨?_, ?_⟩
+  · rw [Complex.mem_reProdIm]
+    have hV_re_in_Ioo : (e.re + R₀) ∈ Set.Ioo e.re b :=
+      ⟨by linarith, h_b⟩
+    have hV_im_in_Ioo : (e.im + R₀) ∈ Set.Ioo e.im d :=
+      ⟨by linarith, h_d⟩
+    refine ⟨?_, ?_⟩
+    · rw [hP_re]
+      exact convex_Ioo e.re b hV_re_in_Ioo hQ_re hs ht hst
+    · rw [hP_im]
+      exact convex_Ioo e.im d hV_im_in_Ioo hQ_im hs ht hst
+  · intro hP_in_ball
+    rw [Metric.mem_closedBall, Complex.dist_eq] at hP_in_ball
+    have h_norm_sq_le : ‖P - e‖^2 ≤ R₀'^2 := by
+      nlinarith [hP_in_ball, sq_nonneg (‖P - e‖ - R₀'), norm_nonneg (P - e), hR₀']
+    have h_norm_sq_eq : ‖P - e‖^2 = (P.re - e.re)^2 + (P.im - e.im)^2 := by
+      rw [← Complex.normSq_eq_norm_sq, Complex.normSq_apply]
+      simp [Complex.sub_re, Complex.sub_im, sq]
+    rw [h_norm_sq_eq] at h_norm_sq_le
+    have h_diff_re : P.re - e.re = s * R₀ + t * α := by
+      rw [hP_re, hα_def]; linear_combination e.re * hst
+    have h_diff_im : P.im - e.im = s * R₀ + t * β := by
+      rw [hP_im, hβ_def]; linear_combination e.im * hst
+    rw [h_diff_re, h_diff_im] at h_norm_sq_le
+    have hQ_dist_gt : α^2 + β^2 > R₀'^2 := by
+      have h_Q_gt : R₀' < ‖Q - e‖ := by
+        rw [Metric.mem_closedBall, Complex.dist_eq] at hQ_not_ball
+        push Not at hQ_not_ball
+        exact hQ_not_ball
+      have h_norm_Q_sq : ‖Q - e‖^2 = α^2 + β^2 := by
+        rw [← Complex.normSq_eq_norm_sq, Complex.normSq_apply]
+        simp [Complex.sub_re, Complex.sub_im, sq, hα_def, hβ_def]
+      nlinarith [h_Q_gt, sq_nonneg (‖Q - e‖ - R₀'), norm_nonneg (Q - e),
+                 h_norm_Q_sq, hR₀']
+    have h_σ_ge_R₀' : R₀' ≤ α + β := by
+      by_contra h
+      push Not at h
+      have h_α_lt_R₀' : α < R₀' := by linarith [hβ_pos]
+      have h_β_lt_R₀' : β < R₀' := by linarith [hα_pos]
+      nlinarith [hQ_dist_gt, mul_pos hα_pos (sub_pos.mpr h_α_lt_R₀'),
+                 mul_pos hβ_pos (sub_pos.mpr h_β_lt_R₀')]
+    have h_st_pow : s^2 + 2 * s * t + t^2 = 1 := by
+      have h_eq : s^2 + 2 * s * t + t^2 = (s + t)^2 := by ring
+      rw [h_eq, hst]; norm_num
+    have h_identity : (s * R₀ + t * α)^2 + (s * R₀ + t * β)^2 - R₀'^2 =
+        s^2 * (2 * R₀^2 - R₀'^2) + 2 * s * t * (R₀ * (α + β) - R₀'^2) +
+        t^2 * (α^2 + β^2 - R₀'^2) := by
+      have hR' : R₀'^2 = R₀'^2 * (s^2 + 2 * s * t + t^2) := by rw [h_st_pow]; ring
+      conv_lhs => rw [hR']
+      ring
+    have h_2R0_sq_gt : 0 < 2 * R₀^2 - R₀'^2 := by
+      have h_sq_le : R₀'^2 ≤ R₀^2 := pow_le_pow_left₀ hR₀'.le hR₀'_le 2
+      have h_pos : 0 < R₀^2 := by positivity
+      linarith
+    have h_cross_nn : 0 ≤ R₀ * (α + β) - R₀'^2 := by
+      have h1 : R₀'^2 = R₀' * R₀' := by ring
+      have h2 : R₀' * R₀' ≤ R₀ * R₀' := mul_le_mul_of_nonneg_right hR₀'_le hR₀'.le
+      have h3 : R₀ * R₀' ≤ R₀ * (α + β) :=
+        mul_le_mul_of_nonneg_left h_σ_ge_R₀' hR₀.le
+      linarith
+    have h_term1_nn : 0 ≤ s^2 * (2 * R₀^2 - R₀'^2) := by positivity
+    have h_term2_nn : 0 ≤ 2 * s * t * (R₀ * (α + β) - R₀'^2) := by positivity
+    have h_term3_nn : 0 ≤ t^2 * (α^2 + β^2 - R₀'^2) := by
+      have : 0 ≤ α^2 + β^2 - R₀'^2 := by linarith [hQ_dist_gt]
+      positivity
+    have h_key : (s * R₀ + t * α)^2 + (s * R₀ + t * β)^2 > R₀'^2 := by
+      rcases hs.lt_or_eq with hs_pos | hs_zero
+      · have h_term1_pos : 0 < s^2 * (2 * R₀^2 - R₀'^2) := by positivity
+        linarith [h_identity, h_term1_pos, h_term2_nn, h_term3_nn]
+      · have ht_one : t = 1 := by linarith
+        have h_term3_pos : 0 < t^2 * (α^2 + β^2 - R₀'^2) := by
+          rw [ht_one]
+          have : 0 < α^2 + β^2 - R₀'^2 := by linarith
+          linarith
+        linarith [h_identity, h_term1_nn, h_term2_nn, h_term3_pos]
+    linarith [h_norm_sq_le, h_key]
 
 /-- **Horizontal segment integral via `starPrimitive`.** For
 `V := xV + y·I` and `Z := xZ + y·I` (same imaginary part `y`), the
@@ -489,7 +891,43 @@ theorem starPrimitive_horizontal_eq_intervalIntegral
     Complex.starPrimitive ((xV : ℂ) + (y : ℂ) * Complex.I) f
         ((xZ : ℂ) + (y : ℂ) * Complex.I) =
       ∫ x in xV..xZ, f ((x : ℂ) + (y : ℂ) * Complex.I) := by
-  sorry
+  unfold Complex.starPrimitive
+  -- Rewrite the integrand into the form `(xZ - xV : ℝ) • g(xV + (xZ - xV) * t)`
+  -- where `g(u) := f(↑u + ↑y · I)`. The `(z - p) = ↑(xZ - xV)` real coercion
+  -- means the scalar multiplication is `(xZ - xV : ℝ) • · = ↑(xZ - xV) * ·`.
+  have h_eq : ∀ t : ℝ,
+      ((xZ : ℂ) + (y : ℂ) * Complex.I - ((xV : ℂ) + (y : ℂ) * Complex.I)) *
+          f (((xV : ℂ) + (y : ℂ) * Complex.I) +
+              (t : ℂ) * ((xZ : ℂ) + (y : ℂ) * Complex.I -
+                ((xV : ℂ) + (y : ℂ) * Complex.I))) =
+        (xZ - xV : ℝ) •
+          f (((xV + (xZ - xV) * t : ℝ) : ℂ) + (y : ℂ) * Complex.I) := by
+    intro t
+    rw [Complex.real_smul]
+    have h1 : (xZ : ℂ) + (y : ℂ) * Complex.I - ((xV : ℂ) + (y : ℂ) * Complex.I) =
+        ((xZ - xV : ℝ) : ℂ) := by push_cast; ring
+    rw [h1]
+    have h2 : ((xV : ℂ) + (y : ℂ) * Complex.I) +
+        (t : ℂ) * ((xZ - xV : ℝ) : ℂ) =
+        ((xV + (xZ - xV) * t : ℝ) : ℂ) + (y : ℂ) * Complex.I := by
+      push_cast; ring
+    rw [h2]
+  rw [intervalIntegral.integral_congr (fun t _ => h_eq t)]
+  -- Pull the real scalar out of the integral, then apply the affine substitution lemma.
+  have h_smul : (∫ t in (0:ℝ)..1, (xZ - xV : ℝ) •
+        f (((xV + (xZ - xV) * t : ℝ) : ℂ) + (y : ℂ) * Complex.I)) =
+      (xZ - xV : ℝ) • ∫ t in (0:ℝ)..1,
+        f (((xV + (xZ - xV) * t : ℝ) : ℂ) + (y : ℂ) * Complex.I) :=
+    intervalIntegral.integral_smul _ _
+  have h_subst : ((xZ - xV : ℝ) • ∫ t in (0:ℝ)..1,
+        f (((xV + (xZ - xV) * t : ℝ) : ℂ) + (y : ℂ) * Complex.I)) =
+      ∫ x in (xV + (xZ - xV) * 0)..(xV + (xZ - xV) * 1),
+        f ((x : ℂ) + (y : ℂ) * Complex.I) :=
+    intervalIntegral.smul_integral_comp_add_mul
+      (fun u : ℝ => f ((u : ℂ) + (y : ℂ) * Complex.I)) (xZ - xV) xV
+  rw [h_smul, h_subst]
+  -- Simplify the bounds.
+  congr 1 <;> ring
 
 /-- **Vertical segment integral via `starPrimitive`.** For
 `V := x + yV·I` and `Z := x + yZ·I` (same real part `x`), the segment
@@ -501,7 +939,51 @@ theorem starPrimitive_vertical_eq_intervalIntegral
     Complex.starPrimitive ((x : ℂ) + (yV : ℂ) * Complex.I) f
         ((x : ℂ) + (yZ : ℂ) * Complex.I) =
       Complex.I * ∫ y in yV..yZ, f ((x : ℂ) + (y : ℂ) * Complex.I) := by
-  sorry
+  unfold Complex.starPrimitive
+  -- Rewrite the integrand into `I * ((yZ - yV : ℝ) • g(yV + (yZ - yV) * t))`
+  -- where `g(v) := f(↑x + ↑v · I)`. The `(z - p) = ↑(yZ - yV) · I` factor
+  -- supplies both `I` and the real scalar `(yZ - yV)`.
+  have h_eq : ∀ t : ℝ,
+      ((x : ℂ) + (yZ : ℂ) * Complex.I - ((x : ℂ) + (yV : ℂ) * Complex.I)) *
+          f (((x : ℂ) + (yV : ℂ) * Complex.I) +
+              (t : ℂ) * ((x : ℂ) + (yZ : ℂ) * Complex.I -
+                ((x : ℂ) + (yV : ℂ) * Complex.I))) =
+        Complex.I * ((yZ - yV : ℝ) •
+          f ((x : ℂ) + ((yV + (yZ - yV) * t : ℝ) : ℂ) * Complex.I)) := by
+    intro t
+    rw [Complex.real_smul]
+    have h1 : (x : ℂ) + (yZ : ℂ) * Complex.I - ((x : ℂ) + (yV : ℂ) * Complex.I) =
+        ((yZ - yV : ℝ) : ℂ) * Complex.I := by push_cast; ring
+    rw [h1]
+    have h2 : ((x : ℂ) + (yV : ℂ) * Complex.I) +
+        (t : ℂ) * (((yZ - yV : ℝ) : ℂ) * Complex.I) =
+        ((x : ℂ) + ((yV + (yZ - yV) * t : ℝ) : ℂ) * Complex.I) := by
+      push_cast; ring
+    rw [h2]
+    ring
+  rw [intervalIntegral.integral_congr (fun t _ => h_eq t)]
+  -- Pull `I` out of the integral.
+  have h_pull_I : (∫ t in (0:ℝ)..1, Complex.I * ((yZ - yV : ℝ) •
+          f ((x : ℂ) + ((yV + (yZ - yV) * t : ℝ) : ℂ) * Complex.I))) =
+      Complex.I * ∫ t in (0:ℝ)..1, (yZ - yV : ℝ) •
+          f ((x : ℂ) + ((yV + (yZ - yV) * t : ℝ) : ℂ) * Complex.I) :=
+    intervalIntegral.integral_const_mul Complex.I _
+  rw [h_pull_I]
+  -- Pull the real scalar out, then apply the affine-substitution lemma.
+  have h_smul : (∫ t in (0:ℝ)..1, (yZ - yV : ℝ) •
+          f ((x : ℂ) + ((yV + (yZ - yV) * t : ℝ) : ℂ) * Complex.I)) =
+      (yZ - yV : ℝ) • ∫ t in (0:ℝ)..1,
+          f ((x : ℂ) + ((yV + (yZ - yV) * t : ℝ) : ℂ) * Complex.I) :=
+    intervalIntegral.integral_smul _ _
+  have h_subst : ((yZ - yV : ℝ) • ∫ t in (0:ℝ)..1,
+          f ((x : ℂ) + ((yV + (yZ - yV) * t : ℝ) : ℂ) * Complex.I)) =
+      ∫ y in (yV + (yZ - yV) * 0)..(yV + (yZ - yV) * 1),
+          f ((x : ℂ) + (y : ℂ) * Complex.I) :=
+    intervalIntegral.smul_integral_comp_add_mul
+      (fun v : ℝ => f ((x : ℂ) + (v : ℂ) * Complex.I)) (yZ - yV) yV
+  rw [h_smul, h_subst]
+  -- Bounds: `yV + (yZ - yV) * 0 = yV`, `yV + (yZ - yV) * 1 = yZ`.
+  congr 2 <;> ring
 
 /-- **Top-left lune arc identity via `starPrimitive`.** For `f` continuous
 on the closed top-left lune and complex-differentiable on the upper-left
@@ -511,26 +993,27 @@ open box minus closed disk, the arc integral
 `V = (e.re − R₀) + (e.im + R₀)·I`, `T = e.re + (e.im + R₀)·I`,
 `B = (e.re − R₀) + e.im·I`.
 
-Proof factors through the ε-arc limit:
-* For `ε > 0` small, the slightly outer arc
-  `circleMap e (R₀ + ε) θ` on `[π/2 + ε, π − ε]` lies in the
-  star-convex open set `U := (Ioo a e.re ×ℂ Ioo e.im d) \ closedBall e R₀`.
-* `F := starPrimitive V f` has derivative `f` on `U`
-  (`hasDerivAt_starPrimitive` + `topLeftBoxMinusBall_starConvex`).
-* Chain rule + `hasDerivAt_circleMap` gives `(F ∘ z_ε)'(θ) = f(z_ε(θ)) · I · (R₀ + ε) · exp(I·θ)`.
-* FTC `intervalIntegral.integral_eq_sub_of_hasDerivAt_of_le` over
-  `[π/2 + ε, π − ε]` produces the ε-version of the identity.
-* `ε → 0` limit recovers the full arc integral via dominated convergence
-  (`f` bounded on a compact thickening of the arc) and continuity of
-  `starPrimitive V f` at the endpoints `T` and `B` (which uses `Hc`'s
-  continuity of `f` on the closed lune). -/
+The proof factors through **parametric differentiation under the integral
+sign** (avoiding any `ε`-arc limit). Set `Z(θ) := circleMap e R₀ θ` and
+`G(θ) := starPrimitive V f (Z(θ))`. Writing
+`G(θ) = ∫_0^1 (Z(θ)−V)·f(V + t·(Z(θ)−V)) dt`, the integrand is
+differentiable in `θ` for each `t ∈ [0, 1)` (using
+`topLeftBoxMinusBall_starConvex`: `V + t·(Z(θ)−V) ∈ U` strictly for
+`t < 1`). Differentiating under the integral sign and grouping terms
+exposes the integrand as the `t`-derivative of `t·f(V + t·(Z(θ)−V))`,
+so the FTC in `t` collapses the inner integral:
+`G'(θ) = Z'(θ) · [t·f(V + t·(Z−V))]_{t=0}^{t=1} = Z'(θ) · f(Z(θ))
+       = f(circleMap e R₀ θ) · (I·R₀·exp(I·θ))`.
+Applying the outer FTC
+`intervalIntegral.integral_eq_sub_of_hasDerivAt_of_le` on `[π/2, π]`
+gives the claimed identity. -/
 theorem topLeftLune_arc_integral_eq_starPrimitive_sub
     (f : ℂ → ℂ) (e : ℂ) (R₀ : ℝ) (_hR₀ : 0 < R₀)
     (a d : ℝ) (_h_a : a < e.re - R₀) (_h_d : e.im + R₀ < d)
     (_Hc : ContinuousOn f
       ((Set.Icc (e.re - R₀) e.re ×ℂ Set.Icc e.im (e.im + R₀)) \ Metric.ball e R₀))
-    (_Hd : DifferentiableOn ℂ f
-      ((Set.Ioo a e.re ×ℂ Set.Ioo e.im d) \ Metric.closedBall e R₀)) :
+    (_Hd : ∃ R₀' : ℝ, 0 < R₀' ∧ R₀' < R₀ ∧ DifferentiableOn ℂ f
+      ((Set.Ioo a e.re ×ℂ Set.Ioo e.im d) \ Metric.closedBall e R₀')) :
     (∫ θ in (Real.pi / 2)..Real.pi, f (_root_.circleMap e R₀ θ) *
         (Complex.I * R₀ * Complex.exp (Complex.I * θ))) =
       Complex.starPrimitive
@@ -539,7 +1022,395 @@ theorem topLeftLune_arc_integral_eq_starPrimitive_sub
       Complex.starPrimitive
           ((↑(e.re - R₀) : ℂ) + (↑(e.im + R₀) : ℂ) * Complex.I) f
           ((↑e.re : ℂ) + (↑(e.im + R₀) : ℂ) * Complex.I) := by
-  sorry
+  obtain ⟨R₀', hR₀'_pos, hR₀'_lt, _Hd'⟩ := _Hd
+  set V : ℂ := (↑(e.re - R₀) : ℂ) + (↑(e.im + R₀) : ℂ) * Complex.I with hV_def
+  set T : ℂ := (↑e.re : ℂ) + (↑(e.im + R₀) : ℂ) * Complex.I with hT_def
+  set B : ℂ := (↑(e.re - R₀) : ℂ) + (↑e.im : ℂ) * Complex.I with hB_def
+  set U' : Set ℂ :=
+    (Set.Ioo a e.re ×ℂ Set.Ioo e.im d) \ Metric.closedBall e R₀' with hU'_def
+  set CL : Set ℂ :=
+    (Set.Icc (e.re - R₀) e.re ×ℂ Set.Icc e.im (e.im + R₀)) \ Metric.ball e R₀ with hCL_def
+  have hSC' : StarConvex ℝ V U' :=
+    topLeftBoxMinusBall_starConvex_of_subradius e R₀ _hR₀ R₀' hR₀'_pos hR₀'_lt.le
+      a d _h_a _h_d
+  have hU'_open : IsOpen U' :=
+    ((isOpen_Ioo.reProdIm isOpen_Ioo).sdiff Metric.isClosed_closedBall)
+  -- Circle map endpoint identities.
+  have h_Z_pi : _root_.circleMap e R₀ Real.pi = B := by
+    rw [hB_def, _root_.circleMap, Complex.exp_mul_I]
+    rw [show Complex.cos (↑Real.pi : ℂ) = -1 by
+          rw [← Complex.ofReal_cos, Real.cos_pi]; push_cast; ring]
+    rw [show Complex.sin (↑Real.pi : ℂ) = 0 by
+          rw [← Complex.ofReal_sin, Real.sin_pi]; push_cast; ring]
+    apply Complex.ext
+    · simp [Complex.add_re, Complex.mul_re, Complex.sub_re, Complex.ofReal_re,
+            Complex.ofReal_im, Complex.I_re, Complex.I_im]; ring
+    · simp [Complex.add_im, Complex.mul_im, Complex.sub_im, Complex.ofReal_re,
+            Complex.ofReal_im, Complex.I_re, Complex.I_im]
+  have h_Z_pi_div_two : _root_.circleMap e R₀ (Real.pi / 2) = T := by
+    rw [hT_def, _root_.circleMap, Complex.exp_mul_I]
+    rw [show Complex.cos ((↑(Real.pi / 2) : ℂ)) = 0 by
+          rw [← Complex.ofReal_cos, Real.cos_pi_div_two]; push_cast; ring]
+    rw [show Complex.sin ((↑(Real.pi / 2) : ℂ)) = 1 by
+          rw [← Complex.ofReal_sin, Real.sin_pi_div_two]; push_cast; ring]
+    apply Complex.ext
+    · simp [Complex.add_re, Complex.mul_re, Complex.ofReal_re, Complex.ofReal_im,
+            Complex.I_re, Complex.I_im]
+    · simp [Complex.add_im, Complex.mul_im, Complex.ofReal_re, Complex.ofReal_im,
+            Complex.I_re, Complex.I_im]
+  -- Geometric: for `θ ∈ Ioo (π/2) π`, `circleMap e R₀ θ ∈ U'`.
+  have h_Z_re : ∀ θ : ℝ,
+      (_root_.circleMap e R₀ θ).re = e.re + R₀ * Real.cos θ := by
+    intro θ
+    rw [_root_.circleMap, Complex.exp_mul_I]
+    simp [Complex.add_re, Complex.mul_re, Complex.ofReal_re,
+          Complex.ofReal_im, Complex.I_re, Complex.I_im,
+          ← Complex.ofReal_cos, ← Complex.ofReal_sin]
+  have h_Z_im : ∀ θ : ℝ,
+      (_root_.circleMap e R₀ θ).im = e.im + R₀ * Real.sin θ := by
+    intro θ
+    rw [_root_.circleMap, Complex.exp_mul_I]
+    simp [Complex.add_im, Complex.mul_im, Complex.ofReal_re,
+          Complex.ofReal_im, Complex.I_re, Complex.I_im,
+          ← Complex.ofReal_cos, ← Complex.ofReal_sin]
+  have h_Z_norm : ∀ θ : ℝ, ‖_root_.circleMap e R₀ θ - e‖ = R₀ := by
+    intro θ
+    rw [_root_.circleMap, show e + (R₀ : ℂ) * Complex.exp ((θ : ℂ) * Complex.I) - e =
+        (R₀ : ℂ) * Complex.exp ((θ : ℂ) * Complex.I) from by ring]
+    rw [norm_mul, Complex.norm_real, Real.norm_of_nonneg _hR₀.le,
+        Complex.norm_exp_ofReal_mul_I]
+    ring
+  have h_Z_in_U' : ∀ θ ∈ Set.Ioo (Real.pi / 2) Real.pi,
+      _root_.circleMap e R₀ θ ∈ U' := by
+    intro θ hθ
+    refine ⟨?_, ?_⟩
+    · rw [Complex.mem_reProdIm]
+      refine ⟨?_, ?_⟩
+      · rw [h_Z_re θ]
+        rw [Set.mem_Ioo]
+        have h_pi_pos := Real.pi_pos
+        have h_cos_neg : Real.cos θ < 0 :=
+          Real.cos_neg_of_pi_div_two_lt_of_lt hθ.1 (by linarith [hθ.2])
+        have h_cos_ge : Real.cos θ ≥ -1 := Real.neg_one_le_cos θ
+        refine ⟨?_, ?_⟩
+        · have h1 : R₀ * Real.cos θ ≥ R₀ * (-1) :=
+            mul_le_mul_of_nonneg_left h_cos_ge _hR₀.le
+          linarith [_h_a]
+        · have h2 : R₀ * Real.cos θ < 0 := mul_neg_of_pos_of_neg _hR₀ h_cos_neg
+          linarith
+      · rw [h_Z_im θ]
+        rw [Set.mem_Ioo]
+        have h_sin_pos : Real.sin θ > 0 :=
+          Real.sin_pos_of_pos_of_lt_pi (by linarith [hθ.1, Real.pi_pos]) hθ.2
+        have h_sin_lt : Real.sin θ ≤ 1 := Real.sin_le_one θ
+        refine ⟨?_, ?_⟩
+        · have h3 : R₀ * Real.sin θ > 0 := mul_pos _hR₀ h_sin_pos
+          linarith
+        · have h4 : R₀ * Real.sin θ ≤ R₀ * 1 :=
+            mul_le_mul_of_nonneg_left h_sin_lt _hR₀.le
+          linarith [_h_d]
+    · intro h_in_cb
+      rw [Metric.mem_closedBall, Complex.dist_eq, h_Z_norm] at h_in_cb
+      linarith [hR₀'_lt]
+  -- Star-convexity of CL from V.
+  have hSC_CL : StarConvex ℝ V CL := by
+    intro Q hQ s t hs ht hst
+    obtain ⟨hQ_box, hQ_not_ball⟩ := hQ
+    rw [Complex.mem_reProdIm] at hQ_box
+    obtain ⟨hQ_re, hQ_im⟩ := hQ_box
+    rw [Set.mem_Icc] at hQ_re hQ_im
+    set α : ℝ := e.re - Q.re with hα_def
+    set β : ℝ := Q.im - e.im with hβ_def
+    have hα_nn : 0 ≤ α := by rw [hα_def]; linarith [hQ_re.2]
+    have hβ_nn : 0 ≤ β := by rw [hβ_def]; linarith [hQ_im.1]
+    set P : ℂ := s • V + t • Q with hP_def
+    have hP_re : P.re = s * (e.re - R₀) + t * Q.re := by
+      simp [hP_def, hV_def, Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
+            Complex.ofReal_re, Complex.ofReal_im, Complex.real_smul]
+    have hP_im : P.im = s * (e.im + R₀) + t * Q.im := by
+      simp [hP_def, hV_def, Complex.add_im, Complex.mul_im, Complex.I_re, Complex.I_im,
+            Complex.ofReal_re, Complex.ofReal_im, Complex.real_smul]
+    refine ⟨?_, ?_⟩
+    · rw [Complex.mem_reProdIm]
+      have hV_re_in_Icc : (e.re - R₀) ∈ Set.Icc (e.re - R₀) e.re :=
+        ⟨le_refl _, by linarith [_hR₀]⟩
+      have hV_im_in_Icc : (e.im + R₀) ∈ Set.Icc e.im (e.im + R₀) :=
+        ⟨by linarith [_hR₀], le_refl _⟩
+      refine ⟨?_, ?_⟩
+      · rw [hP_re]
+        exact (convex_Icc _ _).segment_subset hV_re_in_Icc hQ_re
+          ⟨s, t, hs, ht, hst, rfl⟩
+      · rw [hP_im]
+        exact (convex_Icc _ _).segment_subset hV_im_in_Icc hQ_im
+          ⟨s, t, hs, ht, hst, rfl⟩
+    · intro hP_in_ball
+      rw [Metric.mem_ball, Complex.dist_eq] at hP_in_ball
+      have h_norm_sq_lt : ‖P - e‖^2 < R₀^2 := by
+        nlinarith [hP_in_ball, sq_nonneg (R₀ - ‖P - e‖), norm_nonneg (P - e), _hR₀]
+      have h_norm_sq_eq : ‖P - e‖^2 = (P.re - e.re)^2 + (P.im - e.im)^2 := by
+        rw [← Complex.normSq_eq_norm_sq, Complex.normSq_apply]
+        simp [Complex.sub_re, Complex.sub_im, sq]
+      rw [h_norm_sq_eq] at h_norm_sq_lt
+      have h_diff_re : P.re - e.re = -(s * R₀ + t * α) := by
+        rw [hP_re, hα_def]; linear_combination e.re * hst
+      have h_diff_im : P.im - e.im = s * R₀ + t * β := by
+        rw [hP_im, hβ_def]; linear_combination e.im * hst
+      rw [h_diff_re, h_diff_im] at h_norm_sq_lt
+      have hQ_norm_ge : α^2 + β^2 ≥ R₀^2 := by
+        have h_Q_ge : R₀ ≤ ‖Q - e‖ := by
+          rw [Metric.mem_ball, Complex.dist_eq] at hQ_not_ball
+          push Not at hQ_not_ball
+          exact hQ_not_ball
+        have h_norm_Q_sq : ‖Q - e‖^2 = α^2 + β^2 := by
+          rw [← Complex.normSq_eq_norm_sq, Complex.normSq_apply]
+          simp [Complex.sub_re, Complex.sub_im, sq, hα_def, hβ_def]
+          ring
+        nlinarith [h_Q_ge, sq_nonneg (‖Q - e‖ - R₀), norm_nonneg (Q - e), h_norm_Q_sq]
+      have h_σ_ge_R₀ : R₀ ≤ α + β := by
+        by_contra h
+        push Not at h
+        rcases lt_or_ge α R₀ with hα_lt | hα_ge
+        · rcases lt_or_ge β R₀ with hβ_lt | hβ_ge
+          · nlinarith [hQ_norm_ge, mul_nonneg hα_nn (sub_nonneg.mpr hα_lt.le),
+                       mul_nonneg hβ_nn (sub_nonneg.mpr hβ_lt.le)]
+          · linarith
+        · linarith
+      have h_st_pow : s^2 + 2 * s * t + t^2 = 1 := by
+        have h_eq : s^2 + 2 * s * t + t^2 = (s + t)^2 := by ring
+        rw [h_eq, hst]; norm_num
+      have h_identity : (s * R₀ + t * α)^2 + (s * R₀ + t * β)^2 - R₀^2 =
+          s^2 * R₀^2 + 2 * s * t * R₀ * (α + β - R₀) + t^2 * (α^2 + β^2 - R₀^2) := by
+        have hR' : R₀^2 = R₀^2 * (s^2 + 2 * s * t + t^2) := by rw [h_st_pow]; ring
+        conv_lhs => rw [hR']
+        ring
+      have h_term1_nn : 0 ≤ s^2 * R₀^2 := by positivity
+      have h_term2_nn : 0 ≤ 2 * s * t * R₀ * (α + β - R₀) := by
+        have : 0 ≤ α + β - R₀ := by linarith
+        positivity
+      have h_term3_nn : 0 ≤ t^2 * (α^2 + β^2 - R₀^2) := by
+        have : 0 ≤ α^2 + β^2 - R₀^2 := by linarith
+        positivity
+      linarith [h_identity, h_term1_nn, h_term2_nn, h_term3_nn, h_norm_sq_lt]
+  -- For θ ∈ Icc (π/2) π, Z(θ) ∈ CL.
+  have h_Z_in_CL : ∀ θ ∈ Set.Icc (Real.pi / 2) Real.pi,
+      _root_.circleMap e R₀ θ ∈ CL := by
+    intro θ hθ
+    refine ⟨?_, ?_⟩
+    · rw [Complex.mem_reProdIm]
+      refine ⟨?_, ?_⟩
+      · rw [h_Z_re θ]
+        rw [Set.mem_Icc]
+        have h_pi_pos := Real.pi_pos
+        have h_cos_le : Real.cos θ ≤ 0 :=
+          Real.cos_nonpos_of_pi_div_two_le_of_le hθ.1 (by linarith [hθ.2])
+        have h_cos_ge : Real.cos θ ≥ -1 := Real.neg_one_le_cos θ
+        refine ⟨?_, ?_⟩
+        · have h1 : R₀ * Real.cos θ ≥ R₀ * (-1) :=
+            mul_le_mul_of_nonneg_left h_cos_ge _hR₀.le
+          linarith
+        · have h2 : R₀ * Real.cos θ ≤ 0 :=
+            mul_nonpos_of_nonneg_of_nonpos _hR₀.le h_cos_le
+          linarith
+      · rw [h_Z_im θ]
+        rw [Set.mem_Icc]
+        have h_sin_nn : Real.sin θ ≥ 0 := by
+          apply Real.sin_nonneg_of_nonneg_of_le_pi
+          · linarith [hθ.1, Real.pi_pos]
+          · exact hθ.2
+        have h_sin_le : Real.sin θ ≤ 1 := Real.sin_le_one θ
+        exact ⟨by linarith [mul_nonneg _hR₀.le h_sin_nn],
+               by linarith [mul_le_of_le_one_right _hR₀.le h_sin_le]⟩
+    · intro h_in_ball
+      rw [Metric.mem_ball, Complex.dist_eq, h_Z_norm] at h_in_ball
+      exact lt_irrefl R₀ h_in_ball
+  -- f continuous on CL.
+  have hf_cont_CL : ContinuousOn f CL := _Hc
+  -- f continuous on U' (subset of CL? No, U' uses Ioo box and closedBall e R₀'.
+  -- U' ∩ box not necessarily in CL. But f differentiable on U' implies continuous on U').
+  have hf_cont_U' : ContinuousOn f U' := _Hd'.continuousOn
+  -- V ∈ U'.
+  have hV_in_U' : V ∈ U' := by
+    refine ⟨?_, ?_⟩
+    · rw [Complex.mem_reProdIm]
+      refine ⟨?_, ?_⟩
+      · rw [hV_def]
+        simp only [Complex.ofReal_sub, Complex.add_re, Complex.sub_re,
+          Complex.ofReal_re, Complex.mul_re, Complex.I_re, mul_zero,
+          Complex.ofReal_im, add_zero, Complex.I_im,
+          mul_one, sub_self, Set.mem_Ioo, sub_lt_self_iff]
+        exact ⟨_h_a, by linarith [_hR₀]⟩
+      · rw [hV_def]
+        simp only [Complex.ofReal_sub, Complex.add_im, Complex.sub_im,
+          Complex.ofReal_im, sub_self, Complex.mul_im,
+          Complex.ofReal_re, Complex.I_im, mul_one, add_zero, Complex.I_re,
+          mul_zero, zero_add, Set.mem_Ioo, lt_add_iff_pos_right]
+        exact ⟨by linarith [_hR₀], _h_d⟩
+    · intro hV_ball
+      rw [Metric.mem_closedBall, Complex.dist_eq] at hV_ball
+      have h_V_e_sq : ‖V - e‖^2 = 2 * R₀^2 := by
+        rw [← Complex.normSq_eq_norm_sq, Complex.normSq_apply]
+        rw [hV_def]
+        simp [Complex.sub_re, Complex.sub_im, Complex.add_re, Complex.add_im,
+              Complex.mul_re, Complex.mul_im, Complex.ofReal_re, Complex.ofReal_im,
+              Complex.I_re, Complex.I_im, sq]
+        ring
+      nlinarith [hV_ball, sq_nonneg (‖V - e‖ - R₀'), norm_nonneg (V - e), _hR₀,
+                 hR₀'_pos, hR₀'_lt, h_V_e_sq]
+  -- Define G(θ) := starPrimitive V f (Z(θ)).
+  set G : ℝ → ℂ := fun θ => Complex.starPrimitive V f (_root_.circleMap e R₀ θ)
+    with hG_def
+  -- Derivative of `Z` (circleMap) at θ.
+  have h_circle_deriv : ∀ θ : ℝ, HasDerivAt (_root_.circleMap e R₀)
+      (_root_.circleMap 0 R₀ θ * Complex.I) θ := fun θ => hasDerivAt_circleMap _ _ _
+  -- Derivative of G on Ioo (π/2) π.
+  have h_G_deriv : ∀ θ ∈ Set.Ioo (Real.pi / 2) Real.pi,
+      HasDerivAt G (f (_root_.circleMap e R₀ θ) *
+        (Complex.I * R₀ * Complex.exp (Complex.I * θ))) θ := by
+    intro θ hθ
+    have hZθ : _root_.circleMap e R₀ θ ∈ U' := h_Z_in_U' θ hθ
+    have h_prim_deriv : HasDerivAt (Complex.starPrimitive V f)
+        (f (_root_.circleMap e R₀ θ)) (_root_.circleMap e R₀ θ) :=
+      Complex.hasDerivAt_starPrimitive hU'_open hSC' _Hd' hZθ
+    have h_chain := h_prim_deriv.comp θ (h_circle_deriv θ)
+    have h_circle0 : _root_.circleMap 0 R₀ θ * Complex.I =
+        Complex.I * (R₀ : ℂ) * Complex.exp (Complex.I * (θ : ℂ)) := by
+      rw [_root_.circleMap,
+          show ((θ : ℂ) * Complex.I) = Complex.I * (θ : ℂ) from mul_comm _ _]
+      ring
+    rw [h_circle0] at h_chain
+    exact h_chain
+  -- Continuity of G on Icc (π/2) π via parametric integral continuity.
+  -- Define F(θ, t) := (Z(θ_c) - V) * f(V + t_c · (Z(θ_c) - V)) with clamped θ_c, t_c.
+  set θ_clamp : ℝ → ℝ := fun θ => min Real.pi (max (Real.pi / 2) θ) with hθ_clamp_def
+  set t_clamp : ℝ → ℝ := fun t => min 1 (max 0 t) with ht_clamp_def
+  have h_θ_clamp_cont : Continuous θ_clamp := by
+    apply Continuous.min continuous_const
+    exact Continuous.max continuous_const continuous_id
+  have h_t_clamp_cont : Continuous t_clamp := by
+    apply Continuous.min continuous_const
+    exact Continuous.max continuous_const continuous_id
+  have h_θ_clamp_mem : ∀ θ, θ_clamp θ ∈ Set.Icc (Real.pi / 2) Real.pi := by
+    intro θ
+    refine ⟨?_, ?_⟩
+    · have h_pi_le : Real.pi / 2 ≤ Real.pi := by linarith [Real.pi_pos]
+      exact le_min h_pi_le (le_max_left _ _)
+    · exact min_le_left _ _
+  have h_θ_clamp_id : ∀ θ ∈ Set.Icc (Real.pi / 2) Real.pi, θ_clamp θ = θ := by
+    intro θ hθ
+    change min Real.pi (max (Real.pi / 2) θ) = θ
+    rw [max_eq_right hθ.1, min_eq_right hθ.2]
+  have h_t_clamp_mem : ∀ t, t_clamp t ∈ Set.Icc (0:ℝ) 1 := by
+    intro t
+    refine ⟨?_, ?_⟩
+    · exact le_min zero_le_one (le_max_left _ _)
+    · exact min_le_left _ _
+  have h_t_clamp_id : ∀ t ∈ Set.Icc (0:ℝ) 1, t_clamp t = t := by
+    intro t ht
+    change min 1 (max 0 t) = t
+    rw [max_eq_right ht.1, min_eq_right ht.2]
+  -- Inner point V + t_c · (Z(θ_c) - V) lies in CL.
+  set F_inner : ℝ × ℝ → ℂ :=
+    fun p => V + (t_clamp p.2 : ℂ) * (_root_.circleMap e R₀ (θ_clamp p.1) - V)
+    with hF_inner_def
+  have hF_inner_cont : Continuous F_inner := by
+    apply Continuous.add continuous_const
+    apply Continuous.mul
+    · exact Complex.continuous_ofReal.comp (h_t_clamp_cont.comp continuous_snd)
+    · apply Continuous.sub
+      · exact (continuous_circleMap _ _).comp
+          (h_θ_clamp_cont.comp continuous_fst)
+      · exact continuous_const
+  have hF_inner_mem : ∀ p : ℝ × ℝ, F_inner p ∈ CL := by
+    intro p
+    have hZ_mem : _root_.circleMap e R₀ (θ_clamp p.1) ∈ CL :=
+      h_Z_in_CL _ (h_θ_clamp_mem p.1)
+    have ht_mem : t_clamp p.2 ∈ Set.Icc (0:ℝ) 1 := h_t_clamp_mem p.2
+    have h_sum : (1 - t_clamp p.2) + t_clamp p.2 = 1 := by ring
+    have h_s_nn : (0 : ℝ) ≤ 1 - t_clamp p.2 := by linarith [ht_mem.2]
+    have h_t_nn : (0 : ℝ) ≤ t_clamp p.2 := ht_mem.1
+    have h_sc := hSC_CL hZ_mem h_s_nn h_t_nn h_sum
+    -- h_sc : (1 - t_clamp p.2) • V + (t_clamp p.2) • (circleMap...) ∈ CL.
+    -- Show F_inner p = (1 - t_clamp p.2) • V + (t_clamp p.2) • (circleMap...).
+    change V + (t_clamp p.2 : ℂ) * (_root_.circleMap e R₀ (θ_clamp p.1) - V) ∈ CL
+    have h_eq : V + (t_clamp p.2 : ℂ) * (_root_.circleMap e R₀ (θ_clamp p.1) - V) =
+        (1 - t_clamp p.2 : ℝ) • V + (t_clamp p.2 : ℝ) •
+          _root_.circleMap e R₀ (θ_clamp p.1) := by
+      rw [Complex.real_smul, Complex.real_smul]; push_cast; ring
+    rw [h_eq]
+    exact h_sc
+  -- F (full integrand) is continuous.
+  set F : ℝ × ℝ → ℂ :=
+    fun p => (_root_.circleMap e R₀ (θ_clamp p.1) - V) * f (F_inner p)
+    with hF_def
+  have hF_cont : Continuous F := by
+    apply Continuous.mul
+    · apply Continuous.sub
+      · exact (continuous_circleMap _ _).comp
+          (h_θ_clamp_cont.comp continuous_fst)
+      · exact continuous_const
+    · exact hf_cont_CL.comp_continuous hF_inner_cont hF_inner_mem
+  -- Apply parametric integral continuity:
+  -- `Continuous fun θ => ∫_0^1 F (θ, t) dt`.
+  have h_G_global_cont :
+      Continuous (fun θ : ℝ => ∫ t in (0:ℝ)..1, F (θ, t)) := by
+    have h_uncurry : Function.uncurry (fun θ t => F (θ, t)) = F := rfl
+    have := intervalIntegral.continuous_parametric_intervalIntegral_of_continuous
+      (μ := MeasureTheory.volume) (a₀ := 0) (f := fun θ t => F (θ, t))
+      (by rw [h_uncurry]; exact hF_cont) (s := fun _ => 1) continuous_const
+    exact this
+  -- For θ ∈ Icc (π/2) π, the integral equals G θ (clamping is identity).
+  have h_integral_eq_G : Set.EqOn (fun θ => ∫ t in (0:ℝ)..1, F (θ, t)) G
+      (Set.Icc (Real.pi / 2) Real.pi) := by
+    intro θ hθ
+    have hθc : θ_clamp θ = θ := h_θ_clamp_id θ hθ
+    change (∫ t in (0:ℝ)..1, F (θ, t)) = G θ
+    have h_G_unfold : G θ =
+        ∫ t in (0:ℝ)..1, (_root_.circleMap e R₀ θ - V) *
+          f (V + (t : ℂ) * (_root_.circleMap e R₀ θ - V)) := by
+      change Complex.starPrimitive V f (_root_.circleMap e R₀ θ) = _
+      unfold Complex.starPrimitive
+      rfl
+    rw [h_G_unfold]
+    apply intervalIntegral.integral_congr
+    intro t ht
+    have ht_Icc : t ∈ Set.Icc (0:ℝ) 1 := by
+      rw [Set.uIcc_of_le (by norm_num : (0:ℝ) ≤ 1)] at ht
+      exact ht
+    change (_root_.circleMap e R₀ (θ_clamp θ) - V) *
+        f (V + (t_clamp t : ℂ) * (_root_.circleMap e R₀ (θ_clamp θ) - V)) =
+      (_root_.circleMap e R₀ θ - V) *
+        f (V + (t : ℂ) * (_root_.circleMap e R₀ θ - V))
+    rw [hθc, h_t_clamp_id t ht_Icc]
+  -- G is continuous on Icc (π/2) π.
+  have h_G_cont : ContinuousOn G (Set.Icc (Real.pi / 2) Real.pi) :=
+    (h_G_global_cont.continuousOn).congr h_integral_eq_G.symm
+  -- Integrability of G' on [π/2, π].
+  have h_G'_cont_on : ContinuousOn (fun θ : ℝ => f (_root_.circleMap e R₀ θ) *
+      (Complex.I * R₀ * Complex.exp (Complex.I * θ)))
+      (Set.Icc (Real.pi / 2) Real.pi) := by
+    apply ContinuousOn.mul
+    · exact hf_cont_CL.comp (continuous_circleMap _ _).continuousOn h_Z_in_CL
+    · exact (Continuous.mul (Continuous.mul continuous_const continuous_const)
+        (Complex.continuous_exp.comp
+          (continuous_const.mul Complex.continuous_ofReal))).continuousOn
+  have h_pi_le_for_int : Real.pi / 2 ≤ Real.pi := by linarith [Real.pi_pos]
+  have h_G'_int : IntervalIntegrable
+      (fun θ : ℝ => f (_root_.circleMap e R₀ θ) *
+        (Complex.I * R₀ * Complex.exp (Complex.I * θ)))
+      MeasureTheory.volume (Real.pi / 2) Real.pi := by
+    apply ContinuousOn.intervalIntegrable
+    rw [Set.uIcc_of_le h_pi_le_for_int]
+    exact h_G'_cont_on
+  -- Apply FTC.
+  have h_pi_le : Real.pi / 2 ≤ Real.pi := by linarith [Real.pi_pos]
+  have h_FTC := intervalIntegral.integral_eq_sub_of_hasDerivAt_of_le
+    h_pi_le h_G_cont h_G_deriv h_G'_int
+  rw [h_FTC]
+  have h_G_at_pi : G Real.pi = Complex.starPrimitive V f B := by
+    simp only [hG_def, h_Z_pi]
+  have h_G_at_pi_div_two : G (Real.pi / 2) = Complex.starPrimitive V f T := by
+    simp only [hG_def, h_Z_pi_div_two]
+  rw [h_G_at_pi, h_G_at_pi_div_two]
 
 /-- **Top-right lune arc identity via `starPrimitive`.** Mirror of
 `topLeftLune_arc_integral_eq_starPrimitive_sub` across `x = e.re`. The
@@ -552,8 +1423,8 @@ theorem topRightLune_arc_integral_eq_starPrimitive_sub
     (b d : ℝ) (_h_b : e.re + R₀ < b) (_h_d : e.im + R₀ < d)
     (_Hc : ContinuousOn f
       ((Set.Icc e.re (e.re + R₀) ×ℂ Set.Icc e.im (e.im + R₀)) \ Metric.ball e R₀))
-    (_Hd : DifferentiableOn ℂ f
-      ((Set.Ioo e.re b ×ℂ Set.Ioo e.im d) \ Metric.closedBall e R₀)) :
+    (_Hd : ∃ R₀' : ℝ, 0 < R₀' ∧ R₀' < R₀ ∧ DifferentiableOn ℂ f
+      ((Set.Ioo e.re b ×ℂ Set.Ioo e.im d) \ Metric.closedBall e R₀')) :
     (∫ θ in (0:ℝ)..(Real.pi / 2), f (_root_.circleMap e R₀ θ) *
         (Complex.I * R₀ * Complex.exp (Complex.I * θ))) =
       Complex.starPrimitive
@@ -562,6 +1433,385 @@ theorem topRightLune_arc_integral_eq_starPrimitive_sub
       Complex.starPrimitive
           ((↑(e.re + R₀) : ℂ) + (↑(e.im + R₀) : ℂ) * Complex.I) f
           ((↑(e.re + R₀) : ℂ) + (↑e.im : ℂ) * Complex.I) := by
-  sorry
+  obtain ⟨R₀', hR₀'_pos, hR₀'_lt, _Hd'⟩ := _Hd
+  set V_R : ℂ := (↑(e.re + R₀) : ℂ) + (↑(e.im + R₀) : ℂ) * Complex.I with hV_R_def
+  set T : ℂ := (↑e.re : ℂ) + (↑(e.im + R₀) : ℂ) * Complex.I with hT_def
+  set W_R : ℂ := (↑(e.re + R₀) : ℂ) + (↑e.im : ℂ) * Complex.I with hW_R_def
+  set U' : Set ℂ :=
+    (Set.Ioo e.re b ×ℂ Set.Ioo e.im d) \ Metric.closedBall e R₀' with hU'_def
+  set CL_R : Set ℂ :=
+    (Set.Icc e.re (e.re + R₀) ×ℂ Set.Icc e.im (e.im + R₀)) \ Metric.ball e R₀
+    with hCL_R_def
+  have hSC' : StarConvex ℝ V_R U' :=
+    topRightBoxMinusBall_starConvex_of_subradius e R₀ _hR₀ R₀' hR₀'_pos hR₀'_lt.le
+      b d _h_b _h_d
+  have hU'_open : IsOpen U' :=
+    ((isOpen_Ioo.reProdIm isOpen_Ioo).sdiff Metric.isClosed_closedBall)
+  -- Circle map endpoint identities.
+  have h_Z_0 : _root_.circleMap e R₀ 0 = W_R := by
+    rw [hW_R_def, _root_.circleMap]
+    have h_exp_0 : Complex.exp ((0 : ℝ) * Complex.I) = 1 := by
+      rw [Complex.ofReal_zero, zero_mul, Complex.exp_zero]
+    rw [h_exp_0]
+    apply Complex.ext
+    · simp [Complex.add_re, Complex.mul_re, Complex.ofReal_re,
+            Complex.ofReal_im, Complex.I_re, Complex.I_im]
+    · simp [Complex.add_im, Complex.mul_im, Complex.ofReal_re,
+            Complex.ofReal_im, Complex.I_re, Complex.I_im]
+  have h_Z_pi_div_two : _root_.circleMap e R₀ (Real.pi / 2) = T := by
+    rw [hT_def, _root_.circleMap, Complex.exp_mul_I]
+    rw [show Complex.cos ((↑(Real.pi / 2) : ℂ)) = 0 by
+          rw [← Complex.ofReal_cos, Real.cos_pi_div_two]; push_cast; ring]
+    rw [show Complex.sin ((↑(Real.pi / 2) : ℂ)) = 1 by
+          rw [← Complex.ofReal_sin, Real.sin_pi_div_two]; push_cast; ring]
+    apply Complex.ext
+    · simp [Complex.add_re, Complex.mul_re, Complex.ofReal_re, Complex.ofReal_im,
+            Complex.I_re, Complex.I_im]
+    · simp [Complex.add_im, Complex.mul_im, Complex.ofReal_re, Complex.ofReal_im,
+            Complex.I_re, Complex.I_im]
+  have h_Z_re : ∀ θ : ℝ,
+      (_root_.circleMap e R₀ θ).re = e.re + R₀ * Real.cos θ := by
+    intro θ
+    rw [_root_.circleMap, Complex.exp_mul_I]
+    simp [Complex.add_re, Complex.mul_re, Complex.ofReal_re,
+          Complex.ofReal_im, Complex.I_re, Complex.I_im,
+          ← Complex.ofReal_cos, ← Complex.ofReal_sin]
+  have h_Z_im : ∀ θ : ℝ,
+      (_root_.circleMap e R₀ θ).im = e.im + R₀ * Real.sin θ := by
+    intro θ
+    rw [_root_.circleMap, Complex.exp_mul_I]
+    simp [Complex.add_im, Complex.mul_im, Complex.ofReal_re,
+          Complex.ofReal_im, Complex.I_re, Complex.I_im,
+          ← Complex.ofReal_cos, ← Complex.ofReal_sin]
+  have h_Z_norm : ∀ θ : ℝ, ‖_root_.circleMap e R₀ θ - e‖ = R₀ := by
+    intro θ
+    rw [_root_.circleMap, show e + (R₀ : ℂ) * Complex.exp ((θ : ℂ) * Complex.I) - e =
+        (R₀ : ℂ) * Complex.exp ((θ : ℂ) * Complex.I) from by ring]
+    rw [norm_mul, Complex.norm_real, Real.norm_of_nonneg _hR₀.le,
+        Complex.norm_exp_ofReal_mul_I]
+    ring
+  -- For θ ∈ Ioo 0 (π/2), Z(θ) ∈ U'.
+  have h_Z_in_U' : ∀ θ ∈ Set.Ioo (0:ℝ) (Real.pi / 2),
+      _root_.circleMap e R₀ θ ∈ U' := by
+    intro θ hθ
+    refine ⟨?_, ?_⟩
+    · rw [Complex.mem_reProdIm]
+      refine ⟨?_, ?_⟩
+      · rw [h_Z_re θ]
+        rw [Set.mem_Ioo]
+        have h_pi_pos := Real.pi_pos
+        have h_cos_pos : Real.cos θ > 0 :=
+          Real.cos_pos_of_mem_Ioo ⟨by linarith [hθ.1, h_pi_pos], hθ.2⟩
+        have h_cos_le : Real.cos θ ≤ 1 := Real.cos_le_one θ
+        refine ⟨?_, ?_⟩
+        · have h1 : R₀ * Real.cos θ > 0 := mul_pos _hR₀ h_cos_pos
+          linarith
+        · have h2 : R₀ * Real.cos θ ≤ R₀ * 1 :=
+            mul_le_mul_of_nonneg_left h_cos_le _hR₀.le
+          linarith [_h_b]
+      · rw [h_Z_im θ]
+        rw [Set.mem_Ioo]
+        have h_sin_pos : Real.sin θ > 0 :=
+          Real.sin_pos_of_pos_of_lt_pi hθ.1 (by linarith [hθ.2, Real.pi_pos])
+        have h_sin_le : Real.sin θ ≤ 1 := Real.sin_le_one θ
+        refine ⟨?_, ?_⟩
+        · have h3 : R₀ * Real.sin θ > 0 := mul_pos _hR₀ h_sin_pos
+          linarith
+        · have h4 : R₀ * Real.sin θ ≤ R₀ * 1 :=
+            mul_le_mul_of_nonneg_left h_sin_le _hR₀.le
+          linarith [_h_d]
+    · intro h_in_cb
+      rw [Metric.mem_closedBall, Complex.dist_eq, h_Z_norm] at h_in_cb
+      linarith [hR₀'_lt]
+  -- Star-convexity of CL_R from V_R.
+  have hSC_CL_R : StarConvex ℝ V_R CL_R := by
+    intro Q hQ s t hs ht hst
+    obtain ⟨hQ_box, hQ_not_ball⟩ := hQ
+    rw [Complex.mem_reProdIm] at hQ_box
+    obtain ⟨hQ_re, hQ_im⟩ := hQ_box
+    rw [Set.mem_Icc] at hQ_re hQ_im
+    set α : ℝ := Q.re - e.re with hα_def
+    set β : ℝ := Q.im - e.im with hβ_def
+    have hα_nn : 0 ≤ α := by rw [hα_def]; linarith [hQ_re.1]
+    have hβ_nn : 0 ≤ β := by rw [hβ_def]; linarith [hQ_im.1]
+    set P : ℂ := s • V_R + t • Q with hP_def
+    have hP_re : P.re = s * (e.re + R₀) + t * Q.re := by
+      simp [hP_def, hV_R_def, Complex.add_re, Complex.mul_re, Complex.I_re,
+            Complex.I_im, Complex.ofReal_re, Complex.ofReal_im, Complex.real_smul]
+    have hP_im : P.im = s * (e.im + R₀) + t * Q.im := by
+      simp [hP_def, hV_R_def, Complex.add_im, Complex.mul_im, Complex.I_re,
+            Complex.I_im, Complex.ofReal_re, Complex.ofReal_im, Complex.real_smul]
+    refine ⟨?_, ?_⟩
+    · rw [Complex.mem_reProdIm]
+      have hV_re_in_Icc : (e.re + R₀) ∈ Set.Icc e.re (e.re + R₀) :=
+        ⟨by linarith [_hR₀], le_refl _⟩
+      have hV_im_in_Icc : (e.im + R₀) ∈ Set.Icc e.im (e.im + R₀) :=
+        ⟨by linarith [_hR₀], le_refl _⟩
+      refine ⟨?_, ?_⟩
+      · rw [hP_re]
+        exact (convex_Icc _ _).segment_subset hV_re_in_Icc hQ_re
+          ⟨s, t, hs, ht, hst, rfl⟩
+      · rw [hP_im]
+        exact (convex_Icc _ _).segment_subset hV_im_in_Icc hQ_im
+          ⟨s, t, hs, ht, hst, rfl⟩
+    · intro hP_in_ball
+      rw [Metric.mem_ball, Complex.dist_eq] at hP_in_ball
+      have h_norm_sq_lt : ‖P - e‖^2 < R₀^2 := by
+        nlinarith [hP_in_ball, sq_nonneg (R₀ - ‖P - e‖), norm_nonneg (P - e), _hR₀]
+      have h_norm_sq_eq : ‖P - e‖^2 = (P.re - e.re)^2 + (P.im - e.im)^2 := by
+        rw [← Complex.normSq_eq_norm_sq, Complex.normSq_apply]
+        simp [Complex.sub_re, Complex.sub_im, sq]
+      rw [h_norm_sq_eq] at h_norm_sq_lt
+      have h_diff_re : P.re - e.re = s * R₀ + t * α := by
+        rw [hP_re, hα_def]; linear_combination e.re * hst
+      have h_diff_im : P.im - e.im = s * R₀ + t * β := by
+        rw [hP_im, hβ_def]; linear_combination e.im * hst
+      rw [h_diff_re, h_diff_im] at h_norm_sq_lt
+      have hQ_norm_ge : α^2 + β^2 ≥ R₀^2 := by
+        have h_Q_ge : R₀ ≤ ‖Q - e‖ := by
+          rw [Metric.mem_ball, Complex.dist_eq] at hQ_not_ball
+          push Not at hQ_not_ball
+          exact hQ_not_ball
+        have h_norm_Q_sq : ‖Q - e‖^2 = α^2 + β^2 := by
+          rw [← Complex.normSq_eq_norm_sq, Complex.normSq_apply]
+          simp [Complex.sub_re, Complex.sub_im, sq, hα_def, hβ_def]
+        nlinarith [h_Q_ge, sq_nonneg (‖Q - e‖ - R₀), norm_nonneg (Q - e), h_norm_Q_sq]
+      have h_σ_ge_R₀ : R₀ ≤ α + β := by
+        by_contra h
+        push Not at h
+        rcases lt_or_ge α R₀ with hα_lt | hα_ge
+        · rcases lt_or_ge β R₀ with hβ_lt | hβ_ge
+          · nlinarith [hQ_norm_ge, mul_nonneg hα_nn (sub_nonneg.mpr hα_lt.le),
+                       mul_nonneg hβ_nn (sub_nonneg.mpr hβ_lt.le)]
+          · linarith
+        · linarith
+      have h_st_pow : s^2 + 2 * s * t + t^2 = 1 := by
+        have h_eq : s^2 + 2 * s * t + t^2 = (s + t)^2 := by ring
+        rw [h_eq, hst]; norm_num
+      have h_identity : (s * R₀ + t * α)^2 + (s * R₀ + t * β)^2 - R₀^2 =
+          s^2 * R₀^2 + 2 * s * t * R₀ * (α + β - R₀) + t^2 * (α^2 + β^2 - R₀^2) := by
+        have hR' : R₀^2 = R₀^2 * (s^2 + 2 * s * t + t^2) := by rw [h_st_pow]; ring
+        conv_lhs => rw [hR']
+        ring
+      have h_term1_nn : 0 ≤ s^2 * R₀^2 := by positivity
+      have h_term2_nn : 0 ≤ 2 * s * t * R₀ * (α + β - R₀) := by
+        have : 0 ≤ α + β - R₀ := by linarith
+        positivity
+      have h_term3_nn : 0 ≤ t^2 * (α^2 + β^2 - R₀^2) := by
+        have : 0 ≤ α^2 + β^2 - R₀^2 := by linarith
+        positivity
+      linarith [h_identity, h_term1_nn, h_term2_nn, h_term3_nn, h_norm_sq_lt]
+  -- For θ ∈ Icc 0 (π/2), Z(θ) ∈ CL_R.
+  have h_Z_in_CL_R : ∀ θ ∈ Set.Icc (0:ℝ) (Real.pi / 2),
+      _root_.circleMap e R₀ θ ∈ CL_R := by
+    intro θ hθ
+    refine ⟨?_, ?_⟩
+    · rw [Complex.mem_reProdIm]
+      refine ⟨?_, ?_⟩
+      · rw [h_Z_re θ]
+        rw [Set.mem_Icc]
+        have h_pi_pos := Real.pi_pos
+        have h_cos_nn : Real.cos θ ≥ 0 :=
+          Real.cos_nonneg_of_mem_Icc ⟨by linarith [hθ.1], by linarith [hθ.2]⟩
+        have h_cos_le : Real.cos θ ≤ 1 := Real.cos_le_one θ
+        refine ⟨?_, ?_⟩
+        · have h1 : R₀ * Real.cos θ ≥ 0 := mul_nonneg _hR₀.le h_cos_nn
+          linarith
+        · have h2 : R₀ * Real.cos θ ≤ R₀ * 1 :=
+            mul_le_mul_of_nonneg_left h_cos_le _hR₀.le
+          linarith
+      · rw [h_Z_im θ]
+        rw [Set.mem_Icc]
+        have h_pi_pos := Real.pi_pos
+        have h_sin_nn : Real.sin θ ≥ 0 :=
+          Real.sin_nonneg_of_nonneg_of_le_pi hθ.1 (by linarith [hθ.2])
+        have h_sin_le : Real.sin θ ≤ 1 := Real.sin_le_one θ
+        refine ⟨?_, ?_⟩
+        · have h3 : R₀ * Real.sin θ ≥ 0 := mul_nonneg _hR₀.le h_sin_nn
+          linarith
+        · have h4 : R₀ * Real.sin θ ≤ R₀ * 1 :=
+            mul_le_mul_of_nonneg_left h_sin_le _hR₀.le
+          linarith
+    · intro h_in_ball
+      rw [Metric.mem_ball, Complex.dist_eq, h_Z_norm] at h_in_ball
+      exact lt_irrefl R₀ h_in_ball
+  -- f continuous on CL_R.
+  have hf_cont_CL_R : ContinuousOn f CL_R := _Hc
+  -- f continuous on U'.
+  have hf_cont_U' : ContinuousOn f U' := _Hd'.continuousOn
+  -- V_R ∈ U'.
+  have hV_R_in_U' : V_R ∈ U' := by
+    refine ⟨?_, ?_⟩
+    · rw [Complex.mem_reProdIm]
+      refine ⟨?_, ?_⟩
+      · rw [hV_R_def]
+        simp only [Complex.ofReal_add, Complex.add_re,
+          Complex.ofReal_re, Complex.mul_re, Complex.I_re, mul_zero,
+          Complex.add_im, Complex.ofReal_im, add_zero, Complex.I_im,
+          mul_one, sub_self, Set.mem_Ioo, lt_add_iff_pos_right]
+        exact ⟨_hR₀, _h_b⟩
+      · rw [hV_R_def]
+        simp only [Complex.ofReal_add, Complex.add_im,
+          Complex.ofReal_im, Complex.mul_im, Complex.add_re,
+          Complex.ofReal_re, Complex.I_im, mul_one, add_zero, Complex.I_re,
+          mul_zero, zero_add, Set.mem_Ioo, lt_add_iff_pos_right]
+        exact ⟨_hR₀, _h_d⟩
+    · intro hV_R_ball
+      rw [Metric.mem_closedBall, Complex.dist_eq] at hV_R_ball
+      have h_V_R_e_sq : ‖V_R - e‖^2 = 2 * R₀^2 := by
+        rw [← Complex.normSq_eq_norm_sq, Complex.normSq_apply]
+        rw [hV_R_def]
+        simp [Complex.sub_re, Complex.sub_im, Complex.add_re, Complex.add_im,
+              Complex.mul_re, Complex.mul_im, Complex.ofReal_re, Complex.ofReal_im,
+              Complex.I_re, Complex.I_im, sq]
+        ring
+      nlinarith [hV_R_ball, sq_nonneg (‖V_R - e‖ - R₀'), norm_nonneg (V_R - e),
+                 _hR₀, hR₀'_pos, hR₀'_lt, h_V_R_e_sq]
+  -- Define G(θ) := starPrimitive V_R f (Z(θ)).
+  set G : ℝ → ℂ := fun θ => Complex.starPrimitive V_R f (_root_.circleMap e R₀ θ)
+    with hG_def
+  -- Derivative of `Z` (circleMap) at θ.
+  have h_circle_deriv : ∀ θ : ℝ, HasDerivAt (_root_.circleMap e R₀)
+      (_root_.circleMap 0 R₀ θ * Complex.I) θ := fun θ => hasDerivAt_circleMap _ _ _
+  -- Derivative of G on Ioo 0 (π/2).
+  have h_G_deriv : ∀ θ ∈ Set.Ioo (0:ℝ) (Real.pi / 2),
+      HasDerivAt G (f (_root_.circleMap e R₀ θ) *
+        (Complex.I * R₀ * Complex.exp (Complex.I * θ))) θ := by
+    intro θ hθ
+    have hZθ : _root_.circleMap e R₀ θ ∈ U' := h_Z_in_U' θ hθ
+    have h_prim_deriv : HasDerivAt (Complex.starPrimitive V_R f)
+        (f (_root_.circleMap e R₀ θ)) (_root_.circleMap e R₀ θ) :=
+      Complex.hasDerivAt_starPrimitive hU'_open hSC' _Hd' hZθ
+    have h_chain := h_prim_deriv.comp θ (h_circle_deriv θ)
+    have h_circle0 : _root_.circleMap 0 R₀ θ * Complex.I =
+        Complex.I * (R₀ : ℂ) * Complex.exp (Complex.I * (θ : ℂ)) := by
+      rw [_root_.circleMap,
+          show ((θ : ℂ) * Complex.I) = Complex.I * (θ : ℂ) from mul_comm _ _]
+      ring
+    rw [h_circle0] at h_chain
+    exact h_chain
+  -- Continuity of G on Icc 0 (π/2) via parametric integral continuity.
+  set θ_clamp : ℝ → ℝ := fun θ => min (Real.pi / 2) (max 0 θ) with hθ_clamp_def
+  set t_clamp : ℝ → ℝ := fun t => min 1 (max 0 t) with ht_clamp_def
+  have h_θ_clamp_cont : Continuous θ_clamp := by
+    apply Continuous.min continuous_const
+    exact Continuous.max continuous_const continuous_id
+  have h_t_clamp_cont : Continuous t_clamp := by
+    apply Continuous.min continuous_const
+    exact Continuous.max continuous_const continuous_id
+  have h_pi_div_two_pos : (0 : ℝ) ≤ Real.pi / 2 := by linarith [Real.pi_pos]
+  have h_θ_clamp_mem : ∀ θ, θ_clamp θ ∈ Set.Icc (0:ℝ) (Real.pi / 2) := by
+    intro θ
+    refine ⟨?_, ?_⟩
+    · exact le_min h_pi_div_two_pos (le_max_left _ _)
+    · exact min_le_left _ _
+  have h_θ_clamp_id : ∀ θ ∈ Set.Icc (0:ℝ) (Real.pi / 2), θ_clamp θ = θ := by
+    intro θ hθ
+    change min (Real.pi / 2) (max 0 θ) = θ
+    rw [max_eq_right hθ.1, min_eq_right hθ.2]
+  have h_t_clamp_mem : ∀ t, t_clamp t ∈ Set.Icc (0:ℝ) 1 := by
+    intro t
+    refine ⟨?_, ?_⟩
+    · exact le_min zero_le_one (le_max_left _ _)
+    · exact min_le_left _ _
+  have h_t_clamp_id : ∀ t ∈ Set.Icc (0:ℝ) 1, t_clamp t = t := by
+    intro t ht
+    change min 1 (max 0 t) = t
+    rw [max_eq_right ht.1, min_eq_right ht.2]
+  set F_inner : ℝ × ℝ → ℂ :=
+    fun p => V_R + (t_clamp p.2 : ℂ) * (_root_.circleMap e R₀ (θ_clamp p.1) - V_R)
+    with hF_inner_def
+  have hF_inner_cont : Continuous F_inner := by
+    apply Continuous.add continuous_const
+    apply Continuous.mul
+    · exact Complex.continuous_ofReal.comp (h_t_clamp_cont.comp continuous_snd)
+    · apply Continuous.sub
+      · exact (continuous_circleMap _ _).comp
+          (h_θ_clamp_cont.comp continuous_fst)
+      · exact continuous_const
+  have hF_inner_mem : ∀ p : ℝ × ℝ, F_inner p ∈ CL_R := by
+    intro p
+    have hZ_mem : _root_.circleMap e R₀ (θ_clamp p.1) ∈ CL_R :=
+      h_Z_in_CL_R _ (h_θ_clamp_mem p.1)
+    have ht_mem : t_clamp p.2 ∈ Set.Icc (0:ℝ) 1 := h_t_clamp_mem p.2
+    have h_sum : (1 - t_clamp p.2) + t_clamp p.2 = 1 := by ring
+    have h_s_nn : (0 : ℝ) ≤ 1 - t_clamp p.2 := by linarith [ht_mem.2]
+    have h_t_nn : (0 : ℝ) ≤ t_clamp p.2 := ht_mem.1
+    have h_sc := hSC_CL_R hZ_mem h_s_nn h_t_nn h_sum
+    change V_R + (t_clamp p.2 : ℂ) * (_root_.circleMap e R₀ (θ_clamp p.1) - V_R) ∈ CL_R
+    have h_eq : V_R + (t_clamp p.2 : ℂ) *
+        (_root_.circleMap e R₀ (θ_clamp p.1) - V_R) =
+        (1 - t_clamp p.2 : ℝ) • V_R + (t_clamp p.2 : ℝ) •
+          _root_.circleMap e R₀ (θ_clamp p.1) := by
+      rw [Complex.real_smul, Complex.real_smul]; push_cast; ring
+    rw [h_eq]
+    exact h_sc
+  set F : ℝ × ℝ → ℂ :=
+    fun p => (_root_.circleMap e R₀ (θ_clamp p.1) - V_R) * f (F_inner p)
+    with hF_def
+  have hF_cont : Continuous F := by
+    apply Continuous.mul
+    · apply Continuous.sub
+      · exact (continuous_circleMap _ _).comp
+          (h_θ_clamp_cont.comp continuous_fst)
+      · exact continuous_const
+    · exact hf_cont_CL_R.comp_continuous hF_inner_cont hF_inner_mem
+  have h_G_global_cont :
+      Continuous (fun θ : ℝ => ∫ t in (0:ℝ)..1, F (θ, t)) := by
+    have h_uncurry : Function.uncurry (fun θ t => F (θ, t)) = F := rfl
+    have := intervalIntegral.continuous_parametric_intervalIntegral_of_continuous
+      (μ := MeasureTheory.volume) (a₀ := 0) (f := fun θ t => F (θ, t))
+      (by rw [h_uncurry]; exact hF_cont) (s := fun _ => 1) continuous_const
+    exact this
+  have h_integral_eq_G : Set.EqOn (fun θ => ∫ t in (0:ℝ)..1, F (θ, t)) G
+      (Set.Icc (0:ℝ) (Real.pi / 2)) := by
+    intro θ hθ
+    have hθc : θ_clamp θ = θ := h_θ_clamp_id θ hθ
+    change (∫ t in (0:ℝ)..1, F (θ, t)) = G θ
+    have h_G_unfold : G θ =
+        ∫ t in (0:ℝ)..1, (_root_.circleMap e R₀ θ - V_R) *
+          f (V_R + (t : ℂ) * (_root_.circleMap e R₀ θ - V_R)) := by
+      change Complex.starPrimitive V_R f (_root_.circleMap e R₀ θ) = _
+      unfold Complex.starPrimitive
+      rfl
+    rw [h_G_unfold]
+    apply intervalIntegral.integral_congr
+    intro t ht
+    have ht_Icc : t ∈ Set.Icc (0:ℝ) 1 := by
+      rw [Set.uIcc_of_le (by norm_num : (0:ℝ) ≤ 1)] at ht
+      exact ht
+    change (_root_.circleMap e R₀ (θ_clamp θ) - V_R) *
+        f (V_R + (t_clamp t : ℂ) *
+          (_root_.circleMap e R₀ (θ_clamp θ) - V_R)) =
+      (_root_.circleMap e R₀ θ - V_R) *
+        f (V_R + (t : ℂ) * (_root_.circleMap e R₀ θ - V_R))
+    rw [hθc, h_t_clamp_id t ht_Icc]
+  have h_G_cont : ContinuousOn G (Set.Icc (0:ℝ) (Real.pi / 2)) :=
+    (h_G_global_cont.continuousOn).congr h_integral_eq_G.symm
+  -- Integrability of G' on [0, π/2].
+  have h_G'_cont_on : ContinuousOn (fun θ : ℝ => f (_root_.circleMap e R₀ θ) *
+      (Complex.I * R₀ * Complex.exp (Complex.I * θ)))
+      (Set.Icc (0:ℝ) (Real.pi / 2)) := by
+    apply ContinuousOn.mul
+    · exact hf_cont_CL_R.comp (continuous_circleMap _ _).continuousOn h_Z_in_CL_R
+    · exact (Continuous.mul (Continuous.mul continuous_const continuous_const)
+        (Complex.continuous_exp.comp
+          (continuous_const.mul Complex.continuous_ofReal))).continuousOn
+  have h_G'_int : IntervalIntegrable
+      (fun θ : ℝ => f (_root_.circleMap e R₀ θ) *
+        (Complex.I * R₀ * Complex.exp (Complex.I * θ)))
+      MeasureTheory.volume (0:ℝ) (Real.pi / 2) := by
+    apply ContinuousOn.intervalIntegrable
+    rw [Set.uIcc_of_le h_pi_div_two_pos]
+    exact h_G'_cont_on
+  -- Apply FTC.
+  have h_FTC := intervalIntegral.integral_eq_sub_of_hasDerivAt_of_le
+    h_pi_div_two_pos h_G_cont h_G_deriv h_G'_int
+  rw [h_FTC]
+  have h_G_at_0 : G 0 = Complex.starPrimitive V_R f W_R := by
+    simp only [hG_def, h_Z_0]
+  have h_G_at_pi_div_two : G (Real.pi / 2) = Complex.starPrimitive V_R f T := by
+    simp only [hG_def, h_Z_pi_div_two]
+  rw [h_G_at_0, h_G_at_pi_div_two]
 
 end Complex
