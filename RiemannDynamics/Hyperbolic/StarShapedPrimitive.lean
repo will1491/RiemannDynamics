@@ -26,25 +26,20 @@ star center `p ∈ U`, this defines a primitive of `f` on `U`.
 * `Complex.hasDerivAt_starPrimitive`: for `f` complex-differentiable on an
   open star-shaped set `U` with star center `p`, `starPrimitive p f` has
   complex derivative `f z` at every `z ∈ U`.
-* `Complex.starShaped_isExactOn`: corollary packaging the above as
-  `IsExactOn`.
-* `Complex.intervalIntegral_eq_sub_of_starShaped`: fundamental theorem for
-  line integrals over segments in a star-shaped open set.
-* `Complex.triangleIntegral_eq_zero_of_starShaped`: Cauchy-Goursat for
-  triangles with one vertex at the star center.
 
 ## Lune-specific support lemmas (consumed by `WindingNumber.lean`)
 
 The following lemmas support the closed-form lune Cauchy-Goursat
 identities in `RiemannDynamics/Hyperbolic/WindingNumber.lean`:
 
-* `Complex.topLeftBoxMinusBall_starConvex`: the upper-left-of-`e` open box
-  minus `closedBall e R₀` is star-convex from the outer corner
-  `(e.re - R₀) + (e.im + R₀)·I`. Geometric content: for any point `Q` in
-  this open set, the segment from the outer corner to `Q` stays outside
-  `closedBall e R₀`. Proof factors through a quadratic non-negativity
-  analysis.
-* `Complex.topRightBoxMinusBall_starConvex`: mirror across `x = e.re`.
+* `Complex.topLeftBoxMinusBall_starConvex_of_subradius`: the upper-left-of-`e`
+  open box minus `closedBall e R₀'` (with `R₀' ≤ R₀`) is star-convex from
+  the outer corner `(e.re - R₀) + (e.im + R₀)·I` built from the original
+  radius. Geometric content: for any point `Q` in this open set, the
+  segment from the outer corner to `Q` stays outside `closedBall e R₀'`.
+  Proof factors through a quadratic non-negativity analysis.
+* `Complex.topRightBoxMinusBall_starConvex_of_subradius`: mirror across
+  `x = e.re`.
 * `Complex.starPrimitive_horizontal_eq_intervalIntegral`: the segment
   integral from `xV + y·I` to `xZ + y·I` (same imaginary part) equals
   `∫_{xV}^{xZ} f(x + y·I) dx`. Direct change of variables in the segment
@@ -58,13 +53,14 @@ identities in `RiemannDynamics/Hyperbolic/WindingNumber.lean`:
   `circleMap e R₀ θ` (with the `dz/dθ = I·R₀·exp(I·θ)` factor) equals
   `starPrimitive V f B − starPrimitive V f T` where
   `V = (e.re − R₀) + (e.im + R₀)·I`, `T = e + R₀·I`, `B = e − R₀`. The
-  proof factors through the ε-arc limit: for ε > 0, the slightly outer
-  arc `circleMap e (R₀ + ε)` on `[π/2 + ε, π − ε]` lies in the
-  star-convex open set, FTC applies via `hasDerivAt_starPrimitive` and
-  the chain rule with `hasDerivAt_circleMap`, and ε → 0 recovers the
-  full arc integral by dominated convergence and continuity of
-  `starPrimitive` at the endpoints (which uses `Hc`'s continuity of `f`
-  on the closed lune).
+  proof uses the **strengthened `_Hd`** (analyticity on a slight
+  enlargement `closedBall e R₀'` with `R₀' < R₀`) to apply
+  `hasDerivAt_starPrimitive` at every arc point, the chain rule with
+  `hasDerivAt_circleMap`, and `intervalIntegral.integral_eq_sub_of_hasDerivAt_of_le`
+  on `[π/2, π]`. Continuity of the parametrized integral at the arc
+  endpoints `θ ∈ {π/2, π}` (where the arc meets the box boundary) is
+  obtained via a clamped extension and
+  `intervalIntegral.continuous_parametric_intervalIntegral_of_continuous`.
 * `Complex.topRightLune_arc_integral_eq_starPrimitive_sub`: mirror.
 
 ## Implementation notes
@@ -347,330 +343,18 @@ theorem hasDerivAt_starPrimitive
   rw [h_eq] at h_final
   exact h_final
 
-/-- **`IsExactOn` for star-shaped open sets.** A function `f` complex-
-differentiable on an open star-shaped set `U` with star center `p` is the
-derivative of its segment integral from `p`. -/
-theorem starShaped_isExactOn
-    (hU : IsOpen U) (hSC : StarConvex ℝ p U) (_hp : p ∈ U)
-    (hf : DifferentiableOn ℂ f U) :
-    IsExactOn f U :=
-  ⟨starPrimitive p f, fun _ hz => (hasDerivAt_starPrimitive hU hSC hf hz)⟩
-
-/-- **Fundamental theorem for segment line integrals in a star-shaped set.**
-For `f` complex-differentiable on an open star-shaped set `U` with star
-center `p ∈ U`, the segment integral from any point `z₀ ∈ U` to `z₁ ∈ U`
-(provided the segment `[z₀, z₁]` lies in `U`) equals the difference of the
-segment primitives:
-`∫_0^1 (z₁ - z₀) · f(z₀ + t·(z₁ - z₀)) dt = starPrimitive p f z₁ − starPrimitive p f z₀`.
-This is the line-integral form of the fundamental theorem of calculus. -/
-theorem intervalIntegral_eq_sub_of_starShaped
-    (hU : IsOpen U) (hSC : StarConvex ℝ p U) (_hp : p ∈ U)
-    (hf : DifferentiableOn ℂ f U)
-    {z₀ z₁ : ℂ} (_hz₀ : z₀ ∈ U) (_hz₁ : z₁ ∈ U)
-    (hseg : segment ℝ z₀ z₁ ⊆ U) :
-    (∫ t in (0:ℝ)..1, (z₁ - z₀) * f (z₀ + (t : ℂ) * (z₁ - z₀))) =
-    starPrimitive p f z₁ - starPrimitive p f z₀ := by
-  -- For s ∈ [0, 1], z₀ + s·(z₁-z₀) ∈ segment z₀ z₁ ⊆ U.
-  have h_seg_mem : ∀ s ∈ Set.Icc (0:ℝ) 1, z₀ + (s : ℂ) * (z₁ - z₀) ∈ U := by
-    intro s hs
-    have h_in_seg : z₀ + (s : ℂ) * (z₁ - z₀) ∈ segment ℝ z₀ z₁ := by
-      refine ⟨1 - s, s, by linarith [hs.2], hs.1, by linarith, ?_⟩
-      simp only [Complex.real_smul]
-      push_cast; ring
-    exact hseg h_in_seg
-  -- HasDerivAt of H(s) := starPrimitive p f (z₀ + s·(z₁-z₀)) at each s ∈ uIcc 0 1.
-  have hH_deriv : ∀ s ∈ Set.uIcc (0:ℝ) 1, HasDerivAt
-      (fun s : ℝ => starPrimitive p f (z₀ + (s : ℂ) * (z₁ - z₀)))
-      ((z₁ - z₀) * f (z₀ + (s : ℂ) * (z₁ - z₀))) s := by
-    intro s hs
-    have hs_Icc : s ∈ Set.Icc (0:ℝ) 1 := by
-      rwa [Set.uIcc_of_le (by norm_num : (0:ℝ) ≤ 1)] at hs
-    have h_pt_in_U := h_seg_mem s hs_Icc
-    have h_sP_deriv : HasDerivAt (starPrimitive p f)
-        (f (z₀ + (s : ℂ) * (z₁ - z₀))) (z₀ + (s : ℂ) * (z₁ - z₀)) :=
-      hasDerivAt_starPrimitive hU hSC hf h_pt_in_U
-    -- Chain rule via comp_ofReal: go through an intermediate complex function.
-    have h_inner_C : HasDerivAt (fun w : ℂ => z₀ + w * (z₁ - z₀)) (z₁ - z₀) ((s : ℂ) : ℂ) := by
-      have h1 : HasDerivAt (fun w : ℂ => w) (1 : ℂ) ((s : ℂ) : ℂ) := hasDerivAt_id _
-      have h2 : HasDerivAt (fun w : ℂ => w * (z₁ - z₀)) ((1 : ℂ) * (z₁ - z₀)) ((s : ℂ) : ℂ) :=
-        h1.mul_const (z₁ - z₀)
-      simpa using h2.const_add z₀
-    have hH_at : HasDerivAt (starPrimitive p f) (f (z₀ + (s : ℂ) * (z₁ - z₀)))
-        ((fun w : ℂ => z₀ + w * (z₁ - z₀)) (s : ℂ)) := by simpa using h_sP_deriv
-    have h_comp : HasDerivAt (fun w : ℂ => starPrimitive p f (z₀ + w * (z₁ - z₀)))
-        ((z₁ - z₀) * f (z₀ + (s : ℂ) * (z₁ - z₀))) ((s : ℂ) : ℂ) := by
-      have h_c := HasDerivAt.comp ((s : ℂ) : ℂ) hH_at h_inner_C
-      simp only [Function.comp_def] at h_c
-      rw [mul_comm]
-      exact h_c
-    exact h_comp.comp_ofReal
-  -- IntervalIntegrable of (s ↦ (z₁-z₀) * f(z₀+s(z₁-z₀))) on [0, 1].
-  have h_int : IntervalIntegrable
-      (fun s : ℝ => (z₁ - z₀) * f (z₀ + (s : ℂ) * (z₁ - z₀)))
-      MeasureTheory.volume 0 1 := by
-    apply ContinuousOn.intervalIntegrable
-    rw [Set.uIcc_of_le (by norm_num : (0:ℝ) ≤ 1)]
-    have h_inner_cont : Continuous (fun s : ℝ => z₀ + (s : ℂ) * (z₁ - z₀)) := by fun_prop
-    have h_f_cont : ContinuousOn f U := hf.continuousOn
-    have h_comp_cont : ContinuousOn (fun s : ℝ => f (z₀ + (s : ℂ) * (z₁ - z₀)))
-        (Set.Icc (0:ℝ) 1) :=
-      h_f_cont.comp h_inner_cont.continuousOn h_seg_mem
-    exact continuousOn_const.mul h_comp_cont
-  -- Apply FTC.
-  have h_ftc := intervalIntegral.integral_eq_sub_of_hasDerivAt hH_deriv h_int
-  -- Simplify endpoints: H(1) = starPrimitive p f z₁, H(0) = starPrimitive p f z₀.
-  have h_eq_1 : z₀ + ((1 : ℝ) : ℂ) * (z₁ - z₀) = z₁ := by push_cast; ring
-  have h_eq_0 : z₀ + ((0 : ℝ) : ℂ) * (z₁ - z₀) = z₀ := by push_cast; ring
-  rw [h_eq_1, h_eq_0] at h_ftc
-  exact h_ftc
-
-/-- **Cauchy-Goursat for a triangle with one vertex at the star center.** If
-`f` is complex-differentiable on an open star-shaped set `U` with star center
-`p ∈ U`, and the triangle with vertices `p`, `z₁`, `z₂` lies inside `U`,
-then the contour integral around this triangle (traversed `p → z₁ → z₂ → p`)
-equals zero. -/
-theorem triangleIntegral_eq_zero_of_starShaped
-    (hU : IsOpen U) (hSC : StarConvex ℝ p U) (hp : p ∈ U)
-    (hf : DifferentiableOn ℂ f U)
-    {z₁ z₂ : ℂ} (hz₁ : z₁ ∈ U) (hz₂ : z₂ ∈ U)
-    (hseg : segment ℝ z₁ z₂ ⊆ U) :
-    (∫ t in (0:ℝ)..1, (z₁ - p) * f (p + (t : ℂ) * (z₁ - p))) +
-    (∫ t in (0:ℝ)..1, (z₂ - z₁) * f (z₁ + (t : ℂ) * (z₂ - z₁))) +
-    (∫ t in (0:ℝ)..1, (p - z₂) * f (z₂ + (t : ℂ) * (p - z₂))) = 0 := by
-  -- Each segment lies in U.
-  have hseg_pz₁ : segment ℝ p z₁ ⊆ U := hSC.segment_subset hz₁
-  have hseg_z₂p : segment ℝ z₂ p ⊆ U := by
-    rw [segment_symm]
-    exact hSC.segment_subset hz₂
-  -- Apply intervalIntegral_eq_sub_of_starShaped to each segment.
-  have h1 := intervalIntegral_eq_sub_of_starShaped (p := p) hU hSC hp hf hp hz₁ hseg_pz₁
-  have h2 := intervalIntegral_eq_sub_of_starShaped (p := p) hU hSC hp hf hz₁ hz₂ hseg
-  have h3 := intervalIntegral_eq_sub_of_starShaped (p := p) hU hSC hp hf hz₂ hp hseg_z₂p
-  -- Sum: (starP z₁ - starP p) + (starP z₂ - starP z₁) + (starP p - starP z₂) = 0.
-  linear_combination h1 + h2 + h3
-
 /-! ## Lune-specific support lemmas for `WindingNumber.lean` -/
 
-/-- **Star-convexity of the upper-left-of-`e` open box minus the closed
-ball.** For `e : ℂ`, `R₀ > 0`, `a < e.re - R₀`, `e.im + R₀ < d`, the open
-set `(Set.Ioo a e.re ×ℂ Set.Ioo e.im d) \ Metric.closedBall e R₀` is
+/-- **Star-convexity of the upper-left-of-`e` open box minus a closed
+ball of radius `R₀' ≤ R₀`.** For `e : ℂ`, `R₀ > 0`, `a < e.re - R₀`,
+`e.im + R₀ < d`, and `0 < R₀' ≤ R₀`, the open set
+`(Set.Ioo a e.re ×ℂ Set.Ioo e.im d) \ Metric.closedBall e R₀'` is
 star-convex from the outer corner
-`V := (e.re - R₀ : ℝ) + (e.im + R₀ : ℝ)·I`.
-
-Geometric content: with `q_x := Q.re - e.re ≤ 0` strict (since
-`Q ∈ Ioo a e.re`) and `q_y := Q.im - e.im > 0` strict, the function
-`g(t) := |V + t·(Q - V) - e|² - R₀²` is a quadratic in `t ∈ [0, 1]` whose
-boundary values `g(0) = R₀² ≥ 0` and `g(1) = |Q - e|² - R₀² ≥ 0` are
-non-negative, and whose vertex falls outside `(0, 1)` (or whose minimum
-on `(0, 1)` is non-negative by discriminant analysis). -/
-theorem topLeftBoxMinusBall_starConvex
-    (e : ℂ) (R₀ : ℝ) (hR₀ : 0 < R₀)
-    (a d : ℝ) (h_a : a < e.re - R₀) (h_d : e.im + R₀ < d) :
-    StarConvex ℝ ((↑(e.re - R₀) : ℂ) + (↑(e.im + R₀) : ℂ) * Complex.I)
-      ((Set.Ioo a e.re ×ℂ Set.Ioo e.im d) \ Metric.closedBall e R₀) := by
-  intro Q hQ s t hs ht hst
-  obtain ⟨hQ_box, hQ_not_ball⟩ := hQ
-  rw [Complex.mem_reProdIm] at hQ_box
-  obtain ⟨hQ_re, hQ_im⟩ := hQ_box
-  rw [Set.mem_Ioo] at hQ_re hQ_im
-  -- Coordinates of the convex combination.
-  set α : ℝ := e.re - Q.re with hα_def
-  set β : ℝ := Q.im - e.im with hβ_def
-  have hα_pos : 0 < α := by rw [hα_def]; linarith [hQ_re.2]
-  have hβ_pos : 0 < β := by rw [hβ_def]; linarith [hQ_im.1]
-  have hα_lt : α < e.re - a := by rw [hα_def]; linarith [hQ_re.1]
-  have hβ_lt : β < d - e.im := by rw [hβ_def]; linarith [hQ_im.2]
-  -- Real/imaginary parts of `P = s • V + t • Q`.
-  set P : ℂ := s • (((↑(e.re - R₀) : ℂ)) + ((↑(e.im + R₀) : ℂ)) * Complex.I) + t • Q with hP_def
-  have hP_re : P.re = s * (e.re - R₀) + t * Q.re := by
-    simp [hP_def, Complex.add_re, Complex.mul_re,
-          Complex.I_re, Complex.I_im, Complex.ofReal_re, Complex.ofReal_im,
-          Complex.real_smul]
-  have hP_im : P.im = s * (e.im + R₀) + t * Q.im := by
-    simp [hP_def, Complex.add_im, Complex.mul_im,
-          Complex.I_re, Complex.I_im, Complex.ofReal_re, Complex.ofReal_im,
-          Complex.real_smul]
-  refine ⟨?_, ?_⟩
-  · -- `P ∈ Ioo a e.re ×ℂ Ioo e.im d`: open intervals are convex.
-    rw [Complex.mem_reProdIm]
-    have hV_re_in_Ioo : (e.re - R₀) ∈ Set.Ioo a e.re :=
-      ⟨h_a, by linarith⟩
-    have hV_im_in_Ioo : (e.im + R₀) ∈ Set.Ioo e.im d :=
-      ⟨by linarith, h_d⟩
-    refine ⟨?_, ?_⟩
-    · rw [hP_re]
-      exact convex_Ioo a e.re hV_re_in_Ioo hQ_re hs ht hst
-    · rw [hP_im]
-      exact convex_Ioo e.im d hV_im_in_Ioo hQ_im hs ht hst
-  · -- `P ∉ closedBall e R₀`: the segment from `V` to `Q` avoids the closed disk.
-    intro hP_in_ball
-    -- From `‖P - e‖ ≤ R₀` derive `‖P - e‖² ≤ R₀²` and contradict.
-    rw [Metric.mem_closedBall, Complex.dist_eq] at hP_in_ball
-    have h_norm_sq_le : ‖P - e‖^2 ≤ R₀^2 := by
-      nlinarith [hP_in_ball, sq_nonneg (‖P - e‖ - R₀), norm_nonneg (P - e), hR₀]
-    -- `‖z‖² = z.re² + z.im²` for `z : ℂ`.
-    have h_norm_sq_eq : ‖P - e‖^2 = (P.re - e.re)^2 + (P.im - e.im)^2 := by
-      rw [← Complex.normSq_eq_norm_sq, Complex.normSq_apply]
-      simp [Complex.sub_re, Complex.sub_im, sq]
-    rw [h_norm_sq_eq] at h_norm_sq_le
-    -- Substitute `P.re - e.re = -(s*R₀ + t*α)` and `P.im - e.im = s*R₀ + t*β`,
-    -- using `s + t = 1` to fold `e.re` and `e.im` into the right form.
-    have h_diff_re : P.re - e.re = -(s * R₀ + t * α) := by
-      rw [hP_re, hα_def]; linear_combination e.re * hst
-    have h_diff_im : P.im - e.im = s * R₀ + t * β := by
-      rw [hP_im, hβ_def]; linear_combination e.im * hst
-    rw [h_diff_re, h_diff_im] at h_norm_sq_le
-    -- `‖Q - e‖ > R₀` ⟹ `α² + β² > R₀²`.
-    have hQ_dist_gt : α^2 + β^2 > R₀^2 := by
-      have h_Q_gt : R₀ < ‖Q - e‖ := by
-        rw [Metric.mem_closedBall, Complex.dist_eq] at hQ_not_ball
-        push Not at hQ_not_ball
-        exact hQ_not_ball
-      have h_norm_Q_sq : ‖Q - e‖^2 = α^2 + β^2 := by
-        rw [← Complex.normSq_eq_norm_sq, Complex.normSq_apply]
-        simp [Complex.sub_re, Complex.sub_im, sq, hα_def, hβ_def]
-        ring
-      nlinarith [h_Q_gt, sq_nonneg (‖Q - e‖ - R₀), norm_nonneg (Q - e),
-                 h_norm_Q_sq, hR₀]
-    -- Key observation: `α + β ≥ R₀` is FORCED by the hypotheses. Otherwise
-    -- `α + β < R₀` with `α, β > 0` would imply `α, β < R₀`, hence
-    -- `α² + β² < R₀(α+β) < R₀²`, contradicting `α² + β² > R₀²`.
-    have h_σ_ge_R₀ : R₀ ≤ α + β := by
-      by_contra h
-      push Not at h
-      have h_α_lt_R₀ : α < R₀ := by linarith [hβ_pos]
-      have h_β_lt_R₀ : β < R₀ := by linarith [hα_pos]
-      nlinarith [hQ_dist_gt, mul_pos hα_pos (sub_pos.mpr h_α_lt_R₀),
-                 mul_pos hβ_pos (sub_pos.mpr h_β_lt_R₀)]
-    -- Now `(s*R₀ + t*α)² + (s*R₀ + t*β)² > R₀²` via the identity
-    -- `LHS - R₀² = s²R₀² + 2stR₀(σ - R₀) + t²(τ - R₀²)` (using `(s+t)² = 1`).
-    -- All three terms are ≥ 0; case-split on `s = 0` vs `s > 0` gives strict.
-    have h_st_sq : (s + t)^2 = 1 := by rw [hst]; ring
-    have h_identity : (s * R₀ + t * α)^2 + (s * R₀ + t * β)^2 - R₀^2 =
-        s^2 * R₀^2 + 2 * s * t * R₀ * (α + β - R₀) + t^2 * (α^2 + β^2 - R₀^2) := by
-      linear_combination R₀^2 * h_st_sq
-    have h_term2_nn : 0 ≤ 2 * s * t * R₀ * (α + β - R₀) := by
-      have h_σ_minus : 0 ≤ α + β - R₀ := by linarith
-      positivity
-    have h_term3_nn : 0 ≤ t^2 * (α^2 + β^2 - R₀^2) := by
-      have : 0 ≤ α^2 + β^2 - R₀^2 := by linarith [hQ_dist_gt]
-      positivity
-    have h_key : (s * R₀ + t * α)^2 + (s * R₀ + t * β)^2 > R₀^2 := by
-      rcases hs.lt_or_eq with hs_pos | hs_zero
-      · -- `s > 0`: `s²R₀² > 0` dominates the other (nonneg) terms.
-        have h_term1_pos : 0 < s^2 * R₀^2 := by positivity
-        linarith [h_identity, h_term1_pos, h_term2_nn, h_term3_nn]
-      · -- `s = 0`, so `t = 1`: `t²(τ - R₀²) > 0`.
-        have ht_one : t = 1 := by linarith
-        have h_term3_pos : 0 < t^2 * (α^2 + β^2 - R₀^2) := by
-          rw [ht_one]
-          have : 0 < α^2 + β^2 - R₀^2 := by linarith [hQ_dist_gt]
-          linarith
-        have h_term1_nn : 0 ≤ s^2 * R₀^2 := by positivity
-        linarith [h_identity, h_term1_nn, h_term2_nn, h_term3_pos]
-    linarith [h_norm_sq_le, h_key]
-
-/-- **Star-convexity of the upper-right-of-`e` open box minus the closed
-ball.** Mirror of `topLeftBoxMinusBall_starConvex` across `x = e.re`. -/
-theorem topRightBoxMinusBall_starConvex
-    (e : ℂ) (R₀ : ℝ) (hR₀ : 0 < R₀)
-    (b d : ℝ) (h_b : e.re + R₀ < b) (h_d : e.im + R₀ < d) :
-    StarConvex ℝ ((↑(e.re + R₀) : ℂ) + (↑(e.im + R₀) : ℂ) * Complex.I)
-      ((Set.Ioo e.re b ×ℂ Set.Ioo e.im d) \ Metric.closedBall e R₀) := by
-  intro Q hQ s t hs ht hst
-  obtain ⟨hQ_box, hQ_not_ball⟩ := hQ
-  rw [Complex.mem_reProdIm] at hQ_box
-  obtain ⟨hQ_re, hQ_im⟩ := hQ_box
-  rw [Set.mem_Ioo] at hQ_re hQ_im
-  -- Coordinates: now `α := Q.re - e.re > 0` (mirrored).
-  set α : ℝ := Q.re - e.re with hα_def
-  set β : ℝ := Q.im - e.im with hβ_def
-  have hα_pos : 0 < α := by rw [hα_def]; linarith [hQ_re.1]
-  have hβ_pos : 0 < β := by rw [hβ_def]; linarith [hQ_im.1]
-  -- Real/imaginary parts of `P = s • V_R + t • Q`.
-  set P : ℂ := s • (((↑(e.re + R₀) : ℂ)) + ((↑(e.im + R₀) : ℂ)) * Complex.I) + t • Q with hP_def
-  have hP_re : P.re = s * (e.re + R₀) + t * Q.re := by
-    simp [hP_def, Complex.add_re, Complex.mul_re,
-          Complex.I_re, Complex.I_im, Complex.ofReal_re, Complex.ofReal_im,
-          Complex.real_smul]
-  have hP_im : P.im = s * (e.im + R₀) + t * Q.im := by
-    simp [hP_def, Complex.add_im, Complex.mul_im,
-          Complex.I_re, Complex.I_im, Complex.ofReal_re, Complex.ofReal_im,
-          Complex.real_smul]
-  refine ⟨?_, ?_⟩
-  · -- `P ∈ Ioo e.re b ×ℂ Ioo e.im d`: open intervals are convex.
-    rw [Complex.mem_reProdIm]
-    have hV_re_in_Ioo : (e.re + R₀) ∈ Set.Ioo e.re b :=
-      ⟨by linarith, h_b⟩
-    have hV_im_in_Ioo : (e.im + R₀) ∈ Set.Ioo e.im d :=
-      ⟨by linarith, h_d⟩
-    refine ⟨?_, ?_⟩
-    · rw [hP_re]
-      exact convex_Ioo e.re b hV_re_in_Ioo hQ_re hs ht hst
-    · rw [hP_im]
-      exact convex_Ioo e.im d hV_im_in_Ioo hQ_im hs ht hst
-  · -- `P ∉ closedBall e R₀`: same algebraic argument as the top-left case.
-    intro hP_in_ball
-    rw [Metric.mem_closedBall, Complex.dist_eq] at hP_in_ball
-    have h_norm_sq_le : ‖P - e‖^2 ≤ R₀^2 := by
-      nlinarith [hP_in_ball, sq_nonneg (‖P - e‖ - R₀), norm_nonneg (P - e), hR₀]
-    have h_norm_sq_eq : ‖P - e‖^2 = (P.re - e.re)^2 + (P.im - e.im)^2 := by
-      rw [← Complex.normSq_eq_norm_sq, Complex.normSq_apply]
-      simp [Complex.sub_re, Complex.sub_im, sq]
-    rw [h_norm_sq_eq] at h_norm_sq_le
-    -- Now `P.re - e.re = s*R₀ + t*α` (positive sign, mirrored) and
-    -- `P.im - e.im = s*R₀ + t*β` (same as left case).
-    have h_diff_re : P.re - e.re = s * R₀ + t * α := by
-      rw [hP_re, hα_def]; linear_combination e.re * hst
-    have h_diff_im : P.im - e.im = s * R₀ + t * β := by
-      rw [hP_im, hβ_def]; linear_combination e.im * hst
-    rw [h_diff_re, h_diff_im] at h_norm_sq_le
-    have hQ_dist_gt : α^2 + β^2 > R₀^2 := by
-      have h_Q_gt : R₀ < ‖Q - e‖ := by
-        rw [Metric.mem_closedBall, Complex.dist_eq] at hQ_not_ball
-        push Not at hQ_not_ball
-        exact hQ_not_ball
-      have h_norm_Q_sq : ‖Q - e‖^2 = α^2 + β^2 := by
-        rw [← Complex.normSq_eq_norm_sq, Complex.normSq_apply]
-        simp [Complex.sub_re, Complex.sub_im, sq, hα_def, hβ_def]
-      nlinarith [h_Q_gt, sq_nonneg (‖Q - e‖ - R₀), norm_nonneg (Q - e),
-                 h_norm_Q_sq, hR₀]
-    -- Hypothesis-forcing argument: `α + β ≥ R₀`.
-    have h_σ_ge_R₀ : R₀ ≤ α + β := by
-      by_contra h
-      push Not at h
-      have h_α_lt_R₀ : α < R₀ := by linarith [hβ_pos]
-      have h_β_lt_R₀ : β < R₀ := by linarith [hα_pos]
-      nlinarith [hQ_dist_gt, mul_pos hα_pos (sub_pos.mpr h_α_lt_R₀),
-                 mul_pos hβ_pos (sub_pos.mpr h_β_lt_R₀)]
-    have h_st_sq : (s + t)^2 = 1 := by rw [hst]; ring
-    have h_identity : (s * R₀ + t * α)^2 + (s * R₀ + t * β)^2 - R₀^2 =
-        s^2 * R₀^2 + 2 * s * t * R₀ * (α + β - R₀) + t^2 * (α^2 + β^2 - R₀^2) := by
-      linear_combination R₀^2 * h_st_sq
-    have h_term2_nn : 0 ≤ 2 * s * t * R₀ * (α + β - R₀) := by
-      have h_σ_minus : 0 ≤ α + β - R₀ := by linarith
-      positivity
-    have h_term3_nn : 0 ≤ t^2 * (α^2 + β^2 - R₀^2) := by
-      have : 0 ≤ α^2 + β^2 - R₀^2 := by linarith [hQ_dist_gt]
-      positivity
-    have h_key : (s * R₀ + t * α)^2 + (s * R₀ + t * β)^2 > R₀^2 := by
-      rcases hs.lt_or_eq with hs_pos | hs_zero
-      · have h_term1_pos : 0 < s^2 * R₀^2 := by positivity
-        linarith [h_identity, h_term1_pos, h_term2_nn, h_term3_nn]
-      · have ht_one : t = 1 := by linarith
-        have h_term3_pos : 0 < t^2 * (α^2 + β^2 - R₀^2) := by
-          rw [ht_one]
-          have : 0 < α^2 + β^2 - R₀^2 := by linarith [hQ_dist_gt]
-          linarith
-        have h_term1_nn : 0 ≤ s^2 * R₀^2 := by positivity
-        linarith [h_identity, h_term1_nn, h_term2_nn, h_term3_pos]
-    linarith [h_norm_sq_le, h_key]
-
-/-- **Star-convexity of the upper-left-of-`e` open box minus a shrunken
-closed ball.** Variant of `topLeftBoxMinusBall_starConvex` where the
-excluded closed ball has radius `R₀' ≤ R₀`. The star center remains the
-original `V = (e.re - R₀) + (e.im + R₀) I` built from `R₀`. The same
-chord-avoidance argument generalizes via the identity
+`V = (e.re - R₀) + (e.im + R₀) I` (built from the original `R₀`, not
+`R₀'`). The chord-avoidance argument: with `α := e.re − Q.re > 0` and
+`β := Q.im − e.im > 0` for `Q ∈ Ioo a e.re × Ioo e.im d`, the squared
+distance from `e` to a convex combination `sV + tQ` simplifies via the
+identity
 `(sR₀ + tα)² + (sR₀ + tβ)² − R₀'²
    = s²(2R₀² − R₀'²) + 2st(R₀(α+β) − R₀'²) + t²(α²+β² − R₀'²)`,
 each term ≥ 0 with at least one strict (since `R₀ ≥ R₀' > 0` and
@@ -993,20 +677,24 @@ open box minus closed disk, the arc integral
 `V = (e.re − R₀) + (e.im + R₀)·I`, `T = e.re + (e.im + R₀)·I`,
 `B = (e.re − R₀) + e.im·I`.
 
-The proof factors through **parametric differentiation under the integral
-sign** (avoiding any `ε`-arc limit). Set `Z(θ) := circleMap e R₀ θ` and
-`G(θ) := starPrimitive V f (Z(θ))`. Writing
-`G(θ) = ∫_0^1 (Z(θ)−V)·f(V + t·(Z(θ)−V)) dt`, the integrand is
-differentiable in `θ` for each `t ∈ [0, 1)` (using
-`topLeftBoxMinusBall_starConvex`: `V + t·(Z(θ)−V) ∈ U` strictly for
-`t < 1`). Differentiating under the integral sign and grouping terms
-exposes the integrand as the `t`-derivative of `t·f(V + t·(Z(θ)−V))`,
-so the FTC in `t` collapses the inner integral:
-`G'(θ) = Z'(θ) · [t·f(V + t·(Z−V))]_{t=0}^{t=1} = Z'(θ) · f(Z(θ))
-       = f(circleMap e R₀ θ) · (I·R₀·exp(I·θ))`.
-Applying the outer FTC
-`intervalIntegral.integral_eq_sub_of_hasDerivAt_of_le` on `[π/2, π]`
-gives the claimed identity. -/
+**Proof strategy.** Set `Z(θ) := circleMap e R₀ θ` and
+`G(θ) := starPrimitive V f (Z(θ))`. The strengthened `_Hd` hypothesis
+provides analyticity of `f` on a slightly enlarged set `U' := (Ioo box) \
+closedBall e R₀'` with `R₀' < R₀`, which is star-convex from `V` via
+`topLeftBoxMinusBall_starConvex_of_subradius`. For `θ ∈ (π/2, π)`, the
+arc point `Z(θ)` lies strictly inside `U'` (sphere is at distance
+`R₀ > R₀'` from `e`, and the open box constraints are strict), so
+`hasDerivAt_starPrimitive` gives `HasDerivAt (starPrimitive V f) (f
+(Z(θ))) (Z(θ))`; chain rule with `hasDerivAt_circleMap` yields
+`HasDerivAt G (f(Z(θ)) · I·R₀·exp(I·θ)) θ`. For continuity of `G` on
+the closed interval `[π/2, π]` (where the endpoint arc points `T, B`
+sit on the box boundary, outside `U'`), we use star-convexity of the
+**closed** lune `CL := (Icc box) \ ball e R₀` from `V` (proved inline by
+the same quadratic identity) plus a clamped extension of the integrand
+to `ℝ × ℝ`, then
+`intervalIntegral.continuous_parametric_intervalIntegral_of_continuous`.
+Finally `intervalIntegral.integral_eq_sub_of_hasDerivAt_of_le` on
+`[π/2, π]` gives the claimed identity. -/
 theorem topLeftLune_arc_integral_eq_starPrimitive_sub
     (f : ℂ → ℂ) (e : ℂ) (R₀ : ℝ) (_hR₀ : 0 < R₀)
     (a d : ℝ) (_h_a : a < e.re - R₀) (_h_d : e.im + R₀ < d)

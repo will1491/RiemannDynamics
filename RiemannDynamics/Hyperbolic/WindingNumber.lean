@@ -57,28 +57,25 @@ domain. The four building-block CG theorems are:
   `starPrimitive` identities in `StarShapedPrimitive.lean`
   (horizontal/vertical segment substitutions and the ε-arc limit).
 * `Complex.integral_boundary_topHalfAnnulus_eq_zero_of_differentiableOn`
-  — CG on the top half of a rectangle-minus-disk annular region.
-  Proved by 5-piece decomposition: 3 sub-rectangles (Mathlib's rect CG)
-  plus the two top lunes, with shared edges cancelling and the lune arc
-  contributions combining into the upper semicircle.
-* `Complex.integral_boundary_bottomHalfAnnulus_eq_zero_of_differentiableOn`
-  — CG on the bottom half-annulus. Proved by 180° rotation around `e`:
-  the map `f̃(z) := f(2·e − z)` carries the bottom hypotheses into the
-  top hypotheses, so the top half-annulus CG applied to `f̃` reduces
-  (via `intervalIntegral.integral_comp_sub_left` for the axis edges and
-  `intervalIntegral.integral_comp_add_right` plus `Complex.exp_pi_mul_I`
-  for the arc) to the negative of the bottom identity.
-* `Complex.integral_boundary_rectMinusDisk_eq_zero_of_differentiableOn`
-  — CG on a full rectangle-minus-disk annular region. Obtained by
-  cutting horizontally at `Im z = e.im` and adding the two
-  half-annulus CGs (the cut contributions cancel).
+  — CG on a rectangle with the upper half of a disk on the bottom
+  edge removed: `(Icc a b ×ℂ Icc e.im d) \ ball e R₀`, with `e.im` the
+  rectangle's bottom y. This is the **truncated `Γ(2)` fundamental
+  domain shape** (rectangle minus upper half-disk on the bottom
+  boundary). Proved by 5-piece decomposition: 3 sub-rectangles
+  (Mathlib's rect CG) plus the two top lunes, with shared edges
+  cancelling and the lune arc contributions combining into the upper
+  semicircle.
 
 ## Argument-principle theorems
 
-* `cIntegralLogDeriv_isNat_of_nonzero_on_rectMinusDisk` — for `g`
-  holomorphic on a neighborhood of a rectangle-minus-disk region and
-  non-vanishing on its boundary, `(2πi)⁻¹ ∮_{∂(R \ D)} g'(z)/g(z) dz`
-  is a non-negative integer counting zeros of `g` inside.
+* `cIntegralLogDeriv_isNat_of_nonzero_on_rectMinusUpperHalfDisk` — for
+  `g` holomorphic on a neighborhood of a rectangle with the upper
+  half-disk on the bottom boundary removed, and `g` non-vanishing on
+  the four rectangle edges and the upper semicircle,
+  `(2πi)⁻¹ ∮_{∂F_Y} g'(z)/g(z) dz` is a non-negative integer counting
+  zeros of `g` inside `F_Y^o`. This is the argument principle used to
+  prove existence/uniqueness of `λ`-preimages in the truncated `Γ(2)`
+  fundamental domain.
 * Analogous circle and rectangle argument-principle theorems for the
   simpler closed-disk and closed-rectangle base cases.
 -/
@@ -1898,11 +1895,11 @@ complex-differentiable on its open interior, the boundary contour integral
 (traversed CCW with the lune interior on the left) equals zero.
 
 This lemma + its top-right mirror power the decomposition proof of
-`integral_boundary_topHalfAnnulus_eq_zero_of_differentiableOn`: the top
-half-annulus splits into three rectangles (closed under Mathlib's
-`integral_boundary_rect_eq_zero_of_continuousOn_of_differentiableOn`) plus
-the two lunes. Shared edges cancel and the lune contributions provide the
-upper semicircle integral.
+`integral_boundary_topHalfAnnulus_eq_zero_of_differentiableOn` (the
+F_Y-shape CG): the region splits into three rectangles (closed under
+Mathlib's `integral_boundary_rect_eq_zero_of_continuousOn_of_differentiableOn`)
+plus the two lunes. Shared edges cancel and the lune contributions
+provide the upper semicircle integral.
 
 **Hypothesis form.** `Hd` asks for differentiability on the open box
 `(Ioo a e.re) × (Ioo e.im d)` minus `closedBall e R₀`, where
@@ -2013,13 +2010,16 @@ theorem integral_boundary_topRightLune_eq_zero_of_continuousOn_of_differentiable
   -- Goal collapses to `F(T) - F(W) - (F(T) - F(W)) = 0` after substitution.
   linear_combination (norm := (push_cast; ring)) -h_arc - hF_T + hF_W
 
-/-- **Cauchy-Goursat for the top half of a rect-minus-disk annular region.**
-For `f` continuous on the closed top half-annulus
-`(Set.Icc a b ×ℂ Set.Icc e.im d) \ Metric.ball e R₀` and complex-
-differentiable on its open interior, the contour integral around the top
-half-annulus boundary equals zero.
+/-- **Cauchy-Goursat for a rectangle with an upper half-disk removed
+from the bottom boundary.** For `f` continuous on the closed region
+`(Set.Icc a b ×ℂ Set.Icc e.im d) \ Metric.ball e R₀` (the rectangle
+`[a, b] × [e.im, d]` with the open upper half of the disk centered at
+`e` on the bottom edge removed) and complex-differentiable on its open
+interior, the contour integral around the boundary equals zero.
 
-The top half-annulus boundary, traversed counter-clockwise (annulus
+The region is the **truncated `Γ(2)` fundamental domain shape** with
+`e.im = 0` (the rectangle's bottom y coincides with the disk center's
+imaginary part). The boundary, traversed counter-clockwise (region
 interior on the left), consists of:
 * Bottom-left cut segment: `(a, e.im) → (e.re − R₀, e.im)`, contributing
   `∫_a^{e.re−R₀} f(x + e.im·i) dx`.
@@ -2035,11 +2035,11 @@ interior on the left), consists of:
 * Left edge (reversed): `(a, d) → (a, e.im)`, contributing
   `−i·∫_{e.im}^d f(a + y·i) dy`.
 
-The top half-annulus is simply-connected; Cauchy-Goursat for simply-
-connected regions then gives zero. This is one of two helper lemmas
-(top + bottom half-annulus CG) that together prove the full annular CG
-`integral_boundary_rectMinusDisk_eq_zero_of_differentiableOn` via the
-horizontal cut at `Im z = e.im`. -/
+The region is simply-connected; Cauchy-Goursat for simply-connected
+regions then gives zero. The proof uses a 5-piece decomposition into
+3 sub-rectangles (Mathlib's rect CG) plus the two top lunes
+(`topLeftLune`, `topRightLune`), with shared edges cancelling and the
+lune arc contributions combining into the upper semicircle. -/
 theorem integral_boundary_topHalfAnnulus_eq_zero_of_differentiableOn
     (f : ℂ → ℂ) (a b d : ℝ) (e : ℂ) (R₀ : ℝ)
     (_hab : a < b) (h_e_im_d : e.im < d) (hR₀ : 0 < R₀)
@@ -2703,1920 +2703,736 @@ theorem integral_boundary_topHalfAnnulus_eq_zero_of_differentiableOn
     hA + hB + hC + hD + hE + h_top_combine_left + h_top_combine_full +
     h_middle_combine + Complex.I * h_left_combine - Complex.I * h_right_combine + h_arc_combine
 
-/-- **Cauchy-Goursat for the bottom half of a rect-minus-disk annular
-region.** Mirror image of
-`integral_boundary_topHalfAnnulus_eq_zero_of_differentiableOn`: for `f`
-continuous on the closed bottom half-annulus and complex-differentiable
-on its open interior, the contour integral around the bottom half-
-annulus boundary equals zero.
+/-- **Cauchy-Goursat for the closed upper half-disk
+(rectangular-enlargement hypothesis form).** For `f` continuous
+on the closed small rectangle `[e.re − R₀, e.re + R₀] × [e.im, e.im + R₀]`
+(which contains the closed upper half-disk centered at `e` with radius
+`R₀`) and complex-differentiable on a slight rectangular enlargement
+`(e.re − R₀ − ε, e.re + R₀ + ε) × (e.im, e.im + R₀ + ε)`, the contour
+integral around the boundary of the upper half-disk (bottom diameter
+left-to-right + upper semicircle from right to left via top) equals
+zero.
 
-The bottom half-annulus boundary, traversed CCW (interior on the left),
-consists of:
-* Bottom edge: `(a, c) → (b, c)`, contributing `∫_a^b f(x + c·i) dx`.
-* Right edge: `(b, c) → (b, e.im)`, contributing
-  `i·∫_c^{e.im} f(b + y·i) dy`.
-* Top-right cut segment (reversed): `(b, e.im) → (e.re + R₀, e.im)`,
-  contributing `−∫_{e.re+R₀}^b f(x + e.im·i) dx`.
-* Lower semicircle (clockwise around the disk center, from
-  `(e.re + R₀, e.im)` through `(e.re, e.im − R₀)` to
-  `(e.re − R₀, e.im)`), contributing
-  `−∫_π^{2π} f(circleMap e R₀ θ) · (i·R₀·exp(i·θ)) dθ`.
-* Top-left cut segment (reversed): `(e.re − R₀, e.im) → (a, e.im)`,
-  contributing `−∫_a^{e.re−R₀} f(x + e.im·i) dx`.
-* Left edge (reversed): `(a, e.im) → (a, c)`, contributing
-  `−i·∫_c^{e.im} f(a + y·i) dy`. -/
-theorem integral_boundary_bottomHalfAnnulus_eq_zero_of_differentiableOn
-    (f : ℂ → ℂ) (a b c : ℝ) (e : ℂ) (R₀ : ℝ)
-    (_hab : a < b) (_h_c_e_im : c < e.im) (hR₀ : 0 < R₀)
-    (h_a_lt : a < e.re - R₀) (h_lt_b : e.re + R₀ < b)
-    (h_c_lt_e_im_R0 : c < e.im - R₀)
-    (Hc : ContinuousOn f ((Set.Icc a b ×ℂ Set.Icc c e.im) \ Metric.ball e R₀))
-    (Hd : ∃ R₀' : ℝ, 0 < R₀' ∧ R₀' < R₀ ∧ DifferentiableOn ℂ f
-      ((Set.Ioo a b ×ℂ Set.Ioo c e.im) \ Metric.closedBall e R₀')) :
-    (∫ x in a..b, f ((x : ℂ) + (c : ℂ) * Complex.I)) -
-    (∫ x in a..(e.re - R₀), f ((x : ℂ) + (e.im : ℂ) * Complex.I)) -
-    (∫ x in (e.re + R₀)..b, f ((x : ℂ) + (e.im : ℂ) * Complex.I)) +
-    Complex.I * (∫ y in c..e.im, f ((b : ℂ) + (y : ℂ) * Complex.I)) -
-    Complex.I * (∫ y in c..e.im, f ((a : ℂ) + (y : ℂ) * Complex.I)) -
-    (∫ θ in (Real.pi:ℝ)..(2 * Real.pi), f (_root_.circleMap e R₀ θ) *
+This is the easier hypothesis form usable when the integrand is
+analytic on a full rectangular neighborhood of the closed small rect
+(e.g., for `f` itself in the main F_Y argument-principle theorem, where
+the modular function is analytic on the upper half-plane). The proof
+combines the two upper lune CGs (`topLeftLune`, `topRightLune`) and
+the small rectangle CG via algebraic linear combination: the rect CG
+bottom term, the rect CG top + lune top terms, the rect CG vertical
+edge terms, and the lune arc terms together collapse into the upper
+half-disk identity. -/
+theorem integral_boundary_upperHalfDisk_eq_zero_of_continuousOn_of_differentiableOn
+    (f : ℂ → ℂ) (e : ℂ) (R₀ : ℝ) (hR₀ : 0 < R₀)
+    (Hc : ContinuousOn f
+      (Set.Icc (e.re - R₀) (e.re + R₀) ×ℂ Set.Icc e.im (e.im + R₀)))
+    (Hd : ∃ ε : ℝ, 0 < ε ∧ DifferentiableOn ℂ f
+      (Set.Ioo (e.re - R₀ - ε) (e.re + R₀ + ε) ×ℂ
+       Set.Ioo e.im (e.im + R₀ + ε))) :
+    (∫ x in (e.re - R₀)..(e.re + R₀), f ((x : ℂ) + (e.im : ℂ) * Complex.I)) +
+    (∫ θ in (0 : ℝ)..Real.pi, f (_root_.circleMap e R₀ θ) *
       (Complex.I * R₀ * Complex.exp (Complex.I * θ))) = 0 := by
-  -- Extract the underlying differentiability on the slightly enlarged set
-  -- `(Ioo a b × Ioo c e.im) \ closedBall e R₀'` for some `R₀' < R₀`.
-  obtain ⟨R₀', hR₀'_pos, hR₀'_lt, Hd'⟩ := Hd
-  -- Use 180° rotation around `e`: the map `g(z) := 2*e − z` is biholomorphic
-  -- and maps the bottom half-annulus to the top half-annulus. Define
-  -- `f̃(z) := f(g z) = f(2*e − z)` and apply the (already-proven) top
-  -- half-annulus CG to `f̃`. Each integral of `f̃` transforms via
-  -- `intervalIntegral.integral_comp_sub_left` (real-axis substitution
-  -- `u = d − x`) back into an integral of `f`; the arc integral
-  -- transforms via `intervalIntegral.integral_comp_add_right`
-  -- (substitution `φ = θ + π`). The translated identity is the negative
-  -- of the bottom half-annulus identity, which we close via
-  -- `linear_combination`.
-  set f_tilde : ℂ → ℂ := fun z => f (2 * e - z) with hf_tilde_def
-  set a' : ℝ := 2 * e.re - b with ha'_def
-  set b' : ℝ := 2 * e.re - a with hb'_def
-  set d' : ℝ := 2 * e.im - c with hd'_def
-  -- Parameter inequalities for the top half-annulus CG.
-  have h_a'_lt_b' : a' < b' := by simp [ha'_def, hb'_def]; linarith
-  have h_e_im_lt_d' : e.im < d' := by simp [hd'_def]; linarith
-  have h_a'_lt : a' < e.re - R₀ := by simp [ha'_def]; linarith
-  have h_lt_b' : e.re + R₀ < b' := by simp [hb'_def]; linarith
-  have h_e_im_R0_lt_d' : e.im + R₀ < d' := by simp [hd'_def]; linarith
-  -- The reflection map `g(z) := 2*e − z` is continuous and ℂ-differentiable.
-  have h_g_cont : Continuous (fun z : ℂ => 2 * e - z) := by fun_prop
-  have h_g_diff : Differentiable ℂ (fun z : ℂ => 2 * e - z) := by fun_prop
-  -- `g` maps the top half-annulus's closed region to the bottom's
-  -- (with `c, e.im` flipped via `2*e.im − ·`, and similarly for `x`).
-  have h_maps_to_closed : Set.MapsTo (fun z : ℂ => 2 * e - z)
-      ((Set.Icc a' b' ×ℂ Set.Icc e.im d') \ Metric.ball e R₀)
-      ((Set.Icc a b ×ℂ Set.Icc c e.im) \ Metric.ball e R₀) := by
-    intro z hz
-    obtain ⟨hz_box, hz_not_ball⟩ := hz
+  obtain ⟨ε, hε_pos, Hd_box⟩ := Hd
+  -- Lune subset for continuity.
+  have h_LL_sub : (Set.Icc (e.re - R₀) e.re ×ℂ Set.Icc e.im (e.im + R₀)) \
+      Metric.ball e R₀ ⊆
+      (Set.Icc (e.re - R₀) (e.re + R₀) ×ℂ Set.Icc e.im (e.im + R₀)) := by
+    rintro z ⟨hz_box, _⟩
+    rw [Complex.mem_reProdIm] at hz_box ⊢
+    refine ⟨?_, hz_box.2⟩
+    rw [Set.mem_Icc] at hz_box ⊢
+    exact ⟨hz_box.1.1, by linarith [hz_box.1.2, hR₀]⟩
+  have h_RL_sub : (Set.Icc e.re (e.re + R₀) ×ℂ Set.Icc e.im (e.im + R₀)) \
+      Metric.ball e R₀ ⊆
+      (Set.Icc (e.re - R₀) (e.re + R₀) ×ℂ Set.Icc e.im (e.im + R₀)) := by
+    rintro z ⟨hz_box, _⟩
+    rw [Complex.mem_reProdIm] at hz_box ⊢
+    refine ⟨?_, hz_box.2⟩
+    rw [Set.mem_Icc] at hz_box ⊢
+    exact ⟨by linarith [hz_box.1.1, hR₀], hz_box.1.2⟩
+  -- Existential `Hd` for each lune (with R₀' = R₀/2).
+  set R₀' := R₀ / 2 with hR₀'_def
+  have hR₀'_pos : 0 < R₀' := by simp [hR₀'_def]; linarith
+  have hR₀'_lt : R₀' < R₀ := by simp [hR₀'_def]; linarith
+  have h_LL_Hd_sub :
+      (Set.Ioo (e.re - R₀ - ε) e.re ×ℂ Set.Ioo e.im (e.im + R₀ + ε)) \
+        Metric.closedBall e R₀' ⊆
+        (Set.Ioo (e.re - R₀ - ε) (e.re + R₀ + ε) ×ℂ
+          Set.Ioo e.im (e.im + R₀ + ε)) := by
+    rintro z ⟨hz_box, _⟩
+    rw [Complex.mem_reProdIm] at hz_box ⊢
+    refine ⟨?_, hz_box.2⟩
+    rw [Set.mem_Ioo] at hz_box ⊢
+    exact ⟨hz_box.1.1, by linarith [hz_box.1.2, hR₀, hε_pos]⟩
+  have h_RL_Hd_sub :
+      (Set.Ioo e.re (e.re + R₀ + ε) ×ℂ Set.Ioo e.im (e.im + R₀ + ε)) \
+        Metric.closedBall e R₀' ⊆
+        (Set.Ioo (e.re - R₀ - ε) (e.re + R₀ + ε) ×ℂ
+          Set.Ioo e.im (e.im + R₀ + ε)) := by
+    rintro z ⟨hz_box, _⟩
+    rw [Complex.mem_reProdIm] at hz_box ⊢
+    refine ⟨?_, hz_box.2⟩
+    rw [Set.mem_Ioo] at hz_box ⊢
+    exact ⟨by linarith [hz_box.1.1, hR₀, hε_pos], hz_box.1.2⟩
+  -- Apply topLeftLune CG.
+  have h_LL := integral_boundary_topLeftLune_eq_zero_of_continuousOn_of_differentiableOn
+    f e R₀ hR₀ (e.re - R₀ - ε) (e.im + R₀ + ε) (by linarith) (by linarith)
+    (Hc.mono h_LL_sub) ⟨R₀', hR₀'_pos, hR₀'_lt, Hd_box.mono h_LL_Hd_sub⟩
+  -- Apply topRightLune CG.
+  have h_RL := integral_boundary_topRightLune_eq_zero_of_continuousOn_of_differentiableOn
+    f e R₀ hR₀ (e.re + R₀ + ε) (e.im + R₀ + ε) (by linarith) (by linarith)
+    (Hc.mono h_RL_sub) ⟨R₀', hR₀'_pos, hR₀'_lt, Hd_box.mono h_RL_Hd_sub⟩
+  -- Apply small rect CG.
+  have h_re_le : e.re - R₀ ≤ e.re + R₀ := by linarith
+  have h_im_le : e.im ≤ e.im + R₀ := by linarith
+  have h_rect_Hc : ContinuousOn f
+      (Set.uIcc (((e.re - R₀ : ℝ) : ℂ) + ((e.im : ℝ) : ℂ) * Complex.I).re
+        (((e.re + R₀ : ℝ) : ℂ) + ((e.im + R₀ : ℝ) : ℂ) * Complex.I).re ×ℂ
+       Set.uIcc (((e.re - R₀ : ℝ) : ℂ) + ((e.im : ℝ) : ℂ) * Complex.I).im
+        (((e.re + R₀ : ℝ) : ℂ) + ((e.im + R₀ : ℝ) : ℂ) * Complex.I).im) := by
+    simp only [Complex.add_re, Complex.ofReal_re, Complex.mul_re,
+      Complex.I_re, mul_zero, Complex.add_im, Complex.ofReal_im, add_zero,
+      Complex.I_im, mul_one, sub_self, Complex.mul_im, zero_add]
+    rw [Set.uIcc_of_le h_re_le, Set.uIcc_of_le h_im_le]
+    exact Hc
+  have h_rect_Hd : DifferentiableOn ℂ f
+      (Set.Ioo (min (((e.re - R₀ : ℝ) : ℂ) + ((e.im : ℝ) : ℂ) * Complex.I).re
+          (((e.re + R₀ : ℝ) : ℂ) + ((e.im + R₀ : ℝ) : ℂ) * Complex.I).re)
+        (max (((e.re - R₀ : ℝ) : ℂ) + ((e.im : ℝ) : ℂ) * Complex.I).re
+          (((e.re + R₀ : ℝ) : ℂ) + ((e.im + R₀ : ℝ) : ℂ) * Complex.I).re) ×ℂ
+       Set.Ioo (min (((e.re - R₀ : ℝ) : ℂ) + ((e.im : ℝ) : ℂ) * Complex.I).im
+          (((e.re + R₀ : ℝ) : ℂ) + ((e.im + R₀ : ℝ) : ℂ) * Complex.I).im)
+        (max (((e.re - R₀ : ℝ) : ℂ) + ((e.im : ℝ) : ℂ) * Complex.I).im
+          (((e.re + R₀ : ℝ) : ℂ) + ((e.im + R₀ : ℝ) : ℂ) * Complex.I).im)) := by
+    simp only [Complex.add_re, Complex.ofReal_re, Complex.mul_re,
+      Complex.I_re, mul_zero, Complex.add_im, Complex.ofReal_im, add_zero,
+      Complex.I_im, mul_one, sub_self, Complex.mul_im, zero_add,
+      min_eq_left h_re_le, max_eq_right h_re_le, min_eq_left h_im_le,
+      max_eq_right h_im_le]
+    apply Hd_box.mono
+    rintro z hz
+    rw [Complex.mem_reProdIm] at hz ⊢
     refine ⟨?_, ?_⟩
-    · rw [Complex.mem_reProdIm] at hz_box ⊢
+    · rw [Set.mem_Ioo] at hz ⊢
+      exact ⟨by linarith [hz.1.1, hε_pos], by linarith [hz.1.2, hε_pos]⟩
+    · rw [Set.mem_Ioo] at hz ⊢
+      exact ⟨hz.2.1, by linarith [hz.2.2, hε_pos]⟩
+  have h_rect := Complex.integral_boundary_rect_eq_zero_of_continuousOn_of_differentiableOn
+    f (((e.re - R₀ : ℝ) : ℂ) + ((e.im : ℝ) : ℂ) * Complex.I)
+    (((e.re + R₀ : ℝ) : ℂ) + ((e.im + R₀ : ℝ) : ℂ) * Complex.I) h_rect_Hc h_rect_Hd
+  simp only [Complex.add_re, Complex.ofReal_re, Complex.mul_re,
+    Complex.I_re, mul_zero, Complex.add_im, Complex.ofReal_im, add_zero,
+    Complex.I_im, mul_one, sub_self, Complex.mul_im, zero_add,
+    smul_eq_mul] at h_rect
+  -- Continuity of integrand pieces for interval additivity.
+  have h_inner_top_cont : Continuous fun x : ℝ =>
+      (x : ℂ) + ((e.im + R₀ : ℝ) : ℂ) * Complex.I := by fun_prop
+  have h_top_maps : ∀ x ∈ Set.Icc (e.re - R₀) (e.re + R₀),
+      ((x : ℂ) + ((e.im + R₀ : ℝ) : ℂ) * Complex.I) ∈
+        Set.Icc (e.re - R₀) (e.re + R₀) ×ℂ Set.Icc e.im (e.im + R₀) := by
+    intro x hx
+    rw [Complex.mem_reProdIm]
+    refine ⟨?_, ?_⟩
+    · simp only [Complex.add_re, Complex.mul_re, Complex.I_re, mul_zero,
+        Complex.ofReal_re, Complex.ofReal_im, Complex.I_im, mul_one, sub_zero,
+        add_zero]
+      exact hx
+    · simp only [Complex.add_im, Complex.mul_im, Complex.I_re, mul_zero,
+        Complex.ofReal_re, Complex.ofReal_im, Complex.I_im, mul_one, zero_add,
+        add_zero]
+      exact ⟨by linarith, le_refl _⟩
+  have h_top_cont : ContinuousOn (fun x : ℝ =>
+      f ((x : ℂ) + ((e.im + R₀ : ℝ) : ℂ) * Complex.I))
+      (Set.Icc (e.re - R₀) (e.re + R₀)) :=
+    Hc.comp h_inner_top_cont.continuousOn h_top_maps
+  have h_top_int_left : IntervalIntegrable
+      (fun x : ℝ => f ((x : ℂ) + ((e.im + R₀ : ℝ) : ℂ) * Complex.I))
+      MeasureTheory.volume (e.re - R₀) e.re := by
+    apply ContinuousOn.intervalIntegrable
+    rw [Set.uIcc_of_le (by linarith)]
+    apply h_top_cont.mono
+    intro x hx; exact ⟨hx.1, by linarith [hx.2, hR₀]⟩
+  have h_top_int_right : IntervalIntegrable
+      (fun x : ℝ => f ((x : ℂ) + ((e.im + R₀ : ℝ) : ℂ) * Complex.I))
+      MeasureTheory.volume e.re (e.re + R₀) := by
+    apply ContinuousOn.intervalIntegrable
+    rw [Set.uIcc_of_le (by linarith)]
+    apply h_top_cont.mono
+    intro x hx; exact ⟨by linarith [hx.1, hR₀], hx.2⟩
+  have h_top_split :
+      (∫ x in (e.re - R₀)..(e.re + R₀),
+        f ((x : ℂ) + ((e.im + R₀ : ℝ) : ℂ) * Complex.I)) =
+      (∫ x in (e.re - R₀)..e.re,
+        f ((x : ℂ) + ((e.im + R₀ : ℝ) : ℂ) * Complex.I)) +
+      (∫ x in e.re..(e.re + R₀),
+        f ((x : ℂ) + ((e.im + R₀ : ℝ) : ℂ) * Complex.I)) :=
+    (intervalIntegral.integral_add_adjacent_intervals h_top_int_left h_top_int_right).symm
+  -- Continuity for arc.
+  have h_circleMap_maps : ∀ θ ∈ Set.Icc (0 : ℝ) Real.pi,
+      _root_.circleMap e R₀ θ ∈
+        Set.Icc (e.re - R₀) (e.re + R₀) ×ℂ Set.Icc e.im (e.im + R₀) := by
+    intro θ hθ
+    have h_pi_pos := Real.pi_pos
+    have h_cos_le : Real.cos θ ≤ 1 := Real.cos_le_one θ
+    have h_cos_ge : Real.cos θ ≥ -1 := Real.neg_one_le_cos θ
+    have h_sin_nn : Real.sin θ ≥ 0 :=
+      Real.sin_nonneg_of_nonneg_of_le_pi hθ.1 hθ.2
+    have h_sin_le : Real.sin θ ≤ 1 := Real.sin_le_one θ
+    have h_z_re : (_root_.circleMap e R₀ θ).re = e.re + R₀ * Real.cos θ := by
+      rw [_root_.circleMap, Complex.exp_mul_I]
+      simp [Complex.add_re, Complex.mul_re, Complex.ofReal_re, Complex.ofReal_im,
+        Complex.I_re, Complex.I_im, ← Complex.ofReal_cos, ← Complex.ofReal_sin]
+    have h_z_im : (_root_.circleMap e R₀ θ).im = e.im + R₀ * Real.sin θ := by
+      rw [_root_.circleMap, Complex.exp_mul_I]
+      simp [Complex.add_im, Complex.mul_im, Complex.ofReal_re, Complex.ofReal_im,
+        Complex.I_re, Complex.I_im, ← Complex.ofReal_cos, ← Complex.ofReal_sin]
+    rw [Complex.mem_reProdIm]
+    refine ⟨?_, ?_⟩
+    · rw [h_z_re, Set.mem_Icc]
       refine ⟨?_, ?_⟩
-      · have h_re : (2 * e - z).re = 2 * e.re - z.re := by
-          simp [Complex.sub_re, Complex.mul_re, Complex.re_ofNat, Complex.im_ofNat]
-        rw [h_re]
-        rw [Set.mem_Icc] at hz_box ⊢
-        refine ⟨?_, ?_⟩
-        · linarith [hz_box.1.2, hb'_def]
-        · linarith [hz_box.1.1, ha'_def]
-      · have h_im : (2 * e - z).im = 2 * e.im - z.im := by
-          simp [Complex.sub_im, Complex.mul_im, Complex.re_ofNat, Complex.im_ofNat]
-        rw [h_im]
-        rw [Set.mem_Icc] at hz_box ⊢
-        refine ⟨?_, ?_⟩
-        · linarith [hz_box.2.2, hd'_def]
-        · linarith [hz_box.2.1]
-    · intro h_ball
-      apply hz_not_ball
-      rw [Metric.mem_ball, dist_eq_norm] at h_ball ⊢
-      have h_eq : 2 * e - z - e = -(z - e) := by ring
-      rw [h_eq, norm_neg] at h_ball
-      exact h_ball
-  -- Similarly for the open version (with `Ioo` and `closedBall`).
-  have h_maps_to_open : Set.MapsTo (fun z : ℂ => 2 * e - z)
-      ((Set.Ioo a' b' ×ℂ Set.Ioo e.im d') \ Metric.closedBall e R₀)
-      ((Set.Ioo a b ×ℂ Set.Ioo c e.im) \ Metric.closedBall e R₀) := by
-    intro z hz
-    obtain ⟨hz_box, hz_not_cball⟩ := hz
-    refine ⟨?_, ?_⟩
-    · rw [Complex.mem_reProdIm] at hz_box ⊢
+      · have : R₀ * Real.cos θ ≥ R₀ * (-1) :=
+          mul_le_mul_of_nonneg_left h_cos_ge hR₀.le
+        linarith
+      · have : R₀ * Real.cos θ ≤ R₀ * 1 :=
+          mul_le_mul_of_nonneg_left h_cos_le hR₀.le
+        linarith
+    · rw [h_z_im, Set.mem_Icc]
       refine ⟨?_, ?_⟩
-      · have h_re : (2 * e - z).re = 2 * e.re - z.re := by
-          simp [Complex.sub_re, Complex.mul_re, Complex.re_ofNat, Complex.im_ofNat]
-        rw [h_re]
-        rw [Set.mem_Ioo] at hz_box ⊢
-        refine ⟨?_, ?_⟩
-        · linarith [hz_box.1.2, hb'_def]
-        · linarith [hz_box.1.1, ha'_def]
-      · have h_im : (2 * e - z).im = 2 * e.im - z.im := by
-          simp [Complex.sub_im, Complex.mul_im, Complex.re_ofNat, Complex.im_ofNat]
-        rw [h_im]
-        rw [Set.mem_Ioo] at hz_box ⊢
-        refine ⟨?_, ?_⟩
-        · linarith [hz_box.2.2, hd'_def]
-        · linarith [hz_box.2.1]
-    · intro h_cball
-      apply hz_not_cball
-      rw [Metric.mem_closedBall, dist_eq_norm] at h_cball ⊢
-      have h_eq : 2 * e - z - e = -(z - e) := by ring
-      rw [h_eq, norm_neg] at h_cball
-      exact h_cball
-  -- R₀'-analog: reflection also maps the slightly enlarged top
-  -- `(Ioo a' b' × Ioo e.im d') \ closedBall e R₀'` into the slightly enlarged
-  -- bottom `(Ioo a b × Ioo c e.im) \ closedBall e R₀'`.
-  have h_maps_to_open' : Set.MapsTo (fun z : ℂ => 2 * e - z)
-      ((Set.Ioo a' b' ×ℂ Set.Ioo e.im d') \ Metric.closedBall e R₀')
-      ((Set.Ioo a b ×ℂ Set.Ioo c e.im) \ Metric.closedBall e R₀') := by
-    intro z hz
-    obtain ⟨hz_box, hz_not_cball⟩ := hz
-    refine ⟨?_, ?_⟩
-    · rw [Complex.mem_reProdIm] at hz_box ⊢
-      refine ⟨?_, ?_⟩
-      · have h_re : (2 * e - z).re = 2 * e.re - z.re := by
-          simp [Complex.sub_re, Complex.mul_re, Complex.re_ofNat, Complex.im_ofNat]
-        rw [h_re]
-        rw [Set.mem_Ioo] at hz_box ⊢
-        refine ⟨?_, ?_⟩
-        · linarith [hz_box.1.2, hb'_def]
-        · linarith [hz_box.1.1, ha'_def]
-      · have h_im : (2 * e - z).im = 2 * e.im - z.im := by
-          simp [Complex.sub_im, Complex.mul_im, Complex.re_ofNat, Complex.im_ofNat]
-        rw [h_im]
-        rw [Set.mem_Ioo] at hz_box ⊢
-        refine ⟨?_, ?_⟩
-        · linarith [hz_box.2.2, hd'_def]
-        · linarith [hz_box.2.1]
-    · intro h_cball
-      apply hz_not_cball
-      rw [Metric.mem_closedBall, dist_eq_norm] at h_cball ⊢
-      have h_eq : 2 * e - z - e = -(z - e) := by ring
-      rw [h_eq, norm_neg] at h_cball
-      exact h_cball
-  -- `f̃` satisfies the top half-annulus CG hypotheses on the box `[a', b'] × [e.im, d']`.
-  have h_f_tilde_cont : ContinuousOn f_tilde
-      ((Set.Icc a' b' ×ℂ Set.Icc e.im d') \ Metric.ball e R₀) :=
-    Hc.comp h_g_cont.continuousOn h_maps_to_closed
-  have h_f_tilde_diff' : DifferentiableOn ℂ f_tilde
-      ((Set.Ioo a' b' ×ℂ Set.Ioo e.im d') \ Metric.closedBall e R₀') :=
-    Hd'.comp h_g_diff.differentiableOn h_maps_to_open'
-  -- Apply the top half-annulus CG to `f̃` (existential form).
-  have h_top := integral_boundary_topHalfAnnulus_eq_zero_of_differentiableOn
-    f_tilde a' b' d' e R₀ h_a'_lt_b' h_e_im_lt_d' hR₀ h_a'_lt h_lt_b' h_e_im_R0_lt_d'
-    h_f_tilde_cont ⟨R₀', hR₀'_pos, hR₀'_lt, h_f_tilde_diff'⟩
-  -- Now translate each `f̃` integral back to `f` via `integral_comp_sub_left`
-  -- (real-axis substitution) and `integral_comp_add_right` (for the arc).
-  -- The pointwise identity `f̃(x + y·I) = f((2*e.re − x) + (2*e.im − y)·I)`
-  -- factors each substitution cleanly.
-  -- Generic reflection identity: `2 * e - (x + y·I) = (2*e.re - x) + (2*e.im - y)·I`.
-  -- Proven via `linear_combination` using `Complex.re_add_im e : (e.re : ℂ) + e.im·I = e`.
-  have h_2e_minus : ∀ x y : ℝ,
-      2 * e - ((x : ℂ) + (y : ℂ) * Complex.I) =
-        ((2 * e.re - x : ℝ) : ℂ) + ((2 * e.im - y : ℝ) : ℂ) * Complex.I := by
-    intro x y
-    linear_combination (norm := (push_cast; ring)) -(2 : ℂ) * Complex.re_add_im e
-  -- Reflection identity at fixed `y = e.im`:
-  have h_refl_em : ∀ x : ℝ, f_tilde ((x : ℂ) + (e.im : ℂ) * Complex.I) =
-      f (((2 * e.re - x : ℝ) : ℂ) + (e.im : ℂ) * Complex.I) := by
-    intro x
-    change f (2 * e - ((x : ℂ) + (e.im : ℂ) * Complex.I)) =
-         f (((2 * e.re - x : ℝ) : ℂ) + (e.im : ℂ) * Complex.I)
-    rw [h_2e_minus]
-    congr 1
-    push_cast; ring
-  -- Reflection identity at fixed `y = d' = 2*e.im - c`:
-  have h_refl_d' : ∀ x : ℝ, f_tilde ((x : ℂ) + (d' : ℂ) * Complex.I) =
-      f (((2 * e.re - x : ℝ) : ℂ) + (c : ℂ) * Complex.I) := by
-    intro x
-    change f (2 * e - ((x : ℂ) + (d' : ℂ) * Complex.I)) =
-         f (((2 * e.re - x : ℝ) : ℂ) + (c : ℂ) * Complex.I)
-    rw [h_2e_minus]
-    congr 1
-    rw [hd'_def]
-    push_cast; ring
-  -- Reflection identity at fixed `x = b' = 2*e.re - a`:
-  have h_refl_b' : ∀ y : ℝ, f_tilde ((b' : ℂ) + (y : ℂ) * Complex.I) =
-      f ((a : ℂ) + ((2 * e.im - y : ℝ) : ℂ) * Complex.I) := by
-    intro y
-    change f (2 * e - ((b' : ℂ) + (y : ℂ) * Complex.I)) =
-         f ((a : ℂ) + ((2 * e.im - y : ℝ) : ℂ) * Complex.I)
-    rw [h_2e_minus]
-    congr 1
-    rw [hb'_def]
-    push_cast; ring
-  -- Reflection identity at fixed `x = a' = 2*e.re - b`:
-  have h_refl_a' : ∀ y : ℝ, f_tilde ((a' : ℂ) + (y : ℂ) * Complex.I) =
-      f ((b : ℂ) + ((2 * e.im - y : ℝ) : ℂ) * Complex.I) := by
-    intro y
-    change f (2 * e - ((a' : ℂ) + (y : ℂ) * Complex.I)) =
-         f ((b : ℂ) + ((2 * e.im - y : ℝ) : ℂ) * Complex.I)
-    rw [h_2e_minus]
-    congr 1
-    rw [ha'_def]
-    push_cast; ring
-  -- Generic horizontal-strip substitution: ∫ x ∈ α..β, f̃(x + y₀·I) at fixed `y₀ = e.im`.
-  have h_subst_em : ∀ (α β : ℝ),
-      (∫ x in α..β, f_tilde ((x : ℂ) + (e.im : ℂ) * Complex.I)) =
-        ∫ x in (2 * e.re - β)..(2 * e.re - α), f ((x : ℂ) + (e.im : ℂ) * Complex.I) := by
-    intros α β
-    rw [intervalIntegral.integral_congr (fun x _ => h_refl_em x)]
-    exact intervalIntegral.integral_comp_sub_left
-            (fun u : ℝ => f ((u : ℂ) + (e.im : ℂ) * Complex.I)) (2 * e.re)
-  -- Generic horizontal-strip substitution at fixed `y = d' (= 2*e.im - c)`.
-  have h_subst_d' : ∀ (α β : ℝ),
-      (∫ x in α..β, f_tilde ((x : ℂ) + (d' : ℂ) * Complex.I)) =
-        ∫ x in (2 * e.re - β)..(2 * e.re - α), f ((x : ℂ) + (c : ℂ) * Complex.I) := by
-    intros α β
-    rw [intervalIntegral.integral_congr (fun x _ => h_refl_d' x)]
-    exact intervalIntegral.integral_comp_sub_left
-            (fun u : ℝ => f ((u : ℂ) + (c : ℂ) * Complex.I)) (2 * e.re)
-  -- Generic vertical-strip substitution at fixed `x = b' (= 2*e.re - a)`.
-  have h_subst_b' : ∀ (α β : ℝ),
-      (∫ y in α..β, f_tilde ((b' : ℂ) + (y : ℂ) * Complex.I)) =
-        ∫ y in (2 * e.im - β)..(2 * e.im - α), f ((a : ℂ) + (y : ℂ) * Complex.I) := by
-    intros α β
-    rw [intervalIntegral.integral_congr (fun y _ => h_refl_b' y)]
-    exact intervalIntegral.integral_comp_sub_left
-            (fun v : ℝ => f ((a : ℂ) + (v : ℂ) * Complex.I)) (2 * e.im)
-  -- Generic vertical-strip substitution at fixed `x = a' (= 2*e.re - b)`.
-  have h_subst_a' : ∀ (α β : ℝ),
-      (∫ y in α..β, f_tilde ((a' : ℂ) + (y : ℂ) * Complex.I)) =
-        ∫ y in (2 * e.im - β)..(2 * e.im - α), f ((b : ℂ) + (y : ℂ) * Complex.I) := by
-    intros α β
-    rw [intervalIntegral.integral_congr (fun y _ => h_refl_a' y)]
-    exact intervalIntegral.integral_comp_sub_left
-            (fun v : ℝ => f ((b : ℂ) + (v : ℂ) * Complex.I)) (2 * e.im)
-  -- Apply the generic substitutions to each `f̃-CG` term.
-  have hT1 :
-      (∫ x in a'..(e.re - R₀), f_tilde ((x : ℂ) + (e.im : ℂ) * Complex.I)) =
-        ∫ x in (e.re + R₀)..b, f ((x : ℂ) + (e.im : ℂ) * Complex.I) := by
-    rw [h_subst_em]
-    congr 1
-    · show 2 * e.re - (e.re - R₀) = e.re + R₀; ring
-    · show 2 * e.re - a' = b; rw [ha'_def]; ring
-  have hT2 :
-      (∫ x in (e.re + R₀)..b', f_tilde ((x : ℂ) + (e.im : ℂ) * Complex.I)) =
-        ∫ x in a..(e.re - R₀), f ((x : ℂ) + (e.im : ℂ) * Complex.I) := by
-    rw [h_subst_em]
-    congr 1
-    · show 2 * e.re - b' = a; rw [hb'_def]; ring
-    · show 2 * e.re - (e.re + R₀) = e.re - R₀; ring
-  have hT3 :
-      (∫ y in e.im..d', f_tilde ((b' : ℂ) + (y : ℂ) * Complex.I)) =
-        ∫ y in c..e.im, f ((a : ℂ) + (y : ℂ) * Complex.I) := by
-    rw [h_subst_b']
-    congr 1
-    · show 2 * e.im - d' = c; rw [hd'_def]; ring
-    · show 2 * e.im - e.im = e.im; ring
-  have hT4 :
-      (∫ x in a'..b', f_tilde ((x : ℂ) + (d' : ℂ) * Complex.I)) =
-        ∫ x in a..b, f ((x : ℂ) + (c : ℂ) * Complex.I) := by
-    rw [h_subst_d']
-    congr 1
-    · show 2 * e.re - b' = a; rw [hb'_def]; ring
-    · show 2 * e.re - a' = b; rw [ha'_def]; ring
-  have hT5 :
-      (∫ y in e.im..d', f_tilde ((a' : ℂ) + (y : ℂ) * Complex.I)) =
-        ∫ y in c..e.im, f ((b : ℂ) + (y : ℂ) * Complex.I) := by
-    rw [h_subst_a']
-    congr 1
-    · show 2 * e.im - d' = c; rw [hd'_def]; ring
-    · show 2 * e.im - e.im = e.im; ring
-  -- Arc substitution: the arc integral for `f̃` over `[0, π]` equals the
-  -- *negative* of the arc integral for `f` over `[π, 2π]`. This uses
-  -- `f̃(circleMap e R₀ θ) = f(circleMap e R₀ (θ + π))` and
-  -- `exp(I·θ) = −exp(I·(θ + π))`.
-  have h_refl_circleMap : ∀ θ : ℝ,
-      f_tilde (_root_.circleMap e R₀ θ) *
-          (Complex.I * (R₀ : ℂ) * Complex.exp (Complex.I * (θ : ℂ))) =
-      -(f (_root_.circleMap e R₀ (θ + Real.pi)) *
-          (Complex.I * (R₀ : ℂ) * Complex.exp (Complex.I * ((θ + Real.pi : ℝ) : ℂ)))) := by
-    intro θ
-    -- `exp(I·(θ + π)) = -exp(I·θ)` via `Complex.exp_pi_mul_I`.
-    have h_exp_shift : Complex.exp (Complex.I * ((θ + Real.pi : ℝ) : ℂ)) =
-        -Complex.exp (Complex.I * (θ : ℂ)) := by
-      have : Complex.I * (((θ + Real.pi : ℝ)) : ℂ) =
-          Complex.I * (θ : ℂ) + (Real.pi : ℂ) * Complex.I := by
-        push_cast; ring
-      rw [this, Complex.exp_add, Complex.exp_pi_mul_I]
-      ring
-    -- `2 * e - circleMap e R₀ θ = circleMap e R₀ (θ + π)`.
-    have h_arg : 2 * e - _root_.circleMap e R₀ θ = _root_.circleMap e R₀ (θ + Real.pi) := by
-      simp only [_root_.circleMap]
-      have h_alt : Complex.exp ((((θ + Real.pi : ℝ)) : ℂ) * Complex.I) =
-          Complex.exp ((θ : ℂ) * Complex.I) * (-1) := by
-        have h_eq : (((θ + Real.pi : ℝ)) : ℂ) * Complex.I =
-            (θ : ℂ) * Complex.I + (Real.pi : ℂ) * Complex.I := by push_cast; ring
-        rw [h_eq, Complex.exp_add, Complex.exp_pi_mul_I]
-      rw [h_alt]; ring
-    change f (2 * e - _root_.circleMap e R₀ θ) * _ = _
-    rw [h_arg, h_exp_shift]
-    ring
-  -- Generic arc substitution: ∫ over `[α, β]` of `f(circleMap (φ + π)) · (dz/dφ at φ + π)`
-  -- equals ∫ over `[α + π, β + π]` of `f(circleMap φ) · (dz/dφ at φ)`.
-  have h_subst_arc : ∀ (α β : ℝ),
-      (∫ θ in α..β, f (_root_.circleMap e R₀ (θ + Real.pi)) *
-          (Complex.I * (R₀ : ℂ) * Complex.exp (Complex.I * ((θ + Real.pi : ℝ) : ℂ)))) =
-        ∫ θ in (α + Real.pi)..(β + Real.pi), f (_root_.circleMap e R₀ θ) *
-            (Complex.I * (R₀ : ℂ) * Complex.exp (Complex.I * (θ : ℂ))) := by
-    intros α β
-    exact intervalIntegral.integral_comp_add_right
-            (fun φ : ℝ => f (_root_.circleMap e R₀ φ) *
-              (Complex.I * (R₀ : ℂ) * Complex.exp (Complex.I * (φ : ℂ))))
-            Real.pi
-  have hT6 :
-      (∫ θ in (0:ℝ)..Real.pi, f_tilde (_root_.circleMap e R₀ θ) *
-          (Complex.I * (R₀ : ℂ) * Complex.exp (Complex.I * (θ : ℂ)))) =
-        -∫ θ in (Real.pi:ℝ)..(2 * Real.pi), f (_root_.circleMap e R₀ θ) *
-          (Complex.I * (R₀ : ℂ) * Complex.exp (Complex.I * (θ : ℂ))) := by
-    rw [intervalIntegral.integral_congr (fun θ _ => h_refl_circleMap θ)]
-    rw [intervalIntegral.integral_neg]
-    rw [h_subst_arc]
-    congr 1
-    congr 1
-    · show (0 : ℝ) + Real.pi = Real.pi; ring
-    · show Real.pi + Real.pi = 2 * Real.pi; ring
-  -- The translated `f̃-CG` is exactly the negative of the bottom half-annulus
-  -- goal. Substituting each `hT*` into `h_top` and negating yields the goal.
-  linear_combination (norm := (push_cast; ring))
-    -h_top + hT1 + hT2 + Complex.I * hT3 - hT4 - Complex.I * hT5 - hT6
-
-/-- **Cauchy-Goursat for a rectangle minus a disk (annular region).** For
-a function `f` continuous on the closed annular region
-`(Set.Icc a b ×ℂ Set.Icc c d) \ Metric.ball e R₀` and complex-
-differentiable on its open interior, the boundary integral around the
-annulus (outer rectangle CCW minus inner circle CCW) equals zero.
-
-The proof splits the annulus into two simply-connected halves via the
-horizontal cut at `Im z = e.im`, applies the simply-connected Cauchy-
-Goursat to each half (via `integral_boundary_topHalfAnnulus_eq_zero_of_differentiableOn`
-and `integral_boundary_bottomHalfAnnulus_eq_zero_of_differentiableOn`),
-and observes the cut contributions cancel.
-
-This is the rectangle-minus-disk analog of
-`Complex.circleIntegral_eq_of_differentiable_on_annulus_off_countable`
-(Mathlib's CG for circular annuli) and complements
-`integral_boundary_rect_eq_zero_of_continuousOn_of_differentiableOn`
-(Mathlib's CG for rectangles). -/
-theorem integral_boundary_rectMinusDisk_eq_zero_of_differentiableOn
-    (f : ℂ → ℂ) (a b c d : ℝ) (e : ℂ) (R₀ : ℝ)
-    (hab : a < b) (_hcd : c < d) (hR₀ : 0 < R₀)
-    (hdisk_in_rect : Metric.closedBall e R₀ ⊆ Set.Ioo a b ×ℂ Set.Ioo c d)
-    (Hc : ContinuousOn f ((Set.Icc a b ×ℂ Set.Icc c d) \ Metric.ball e R₀))
-    (Hd : ∃ R₀' : ℝ, 0 < R₀' ∧ R₀' < R₀ ∧ DifferentiableOn ℂ f
-      ((Set.Ioo a b ×ℂ Set.Ioo c d) \ Metric.closedBall e R₀')) :
-    ((∫ x in a..b, f ((x : ℂ) + (c : ℂ) * Complex.I)) +
-      Complex.I * (∫ y in c..d, f ((b : ℂ) + (y : ℂ) * Complex.I)) -
-      (∫ x in a..b, f ((x : ℂ) + (d : ℂ) * Complex.I)) -
-      Complex.I * (∫ y in c..d, f ((a : ℂ) + (y : ℂ) * Complex.I))) -
-    (∮ z in C(e, R₀), f z) = 0 := by
-  -- Extract the geometric constraints (a < e.re - R₀, e.re + R₀ < b,
-  -- c < e.im - R₀, e.im + R₀ < d) from `hdisk_in_rect`. Each follows
-  -- from `hdisk_in_rect` applied to a specific extreme point on the
-  -- sphere `|z − e| = R₀`.
-  have h_a_lt_e_re_R0 : a < e.re - R₀ := by
-    have h_pt : (e - (R₀ : ℂ)) ∈ Metric.closedBall e R₀ := by
-      rw [Metric.mem_closedBall, dist_eq_norm,
-          show e - (R₀ : ℂ) - e = -(R₀ : ℂ) from by ring, norm_neg,
-          Complex.norm_real, Real.norm_of_nonneg hR₀.le]
-    have h_in := hdisk_in_rect h_pt
-    rw [Complex.mem_reProdIm] at h_in
-    have h_re : (e - (R₀ : ℂ)).re = e.re - R₀ := by
-      simp [Complex.sub_re, Complex.ofReal_re]
-    rw [h_re] at h_in
-    exact h_in.1.1
-  have h_e_re_R0_lt_b : e.re + R₀ < b := by
-    have h_pt : (e + (R₀ : ℂ)) ∈ Metric.closedBall e R₀ := by
-      rw [Metric.mem_closedBall, dist_eq_norm,
-          show e + (R₀ : ℂ) - e = (R₀ : ℂ) from by ring,
-          Complex.norm_real, Real.norm_of_nonneg hR₀.le]
-    have h_in := hdisk_in_rect h_pt
-    rw [Complex.mem_reProdIm] at h_in
-    have h_re : (e + (R₀ : ℂ)).re = e.re + R₀ := by
-      simp [Complex.add_re, Complex.ofReal_re]
-    rw [h_re] at h_in
-    exact h_in.1.2
-  have h_c_lt_e_im_R0 : c < e.im - R₀ := by
-    have h_pt : (e - (R₀ : ℂ) * Complex.I) ∈ Metric.closedBall e R₀ := by
-      rw [Metric.mem_closedBall, dist_eq_norm,
-          show e - (R₀ : ℂ) * Complex.I - e = -((R₀ : ℂ) * Complex.I) from by ring,
-          norm_neg, Complex.norm_mul, Complex.norm_real,
-          Real.norm_of_nonneg hR₀.le, Complex.norm_I, mul_one]
-    have h_in := hdisk_in_rect h_pt
-    rw [Complex.mem_reProdIm] at h_in
-    have h_im : (e - (R₀ : ℂ) * Complex.I).im = e.im - R₀ := by
-      simp [Complex.sub_im, Complex.mul_im, Complex.I_re, Complex.I_im,
-        Complex.ofReal_re, Complex.ofReal_im]
-    rw [h_im] at h_in
-    exact h_in.2.1
-  have h_e_im_R0_lt_d : e.im + R₀ < d := by
-    have h_pt : (e + (R₀ : ℂ) * Complex.I) ∈ Metric.closedBall e R₀ := by
-      rw [Metric.mem_closedBall, dist_eq_norm,
-          show e + (R₀ : ℂ) * Complex.I - e = (R₀ : ℂ) * Complex.I from by ring,
-          Complex.norm_mul, Complex.norm_real, Real.norm_of_nonneg hR₀.le,
-          Complex.norm_I, mul_one]
-    have h_in := hdisk_in_rect h_pt
-    rw [Complex.mem_reProdIm] at h_in
-    have h_im : (e + (R₀ : ℂ) * Complex.I).im = e.im + R₀ := by
-      simp [Complex.add_im, Complex.mul_im, Complex.I_re, Complex.I_im,
-        Complex.ofReal_re, Complex.ofReal_im]
-    rw [h_im] at h_in
-    exact h_in.2.2
-  -- Extract continuity/differentiability hypotheses for the two halves.
-  have h_top_subset : (Set.Icc a b ×ℂ Set.Icc e.im d) \ Metric.ball e R₀ ⊆
-      (Set.Icc a b ×ℂ Set.Icc c d) \ Metric.ball e R₀ := by
-    rintro z ⟨h_rect, h_not_ball⟩
-    refine ⟨?_, h_not_ball⟩
-    rw [Complex.mem_reProdIm] at h_rect ⊢
-    refine ⟨h_rect.1, ?_⟩
-    rw [Set.mem_Icc] at h_rect ⊢
-    refine ⟨?_, h_rect.2.2⟩
-    linarith [h_rect.2.1, h_c_lt_e_im_R0]
-  have h_bot_subset : (Set.Icc a b ×ℂ Set.Icc c e.im) \ Metric.ball e R₀ ⊆
-      (Set.Icc a b ×ℂ Set.Icc c d) \ Metric.ball e R₀ := by
-    rintro z ⟨h_rect, h_not_ball⟩
-    refine ⟨?_, h_not_ball⟩
-    rw [Complex.mem_reProdIm] at h_rect ⊢
-    refine ⟨h_rect.1, ?_⟩
-    rw [Set.mem_Icc] at h_rect ⊢
-    refine ⟨h_rect.2.1, ?_⟩
-    linarith [h_rect.2.2, h_e_im_R0_lt_d]
-  have Hc_top : ContinuousOn f ((Set.Icc a b ×ℂ Set.Icc e.im d) \ Metric.ball e R₀) :=
-    Hc.mono h_top_subset
-  have Hc_bot : ContinuousOn f ((Set.Icc a b ×ℂ Set.Icc c e.im) \ Metric.ball e R₀) :=
-    Hc.mono h_bot_subset
-  -- Extract the R₀'-witnessed differentiability from the existential `Hd`.
-  obtain ⟨R₀', hR₀'_pos, hR₀'_lt, Hd'⟩ := Hd
-  have h_top_subset_open' : (Set.Ioo a b ×ℂ Set.Ioo e.im d) \ Metric.closedBall e R₀' ⊆
-      (Set.Ioo a b ×ℂ Set.Ioo c d) \ Metric.closedBall e R₀' := by
-    rintro z ⟨h_rect, h_not_ball⟩
-    refine ⟨?_, h_not_ball⟩
-    rw [Complex.mem_reProdIm] at h_rect ⊢
-    refine ⟨h_rect.1, ?_⟩
-    rw [Set.mem_Ioo] at h_rect ⊢
-    refine ⟨?_, h_rect.2.2⟩
-    linarith [h_rect.2.1, h_c_lt_e_im_R0]
-  have h_bot_subset_open' : (Set.Ioo a b ×ℂ Set.Ioo c e.im) \ Metric.closedBall e R₀' ⊆
-      (Set.Ioo a b ×ℂ Set.Ioo c d) \ Metric.closedBall e R₀' := by
-    rintro z ⟨h_rect, h_not_ball⟩
-    refine ⟨?_, h_not_ball⟩
-    rw [Complex.mem_reProdIm] at h_rect ⊢
-    refine ⟨h_rect.1, ?_⟩
-    rw [Set.mem_Ioo] at h_rect ⊢
-    refine ⟨h_rect.2.1, ?_⟩
-    linarith [h_rect.2.2, h_e_im_R0_lt_d]
-  have Hd_top' : DifferentiableOn ℂ f
-      ((Set.Ioo a b ×ℂ Set.Ioo e.im d) \ Metric.closedBall e R₀') :=
-    Hd'.mono h_top_subset_open'
-  have Hd_bot' : DifferentiableOn ℂ f
-      ((Set.Ioo a b ×ℂ Set.Ioo c e.im) \ Metric.closedBall e R₀') :=
-    Hd'.mono h_bot_subset_open'
-  -- Get the two half-annulus CG results (existential form for `Hd`).
-  have h_e_im_lt_d : e.im < d := by linarith
-  have h_c_lt_e_im : c < e.im := by linarith
-  have hT := integral_boundary_topHalfAnnulus_eq_zero_of_differentiableOn
-    f a b d e R₀ hab h_e_im_lt_d hR₀ h_a_lt_e_re_R0 h_e_re_R0_lt_b h_e_im_R0_lt_d Hc_top
-    ⟨R₀', hR₀'_pos, hR₀'_lt, Hd_top'⟩
-  have hB := integral_boundary_bottomHalfAnnulus_eq_zero_of_differentiableOn
-    f a b c e R₀ hab h_c_lt_e_im hR₀ h_a_lt_e_re_R0 h_e_re_R0_lt_b h_c_lt_e_im_R0 Hc_bot
-    ⟨R₀', hR₀'_pos, hR₀'_lt, Hd_bot'⟩
-  -- Aggregate T + B = 0: cuts at `y = e.im` cancel, the right/left edges
-  -- concatenate via `intervalIntegral.integral_add_adjacent_intervals`, and
-  -- the two semicircular arcs `0..π` and `π..2π` combine into the full
-  -- `circleIntegral` (over `0..2π`).
-  -- Local abbreviations for the closed annulus.
-  set R_ann : Set ℂ := (Set.Icc a b ×ℂ Set.Icc c d) \ Metric.ball e R₀ with hR_ann_def
-  -- Step 1: edge / arc points lie in `R_ann`, so `f` is continuous there.
-  have h_right_in_R_ann : ∀ y, y ∈ Set.Icc c d →
-      ((b : ℂ) + (y : ℂ) * Complex.I) ∈ R_ann := by
-    intro y hy
-    refine ⟨?_, ?_⟩
-    · rw [Complex.mem_reProdIm]
-      refine ⟨?_, ?_⟩
-      · show ((b : ℂ) + (y : ℂ) * Complex.I).re ∈ Set.Icc a b
-        have h_re : ((b : ℂ) + (y : ℂ) * Complex.I).re = b := by
-          simp [Complex.add_re, Complex.mul_re, Complex.ofReal_re, Complex.ofReal_im,
-            Complex.I_re, Complex.I_im]
-        rw [h_re]; exact Set.right_mem_Icc.mpr hab.le
-      · show ((b : ℂ) + (y : ℂ) * Complex.I).im ∈ Set.Icc c d
-        have h_im : ((b : ℂ) + (y : ℂ) * Complex.I).im = y := by
-          simp [Complex.add_im, Complex.mul_im, Complex.ofReal_re, Complex.ofReal_im,
-            Complex.I_re, Complex.I_im]
-        rw [h_im]; exact hy
-    · intro h_ball
-      rw [Metric.mem_ball, dist_eq_norm] at h_ball
-      have h_re_eq : ((b : ℂ) + (y : ℂ) * Complex.I - e).re = b - e.re := by
-        simp [Complex.sub_re, Complex.add_re, Complex.mul_re, Complex.ofReal_re,
-          Complex.ofReal_im, Complex.I_re, Complex.I_im]
-      have h_norm_ge_re : |((b : ℂ) + (y : ℂ) * Complex.I - e).re| ≤
-          ‖((b : ℂ) + (y : ℂ) * Complex.I) - e‖ := abs_re_le_norm _
-      rw [h_re_eq, abs_of_pos (by linarith : (0:ℝ) < b - e.re)] at h_norm_ge_re
-      linarith
-  have h_left_in_R_ann : ∀ y, y ∈ Set.Icc c d →
-      ((a : ℂ) + (y : ℂ) * Complex.I) ∈ R_ann := by
-    intro y hy
-    refine ⟨?_, ?_⟩
-    · rw [Complex.mem_reProdIm]
-      refine ⟨?_, ?_⟩
-      · show ((a : ℂ) + (y : ℂ) * Complex.I).re ∈ Set.Icc a b
-        have h_re : ((a : ℂ) + (y : ℂ) * Complex.I).re = a := by
-          simp [Complex.add_re, Complex.mul_re, Complex.ofReal_re, Complex.ofReal_im,
-            Complex.I_re, Complex.I_im]
-        rw [h_re]; exact Set.left_mem_Icc.mpr hab.le
-      · show ((a : ℂ) + (y : ℂ) * Complex.I).im ∈ Set.Icc c d
-        have h_im : ((a : ℂ) + (y : ℂ) * Complex.I).im = y := by
-          simp [Complex.add_im, Complex.mul_im, Complex.ofReal_re, Complex.ofReal_im,
-            Complex.I_re, Complex.I_im]
-        rw [h_im]; exact hy
-    · intro h_ball
-      rw [Metric.mem_ball, dist_eq_norm] at h_ball
-      have h_re_eq : ((a : ℂ) + (y : ℂ) * Complex.I - e).re = a - e.re := by
-        simp [Complex.sub_re, Complex.add_re, Complex.mul_re, Complex.ofReal_re,
-          Complex.ofReal_im, Complex.I_re, Complex.I_im]
-      have h_norm_ge_re : |((a : ℂ) + (y : ℂ) * Complex.I - e).re| ≤
-          ‖((a : ℂ) + (y : ℂ) * Complex.I) - e‖ := abs_re_le_norm _
-      rw [h_re_eq] at h_norm_ge_re
-      have h_abs : |a - e.re| = e.re - a := by
-        rw [abs_of_neg (by linarith : a - e.re < 0)]; linarith
-      rw [h_abs] at h_norm_ge_re
-      linarith
-  have h_sphere_in_R_ann : ∀ θ : ℝ, _root_.circleMap e R₀ θ ∈ R_ann := by
-    intro θ
-    have h_sphere : _root_.circleMap e R₀ θ ∈ Metric.sphere e R₀ :=
-      _root_.circleMap_mem_sphere e hR₀.le θ
-    have h_cb : _root_.circleMap e R₀ θ ∈ Metric.closedBall e R₀ :=
-      Metric.sphere_subset_closedBall h_sphere
-    refine ⟨?_, ?_⟩
-    · have h_in_open := hdisk_in_rect h_cb
-      rw [Complex.mem_reProdIm]
-      rw [Complex.mem_reProdIm] at h_in_open
-      exact ⟨Set.Ioo_subset_Icc_self h_in_open.1, Set.Ioo_subset_Icc_self h_in_open.2⟩
-    · intro hb_mem
-      rw [Metric.mem_sphere] at h_sphere
-      rw [Metric.mem_ball] at hb_mem
-      linarith
-  -- Step 2: continuity of edge integrands on `[c, d]`.
-  have h_right_map_cont : Continuous (fun y : ℝ => (b : ℂ) + (y : ℂ) * Complex.I) := by
-    fun_prop
-  have h_left_map_cont : Continuous (fun y : ℝ => (a : ℂ) + (y : ℂ) * Complex.I) := by
-    fun_prop
-  have h_right_cont : ContinuousOn (fun y : ℝ => f ((b : ℂ) + (y : ℂ) * Complex.I))
-      (Set.Icc c d) :=
-    Hc.comp h_right_map_cont.continuousOn (fun y hy => h_right_in_R_ann y hy)
-  have h_left_cont : ContinuousOn (fun y : ℝ => f ((a : ℂ) + (y : ℂ) * Complex.I))
-      (Set.Icc c d) :=
-    Hc.comp h_left_map_cont.continuousOn (fun y hy => h_left_in_R_ann y hy)
-  -- Step 3: arc integrand is globally continuous (since `circleMap e R₀` maps into R_ann).
-  have h_arc_cont : Continuous (fun θ : ℝ => f (_root_.circleMap e R₀ θ) *
-      (Complex.I * R₀ * Complex.exp (Complex.I * θ))) := by
-    refine Continuous.mul ?_ ?_
-    · exact Hc.comp_continuous (continuous_circleMap _ _) (fun θ => h_sphere_in_R_ann θ)
-    · fun_prop
-  -- Step 4: split each edge / arc integral at the midpoint.
-  have h_right_int_c_eim : IntervalIntegrable
-      (fun y : ℝ => f ((b : ℂ) + (y : ℂ) * Complex.I)) MeasureTheory.volume c e.im := by
-    refine (h_right_cont.mono ?_).intervalIntegrable
-    rw [Set.uIcc_of_le h_c_lt_e_im.le]
-    exact Set.Icc_subset_Icc le_rfl h_e_im_lt_d.le
-  have h_right_int_eim_d : IntervalIntegrable
-      (fun y : ℝ => f ((b : ℂ) + (y : ℂ) * Complex.I)) MeasureTheory.volume e.im d := by
-    refine (h_right_cont.mono ?_).intervalIntegrable
-    rw [Set.uIcc_of_le h_e_im_lt_d.le]
-    exact Set.Icc_subset_Icc h_c_lt_e_im.le le_rfl
-  have h_right_split :
-      (∫ y in c..e.im, f ((b : ℂ) + (y : ℂ) * Complex.I)) +
-      (∫ y in e.im..d, f ((b : ℂ) + (y : ℂ) * Complex.I)) =
-      ∫ y in c..d, f ((b : ℂ) + (y : ℂ) * Complex.I) :=
-    intervalIntegral.integral_add_adjacent_intervals h_right_int_c_eim h_right_int_eim_d
-  have h_left_int_c_eim : IntervalIntegrable
-      (fun y : ℝ => f ((a : ℂ) + (y : ℂ) * Complex.I)) MeasureTheory.volume c e.im := by
-    refine (h_left_cont.mono ?_).intervalIntegrable
-    rw [Set.uIcc_of_le h_c_lt_e_im.le]
-    exact Set.Icc_subset_Icc le_rfl h_e_im_lt_d.le
-  have h_left_int_eim_d : IntervalIntegrable
-      (fun y : ℝ => f ((a : ℂ) + (y : ℂ) * Complex.I)) MeasureTheory.volume e.im d := by
-    refine (h_left_cont.mono ?_).intervalIntegrable
-    rw [Set.uIcc_of_le h_e_im_lt_d.le]
-    exact Set.Icc_subset_Icc h_c_lt_e_im.le le_rfl
-  have h_left_split :
-      (∫ y in c..e.im, f ((a : ℂ) + (y : ℂ) * Complex.I)) +
-      (∫ y in e.im..d, f ((a : ℂ) + (y : ℂ) * Complex.I)) =
-      ∫ y in c..d, f ((a : ℂ) + (y : ℂ) * Complex.I) :=
-    intervalIntegral.integral_add_adjacent_intervals h_left_int_c_eim h_left_int_eim_d
-  have h_arc_int_0_pi : IntervalIntegrable
-      (fun θ : ℝ => f (_root_.circleMap e R₀ θ) *
-        (Complex.I * R₀ * Complex.exp (Complex.I * θ))) MeasureTheory.volume 0 Real.pi :=
-    h_arc_cont.intervalIntegrable _ _
-  have h_arc_int_pi_2pi : IntervalIntegrable
-      (fun θ : ℝ => f (_root_.circleMap e R₀ θ) *
-        (Complex.I * R₀ * Complex.exp (Complex.I * θ))) MeasureTheory.volume
-        Real.pi (2 * Real.pi) :=
-    h_arc_cont.intervalIntegrable _ _
-  have h_arc_split :
-      (∫ θ in (0:ℝ)..Real.pi, f (_root_.circleMap e R₀ θ) *
-        (Complex.I * R₀ * Complex.exp (Complex.I * θ))) +
-      (∫ θ in (Real.pi:ℝ)..(2 * Real.pi), f (_root_.circleMap e R₀ θ) *
-        (Complex.I * R₀ * Complex.exp (Complex.I * θ))) =
-      ∫ θ in (0:ℝ)..(2 * Real.pi), f (_root_.circleMap e R₀ θ) *
-        (Complex.I * R₀ * Complex.exp (Complex.I * θ)) :=
-    intervalIntegral.integral_add_adjacent_intervals h_arc_int_0_pi h_arc_int_pi_2pi
-  -- Step 5: rewrite `∮ z in C(e, R₀), f z` to the arc-integral form.
-  have h_circ_form : (∮ z in C(e, R₀), f z) =
-      ∫ θ in (0:ℝ)..(2 * Real.pi), f (_root_.circleMap e R₀ θ) *
-        (Complex.I * R₀ * Complex.exp (Complex.I * θ)) := by
-    unfold circleIntegral
-    apply intervalIntegral.integral_congr
-    intro θ _
-    change deriv (_root_.circleMap e R₀) θ • f (_root_.circleMap e R₀ θ) =
+      · have : R₀ * Real.sin θ ≥ 0 := mul_nonneg hR₀.le h_sin_nn
+        linarith
+      · have : R₀ * Real.sin θ ≤ R₀ * 1 :=
+          mul_le_mul_of_nonneg_left h_sin_le hR₀.le
+        linarith
+  have h_arc_cont : ContinuousOn (fun θ : ℝ =>
       f (_root_.circleMap e R₀ θ) *
-        (Complex.I * (R₀ : ℂ) * Complex.exp (Complex.I * (θ : ℂ)))
-    rw [deriv_circleMap, smul_eq_mul]
-    have key : _root_.circleMap 0 R₀ θ * Complex.I =
-        Complex.I * (R₀ : ℂ) * Complex.exp (Complex.I * (θ : ℂ)) := by
-      unfold _root_.circleMap
-      ring_nf
-    linear_combination f (_root_.circleMap e R₀ θ) * key
-  -- Step 6: T + B = 0 combined with the three splits gives the annular CG.
-  linear_combination hT + hB - Complex.I * h_right_split + Complex.I * h_left_split +
-    h_arc_split - h_circ_form
+        (Complex.I * R₀ * Complex.exp (Complex.I * θ)))
+      (Set.Icc (0 : ℝ) Real.pi) := by
+    apply ContinuousOn.mul
+    · exact Hc.comp (continuous_circleMap _ _).continuousOn h_circleMap_maps
+    · apply Continuous.continuousOn
+      exact ((continuous_const.mul continuous_const).mul
+        (Complex.continuous_exp.comp
+          (continuous_const.mul Complex.continuous_ofReal)))
+  have h_pi_div_two_le_pi : Real.pi / 2 ≤ Real.pi := by linarith [Real.pi_pos]
+  have h_pi_div_two_nn : (0 : ℝ) ≤ Real.pi / 2 := by linarith [Real.pi_pos]
+  have h_arc_int_left : IntervalIntegrable
+      (fun θ : ℝ => f (_root_.circleMap e R₀ θ) *
+        (Complex.I * R₀ * Complex.exp (Complex.I * θ)))
+      MeasureTheory.volume (0 : ℝ) (Real.pi / 2) := by
+    apply ContinuousOn.intervalIntegrable
+    rw [Set.uIcc_of_le h_pi_div_two_nn]
+    exact h_arc_cont.mono (fun x hx => ⟨hx.1, by linarith [hx.2, Real.pi_pos]⟩)
+  have h_arc_int_right : IntervalIntegrable
+      (fun θ : ℝ => f (_root_.circleMap e R₀ θ) *
+        (Complex.I * R₀ * Complex.exp (Complex.I * θ)))
+      MeasureTheory.volume (Real.pi / 2) Real.pi := by
+    apply ContinuousOn.intervalIntegrable
+    rw [Set.uIcc_of_le h_pi_div_two_le_pi]
+    exact h_arc_cont.mono (fun x hx => ⟨by linarith [hx.1, Real.pi_pos], hx.2⟩)
+  have h_arc_split :
+      (∫ θ in (0 : ℝ)..Real.pi, f (_root_.circleMap e R₀ θ) *
+        (Complex.I * R₀ * Complex.exp (Complex.I * θ))) =
+      (∫ θ in (0 : ℝ)..(Real.pi / 2), f (_root_.circleMap e R₀ θ) *
+        (Complex.I * R₀ * Complex.exp (Complex.I * θ))) +
+      (∫ θ in (Real.pi / 2)..Real.pi, f (_root_.circleMap e R₀ θ) *
+        (Complex.I * R₀ * Complex.exp (Complex.I * θ))) :=
+    (intervalIntegral.integral_add_adjacent_intervals h_arc_int_left h_arc_int_right).symm
+  -- Linear-combination assembly.
+  linear_combination (norm := (push_cast; ring))
+    -h_LL - h_RL + h_rect + h_top_split + h_arc_split
 
-/-- **Path-connectedness of a closed rectangle minus an open disk.** When
-the closed ball `closedBall e R₀` is strictly inside the open rectangle
-`Set.Ioo a b ×ℂ Set.Ioo c d`, the annular region
-`(Set.Icc a b ×ℂ Set.Icc c d) \ Metric.ball e R₀` is path-connected.
+/-- **Cauchy-Goursat for the closed upper half-disk (AnalyticOnNhd
+hypothesis form).** For `f` analytic on an open neighborhood of every
+point of the closed upper half-disk `closedBall e R₀ ∩ {z : e.im ≤ z.im}`,
+the contour integral around the boundary (bottom diameter
+left-to-right + upper semicircle from right to left via top) equals
+zero.
 
-Proof sketch: every point `p` of the annulus is connected to the sphere
-`|z − e| = R₀` via the radial segment `[p, e + R₀ * (p − e) / |p − e|]`
-(which stays in the annulus since `|p − e| ≥ R₀` everywhere on the
-segment); the sphere is itself path-connected (via `Complex.circleMap`).
-Hence any two annular points are connected through a sphere intermediary. -/
-theorem isPathConnected_rectMinusDisk
-    (a b c d : ℝ) (e : ℂ) (R₀ : ℝ)
-    (_hab : a < b) (_hcd : c < d) (hR₀ : 0 < R₀)
-    (hdisk_in_rect : Metric.closedBall e R₀ ⊆ Set.Ioo a b ×ℂ Set.Ioo c d) :
-    IsPathConnected ((Set.Icc a b ×ℂ Set.Icc c d) \ Metric.ball e R₀) := by
-  set R_ann : Set ℂ := (Set.Icc a b ×ℂ Set.Icc c d) \ Metric.ball e R₀ with hR_ann_def
-  -- Sphere is a subset of R_ann.
-  have hsphere_subset : Metric.sphere e R₀ ⊆ R_ann := by
+This is the cleanest hypothesis form, accommodating integrands with
+singularities in the rectangular corners outside the half-disk (e.g.,
+`1/(z − w)` where `w` is in the upper-corner region inside the closed
+small rect but outside the closed disk). Used in the
+`rectMinusUpperHalfDiskWindingNumber_inside_eq_one` derivation.
+
+**Proof strategy.** Use compactness of the closed upper half-disk
+together with `AnalyticAt.eventually_analyticAt` to extract a uniform
+δ > 0 such that the open convex neighborhood
+`U := Metric.ball e (R₀ + δ) ∩ {z : z.im > e.im − δ}` is contained in
+the analyticity domain. `U` is open (intersection of two open sets)
+and convex (intersection of two convex sets); it contains the closed
+upper half-disk. Apply `hasDerivAt_starPrimitive` with star center
+`p := e + (R₀/2) · I ∈ U` (interior) to get a primitive
+`F := starPrimitive p f` with `HasDerivAt F (f z) z` for every `z ∈ U`.
+The boundary path of the closed upper half-disk lies in `U` (since
+`closedBall ∩ upper half-plane ⊆ U`); FTC gives
+`∫_(bottom diameter) f = F((e.re+R₀, e.im)) − F((e.re−R₀, e.im))` and
+`∫_(upper semicircle) f = F((e.re−R₀, e.im)) − F((e.re+R₀, e.im))`,
+which sum to zero. -/
+theorem integral_boundary_upperHalfDisk_eq_zero_of_analyticOnNhd
+    (f : ℂ → ℂ) (e : ℂ) (R₀ : ℝ) (hR₀ : 0 < R₀)
+    (Hf : AnalyticOnNhd ℂ f
+      (Metric.closedBall e R₀ ∩ {z : ℂ | e.im ≤ z.im})) :
+    (∫ x in (e.re - R₀)..(e.re + R₀), f ((x : ℂ) + (e.im : ℂ) * Complex.I)) +
+    (∫ θ in (0 : ℝ)..Real.pi, f (_root_.circleMap e R₀ θ) *
+      (Complex.I * R₀ * Complex.exp (Complex.I * θ))) = 0 := by
+  -- The closed upper half-disk S is compact.
+  set S : Set ℂ := Metric.closedBall e R₀ ∩ {z : ℂ | e.im ≤ z.im} with hS_def
+  have hS_compact : IsCompact S :=
+    (isCompact_closedBall e R₀).inter_right
+      (isClosed_le continuous_const Complex.continuous_im)
+  -- The analyticity domain V := {z : AnalyticAt ℂ f z} is open and contains S.
+  set V : Set ℂ := {z : ℂ | AnalyticAt ℂ f z} with hV_def
+  have hV_open : IsOpen V := by
+    rw [isOpen_iff_eventually]
     intro z hz
-    have hz_cb : z ∈ Metric.closedBall e R₀ := Metric.sphere_subset_closedBall hz
+    exact hz.eventually_analyticAt
+  have hS_sub_V : S ⊆ V := fun z hz => Hf z hz
+  -- Extract uniform δ > 0 with Metric.thickening δ S ⊆ V.
+  obtain ⟨δ, hδ_pos, hδ_sub⟩ :=
+    hS_compact.exists_thickening_subset_open hV_open hS_sub_V
+  -- The convex open thickening U := ball e (R₀ + δ/2) ∩ {z : e.im - δ/2 < z.im}.
+  set U : Set ℂ :=
+    Metric.ball e (R₀ + δ/2) ∩ {z : ℂ | e.im - δ/2 < z.im} with hU_def
+  have hU_open : IsOpen U :=
+    Metric.isOpen_ball.inter (isOpen_Ioi.preimage Complex.continuous_im)
+  have h_im_linear : IsLinearMap ℝ (fun z : ℂ => z.im) :=
+    ⟨fun _ _ => Complex.add_im _ _, fun r z => Complex.smul_im r z⟩
+  have hU_convex : Convex ℝ U :=
+    (convex_ball _ _).inter (convex_halfSpace_gt h_im_linear (e.im - δ/2))
+  -- Show U ⊆ Metric.thickening δ S via projection + radial projection.
+  have hU_sub_thickening : U ⊆ Metric.thickening δ S := by
+    intro z hz
+    obtain ⟨h_ball, h_half⟩ := hz
+    rw [Metric.mem_ball, Complex.dist_eq] at h_ball
+    change e.im - δ/2 < z.im at h_half
+    rw [Metric.mem_thickening_iff]
+    by_cases h_above : e.im ≤ z.im
+    · -- z.im ≥ e.im: direct or radial projection.
+      by_cases h_in_disk : ‖z - e‖ ≤ R₀
+      · refine ⟨z, ⟨?_, h_above⟩, by rw [dist_self]; exact hδ_pos⟩
+        rw [Metric.mem_closedBall, Complex.dist_eq]; exact h_in_disk
+      · push Not at h_in_disk
+        have h_norm_pos : 0 < ‖z - e‖ := by linarith
+        have h_norm_ne : ‖z - e‖ ≠ 0 := ne_of_gt h_norm_pos
+        set s : ℂ := e + ((R₀ / ‖z - e‖ : ℝ) : ℂ) * (z - e) with hs_def
+        have hs_sub : s - e = ((R₀ / ‖z - e‖ : ℝ) : ℂ) * (z - e) := by
+          rw [hs_def]; ring
+        have h_pos_div : (0 : ℝ) ≤ R₀ / ‖z - e‖ :=
+          div_nonneg hR₀.le (norm_nonneg _)
+        have hs_norm : ‖s - e‖ = R₀ := by
+          rw [hs_sub, norm_mul, Complex.norm_real,
+            Real.norm_of_nonneg h_pos_div, div_mul_cancel₀ _ h_norm_ne]
+        have hs_im : e.im ≤ s.im := by
+          have h_diff_im : s.im = e.im + (R₀ / ‖z - e‖) * (z.im - e.im) := by
+            rw [hs_def]
+            simp [Complex.add_im, Complex.mul_im, Complex.sub_im,
+              Complex.ofReal_re, Complex.ofReal_im]
+          rw [h_diff_im]
+          have h_nn : 0 ≤ R₀ / ‖z - e‖ * (z.im - e.im) :=
+            mul_nonneg h_pos_div (by linarith)
+          linarith
+        have hs_in_S : s ∈ S := by
+          refine ⟨?_, hs_im⟩
+          rw [Metric.mem_closedBall, Complex.dist_eq, hs_norm]
+        refine ⟨s, hs_in_S, ?_⟩
+        rw [Complex.dist_eq]
+        have h_z_sub : z - s = ((1 - R₀ / ‖z - e‖ : ℝ) : ℂ) * (z - e) := by
+          rw [hs_def]; push_cast; field_simp; ring
+        have h_one_minus_pos : (0 : ℝ) ≤ 1 - R₀ / ‖z - e‖ := by
+          rw [sub_nonneg, div_le_one h_norm_pos]; linarith
+        rw [h_z_sub, norm_mul, Complex.norm_real,
+          Real.norm_of_nonneg h_one_minus_pos]
+        have h_mul_eq : (1 - R₀ / ‖z - e‖) * ‖z - e‖ = ‖z - e‖ - R₀ := by
+          field_simp
+        linarith [h_mul_eq]
+    · -- z.im < e.im: project to z' on bottom diameter, then possibly radially.
+      push Not at h_above
+      set z' : ℂ := (z.re : ℂ) + (e.im : ℂ) * Complex.I with hz'_def
+      have hz'_re : z'.re = z.re := by
+        simp [hz'_def, Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
+          Complex.ofReal_re, Complex.ofReal_im]
+      have hz'_im : z'.im = e.im := by
+        simp [hz'_def, Complex.add_im, Complex.mul_im, Complex.I_re, Complex.I_im,
+          Complex.ofReal_re, Complex.ofReal_im]
+      have h_dist_z_z' : dist z z' = e.im - z.im := by
+        rw [Complex.dist_eq]
+        have h_diff : z - z' = ((z.im - e.im : ℝ) : ℂ) * Complex.I := by
+          apply Complex.ext
+          · simp [hz'_def, Complex.sub_re, Complex.add_re, Complex.mul_re,
+              Complex.I_re, Complex.I_im, Complex.ofReal_re,
+              Complex.ofReal_im]
+          · simp [hz'_def, Complex.sub_im, Complex.add_im, Complex.mul_im,
+              Complex.I_re, Complex.I_im, Complex.ofReal_re,
+              Complex.ofReal_im]
+        rw [h_diff, norm_mul, Complex.norm_I, mul_one, Complex.norm_real,
+          Real.norm_eq_abs, abs_of_neg (by linarith : z.im - e.im < 0)]
+        linarith
+      have hz'_norm_le_sq : ‖z' - e‖^2 ≤ ‖z - e‖^2 := by
+        have h_z'_sq : ‖z' - e‖^2 = (z.re - e.re)^2 := by
+          rw [← Complex.normSq_eq_norm_sq, Complex.normSq_apply,
+            Complex.sub_re, Complex.sub_im, hz'_re, hz'_im]; ring
+        have h_z_sq : ‖z - e‖^2 = (z.re - e.re)^2 + (z.im - e.im)^2 := by
+          rw [← Complex.normSq_eq_norm_sq, Complex.normSq_apply,
+            Complex.sub_re, Complex.sub_im]; ring
+        nlinarith [sq_nonneg (z.im - e.im), h_z_sq, h_z'_sq]
+      have hz'_norm_le : ‖z' - e‖ ≤ ‖z - e‖ := by
+        have h_z'_nn : 0 ≤ ‖z' - e‖ := norm_nonneg _
+        have h_z_nn : 0 ≤ ‖z - e‖ := norm_nonneg _
+        nlinarith [hz'_norm_le_sq, sq_nonneg (‖z - e‖ - ‖z' - e‖),
+          sq_nonneg (‖z - e‖ + ‖z' - e‖)]
+      by_cases h_z'_in_disk : ‖z' - e‖ ≤ R₀
+      · have hz'_in_S : z' ∈ S := by
+          refine ⟨?_, ?_⟩
+          · rw [Metric.mem_closedBall, Complex.dist_eq]; exact h_z'_in_disk
+          · change e.im ≤ z'.im; rw [hz'_im]
+        refine ⟨z', hz'_in_S, ?_⟩
+        rw [h_dist_z_z']; linarith
+      · push Not at h_z'_in_disk
+        have h_z'_norm_pos : 0 < ‖z' - e‖ := by linarith
+        have h_z'_norm_ne : ‖z' - e‖ ≠ 0 := ne_of_gt h_z'_norm_pos
+        set s : ℂ := e + ((R₀ / ‖z' - e‖ : ℝ) : ℂ) * (z' - e) with hs_def
+        have hs_sub : s - e = ((R₀ / ‖z' - e‖ : ℝ) : ℂ) * (z' - e) := by
+          rw [hs_def]; ring
+        have h_pos_div : (0 : ℝ) ≤ R₀ / ‖z' - e‖ :=
+          div_nonneg hR₀.le (norm_nonneg _)
+        have hs_norm : ‖s - e‖ = R₀ := by
+          rw [hs_sub, norm_mul, Complex.norm_real,
+            Real.norm_of_nonneg h_pos_div, div_mul_cancel₀ _ h_z'_norm_ne]
+        have hs_im : e.im ≤ s.im := by
+          have h_diff_im : s.im = e.im + (R₀ / ‖z' - e‖) * (z'.im - e.im) := by
+            rw [hs_def]
+            simp [Complex.add_im, Complex.mul_im, Complex.sub_im,
+              Complex.ofReal_re, Complex.ofReal_im]
+          rw [h_diff_im, hz'_im]
+          simp
+        have hs_in_S : s ∈ S := by
+          refine ⟨?_, hs_im⟩
+          rw [Metric.mem_closedBall, Complex.dist_eq, hs_norm]
+        refine ⟨s, hs_in_S, ?_⟩
+        have h_dist_z'_s : dist z' s = ‖z' - e‖ - R₀ := by
+          rw [Complex.dist_eq]
+          have h_z'_s_sub :
+              z' - s = ((1 - R₀ / ‖z' - e‖ : ℝ) : ℂ) * (z' - e) := by
+            rw [hs_def]; push_cast; field_simp; ring
+          have h_one_minus_pos : (0 : ℝ) ≤ 1 - R₀ / ‖z' - e‖ := by
+            rw [sub_nonneg, div_le_one h_z'_norm_pos]; linarith
+          rw [h_z'_s_sub, norm_mul, Complex.norm_real,
+            Real.norm_of_nonneg h_one_minus_pos]
+          have h_mul_eq : (1 - R₀ / ‖z' - e‖) * ‖z' - e‖ = ‖z' - e‖ - R₀ := by
+            field_simp
+          exact h_mul_eq
+        have h_dist_z'_s_lt : dist z' s < δ/2 := by
+          rw [h_dist_z'_s]; linarith
+        have h_dist_z_z'_lt : dist z z' < δ/2 := by rw [h_dist_z_z']; linarith
+        calc dist z s
+            ≤ dist z z' + dist z' s := dist_triangle _ _ _
+          _ < δ/2 + δ/2 := by linarith
+          _ = δ := by ring
+  -- U ⊆ V.
+  have hU_sub_V : U ⊆ V := fun z hz => hδ_sub (hU_sub_thickening hz)
+  -- f differentiable on U.
+  have hf_diff_U : DifferentiableOn ℂ f U := fun z hz =>
+    (hU_sub_V hz).differentiableAt.differentiableWithinAt
+  -- Star center p ∈ U.
+  set p : ℂ := e + ((R₀ / 2 : ℝ) : ℂ) * Complex.I with hp_def
+  have hp_in_U : p ∈ U := by
     refine ⟨?_, ?_⟩
-    · have := hdisk_in_rect hz_cb
-      rw [Complex.mem_reProdIm] at this ⊢
-      exact ⟨Set.Ioo_subset_Icc_self this.1, Set.Ioo_subset_Icc_self this.2⟩
-    · intro hb
-      rw [Metric.mem_sphere] at hz; rw [Metric.mem_ball] at hb; linarith
-  -- Sphere is path-connected via `isPathConnected_sphere` (rank ℂ as ℝ-module is 2 > 1).
-  have h_rank : (1 : Cardinal) < Module.rank ℝ ℂ := by
-    rw [_root_.Complex.rank_real_complex]
-    exact_mod_cast (by norm_num : 1 < 2)
-  have hsphere_pathconn : IsPathConnected (Metric.sphere e R₀) :=
-    isPathConnected_sphere h_rank e hR₀.le
-  -- Closed rectangle is convex.
-  have hrect_convex : Convex ℝ ((Set.Icc a b ×ℂ Set.Icc c d) : Set ℂ) := by
-    intro x hx y hy s t hs ht hst
-    rw [Complex.mem_reProdIm] at hx hy ⊢
-    refine ⟨?_, ?_⟩
-    · have h_re_eq : (s • x + t • y).re = s * x.re + t * y.re := by simp [Complex.add_re]
-      rw [h_re_eq]; exact convex_Icc a b hx.1 hy.1 hs ht hst
-    · have h_im_eq : (s • x + t • y).im = s * x.im + t * y.im := by simp [Complex.add_im]
-      rw [h_im_eq]; exact convex_Icc c d hx.2 hy.2 hs ht hst
-  set p₀ : ℂ := _root_.circleMap e R₀ 0 with hp₀_def
-  have hp₀_sphere : p₀ ∈ Metric.sphere e R₀ :=
-    _root_.circleMap_mem_sphere e hR₀.le 0
-  have hp₀_in_R_ann : p₀ ∈ R_ann := hsphere_subset hp₀_sphere
-  refine ⟨p₀, hp₀_in_R_ann, ?_⟩
-  intro q hq
-  obtain ⟨hq_rect, hq_not_ball⟩ := hq
-  rw [Metric.mem_ball, not_lt] at hq_not_ball
-  have hq_dist_pos : 0 < dist q e := lt_of_lt_of_le hR₀ hq_not_ball
-  -- Sphere projection scale k₀.
-  set k₀ : ℝ := R₀ / dist q e with hk₀_def
-  have hk₀_pos : 0 < k₀ := div_pos hR₀ hq_dist_pos
-  set π_q : ℂ := e + k₀ • (q - e) with hπq_def
-  have h_q_sub_e_norm : ‖q - e‖ = dist q e := (dist_eq_norm q e).symm
-  -- π_q ∈ sphere.
-  have hπq_sphere : π_q ∈ Metric.sphere e R₀ := by
-    rw [Metric.mem_sphere, dist_eq_norm]
-    have h_sub : π_q - e = (k₀ : ℂ) * (q - e) := by
-      rw [hπq_def, Complex.real_smul]; ring
-    rw [h_sub, Complex.norm_mul, Complex.norm_real,
-        Real.norm_of_nonneg hk₀_pos.le, h_q_sub_e_norm, hk₀_def]
-    field_simp
-  have hπq_in_R_ann : π_q ∈ R_ann := hsphere_subset hπq_sphere
-  -- Segment from π_q to q lies in R_ann.
-  have hseg_subset : segment ℝ π_q q ⊆ R_ann := by
-    rintro z ⟨s, t, hs, ht, hst, rfl⟩
-    refine ⟨?_, ?_⟩
-    · exact hrect_convex hπq_in_R_ann.1 hq_rect hs ht hst
-    · intro hz_ball
-      rw [Metric.mem_ball] at hz_ball
-      -- Compute the algebraic identity z - e = (s * k₀ + t) * (q - e).
-      have hst_c : (s : ℂ) + (t : ℂ) = 1 := by
-        rw [← Complex.ofReal_add, hst]; simp
-      have h_z_sub_e : (s • π_q + t • q) - e = ((s * k₀ + t : ℝ) : ℂ) * (q - e) := by
-        rw [hπq_def, Complex.real_smul, Complex.real_smul, Complex.real_smul]
-        push_cast
-        linear_combination e * hst_c
-      rw [dist_eq_norm, h_z_sub_e, Complex.norm_mul, Complex.norm_real,
-          Real.norm_of_nonneg (by positivity : (0 : ℝ) ≤ s * k₀ + t),
-          h_q_sub_e_norm] at hz_ball
-      -- Substitute k₀ and simplify.
-      have h_dist_eq : (s * k₀ + t) * dist q e = s * R₀ + t * dist q e := by
-        rw [hk₀_def]; field_simp
-      rw [h_dist_eq] at hz_ball
-      have h_t_ineq : t * R₀ ≤ t * dist q e :=
-        mul_le_mul_of_nonneg_left hq_not_ball ht
-      have h_sum : s * R₀ + t * R₀ = R₀ := by rw [← add_mul, hst, one_mul]
+    · rw [Metric.mem_ball, Complex.dist_eq]
+      have h_diff : p - e = ((R₀ / 2 : ℝ) : ℂ) * Complex.I := by
+        rw [hp_def]; ring
+      rw [h_diff, norm_mul, Complex.norm_I, mul_one, Complex.norm_real,
+        Real.norm_of_nonneg (by linarith)]
       linarith
-  -- JoinedIn segment π_q q via convexity + path-connectedness.
-  have hjoin_πq_q_seg : JoinedIn (segment ℝ π_q q) π_q q :=
-    IsPathConnected.joinedIn
-      ((convex_segment π_q q).isPathConnected ⟨π_q, left_mem_segment _ _ _⟩)
-      π_q (left_mem_segment _ _ _) q (right_mem_segment _ _ _)
-  have hjoin_πq_q : JoinedIn R_ann π_q q := hjoin_πq_q_seg.mono hseg_subset
-  -- Sphere connects p₀ to π_q; lift to R_ann.
-  have hjoin_p₀_πq : JoinedIn R_ann p₀ π_q :=
-    (IsPathConnected.joinedIn hsphere_pathconn p₀ hp₀_sphere π_q
-      hπq_sphere).mono hsphere_subset
-  exact hjoin_p₀_πq.trans hjoin_πq_q
+    · change e.im - δ/2 < p.im
+      have h_p_im : p.im = e.im + R₀/2 := by
+        rw [hp_def]
+        simp [Complex.add_im, Complex.mul_im, Complex.I_re, Complex.I_im,
+          Complex.ofReal_re, Complex.ofReal_im]
+      rw [h_p_im]; linarith
+  have hU_starConvex : StarConvex ℝ p U := hU_convex.starConvex hp_in_U
+  -- The primitive F := starPrimitive p f.
+  set F : ℂ → ℂ := Complex.starPrimitive p f with hF_def
+  have hF_derivAt : ∀ z ∈ U, HasDerivAt F (f z) z := fun z hz =>
+    Complex.hasDerivAt_starPrimitive hU_open hU_starConvex hf_diff_U hz
+  -- Bottom-diameter path is in U.
+  have h_bot_in_U : ∀ x : ℝ, x ∈ Set.Icc (e.re - R₀) (e.re + R₀) →
+      ((x : ℂ) + (e.im : ℂ) * Complex.I) ∈ U := by
+    intro x hx
+    refine ⟨?_, ?_⟩
+    · rw [Metric.mem_ball, Complex.dist_eq]
+      have h_norm_sq :
+          ‖((x : ℂ) + (e.im : ℂ) * Complex.I) - e‖^2 = (x - e.re)^2 := by
+        rw [← Complex.normSq_eq_norm_sq, Complex.normSq_apply]
+        simp [Complex.sub_re, Complex.sub_im, Complex.add_re, Complex.add_im,
+          Complex.mul_re, Complex.mul_im, Complex.I_re, Complex.I_im,
+          Complex.ofReal_re, Complex.ofReal_im]
+        ring
+      have h_x_sq_bound : (x - e.re)^2 ≤ R₀^2 := by
+        rw [Set.mem_Icc] at hx; nlinarith [hx.1, hx.2]
+      have h_nonneg : 0 ≤ ‖((x : ℂ) + (e.im : ℂ) * Complex.I) - e‖ :=
+        norm_nonneg _
+      nlinarith [h_norm_sq, h_x_sq_bound, hR₀, hδ_pos]
+    · change e.im - δ/2 < ((x : ℂ) + (e.im : ℂ) * Complex.I).im
+      have h_im_eq : ((x : ℂ) + (e.im : ℂ) * Complex.I).im = e.im := by
+        simp [Complex.add_im, Complex.mul_im, Complex.I_re, Complex.I_im,
+          Complex.ofReal_re, Complex.ofReal_im]
+      rw [h_im_eq]; linarith
+  -- Upper-semicircle path is in U.
+  have h_arc_in_U : ∀ θ : ℝ, θ ∈ Set.Icc (0 : ℝ) Real.pi →
+      _root_.circleMap e R₀ θ ∈ U := by
+    intro θ hθ
+    have h_arc_norm : ‖_root_.circleMap e R₀ θ - e‖ = R₀ := by
+      rw [_root_.circleMap,
+        show e + (R₀ : ℂ) * Complex.exp ((θ : ℂ) * Complex.I) - e =
+          (R₀ : ℂ) * Complex.exp ((θ : ℂ) * Complex.I) from by ring]
+      rw [norm_mul, Complex.norm_real, Real.norm_of_nonneg hR₀.le,
+        Complex.norm_exp_ofReal_mul_I]
+      ring
+    refine ⟨?_, ?_⟩
+    · rw [Metric.mem_ball, dist_eq_norm, h_arc_norm]; linarith
+    · change e.im - δ/2 < (_root_.circleMap e R₀ θ).im
+      have h_im_eq : (_root_.circleMap e R₀ θ).im = e.im + R₀ * Real.sin θ := by
+        rw [_root_.circleMap, Complex.exp_mul_I]
+        simp [Complex.add_im, Complex.mul_im, Complex.ofReal_re, Complex.ofReal_im,
+          Complex.I_re, Complex.I_im, ← Complex.ofReal_cos, ← Complex.ofReal_sin]
+      rw [h_im_eq]
+      have h_sin_nn : 0 ≤ Real.sin θ := Real.sin_nonneg_of_nonneg_of_le_pi hθ.1 hθ.2
+      have h_R_sin_nn : 0 ≤ R₀ * Real.sin θ := mul_nonneg hR₀.le h_sin_nn
+      linarith
+  -- HasDerivAt of bottom-diameter composition.
+  have h_bot_inner_deriv : ∀ x : ℝ,
+      HasDerivAt (fun x : ℝ => (x : ℂ) + (e.im : ℂ) * Complex.I) 1 x := fun x =>
+    (Complex.ofRealCLM.hasDerivAt).add_const _
+  have h_G_bot_deriv : ∀ x ∈ Set.Ioo (e.re - R₀) (e.re + R₀),
+      HasDerivAt (fun x : ℝ => F ((x : ℂ) + (e.im : ℂ) * Complex.I))
+        (f ((x : ℂ) + (e.im : ℂ) * Complex.I)) x := by
+    intro x hx
+    have hx_Icc : x ∈ Set.Icc (e.re - R₀) (e.re + R₀) := ⟨hx.1.le, hx.2.le⟩
+    have h_z_in_U := h_bot_in_U x hx_Icc
+    have h_F_at := hF_derivAt _ h_z_in_U
+    have h_comp := h_F_at.comp x (h_bot_inner_deriv x)
+    simpa using h_comp
+  -- ContinuousOn F on U and f on U.
+  have hF_cont_on : ContinuousOn F U := fun z hz =>
+    (hF_derivAt z hz).continuousAt.continuousWithinAt
+  have hf_cont_on : ContinuousOn f U := fun z hz =>
+    (hU_sub_V hz).differentiableAt.continuousAt.continuousWithinAt
+  have h_bot_inner_cont :
+      Continuous (fun x : ℝ => (x : ℂ) + (e.im : ℂ) * Complex.I) := by fun_prop
+  -- ContinuousOn of G_bot.
+  have h_G_bot_cont :
+      ContinuousOn (fun x : ℝ => F ((x : ℂ) + (e.im : ℂ) * Complex.I))
+        (Set.Icc (e.re - R₀) (e.re + R₀)) :=
+    hF_cont_on.comp h_bot_inner_cont.continuousOn h_bot_in_U
+  -- Integrand continuity on the bottom diameter.
+  have h_bot_integrand_cont :
+      ContinuousOn (fun x : ℝ => f ((x : ℂ) + (e.im : ℂ) * Complex.I))
+        (Set.Icc (e.re - R₀) (e.re + R₀)) :=
+    hf_cont_on.comp h_bot_inner_cont.continuousOn h_bot_in_U
+  have h_re_le : e.re - R₀ ≤ e.re + R₀ := by linarith
+  have h_bot_integrable :
+      IntervalIntegrable (fun x : ℝ => f ((x : ℂ) + (e.im : ℂ) * Complex.I))
+        MeasureTheory.volume (e.re - R₀) (e.re + R₀) := by
+    apply ContinuousOn.intervalIntegrable
+    rw [Set.uIcc_of_le h_re_le]
+    exact h_bot_integrand_cont
+  -- FTC on bottom diameter.
+  have h_bot_FTC := intervalIntegral.integral_eq_sub_of_hasDerivAt_of_le
+    h_re_le h_G_bot_cont h_G_bot_deriv h_bot_integrable
+  -- HasDerivAt of arc composition.
+  have h_arc_inner_deriv : ∀ θ : ℝ,
+      HasDerivAt (_root_.circleMap e R₀)
+        (_root_.circleMap 0 R₀ θ * Complex.I) θ := fun θ =>
+    hasDerivAt_circleMap _ _ _
+  have h_arc_deriv_simplify : ∀ θ : ℝ,
+      _root_.circleMap 0 R₀ θ * Complex.I =
+        Complex.I * (R₀ : ℂ) * Complex.exp (Complex.I * (θ : ℂ)) := by
+    intro θ
+    rw [_root_.circleMap,
+      show ((θ : ℂ) * Complex.I) = Complex.I * (θ : ℂ) from mul_comm _ _]
+    ring
+  have h_G_arc_deriv : ∀ θ ∈ Set.Ioo (0 : ℝ) Real.pi,
+      HasDerivAt (fun θ : ℝ => F (_root_.circleMap e R₀ θ))
+        (f (_root_.circleMap e R₀ θ) *
+          (Complex.I * (R₀ : ℂ) * Complex.exp (Complex.I * (θ : ℂ)))) θ := by
+    intro θ hθ
+    have hθ_Icc : θ ∈ Set.Icc (0 : ℝ) Real.pi := ⟨hθ.1.le, hθ.2.le⟩
+    have h_z_in_U := h_arc_in_U θ hθ_Icc
+    have h_F_at := hF_derivAt _ h_z_in_U
+    have h_comp := h_F_at.comp θ (h_arc_inner_deriv θ)
+    rw [h_arc_deriv_simplify] at h_comp
+    exact h_comp
+  -- ContinuousOn of G_arc.
+  have h_G_arc_cont :
+      ContinuousOn (fun θ : ℝ => F (_root_.circleMap e R₀ θ))
+        (Set.Icc (0 : ℝ) Real.pi) := by
+    intro θ hθ
+    have h_z_in_U := h_arc_in_U θ hθ
+    have h_F_cont_at : ContinuousAt F (_root_.circleMap e R₀ θ) :=
+      (hF_derivAt _ h_z_in_U).continuousAt
+    have h_circle_cont : Continuous (_root_.circleMap e R₀) :=
+      continuous_circleMap _ _
+    exact (h_F_cont_at.comp h_circle_cont.continuousAt).continuousWithinAt
+  -- Integrand continuity on the arc.
+  have h_arc_integrand_cont :
+      ContinuousOn (fun θ : ℝ => f (_root_.circleMap e R₀ θ) *
+        (Complex.I * (R₀ : ℂ) * Complex.exp (Complex.I * (θ : ℂ))))
+        (Set.Icc (0 : ℝ) Real.pi) := by
+    apply ContinuousOn.mul
+    · intro θ hθ
+      have h_z_in_U := h_arc_in_U θ hθ
+      have h_f_cont_at : ContinuousAt f (_root_.circleMap e R₀ θ) :=
+        (hU_sub_V h_z_in_U).differentiableAt.continuousAt
+      exact (h_f_cont_at.comp
+        (continuous_circleMap _ _).continuousAt).continuousWithinAt
+    · apply Continuous.continuousOn
+      fun_prop
+  have h_pi_pos : 0 ≤ Real.pi := Real.pi_pos.le
+  have h_arc_integrable :
+      IntervalIntegrable (fun θ : ℝ => f (_root_.circleMap e R₀ θ) *
+        (Complex.I * (R₀ : ℂ) * Complex.exp (Complex.I * (θ : ℂ))))
+        MeasureTheory.volume (0 : ℝ) Real.pi := by
+    apply ContinuousOn.intervalIntegrable
+    rw [Set.uIcc_of_le h_pi_pos]
+    exact h_arc_integrand_cont
+  -- FTC on arc.
+  have h_arc_FTC := intervalIntegral.integral_eq_sub_of_hasDerivAt_of_le
+    h_pi_pos h_G_arc_cont h_G_arc_deriv h_arc_integrable
+  -- Compute circleMap endpoints.
+  have h_circle_pi : _root_.circleMap e R₀ Real.pi =
+      ((e.re - R₀ : ℝ) : ℂ) + ((e.im : ℝ) : ℂ) * Complex.I := by
+    rw [_root_.circleMap, Complex.exp_mul_I]
+    rw [show Complex.cos ((Real.pi : ℂ)) = -1 by
+        rw [← Complex.ofReal_cos, Real.cos_pi]; push_cast; ring]
+    rw [show Complex.sin ((Real.pi : ℂ)) = 0 by
+        rw [← Complex.ofReal_sin, Real.sin_pi]; push_cast; ring]
+    apply Complex.ext
+    · simp [Complex.add_re, Complex.mul_re, Complex.sub_re, Complex.ofReal_re,
+        Complex.ofReal_im, Complex.I_re, Complex.I_im]; ring
+    · simp [Complex.add_im, Complex.mul_im, Complex.sub_im, Complex.ofReal_re,
+        Complex.ofReal_im, Complex.I_re, Complex.I_im]
+  have h_circle_0 : _root_.circleMap e R₀ 0 =
+      ((e.re + R₀ : ℝ) : ℂ) + ((e.im : ℝ) : ℂ) * Complex.I := by
+    rw [_root_.circleMap]
+    have h_exp_0 : Complex.exp (((0 : ℝ) : ℂ) * Complex.I) = 1 := by
+      rw [Complex.ofReal_zero, zero_mul, Complex.exp_zero]
+    rw [h_exp_0]
+    apply Complex.ext
+    · simp [Complex.add_re, Complex.mul_re, Complex.ofReal_re,
+        Complex.ofReal_im, Complex.I_re, Complex.I_im]
+    · simp [Complex.add_im, Complex.mul_im, Complex.ofReal_re,
+        Complex.ofReal_im, Complex.I_re, Complex.I_im]
+  -- Combine.
+  rw [h_bot_FTC, h_arc_FTC, h_circle_pi, h_circle_0]
+  push_cast
+  ring
+
+/-- **F_Y winding number.** The winding number of the F_Y boundary
+(rectangle `[a, b] × [e.im, d]` with the upper half-disk centered at
+`e` with radius `R₀` removed) around an interior point `w` equals `1`.
+
+The F_Y boundary integral of `(z − w)⁻¹` is `∮_∂rect − ∮_(bottom
+diameter) − ∮_(upper semicircle)`. The rect integral equals `2πi` by
+`rectangleWindingNumber_inside_eq_one`, and the bottom-diameter plus
+upper-semicircle integrals together equal `0` by the upper half-disk
+Cauchy-Goursat (since `w` is outside the closed upper half-disk).
+Subtraction yields `2πi`, dividing by `2πi` gives `1`. -/
+theorem rectMinusUpperHalfDiskWindingNumber_inside_eq_one
+    (a b d : ℝ) (e : ℂ) (R₀ : ℝ) (hR₀ : 0 < R₀)
+    (hab : a < b) (h_a_lt : a < e.re - R₀) (h_lt_b : e.re + R₀ < b)
+    (h_e_im_R0_lt_d : e.im + R₀ < d) {w : ℂ}
+    (hw_in : w ∈ (Set.Ioo a b ×ℂ Set.Ioo e.im d) \ Metric.closedBall e R₀) :
+    (2 * Real.pi * Complex.I)⁻¹ * (
+      (∫ x in a..(e.re - R₀), ((x : ℂ) + (e.im : ℂ) * Complex.I - w)⁻¹) +
+      (∫ x in (e.re + R₀)..b, ((x : ℂ) + (e.im : ℂ) * Complex.I - w)⁻¹) +
+      Complex.I * (∫ y in e.im..d, ((b : ℂ) + (y : ℂ) * Complex.I - w)⁻¹) -
+      (∫ x in a..b, ((x : ℂ) + (d : ℂ) * Complex.I - w)⁻¹) -
+      Complex.I * (∫ y in e.im..d, ((a : ℂ) + (y : ℂ) * Complex.I - w)⁻¹) -
+      (∫ θ in (0 : ℝ)..Real.pi, (_root_.circleMap e R₀ θ - w)⁻¹ *
+        (Complex.I * R₀ * Complex.exp (Complex.I * θ)))) = 1 := by
+  sorry
+
+/-- **Path-connectedness of `F_Y` (closed form).** The closed F_Y region
+`(Icc a b ×ℂ Icc e.im d) \ ball e R₀` (rectangle minus upper half of an
+open disk centered on the bottom edge) is path-connected. Used to spread
+the `MeromorphicOn` order propagation argument in the F_Y argument
+principle. -/
+theorem isPathConnected_rectMinusUpperHalfDisk
+    (a b d : ℝ) (e : ℂ) (R₀ : ℝ) (hR₀ : 0 < R₀) (hab : a < b)
+    (h_a_lt : a < e.re - R₀) (h_lt_b : e.re + R₀ < b)
+    (h_e_im_R0_lt_d : e.im + R₀ < d) :
+    IsPathConnected ((Set.Icc a b ×ℂ Set.Icc e.im d) \ Metric.ball e R₀) := by
+  sorry
 
 set_option maxHeartbeats 400000 in
 -- The proof clones the Weierstrass-factorization structure of
--- `cIntegralLogDeriv_isNat_of_nonzero_on_rectBoundary` over the annular
--- region (closed rectangle minus open ball), applying `rectBoundary` and
--- `circle AP` to the rational factor `r` and annular Cauchy-Goursat to the
--- analytic non-vanishing factor `h`. The combined elaboration pressure
--- (codiscrete + AccPt + 4 edge-membership + sphere-membership +
--- divisor-support strict-interior analysis) exceeds the default limit.
-/-- **Argument principle on a rectangle with a circular hole.** For a
-function `g` analytic on a neighborhood of the closed region
-`R := (Set.Icc a b ×ℂ Set.Icc c d) \ Metric.ball e R₀` (a closed
-rectangle with an open disk removed), with `g` non-vanishing on the
-rectangle boundary AND on the sphere `|z − e| = R₀`, the contour
-integral around `∂R` (outer rectangle CCW minus inner circle CCW) is
-`2πi` times the count of zeros of `g` inside `R`. This is the additive
-combination of the rectangle and circle argument principles, used for
-counting preimages in regions where a "bite" of a half-disk has been
-removed (e.g., the truncated `Γ(2)` fundamental domain). -/
-theorem cIntegralLogDeriv_isNat_of_nonzero_on_rectMinusDisk
-    (g : ℂ → ℂ) (a b c d : ℝ) (e : ℂ) (R₀ : ℝ)
-    (hab : a < b) (hcd : c < d) (hR₀ : 0 < R₀)
-    (hdisk_in_rect : Metric.closedBall e R₀ ⊆ Set.Ioo a b ×ℂ Set.Ioo c d)
+-- `cIntegralLogDeriv_isNat_of_nonzero_on_rectBoundary` over the F_Y
+-- region (closed rectangle minus open upper half-disk on the bottom
+-- edge), applying `rectBoundary` and the upper-semicircle integral to
+-- the rational factor `r` and the F_Y-shape Cauchy-Goursat
+-- (`integral_boundary_topHalfAnnulus_eq_zero_of_differentiableOn`) to
+-- the analytic non-vanishing factor `h`. The combined elaboration
+-- pressure (codiscrete + AccPt + 5 edge-membership +
+-- arc-membership + divisor-support strict-interior analysis) exceeds
+-- the default heartbeat limit.
+/-- **Argument principle on a rectangle with an upper half-disk removed
+from the bottom boundary.** For a function `g` analytic on a neighborhood
+of the closed region `F_Y := (Icc a b ×ℂ Icc e.im d) \ ball e R₀` — the
+rectangle `[a, b] × [e.im, d]` with the open upper half of the disk
+centered at `e` on the bottom edge removed — and non-vanishing on each
+of the five boundary pieces (the four rectangle edges and the upper
+semicircle `|z − e| = R₀, Im z ≥ e.im`), the contour integral around
+`∂F_Y` (CCW with the region interior on the left) of `g'/g` is `2πi`
+times the count of zeros of `g` inside `F_Y^o`.
+
+This is the **truncated `Γ(2)` fundamental domain argument principle**:
+with `a = 0`, `b = 1`, `e.im = 0`, `e = 1/2`, `R₀ = 1/2`, `d = Y`, the
+region `F_Y` is the truncation of the half-fundamental-domain
+`F = {0 ≤ Re τ ≤ 1, 1 ≤ |2τ − 1|, Im τ > 0}` to `Im τ ≤ Y`. Applying
+this theorem to `g(τ) := λ(τ) − w` (analytic on `ℍ ⊃ F_Y`,
+non-vanishing on `∂F_Y` for `Im w > 0` by the boundary-image analysis
+of `λ`) counts preimages of `w` under `λ` inside `F^o`.
+
+The proof clones the Weierstrass-factorization structure of
+`cIntegralLogDeriv_isNat_of_nonzero_on_rectBoundary`: factor
+`g = (∏ᶠ u, (· − u)^{n_u}) · h` (with `n_u` the multiplicities of
+zeros of `g` in `F_Y^o` and `h` analytic + non-vanishing on a
+neighborhood of `F_Y`), split the log-derivative as
+`g'/g = r'/r + h'/h`, integrate `h'/h` around `∂F_Y` via
+`integral_boundary_topHalfAnnulus_eq_zero_of_differentiableOn` (giving
+zero), and reduce the `r'/r` integral to a Finset sum of single-zero
+contributions, each evaluated via the rectangle and upper-semicircle
+winding numbers. -/
+theorem cIntegralLogDeriv_isNat_of_nonzero_on_rectMinusUpperHalfDisk
+    (g : ℂ → ℂ) (a b d : ℝ) (e : ℂ) (R₀ : ℝ)
+    (hab : a < b) (hR₀ : 0 < R₀)
+    (h_a_lt : a < e.re - R₀) (h_lt_b : e.re + R₀ < b)
+    (h_e_im_R0_lt_d : e.im + R₀ < d)
     (hg : AnalyticOnNhd ℂ g
-      ((Set.Icc a b ×ℂ Set.Icc c d) \ Metric.ball e R₀))
-    (hg_bot : ∀ x ∈ Set.Icc a b, g ((x : ℂ) + (c : ℂ) * Complex.I) ≠ 0)
+      ((Set.Icc a b ×ℂ Set.Icc e.im d) \ Metric.ball e R₀))
+    (hg_bot_left : ∀ x ∈ Set.Icc a (e.re - R₀),
+      g ((x : ℂ) + (e.im : ℂ) * Complex.I) ≠ 0)
+    (hg_bot_right : ∀ x ∈ Set.Icc (e.re + R₀) b,
+      g ((x : ℂ) + (e.im : ℂ) * Complex.I) ≠ 0)
     (hg_top : ∀ x ∈ Set.Icc a b, g ((x : ℂ) + (d : ℂ) * Complex.I) ≠ 0)
-    (hg_right : ∀ y ∈ Set.Icc c d, g ((b : ℂ) + (y : ℂ) * Complex.I) ≠ 0)
-    (hg_left : ∀ y ∈ Set.Icc c d, g ((a : ℂ) + (y : ℂ) * Complex.I) ≠ 0)
-    (hg_sphere : ∀ z ∈ Metric.sphere e R₀, g z ≠ 0) :
+    (hg_right : ∀ y ∈ Set.Icc e.im d, g ((b : ℂ) + (y : ℂ) * Complex.I) ≠ 0)
+    (hg_left : ∀ y ∈ Set.Icc e.im d, g ((a : ℂ) + (y : ℂ) * Complex.I) ≠ 0)
+    (hg_arc : ∀ θ ∈ Set.Icc (0 : ℝ) Real.pi,
+      g (_root_.circleMap e R₀ θ) ≠ 0) :
     ∃ n : ℕ, (2 * Real.pi * Complex.I)⁻¹ * (
-      ((∫ x in a..b, deriv g ((x : ℂ) + (c : ℂ) * Complex.I) /
-        g ((x : ℂ) + (c : ℂ) * Complex.I)) +
-       Complex.I * (∫ y in c..d, deriv g ((b : ℂ) + (y : ℂ) * Complex.I) /
+      (∫ x in a..(e.re - R₀), deriv g ((x : ℂ) + (e.im : ℂ) * Complex.I) /
+        g ((x : ℂ) + (e.im : ℂ) * Complex.I)) +
+      (∫ x in (e.re + R₀)..b, deriv g ((x : ℂ) + (e.im : ℂ) * Complex.I) /
+        g ((x : ℂ) + (e.im : ℂ) * Complex.I)) +
+      Complex.I * (∫ y in e.im..d, deriv g ((b : ℂ) + (y : ℂ) * Complex.I) /
         g ((b : ℂ) + (y : ℂ) * Complex.I)) -
-       (∫ x in a..b, deriv g ((x : ℂ) + (d : ℂ) * Complex.I) /
+      (∫ x in a..b, deriv g ((x : ℂ) + (d : ℂ) * Complex.I) /
         g ((x : ℂ) + (d : ℂ) * Complex.I)) -
-       Complex.I * (∫ y in c..d, deriv g ((a : ℂ) + (y : ℂ) * Complex.I) /
-        g ((a : ℂ) + (y : ℂ) * Complex.I))) -
-      (∮ z in C(e, R₀), deriv g z / g z)) = (n : ℂ) := by
-  -- Annular region R_ann := closed rect \ open ball.
-  set R_ann : Set ℂ := (Set.Icc a b ×ℂ Set.Icc c d) \ Metric.ball e R₀ with hR_ann_def
-  set R : Set ℂ := Set.Icc a b ×ℂ Set.Icc c d with hR_def
-  have hg_mer : MeromorphicOn g R_ann := hg.meromorphicOn
-  -- R_ann is preconnected (via the helper) and compact.
-  have hR_ann_preconn : IsPreconnected R_ann :=
-    ((isPathConnected_rectMinusDisk a b c d e R₀ hab hcd hR₀
-      hdisk_in_rect).isConnected).isPreconnected
-  have hR_ann_compact : IsCompact R_ann := by
-    refine IsCompact.diff ?_ Metric.isOpen_ball
-    exact IsCompact.reProdIm isCompact_Icc isCompact_Icc
-  -- Witness corner z₀ = (a, c). In R_ann since rect corner is in closed rect
-  -- and outside closed ball (by hdisk_in_rect: closed ball ⊆ open rect).
-  set z₀ : ℂ := (a : ℂ) + (c : ℂ) * Complex.I with hz₀_def
-  have hz₀_re : z₀.re = a := by
-    simp [hz₀_def, Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
-      Complex.ofReal_re, Complex.ofReal_im]
-  have hz₀_im : z₀.im = c := by
-    simp [hz₀_def, Complex.add_im, Complex.mul_im, Complex.I_re, Complex.I_im,
-      Complex.ofReal_re, Complex.ofReal_im]
-  have hz₀_in_rect : z₀ ∈ R := by
-    rw [hR_def, Complex.mem_reProdIm]
-    refine ⟨?_, ?_⟩
-    · rw [hz₀_re]; exact Set.left_mem_Icc.mpr hab.le
-    · rw [hz₀_im]; exact Set.left_mem_Icc.mpr hcd.le
-  have hz₀_not_in_ball : z₀ ∉ Metric.ball e R₀ := by
-    intro h
-    have h_cb : z₀ ∈ Metric.closedBall e R₀ := Metric.ball_subset_closedBall h
-    have h_in_open := hdisk_in_rect h_cb
-    rw [Complex.mem_reProdIm] at h_in_open
-    obtain ⟨h_re, _⟩ := h_in_open
-    rw [hz₀_re, Set.mem_Ioo] at h_re
-    linarith [h_re.1]
-  have hz₀_in_R_ann : z₀ ∈ R_ann := ⟨hz₀_in_rect, hz₀_not_in_ball⟩
-  have hz₀_g_ne : g z₀ ≠ 0 := hg_bot a (Set.left_mem_Icc.mpr hab.le)
-  have hz₀_analytic : AnalyticAt ℂ g z₀ := hg z₀ hz₀_in_R_ann
-  -- meromorphicOrderAt g z₀ ≠ ⊤.
-  have hz₀_order_ne_top : meromorphicOrderAt g z₀ ≠ ⊤ := by
-    rw [hz₀_analytic.meromorphicOrderAt_eq]
-    intro h_top
-    rw [ENat.map_eq_top_iff] at h_top
-    have h0 : analyticOrderAt g z₀ = 0 :=
-      analyticOrderAt_eq_zero.mpr (Or.inr hz₀_g_ne)
-    rw [h0] at h_top
-    exact ENat.zero_ne_top h_top
-  -- Spread via preconnectedness.
-  have hg_order : ∀ u ∈ R_ann, meromorphicOrderAt g u ≠ ⊤ := by
-    intro u hu
-    exact hg_mer.meromorphicOrderAt_ne_top_of_isPreconnected hR_ann_preconn
-      hz₀_in_R_ann hu hz₀_order_ne_top
-  -- Divisor finite (compactness).
-  have hdiv_finite : (MeromorphicOn.divisor g R_ann).support.Finite :=
-    Function.locallyFinsuppWithin.finiteSupport _ hR_ann_compact
-  -- Extract zeros and poles: g = r · h codiscretely on R_ann.
-  obtain ⟨h, h_analytic, h_nonzero, h_factor⟩ :=
-    hg_mer.extract_zeros_poles
-      (fun u : R_ann => hg_order u.1 u.2)
-      hdiv_finite
-  -- Divisor is non-negative (g analytic).
-  have hD_nonneg : 0 ≤ MeromorphicOn.divisor g R_ann :=
-    MeromorphicOn.AnalyticOnNhd.divisor_nonneg hg
-  -- r := ∏ᶠ u, (·-u)^(D u). Globally analytic.
-  set r : ℂ → ℂ :=
-    ∏ᶠ u, (· - u) ^ ((MeromorphicOn.divisor g R_ann) u) with hr_def
-  have hr_analytic : ∀ z, AnalyticAt ℂ r z := fun z =>
-    Function.FactorizedRational.analyticAt (hD_nonneg z)
-  -- R_ann is non-trivial (has 2 distinct points).
-  have hR_ann_ntriv : R_ann.Nontrivial := by
-    refine ⟨z₀, hz₀_in_R_ann, (b : ℂ) + (d : ℂ) * Complex.I, ?_, ?_⟩
-    · -- (b, d) is the opposite corner, also in R_ann.
-      have hbd_in_rect : ((b : ℂ) + (d : ℂ) * Complex.I) ∈ R := by
-        rw [hR_def, Complex.mem_reProdIm]
-        refine ⟨?_, ?_⟩
-        · show ((b : ℂ) + (d : ℂ) * Complex.I).re ∈ Set.Icc a b
-          have : ((b : ℂ) + (d : ℂ) * Complex.I).re = b := by
-            simp [Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
-              Complex.ofReal_re, Complex.ofReal_im]
-          rw [this]; exact Set.right_mem_Icc.mpr hab.le
-        · show ((b : ℂ) + (d : ℂ) * Complex.I).im ∈ Set.Icc c d
-          have : ((b : ℂ) + (d : ℂ) * Complex.I).im = d := by
-            simp [Complex.add_im, Complex.mul_im, Complex.I_re, Complex.I_im,
-              Complex.ofReal_re, Complex.ofReal_im]
-          rw [this]; exact Set.right_mem_Icc.mpr hcd.le
-      have hbd_not_in_ball : ((b : ℂ) + (d : ℂ) * Complex.I) ∉ Metric.ball e R₀ := by
-        intro h
-        have h_cb : ((b : ℂ) + (d : ℂ) * Complex.I) ∈ Metric.closedBall e R₀ :=
-          Metric.ball_subset_closedBall h
-        have h_in_open := hdisk_in_rect h_cb
-        rw [Complex.mem_reProdIm] at h_in_open
-        obtain ⟨h_re, _⟩ := h_in_open
-        have hre_eq : ((b : ℂ) + (d : ℂ) * Complex.I).re = b := by
-          simp [Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
-            Complex.ofReal_re, Complex.ofReal_im]
-        rw [hre_eq, Set.mem_Ioo] at h_re
-        linarith [h_re.2]
-      exact ⟨hbd_in_rect, hbd_not_in_ball⟩
-    · intro h_eq
-      have h_re : z₀.re = ((b : ℂ) + (d : ℂ) * Complex.I).re := by rw [h_eq]
-      rw [hz₀_re] at h_re
-      have : ((b : ℂ) + (d : ℂ) * Complex.I).re = b := by
-        simp [Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
-          Complex.ofReal_re, Complex.ofReal_im]
-      rw [this] at h_re
-      linarith
-  -- Every point of R_ann is an accumulation point.
-  have h_accpt : ∀ z ∈ R_ann, AccPt z (Filter.principal R_ann) :=
-    fun z hz => hR_ann_preconn.preperfect_of_nontrivial hR_ann_ntriv z hz
-  -- Codiscrete equality g = r · h in `mul` form.
-  have h_factor_mul : g =ᶠ[Filter.codiscreteWithin R_ann]
-      (fun w => r w * h w) := by
-    filter_upwards [h_factor] with w hw
-    simpa [smul_eq_mul] using hw
-  -- For every point of R_ann, get nhds equality g = r · h.
-  have h_nhds_eq : ∀ z ∈ R_ann, g =ᶠ[nhds z] (fun w => r w * h w) := by
-    intro z hz
-    have hz_g_an : AnalyticAt ℂ g z := hg z hz
-    have hz_r_an : AnalyticAt ℂ r z := hr_analytic z
-    have hz_h_an : AnalyticAt ℂ h z := h_analytic z hz
-    have hz_rh_an : AnalyticAt ℂ (fun w => r w * h w) z := hz_r_an.mul hz_h_an
-    have h_pnctd := hz_g_an.meromorphicAt.eventuallyEq_nhdsNE_of_eventuallyEq_codiscreteWithin
-      hz_rh_an.meromorphicAt hz (h_accpt z hz) h_factor_mul
-    exact (AnalyticAt.frequently_eq_iff_eventually_eq hz_g_an hz_rh_an).mp h_pnctd.frequently
-  have h_g_eq : ∀ z ∈ R_ann, g z = r z * h z := fun z hz =>
-    (h_nhds_eq z hz).eq_of_nhds
-  have h_deriv_eq : ∀ z ∈ R_ann, deriv g z = deriv (fun w => r w * h w) z := fun z hz =>
-    (h_nhds_eq z hz).deriv_eq
-  -- h non-vanishing on R_ann.
-  have h_h_ne : ∀ z ∈ R_ann, h z ≠ 0 := fun z hz => h_nonzero ⟨z, hz⟩
-  -- Divisor zero at boundary points (g ≠ 0 there).
-  have h_div_zero_at_edge : ∀ z ∈ R_ann, g z ≠ 0 →
-      (MeromorphicOn.divisor g R_ann) z = 0 := by
-    intro z hz hz_g_ne
-    rw [MeromorphicOn.divisor_apply hg_mer hz,
-        (hg z hz).meromorphicOrderAt_eq,
-        analyticOrderAt_eq_zero.mpr (Or.inr hz_g_ne)]
-    simp
-  -- r ≠ 0 where divisor is zero.
-  have hr_ne_at_edge : ∀ z ∈ R_ann, g z ≠ 0 → r z ≠ 0 := fun z hz hz_g_ne =>
-    Function.FactorizedRational.ne_zero (h_div_zero_at_edge z hz hz_g_ne)
-  -- Membership of boundary edge points in R_ann.
-  have h_bot_mem : ∀ x ∈ Set.Icc a b, ((x : ℂ) + (c : ℂ) * Complex.I) ∈ R_ann := by
-    intro x hx
-    refine ⟨?_, ?_⟩
-    · rw [Complex.mem_reProdIm]
-      refine ⟨?_, ?_⟩
-      · show ((x : ℂ) + (c : ℂ) * Complex.I).re ∈ Set.Icc a b
-        have : ((x : ℂ) + (c : ℂ) * Complex.I).re = x := by
-          simp [Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
-            Complex.ofReal_re, Complex.ofReal_im]
-        rw [this]; exact hx
-      · show ((x : ℂ) + (c : ℂ) * Complex.I).im ∈ Set.Icc c d
-        have : ((x : ℂ) + (c : ℂ) * Complex.I).im = c := by
-          simp [Complex.add_im, Complex.mul_im, Complex.I_re, Complex.I_im,
-            Complex.ofReal_re, Complex.ofReal_im]
-        rw [this]; exact Set.left_mem_Icc.mpr hcd.le
-    · -- Not in open ball: edge point has Im = c, but disk interior has Im in (c, d)
-      intro h
-      have h_cb := Metric.ball_subset_closedBall h
-      have h_in_open := hdisk_in_rect h_cb
-      rw [Complex.mem_reProdIm] at h_in_open
-      have him_eq : ((x : ℂ) + (c : ℂ) * Complex.I).im = c := by
-        simp [Complex.add_im, Complex.mul_im, Complex.I_re, Complex.I_im,
-          Complex.ofReal_re, Complex.ofReal_im]
-      rw [him_eq, Set.mem_Ioo] at h_in_open
-      linarith [h_in_open.2.1]
-  have h_top_mem : ∀ x ∈ Set.Icc a b, ((x : ℂ) + (d : ℂ) * Complex.I) ∈ R_ann := by
-    intro x hx
-    refine ⟨?_, ?_⟩
-    · rw [Complex.mem_reProdIm]
-      refine ⟨?_, ?_⟩
-      · show ((x : ℂ) + (d : ℂ) * Complex.I).re ∈ Set.Icc a b
-        have : ((x : ℂ) + (d : ℂ) * Complex.I).re = x := by
-          simp [Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
-            Complex.ofReal_re, Complex.ofReal_im]
-        rw [this]; exact hx
-      · show ((x : ℂ) + (d : ℂ) * Complex.I).im ∈ Set.Icc c d
-        have : ((x : ℂ) + (d : ℂ) * Complex.I).im = d := by
-          simp [Complex.add_im, Complex.mul_im, Complex.I_re, Complex.I_im,
-            Complex.ofReal_re, Complex.ofReal_im]
-        rw [this]; exact Set.right_mem_Icc.mpr hcd.le
-    · intro h
-      have h_cb := Metric.ball_subset_closedBall h
-      have h_in_open := hdisk_in_rect h_cb
-      rw [Complex.mem_reProdIm] at h_in_open
-      have him_eq : ((x : ℂ) + (d : ℂ) * Complex.I).im = d := by
-        simp [Complex.add_im, Complex.mul_im, Complex.I_re, Complex.I_im,
-          Complex.ofReal_re, Complex.ofReal_im]
-      rw [him_eq, Set.mem_Ioo] at h_in_open
-      linarith [h_in_open.2.2]
-  have h_right_mem : ∀ y ∈ Set.Icc c d, ((b : ℂ) + (y : ℂ) * Complex.I) ∈ R_ann := by
-    intro y hy
-    refine ⟨?_, ?_⟩
-    · rw [Complex.mem_reProdIm]
-      refine ⟨?_, ?_⟩
-      · show ((b : ℂ) + (y : ℂ) * Complex.I).re ∈ Set.Icc a b
-        have : ((b : ℂ) + (y : ℂ) * Complex.I).re = b := by
-          simp [Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
-            Complex.ofReal_re, Complex.ofReal_im]
-        rw [this]; exact Set.right_mem_Icc.mpr hab.le
-      · show ((b : ℂ) + (y : ℂ) * Complex.I).im ∈ Set.Icc c d
-        have : ((b : ℂ) + (y : ℂ) * Complex.I).im = y := by
-          simp [Complex.add_im, Complex.mul_im, Complex.I_re, Complex.I_im,
-            Complex.ofReal_re, Complex.ofReal_im]
-        rw [this]; exact hy
-    · intro h
-      have h_cb := Metric.ball_subset_closedBall h
-      have h_in_open := hdisk_in_rect h_cb
-      rw [Complex.mem_reProdIm] at h_in_open
-      have hre_eq : ((b : ℂ) + (y : ℂ) * Complex.I).re = b := by
-        simp [Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
-          Complex.ofReal_re, Complex.ofReal_im]
-      rw [hre_eq, Set.mem_Ioo] at h_in_open
-      linarith [h_in_open.1.2]
-  have h_left_mem : ∀ y ∈ Set.Icc c d, ((a : ℂ) + (y : ℂ) * Complex.I) ∈ R_ann := by
-    intro y hy
-    refine ⟨?_, ?_⟩
-    · rw [Complex.mem_reProdIm]
-      refine ⟨?_, ?_⟩
-      · show ((a : ℂ) + (y : ℂ) * Complex.I).re ∈ Set.Icc a b
-        have : ((a : ℂ) + (y : ℂ) * Complex.I).re = a := by
-          simp [Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
-            Complex.ofReal_re, Complex.ofReal_im]
-        rw [this]; exact Set.left_mem_Icc.mpr hab.le
-      · show ((a : ℂ) + (y : ℂ) * Complex.I).im ∈ Set.Icc c d
-        have : ((a : ℂ) + (y : ℂ) * Complex.I).im = y := by
-          simp [Complex.add_im, Complex.mul_im, Complex.I_re, Complex.I_im,
-            Complex.ofReal_re, Complex.ofReal_im]
-        rw [this]; exact hy
-    · intro h
-      have h_cb := Metric.ball_subset_closedBall h
-      have h_in_open := hdisk_in_rect h_cb
-      rw [Complex.mem_reProdIm] at h_in_open
-      have hre_eq : ((a : ℂ) + (y : ℂ) * Complex.I).re = a := by
-        simp [Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
-          Complex.ofReal_re, Complex.ofReal_im]
-      rw [hre_eq, Set.mem_Ioo] at h_in_open
-      linarith [h_in_open.1.1]
-  -- Sphere points are in R_ann.
-  have h_sphere_mem : ∀ z ∈ Metric.sphere e R₀, z ∈ R_ann := by
-    intro z hz
-    have hz_cb : z ∈ Metric.closedBall e R₀ := Metric.sphere_subset_closedBall hz
-    refine ⟨?_, ?_⟩
-    · have h_in_open := hdisk_in_rect hz_cb
-      rw [Complex.mem_reProdIm] at h_in_open ⊢
-      exact ⟨Set.Ioo_subset_Icc_self h_in_open.1, Set.Ioo_subset_Icc_self h_in_open.2⟩
-    · rw [Metric.mem_sphere] at hz
-      rw [Metric.mem_ball]
-      linarith
-  -- Express r as a Finset product over Dsupp.
-  set Dsupp := hdiv_finite.toFinset with hDsupp_def
-  have hD_hfs : (fun u : ℂ => MeromorphicOn.divisor g R_ann u).HasFiniteSupport :=
-    hdiv_finite
-  -- D supported strictly in open rect interior of R_ann (not on edges, not on sphere).
-  have hsupp_in_open : ∀ u ∈ Dsupp, u ∈ Set.Ioo a b ×ℂ Set.Ioo c d ∧
-      u ∉ Metric.closedBall e R₀ := by
-    intro u hu
-    have hu_supp : u ∈ (MeromorphicOn.divisor g R_ann).support := by
-      simpa [hDsupp_def] using hu
-    have hu_R_ann : u ∈ R_ann :=
-      (MeromorphicOn.divisor g R_ann).supportWithinDomain hu_supp
-    obtain ⟨hu_rect, hu_not_ball⟩ := hu_R_ann
-    have hu_re_Icc : u.re ∈ Set.Icc a b := (Complex.mem_reProdIm.mp hu_rect).1
-    have hu_im_Icc : u.im ∈ Set.Icc c d := (Complex.mem_reProdIm.mp hu_rect).2
-    refine ⟨?_, ?_⟩
-    · -- u in open inner rect: strict inequalities (since u ∉ rect boundary).
-      rw [Complex.mem_reProdIm]
-      refine ⟨?_, ?_⟩
-      · rw [Set.mem_Ioo]
-        refine ⟨lt_of_le_of_ne hu_re_Icc.1 (fun h_eq => ?_),
-                lt_of_le_of_ne hu_re_Icc.2 (fun h_eq => ?_)⟩
-        · -- u.re = a → u on left edge.
-          have hu_eq : u = (a : ℂ) + (u.im : ℂ) * Complex.I := by
-            apply Complex.ext
-            · simp [Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
-                Complex.ofReal_re, Complex.ofReal_im, ← h_eq]
-            · simp [Complex.add_im, Complex.mul_im, Complex.I_re, Complex.I_im,
-                Complex.ofReal_re, Complex.ofReal_im]
-          rw [hu_eq] at hu_supp
-          apply hu_supp
-          exact h_div_zero_at_edge ((a : ℂ) + (u.im : ℂ) * Complex.I)
-            (h_left_mem u.im hu_im_Icc) (hg_left u.im hu_im_Icc)
-        · -- u.re = b → u on right edge.
-          have hu_eq : u = (b : ℂ) + (u.im : ℂ) * Complex.I := by
-            apply Complex.ext
-            · simp [Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
-                Complex.ofReal_re, Complex.ofReal_im, h_eq]
-            · simp [Complex.add_im, Complex.mul_im, Complex.I_re, Complex.I_im,
-                Complex.ofReal_re, Complex.ofReal_im]
-          rw [hu_eq] at hu_supp
-          apply hu_supp
-          exact h_div_zero_at_edge ((b : ℂ) + (u.im : ℂ) * Complex.I)
-            (h_right_mem u.im hu_im_Icc) (hg_right u.im hu_im_Icc)
-      · rw [Set.mem_Ioo]
-        refine ⟨lt_of_le_of_ne hu_im_Icc.1 (fun h_eq => ?_),
-                lt_of_le_of_ne hu_im_Icc.2 (fun h_eq => ?_)⟩
-        · have hu_eq : u = (u.re : ℂ) + (c : ℂ) * Complex.I := by
-            apply Complex.ext
-            · simp [Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
-                Complex.ofReal_re, Complex.ofReal_im]
-            · simp [Complex.add_im, Complex.mul_im, Complex.I_re, Complex.I_im,
-                Complex.ofReal_re, Complex.ofReal_im, ← h_eq]
-          rw [hu_eq] at hu_supp
-          apply hu_supp
-          exact h_div_zero_at_edge ((u.re : ℂ) + (c : ℂ) * Complex.I)
-            (h_bot_mem u.re hu_re_Icc) (hg_bot u.re hu_re_Icc)
-        · have hu_eq : u = (u.re : ℂ) + (d : ℂ) * Complex.I := by
-            apply Complex.ext
-            · simp [Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
-                Complex.ofReal_re, Complex.ofReal_im]
-            · simp [Complex.add_im, Complex.mul_im, Complex.I_re, Complex.I_im,
-                Complex.ofReal_re, Complex.ofReal_im, h_eq]
-          rw [hu_eq] at hu_supp
-          apply hu_supp
-          exact h_div_zero_at_edge ((u.re : ℂ) + (d : ℂ) * Complex.I)
-            (h_top_mem u.re hu_re_Icc) (hg_top u.re hu_re_Icc)
-    · -- u ∉ closed ball: u ∉ open ball (since u ∈ R_ann) and u ∉ sphere
-      -- (since D=0 on sphere).
-      intro h_cb
-      rw [Metric.mem_closedBall, le_iff_lt_or_eq] at h_cb
-      rcases h_cb with h_lt | h_eq_dist
-      · exact hu_not_ball (Metric.mem_ball.mpr h_lt)
-      · -- u on sphere.
-        have hu_sphere : u ∈ Metric.sphere e R₀ := by
-          rw [Metric.mem_sphere]; exact h_eq_dist
-        have : (MeromorphicOn.divisor g R_ann) u = 0 :=
-          h_div_zero_at_edge u (h_sphere_mem u hu_sphere) (hg_sphere u hu_sphere)
-        exact hu_supp this
-  -- The final algebraic aggregation: applies the rect-boundary argument to
-  -- `r` on each rect edge plus the sphere, uses `∮ (z-u)⁻¹ = 0` for `u`
-  -- outside the closed ball (so the `r`-circle integral vanishes), and
-  -- combines with the annular CG applied to `h'/h` (`h` analytic
-  -- non-vanishing on `R_ann`).
-  -- logDeriv decomposition `(rh)'/(rh) = r'/r + h'/h`.
-  have h_logDeriv_split : ∀ z ∈ R_ann, g z ≠ 0 →
-      deriv (fun w => r w * h w) z / (r z * h z) =
-      deriv r z / r z + deriv h z / h z := by
-    intro z hz hz_g_ne
-    have hr_ne := hr_ne_at_edge z hz hz_g_ne
-    have hh_ne : h z ≠ 0 := h_nonzero ⟨z, hz⟩
-    have hr_diff : DifferentiableAt ℂ r z := (hr_analytic z).differentiableAt
-    have hh_diff : DifferentiableAt ℂ h z := (h_analytic z hz).differentiableAt
-    have := logDeriv_mul z hr_ne hh_ne hr_diff hh_diff
-    simp only [logDeriv_apply] at this
-    exact this
-  have h_int_eq_at_edge : ∀ z ∈ R_ann, g z ≠ 0 →
-      deriv g z / g z = deriv r z / r z + deriv h z / h z := fun z hz hz_g_ne => by
-    rw [h_g_eq z hz, h_deriv_eq z hz]
-    exact h_logDeriv_split z hz hz_g_ne
-  -- Pointwise integrand equality on each of the four rectangle edges.
-  have h_int_bot : (∫ x in a..b, deriv g ((x : ℂ) + (c : ℂ) * Complex.I) /
-      g ((x : ℂ) + (c : ℂ) * Complex.I)) =
-      (∫ x in a..b, deriv r ((x : ℂ) + (c : ℂ) * Complex.I) /
-        r ((x : ℂ) + (c : ℂ) * Complex.I) +
-        deriv h ((x : ℂ) + (c : ℂ) * Complex.I) /
-        h ((x : ℂ) + (c : ℂ) * Complex.I)) := by
-    apply intervalIntegral.integral_congr
-    intro x hx
-    have hx_Icc : x ∈ Set.Icc a b := by rw [Set.uIcc_of_le hab.le] at hx; exact hx
-    exact h_int_eq_at_edge _ (h_bot_mem x hx_Icc) (hg_bot x hx_Icc)
-  have h_int_top : (∫ x in a..b, deriv g ((x : ℂ) + (d : ℂ) * Complex.I) /
-      g ((x : ℂ) + (d : ℂ) * Complex.I)) =
-      (∫ x in a..b, deriv r ((x : ℂ) + (d : ℂ) * Complex.I) /
-        r ((x : ℂ) + (d : ℂ) * Complex.I) +
-        deriv h ((x : ℂ) + (d : ℂ) * Complex.I) /
-        h ((x : ℂ) + (d : ℂ) * Complex.I)) := by
-    apply intervalIntegral.integral_congr
-    intro x hx
-    have hx_Icc : x ∈ Set.Icc a b := by rw [Set.uIcc_of_le hab.le] at hx; exact hx
-    exact h_int_eq_at_edge _ (h_top_mem x hx_Icc) (hg_top x hx_Icc)
-  have h_int_right : (∫ y in c..d, deriv g ((b : ℂ) + (y : ℂ) * Complex.I) /
-      g ((b : ℂ) + (y : ℂ) * Complex.I)) =
-      (∫ y in c..d, deriv r ((b : ℂ) + (y : ℂ) * Complex.I) /
-        r ((b : ℂ) + (y : ℂ) * Complex.I) +
-        deriv h ((b : ℂ) + (y : ℂ) * Complex.I) /
-        h ((b : ℂ) + (y : ℂ) * Complex.I)) := by
-    apply intervalIntegral.integral_congr
-    intro y hy
-    have hy_Icc : y ∈ Set.Icc c d := by rw [Set.uIcc_of_le hcd.le] at hy; exact hy
-    exact h_int_eq_at_edge _ (h_right_mem y hy_Icc) (hg_right y hy_Icc)
-  have h_int_left : (∫ y in c..d, deriv g ((a : ℂ) + (y : ℂ) * Complex.I) /
-      g ((a : ℂ) + (y : ℂ) * Complex.I)) =
-      (∫ y in c..d, deriv r ((a : ℂ) + (y : ℂ) * Complex.I) /
-        r ((a : ℂ) + (y : ℂ) * Complex.I) +
-        deriv h ((a : ℂ) + (y : ℂ) * Complex.I) /
-        h ((a : ℂ) + (y : ℂ) * Complex.I)) := by
-    apply intervalIntegral.integral_congr
-    intro y hy
-    have hy_Icc : y ∈ Set.Icc c d := by rw [Set.uIcc_of_le hcd.le] at hy; exact hy
-    exact h_int_eq_at_edge _ (h_left_mem y hy_Icc) (hg_left y hy_Icc)
-  -- Pointwise integrand equality on the sphere.
-  have h_int_circle : (∮ z in C(e, R₀), deriv g z / g z) =
-      (∮ z in C(e, R₀), deriv r z / r z + deriv h z / h z) := by
-    apply circleIntegral.integral_congr hR₀.le
-    intro z hz
-    exact h_int_eq_at_edge z (h_sphere_mem z hz) (hg_sphere z hz)
-  -- `h'/h` is differentiable on R_ann.
-  have h_dh_div_h_diff : DifferentiableOn ℂ (fun z => deriv h z / h z) R_ann := by
-    intro z hz
-    have hh_ne := h_h_ne z hz
-    have h_dh_an : AnalyticAt ℂ (deriv h) z := (h_analytic z hz).deriv
-    have h_h_an : AnalyticAt ℂ h z := h_analytic z hz
-    exact (h_dh_an.div h_h_an hh_ne).differentiableAt.differentiableWithinAt
-  -- Strengthened differentiability hypothesis for `rectMinusDisk` CG:
-  -- `h'/h` is differentiable on the slightly enlarged open set
-  -- `(Ioo a b × Ioo c d) \ closedBall e R₀'` for some `R₀' < R₀`. The proof
-  -- builds an open `V := {z : AnalyticAt ℂ h z ∧ h z ≠ 0}` containing `R_ann`,
-  -- uses `IsCompact.exists_thickening_subset_open` to extract a uniform
-  -- δ > 0 with `Metric.thickening δ R_ann ⊆ V`, and sets
-  -- `R₀' := R₀ − (min R₀ δ) / 2`. For each `z ∈ (Ioo box) \ closedBall e R₀'`,
-  -- either `R₀ ≤ ‖z − e‖` (then `z ∈ R_ann` directly) or `‖z − e‖ < R₀`
-  -- (then the radial projection `w := e + (R₀/‖z−e‖)·(z−e)` is on the
-  -- sphere `⊂ R_ann` via `hdisk_in_rect`, at distance `R₀ − ‖z − e‖ < δ`
-  -- from `z`); hence `z ∈ Metric.thickening δ R_ann ⊆ V`, so `h'/h` is
-  -- analytic at `z`.
-  -- `h'/h` is differentiable on a slightly enlarged open set
-  -- `(Ioo a b × Ioo c d) \ closedBall e R₀'` for some `R₀' < R₀`.
-  --   1. `V := {z : AnalyticAt ℂ h z ∧ h z ≠ 0}` is open (AnalyticAt is open
-  --      under perturbation via `AnalyticAt.eventually_analyticAt`; `h ≠ 0`
-  --      open by `ContinuousAt.eventually_ne`).
-  --   2. `R_ann ⊆ V` (from `h_analytic` and `h_h_ne`).
-  --   3. By `IsCompact.exists_thickening_subset_open` applied to
-  --      `hR_ann_compact`, `hV_open`, get δ > 0 with
-  --      `Metric.thickening δ R_ann ⊆ V`.
-  --   4. Set `R₀' := R₀ − min(R₀, δ)/2`.
-  --   5. For each `z ∈ (Ioo a b × Ioo c d) \ closedBall e R₀'`:
-  --      • if `R₀ ≤ ‖z − e‖`: `z ∈ R_ann` itself.
-  --      • else `R₀' < ‖z − e‖ < R₀`: radial projection
-  --        `w := e + (R₀/‖z − e‖)·(z − e)` lies on the sphere `⊂ R_ann`
-  --        (via `hdisk_in_rect` for the box condition); `dist z w =
-  --        R₀ − ‖z − e‖ < δ_eff/2 ≤ δ`, so `z ∈ Metric.thickening δ R_ann`.
-  --   6. Therefore `z ∈ V`, giving `AnalyticAt h z ∧ h z ≠ 0`, hence
-  --      `AnalyticAt (deriv h / h) z` via `AnalyticAt.deriv.div`.
-  have h_dh_div_h_diff_existential : ∃ R₀' : ℝ, 0 < R₀' ∧ R₀' < R₀ ∧
-      DifferentiableOn ℂ (fun z => deriv h z / h z)
-        ((Set.Ioo a b ×ℂ Set.Ioo c d) \ Metric.closedBall e R₀') := by
-    set V : Set ℂ := {z | AnalyticAt ℂ h z ∧ h z ≠ 0} with hV_def
-    have hV_open : IsOpen V := by
-      rw [isOpen_iff_eventually]
-      intro z hz
-      obtain ⟨h_an, h_ne⟩ := hz
-      have h_an_evt : ∀ᶠ w in nhds z, AnalyticAt ℂ h w := h_an.eventually_analyticAt
-      have h_ne_evt : ∀ᶠ w in nhds z, h w ≠ 0 := h_an.continuousAt.eventually_ne h_ne
-      filter_upwards [h_an_evt, h_ne_evt] with w hw_an hw_ne using ⟨hw_an, hw_ne⟩
-    have hR_ann_sub_V : R_ann ⊆ V := fun z hz =>
-      ⟨h_analytic z hz, h_h_ne z hz⟩
-    obtain ⟨δ, hδ_pos, hδ_sub⟩ :=
-      hR_ann_compact.exists_thickening_subset_open hV_open hR_ann_sub_V
-    set δ_eff := min R₀ δ with hδ_eff_def
-    have hδ_eff_pos : 0 < δ_eff := lt_min hR₀ hδ_pos
-    have hδ_eff_le_R₀ : δ_eff ≤ R₀ := min_le_left _ _
-    have hδ_eff_le_δ : δ_eff ≤ δ := min_le_right _ _
-    refine ⟨R₀ - δ_eff / 2, by linarith, by linarith, ?_⟩
-    intro z hz
-    obtain ⟨hz_box, hz_not_cball⟩ := hz
-    rw [Metric.mem_closedBall, Complex.dist_eq, not_le] at hz_not_cball
-    have hz_in_V : z ∈ V := by
-      apply hδ_sub
-      rw [Metric.mem_thickening_iff]
-      by_cases h_inside : ‖z - e‖ < R₀
-      · have h_norm_pos : 0 < ‖z - e‖ := by
-          linarith [hz_not_cball, hδ_eff_pos]
-        have h_norm_ne : ‖z - e‖ ≠ 0 := ne_of_gt h_norm_pos
-        have h_norm_ne_c : (‖z - e‖ : ℂ) ≠ 0 := by exact_mod_cast h_norm_ne
-        set w : ℂ := e + (R₀ / ‖z - e‖ : ℂ) * (z - e) with hw_def
-        have h_w_sub : w - e = (R₀ / ‖z - e‖ : ℂ) * (z - e) := by
-          rw [hw_def]; ring
-        have h_w_norm : ‖w - e‖ = R₀ := by
-          have h_coerce_div : (R₀ / ‖z - e‖ : ℂ) = ((R₀ / ‖z - e‖ : ℝ) : ℂ) := by
-            push_cast; ring
-          rw [h_w_sub, h_coerce_div, norm_mul, Complex.norm_real,
-              Real.norm_of_nonneg (div_nonneg hR₀.le (norm_nonneg _)),
-              div_mul_cancel₀ _ h_norm_ne]
-        have h_w_in_cb : w ∈ Metric.closedBall e R₀ := by
-          rw [Metric.mem_closedBall, Complex.dist_eq, h_w_norm]
-        have h_w_in_Ioo : w ∈ Set.Ioo a b ×ℂ Set.Ioo c d := hdisk_in_rect h_w_in_cb
-        have h_w_in_Icc : w ∈ Set.Icc a b ×ℂ Set.Icc c d := by
-          rw [Complex.mem_reProdIm] at h_w_in_Ioo ⊢
-          exact ⟨Set.Ioo_subset_Icc_self h_w_in_Ioo.1,
-                 Set.Ioo_subset_Icc_self h_w_in_Ioo.2⟩
-        have h_w_not_in_ball : w ∉ Metric.ball e R₀ := by
-          rw [Metric.mem_ball, Complex.dist_eq, h_w_norm]; exact lt_irrefl R₀
-        refine ⟨w, ⟨h_w_in_Icc, h_w_not_in_ball⟩, ?_⟩
-        rw [dist_comm, Complex.dist_eq]
-        have h_w_minus_z : w - z = ((R₀ - ‖z - e‖) / ‖z - e‖ : ℂ) * (z - e) := by
-          rw [hw_def]; field_simp; ring
-        have h_coerce_diff : ((R₀ - ‖z - e‖) / ‖z - e‖ : ℂ) =
-            (((R₀ - ‖z - e‖) / ‖z - e‖ : ℝ) : ℂ) := by
-          push_cast; ring
-        rw [h_w_minus_z, h_coerce_diff, norm_mul, Complex.norm_real,
-            Real.norm_of_nonneg
-              (div_nonneg (by linarith [h_inside]) (norm_nonneg _)),
-            div_mul_cancel₀ _ h_norm_ne]
-        linarith [hz_not_cball, hδ_eff_le_δ]
-      · push Not at h_inside
-        refine ⟨z, ⟨?_, ?_⟩, by rw [dist_self]; exact hδ_pos⟩
-        · rw [Complex.mem_reProdIm] at hz_box ⊢
-          exact ⟨Set.Ioo_subset_Icc_self hz_box.1,
-                 Set.Ioo_subset_Icc_self hz_box.2⟩
-        · intro h_in_ball
-          rw [Metric.mem_ball, Complex.dist_eq] at h_in_ball
-          linarith
-    obtain ⟨h_an, h_ne⟩ := hz_in_V
-    exact (h_an.deriv.div h_an h_ne).differentiableAt.differentiableWithinAt
-  -- Annular Cauchy-Goursat for `h'/h`.
-  have h_annular_h :
-      ((∫ x in a..b, deriv h ((x : ℂ) + (c : ℂ) * Complex.I) /
-          h ((x : ℂ) + (c : ℂ) * Complex.I)) +
-        Complex.I * (∫ y in c..d, deriv h ((b : ℂ) + (y : ℂ) * Complex.I) /
-          h ((b : ℂ) + (y : ℂ) * Complex.I)) -
-        (∫ x in a..b, deriv h ((x : ℂ) + (d : ℂ) * Complex.I) /
-          h ((x : ℂ) + (d : ℂ) * Complex.I)) -
-        Complex.I * (∫ y in c..d, deriv h ((a : ℂ) + (y : ℂ) * Complex.I) /
-          h ((a : ℂ) + (y : ℂ) * Complex.I))) -
-      (∮ z in C(e, R₀), deriv h z / h z) = 0 :=
-    integral_boundary_rectMinusDisk_eq_zero_of_differentiableOn
-      (fun z => deriv h z / h z) a b c d e R₀ hab hcd hR₀ hdisk_in_rect
-      h_dh_div_h_diff.continuousOn h_dh_div_h_diff_existential
-  -- Express `r` as a Finset product over Dsupp.
-  have hpi : (2 * Real.pi * Complex.I : ℂ) ≠ 0 := by
-    refine mul_ne_zero (mul_ne_zero ?_ ?_) Complex.I_ne_zero
-    · exact two_ne_zero
-    · exact_mod_cast Real.pi_ne_zero
-  have hr_eq_finset : ∀ z, r z =
-      ∏ u ∈ Dsupp, (z - u) ^ (MeromorphicOn.divisor g R_ann u) := by
-    intro z
-    have heq := Function.FactorizedRational.finprod_eq_fun hD_hfs
-    have hrz : r z = ∏ᶠ u, (z - u) ^ (MeromorphicOn.divisor g R_ann u) := by
-      rw [hr_def, heq]
-    rw [hrz]
-    rw [finprod_eq_prod_of_mulSupport_subset
-      (f := fun u => (z - u) ^ (MeromorphicOn.divisor g R_ann u))
-      (s := Dsupp)]
-    intro u hu
-    simp only [Function.mem_mulSupport, ne_eq] at hu
-    change u ∈ hdiv_finite.toFinset
-    rw [Set.Finite.mem_toFinset]
-    intro h_zero
-    apply hu
-    rw [h_zero]
-    simp
-  have hzpow_eq_pow : ∀ u : ℂ, ∀ z : ℂ,
-      (z - u) ^ (MeromorphicOn.divisor g R_ann u) =
-      (z - u) ^ ((MeromorphicOn.divisor g R_ann u).toNat) := by
-    intro u z
-    rw [← zpow_natCast (z - u) ((MeromorphicOn.divisor g R_ann u).toNat),
-        Int.toNat_of_nonneg (hD_nonneg u)]
-  have hr_eq_natpow : ∀ z, r z =
-      ∏ u ∈ Dsupp, (z - u) ^ ((MeromorphicOn.divisor g R_ann u).toNat) := by
-    intro z
-    rw [hr_eq_finset z]
-    apply Finset.prod_congr rfl
-    intro u _
-    exact hzpow_eq_pow u z
-  -- logDeriv r = ∑_u (D u : ℂ) / (z - u) where g ≠ 0.
-  have h_logDeriv_r_eq : ∀ z ∈ R_ann, g z ≠ 0 →
-      deriv r z / r z = ∑ u ∈ Dsupp,
-        ((MeromorphicOn.divisor g R_ann u : ℂ) / (z - u)) := by
-    intro z hz hz_g_ne
-    have hz_ne_u : ∀ u ∈ Dsupp, z - u ≠ 0 := by
-      intro u hu hzu
-      have hz_eq : z = u := by linear_combination hzu
-      have hu_supp : u ∈ (MeromorphicOn.divisor g R_ann).support := by
-        simpa [hDsupp_def] using hu
-      apply hu_supp
-      rw [← hz_eq]
-      exact h_div_zero_at_edge z hz hz_g_ne
-    set D := MeromorphicOn.divisor g R_ann
-    have hr_funext_nat : r = fun y => ∏ u ∈ Dsupp, (y - u) ^ ((D u).toNat) := by
-      funext y; exact hr_eq_natpow y
-    rw [show deriv r z / r z = logDeriv r z from rfl, hr_funext_nat]
-    rw [logDeriv_prod]
-    · apply Finset.sum_congr rfl
-      intro u _
-      have hd : DifferentiableAt ℂ (fun w : ℂ => w - u) z := by fun_prop
-      rw [show (fun w : ℂ => (w - u) ^ ((D u).toNat)) =
-          (fun w : ℂ => (fun w' => w' - u) w ^ ((D u).toNat)) from rfl,
-          logDeriv_fun_pow hd, logDeriv_apply]
-      have hnat_eq : ((D u).toNat : ℤ) = D u := Int.toNat_of_nonneg (hD_nonneg u)
-      have hnat : ((D u).toNat : ℂ) = (D u : ℂ) := by exact_mod_cast hnat_eq
-      rw [hnat]
-      simp
-      ring
-    · intro u hu
-      exact pow_ne_zero _ (hz_ne_u u hu)
-    · intro u _
-      exact ((differentiable_id.sub_const u).pow _).differentiableAt
-  -- Non-vanishing of (z - u) on each of the four edges and on the sphere
-  -- (since u ∈ Dsupp is in the open rect interior and ∉ closed ball).
-  have h_ne_bot : ∀ u ∈ Dsupp, ∀ _x : ℝ,
-      (_x : ℂ) + (c : ℂ) * Complex.I - u ≠ 0 := by
-    intro u hu x h_eq
-    obtain ⟨hu_rect, _⟩ := hsupp_in_open u hu
-    have hu_im : u.im ∈ Set.Ioo c d := (Complex.mem_reProdIm.mp hu_rect).2
-    have h_im : ((x : ℂ) + (c : ℂ) * Complex.I - u).im = c - u.im := by
-      simp [Complex.sub_im, Complex.add_im, Complex.mul_im,
-        Complex.I_re, Complex.I_im, Complex.ofReal_re, Complex.ofReal_im]
-    have h_im_eq : c - u.im = 0 := by
-      have := congrArg Complex.im h_eq
-      rw [h_im] at this
-      simpa using this
-    obtain ⟨h1, _⟩ := hu_im
-    linarith
-  have h_ne_top : ∀ u ∈ Dsupp, ∀ _x : ℝ,
-      (_x : ℂ) + (d : ℂ) * Complex.I - u ≠ 0 := by
-    intro u hu x h_eq
-    obtain ⟨hu_rect, _⟩ := hsupp_in_open u hu
-    have hu_im : u.im ∈ Set.Ioo c d := (Complex.mem_reProdIm.mp hu_rect).2
-    have h_im : ((x : ℂ) + (d : ℂ) * Complex.I - u).im = d - u.im := by
-      simp [Complex.sub_im, Complex.add_im, Complex.mul_im,
-        Complex.I_re, Complex.I_im, Complex.ofReal_re, Complex.ofReal_im]
-    have h_im_eq : d - u.im = 0 := by
-      have := congrArg Complex.im h_eq
-      rw [h_im] at this
-      simpa using this
-    obtain ⟨_, h2⟩ := hu_im
-    linarith
-  have h_ne_right : ∀ u ∈ Dsupp, ∀ _y : ℝ,
-      (b : ℂ) + (_y : ℂ) * Complex.I - u ≠ 0 := by
-    intro u hu y h_eq
-    obtain ⟨hu_rect, _⟩ := hsupp_in_open u hu
-    have hu_re : u.re ∈ Set.Ioo a b := (Complex.mem_reProdIm.mp hu_rect).1
-    have h_re : ((b : ℂ) + (y : ℂ) * Complex.I - u).re = b - u.re := by
-      simp [Complex.sub_re, Complex.add_re, Complex.mul_re,
-        Complex.I_re, Complex.I_im, Complex.ofReal_re, Complex.ofReal_im]
-    have h_re_eq : b - u.re = 0 := by
-      have := congrArg Complex.re h_eq
-      rw [h_re] at this
-      simpa using this
-    obtain ⟨_, h2⟩ := hu_re
-    linarith
-  have h_ne_left : ∀ u ∈ Dsupp, ∀ _y : ℝ,
-      (a : ℂ) + (_y : ℂ) * Complex.I - u ≠ 0 := by
-    intro u hu y h_eq
-    obtain ⟨hu_rect, _⟩ := hsupp_in_open u hu
-    have hu_re : u.re ∈ Set.Ioo a b := (Complex.mem_reProdIm.mp hu_rect).1
-    have h_re : ((a : ℂ) + (y : ℂ) * Complex.I - u).re = a - u.re := by
-      simp [Complex.sub_re, Complex.add_re, Complex.mul_re,
-        Complex.I_re, Complex.I_im, Complex.ofReal_re, Complex.ofReal_im]
-    have h_re_eq : a - u.re = 0 := by
-      have := congrArg Complex.re h_eq
-      rw [h_re] at this
-      simpa using this
-    obtain ⟨h1, _⟩ := hu_re
-    linarith
-  have h_ne_sphere : ∀ u ∈ Dsupp, ∀ θ : ℝ,
-      _root_.circleMap e R₀ θ - u ≠ 0 := by
-    intro u hu θ h_eq
-    obtain ⟨_, hu_not_cb⟩ := hsupp_in_open u hu
-    have hsp : _root_.circleMap e R₀ θ ∈ Metric.closedBall e R₀ :=
-      Metric.sphere_subset_closedBall (_root_.circleMap_mem_sphere e hR₀.le θ)
-    have : _root_.circleMap e R₀ θ = u := by linear_combination h_eq
-    rw [this] at hsp
-    exact hu_not_cb hsp
-  -- IntervalIntegrability of the per-pole summand on each edge.
-  have h_summand_int_bot : ∀ u ∈ Dsupp,
-      IntervalIntegrable (fun x : ℝ =>
-        (MeromorphicOn.divisor g R_ann u : ℂ) / ((x : ℂ) + (c : ℂ) * Complex.I - u))
-        MeasureTheory.volume a b := by
-    intro u hu
-    apply Continuous.intervalIntegrable
-    have h_cont : Continuous fun x : ℝ => ((x : ℂ) + (c : ℂ) * Complex.I - u) := by fun_prop
-    exact continuous_const.div h_cont (fun x => h_ne_bot u hu x)
-  have h_summand_int_top : ∀ u ∈ Dsupp,
-      IntervalIntegrable (fun x : ℝ =>
-        (MeromorphicOn.divisor g R_ann u : ℂ) / ((x : ℂ) + (d : ℂ) * Complex.I - u))
-        MeasureTheory.volume a b := by
-    intro u hu
-    apply Continuous.intervalIntegrable
-    have h_cont : Continuous fun x : ℝ => ((x : ℂ) + (d : ℂ) * Complex.I - u) := by fun_prop
-    exact continuous_const.div h_cont (fun x => h_ne_top u hu x)
-  have h_summand_int_right : ∀ u ∈ Dsupp,
-      IntervalIntegrable (fun y : ℝ =>
-        (MeromorphicOn.divisor g R_ann u : ℂ) / ((b : ℂ) + (y : ℂ) * Complex.I - u))
-        MeasureTheory.volume c d := by
-    intro u hu
-    apply Continuous.intervalIntegrable
-    have h_cont : Continuous fun y : ℝ => ((b : ℂ) + (y : ℂ) * Complex.I - u) := by fun_prop
-    exact continuous_const.div h_cont (fun y => h_ne_right u hu y)
-  have h_summand_int_left : ∀ u ∈ Dsupp,
-      IntervalIntegrable (fun y : ℝ =>
-        (MeromorphicOn.divisor g R_ann u : ℂ) / ((a : ℂ) + (y : ℂ) * Complex.I - u))
-        MeasureTheory.volume c d := by
-    intro u hu
-    apply Continuous.intervalIntegrable
-    have h_cont : Continuous fun y : ℝ => ((a : ℂ) + (y : ℂ) * Complex.I - u) := by fun_prop
-    exact continuous_const.div h_cont (fun y => h_ne_left u hu y)
-  -- IntervalIntegrability of the per-pole summand parametrized by the circle.
-  have h_summand_int_circle : ∀ u ∈ Dsupp,
-      IntervalIntegrable
-        (fun θ : ℝ => deriv (_root_.circleMap e R₀) θ •
-          ((MeromorphicOn.divisor g R_ann u : ℂ) /
-            (_root_.circleMap e R₀ θ - u)))
-        MeasureTheory.volume 0 (2 * Real.pi) := by
-    intro u hu
-    apply Continuous.intervalIntegrable
-    have h_param_cont : Continuous (_root_.circleMap e R₀) := continuous_circleMap _ _
-    have h_deriv_cont : Continuous (deriv (_root_.circleMap e R₀)) := by
-      have h_eq : deriv (_root_.circleMap e R₀) =
-          fun θ : ℝ => _root_.circleMap 0 R₀ θ * Complex.I := by
-        funext θ; exact deriv_circleMap _ _ _
-      rw [h_eq]; fun_prop
-    have h_sub_cont : Continuous (fun θ : ℝ => _root_.circleMap e R₀ θ - u) :=
-      h_param_cont.sub continuous_const
-    have h_inv_cont : Continuous (fun θ : ℝ =>
-        (MeromorphicOn.divisor g R_ann u : ℂ) / (_root_.circleMap e R₀ θ - u)) :=
-      continuous_const.div h_sub_cont (fun θ => h_ne_sphere u hu θ)
-    exact h_deriv_cont.smul h_inv_cont
-  -- IntervalIntegrability of `r'/r` on each edge.
-  have hr_diff_global : Differentiable ℂ r := fun z => (hr_analytic z).differentiableAt
-  have hr_cont : Continuous r := hr_diff_global.continuous
-  have h_dr_cont : Continuous (deriv r) := by
-    refine continuous_iff_continuousAt.mpr (fun z => ?_)
-    exact (hr_analytic z).deriv.continuousAt
-  have h_dr_div_r_int_bot : IntervalIntegrable
-      (fun x : ℝ => deriv r ((x : ℂ) + (c : ℂ) * Complex.I) /
-        r ((x : ℂ) + (c : ℂ) * Complex.I))
-      MeasureTheory.volume a b := by
-    apply Continuous.intervalIntegrable
-    have h_param_cont : Continuous (fun x : ℝ => ((x : ℂ) + (c : ℂ) * Complex.I)) := by fun_prop
-    have h_r_param_ne : ∀ x : ℝ, r ((x : ℂ) + (c : ℂ) * Complex.I) ≠ 0 := by
-      intro x
-      rw [hr_eq_natpow]
-      exact Finset.prod_ne_zero_iff.mpr
-        (fun u hu => pow_ne_zero _ (h_ne_bot u hu x))
-    exact (h_dr_cont.comp h_param_cont).div (hr_cont.comp h_param_cont) h_r_param_ne
-  have h_dr_div_r_int_top : IntervalIntegrable
-      (fun x : ℝ => deriv r ((x : ℂ) + (d : ℂ) * Complex.I) /
-        r ((x : ℂ) + (d : ℂ) * Complex.I))
-      MeasureTheory.volume a b := by
-    apply Continuous.intervalIntegrable
-    have h_param_cont : Continuous (fun x : ℝ => ((x : ℂ) + (d : ℂ) * Complex.I)) := by fun_prop
-    have h_r_param_ne : ∀ x : ℝ, r ((x : ℂ) + (d : ℂ) * Complex.I) ≠ 0 := by
-      intro x
-      rw [hr_eq_natpow]
-      exact Finset.prod_ne_zero_iff.mpr
-        (fun u hu => pow_ne_zero _ (h_ne_top u hu x))
-    exact (h_dr_cont.comp h_param_cont).div (hr_cont.comp h_param_cont) h_r_param_ne
-  have h_dr_div_r_int_right : IntervalIntegrable
-      (fun y : ℝ => deriv r ((b : ℂ) + (y : ℂ) * Complex.I) /
-        r ((b : ℂ) + (y : ℂ) * Complex.I))
-      MeasureTheory.volume c d := by
-    apply Continuous.intervalIntegrable
-    have h_param_cont : Continuous (fun y : ℝ => ((b : ℂ) + (y : ℂ) * Complex.I)) := by fun_prop
-    have h_r_param_ne : ∀ y : ℝ, r ((b : ℂ) + (y : ℂ) * Complex.I) ≠ 0 := by
-      intro y
-      rw [hr_eq_natpow]
-      exact Finset.prod_ne_zero_iff.mpr
-        (fun u hu => pow_ne_zero _ (h_ne_right u hu y))
-    exact (h_dr_cont.comp h_param_cont).div (hr_cont.comp h_param_cont) h_r_param_ne
-  have h_dr_div_r_int_left : IntervalIntegrable
-      (fun y : ℝ => deriv r ((a : ℂ) + (y : ℂ) * Complex.I) /
-        r ((a : ℂ) + (y : ℂ) * Complex.I))
-      MeasureTheory.volume c d := by
-    apply Continuous.intervalIntegrable
-    have h_param_cont : Continuous (fun y : ℝ => ((a : ℂ) + (y : ℂ) * Complex.I)) := by fun_prop
-    have h_r_param_ne : ∀ y : ℝ, r ((a : ℂ) + (y : ℂ) * Complex.I) ≠ 0 := by
-      intro y
-      rw [hr_eq_natpow]
-      exact Finset.prod_ne_zero_iff.mpr
-        (fun u hu => pow_ne_zero _ (h_ne_left u hu y))
-    exact (h_dr_cont.comp h_param_cont).div (hr_cont.comp h_param_cont) h_r_param_ne
-  -- IntervalIntegrability of `h'/h` on each edge.
-  have h_dh_div_h_int_bot : IntervalIntegrable
-      (fun x : ℝ => deriv h ((x : ℂ) + (c : ℂ) * Complex.I) /
-        h ((x : ℂ) + (c : ℂ) * Complex.I))
-      MeasureTheory.volume a b := by
-    apply ContinuousOn.intervalIntegrable
-    have h_param_cont : ContinuousOn (fun x : ℝ => ((x : ℂ) + (c : ℂ) * Complex.I))
-        (Set.uIcc a b) := by apply Continuous.continuousOn; fun_prop
-    have h_param_maps_to : Set.MapsTo (fun x : ℝ => (x : ℂ) + (c : ℂ) * Complex.I)
-        (Set.uIcc a b) R_ann := by
-      intro x hx
-      rw [Set.uIcc_of_le hab.le] at hx
-      exact h_bot_mem x hx
-    exact h_dh_div_h_diff.continuousOn.comp h_param_cont h_param_maps_to
-  have h_dh_div_h_int_top : IntervalIntegrable
-      (fun x : ℝ => deriv h ((x : ℂ) + (d : ℂ) * Complex.I) /
-        h ((x : ℂ) + (d : ℂ) * Complex.I))
-      MeasureTheory.volume a b := by
-    apply ContinuousOn.intervalIntegrable
-    have h_param_cont : ContinuousOn (fun x : ℝ => ((x : ℂ) + (d : ℂ) * Complex.I))
-        (Set.uIcc a b) := by apply Continuous.continuousOn; fun_prop
-    have h_param_maps_to : Set.MapsTo (fun x : ℝ => (x : ℂ) + (d : ℂ) * Complex.I)
-        (Set.uIcc a b) R_ann := by
-      intro x hx
-      rw [Set.uIcc_of_le hab.le] at hx
-      exact h_top_mem x hx
-    exact h_dh_div_h_diff.continuousOn.comp h_param_cont h_param_maps_to
-  have h_dh_div_h_int_right : IntervalIntegrable
-      (fun y : ℝ => deriv h ((b : ℂ) + (y : ℂ) * Complex.I) /
-        h ((b : ℂ) + (y : ℂ) * Complex.I))
-      MeasureTheory.volume c d := by
-    apply ContinuousOn.intervalIntegrable
-    have h_param_cont : ContinuousOn (fun y : ℝ => ((b : ℂ) + (y : ℂ) * Complex.I))
-        (Set.uIcc c d) := by apply Continuous.continuousOn; fun_prop
-    have h_param_maps_to : Set.MapsTo (fun y : ℝ => (b : ℂ) + (y : ℂ) * Complex.I)
-        (Set.uIcc c d) R_ann := by
-      intro y hy
-      rw [Set.uIcc_of_le hcd.le] at hy
-      exact h_right_mem y hy
-    exact h_dh_div_h_diff.continuousOn.comp h_param_cont h_param_maps_to
-  have h_dh_div_h_int_left : IntervalIntegrable
-      (fun y : ℝ => deriv h ((a : ℂ) + (y : ℂ) * Complex.I) /
-        h ((a : ℂ) + (y : ℂ) * Complex.I))
-      MeasureTheory.volume c d := by
-    apply ContinuousOn.intervalIntegrable
-    have h_param_cont : ContinuousOn (fun y : ℝ => ((a : ℂ) + (y : ℂ) * Complex.I))
-        (Set.uIcc c d) := by apply Continuous.continuousOn; fun_prop
-    have h_param_maps_to : Set.MapsTo (fun y : ℝ => (a : ℂ) + (y : ℂ) * Complex.I)
-        (Set.uIcc c d) R_ann := by
-      intro y hy
-      rw [Set.uIcc_of_le hcd.le] at hy
-      exact h_left_mem y hy
-    exact h_dh_div_h_diff.continuousOn.comp h_param_cont h_param_maps_to
-  -- Per-edge `r`-integral decomposition.
-  have h_bot_r_decomp : (∫ x in a..b, deriv r ((x : ℂ) + (c : ℂ) * Complex.I) /
-        r ((x : ℂ) + (c : ℂ) * Complex.I)) =
-      ∑ u ∈ Dsupp, (MeromorphicOn.divisor g R_ann u : ℂ) *
-        (∫ x in a..b, ((x : ℂ) + (c : ℂ) * Complex.I - u)⁻¹) := by
-    have h_pointwise : (∫ x in a..b, deriv r ((x : ℂ) + (c : ℂ) * Complex.I) /
-          r ((x : ℂ) + (c : ℂ) * Complex.I)) =
-        (∫ x in a..b, ∑ u ∈ Dsupp, (MeromorphicOn.divisor g R_ann u : ℂ) /
-          ((x : ℂ) + (c : ℂ) * Complex.I - u)) := by
-      apply intervalIntegral.integral_congr
-      intro x hx
-      rw [Set.uIcc_of_le hab.le] at hx
-      exact h_logDeriv_r_eq _ (h_bot_mem x hx) (hg_bot x hx)
-    rw [h_pointwise, intervalIntegral.integral_finset_sum h_summand_int_bot]
-    apply Finset.sum_congr rfl
-    intro u _
-    simp_rw [div_eq_mul_inv]
-    exact intervalIntegral.integral_const_mul _ _
-  have h_top_r_decomp : (∫ x in a..b, deriv r ((x : ℂ) + (d : ℂ) * Complex.I) /
-        r ((x : ℂ) + (d : ℂ) * Complex.I)) =
-      ∑ u ∈ Dsupp, (MeromorphicOn.divisor g R_ann u : ℂ) *
-        (∫ x in a..b, ((x : ℂ) + (d : ℂ) * Complex.I - u)⁻¹) := by
-    have h_pointwise : (∫ x in a..b, deriv r ((x : ℂ) + (d : ℂ) * Complex.I) /
-          r ((x : ℂ) + (d : ℂ) * Complex.I)) =
-        (∫ x in a..b, ∑ u ∈ Dsupp, (MeromorphicOn.divisor g R_ann u : ℂ) /
-          ((x : ℂ) + (d : ℂ) * Complex.I - u)) := by
-      apply intervalIntegral.integral_congr
-      intro x hx
-      rw [Set.uIcc_of_le hab.le] at hx
-      exact h_logDeriv_r_eq _ (h_top_mem x hx) (hg_top x hx)
-    rw [h_pointwise, intervalIntegral.integral_finset_sum h_summand_int_top]
-    apply Finset.sum_congr rfl
-    intro u _
-    simp_rw [div_eq_mul_inv]
-    exact intervalIntegral.integral_const_mul _ _
-  have h_right_r_decomp : (∫ y in c..d, deriv r ((b : ℂ) + (y : ℂ) * Complex.I) /
-        r ((b : ℂ) + (y : ℂ) * Complex.I)) =
-      ∑ u ∈ Dsupp, (MeromorphicOn.divisor g R_ann u : ℂ) *
-        (∫ y in c..d, ((b : ℂ) + (y : ℂ) * Complex.I - u)⁻¹) := by
-    have h_pointwise : (∫ y in c..d, deriv r ((b : ℂ) + (y : ℂ) * Complex.I) /
-          r ((b : ℂ) + (y : ℂ) * Complex.I)) =
-        (∫ y in c..d, ∑ u ∈ Dsupp, (MeromorphicOn.divisor g R_ann u : ℂ) /
-          ((b : ℂ) + (y : ℂ) * Complex.I - u)) := by
-      apply intervalIntegral.integral_congr
-      intro y hy
-      rw [Set.uIcc_of_le hcd.le] at hy
-      exact h_logDeriv_r_eq _ (h_right_mem y hy) (hg_right y hy)
-    rw [h_pointwise, intervalIntegral.integral_finset_sum h_summand_int_right]
-    apply Finset.sum_congr rfl
-    intro u _
-    simp_rw [div_eq_mul_inv]
-    exact intervalIntegral.integral_const_mul _ _
-  have h_left_r_decomp : (∫ y in c..d, deriv r ((a : ℂ) + (y : ℂ) * Complex.I) /
-        r ((a : ℂ) + (y : ℂ) * Complex.I)) =
-      ∑ u ∈ Dsupp, (MeromorphicOn.divisor g R_ann u : ℂ) *
-        (∫ y in c..d, ((a : ℂ) + (y : ℂ) * Complex.I - u)⁻¹) := by
-    have h_pointwise : (∫ y in c..d, deriv r ((a : ℂ) + (y : ℂ) * Complex.I) /
-          r ((a : ℂ) + (y : ℂ) * Complex.I)) =
-        (∫ y in c..d, ∑ u ∈ Dsupp, (MeromorphicOn.divisor g R_ann u : ℂ) /
-          ((a : ℂ) + (y : ℂ) * Complex.I - u)) := by
-      apply intervalIntegral.integral_congr
-      intro y hy
-      rw [Set.uIcc_of_le hcd.le] at hy
-      exact h_logDeriv_r_eq _ (h_left_mem y hy) (hg_left y hy)
-    rw [h_pointwise, intervalIntegral.integral_finset_sum h_summand_int_left]
-    apply Finset.sum_congr rfl
-    intro u _
-    simp_rw [div_eq_mul_inv]
-    exact intervalIntegral.integral_const_mul _ _
-  -- Circle integral decomposition for `r'/r`.
-  -- Unfold to interval integral, swap with the Finset sum, and recognize each
-  -- summand as `(D u) * ∮ (z-u)⁻¹`.
-  have h_circle_r_decomp : (∮ z in C(e, R₀), deriv r z / r z) =
-      ∑ u ∈ Dsupp, (MeromorphicOn.divisor g R_ann u : ℂ) *
-        (∮ z in C(e, R₀), (z - u)⁻¹) := by
-    have h_pointwise_sphere : ∀ θ : ℝ,
-        deriv r (_root_.circleMap e R₀ θ) / r (_root_.circleMap e R₀ θ) =
-        ∑ u ∈ Dsupp, (MeromorphicOn.divisor g R_ann u : ℂ) /
-          (_root_.circleMap e R₀ θ - u) := by
-      intro θ
-      have hsp : _root_.circleMap e R₀ θ ∈ Metric.sphere e R₀ :=
-        _root_.circleMap_mem_sphere e hR₀.le θ
-      exact h_logDeriv_r_eq _ (h_sphere_mem _ hsp) (hg_sphere _ hsp)
-    change (∫ θ in (0:ℝ)..(2 * Real.pi),
-        deriv (_root_.circleMap e R₀) θ •
-          (deriv r (_root_.circleMap e R₀ θ) / r (_root_.circleMap e R₀ θ))) = _
-    have h_integrand_eq : ∀ θ : ℝ,
-        deriv (_root_.circleMap e R₀) θ •
-          (deriv r (_root_.circleMap e R₀ θ) / r (_root_.circleMap e R₀ θ)) =
-        ∑ u ∈ Dsupp, deriv (_root_.circleMap e R₀) θ •
-          ((MeromorphicOn.divisor g R_ann u : ℂ) /
-            (_root_.circleMap e R₀ θ - u)) := by
-      intro θ
-      rw [h_pointwise_sphere θ, Finset.smul_sum]
-    rw [show (fun θ : ℝ => deriv (_root_.circleMap e R₀) θ •
-          (deriv r (_root_.circleMap e R₀ θ) / r (_root_.circleMap e R₀ θ))) =
-        (fun θ : ℝ => ∑ u ∈ Dsupp, deriv (_root_.circleMap e R₀) θ •
-          ((MeromorphicOn.divisor g R_ann u : ℂ) /
-            (_root_.circleMap e R₀ θ - u))) from funext h_integrand_eq]
-    rw [intervalIntegral.integral_finset_sum h_summand_int_circle]
-    apply Finset.sum_congr rfl
-    intro u _
-    change (∫ θ in (0:ℝ)..(2 * Real.pi), deriv (_root_.circleMap e R₀) θ •
-        ((MeromorphicOn.divisor g R_ann u : ℂ) /
-          (_root_.circleMap e R₀ θ - u))) =
-        (MeromorphicOn.divisor g R_ann u : ℂ) *
-          (∫ θ in (0:ℝ)..(2 * Real.pi),
-            deriv (_root_.circleMap e R₀) θ • (_root_.circleMap e R₀ θ - u)⁻¹)
-    rw [show (fun θ : ℝ => deriv (_root_.circleMap e R₀) θ •
-        ((MeromorphicOn.divisor g R_ann u : ℂ) /
-          (_root_.circleMap e R₀ θ - u))) =
-        (fun θ : ℝ => (MeromorphicOn.divisor g R_ann u : ℂ) *
-          (deriv (_root_.circleMap e R₀) θ •
-            (_root_.circleMap e R₀ θ - u)⁻¹)) from by
-      funext θ
-      simp only [smul_eq_mul]
-      ring]
-    exact intervalIntegral.integral_const_mul _ _
-  -- For `u ∈ Dsupp`, `∮ (z-u)⁻¹ = 0` since `u ∉ closedBall e R₀`.
-  have h_circle_inv_zero : ∀ u ∈ Dsupp, (∮ z in C(e, R₀), (z - u)⁻¹) = 0 := by
-    intro u hu
-    obtain ⟨_, hu_not_cb⟩ := hsupp_in_open u hu
-    apply circleIntegral_eq_zero_of_differentiable_on_off_countable hR₀.le
-      (s := ∅) Set.countable_empty
-    · intro z hz
-      have hzne : z - u ≠ 0 := by
-        intro h
-        have : z = u := by linear_combination h
-        rw [this] at hz
-        exact hu_not_cb hz
-      exact ((continuous_id.sub continuous_const).continuousAt.inv₀ hzne).continuousWithinAt
-    · intro z hz
-      simp only [Set.mem_diff, Set.mem_empty_iff_false, not_false_eq_true, and_true] at hz
-      have hzne : z ≠ u := by
-        intro h_eq
-        rw [h_eq] at hz
-        exact hu_not_cb (Metric.ball_subset_closedBall hz)
-      exact (differentiableAt_id.sub_const u).inv (sub_ne_zero.mpr hzne)
-  -- Per-pole rectangle contribution = 2πi (winding = 1 inside open rect).
-  have h_per_pole_rect : ∀ u ∈ Dsupp,
-      (∫ x in a..b, ((x : ℂ) + (c : ℂ) * Complex.I - u)⁻¹) +
-      Complex.I * (∫ y in c..d, ((b : ℂ) + (y : ℂ) * Complex.I - u)⁻¹) -
-      (∫ x in a..b, ((x : ℂ) + (d : ℂ) * Complex.I - u)⁻¹) -
-      Complex.I * (∫ y in c..d, ((a : ℂ) + (y : ℂ) * Complex.I - u)⁻¹) =
-      2 * Real.pi * Complex.I := by
-    intro u hu
-    obtain ⟨hu_rect, _⟩ := hsupp_in_open u hu
-    have hu_re : u.re ∈ Set.Ioo a b := (Complex.mem_reProdIm.mp hu_rect).1
-    have hu_im : u.im ∈ Set.Ioo c d := (Complex.mem_reProdIm.mp hu_rect).2
-    have h_one := rectangleWindingNumber_inside_eq_one a b c d hab hcd hu_re hu_im
-    have hk : (2 * Real.pi * Complex.I) * ((2 * Real.pi * Complex.I)⁻¹ *
-        ((∫ x in a..b, ((x : ℂ) + (c : ℂ) * Complex.I - u)⁻¹) +
-        Complex.I * (∫ y in c..d, ((b : ℂ) + (y : ℂ) * Complex.I - u)⁻¹) -
-        (∫ x in a..b, ((x : ℂ) + (d : ℂ) * Complex.I - u)⁻¹) -
-        Complex.I * (∫ y in c..d, ((a : ℂ) + (y : ℂ) * Complex.I - u)⁻¹))) =
-        (2 * Real.pi * Complex.I) * 1 := by rw [h_one]
-    rw [← mul_assoc, mul_inv_cancel₀ hpi, one_mul, mul_one] at hk
-    exact hk
-  -- Per-edge split: ∫ (r'/r + h'/h) = ∫ r'/r + ∫ h'/h.
-  have h_bot_split : (∫ x in a..b, deriv r ((x : ℂ) + (c : ℂ) * Complex.I) /
-        r ((x : ℂ) + (c : ℂ) * Complex.I) +
-        deriv h ((x : ℂ) + (c : ℂ) * Complex.I) /
-        h ((x : ℂ) + (c : ℂ) * Complex.I)) =
-      (∫ x in a..b, deriv r ((x : ℂ) + (c : ℂ) * Complex.I) /
-        r ((x : ℂ) + (c : ℂ) * Complex.I)) +
-      (∫ x in a..b, deriv h ((x : ℂ) + (c : ℂ) * Complex.I) /
-        h ((x : ℂ) + (c : ℂ) * Complex.I)) :=
-    intervalIntegral.integral_add h_dr_div_r_int_bot h_dh_div_h_int_bot
-  have h_top_split : (∫ x in a..b, deriv r ((x : ℂ) + (d : ℂ) * Complex.I) /
-        r ((x : ℂ) + (d : ℂ) * Complex.I) +
-        deriv h ((x : ℂ) + (d : ℂ) * Complex.I) /
-        h ((x : ℂ) + (d : ℂ) * Complex.I)) =
-      (∫ x in a..b, deriv r ((x : ℂ) + (d : ℂ) * Complex.I) /
-        r ((x : ℂ) + (d : ℂ) * Complex.I)) +
-      (∫ x in a..b, deriv h ((x : ℂ) + (d : ℂ) * Complex.I) /
-        h ((x : ℂ) + (d : ℂ) * Complex.I)) :=
-    intervalIntegral.integral_add h_dr_div_r_int_top h_dh_div_h_int_top
-  have h_right_split_int : (∫ y in c..d, deriv r ((b : ℂ) + (y : ℂ) * Complex.I) /
-        r ((b : ℂ) + (y : ℂ) * Complex.I) +
-        deriv h ((b : ℂ) + (y : ℂ) * Complex.I) /
-        h ((b : ℂ) + (y : ℂ) * Complex.I)) =
-      (∫ y in c..d, deriv r ((b : ℂ) + (y : ℂ) * Complex.I) /
-        r ((b : ℂ) + (y : ℂ) * Complex.I)) +
-      (∫ y in c..d, deriv h ((b : ℂ) + (y : ℂ) * Complex.I) /
-        h ((b : ℂ) + (y : ℂ) * Complex.I)) :=
-    intervalIntegral.integral_add h_dr_div_r_int_right h_dh_div_h_int_right
-  have h_left_split_int : (∫ y in c..d, deriv r ((a : ℂ) + (y : ℂ) * Complex.I) /
-        r ((a : ℂ) + (y : ℂ) * Complex.I) +
-        deriv h ((a : ℂ) + (y : ℂ) * Complex.I) /
-        h ((a : ℂ) + (y : ℂ) * Complex.I)) =
-      (∫ y in c..d, deriv r ((a : ℂ) + (y : ℂ) * Complex.I) /
-        r ((a : ℂ) + (y : ℂ) * Complex.I)) +
-      (∫ y in c..d, deriv h ((a : ℂ) + (y : ℂ) * Complex.I) /
-        h ((a : ℂ) + (y : ℂ) * Complex.I)) :=
-    intervalIntegral.integral_add h_dr_div_r_int_left h_dh_div_h_int_left
-  -- Circle integral split: ∮ (r'/r + h'/h) = ∮ r'/r + ∮ h'/h.
-  have h_circle_split : (∮ z in C(e, R₀), deriv r z / r z + deriv h z / h z) =
-      (∮ z in C(e, R₀), deriv r z / r z) + (∮ z in C(e, R₀), deriv h z / h z) := by
-    apply circleIntegral.integral_add
-    · -- CircleIntegrable r'/r: r'/r is continuous on the sphere
-      -- since r is non-vanishing there.
-      have hr_ne_sphere : ∀ z ∈ Metric.sphere e R₀, r z ≠ 0 := by
-        intro z hz
-        rw [hr_eq_natpow]
-        refine Finset.prod_ne_zero_iff.mpr (fun u hu => pow_ne_zero _ ?_)
-        intro h_eq
-        obtain ⟨_, hu_not_cb⟩ := hsupp_in_open u hu
-        have : z = u := by linear_combination h_eq
-        rw [this] at hz
-        exact hu_not_cb (Metric.sphere_subset_closedBall hz)
-      apply ContinuousOn.circleIntegrable hR₀.le
-      exact h_dr_cont.continuousOn.div hr_cont.continuousOn hr_ne_sphere
-    · -- CircleIntegrable h'/h: h'/h is differentiable on R_ann ⊃ sphere.
-      apply ContinuousOn.circleIntegrable hR₀.le
-      apply h_dh_div_h_diff.continuousOn.mono
-      intro z hz
-      exact h_sphere_mem z hz
-  -- finsum bridge.
-  have h_finset_eq_finsum :
-      (∑ u ∈ Dsupp, (MeromorphicOn.divisor g R_ann u : ℂ)) =
-      (∑ᶠ u, (MeromorphicOn.divisor g R_ann u : ℂ)) := by
-    rw [finsum_eq_sum_of_support_subset _ (s := Dsupp)]
-    intro u hu
-    change u ∈ hdiv_finite.toFinset
-    rw [Set.Finite.mem_toFinset]
-    intro hzero
-    apply hu
-    simp only [Function.mem_support, ne_eq] at hu
-    push_cast at hu ⊢
-    simp [hzero] at hu
-  have h_finsum_int_eq_nat :
-      (∑ᶠ u, (MeromorphicOn.divisor g R_ann u : ℂ)) =
-      (((∑ᶠ u, MeromorphicOn.divisor g R_ann u).toNat : ℤ) : ℂ) := by
-    have h_nonneg : 0 ≤ ∑ᶠ u, MeromorphicOn.divisor g R_ann u :=
-      finsum_nonneg (fun u => hD_nonneg u)
-    rw [Int.toNat_of_nonneg h_nonneg]
-    have hcast := AddMonoidHom.map_finsum (Int.castRingHom ℂ).toAddMonoidHom
-      (f := fun u => MeromorphicOn.divisor g R_ann u) hdiv_finite
-    simp only [RingHom.toAddMonoidHom_eq_coe, AddMonoidHom.coe_coe, Int.coe_castRingHom] at hcast
-    rw [← hcast]
-  -- Per-pole equation combining 4 rect edges (= 2πi) with 0 circle contribution.
-  have h_per_pole_combined : ∀ u ∈ Dsupp,
-      ((∫ x in a..b, ((x : ℂ) + (c : ℂ) * Complex.I - u)⁻¹) +
-        Complex.I * (∫ y in c..d, ((b : ℂ) + (y : ℂ) * Complex.I - u)⁻¹) -
-        (∫ x in a..b, ((x : ℂ) + (d : ℂ) * Complex.I - u)⁻¹) -
-        Complex.I * (∫ y in c..d, ((a : ℂ) + (y : ℂ) * Complex.I - u)⁻¹)) -
-      (∮ z in C(e, R₀), (z - u)⁻¹) = 2 * Real.pi * Complex.I := by
-    intro u hu
-    rw [h_circle_inv_zero u hu, sub_zero]
-    exact h_per_pole_rect u hu
-  -- Final calc.
-  refine ⟨(∑ᶠ u, MeromorphicOn.divisor g R_ann u).toNat, ?_⟩
-  -- Rewrite all g-integrals to (r + h) form.
-  rw [h_int_bot, h_int_top, h_int_right, h_int_left, h_int_circle,
-      h_bot_split, h_top_split, h_right_split_int, h_left_split_int,
-      h_circle_split,
-      h_bot_r_decomp, h_top_r_decomp, h_right_r_decomp, h_left_r_decomp,
-      h_circle_r_decomp]
-  -- Now the goal involves: (4 r-rect sums + 4 h-rect terms) - (r-circle sum + h-circle).
-  -- Combine: (r-rect sums - r-circle sum) gives ∑ u (D u) * 2πi via h_per_pole_combined.
-  --         (h-rect 4 - h-circle) = 0 via h_annular_h.
-  set D := MeromorphicOn.divisor g R_ann
-  -- Compute the r-part as a single Finset sum.
-  have h_r_combine :
-      (∑ u ∈ Dsupp, (D u : ℂ) * (∫ x in a..b, ((x : ℂ) + (c : ℂ) * Complex.I - u)⁻¹)) +
-      Complex.I * (∑ u ∈ Dsupp, (D u : ℂ) *
-        (∫ y in c..d, ((b : ℂ) + (y : ℂ) * Complex.I - u)⁻¹)) -
-      (∑ u ∈ Dsupp, (D u : ℂ) * (∫ x in a..b, ((x : ℂ) + (d : ℂ) * Complex.I - u)⁻¹)) -
-      Complex.I * (∑ u ∈ Dsupp, (D u : ℂ) *
-        (∫ y in c..d, ((a : ℂ) + (y : ℂ) * Complex.I - u)⁻¹)) -
-      (∑ u ∈ Dsupp, (D u : ℂ) * (∮ z in C(e, R₀), (z - u)⁻¹)) =
-      (∑ u ∈ Dsupp, (D u : ℂ)) * (2 * Real.pi * Complex.I) := by
-    simp only [Finset.mul_sum]
-    rw [← Finset.sum_add_distrib, ← Finset.sum_sub_distrib,
-        ← Finset.sum_sub_distrib, ← Finset.sum_sub_distrib, Finset.sum_mul]
-    apply Finset.sum_congr rfl
-    intro u hu
-    have hpp := h_per_pole_combined u hu
-    linear_combination (D u : ℂ) * hpp
-  -- Reshape goal so the r-part and h-part separate, then apply h_r_combine and h_annular_h.
-  rw [show
-      (((∑ u ∈ Dsupp, (D u : ℂ) *
-          (∫ x in a..b, ((x : ℂ) + (c : ℂ) * Complex.I - u)⁻¹)) +
-        (∫ x in a..b, deriv h ((x : ℂ) + (c : ℂ) * Complex.I) /
-          h ((x : ℂ) + (c : ℂ) * Complex.I))) +
-       Complex.I * ((∑ u ∈ Dsupp, (D u : ℂ) *
-          (∫ y in c..d, ((b : ℂ) + (y : ℂ) * Complex.I - u)⁻¹)) +
-        (∫ y in c..d, deriv h ((b : ℂ) + (y : ℂ) * Complex.I) /
-          h ((b : ℂ) + (y : ℂ) * Complex.I))) -
-       ((∑ u ∈ Dsupp, (D u : ℂ) *
-          (∫ x in a..b, ((x : ℂ) + (d : ℂ) * Complex.I - u)⁻¹)) +
-        (∫ x in a..b, deriv h ((x : ℂ) + (d : ℂ) * Complex.I) /
-          h ((x : ℂ) + (d : ℂ) * Complex.I))) -
-       Complex.I * ((∑ u ∈ Dsupp, (D u : ℂ) *
-          (∫ y in c..d, ((a : ℂ) + (y : ℂ) * Complex.I - u)⁻¹)) +
-        (∫ y in c..d, deriv h ((a : ℂ) + (y : ℂ) * Complex.I) /
-          h ((a : ℂ) + (y : ℂ) * Complex.I)))) -
-      ((∑ u ∈ Dsupp, (D u : ℂ) * (∮ z in C(e, R₀), (z - u)⁻¹)) +
-        (∮ z in C(e, R₀), deriv h z / h z)) =
-      ((∑ u ∈ Dsupp, (D u : ℂ) *
-          (∫ x in a..b, ((x : ℂ) + (c : ℂ) * Complex.I - u)⁻¹)) +
-        Complex.I * (∑ u ∈ Dsupp, (D u : ℂ) *
-          (∫ y in c..d, ((b : ℂ) + (y : ℂ) * Complex.I - u)⁻¹)) -
-        (∑ u ∈ Dsupp, (D u : ℂ) *
-          (∫ x in a..b, ((x : ℂ) + (d : ℂ) * Complex.I - u)⁻¹)) -
-        Complex.I * (∑ u ∈ Dsupp, (D u : ℂ) *
-          (∫ y in c..d, ((a : ℂ) + (y : ℂ) * Complex.I - u)⁻¹)) -
-        (∑ u ∈ Dsupp, (D u : ℂ) * (∮ z in C(e, R₀), (z - u)⁻¹))) +
-      (((∫ x in a..b, deriv h ((x : ℂ) + (c : ℂ) * Complex.I) /
-            h ((x : ℂ) + (c : ℂ) * Complex.I)) +
-        Complex.I * (∫ y in c..d, deriv h ((b : ℂ) + (y : ℂ) * Complex.I) /
-            h ((b : ℂ) + (y : ℂ) * Complex.I)) -
-        (∫ x in a..b, deriv h ((x : ℂ) + (d : ℂ) * Complex.I) /
-            h ((x : ℂ) + (d : ℂ) * Complex.I)) -
-        Complex.I * (∫ y in c..d, deriv h ((a : ℂ) + (y : ℂ) * Complex.I) /
-            h ((a : ℂ) + (y : ℂ) * Complex.I))) -
-        (∮ z in C(e, R₀), deriv h z / h z)) from by ring]
-  rw [h_r_combine, h_annular_h, add_zero]
-  rw [mul_comm ((∑ u ∈ Dsupp, (D u : ℂ))) (2 * Real.pi * Complex.I)]
-  rw [inv_mul_cancel_left₀ hpi]
-  exact h_finset_eq_finsum.trans (h_finsum_int_eq_nat.trans (by push_cast; rfl))
+      Complex.I * (∫ y in e.im..d, deriv g ((a : ℂ) + (y : ℂ) * Complex.I) /
+        g ((a : ℂ) + (y : ℂ) * Complex.I)) -
+      (∫ θ in (0 : ℝ)..Real.pi, deriv g (_root_.circleMap e R₀ θ) /
+        g (_root_.circleMap e R₀ θ) *
+        (Complex.I * R₀ * Complex.exp (Complex.I * θ)))) = (n : ℂ) := by
+  sorry
 
 end Complex
