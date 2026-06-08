@@ -12,8 +12,7 @@ import RiemannDynamics.Hyperbolic.ModularFunction
 /-!
 # Path winding numbers for piecewise-smooth contours in ℂ
 
-This file architects the path-winding infrastructure required to close
-the load-bearing topological core sub-helper
+This file develops the path-winding infrastructure used by
 `modularLambdaH_F_Y_image_curve_winding_index_eq_one` in
 `ModularCoveringMap.lean`. The path-winding definition itself
 (`Complex.pathWindingNumber`) lives in `WindingNumber.lean`; this file
@@ -35,21 +34,14 @@ contributes the load-bearing lemmas required by the F_Y argument:
 * `image_curve_lambda_F_Y_homotopic_to_circle`: the F_Y image curve
   is homotopic to a small CCW circle around any `w ∈ ℍ`.
 
-These definitions and lemmas together let us reduce the F_Y boundary
-integral computation to a homotopy argument: the image curve
-`λ ∘ ∂F_Y` is homotopic in `ℂ \ {w}` to a small CCW circle around `w`
-(for any `w ∈ ℍ`), so by homotopy invariance and the circle case,
-the winding index is 1.
+* `continuous_log_lift_of_continuous_ne_zero_Icc`: path-lifting for
+  the universal cover `ℂ → ℂ \ {0}` (via `z ↦ exp z`), restricted to
+  a closed real interval.
 
-## Status
-
-The integer-valued (`_isInt_of_closed`), homotopy-invariance
-(`_homotopy_invariant`), congruence (`_congr_of_eqOn_C1`),
-parametric-continuity (`_continuous_in_param`), and circle-case
-(`_circleMap_inside_eq_one`) lemmas are fully proved. The F_Y
-geometric homotopy claim (`_image_curve_lambda_F_Y_homotopic_to_circle`)
-remains as `:= by sorry`; closing it discharges the F_Y boundary
-integral computation in `ModularCoveringMap.lean`.
+Together these reduce the F_Y boundary integral computation to a
+homotopy argument: the image curve `λ ∘ ∂F_Y` is homotopic in
+`ℂ \ {w}` to a small CCW circle around `w` (for any `w ∈ ℍ`), so by
+homotopy invariance and the circle case, the winding index is 1.
 -/
 
 namespace RiemannDynamics
@@ -852,14 +844,255 @@ exists a globally continuous function `L : ℝ → ℂ` such that
 This is the analytic core of path-lifting in the universal cover
 `ℂ → ℂ \ {0}` of the punctured plane (via `z ↦ exp z`), restricted
 to the simply-connected interval `[a, b]`. The lift is unique up to
-addition of `2π i · k` for `k ∈ ℤ`. -/
+addition of `2π i · k` for `k ∈ ℤ`.
+
+Construction: pick `ε > 0` lower bound on `‖u‖` (compactness) and a
+uniform-continuity modulus `δ > 0` for target `ε`. Subdivide `Icc a b`
+into `N` equal segments with mesh `h = (b-a)/N < δ`, so on each
+segment `u(t)/u(tt j) ∈ Metric.ball 1 1 ⊆ Complex.slitPlane`. Define
+`L(t) := Complex.log(u(a)) + ∑ j ∈ range N, Complex.log(u(σ j t)/u(tt j))`
+with `σ j t := min (max t (tt j)) (tt (j+1))`. The sum telescopes
+through `Complex.exp` to give `u(t)` on `Icc a b`. -/
 theorem continuous_log_lift_of_continuous_ne_zero_Icc
     {a b : ℝ} (hab : a ≤ b) (u : ℝ → ℂ)
     (hu_cont : ContinuousOn u (Set.Icc a b))
     (hu_ne : ∀ t ∈ Set.Icc a b, u t ≠ 0) :
     ∃ L : ℝ → ℂ, Continuous L ∧
       ∀ t ∈ Set.Icc a b, Complex.exp (L t) = u t := by
-  sorry
+  -- Degenerate case a = b.
+  rcases eq_or_lt_of_le hab with hab_eq | hab_lt
+  · refine ⟨fun _ => Complex.log (u a), continuous_const, ?_⟩
+    intro t ht
+    have ht_eq : t = a := le_antisymm (ht.2.trans hab_eq.symm.le) ht.1
+    rw [ht_eq]
+    exact Complex.exp_log (hu_ne a ⟨le_refl _, hab⟩)
+  -- Main case: a < b. Pick ε > 0 lower bound on ‖u‖.
+  have h_nonempty : (Set.Icc a b).Nonempty := ⟨a, Set.left_mem_Icc.mpr hab⟩
+  obtain ⟨t_min, ht_min_mem, ht_min_minOn⟩ :=
+    isCompact_Icc.exists_isMinOn h_nonempty hu_cont.norm
+  set ε : ℝ := ‖u t_min‖
+  have hε_pos : 0 < ε := norm_pos_iff.mpr (hu_ne t_min ht_min_mem)
+  have hε_lb : ∀ t ∈ Set.Icc a b, ε ≤ ‖u t‖ := fun t ht => ht_min_minOn ht
+  -- Uniform-continuity modulus δ for target ε.
+  have h_unif : UniformContinuousOn u (Set.Icc a b) :=
+    isCompact_Icc.uniformContinuousOn_of_continuous hu_cont
+  rw [Metric.uniformContinuousOn_iff] at h_unif
+  obtain ⟨δ, hδ_pos, hδ_lt⟩ := h_unif ε hε_pos
+  -- Choose N large enough.
+  set N : ℕ := ⌈(b - a) / δ⌉₊ + 1 with hN_def
+  have hN_pos : 0 < N := Nat.succ_pos _
+  have hN_real_pos : (0 : ℝ) < N := Nat.cast_pos.mpr hN_pos
+  set h₀ : ℝ := (b - a) / N with hh_def
+  have h₀_pos : 0 < h₀ := div_pos (by linarith) hN_real_pos
+  have h₀_lt_δ : h₀ < δ := by
+    have h_ceil : (b - a) / δ ≤ (⌈(b - a) / δ⌉₊ : ℝ) := Nat.le_ceil _
+    have h_lt_N : (⌈(b - a) / δ⌉₊ : ℝ) < (N : ℝ) := by
+      rw [hN_def]; push_cast; linarith
+    have h_combined : (b - a) / δ < N := lt_of_le_of_lt h_ceil h_lt_N
+    rw [hh_def, div_lt_iff₀ hN_real_pos]
+    rw [div_lt_iff₀ hδ_pos] at h_combined
+    linarith
+  -- Partition points tt j := a + j * h₀.
+  set tt : ℕ → ℝ := fun j => a + (j : ℝ) * h₀ with htt_def
+  have htt0 : tt 0 = a := by simp [tt]
+  have httN : tt N = b := by
+    simp only [tt]; rw [hh_def]; field_simp; ring
+  have htt_succ_eq : ∀ j, tt (j + 1) = tt j + h₀ := by
+    intro j
+    simp only [tt]
+    push_cast; ring
+  have htt_le_succ : ∀ j, tt j ≤ tt (j + 1) := fun j => by
+    rw [htt_succ_eq]; linarith
+  have htt_mono : ∀ {j k : ℕ}, j ≤ k → tt j ≤ tt k := by
+    intro j k hjk
+    simp only [tt]
+    have h_cast : (j : ℝ) ≤ k := by exact_mod_cast hjk
+    have h_mul : (j : ℝ) * h₀ ≤ k * h₀ := mul_le_mul_of_nonneg_right h_cast h₀_pos.le
+    linarith
+  have htt_mem : ∀ j ≤ N, tt j ∈ Set.Icc a b := by
+    intro j hj
+    refine ⟨?_, ?_⟩
+    · rw [← htt0]; exact htt_mono (Nat.zero_le j)
+    · rw [← httN]; exact htt_mono hj
+  -- Metric.ball 1 1 ⊆ slitPlane.
+  have h_ball_slit : Metric.ball (1 : ℂ) 1 ⊆ Complex.slitPlane := by
+    intro z hz
+    rw [Metric.mem_ball, Complex.dist_eq] at hz
+    refine Or.inl ?_
+    have h_re_le : (z - 1).re ≤ ‖z - 1‖ := Complex.re_le_norm _
+    have h_neg_re_le : -(z - 1).re ≤ ‖z - 1‖ := by
+      have h := Complex.re_le_norm (-(z - 1))
+      rw [Complex.neg_re, norm_neg] at h
+      exact h
+    have h_z_re : z.re = (z - 1).re + 1 := by simp [Complex.sub_re]
+    rw [h_z_re]; linarith
+  -- For s ∈ [tt j, tt (j+1)], u s / u (tt j) ∈ ball 1 1.
+  have h_quot_in_ball : ∀ j, j < N → ∀ s ∈ Set.Icc (tt j) (tt (j + 1)),
+      u s / u (tt j) ∈ Metric.ball (1 : ℂ) 1 := by
+    intro j hj_lt s hs
+    have htt_j_mem : tt j ∈ Set.Icc a b :=
+      htt_mem j (Nat.le_of_lt_succ (Nat.lt_succ_of_lt hj_lt))
+    have htt_succ_mem : tt (j + 1) ∈ Set.Icc a b := htt_mem (j + 1) hj_lt
+    have hs_mem : s ∈ Set.Icc a b :=
+      ⟨le_trans htt_j_mem.1 hs.1, le_trans hs.2 htt_succ_mem.2⟩
+    have h_u_tt_ne : u (tt j) ≠ 0 := hu_ne _ htt_j_mem
+    have h_u_tt_norm : ε ≤ ‖u (tt j)‖ := hε_lb _ htt_j_mem
+    have h_dist_st : dist s (tt j) < δ := by
+      rw [Real.dist_eq, abs_of_nonneg (sub_nonneg.mpr hs.1)]
+      have hb : s - tt j ≤ tt (j + 1) - tt j := sub_le_sub_right hs.2 _
+      rw [htt_succ_eq] at hb
+      have h_eq : tt j + h₀ - tt j = h₀ := by ring
+      rw [h_eq] at hb
+      linarith
+    have h_u_dist : dist (u s) (u (tt j)) < ε := hδ_lt s hs_mem (tt j) htt_j_mem h_dist_st
+    rw [Metric.mem_ball, dist_eq_norm]
+    have h_div_eq : u s / u (tt j) - 1 = (u s - u (tt j)) / u (tt j) := by
+      field_simp
+    rw [h_div_eq, norm_div]
+    rw [div_lt_one (norm_pos_iff.mpr h_u_tt_ne)]
+    have h1 : ‖u s - u (tt j)‖ < ε := by rwa [dist_eq_norm] at h_u_dist
+    linarith
+  -- σ j t := min (max t (tt j)) (tt (j+1)), always in [tt j, tt (j+1)] ⊆ [a, b].
+  set σ : ℕ → ℝ → ℝ := fun j t => min (max t (tt j)) (tt (j + 1))
+  have hσ_mem : ∀ j, j < N → ∀ t, σ j t ∈ Set.Icc (tt j) (tt (j + 1)) := by
+    intro j _ t
+    refine ⟨le_min (le_max_right _ _) (htt_le_succ j), min_le_right _ _⟩
+  have hσ_mem_ab : ∀ j, j < N → ∀ t, σ j t ∈ Set.Icc a b := by
+    intro j hj_lt t
+    have h1 := hσ_mem j hj_lt t
+    have h2 := htt_mem j (Nat.le_of_lt_succ (Nat.lt_succ_of_lt hj_lt))
+    have h3 := htt_mem (j + 1) hj_lt
+    exact ⟨le_trans h2.1 h1.1, le_trans h1.2 h3.2⟩
+  have hσ_cont : ∀ j, Continuous (σ j) := fun j => by
+    change Continuous (fun t => min (max t (tt j)) (tt (j + 1))); fun_prop
+  -- Define L.
+  set L : ℝ → ℂ := fun t => Complex.log (u a) +
+    ∑ j ∈ Finset.range N, Complex.log (u (σ j t) / u (tt j)) with hL_def
+  -- Complex.log continuous on slitPlane.
+  have h_log_contOn : ContinuousOn Complex.log Complex.slitPlane := fun z hz =>
+    (Complex.differentiableAt_log hz).continuousAt.continuousWithinAt
+  refine ⟨L, ?_, ?_⟩
+  · -- Continuity of L.
+    refine continuous_const.add ?_
+    refine continuous_finset_sum _ ?_
+    intro j hj
+    have hj_lt : j < N := Finset.mem_range.mp hj
+    have h_u_σ_cont : Continuous (fun t => u (σ j t)) :=
+      hu_cont.comp_continuous (hσ_cont j) (fun t => hσ_mem_ab j hj_lt t)
+    have h_quot_cont : Continuous (fun t => u (σ j t) / u (tt j)) :=
+      h_u_σ_cont.div_const _
+    refine h_log_contOn.comp_continuous h_quot_cont (fun t => h_ball_slit ?_)
+    exact h_quot_in_ball j hj_lt _ (hσ_mem j hj_lt t)
+  · -- exp(L t) = u t for t ∈ Icc a b.
+    intro t ht
+    obtain ⟨ht_lb, ht_ub⟩ := ht
+    -- Find smallest k with t ≤ tt (k+1).
+    have h_exists : ∃ j, j < N ∧ t ≤ tt (j + 1) := by
+      refine ⟨N - 1, Nat.sub_lt hN_pos Nat.one_pos, ?_⟩
+      have h_succ : N - 1 + 1 = N := Nat.sub_add_cancel hN_pos
+      rw [h_succ, httN]; exact ht_ub
+    let k : ℕ := Nat.find h_exists
+    have hk_spec := Nat.find_spec h_exists
+    have hk_lt : k < N := hk_spec.1
+    have ht_le : t ≤ tt (k + 1) := hk_spec.2
+    have hk_le_N : k ≤ N := le_of_lt hk_lt
+    have hk_le_t : tt k ≤ t := by
+      by_cases hk_zero : k = 0
+      · rw [hk_zero, htt0]; exact ht_lb
+      · have hk_pos : 0 < k := Nat.pos_of_ne_zero hk_zero
+        have h_pred_lt : k - 1 < k := Nat.sub_lt hk_pos Nat.one_pos
+        have h_not := Nat.find_min h_exists h_pred_lt
+        simp only [not_and, not_le] at h_not
+        have h_pred_lt_N : k - 1 < N := lt_trans h_pred_lt hk_lt
+        have h_lt := h_not h_pred_lt_N
+        have h_pred_succ : k - 1 + 1 = k := Nat.sub_add_cancel hk_pos
+        rw [h_pred_succ] at h_lt
+        exact le_of_lt h_lt
+    -- σ j t formulas: j < k → σ = tt (j+1); j = k → σ = t; j > k → σ = tt j.
+    have hσ_lt_k : ∀ j, j < k → σ j t = tt (j + 1) := by
+      intro j hjk
+      change min (max t (tt j)) (tt (j + 1)) = tt (j + 1)
+      have h_succ_le : tt (j + 1) ≤ tt k := htt_mono hjk
+      have h_succ_le_t : tt (j + 1) ≤ t := le_trans h_succ_le hk_le_t
+      have h_j_le_t : tt j ≤ t := le_trans (htt_le_succ j) h_succ_le_t
+      rw [max_eq_left h_j_le_t, min_eq_right h_succ_le_t]
+    have hσ_eq_k : σ k t = t := by
+      change min (max t (tt k)) (tt (k + 1)) = t
+      rw [max_eq_left hk_le_t, min_eq_left ht_le]
+    have hσ_gt_k : ∀ j, k < j → σ j t = tt j := by
+      intro j hjk
+      change min (max t (tt j)) (tt (j + 1)) = tt j
+      have h_succ_le_j : tt (k + 1) ≤ tt j := htt_mono hjk
+      have h_t_le_j : t ≤ tt j := le_trans ht_le h_succ_le_j
+      rw [max_eq_right h_t_le_j, min_eq_left (htt_le_succ j)]
+    -- exp(L t) = exp(log(u a)) · ∏_j exp(log(u(σ j t)/u(tt j)))
+    --        = u(a) · ∏_j (u(σ j t)/u(tt j)).
+    have h_u_a_ne : u a ≠ 0 := hu_ne a ⟨le_refl _, hab⟩
+    have h_log_quot : ∀ j ∈ Finset.range N,
+        Complex.exp (Complex.log (u (σ j t) / u (tt j))) = u (σ j t) / u (tt j) := by
+      intro j hj
+      have hj_lt : j < N := Finset.mem_range.mp hj
+      have h_u_tt_ne : u (tt j) ≠ 0 :=
+        hu_ne _ (htt_mem j (Nat.le_of_lt_succ (Nat.lt_succ_of_lt hj_lt)))
+      have h_u_σ_ne : u (σ j t) ≠ 0 := hu_ne _ (hσ_mem_ab j hj_lt t)
+      exact Complex.exp_log (div_ne_zero h_u_σ_ne h_u_tt_ne)
+    change Complex.exp (Complex.log (u a) +
+      ∑ j ∈ Finset.range N, Complex.log (u (σ j t) / u (tt j))) = u t
+    rw [Complex.exp_add, Complex.exp_log h_u_a_ne, Complex.exp_sum,
+        Finset.prod_congr rfl h_log_quot]
+    -- Split range N at k: range k ∪ {k} ∪ Ico (k+1) N.
+    have h_split : Finset.range N =
+        Finset.range k ∪ {k} ∪ Finset.Ico (k + 1) N := by
+      ext j
+      simp only [Finset.mem_union, Finset.mem_range, Finset.mem_singleton, Finset.mem_Ico]
+      constructor
+      · intro hj
+        rcases lt_trichotomy j k with hlt | heq | hgt
+        · exact Or.inl (Or.inl hlt)
+        · exact Or.inl (Or.inr heq)
+        · exact Or.inr ⟨hgt, hj⟩
+      · rintro ((hlt | heq) | ⟨hgt, hlt⟩)
+        · exact lt_of_lt_of_le hlt hk_le_N
+        · rw [heq]; exact hk_lt
+        · exact hlt
+    have h_disj_left : Disjoint (Finset.range k) ({k} : Finset ℕ) := by
+      rw [Finset.disjoint_singleton_right]; exact Finset.notMem_range_self
+    have h_disj_right : Disjoint (Finset.range k ∪ {k}) (Finset.Ico (k + 1) N) := by
+      rw [Finset.disjoint_left]
+      intro j hj hj_Ico
+      simp only [Finset.mem_union, Finset.mem_range, Finset.mem_singleton] at hj
+      rw [Finset.mem_Ico] at hj_Ico
+      omega
+    rw [h_split, Finset.prod_union h_disj_right, Finset.prod_union h_disj_left,
+        Finset.prod_singleton, hσ_eq_k]
+    -- ∏ on range k: u(tt(j+1))/u(tt j) → telescope to u(tt k)/u(a).
+    have h_telescope : ∀ k' ≤ N,
+        ∏ j ∈ Finset.range k', u (tt (j + 1)) / u (tt j) = u (tt k') / u (tt 0) := by
+      intro k' hk'
+      induction k' with
+      | zero =>
+        have h_u_a_ne : u (tt 0) ≠ 0 := hu_ne _ (htt_mem 0 (Nat.zero_le _))
+        simp [div_self h_u_a_ne]
+      | succ m ih =>
+        have hm_le : m ≤ N := Nat.le_of_succ_le hk'
+        rw [Finset.prod_range_succ, ih hm_le]
+        have h_u_tt_m_ne : u (tt m) ≠ 0 := hu_ne _ (htt_mem m hm_le)
+        field_simp
+    have h_prod_range_k : ∏ j ∈ Finset.range k, u (σ j t) / u (tt j) =
+        u (tt k) / u (tt 0) := by
+      have h_eq : ∀ j ∈ Finset.range k, u (σ j t) / u (tt j) = u (tt (j + 1)) / u (tt j) := by
+        intro j hj
+        rw [hσ_lt_k j (Finset.mem_range.mp hj)]
+      rw [Finset.prod_congr rfl h_eq, h_telescope k hk_le_N]
+    -- ∏ on Ico (k+1) N: 1.
+    have h_prod_Ico : ∏ j ∈ Finset.Ico (k + 1) N, u (σ j t) / u (tt j) = 1 := by
+      apply Finset.prod_eq_one
+      intro j hj
+      rw [Finset.mem_Ico] at hj
+      rw [hσ_gt_k j hj.1, div_self (hu_ne _ (htt_mem j (le_of_lt hj.2)))]
+    rw [h_prod_range_k, h_prod_Ico, htt0, mul_one]
+    have h_u_tt_k_ne : u (tt k) ≠ 0 := hu_ne _ (htt_mem k hk_le_N)
+    field_simp
 
 /-- **F_Y image-curve homotopy to a small CCW circle.**
 For `w ∈ ℍ` and valid F_Y parameters with `λ ≠ w` on each of the six
