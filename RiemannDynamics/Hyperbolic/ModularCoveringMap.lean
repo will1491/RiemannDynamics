@@ -2626,40 +2626,37 @@ theorem modularLambdaH_F_Y_AP_integral_eq_nat_form
   simp_rw [h_deriv, hg_def, he_def] at hn
   convert hn using 2
 
-/-- **Sub-lemma 9.aux.B2 — AP natural-count equals 1.**
-This is the **load-bearing topological/geometric core** of path (a). For
-`w ∈ ℍ` and any `n : ℕ` satisfying the AP-derived identity
-`(2πi)⁻¹ · (boundary integral) = (n : ℂ)`, the count `n` equals 1.
+/-- **Sub-lemma 9.aux.B2.core — Image curve winding index is 1.**
+The load-bearing topological/geometric core sub-helper for B2. For any
+`n : ℕ` satisfying the AP-derived identity and a continuous closed loop
+`γ : [0, 1] → ℂ \ {w}` derived from `λ ∘ ∂F_Y`, `n` equals the winding
+index of `γ` around `w`, which is 1.
 
-Mathematically, this asserts the winding number of `λ ∘ ∂F_Y` around `w`
-equals 1. By chain rule, `(2πi)⁻¹ · ∫_∂F_Y λ'(τ)/(λ(τ) − w) dτ`
-is the winding number of the image curve `λ ∘ ∂F_Y` around `w`. We
-must show this number is 1.
+Reduction path (via the infrastructure in `Hyperbolic/PathWinding.lean`
+and `Complex.pathWindingNumber` from `Hyperbolic/WindingNumber.lean`):
 
-Image curve description (using existing project infrastructure):
+1. By chain rule, each of the 6 boundary integrals in the F_Y boundary
+   integral expression equals `(2πi) · Complex.pathWindingNumber (λ ∘ γᵢ)`
+   for the corresponding boundary parameterization `γᵢ : [aᵢ, bᵢ] → ℂ`.
+   Summing the 6 pieces gives a single `Complex.pathWindingNumber` of the
+   concatenated image curve `λ ∘ ∂F_Y` around `w`.
 
-* **Left edge** `τ = i·y, y ∈ [δ, Y]`: `λ(τ) ∈ (-∞, 0)` by
-  `modularLambdaH_pure_imag_real`.
-* **Right edge** `τ = 1 + i·y, y ∈ [δ, Y]`: `λ(τ) ∈ (1, ∞)` by
-  `modularLambdaH_one_add_imag_real`.
-* **Semicircle** `τ = circleMap(1 / 2 + δi, R₀, θ), θ ∈ [0, π]`:
-  `λ(τ) ≈ (real ≥ 1)` by `modularLambdaH_semicircle_real`.
-* **Top edge** `τ = x + Y·i, x ∈ [0, 1]`: `λ(τ) ≈ 0` by
-  `modularLambdaH_iy_tendsto_zero_atTop` (extended by translation).
-* **bot_left edge** `τ = x + δi, x ∈ [0, 1/2 − R₀]`: `λ(τ) ≈ 1` by
-  `modularLambdaH_iy_tendsto_one_atZeroPos`.
-* **bot_right edge** `τ = x + δi, x ∈ [1/2 + R₀, 1]`: `|λ(τ)|` large
-  by `modularLambdaH_one_add_iy_tendsto_neg_infty_atZeroPos`.
+2. By `pathWindingNumber_homotopy_invariant`, this equals the
+   winding index of any homotopic curve in `ℂ \ {w}`. The image curve
+   `λ ∘ ∂F_Y` is homotopic to a small CCW circle around `w` (claim
+   `image_curve_lambda_F_Y_homotopic_to_circle` in `PathWinding.lean`),
+   using the F_Y boundary non-vanishing helpers + the cusp asymptotics
+   (`_iy_tendsto_zero_atTop`, `_iy_tendsto_one_atZeroPos`,
+   `_one_add_iy_tendsto_neg_infty_atZeroPos`) and boundary symmetries
+   (`_pure_imag_real`, `_one_add_imag_real`, `_semicircle_real`).
 
-The composite image curve closes around the cusp triangle `{0, 1, ∞}`
-and has winding number `1` around any `w ∈ ℍ`.
+3. By `pathWindingNumber_circleMap_inside_eq_one`, the winding
+   index of a CCW circle around `w` is `1`. Hence `(n : ℂ) = 1`, so
+   `n = 1`.
 
-Estimated 400–600 LOC. Proof strategy: either (i) construct a continuous
-branch of `arg(λ(τ) − w)` along `∂F_Y` and FTC the boundary integral
-into a total argument variation summing to `2π`; or (ii) homotope the
-image curve in `ℂ \ {w}` to a small CCW circle around `w` and apply
-`circleWindingNumber_inside`. -/
-theorem modularLambdaH_F_Y_AP_count_eq_one
+Body left as `sorry` for follow-up work to wire steps 1-3 explicitly
+once the PathWinding sorry helpers are closed. -/
+theorem modularLambdaH_F_Y_image_curve_winding_index_eq_one
     {w : ℂ} (hw : 0 < w.im) {δ Y R₀ : ℝ}
     (hδ : 0 < δ) (hδY : δ < Y) (hR₀_pos : 0 < R₀) (hR₀_lt : R₀ < 1 / 2)
     (h_δR_lt_Y : δ + R₀ < Y)
@@ -2699,6 +2696,59 @@ theorem modularLambdaH_F_Y_AP_count_eq_one
         (Complex.I * R₀ * Complex.exp (Complex.I * θ)))) = (n : ℂ)) :
     n = 1 := by
   sorry
+
+/-- **Sub-lemma 9.aux.B2 — AP natural-count equals 1.**
+For `w ∈ ℍ` and any `n : ℕ` satisfying the AP-derived identity
+`(2πi)⁻¹ · (boundary integral) = (n : ℂ)`, the count `n` equals 1.
+Mathematically, this asserts the winding number of `λ ∘ ∂F_Y` around `w`
+equals 1.
+
+Body: trivial wrapper around
+`modularLambdaH_F_Y_image_curve_winding_index_eq_one`, which carries
+the load-bearing topological argument. The split keeps B2's role in the
+B1/B2/`_boundary_integral_eq_two_pi_I`/`_winding_eq_one` chain clean
+while isolating the topological core for future refinement. -/
+theorem modularLambdaH_F_Y_AP_count_eq_one
+    {w : ℂ} (hw : 0 < w.im) {δ Y R₀ : ℝ}
+    (hδ : 0 < δ) (hδY : δ < Y) (hR₀_pos : 0 < R₀) (hR₀_lt : R₀ < 1 / 2)
+    (h_δR_lt_Y : δ + R₀ < Y)
+    (hg_bot_left : ∀ x ∈ Set.Icc (0 : ℝ) (1 / 2 - R₀),
+      modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) - w ≠ 0)
+    (hg_bot_right : ∀ x ∈ Set.Icc (1 / 2 + R₀ : ℝ) 1,
+      modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) - w ≠ 0)
+    (hg_top : ∀ x ∈ Set.Icc (0 : ℝ) 1,
+      modularLambdaH ((x : ℂ) + (Y : ℂ) * Complex.I) - w ≠ 0)
+    (hg_right : ∀ y ∈ Set.Icc δ Y,
+      modularLambdaH ((1 : ℂ) + (y : ℂ) * Complex.I) - w ≠ 0)
+    (hg_left : ∀ y ∈ Set.Icc δ Y,
+      modularLambdaH ((0 : ℂ) + (y : ℂ) * Complex.I) - w ≠ 0)
+    (hg_arc : ∀ θ ∈ Set.Icc (0 : ℝ) Real.pi,
+      modularLambdaH (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ) - w ≠ 0)
+    {n : ℕ}
+    (hn : (2 * Real.pi * Complex.I)⁻¹ * ((∫ x in (0 : ℝ)..(1 / 2 - R₀),
+        deriv modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) /
+        (modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) - w)) +
+      (∫ x in (1 / 2 + R₀ : ℝ)..1,
+        deriv modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) /
+        (modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) - w)) +
+      Complex.I * (∫ y in (δ : ℝ)..Y,
+        deriv modularLambdaH ((1 : ℂ) + (y : ℂ) * Complex.I) /
+        (modularLambdaH ((1 : ℂ) + (y : ℂ) * Complex.I) - w)) -
+      (∫ x in (0 : ℝ)..1,
+        deriv modularLambdaH ((x : ℂ) + (Y : ℂ) * Complex.I) /
+        (modularLambdaH ((x : ℂ) + (Y : ℂ) * Complex.I) - w)) -
+      Complex.I * (∫ y in (δ : ℝ)..Y,
+        deriv modularLambdaH ((0 : ℂ) + (y : ℂ) * Complex.I) /
+        (modularLambdaH ((0 : ℂ) + (y : ℂ) * Complex.I) - w)) -
+      (∫ θ in (0 : ℝ)..Real.pi,
+        deriv modularLambdaH
+          (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ) /
+        (modularLambdaH
+          (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ) - w) *
+        (Complex.I * R₀ * Complex.exp (Complex.I * θ)))) = (n : ℂ)) :
+    n = 1 :=
+  modularLambdaH_F_Y_image_curve_winding_index_eq_one hw hδ hδY hR₀_pos hR₀_lt
+    h_δR_lt_Y hg_bot_left hg_bot_right hg_top hg_right hg_left hg_arc hn
 
 /-- **Sub-lemma 9.aux — F_Y boundary integral of `λ'/(λ − w)` equals `2πi`.**
 
@@ -2817,29 +2867,92 @@ theorem modularLambdaH_F_Y_winding_eq_one
     · exact_mod_cast Real.pi_ne_zero
   exact inv_mul_cancel₀ hpi
 
+/-- **Sub-lemma 9.aux.B3 — Two distinct zeros force AP count `≥ 2`.**
+A refinement of the F_Y argument principle exposing the natural-number
+count as the divisor sum. For `g(τ) = λ(τ) − w` with two distinct zeros
+`τ₁, τ₂` in the **open** F_Y interior, the natural number `n` returned
+by the AP existential (`(2πi)⁻¹ · integral = (n : ℂ)`) satisfies `n ≥ 2`.
+
+Combined with `_winding_eq_one` (giving `(2πi)⁻¹ · integral = 1`, hence
+`n = 1`), this yields a contradiction, proving uniqueness of preimages
+in F_Y interior.
+
+Proof strategy: factor `g = r · h` via `MeromorphicOn.extract_zeros_poles`
+on the F_Y region. The natural number `n` from `cIntegralLogDeriv_isNat`
+equals the divisor sum of `g` over `F_Y` (this requires either reaching
+inside the AP theorem's existing proof or restating with the explicit
+divisor sum). Each zero `τᵢ` contributes at least `1` to the divisor
+sum (multiplicity ≥ 1 since `g τᵢ = 0` and `g` analytic, distinct from
+the analyticOrder-defined `0` value). Two distinct zeros ⟹ sum ≥ 2. -/
+theorem modularLambdaH_F_Y_AP_count_ge_two_of_two_distinct_zeros
+    {w : ℂ} {δ Y R₀ : ℝ}
+    (hδ : 0 < δ) (_hδY : δ < Y) (hR₀_pos : 0 < R₀) (_hR₀_lt : R₀ < 1 / 2)
+    (_h_δR_lt_Y : δ + R₀ < Y)
+    (_hg_bot_left : ∀ x ∈ Set.Icc (0 : ℝ) (1 / 2 - R₀),
+      modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) - w ≠ 0)
+    (_hg_bot_right : ∀ x ∈ Set.Icc (1 / 2 + R₀ : ℝ) 1,
+      modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) - w ≠ 0)
+    (_hg_top : ∀ x ∈ Set.Icc (0 : ℝ) 1,
+      modularLambdaH ((x : ℂ) + (Y : ℂ) * Complex.I) - w ≠ 0)
+    (_hg_right : ∀ y ∈ Set.Icc δ Y,
+      modularLambdaH ((1 : ℂ) + (y : ℂ) * Complex.I) - w ≠ 0)
+    (_hg_left : ∀ y ∈ Set.Icc δ Y,
+      modularLambdaH ((0 : ℂ) + (y : ℂ) * Complex.I) - w ≠ 0)
+    (_hg_arc : ∀ θ ∈ Set.Icc (0 : ℝ) Real.pi,
+      modularLambdaH (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ) - w ≠ 0)
+    {τ₁ τ₂ : ℂ}
+    (_hτ₁_re_lo : 0 < τ₁.re) (_hτ₁_re_hi : τ₁.re < 1)
+    (_hτ₁_im_lo : δ < τ₁.im) (_hτ₁_im_hi : τ₁.im < Y)
+    (_hτ₁_outside : R₀ < ‖τ₁ - ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I)‖)
+    (_hτ₂_re_lo : 0 < τ₂.re) (_hτ₂_re_hi : τ₂.re < 1)
+    (_hτ₂_im_lo : δ < τ₂.im) (_hτ₂_im_hi : τ₂.im < Y)
+    (_hτ₂_outside : R₀ < ‖τ₂ - ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I)‖)
+    (_hτ_ne : τ₁ ≠ τ₂)
+    (_hlam_τ₁ : modularLambdaH τ₁ = w) (_hlam_τ₂ : modularLambdaH τ₂ = w)
+    {n : ℕ}
+    (_hn : (2 * Real.pi * Complex.I)⁻¹ * ((∫ x in (0 : ℝ)..(1 / 2 - R₀),
+        deriv modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) /
+        (modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) - w)) +
+      (∫ x in (1 / 2 + R₀ : ℝ)..1,
+        deriv modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) /
+        (modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) - w)) +
+      Complex.I * (∫ y in (δ : ℝ)..Y,
+        deriv modularLambdaH ((1 : ℂ) + (y : ℂ) * Complex.I) /
+        (modularLambdaH ((1 : ℂ) + (y : ℂ) * Complex.I) - w)) -
+      (∫ x in (0 : ℝ)..1,
+        deriv modularLambdaH ((x : ℂ) + (Y : ℂ) * Complex.I) /
+        (modularLambdaH ((x : ℂ) + (Y : ℂ) * Complex.I) - w)) -
+      Complex.I * (∫ y in (δ : ℝ)..Y,
+        deriv modularLambdaH ((0 : ℂ) + (y : ℂ) * Complex.I) /
+        (modularLambdaH ((0 : ℂ) + (y : ℂ) * Complex.I) - w)) -
+      (∫ θ in (0 : ℝ)..Real.pi,
+        deriv modularLambdaH
+          (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ) /
+        (modularLambdaH
+          (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ) - w) *
+        (Complex.I * R₀ * Complex.exp (Complex.I * θ)))) = (n : ℂ)) :
+    2 ≤ n := by
+  sorry
+
 /-- **Injectivity of `λ` on `F^o` via the F_Y argument principle.** For `w`
 with `Im w > 0` and `τ₁, τ₂ ∈ F^o` both mapping to `w`, `τ₁ = τ₂`.
 
 The proof combines the nine sub-lemmas above. The δ-cascade:
 
-0. Extract `δ_w_6` from `_bot_left_strip_ne`, `δ_w_7` from
-   `_bot_right_strip_ne`, `δ_w_8` from `_arc_ne` (all existential `δ_w`
-   forms). Set `δ_max := min(δ_w_6, δ_w_7, δ_w_8, 1/4)`.
+0. Extract `Y₀` from `_top_edge_ne`, `δ_w_6` from `_bot_left_strip_ne`,
+   `δ_w_7` from `_bot_right_strip_ne`, `δ_w_8` from `_arc_ne` (all
+   existential forms). Set `δ_max := min(δ_w_6, δ_w_7, δ_w_8, 1/4)`.
 1. Apply `_params_exist_arc` with `δ_max` to obtain F_Y params
-   `(δ, Y, R₀)` with `δ ≤ δ_max`, both `τᵢ` in the interior, and
-   `R₀ > √(1/4 − δ²)` (for the arc bound to engage).
-2. Verify analyticity on the closed F_Y region (`_analytic`).
-3. Verify boundary non-vanishing on each of the five edges + arc
-   (`_left_edge_ne`, `_right_edge_ne`, `_top_edge_ne`,
-   `_bot_left_strip_ne` w/ `δ ≤ δ_w_6`,
-   `_bot_right_strip_ne` w/ `δ ≤ δ_w_7`,
-   `_arc_ne` w/ `δ ≤ δ_w_8`).
-4. Apply `cIntegralLogDeriv_isNat_of_nonzero_on_rectMinusUpperHalfDisk`
-   to obtain `(boundary integral) = (n : ℂ)` for some `n : ℕ`.
-5. By `_winding_eq_one`, the boundary integral equals `1`, so `n = 1`.
-6. If `τ₁ ≠ τ₂`, both are distinct zeros of `g(τ) = λ(τ) − w` in the
-   F_Y interior, so the divisor support has size ≥ 2, contradicting
-   `n = 1`. Hence `τ₁ = τ₂`. -/
+   `(δ, Y_base, R₀)` with `δ ≤ δ_max`, both `τᵢ` in the interior, and
+   `R₀ > √(1/4 − δ²)` (for the arc bound to engage). Augment
+   `Y := max(Y_base, Y₀)` to satisfy the top-edge cascade.
+2. Verify boundary non-vanishing on each of the five edges + arc.
+3. Apply `_AP_integral_eq_nat_form` (B1) to obtain
+   `(2πi)⁻¹ · (boundary integral) = (n : ℂ)` for some `n : ℕ`.
+4. By `_winding_eq_one`, the boundary integral satisfies
+   `(2πi)⁻¹ · integral = 1`, so `(n : ℂ) = 1`, hence `n = 1`.
+5. If `τ₁ ≠ τ₂`, apply `_AP_count_ge_two_of_two_distinct_zeros` to get
+   `n ≥ 2`. Contradict `n = 1`. -/
 theorem modularLambdaH_F_unique_preimage_via_AP
     {w : ℂ} (hw : 0 < w.im)
     {τ₁ τ₂ : ℂ}
@@ -2848,7 +2961,104 @@ theorem modularLambdaH_F_unique_preimage_via_AP
     (h₂_in : τ₂ ∈ Gamma2FundamentalDomainInterior)
     (h₂_eq : modularLambdaH τ₂ = w) :
     τ₁ = τ₂ := by
-  sorry
+  by_contra h_τ_ne
+  -- Extract cascading existentials.
+  obtain ⟨Y₀_top, hY₀_top⟩ := modularLambdaH_F_Y_top_edge_ne hw
+  obtain ⟨δ_w_6, hδ_w_6_pos, _hδ_w_6_lt, hδ_w_6_prop⟩ :=
+    modularLambdaH_F_Y_bot_left_strip_ne hw
+  obtain ⟨δ_w_7, hδ_w_7_pos, _hδ_w_7_lt, hδ_w_7_prop⟩ :=
+    modularLambdaH_F_Y_bot_right_strip_ne hw
+  obtain ⟨δ_w_8, hδ_w_8_pos, _hδ_w_8_lt, hδ_w_8_prop⟩ :=
+    modularLambdaH_F_Y_arc_ne hw
+  -- δ_max := min(δ_w_6, δ_w_7, δ_w_8, 1/4).
+  set δ_max : ℝ := min (min δ_w_6 δ_w_7) (min δ_w_8 (1 / 4)) with hδ_max_def
+  have hδ_max_pos : 0 < δ_max :=
+    lt_min (lt_min hδ_w_6_pos hδ_w_7_pos) (lt_min hδ_w_8_pos (by norm_num))
+  have hδ_max_le_quarter : δ_max ≤ 1 / 4 := by
+    rw [hδ_max_def]
+    exact le_trans (min_le_right _ _) (min_le_right _ _)
+  -- Apply _params_exist_arc.
+  obtain ⟨δ, Y_base, R₀, hδ_pos, hδ_le_δ_max, hδ_lt_τ₁_im, hδ_lt_τ₂_im,
+    hδ_lt_Y_base, hτ₁_im_lt_Y_base, hτ₂_im_lt_Y_base,
+    hR₀_pos, hR₀_lt, h_δR_lt_Y_base, hR₀_lo, hτ₁_norm_gt, hτ₂_norm_gt⟩ :=
+    modularLambdaH_F_Y_params_exist_arc hw h₁_in h₂_in hδ_max_pos hδ_max_le_quarter
+  -- Augment Y to satisfy top-edge cascade.
+  set Y : ℝ := max Y_base Y₀_top with hY_def
+  have hY_ge_base : Y_base ≤ Y := le_max_left _ _
+  have hY_ge_Y₀_top : Y₀_top ≤ Y := le_max_right _ _
+  have hδ_lt_Y : δ < Y := lt_of_lt_of_le hδ_lt_Y_base hY_ge_base
+  have hτ₁_im_lt_Y : τ₁.im < Y := lt_of_lt_of_le hτ₁_im_lt_Y_base hY_ge_base
+  have hτ₂_im_lt_Y : τ₂.im < Y := lt_of_lt_of_le hτ₂_im_lt_Y_base hY_ge_base
+  have h_δR_lt_Y : δ + R₀ < Y := lt_of_lt_of_le h_δR_lt_Y_base hY_ge_base
+  -- Extract δ ≤ δ_w_i.
+  have hδ_le_δ_w_6 : δ ≤ δ_w_6 := by
+    refine le_trans hδ_le_δ_max ?_
+    rw [hδ_max_def]; exact le_trans (min_le_left _ _) (min_le_left _ _)
+  have hδ_le_δ_w_7 : δ ≤ δ_w_7 := by
+    refine le_trans hδ_le_δ_max ?_
+    rw [hδ_max_def]; exact le_trans (min_le_left _ _) (min_le_right _ _)
+  have hδ_le_δ_w_8 : δ ≤ δ_w_8 := by
+    refine le_trans hδ_le_δ_max ?_
+    rw [hδ_max_def]; exact le_trans (min_le_right _ _) (min_le_left _ _)
+  have hδ_le_quarter : δ ≤ 1 / 4 := by
+    refine le_trans hδ_le_δ_max ?_
+    rw [hδ_max_def]; exact le_trans (min_le_right _ _) (min_le_right _ _)
+  -- For bot_left/bot_right, the strip helpers cover x ≤ δ. We need to
+  -- show x ∈ [0, 1/2 - R₀] ⟹ x ≤ δ, via _arc_half_minus_R₀_bound.
+  have h_half_minus_R₀ : 1 / 2 - R₀ ≤ 2 * δ ^ 2 :=
+    modularLambdaH_F_Y_arc_half_minus_R₀_bound hδ_pos hδ_le_quarter hR₀_lo hR₀_lt hR₀_pos
+  have h_2δ_sq_le_δ : 2 * δ ^ 2 ≤ δ := by nlinarith [hδ_pos.le, hδ_le_quarter]
+  have h_half_minus_R₀_le_δ : 1 / 2 - R₀ ≤ δ := le_trans h_half_minus_R₀ h_2δ_sq_le_δ
+  -- Now produce the 6 boundary non-vanishing hypotheses.
+  have hg_bot_left : ∀ x ∈ Set.Icc (0 : ℝ) (1 / 2 - R₀),
+      modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) - w ≠ 0 := by
+    intro x hx
+    refine hδ_w_6_prop δ hδ_pos hδ_le_δ_w_6 x hx.1 ?_
+    exact le_trans hx.2 h_half_minus_R₀_le_δ
+  have hg_bot_right : ∀ x ∈ Set.Icc (1 / 2 + R₀ : ℝ) 1,
+      modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) - w ≠ 0 := by
+    intro x hx
+    refine hδ_w_7_prop δ hδ_pos hδ_le_δ_w_7 x ?_ hx.2
+    linarith [hx.1, h_half_minus_R₀_le_δ]
+  have hg_top : ∀ x ∈ Set.Icc (0 : ℝ) 1,
+      modularLambdaH ((x : ℂ) + (Y : ℂ) * Complex.I) - w ≠ 0 := by
+    intro x hx h_eq
+    refine hY₀_top Y hY_ge_Y₀_top x hx.1 hx.2 ?_
+    linear_combination h_eq
+  have hg_right : ∀ y ∈ Set.Icc δ Y,
+      modularLambdaH ((1 : ℂ) + (y : ℂ) * Complex.I) - w ≠ 0 := fun y hy =>
+    modularLambdaH_F_Y_right_edge_ne hw (lt_of_lt_of_le hδ_pos hy.1)
+  have hg_left : ∀ y ∈ Set.Icc δ Y,
+      modularLambdaH ((0 : ℂ) + (y : ℂ) * Complex.I) - w ≠ 0 := fun y hy =>
+    modularLambdaH_F_Y_left_edge_ne hw (lt_of_lt_of_le hδ_pos hy.1)
+  have hg_arc : ∀ θ ∈ Set.Icc (0 : ℝ) Real.pi,
+      modularLambdaH (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ) - w ≠ 0 := by
+    intro θ hθ h_eq
+    refine hδ_w_8_prop δ R₀ hδ_pos hδ_le_δ_w_8 hR₀_lo hR₀_lt θ hθ.1 hθ.2 ?_
+    linear_combination h_eq
+  -- Apply B1 to get ⟨n, hn⟩.
+  obtain ⟨n, hn⟩ := modularLambdaH_F_Y_AP_integral_eq_nat_form hδ_pos hδ_lt_Y hR₀_pos hR₀_lt
+    h_δR_lt_Y hg_bot_left hg_bot_right hg_top hg_right hg_left hg_arc
+  -- Apply _winding_eq_one to get (2πi)⁻¹ * integral = 1.
+  have h_winding := modularLambdaH_F_Y_winding_eq_one hw hδ_pos hδ_lt_Y hR₀_pos hR₀_lt
+    h_δR_lt_Y hg_bot_left hg_bot_right hg_top hg_right hg_left hg_arc
+  -- Conclude (n : ℂ) = 1.
+  have h_n_eq_one_cast : (n : ℂ) = 1 := by rw [← hn]; exact h_winding
+  have h_n_eq_one : n = 1 := by exact_mod_cast h_n_eq_one_cast
+  -- Extract τᵢ box conditions from F^o.
+  obtain ⟨h₁_im, h₁_re_lo, h₁_re_hi, _h₁_semi⟩ := h₁_in
+  obtain ⟨h₂_im, h₂_re_lo, h₂_re_hi, _h₂_semi⟩ := h₂_in
+  have hlam_τ₁ : modularLambdaH τ₁ = w := h₁_eq
+  have hlam_τ₂ : modularLambdaH τ₂ = w := h₂_eq
+  -- Apply refined helper to get n ≥ 2.
+  have h_n_ge_two : 2 ≤ n :=
+    modularLambdaH_F_Y_AP_count_ge_two_of_two_distinct_zeros hδ_pos hδ_lt_Y hR₀_pos
+      hR₀_lt h_δR_lt_Y hg_bot_left hg_bot_right hg_top hg_right hg_left hg_arc
+      h₁_re_lo h₁_re_hi hδ_lt_τ₁_im hτ₁_im_lt_Y hτ₁_norm_gt
+      h₂_re_lo h₂_re_hi hδ_lt_τ₂_im hτ₂_im_lt_Y hτ₂_norm_gt
+      h_τ_ne hlam_τ₁ hlam_τ₂ hn
+  -- Contradiction: n = 1 and 2 ≤ n.
+  omega
 
 /-- **Existence and uniqueness of `λ`-preimage in `F^o`.** For each
 `w` with `Im w > 0`, there is a unique `τ ∈ F^o` with `λ(τ) = w`.
