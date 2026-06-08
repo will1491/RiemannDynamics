@@ -580,50 +580,325 @@ noncomputable def F_Y_boundary_parameterization
   else
     0
 
+/-- **F_Y boundary parameterization has positive imaginary part.**
+For valid F_Y parameters and `t ∈ Icc 0 6`, the boundary point
+`F_Y_boundary_parameterization δ Y R₀ t` has strictly positive
+imaginary part, so it lies in the open upper half-plane `ℍ`.
+
+The six pieces all have imaginary part bounded below by `δ > 0`
+(the bottom edges and arc) or by some value in `[δ, Y]` (the
+side edges and top edge). -/
+theorem F_Y_boundary_parameterization_im_pos
+    {δ Y R₀ : ℝ} (hδ : 0 < δ) (hδY : δ < Y) (_hR₀_pos : 0 < R₀)
+    (_hR₀_lt : R₀ < 1 / 2) :
+    ∀ t ∈ Set.Icc (0 : ℝ) 6,
+      0 < (F_Y_boundary_parameterization δ Y R₀ t).im := by
+  intro t ht
+  obtain ⟨ht0, ht6⟩ := ht
+  -- Local helper: imaginary part of circleMap formula.
+  have h_cm_im : ∀ (c : ℂ) (R θ : ℝ), (_root_.circleMap c R θ).im = c.im + R * Real.sin θ := by
+    intro c R θ
+    unfold _root_.circleMap
+    rw [Complex.exp_mul_I]
+    simp [Complex.add_im, Complex.mul_im, Complex.ofReal_im, Complex.ofReal_re,
+      Complex.I_im, Complex.I_re, Complex.sin_ofReal_re, Complex.cos_ofReal_im]
+  unfold F_Y_boundary_parameterization
+  split_ifs with h1 h2 h3 h4 h5
+  · -- t ≤ 1: bot_left edge, Im = δ.
+    simp [Complex.add_im, Complex.mul_im, Complex.ofReal_im, Complex.ofReal_re,
+      Complex.I_im, Complex.I_re]
+    linarith
+  · -- 1 < t ≤ 2: upper semicircle, Im = δ + R₀ · sin(π · (2 - t)) ≥ δ.
+    have h1' : 1 < t := not_le.mp h1
+    rw [h_cm_im]
+    have h_c_im : ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I).im = δ := by
+      simp [Complex.add_im, Complex.mul_im, Complex.ofReal_im, Complex.ofReal_re,
+        Complex.I_im, Complex.I_re]
+    rw [h_c_im]
+    have h_sin_nn : 0 ≤ Real.sin (Real.pi * (2 - t)) := by
+      apply Real.sin_nonneg_of_nonneg_of_le_pi
+      · apply mul_nonneg Real.pi_pos.le; linarith
+      · have h2t : (2 - t) ≤ 1 := by linarith
+        have : Real.pi * (2 - t) ≤ Real.pi * 1 :=
+          mul_le_mul_of_nonneg_left h2t Real.pi_pos.le
+        linarith
+    nlinarith [_hR₀_pos]
+  · -- 2 < t ≤ 3: bot_right edge, Im = δ.
+    simp [Complex.add_im, Complex.mul_im, Complex.ofReal_im, Complex.ofReal_re,
+      Complex.I_im, Complex.I_re]
+    linarith
+  · -- 3 < t ≤ 4: right edge, Im = δ + (t - 3) · (Y - δ) ≥ δ.
+    have h3' : 3 < t := not_le.mp h3
+    simp [Complex.add_im, Complex.mul_im, Complex.ofReal_im, Complex.ofReal_re,
+      Complex.I_im, Complex.I_re]
+    have hYδ : 0 < Y - δ := by linarith
+    have h_t3 : 0 ≤ t - 3 := by linarith
+    nlinarith
+  · -- 4 < t ≤ 5: top edge, Im = Y.
+    simp [Complex.add_im, Complex.mul_im, Complex.ofReal_im, Complex.ofReal_re,
+      Complex.I_im, Complex.I_re]
+    linarith
+  · -- 5 < t ≤ 6: left edge, Im = Y - (t - 5) · (Y - δ) ∈ [δ, Y).
+    have h5' : 5 < t := not_le.mp h5
+    simp [Complex.mul_im, Complex.ofReal_im, Complex.ofReal_re,
+      Complex.I_im, Complex.I_re]
+    have hYδ : 0 < Y - δ := by linarith
+    have h_t5 : t - 5 ≤ 1 := by linarith
+    nlinarith
+
+/-- **F_Y boundary parameterization is continuous on `Icc 0 6`.**
+The piecewise definition is continuous on each piece, and the
+values match at the seams `t = 1, 2, 3, 4, 5` so the overall
+function is continuous on `Icc 0 6`.
+
+Proof construction: build a globally continuous auxiliary `gg : ℝ → ℂ`
+that drops the final `if t ≤ 6 then ... else 0` clause (collapsing it
+to the unconditional piece 6 formula), via repeated
+`Continuous.if_le`. Since on `Icc 0 6` the condition `t ≤ 6` always
+holds, `gg = F_Y_boundary_parameterization δ Y R₀` on `Icc 0 6`, and
+the result follows from `Continuous.continuousOn` + `ContinuousOn.congr`. -/
+theorem F_Y_boundary_parameterization_continuousOn
+    (δ Y R₀ : ℝ) :
+    ContinuousOn (F_Y_boundary_parameterization δ Y R₀)
+      (Set.Icc (0 : ℝ) 6) := by
+  -- Piece-wise functions p1, ..., p6 (matching F_Y_boundary's six branches).
+  set p1 : ℝ → ℂ := fun t => (t * (1 / 2 - R₀) : ℂ) + (δ : ℂ) * Complex.I
+  set p2 : ℝ → ℂ := fun t =>
+    _root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ (Real.pi * (2 - t))
+  set p3 : ℝ → ℂ := fun t =>
+    (((1 / 2 + R₀) + (t - 2) * (1 / 2 - R₀)) : ℂ) + (δ : ℂ) * Complex.I
+  set p4 : ℝ → ℂ := fun t =>
+    (1 : ℂ) + ((δ + (t - 3) * (Y - δ)) : ℂ) * Complex.I
+  set p5 : ℝ → ℂ := fun t =>
+    ((5 - t : ℝ) : ℂ) + (Y : ℂ) * Complex.I
+  set p6 : ℝ → ℂ := fun t =>
+    ((Y - (t - 5) * (Y - δ) : ℝ) : ℂ) * Complex.I
+  -- Each piece is globally continuous in t.
+  have hp1_cont : Continuous p1 := by fun_prop
+  have hp2_cont : Continuous p2 :=
+    (continuous_circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀).comp (by fun_prop)
+  have hp3_cont : Continuous p3 := by fun_prop
+  have hp4_cont : Continuous p4 := by fun_prop
+  have hp5_cont : Continuous p5 := by fun_prop
+  have hp6_cont : Continuous p6 := by fun_prop
+  -- Matching values at the five interior seams.
+  have match5 : p5 5 = p6 5 := by
+    change ((5 - 5 : ℝ) : ℂ) + (Y : ℂ) * Complex.I =
+        ((Y - (5 - 5) * (Y - δ) : ℝ) : ℂ) * Complex.I
+    push_cast; ring
+  have match4 : p4 4 = p5 4 := by
+    change (1 : ℂ) + ((δ + (4 - 3) * (Y - δ)) : ℂ) * Complex.I =
+        ((5 - 4 : ℝ) : ℂ) + (Y : ℂ) * Complex.I
+    push_cast; ring
+  have match3 : p3 3 = p4 3 := by
+    change (((1 / 2 + R₀) + (3 - 2) * (1 / 2 - R₀)) : ℂ) + (δ : ℂ) * Complex.I =
+        (1 : ℂ) + ((δ + (3 - 3) * (Y - δ)) : ℂ) * Complex.I
+    ring
+  have match2 : p2 2 = p3 2 := by
+    change _root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ (Real.pi * (2 - 2)) =
+        (((1 / 2 + R₀) + (2 - 2) * (1 / 2 - R₀)) : ℂ) + (δ : ℂ) * Complex.I
+    unfold _root_.circleMap
+    rw [show (Real.pi * (2 - 2) : ℝ) = 0 from by ring]
+    push_cast
+    simp; ring
+  have match1 : p1 1 = p2 1 := by
+    change (1 * (1 / 2 - R₀) : ℂ) + (δ : ℂ) * Complex.I =
+        _root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ (Real.pi * (2 - 1))
+    unfold _root_.circleMap
+    rw [show (Real.pi * (2 - 1) : ℝ) = Real.pi from by ring,
+      show ((Real.pi : ℝ) : ℂ) * Complex.I = (Real.pi : ℂ) * Complex.I from rfl,
+      Complex.exp_pi_mul_I]
+    ring
+  -- Build up gg = nested if's from inside out.
+  -- gg5 = if t ≤ 5 then p5 else p6
+  have hg5 : Continuous (fun t : ℝ => if t ≤ 5 then p5 t else p6 t) :=
+    Continuous.if_le hp5_cont hp6_cont continuous_id continuous_const
+      (fun x hx => by subst hx; exact match5)
+  -- gg4 = if t ≤ 4 then p4 else gg5; at the seam t = 4, gg5(4) = p5(4) since 4 ≤ 5.
+  have hg4 : Continuous (fun t : ℝ => if t ≤ 4 then p4 t else
+      (if t ≤ 5 then p5 t else p6 t)) :=
+    Continuous.if_le hp4_cont hg5 continuous_id continuous_const
+      (fun x hx => by
+        subst hx
+        have h : (4 : ℝ) ≤ 5 := by norm_num
+        simp only [if_pos h]
+        exact match4)
+  have hg3 : Continuous (fun t : ℝ => if t ≤ 3 then p3 t else
+      (if t ≤ 4 then p4 t else (if t ≤ 5 then p5 t else p6 t))) :=
+    Continuous.if_le hp3_cont hg4 continuous_id continuous_const
+      (fun x hx => by
+        subst hx
+        have h : (3 : ℝ) ≤ 4 := by norm_num
+        simp only [if_pos h]
+        exact match3)
+  have hg2 : Continuous (fun t : ℝ => if t ≤ 2 then p2 t else
+      (if t ≤ 3 then p3 t else (if t ≤ 4 then p4 t else
+        (if t ≤ 5 then p5 t else p6 t)))) :=
+    Continuous.if_le hp2_cont hg3 continuous_id continuous_const
+      (fun x hx => by
+        subst hx
+        have h : (2 : ℝ) ≤ 3 := by norm_num
+        simp only [if_pos h]
+        exact match2)
+  have hg1 : Continuous (fun t : ℝ => if t ≤ 1 then p1 t else
+      (if t ≤ 2 then p2 t else (if t ≤ 3 then p3 t else
+        (if t ≤ 4 then p4 t else (if t ≤ 5 then p5 t else p6 t))))) :=
+    Continuous.if_le hp1_cont hg2 continuous_id continuous_const
+      (fun x hx => by
+        subst hx
+        have h : (1 : ℝ) ≤ 2 := by norm_num
+        simp only [if_pos h]
+        exact match1)
+  -- F_Y_boundary equals gg on Icc 0 6: gg drops the final `if t ≤ 6 then p6 else 0`
+  -- and uses p6 directly, which matches F_Y_boundary's value for t ≤ 6.
+  refine ContinuousOn.congr hg1.continuousOn ?_
+  intro t ⟨_, _ht6⟩
+  change F_Y_boundary_parameterization δ Y R₀ t = (if t ≤ 1 then p1 t else _)
+  unfold F_Y_boundary_parameterization
+  split_ifs <;> rfl
+
+/-- **F_Y image curve is continuous on `Icc 0 6`.**
+The composition `t ↦ modularLambdaH (F_Y_boundary_parameterization δ Y R₀ t) - w`
+is continuous on `Icc 0 6`, since the boundary parameterization is
+continuous (`F_Y_boundary_parameterization_continuousOn`) and lands in
+the open upper half-plane `ℍ` (`F_Y_boundary_parameterization_im_pos`)
+where `modularLambdaH` is holomorphic. -/
+theorem F_Y_image_curve_continuousOn
+    (w : ℂ) {δ Y R₀ : ℝ} (hδ : 0 < δ) (hδY : δ < Y) (hR₀_pos : 0 < R₀)
+    (hR₀_lt : R₀ < 1 / 2) :
+    ContinuousOn (fun t : ℝ =>
+        modularLambdaH (F_Y_boundary_parameterization δ Y R₀ t) - w)
+      (Set.Icc (0 : ℝ) 6) := by
+  refine ContinuousOn.sub ?_ continuousOn_const
+  intro t ht
+  have h_im_pos := F_Y_boundary_parameterization_im_pos hδ hδY hR₀_pos hR₀_lt t ht
+  have h_F_Y_cont := F_Y_boundary_parameterization_continuousOn δ Y R₀ t ht
+  have h_lambda_at : ContinuousAt modularLambdaH
+      (F_Y_boundary_parameterization δ Y R₀ t) :=
+    (modularLambdaH_differentiableAt_of_im_pos h_im_pos).continuousAt
+  exact h_lambda_at.comp_continuousWithinAt h_F_Y_cont
+
+/-- **F_Y image curve avoids zero on `Icc 0 6`.**
+The composition `t ↦ modularLambdaH (F_Y_boundary_parameterization δ Y R₀ t) - w`
+is nonzero on `Icc 0 6`. By case analysis on which boundary piece `t`
+belongs to, the value reduces to one of the six non-vanishing
+hypotheses. -/
+theorem F_Y_image_curve_ne_zero
+    {w : ℂ} {δ Y R₀ : ℝ}
+    (_hR₀_pos : 0 < R₀) (hR₀_lt : R₀ < 1 / 2) (hδY : δ ≤ Y)
+    (hg_bot_left : ∀ x ∈ Set.Icc (0 : ℝ) (1 / 2 - R₀),
+      modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) - w ≠ 0)
+    (hg_bot_right : ∀ x ∈ Set.Icc (1 / 2 + R₀ : ℝ) 1,
+      modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) - w ≠ 0)
+    (hg_top : ∀ x ∈ Set.Icc (0 : ℝ) 1,
+      modularLambdaH ((x : ℂ) + (Y : ℂ) * Complex.I) - w ≠ 0)
+    (hg_right : ∀ y ∈ Set.Icc δ Y,
+      modularLambdaH ((1 : ℂ) + (y : ℂ) * Complex.I) - w ≠ 0)
+    (hg_left : ∀ y ∈ Set.Icc δ Y,
+      modularLambdaH ((0 : ℂ) + (y : ℂ) * Complex.I) - w ≠ 0)
+    (hg_arc : ∀ θ ∈ Set.Icc (0 : ℝ) Real.pi,
+      modularLambdaH (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ) - w ≠ 0) :
+    ∀ t ∈ Set.Icc (0 : ℝ) 6,
+      modularLambdaH (F_Y_boundary_parameterization δ Y R₀ t) - w ≠ 0 := by
+  intro t ht
+  obtain ⟨ht0, ht6⟩ := ht
+  have h_R₀_lt_half : 0 ≤ 1 / 2 - R₀ := by linarith
+  have hYδ : 0 ≤ Y - δ := by linarith
+  unfold F_Y_boundary_parameterization
+  split_ifs with h1 h2 h3 h4 h5
+  · -- t ≤ 1: bot_left edge.
+    have hx : t * (1 / 2 - R₀) ∈ Set.Icc (0 : ℝ) (1 / 2 - R₀) :=
+      ⟨by positivity, by nlinarith⟩
+    have key := hg_bot_left _ hx
+    push_cast at key
+    exact key
+  · -- 1 < t ≤ 2: upper semicircle.
+    have h1' : 1 < t := not_le.mp h1
+    have hθ : Real.pi * (2 - t) ∈ Set.Icc (0 : ℝ) Real.pi :=
+      ⟨by nlinarith [Real.pi_pos], by nlinarith [Real.pi_pos]⟩
+    exact hg_arc _ hθ
+  · -- 2 < t ≤ 3: bot_right edge.
+    have h2' : 2 < t := not_le.mp h2
+    have hx : (1 / 2 + R₀) + (t - 2) * (1 / 2 - R₀) ∈ Set.Icc (1 / 2 + R₀ : ℝ) 1 :=
+      ⟨by nlinarith, by nlinarith⟩
+    have key := hg_bot_right _ hx
+    push_cast at key
+    convert key using 2
+  · -- 3 < t ≤ 4: right edge.
+    have h3' : 3 < t := not_le.mp h3
+    have hy : δ + (t - 3) * (Y - δ) ∈ Set.Icc δ Y :=
+      ⟨by nlinarith, by nlinarith⟩
+    have key := hg_right _ hy
+    push_cast at key
+    convert key using 2
+  · -- 4 < t ≤ 5: top edge.
+    have h4' : 4 < t := not_le.mp h4
+    have hx : (5 - t) ∈ Set.Icc (0 : ℝ) 1 :=
+      ⟨by linarith, by linarith⟩
+    exact_mod_cast hg_top _ hx
+  · -- 5 < t ≤ 6: left edge.
+    have h5' : 5 < t := not_le.mp h5
+    have hy : (Y - (t - 5) * (Y - δ)) ∈ Set.Icc δ Y :=
+      ⟨by nlinarith, by nlinarith⟩
+    have key := hg_left _ hy
+    simp only [zero_add] at key
+    exact_mod_cast key
+
+/-- **Continuous logarithmic lift on a closed real interval.**
+For a continuous function `u : ℝ → ℂ` nonzero on `Icc a b`, there
+exists a globally continuous function `L : ℝ → ℂ` such that
+`Complex.exp (L t) = u t` for all `t ∈ Icc a b`.
+
+This is the analytic core of path-lifting in the universal cover
+`ℂ → ℂ \ {0}` of the punctured plane (via `z ↦ exp z`), restricted
+to the simply-connected interval `[a, b]`. The lift is unique up to
+addition of `2π i · k` for `k ∈ ℤ`. -/
+theorem continuous_log_lift_of_continuous_ne_zero_Icc
+    {a b : ℝ} (hab : a ≤ b) (u : ℝ → ℂ)
+    (hu_cont : ContinuousOn u (Set.Icc a b))
+    (hu_ne : ∀ t ∈ Set.Icc a b, u t ≠ 0) :
+    ∃ L : ℝ → ℂ, Continuous L ∧
+      ∀ t ∈ Set.Icc a b, Complex.exp (L t) = u t := by
+  sorry
+
 /-- **F_Y image-curve homotopy to a small CCW circle.**
 For `w ∈ ℍ` and valid F_Y parameters with `λ ≠ w` on each of the six
 boundary pieces, the composite image curve
 `λ ∘ F_Y_boundary_parameterization` is homotopic in `ℂ \ {w}` to a
-sufficiently small CCW circle around `w` (parameterized over the same
-`[0, 6]` range, going once around with angular speed `π/3`).
+CCW unit circle around `w` (parameterized over the same `[0, 6]`
+range, going once around with angular speed `π/3`).
 
-This is the **load-bearing geometric/topological core** of path (a).
-Together with `pathWindingNumber_homotopy_invariant` (giving
-that winding indices are preserved across the homotopy) and
-`pathWindingNumber_circleMap_inside_eq_one` (giving the
-reference circle's winding index = 1), it closes
+Construction (log-space homotopy): let `u(t) := λ(γ(t)) - w` be the
+shifted image curve (continuous on `Icc 0 6` and nonzero by the F_Y
+boundary helpers, via `F_Y_image_curve_continuousOn` and
+`F_Y_image_curve_ne_zero`). Apply
+`continuous_log_lift_of_continuous_ne_zero_Icc` to obtain a continuous
+`L : ℝ → ℂ` with `exp(L t) = u t` on `Icc 0 6`. Define the homotopy
+`H s t := w + exp((1 - s) · L t + s · i · t · π/3)`. At `s = 0`:
+`H = w + exp(L t) = w + u(t) = λ(γ(t))`. At `s = 1`:
+`H = w + exp(i · t · π/3) = circleMap w 1 (t · π/3)`. Avoidance is
+automatic because `exp ≠ 0` everywhere. Continuity follows from
+joint continuity of the exponential and the continuous lift.
+
+Together with `pathWindingNumber_homotopy_invariant` and
+`pathWindingNumber_circleMap_inside_eq_one`, this closes
 `modularLambdaH_F_Y_image_curve_winding_index_eq_one` in
-`ModularCoveringMap.lean`.
-
-The proof must:
-* Construct an explicit homotopy `H : [0, 1] × [0, 6] → ℂ`
-  interpolating between `λ ∘ ∂F_Y` (at `s = 0`) and a small CCW
-  circle around `w` (at `s = 1`).
-* Show the homotopy stays in `ℂ \ {w}` throughout, using the F_Y
-  boundary non-vanishing helpers + cusp asymptotics
-  (`modularLambdaH_iy_tendsto_zero_atTop`,
-  `modularLambdaH_iy_tendsto_one_atZeroPos`,
-  `modularLambdaH_one_add_iy_tendsto_neg_infty_atZeroPos`) and the
-  boundary symmetries (`modularLambdaH_pure_imag_real`,
-  `modularLambdaH_one_add_imag_real`,
-  `modularLambdaH_semicircle_real`).
-* Show continuity (from continuity of `λ` on `ℍ` + the homotopy
-  parameterization). -/
+`ModularCoveringMap.lean`. -/
 theorem image_curve_lambda_F_Y_homotopic_to_circle
     {w : ℂ} (_hw : 0 < w.im) {δ Y R₀ : ℝ}
-    (_hδ : 0 < δ) (_hδY : δ < Y) (_hR₀_pos : 0 < R₀) (_hR₀_lt : R₀ < 1 / 2)
+    (hδ : 0 < δ) (hδY : δ < Y) (hR₀_pos : 0 < R₀) (hR₀_lt : R₀ < 1 / 2)
     (_h_δR_lt_Y : δ + R₀ < Y)
-    (_hg_bot_left : ∀ x ∈ Set.Icc (0 : ℝ) (1 / 2 - R₀),
+    (hg_bot_left : ∀ x ∈ Set.Icc (0 : ℝ) (1 / 2 - R₀),
       modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) - w ≠ 0)
-    (_hg_bot_right : ∀ x ∈ Set.Icc (1 / 2 + R₀ : ℝ) 1,
+    (hg_bot_right : ∀ x ∈ Set.Icc (1 / 2 + R₀ : ℝ) 1,
       modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) - w ≠ 0)
-    (_hg_top : ∀ x ∈ Set.Icc (0 : ℝ) 1,
+    (hg_top : ∀ x ∈ Set.Icc (0 : ℝ) 1,
       modularLambdaH ((x : ℂ) + (Y : ℂ) * Complex.I) - w ≠ 0)
-    (_hg_right : ∀ y ∈ Set.Icc δ Y,
+    (hg_right : ∀ y ∈ Set.Icc δ Y,
       modularLambdaH ((1 : ℂ) + (y : ℂ) * Complex.I) - w ≠ 0)
-    (_hg_left : ∀ y ∈ Set.Icc δ Y,
+    (hg_left : ∀ y ∈ Set.Icc δ Y,
       modularLambdaH ((0 : ℂ) + (y : ℂ) * Complex.I) - w ≠ 0)
-    (_hg_arc : ∀ θ ∈ Set.Icc (0 : ℝ) Real.pi,
+    (hg_arc : ∀ θ ∈ Set.Icc (0 : ℝ) Real.pi,
       modularLambdaH (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ) - w ≠ 0) :
     ∃ (ε : ℝ) (H : ℝ → ℝ → ℂ),
       0 < ε ∧
@@ -634,6 +909,63 @@ theorem image_curve_lambda_F_Y_homotopic_to_circle
       (∀ t ∈ Set.Icc (0 : ℝ) 6,
         H 1 t = _root_.circleMap w ε (t * Real.pi / 3)) ∧
       (∀ s ∈ Set.Icc (0 : ℝ) 1, ∀ t ∈ Set.Icc (0 : ℝ) 6, H s t ≠ w) := by
-  sorry
+  -- Image curve is continuous on Icc 0 6.
+  have h_u_cont : ContinuousOn
+      (fun t : ℝ => modularLambdaH (F_Y_boundary_parameterization δ Y R₀ t) - w)
+      (Set.Icc (0 : ℝ) 6) :=
+    F_Y_image_curve_continuousOn w hδ hδY hR₀_pos hR₀_lt
+  -- Image curve is nonzero on Icc 0 6.
+  have h_u_ne : ∀ t ∈ Set.Icc (0 : ℝ) 6,
+      modularLambdaH (F_Y_boundary_parameterization δ Y R₀ t) - w ≠ 0 :=
+    F_Y_image_curve_ne_zero hR₀_pos hR₀_lt hδY.le
+      hg_bot_left hg_bot_right hg_top hg_right hg_left hg_arc
+  -- Continuous log lift.
+  obtain ⟨L, hL_cont, hL_exp⟩ :=
+    continuous_log_lift_of_continuous_ne_zero_Icc
+      (by norm_num : (0 : ℝ) ≤ 6)
+      (fun t => modularLambdaH (F_Y_boundary_parameterization δ Y R₀ t) - w)
+      h_u_cont h_u_ne
+  -- Construct the homotopy.
+  refine ⟨1,
+    fun s t => w +
+      Complex.exp ((1 - (s : ℂ)) * L t + (s : ℂ) *
+        (((t * Real.pi / 3 : ℝ) : ℂ) * Complex.I)),
+    zero_lt_one, ?_, ?_, ?_, ?_⟩
+  · -- ContinuousOn (uncurry H) (Icc 0 1 ×ˢ Icc 0 6).
+    refine Continuous.continuousOn ?_
+    refine continuous_const.add ?_
+    refine Complex.continuous_exp.comp ?_
+    refine Continuous.add ?_ ?_
+    · refine Continuous.mul ?_ (hL_cont.comp continuous_snd)
+      exact continuous_const.sub (Complex.continuous_ofReal.comp continuous_fst)
+    · refine Continuous.mul (Complex.continuous_ofReal.comp continuous_fst) ?_
+      refine Continuous.mul ?_ continuous_const
+      refine Complex.continuous_ofReal.comp ?_
+      refine Continuous.div_const ?_ 3
+      exact continuous_snd.mul continuous_const
+  · -- H 0 t = λ(γ(t)).
+    intro t ht
+    have h_exp := hL_exp t ht
+    change w + Complex.exp ((1 - ((0:ℝ) : ℂ)) * L t + ((0:ℝ) : ℂ) *
+      (((t * Real.pi / 3 : ℝ) : ℂ) * Complex.I)) =
+      modularLambdaH (F_Y_boundary_parameterization δ Y R₀ t)
+    push_cast
+    rw [show (1 - 0 : ℂ) = 1 from by ring, one_mul, zero_mul, add_zero, h_exp]
+    ring
+  · -- H 1 t = circleMap w 1 (t * π / 3).
+    intro t _
+    change w + Complex.exp ((1 - ((1:ℝ) : ℂ)) * L t + ((1:ℝ) : ℂ) *
+      (((t * Real.pi / 3 : ℝ) : ℂ) * Complex.I)) =
+      _root_.circleMap w 1 (t * Real.pi / 3)
+    push_cast
+    rw [show (1 - 1 : ℂ) = 0 from by ring, zero_mul, zero_add, one_mul]
+    unfold _root_.circleMap
+    push_cast; ring
+  · -- H s t ≠ w (since exp ≠ 0).
+    intro s _ t _ h_eq
+    have h_exp_ne : Complex.exp ((1 - (s : ℂ)) * L t + (s : ℂ) *
+      (((t * Real.pi / 3 : ℝ) : ℂ) * Complex.I)) ≠ 0 := Complex.exp_ne_zero _
+    apply h_exp_ne
+    linear_combination h_eq
 
 end RiemannDynamics
