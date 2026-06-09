@@ -5,6 +5,7 @@ Authors: Will (Ziang) Li
 -/
 import RiemannDynamics.Hyperbolic.Gamma2FundamentalDomain
 import RiemannDynamics.Hyperbolic.WindingNumber
+import RiemannDynamics.Hyperbolic.PathWinding
 
 /-!
 # Covering map property of `λ : ℍ → ℂ ∖ {0, 1}`
@@ -2626,36 +2627,261 @@ theorem modularLambdaH_F_Y_AP_integral_eq_nat_form
   simp_rw [h_deriv, hg_def, he_def] at hn
   convert hn using 2
 
+/-- **Bridge: F_Y boundary integral expression equals image-curve
+contour integral.** For valid F_Y parameters with `λ ≠ w` on each of
+the six boundary pieces, the six-term AP-derived boundary integral
+expression (with the standard CCW orientation signs) coincides with
+`Complex.pathContourIntegral (λ ∘ F_Y_boundary_parameterization δ Y R₀)`
+of `(z − w)⁻¹` over `[0, 6]`.
+
+Proof: split the `[0, 6]` integral into six segments `[k, k+1]` for
+`k = 0, …, 5`. On each segment `F_Y_boundary_parameterization`
+restricts to one of the six smooth piece formulas (linear edges or
+the semicircle arc). For each piece, apply the chain rule (with the
+piece's affine/circle derivative) and substitute the natural parameter
+(`x` for horizontal edges, `y` for vertical edges, `θ` for the arc) to
+match the corresponding term in the boundary integral. The signs
+match: edges traversed in the parameter's positive direction get a
+`+`, those in the reverse direction get a `−`, the arc with parameter
+`π(2 − t)` reversal gets a `−`. -/
+theorem modularLambdaH_F_Y_image_curve_LHS_eq_pathContourIntegral
+    {w : ℂ} {δ Y R₀ : ℝ}
+    (hδ : 0 < δ) (hδY : δ < Y) (hR₀_pos : 0 < R₀) (hR₀_lt : R₀ < 1 / 2)
+    (h_δR_lt_Y : δ + R₀ < Y)
+    (hg_bot_left : ∀ x ∈ Set.Icc (0 : ℝ) (1 / 2 - R₀),
+      modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) - w ≠ 0)
+    (hg_bot_right : ∀ x ∈ Set.Icc (1 / 2 + R₀ : ℝ) 1,
+      modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) - w ≠ 0)
+    (hg_top : ∀ x ∈ Set.Icc (0 : ℝ) 1,
+      modularLambdaH ((x : ℂ) + (Y : ℂ) * Complex.I) - w ≠ 0)
+    (hg_right : ∀ y ∈ Set.Icc δ Y,
+      modularLambdaH ((1 : ℂ) + (y : ℂ) * Complex.I) - w ≠ 0)
+    (hg_left : ∀ y ∈ Set.Icc δ Y,
+      modularLambdaH ((0 : ℂ) + (y : ℂ) * Complex.I) - w ≠ 0)
+    (hg_arc : ∀ θ ∈ Set.Icc (0 : ℝ) Real.pi,
+      modularLambdaH (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ) - w ≠ 0) :
+    (∫ x in (0 : ℝ)..(1 / 2 - R₀),
+        deriv modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) /
+        (modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) - w)) +
+      (∫ x in (1 / 2 + R₀ : ℝ)..1,
+        deriv modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) /
+        (modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) - w)) +
+      Complex.I * (∫ y in (δ : ℝ)..Y,
+        deriv modularLambdaH ((1 : ℂ) + (y : ℂ) * Complex.I) /
+        (modularLambdaH ((1 : ℂ) + (y : ℂ) * Complex.I) - w)) -
+      (∫ x in (0 : ℝ)..1,
+        deriv modularLambdaH ((x : ℂ) + (Y : ℂ) * Complex.I) /
+        (modularLambdaH ((x : ℂ) + (Y : ℂ) * Complex.I) - w)) -
+      Complex.I * (∫ y in (δ : ℝ)..Y,
+        deriv modularLambdaH ((0 : ℂ) + (y : ℂ) * Complex.I) /
+        (modularLambdaH ((0 : ℂ) + (y : ℂ) * Complex.I) - w)) -
+      (∫ θ in (0 : ℝ)..Real.pi,
+        deriv modularLambdaH
+          (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ) /
+        (modularLambdaH
+          (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ) - w) *
+        (Complex.I * R₀ * Complex.exp (Complex.I * θ))) =
+    Complex.pathContourIntegral
+      (fun t => modularLambdaH (F_Y_boundary_parameterization δ Y R₀ t))
+      0 6 (fun z => (z - w)⁻¹) := by
+  sorry
+
+/-- **Continuous-homotopy invariance of the boundary contour integral.**
+Given a continuous closed homotopy `H : [0, 1] × [0, 6] → ℂ \ {w}`
+(in the sense of `image_curve_lambda_F_Y_homotopic_to_circle`) between
+the image curve `λ ∘ F_Y_boundary_parameterization δ Y R₀` at `s = 0`
+and the parameterized CCW circle `circleMap w ε (· · π/3)` at `s = 1`,
+the pathContourIntegrals of `(z − w)⁻¹` along the two endpoints are
+equal.
+
+This is the load-bearing topological sub-claim. The intended proof
+factors through three pieces:
+
+1. `continuous_log_lift_param_of_continuous_ne_zero` (PathWinding.lean):
+   2D-parametric continuous log-lift of `H − w`.
+
+2. `pathContourIntegral_inv_eq_log_lift_diff_of_contDiff`
+   (PathWinding.lean): FTC bridge identifying `pathContourIntegral` with
+   the log-lift boundary difference for C¹ paths (applied at s = 1 for
+   the C¹ circle, and piecewise for the piecewise-C¹ image curve via a
+   six-segment split).
+
+3. The integer-continuity argument: the lift restricted to each cross-
+   section gives a continuous map `s ↦ L(s, b) − L(s, a)`; for closed
+   paths this is in `2πi · ℤ`, and by connectedness, the endpoint
+   values agree.
+
+The structural difficulty is that `image_curve_lambda_F_Y_homotopic_to_circle`'s
+H is closed at intermediate s only when the image curve has winding 1
+(the conclusion we're proving) — a CIRCULAR dependency that requires a
+direct topological argument exploiting the specific log-space construction
+of H to break. Closure is multi-session work. -/
+theorem modularLambdaH_F_Y_image_curve_pathContourIntegral_eq_circle_via_homotopy
+    {w : ℂ} {δ Y R₀ : ℝ}
+    (ε : ℝ) (_hε_pos : 0 < ε) (H : ℝ → ℝ → ℂ)
+    (_hH_cont : ContinuousOn (Function.uncurry H)
+      (Set.Icc (0 : ℝ) 1 ×ˢ Set.Icc (0 : ℝ) 6))
+    (_hH_0 : ∀ t ∈ Set.Icc (0 : ℝ) 6,
+      H 0 t = modularLambdaH (F_Y_boundary_parameterization δ Y R₀ t))
+    (_hH_1 : ∀ t ∈ Set.Icc (0 : ℝ) 6,
+      H 1 t = _root_.circleMap w ε (t * Real.pi / 3))
+    (_hH_avoid : ∀ s ∈ Set.Icc (0 : ℝ) 1, ∀ t ∈ Set.Icc (0 : ℝ) 6, H s t ≠ w)
+    (_hH_closed : ∀ s ∈ Set.Icc (0 : ℝ) 1, H s 0 = H s 6) :
+    Complex.pathContourIntegral
+      (fun t => modularLambdaH (F_Y_boundary_parameterization δ Y R₀ t))
+      0 6 (fun z => (z - w)⁻¹) =
+    Complex.pathContourIntegral
+      (fun t : ℝ => _root_.circleMap w ε (t * Real.pi / 3))
+      0 6 (fun z => (z - w)⁻¹) := by
+  sorry
+
+/-- **Topological-winding result: image-curve contour integral equals 2πi.**
+For `w ∈ ℍ` and valid F_Y parameters with `λ ≠ w` on each boundary piece,
+the contour integral of `(z − w)⁻¹` along the image curve
+`λ ∘ F_Y_boundary_parameterization δ Y R₀` over `[0, 6]` equals exactly
+`2πi`.
+
+Proof: by `image_curve_lambda_F_Y_homotopic_to_circle` the image curve
+is continuously homotopic to a parameterized CCW circle around `w` with
+angular speed `π/3`. Applying
+`_pathContourIntegral_eq_circle_via_homotopy` equates the two contour
+integrals. The circle integral computes directly via chain rule:
+`d/dt(circleMap w ε (t π/3)) = (π/3) · ε · exp(I(t π/3)) · I`, so the
+integrand `(circleMap - w)⁻¹ · deriv = (ε exp(I t π/3))⁻¹ ·
+(π ε I / 3) · exp(I t π/3) = I π / 3` is constant, giving
+`∫₀⁶ I π / 3 dt = 2πI`. -/
+theorem modularLambdaH_F_Y_image_curve_pathContourIntegral_eq_two_pi_I
+    {w : ℂ} (hw : 0 < w.im) {δ Y R₀ : ℝ}
+    (hδ : 0 < δ) (hδY : δ < Y) (hR₀_pos : 0 < R₀) (hR₀_lt : R₀ < 1 / 2)
+    (h_δR_lt_Y : δ + R₀ < Y)
+    (hg_bot_left : ∀ x ∈ Set.Icc (0 : ℝ) (1 / 2 - R₀),
+      modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) - w ≠ 0)
+    (hg_bot_right : ∀ x ∈ Set.Icc (1 / 2 + R₀ : ℝ) 1,
+      modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) - w ≠ 0)
+    (hg_top : ∀ x ∈ Set.Icc (0 : ℝ) 1,
+      modularLambdaH ((x : ℂ) + (Y : ℂ) * Complex.I) - w ≠ 0)
+    (hg_right : ∀ y ∈ Set.Icc δ Y,
+      modularLambdaH ((1 : ℂ) + (y : ℂ) * Complex.I) - w ≠ 0)
+    (hg_left : ∀ y ∈ Set.Icc δ Y,
+      modularLambdaH ((0 : ℂ) + (y : ℂ) * Complex.I) - w ≠ 0)
+    (hg_arc : ∀ θ ∈ Set.Icc (0 : ℝ) Real.pi,
+      modularLambdaH (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ) - w ≠ 0) :
+    Complex.pathContourIntegral
+      (fun t => modularLambdaH (F_Y_boundary_parameterization δ Y R₀ t))
+      0 6 (fun z => (z - w)⁻¹) = 2 * Real.pi * Complex.I := by
+  -- Extract the homotopy from image_curve_lambda_F_Y_homotopic_to_circle —
+  -- now exposing the 1D log lift `L` and the explicit log-space form of `H`.
+  obtain ⟨ε, L, H, hε_pos, hL_cont, hL_exp, hH_form, hH_cont, hH_0, hH_1, hH_avoid⟩ :=
+    image_curve_lambda_F_Y_homotopic_to_circle hw hδ hδY hR₀_pos hR₀_lt h_δR_lt_Y
+      hg_bot_left hg_bot_right hg_top hg_right hg_left hg_arc
+  -- Architectural setup for `hH_closed`:
+  -- (1) The F_Y boundary curve closes at the corners: `γ(0) = γ(6) = δ·i`.
+  -- (2) Hence the log lift `L` satisfies `exp(L 0) = exp(L 6)`, so by
+  --     `winding_lift_integer_coeff` there is `K : ℤ` with
+  --     `L 6 − L 0 = K · 2πi` (the topological winding integer).
+  -- (3) For the explicit `H s t = w + exp((1−s)·L t + s·t·π/3·i)`,
+  --     `H s 0 = H s 6` reduces algebraically to the integer-valuedness of
+  --     the affine real map `s ↦ K + s·(1 − K)` on `[0, 1]`.
+  -- (4) `K_eq_one_of_affine_int_valued_on_unit_interval` then forces `K = 1`,
+  --     and `H_explicit_closed_of_K_eq_one` recovers `hH_closed`.
+  -- The remaining input — the affine integer-valuedness on `[0, 1]` — is the
+  -- deep topological fact equivalent to `hH_closed`; it sits as an isolated
+  -- inline sorry below.
+  have hγ_closed : F_Y_boundary_parameterization δ Y R₀ 0 =
+      F_Y_boundary_parameterization δ Y R₀ 6 := by
+    unfold F_Y_boundary_parameterization
+    have h0_le_1 : (0 : ℝ) ≤ 1 := by norm_num
+    have h6_not_le_1 : ¬((6 : ℝ) ≤ 1) := by norm_num
+    have h6_not_le_2 : ¬((6 : ℝ) ≤ 2) := by norm_num
+    have h6_not_le_3 : ¬((6 : ℝ) ≤ 3) := by norm_num
+    have h6_not_le_4 : ¬((6 : ℝ) ≤ 4) := by norm_num
+    have h6_not_le_5 : ¬((6 : ℝ) ≤ 5) := by norm_num
+    have h6_le_6 : (6 : ℝ) ≤ 6 := by norm_num
+    rw [if_pos h0_le_1, if_neg h6_not_le_1, if_neg h6_not_le_2,
+        if_neg h6_not_le_3, if_neg h6_not_le_4, if_neg h6_not_le_5, if_pos h6_le_6]
+    push_cast; ring
+  have hL_lift_closed : Complex.exp (L 0) = Complex.exp (L 6) := by
+    have h0 : Complex.exp (L 0) =
+        modularLambdaH (F_Y_boundary_parameterization δ Y R₀ 0) - w :=
+      hL_exp 0 ⟨by norm_num, by norm_num⟩
+    have h6 : Complex.exp (L 6) =
+        modularLambdaH (F_Y_boundary_parameterization δ Y R₀ 6) - w :=
+      hL_exp 6 ⟨by norm_num, by norm_num⟩
+    rw [h0, h6, hγ_closed]
+  obtain ⟨K, hK_eq⟩ := winding_lift_integer_coeff L hL_lift_closed
+  -- Deep topological fact: the affine real map `s ↦ K + s·(1 − K)` is
+  -- integer-valued at every `s ∈ [0, 1]`. Equivalent to `hH_closed`; the
+  -- isolated form makes the integer-continuity content explicit. -/
+  have h_tau_int_valued : ∀ s ∈ Set.Icc (0 : ℝ) 1,
+      ∃ n : ℤ, (K : ℝ) + s * (1 - K) = n := by sorry
+  have hK_one : K = 1 :=
+    K_eq_one_of_affine_int_valued_on_unit_interval h_tau_int_valued
+  have hL_eq : L 6 - L 0 = (2 * Real.pi * Complex.I : ℂ) := by
+    rw [hK_eq, hK_one]; push_cast; ring
+  have hH_explicit_closed := H_explicit_closed_of_K_eq_one w L hL_eq
+  have hH_closed : ∀ s ∈ Set.Icc (0 : ℝ) 1, H s 0 = H s 6 := by
+    intro s hs
+    rw [hH_form s 0, hH_form s 6]
+    exact hH_explicit_closed s hs
+  -- Apply continuous-homotopy invariance to equate image and circle integrals.
+  rw [modularLambdaH_F_Y_image_curve_pathContourIntegral_eq_circle_via_homotopy
+    ε hε_pos H hH_cont hH_0 hH_1 hH_avoid hH_closed]
+  -- Compute the circle integral directly.
+  unfold Complex.pathContourIntegral
+  -- Goal: ∫ t in 0..6, (circleMap w ε (t * π / 3) - w)⁻¹ * deriv (.) t = 2πi.
+  have h_integrand : ∀ t : ℝ,
+      (fun z => (z - w)⁻¹) (_root_.circleMap w ε (t * Real.pi / 3)) *
+        deriv (fun t : ℝ => _root_.circleMap w ε (t * Real.pi / 3)) t =
+      Complex.I * (Real.pi / 3) := by
+    intro t
+    -- Compute deriv via chain rule.
+    have h_inner : HasDerivAt (fun s : ℝ => s * Real.pi / 3) (Real.pi / 3) t := by
+      have h1 : HasDerivAt (fun y : ℝ => id y * Real.pi) (1 * Real.pi) t :=
+        (hasDerivAt_id t).mul_const Real.pi
+      simp only [id, one_mul] at h1
+      exact h1.div_const 3
+    have h_outer := hasDerivAt_circleMap w ε (t * Real.pi / 3)
+    have h_comp := h_outer.scomp t h_inner
+    have h_deriv_eq : deriv (fun t : ℝ => _root_.circleMap w ε (t * Real.pi / 3)) t =
+        (Real.pi / 3 : ℝ) • (_root_.circleMap 0 ε (t * Real.pi / 3) * Complex.I) :=
+      h_comp.deriv
+    rw [h_deriv_eq]
+    -- circleMap w ε θ - w = circleMap 0 ε θ.
+    have h_sub : _root_.circleMap w ε (t * Real.pi / 3) - w =
+        _root_.circleMap 0 ε (t * Real.pi / 3) := by
+      unfold _root_.circleMap; ring
+    change (_root_.circleMap w ε (t * Real.pi / 3) - w)⁻¹ * _ = _
+    rw [h_sub]
+    -- circleMap 0 ε θ ≠ 0.
+    have h_circ_ne : _root_.circleMap 0 ε (t * Real.pi / 3) ≠ 0 := by
+      unfold _root_.circleMap
+      simp only [zero_add]
+      refine mul_ne_zero ?_ (Complex.exp_ne_zero _)
+      exact_mod_cast ne_of_gt hε_pos
+    -- Simplify.
+    rw [Complex.real_smul]
+    field_simp
+    push_cast
+    ring
+  -- Use the constant integrand to evaluate the integral.
+  rw [intervalIntegral.integral_congr (g := fun _ => Complex.I * (Real.pi / 3))
+    (fun t _ => h_integrand t)]
+  rw [intervalIntegral.integral_const]
+  change ((6 - 0 : ℝ) : ℂ) * (Complex.I * (Real.pi / 3)) = 2 * Real.pi * Complex.I
+  push_cast
+  ring
+
 /-- **Sub-lemma 9.aux.B2.core — Image curve winding index is 1.**
 The load-bearing topological/geometric core sub-helper for B2. For any
-`n : ℕ` satisfying the AP-derived identity and a continuous closed loop
-`γ : [0, 1] → ℂ \ {w}` derived from `λ ∘ ∂F_Y`, `n` equals the winding
-index of `γ` around `w`, which is 1.
+`n : ℕ` satisfying the AP-derived identity, `n` equals the winding
+index of the image curve `λ ∘ ∂F_Y` around `w`, which is `1`.
 
-Reduction path (via the infrastructure in `Hyperbolic/PathWinding.lean`
-and `Complex.pathWindingNumber` from `Hyperbolic/WindingNumber.lean`):
-
-1. By chain rule, each of the 6 boundary integrals in the F_Y boundary
-   integral expression equals `(2πi) · Complex.pathWindingNumber (λ ∘ γᵢ)`
-   for the corresponding boundary parameterization `γᵢ : [aᵢ, bᵢ] → ℂ`.
-   Summing the 6 pieces gives a single `Complex.pathWindingNumber` of the
-   concatenated image curve `λ ∘ ∂F_Y` around `w`.
-
-2. By `pathWindingNumber_homotopy_invariant`, this equals the
-   winding index of any homotopic curve in `ℂ \ {w}`. The image curve
-   `λ ∘ ∂F_Y` is homotopic to a small CCW circle around `w` (claim
-   `image_curve_lambda_F_Y_homotopic_to_circle` in `PathWinding.lean`),
-   using the F_Y boundary non-vanishing helpers + the cusp asymptotics
-   (`_iy_tendsto_zero_atTop`, `_iy_tendsto_one_atZeroPos`,
-   `_one_add_iy_tendsto_neg_infty_atZeroPos`) and boundary symmetries
-   (`_pure_imag_real`, `_one_add_imag_real`, `_semicircle_real`).
-
-3. By `pathWindingNumber_circleMap_inside_eq_one`, the winding
-   index of a CCW circle around `w` is `1`. Hence `(n : ℂ) = 1`, so
-   `n = 1`.
-
-Body left as `sorry` for follow-up work to wire steps 1-3 explicitly
-once the PathWinding sorry helpers are closed. -/
+Proof: bridge the 6-term boundary integral expression to
+`pathContourIntegral (λ ∘ F_Y_boundary_parameterization) 0 6 ((z − w)⁻¹)`
+via `_LHS_eq_pathContourIntegral`, then apply
+`_pathContourIntegral_eq_two_pi_I` (the topological winding result).
+Combining with the AP-derived hypothesis `(2πi)⁻¹ · expression = (n : ℂ)`
+gives `(n : ℂ) = 1`, hence `n = 1`. -/
 theorem modularLambdaH_F_Y_image_curve_winding_index_eq_one
     {w : ℂ} (hw : 0 < w.im) {δ Y R₀ : ℝ}
     (hδ : 0 < δ) (hδY : δ < Y) (hR₀_pos : 0 < R₀) (hR₀_lt : R₀ < 1 / 2)
@@ -2695,7 +2921,22 @@ theorem modularLambdaH_F_Y_image_curve_winding_index_eq_one
           (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ) - w) *
         (Complex.I * R₀ * Complex.exp (Complex.I * θ)))) = (n : ℂ)) :
     n = 1 := by
-  sorry
+  -- Bridge LHS to pathContourIntegral via the chain-rule sub-helper.
+  have h_bridge := modularLambdaH_F_Y_image_curve_LHS_eq_pathContourIntegral
+    hδ hδY hR₀_pos hR₀_lt h_δR_lt_Y
+    hg_bot_left hg_bot_right hg_top hg_right hg_left hg_arc
+  -- Topological winding via homotopy + circle.
+  have h_topo := modularLambdaH_F_Y_image_curve_pathContourIntegral_eq_two_pi_I
+    hw hδ hδY hR₀_pos hR₀_lt h_δR_lt_Y
+    hg_bot_left hg_bot_right hg_top hg_right hg_left hg_arc
+  -- Combine: (2πi)⁻¹ · 2πi = 1 = (n : ℂ).
+  rw [h_bridge, h_topo] at hn
+  have hpi : (2 * Real.pi * Complex.I : ℂ) ≠ 0 := by
+    refine mul_ne_zero (mul_ne_zero ?_ ?_) Complex.I_ne_zero
+    · exact two_ne_zero
+    · exact_mod_cast Real.pi_ne_zero
+  rw [inv_mul_cancel₀ hpi] at hn
+  exact_mod_cast hn.symm
 
 /-- **Sub-lemma 9.aux.B2 — AP natural-count equals 1.**
 For `w ∈ ℍ` and any `n : ℕ` satisfying the AP-derived identity
