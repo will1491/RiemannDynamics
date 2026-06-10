@@ -8,6 +8,7 @@
 !/lakefile.toml
 !/lean-toolchain
 !/README.md
+!/LICENSE
 !/.gitignore
 # end of whitelist
 
