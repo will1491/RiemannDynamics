@@ -2627,6 +2627,639 @@ theorem modularLambdaH_F_Y_AP_integral_eq_nat_form
   simp_rw [h_deriv, hg_def, he_def] at hn
   convert hn using 2
 
+/-- **F_Y argument principle, divisor-sum form.** The `(2πi)⁻¹`-normalized
+six-term boundary integral of `λ'/(λ − w)` over `∂F_Y` equals the total
+divisor sum (the zero count with multiplicity) of `λ − w` on the
+truncated region. Wrapper around
+`Complex.cIntegralLogDeriv_eq_divisor_sum_of_nonzero_on_rectMinusUpperHalfDisk`
+specialized to `g := λ − w`, with `deriv g` converted to `deriv λ`. -/
+theorem modularLambdaH_F_Y_AP_integral_eq_divisor_sum
+    {w : ℂ} {δ Y R₀ : ℝ}
+    (hδ : 0 < δ) (hδY : δ < Y) (hR₀_pos : 0 < R₀) (hR₀_lt : R₀ < 1 / 2)
+    (h_δR_lt_Y : δ + R₀ < Y)
+    (hg_bot_left : ∀ x ∈ Set.Icc (0 : ℝ) (1 / 2 - R₀),
+      modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) - w ≠ 0)
+    (hg_bot_right : ∀ x ∈ Set.Icc (1 / 2 + R₀ : ℝ) 1,
+      modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) - w ≠ 0)
+    (hg_top : ∀ x ∈ Set.Icc (0 : ℝ) 1,
+      modularLambdaH ((x : ℂ) + (Y : ℂ) * Complex.I) - w ≠ 0)
+    (hg_right : ∀ y ∈ Set.Icc δ Y,
+      modularLambdaH ((1 : ℂ) + (y : ℂ) * Complex.I) - w ≠ 0)
+    (hg_left : ∀ y ∈ Set.Icc δ Y,
+      modularLambdaH ((0 : ℂ) + (y : ℂ) * Complex.I) - w ≠ 0)
+    (hg_arc : ∀ θ ∈ Set.Icc (0 : ℝ) Real.pi,
+      modularLambdaH (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ) - w ≠ 0) :
+    (2 * Real.pi * Complex.I)⁻¹ * (
+      (∫ x in (0 : ℝ)..(1 / 2 - R₀),
+        deriv modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) /
+        (modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) - w)) +
+      (∫ x in (1 / 2 + R₀ : ℝ)..1,
+        deriv modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) /
+        (modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) - w)) +
+      Complex.I * (∫ y in (δ : ℝ)..Y,
+        deriv modularLambdaH ((1 : ℂ) + (y : ℂ) * Complex.I) /
+        (modularLambdaH ((1 : ℂ) + (y : ℂ) * Complex.I) - w)) -
+      (∫ x in (0 : ℝ)..1,
+        deriv modularLambdaH ((x : ℂ) + (Y : ℂ) * Complex.I) /
+        (modularLambdaH ((x : ℂ) + (Y : ℂ) * Complex.I) - w)) -
+      Complex.I * (∫ y in (δ : ℝ)..Y,
+        deriv modularLambdaH ((0 : ℂ) + (y : ℂ) * Complex.I) /
+        (modularLambdaH ((0 : ℂ) + (y : ℂ) * Complex.I) - w)) -
+      (∫ θ in (0 : ℝ)..Real.pi,
+        deriv modularLambdaH
+          (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ) /
+        (modularLambdaH
+          (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ) - w) *
+        (Complex.I * R₀ * Complex.exp (Complex.I * θ)))) =
+    ((∑ᶠ u, MeromorphicOn.divisor (fun τ => modularLambdaH τ - w)
+      ((Set.Icc (0 : ℝ) 1 ×ℂ Set.Icc δ Y) \
+        Metric.ball ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀) u).toNat : ℂ) := by
+  set g : ℂ → ℂ := fun τ => modularLambdaH τ - w with hg_def
+  set e : ℂ := (1 / 2 : ℂ) + (δ : ℂ) * Complex.I with he_def
+  have he_re : e.re = 1 / 2 := by
+    rw [he_def, Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
+      Complex.ofReal_re, Complex.ofReal_im]
+    have h_half_re : ((1 : ℂ) / 2).re = 1 / 2 := by rw [Complex.div_re]; simp
+    rw [h_half_re]; ring
+  have he_im : e.im = δ := by
+    rw [he_def, Complex.add_im, Complex.mul_im, Complex.I_re, Complex.I_im,
+      Complex.ofReal_re, Complex.ofReal_im]
+    have h_half_im : ((1 : ℂ) / 2).im = 0 := by rw [Complex.div_im]; simp
+    rw [h_half_im]; ring
+  have hab : (0 : ℝ) < 1 := by norm_num
+  have h_a_lt : (0 : ℝ) < e.re - R₀ := by rw [he_re]; linarith
+  have h_lt_b : e.re + R₀ < 1 := by rw [he_re]; linarith
+  have h_e_im_R0_lt_d : e.im + R₀ < Y := by rw [he_im]; exact h_δR_lt_Y
+  have hg_an : AnalyticOnNhd ℂ g
+      ((Set.Icc (0 : ℝ) 1 ×ℂ Set.Icc e.im Y) \ Metric.ball e R₀) := by
+    rw [he_im, he_def]
+    exact modularLambdaH_F_Y_analytic w hδ hδY hR₀_pos
+  have hg_bot_left' : ∀ x ∈ Set.Icc (0 : ℝ) (e.re - R₀),
+      g ((x : ℂ) + (e.im : ℂ) * Complex.I) ≠ 0 := by
+    rw [he_re, he_im]; intro x hx; exact hg_bot_left x hx
+  have hg_bot_right' : ∀ x ∈ Set.Icc (e.re + R₀) 1,
+      g ((x : ℂ) + (e.im : ℂ) * Complex.I) ≠ 0 := by
+    rw [he_re, he_im]; intro x hx; exact hg_bot_right x hx
+  have hg_top' : ∀ x ∈ Set.Icc (0 : ℝ) 1,
+      g ((x : ℂ) + (Y : ℂ) * Complex.I) ≠ 0 := by
+    intro x hx; exact hg_top x hx
+  have hg_right' : ∀ y ∈ Set.Icc e.im Y,
+      g ((1 : ℂ) + (y : ℂ) * Complex.I) ≠ 0 := by
+    rw [he_im]; intro y hy; exact hg_right y hy
+  have hg_left' : ∀ y ∈ Set.Icc e.im Y,
+      g ((0 : ℂ) + (y : ℂ) * Complex.I) ≠ 0 := by
+    rw [he_im]; intro y hy; exact hg_left y hy
+  have hg_arc' : ∀ θ ∈ Set.Icc (0 : ℝ) Real.pi,
+      g (_root_.circleMap e R₀ θ) ≠ 0 := by
+    rw [he_def]; intro θ hθ; exact hg_arc θ hθ
+  have hn := Complex.cIntegralLogDeriv_eq_divisor_sum_of_nonzero_on_rectMinusUpperHalfDisk
+    g 0 1 Y e R₀ hab hR₀_pos h_a_lt h_lt_b h_e_im_R0_lt_d
+    hg_an hg_bot_left' hg_bot_right' hg_top' hg_right' hg_left' hg_arc'
+  have h_deriv : ∀ τ : ℂ, deriv g τ = deriv modularLambdaH τ := fun τ => by
+    rw [hg_def]; exact deriv_sub_const w
+  rw [he_re, he_im] at hn
+  simp_rw [h_deriv, hg_def, he_def] at hn
+  convert hn using 2
+
+
+set_option maxHeartbeats 400000 in
+-- The quantitative cusp-chart estimates make this declaration elaboration-heavy.
+/-- **Deep-cusp reference value.** There is a value `w₀ ∈ ℍ` whose full
+set of `λ`-preimages in the open fundamental domain `F°` is the single
+point `τ₀ = 1/2 + T·i`, at which `λ' ≠ 0`. Deep in the cusp the
+`q = exp(iπτ)`-chart is injective (`λ̃'(0) = 16 ≠ 0`, mean-value
+estimate), the strip makes `q` itself injective, and away from the
+cusp `‖λ‖` is bounded below by a compact-band minimum, which `‖w₀‖`
+undercuts for `T` large. -/
+theorem modularLambdaH_cusp_reference_value :
+    ∃ (w₀ : ℂ) (τ₀ : ℂ), 0 < w₀.im ∧
+      τ₀ ∈ Gamma2FundamentalDomainInterior ∧
+      modularLambdaH τ₀ = w₀ ∧
+      deriv modularLambdaH τ₀ ≠ 0 ∧
+      ∀ τ ∈ Gamma2FundamentalDomainInterior, modularLambdaH τ = w₀ → τ = τ₀ := by
+  -- ====================================================================
+  -- Step 0a: pure arithmetic helpers, proved first (in an empty
+  -- context) so that the nonlinear-arithmetic searches stay cheap.
+  -- ====================================================================
+  -- square-root comparison
+  have h_sq_lt : ∀ a b : ℝ, 0 ≤ a → 0 < b → a ^ 2 < b ^ 2 → a < b := by
+    intro a b ha hb h
+    nlinarith
+  -- squaring `1 < a`
+  have h_one_lt_sq : ∀ a : ℝ, 1 < a → 1 < a ^ 2 := by
+    intro a h
+    nlinarith
+  -- the semicircle constraint in coordinates
+  have h_semi_helper : ∀ x y : ℝ, 1 < (2 * x - 1) ^ 2 + (2 * y) ^ 2 →
+      x * (1 - x) < y ^ 2 := by
+    intro x y h
+    nlinarith
+  -- cusp-0 band geometry: small `Im` and `Re ≤ 1/2` force `|σ| < 2·Im σ`
+  have h_band0 : ∀ x y : ℝ, 0 < x → x ≤ 1/2 → 0 < y → y < 1/4 →
+      x * (1 - x) < y ^ 2 → x * x + y * y < (2 * y) ^ 2 := by
+    intro x y hx hx2 hy hy4 hs
+    have h1 : x < 2 * y ^ 2 := by
+      nlinarith [mul_nonneg hx.le (show (0:ℝ) ≤ 1/2 - x by linarith)]
+    have h2 : 2 * y ^ 2 < y / 2 := by
+      nlinarith [mul_pos hy (show (0:ℝ) < 1/4 - y by linarith)]
+    nlinarith [mul_pos (show (0:ℝ) < y/2 - x by linarith)
+      (show (0:ℝ) < y/2 + x by linarith), mul_pos hy hy]
+  -- cusp-1 band geometry: small `Im` and `Re > 1/2` force `|σ−1| < 2·Im σ`
+  have h_band1 : ∀ x y : ℝ, x < 1 → 1/2 < x → 0 < y → y < 1/4 →
+      x * (1 - x) < y ^ 2 → (x - 1) * (x - 1) + y * y < (2 * y) ^ 2 := by
+    intro x y hx1 hx2 hy hy4 hs
+    have h1 : 1 - x < 2 * y ^ 2 := by
+      nlinarith [mul_nonneg (show (0:ℝ) ≤ x - 1/2 by linarith)
+        (show (0:ℝ) ≤ 1 - x by linarith)]
+    have h2 : 2 * y ^ 2 < y / 2 := by
+      nlinarith [mul_pos hy (show (0:ℝ) < 1/4 - y by linarith)]
+    nlinarith [mul_pos (show (0:ℝ) < y/2 - (1 - x) by linarith)
+      (show (0:ℝ) < y/2 + (1 - x) by linarith), mul_pos hy hy]
+  -- positivity of the deep-cusp derivative lower bound
+  have h_deep_pos : ∀ p v : ℝ, 3 < p → p < 4 → 0 < v → v < 1/10000 →
+      0 < 16 * p * v - 256 * p * v ^ 2 - 2112 * p * v ^ 3 - 100000 * v ^ 4 := by
+    intro p v hp3 hp4 hv hv4
+    have hv1 : v ≤ 1 := by linarith
+    have h2 : v ^ 2 ≤ (1/10000) * v := by nlinarith
+    have h3 : v ^ 3 ≤ v ^ 2 := by nlinarith [sq_nonneg v]
+    have h21 : v ^ 2 ≤ 1 := by nlinarith
+    have h4 : v ^ 4 ≤ v ^ 2 := by nlinarith [sq_nonneg v, sq_nonneg (v ^ 2)]
+    have t1 : 256 * p * v ^ 2 ≤ 1024 * v ^ 2 := by nlinarith [sq_nonneg v]
+    have t2 : 2112 * p * v ^ 3 ≤ 8448 * v ^ 3 := by nlinarith [pow_nonneg hv.le 3]
+    have t3 : 48 * v ≤ 16 * p * v := by nlinarith
+    have h3nn : (0:ℝ) ≤ v ^ 3 := pow_nonneg hv.le 3
+    linarith
+  -- smallness of the cusp-derivative error terms on `‖q‖ ≤ 1/100`
+  have h_small_bound : ∀ t : ℝ, 0 ≤ t → t ≤ 1/100 →
+      31000 * t ^ 3 + (2112 * t ^ 2 + 256 * t) ≤ 8 := by
+    intro t h0 h1
+    have hsq : t ^ 2 ≤ (1/100) * t := by nlinarith
+    have hcb : t ^ 3 ≤ (1/100) * t ^ 2 := by nlinarith [sq_nonneg t]
+    linarith
+  -- ====================================================================
+  -- Step 0b: numerical constants.
+  -- ====================================================================
+  have hπ_pos : (0:ℝ) < Real.pi := Real.pi_pos
+  have hπ_gt3 : (3:ℝ) < Real.pi := Real.pi_gt_three
+  have hπ_lt4 : Real.pi < 4 := Real.pi_lt_four
+  have h_exp_pi_gt : (22:ℝ) < Real.exp Real.pi := exp_pi_gt_22
+  have h_exp_pi_pos : (0:ℝ) < Real.exp Real.pi := Real.exp_pos _
+  -- `exp π < 100`
+  have h_exp_pi_lt : Real.exp Real.pi < 100 := by
+    have h1 : Real.exp Real.pi < Real.exp 4 := Real.exp_lt_exp.mpr hπ_lt4
+    have h4 : Real.exp 4 = Real.exp 1 * Real.exp 1 * Real.exp 1 * Real.exp 1 := by
+      rw [← Real.exp_add, ← Real.exp_add, ← Real.exp_add]; norm_num
+    have he := Real.exp_one_lt_d9
+    have he_pos := Real.exp_pos 1
+    have he2 : Real.exp 1 * Real.exp 1 < 7.389057 := by nlinarith [he, he_pos]
+    have he4 : (Real.exp 1 * Real.exp 1) * (Real.exp 1 * Real.exp 1) < 60 := by
+      nlinarith [he2, mul_pos he_pos he_pos]
+    nlinarith [he4, h1, h4]
+  -- `1/100 ≤ exp(−π)`
+  have h_inv100_le : (1/100 : ℝ) ≤ Real.exp (-Real.pi) := by
+    have h2 : Real.exp (-Real.pi) * Real.exp Real.pi = 1 := by
+      rw [← Real.exp_add]; simp
+    have h_mul := mul_lt_mul_of_pos_left h_exp_pi_lt (Real.exp_pos (-Real.pi))
+    rw [h2] at h_mul
+    linarith only [h_mul]
+  -- `484 < (exp π)²` and `10000 < (exp π)³`
+  have h484 : (484:ℝ) < Real.exp Real.pi ^ 2 := by
+    nlinarith [sq_nonneg (Real.exp Real.pi - 22), h_exp_pi_gt]
+  have h10000 : (10000:ℝ) < Real.exp Real.pi ^ 3 := by
+    nlinarith [mul_nonneg (sub_nonneg.mpr h484.le) (sub_nonneg.mpr h_exp_pi_gt.le),
+      h484, h_exp_pi_gt]
+  -- `exp(−2π) < 1/100`
+  have h_exp_2pi_lt : Real.exp (-(Real.pi * 2)) < 1/100 := by
+    have h2 : Real.exp (-(Real.pi * 2)) * Real.exp Real.pi ^ 2 = 1 := by
+      rw [← Real.exp_nat_mul, ← Real.exp_add,
+        show -(Real.pi * 2) + (2:ℕ) * Real.pi = 0 by push_cast; ring]
+      exact Real.exp_zero
+    have h_mul := mul_lt_mul_of_pos_left h484 (Real.exp_pos (-(Real.pi * 2)))
+    rw [h2] at h_mul
+    linarith only [h_mul, Real.exp_pos (-(Real.pi * 2))]
+  -- ====================================================================
+  -- Step 1: the cusp chart `λ̃` is quantitatively injective on
+  -- `closedBall 0 (1/100)`, via `‖λ̃' − 16‖ ≤ 8` there and the MVT.
+  -- ====================================================================
+  have h_diff_cusp : ∀ z : ℂ, ‖z‖ ≤ 1/100 → DifferentiableAt ℂ modularLambdaH_cusp z := by
+    intro z hz
+    rcases eq_or_ne z 0 with rfl | hz_ne
+    · exact modularLambdaH_cusp_differentiableAt_zero
+    · exact modularLambdaH_cusp_differentiableAt_of_norm_lt_one hz_ne
+        (lt_of_le_of_lt hz (by norm_num))
+  have h_deriv_cusp_bound : ∀ z : ℂ, ‖z‖ ≤ 1/100 →
+      ‖deriv modularLambdaH_cusp z - 16‖ ≤ 8 := by
+    intro z hz
+    rcases eq_or_ne z 0 with rfl | hz_ne
+    · rw [modularLambdaH_cusp_deriv_zero]
+      simp
+    · have hz_le : ‖z‖ ≤ Real.exp (-Real.pi) := le_trans hz h_inv100_le
+      have h_w := modularLambdaH_cusp_deriv_sub_two_term_le_widened hz_le hz_ne
+      have h_split : deriv modularLambdaH_cusp z - 16 =
+          (deriv modularLambdaH_cusp z - 16 + 256 * z - 2112 * z ^ 2) +
+            (2112 * z ^ 2 - 256 * z) := by ring
+      rw [h_split]
+      refine le_trans (norm_add_le _ _) ?_
+      have h_t2 : ‖(2112:ℂ) * z ^ 2 - 256 * z‖ ≤ 2112 * ‖z‖ ^ 2 + 256 * ‖z‖ := by
+        refine le_trans (norm_sub_le _ _) ?_
+        rw [norm_mul, norm_mul, norm_pow]
+        have h1 : ‖(2112:ℂ)‖ = 2112 := by simp
+        have h2 : ‖(256:ℂ)‖ = 256 := by simp
+        rw [h1, h2]
+      linarith only [h_w, h_t2, h_small_bound ‖z‖ (norm_nonneg z) hz]
+  have h_cusp_injOn : ∀ x ∈ Metric.closedBall (0:ℂ) (1/100),
+      ∀ y ∈ Metric.closedBall (0:ℂ) (1/100),
+      modularLambdaH_cusp x = modularLambdaH_cusp y → x = y := by
+    intro x hx y hy h_val_eq
+    have h_ball_norm : ∀ z : ℂ, z ∈ Metric.closedBall (0:ℂ) (1/100) → ‖z‖ ≤ 1/100 := by
+      intro z hz
+      rwa [Metric.mem_closedBall, dist_zero_right] at hz
+    have h_hasDeriv : ∀ z : ℂ, ‖z‖ ≤ 1/100 →
+        HasDerivAt (fun w : ℂ => modularLambdaH_cusp w - 16 * w)
+          (deriv modularLambdaH_cusp z - 16) z := by
+      intro z hz
+      have h1 : HasDerivAt modularLambdaH_cusp (deriv modularLambdaH_cusp z) z :=
+        (h_diff_cusp z hz).hasDerivAt
+      have h2 : HasDerivAt (fun w : ℂ => (16:ℂ) * w) 16 z := by
+        simpa using (hasDerivAt_id z).const_mul (16:ℂ)
+      exact h1.sub h2
+    have h_diff_f : ∀ z ∈ Metric.closedBall (0:ℂ) (1/100),
+        DifferentiableAt ℂ (fun w : ℂ => modularLambdaH_cusp w - 16 * w) z := by
+      intro z hz
+      exact (h_hasDeriv z (h_ball_norm z hz)).differentiableAt
+    have h_deriv_f_le : ∀ z ∈ Metric.closedBall (0:ℂ) (1/100),
+        ‖deriv (fun w : ℂ => modularLambdaH_cusp w - 16 * w) z‖ ≤ 8 := by
+      intro z hz
+      rw [(h_hasDeriv z (h_ball_norm z hz)).deriv]
+      exact h_deriv_cusp_bound z (h_ball_norm z hz)
+    have h_mvt : ‖(modularLambdaH_cusp x - 16 * x) - (modularLambdaH_cusp y - 16 * y)‖ ≤
+        8 * ‖x - y‖ :=
+      Convex.norm_image_sub_le_of_norm_deriv_le h_diff_f h_deriv_f_le
+        (convex_closedBall _ _) hy hx
+    have h_diff_eq : (modularLambdaH_cusp x - 16 * x) - (modularLambdaH_cusp y - 16 * y) =
+        -(16 * (x - y)) := by
+      rw [h_val_eq]; ring
+    rw [h_diff_eq, norm_neg, norm_mul] at h_mvt
+    have h16 : ‖(16:ℂ)‖ = 16 := by simp
+    rw [h16] at h_mvt
+    have h_zero : ‖x - y‖ = 0 := by
+      linarith only [h_mvt, norm_nonneg (x - y)]
+    exact sub_eq_zero.mp (norm_eq_zero.mp h_zero)
+  -- ====================================================================
+  -- Step 2: cusp-0 and cusp-1 control, extracted from the tendsto lemmas.
+  -- ====================================================================
+  obtain ⟨δ₀, hδ₀_pos, h_cusp0⟩ :=
+    Metric.tendsto_nhdsWithin_nhds.mp modularLambdaH_cusp_zero_tendsto_one_in_F
+      (1/2) (by norm_num)
+  have h_cusp1_ev : ∀ᶠ σ in nhdsWithin (1:ℂ) Gamma2FundamentalDomainInterior,
+      (1:ℝ) ≤ ‖modularLambdaH σ‖ :=
+    modularLambdaH_cusp_one_tendsto_norm_atTop_in_F.eventually (Filter.eventually_ge_atTop 1)
+  obtain ⟨δ₁, hδ₁_pos, h_cusp1⟩ := Metric.mem_nhdsWithin_iff.mp h_cusp1_ev
+  -- the cusp-cutoff height ε₀
+  set ε₀ : ℝ := min (min δ₀ δ₁ / 2) (1/4) with hε₀_def
+  have hε₀_pos : 0 < ε₀ := lt_min (half_pos (lt_min hδ₀_pos hδ₁_pos)) (by norm_num)
+  have hε₀_le_quarter : ε₀ ≤ 1/4 := min_le_right _ _
+  have h_2ε₀_le_δ₀ : 2 * ε₀ ≤ δ₀ := by
+    have h1 : ε₀ ≤ min δ₀ δ₁ / 2 := min_le_left _ _
+    have h2 : min δ₀ δ₁ ≤ δ₀ := min_le_left _ _
+    linarith only [h1, h2]
+  have h_2ε₀_le_δ₁ : 2 * ε₀ ≤ δ₁ := by
+    have h1 : ε₀ ≤ min δ₀ δ₁ / 2 := min_le_left _ _
+    have h2 : min δ₀ δ₁ ≤ δ₁ := min_le_right _ _
+    linarith only [h1, h2]
+  -- ====================================================================
+  -- Step 3: compactness minimum on the middle band, and the lower bound
+  -- `c` for `‖λ‖` on all of `F^o ∩ {Im ≤ 2}`.
+  -- ====================================================================
+  set K : Set ℂ := Metric.closedBall (0:ℂ) 3 ∩ {z : ℂ | ε₀ ≤ z.im} with hK_def
+  have hK_compact : IsCompact K :=
+    (isCompact_closedBall (0:ℂ) 3).inter_right
+      (isClosed_le continuous_const Complex.continuous_im)
+  have hK_pos_im : ∀ z ∈ K, 0 < z.im := fun z hz => lt_of_lt_of_le hε₀_pos hz.2
+  have hK_ne : K.Nonempty := by
+    refine ⟨(ε₀ : ℂ) * Complex.I, ?_, ?_⟩
+    · rw [Metric.mem_closedBall, dist_zero_right, norm_mul, Complex.norm_real,
+        Complex.norm_I, Real.norm_eq_abs, abs_of_pos hε₀_pos, mul_one]
+      linarith only [hε₀_le_quarter]
+    · show ε₀ ≤ ((ε₀ : ℂ) * Complex.I).im
+      simp
+  have h_cont : ContinuousOn (fun z => ‖modularLambdaH z‖) K := by
+    intro z hz
+    exact ((modularLambdaH_differentiableAt_of_im_pos
+      (hK_pos_im z hz)).continuousAt.continuousWithinAt).norm
+  obtain ⟨zmin, hzmin_mem, hzmin_min⟩ := hK_compact.exists_isMinOn hK_ne h_cont
+  set c : ℝ := min (‖modularLambdaH zmin‖) (1/2) with hc_def
+  have hc_pos : 0 < c :=
+    lt_min (norm_pos_iff.mpr (modularLambdaH_ne_zero (hK_pos_im zmin hzmin_mem)))
+      (by norm_num)
+  have hc_le_half : c ≤ 1/2 := min_le_right _ _
+  -- The lower bound on the sub-height-2 part of `F^o`.
+  have h_lower : ∀ σ ∈ Gamma2FundamentalDomainInterior,
+      σ.im ≤ 2 → c ≤ ‖modularLambdaH σ‖ := by
+    intro σ hσ hσ_im_le
+    obtain ⟨hσ_im_pos, hσ_re_pos, hσ_re_lt, hσ_semi⟩ := hσ
+    by_cases h_im_case : ε₀ ≤ σ.im
+    · -- middle band: compactness minimum
+      have hσ_norm_le : ‖σ‖ ≤ 3 := by
+        have h := Complex.norm_le_abs_re_add_abs_im σ
+        rw [abs_of_pos hσ_re_pos, abs_of_pos hσ_im_pos] at h
+        linarith only [h, hσ_re_lt, hσ_im_le]
+      have hσK : σ ∈ K := by
+        constructor
+        · rw [Metric.mem_closedBall, dist_zero_right]; exact hσ_norm_le
+        · exact h_im_case
+      calc c ≤ ‖modularLambdaH zmin‖ := min_le_left _ _
+        _ ≤ ‖modularLambdaH σ‖ := hzmin_min hσK
+    · rw [not_le] at h_im_case
+      -- the semicircle constraint forces `Re·(1−Re) < Im²`
+      have h_sq_gt : 1 < ‖2 * σ - 1‖ ^ 2 := h_one_lt_sq _ hσ_semi
+      have h_norm_sq_eq : ‖2 * σ - 1‖ ^ 2 = (2 * σ.re - 1) ^ 2 + (2 * σ.im) ^ 2 := by
+        rw [Complex.sq_norm]
+        simp [Complex.normSq_apply, Complex.sub_re, Complex.sub_im, Complex.mul_re,
+          Complex.mul_im]
+        ring
+      rw [h_norm_sq_eq] at h_sq_gt
+      have h_semi_sq : σ.re * (1 - σ.re) < σ.im ^ 2 := h_semi_helper σ.re σ.im h_sq_gt
+      have hσ_im_lt_quarter : σ.im < 1/4 :=
+        lt_of_lt_of_le h_im_case hε₀_le_quarter
+      by_cases h_re_half : σ.re ≤ 1/2
+      · -- near the cusp 0
+        have h_norm_sq : ‖σ‖ ^ 2 < (2 * σ.im) ^ 2 := by
+          rw [Complex.sq_norm, Complex.normSq_apply]
+          exact h_band0 σ.re σ.im hσ_re_pos h_re_half hσ_im_pos hσ_im_lt_quarter h_semi_sq
+        have h_norm_lt : ‖σ‖ < 2 * σ.im :=
+          h_sq_lt ‖σ‖ (2 * σ.im) (norm_nonneg σ)
+            (by linarith only [hσ_im_pos]) h_norm_sq
+        have h_dist : dist σ 0 < δ₀ := by
+          rw [dist_zero_right]
+          calc ‖σ‖ < 2 * σ.im := h_norm_lt
+            _ < 2 * ε₀ := by linarith only [h_im_case]
+            _ ≤ δ₀ := h_2ε₀_le_δ₀
+        have h_close := h_cusp0 ⟨hσ_im_pos, hσ_re_pos, hσ_re_lt, hσ_semi⟩ h_dist
+        rw [dist_eq_norm] at h_close
+        have h_tri : (1:ℝ) ≤ ‖modularLambdaH σ‖ + ‖modularLambdaH σ - 1‖ := by
+          have h := norm_sub_le (modularLambdaH σ) (modularLambdaH σ - 1)
+          have h2 : modularLambdaH σ - (modularLambdaH σ - 1) = 1 := by ring
+          rw [h2, norm_one] at h
+          exact h
+        linarith only [h_tri, h_close, hc_le_half]
+      · -- near the cusp 1
+        rw [not_le] at h_re_half
+        have h_norm_sq : ‖σ - 1‖ ^ 2 < (2 * σ.im) ^ 2 := by
+          rw [Complex.sq_norm, Complex.normSq_apply]
+          simp only [Complex.sub_re, Complex.sub_im, Complex.one_re, Complex.one_im,
+            sub_zero]
+          exact h_band1 σ.re σ.im hσ_re_lt h_re_half hσ_im_pos hσ_im_lt_quarter h_semi_sq
+        have h_norm_lt : ‖σ - 1‖ < 2 * σ.im :=
+          h_sq_lt ‖σ - 1‖ (2 * σ.im) (norm_nonneg (σ - 1))
+            (by linarith only [hσ_im_pos]) h_norm_sq
+        have h_mem_ball : σ ∈ Metric.ball (1:ℂ) δ₁ := by
+          rw [Metric.mem_ball, dist_eq_norm]
+          calc ‖σ - 1‖ < 2 * σ.im := h_norm_lt
+            _ < 2 * ε₀ := by linarith only [h_im_case]
+            _ ≤ δ₁ := h_2ε₀_le_δ₁
+        have h_ge_one : (1:ℝ) ≤ ‖modularLambdaH σ‖ :=
+          h_cusp1 ⟨h_mem_ball, hσ_im_pos, hσ_re_pos, hσ_re_lt, hσ_semi⟩
+        linarith only [h_ge_one, hc_le_half]
+  -- ====================================================================
+  -- Step 4: choice of the height `T` and the reference point `τ₀`.
+  -- ====================================================================
+  set T : ℝ := max 3 (Real.log (160000 / c) / Real.pi + 1) with hT_def
+  have hT_ge_3 : (3:ℝ) ≤ T := le_max_left _ _
+  have hT_ge_log : Real.log (160000 / c) / Real.pi + 1 ≤ T := le_max_right _ _
+  set τ₀ : ℂ := ((1/2 : ℝ) : ℂ) + (T : ℂ) * Complex.I with hτ₀_def
+  have hτ₀_re : τ₀.re = 1/2 := by
+    rw [hτ₀_def]; simp
+  have hτ₀_im : τ₀.im = T := by
+    rw [hτ₀_def]; simp
+  have hτ₀_mem : τ₀ ∈ Gamma2FundamentalDomainInterior := by
+    refine ⟨?_, ?_, ?_, ?_⟩
+    · rw [hτ₀_im]; linarith only [hT_ge_3]
+    · rw [hτ₀_re]; norm_num
+    · rw [hτ₀_re]; norm_num
+    · have h_eq : 2 * τ₀ - 1 = ((2 * T : ℝ) : ℂ) * Complex.I := by
+        rw [hτ₀_def]; push_cast; ring
+      rw [h_eq, norm_mul, Complex.norm_I, Complex.norm_real, Real.norm_eq_abs,
+        abs_of_pos (by linarith only [hT_ge_3] : (0:ℝ) < 2 * T), mul_one]
+      linarith only [hT_ge_3]
+  -- the q-coordinate size at height T
+  set u : ℝ := Real.exp (-(Real.pi * T)) with hu_def
+  have hu_pos : 0 < u := Real.exp_pos _
+  have h_u_lt : u < 1/10000 := by
+    have hmul3 : Real.pi * 3 ≤ Real.pi * T := mul_le_mul_of_nonneg_left hT_ge_3 hπ_pos.le
+    have h1 : u ≤ Real.exp (-(Real.pi * 3)) := by
+      rw [hu_def]
+      exact Real.exp_le_exp.mpr (by linarith only [hmul3])
+    have h2 : Real.exp (-(Real.pi * 3)) * Real.exp Real.pi ^ 3 = 1 := by
+      rw [← Real.exp_nat_mul, ← Real.exp_add,
+        show -(Real.pi * 3) + (3:ℕ) * Real.pi = 0 by push_cast; ring]
+      exact Real.exp_zero
+    have h_mul := mul_lt_mul_of_pos_left h10000 (Real.exp_pos (-(Real.pi * 3)))
+    rw [h2] at h_mul
+    linarith only [h1, h_mul, Real.exp_pos (-(Real.pi * 3))]
+  -- real part of the exponent, and the chart norm identities
+  have h_re_pi : ∀ σ : ℂ, ((Real.pi : ℂ) * Complex.I * σ).re = -(Real.pi * σ.im) := by
+    intro σ
+    simp only [Complex.mul_re, Complex.mul_im, Complex.I_re, Complex.I_im,
+      Complex.ofReal_re, Complex.ofReal_im]
+    ring
+  have h_norm_E1 : ‖Complex.exp ((Real.pi : ℂ) * Complex.I * τ₀)‖ = u := by
+    rw [Complex.norm_exp, h_re_pi τ₀, hτ₀_im, hu_def]
+  have h_E2_eq : Complex.exp (2 * (Real.pi : ℂ) * Complex.I * τ₀) =
+      Complex.exp ((Real.pi : ℂ) * Complex.I * τ₀) ^ 2 := by
+    rw [← Complex.exp_nat_mul]
+    congr 1
+    push_cast
+    ring
+  have h_E3_eq : Complex.exp (3 * (Real.pi : ℂ) * Complex.I * τ₀) =
+      Complex.exp ((Real.pi : ℂ) * Complex.I * τ₀) ^ 3 := by
+    rw [← Complex.exp_nat_mul]
+    congr 1
+    push_cast
+    ring
+  have h_norm_E2 : ‖Complex.exp (2 * (Real.pi : ℂ) * Complex.I * τ₀)‖ = u ^ 2 := by
+    rw [h_E2_eq, norm_pow, h_norm_E1]
+  have h_norm_E3 : ‖Complex.exp (3 * (Real.pi : ℂ) * Complex.I * τ₀)‖ = u ^ 3 := by
+    rw [h_E3_eq, norm_pow, h_norm_E1]
+  have h_u4 : Real.exp (-4 * Real.pi * T) = u ^ 4 := by
+    rw [hu_def, ← Real.exp_nat_mul]
+    congr 1
+    push_cast
+    ring
+  -- ====================================================================
+  -- Step 5: nonvanishing of the derivative at `τ₀`.
+  -- ====================================================================
+  have h_deriv_ne : deriv modularLambdaH τ₀ ≠ 0 := by
+    have h_im_ge_one : 1 ≤ τ₀.im := by rw [hτ₀_im]; linarith only [hT_ge_3]
+    have h_bound := modularLambdaH_deriv_norm_sub_three_term_le_of_im_ge_one h_im_ge_one
+    rw [hτ₀_im, h_u4] at h_bound
+    -- norms of the three leading terms
+    have hA_norm : ‖(16:ℂ) * (Real.pi : ℂ) * Complex.I *
+        Complex.exp ((Real.pi : ℂ) * Complex.I * τ₀)‖ = 16 * Real.pi * u := by
+      rw [norm_mul, norm_mul, norm_mul, Complex.norm_I, Complex.norm_real,
+        Real.norm_eq_abs, abs_of_pos hπ_pos, h_norm_E1]
+      norm_num
+    have hB_norm : ‖(256:ℂ) * (Real.pi : ℂ) * Complex.I *
+        Complex.exp (2 * (Real.pi : ℂ) * Complex.I * τ₀)‖ = 256 * Real.pi * u ^ 2 := by
+      rw [norm_mul, norm_mul, norm_mul, Complex.norm_I, Complex.norm_real,
+        Real.norm_eq_abs, abs_of_pos hπ_pos, h_norm_E2]
+      norm_num
+    have hC_norm : ‖(2112:ℂ) * (Real.pi : ℂ) * Complex.I *
+        Complex.exp (3 * (Real.pi : ℂ) * Complex.I * τ₀)‖ = 2112 * Real.pi * u ^ 3 := by
+      rw [norm_mul, norm_mul, norm_mul, Complex.norm_I, Complex.norm_real,
+        Real.norm_eq_abs, abs_of_pos hπ_pos, h_norm_E3]
+      norm_num
+    -- reverse triangle inequality
+    have h_tri : ‖(16:ℂ) * (Real.pi : ℂ) * Complex.I *
+          Complex.exp ((Real.pi : ℂ) * Complex.I * τ₀)‖ ≤
+        ‖deriv modularLambdaH τ₀ -
+            16 * (Real.pi : ℂ) * Complex.I * Complex.exp ((Real.pi : ℂ) * Complex.I * τ₀) +
+            256 * (Real.pi : ℂ) * Complex.I *
+              Complex.exp (2 * (Real.pi : ℂ) * Complex.I * τ₀) -
+            2112 * (Real.pi : ℂ) * Complex.I *
+              Complex.exp (3 * (Real.pi : ℂ) * Complex.I * τ₀)‖ +
+          ‖(256:ℂ) * (Real.pi : ℂ) * Complex.I *
+              Complex.exp (2 * (Real.pi : ℂ) * Complex.I * τ₀)‖ +
+          ‖(2112:ℂ) * (Real.pi : ℂ) * Complex.I *
+              Complex.exp (3 * (Real.pi : ℂ) * Complex.I * τ₀)‖ +
+          ‖deriv modularLambdaH τ₀‖ := by
+      set D := deriv modularLambdaH τ₀ with hD_def
+      set A := (16:ℂ) * (Real.pi : ℂ) * Complex.I *
+        Complex.exp ((Real.pi : ℂ) * Complex.I * τ₀) with hA_def
+      set B := (256:ℂ) * (Real.pi : ℂ) * Complex.I *
+        Complex.exp (2 * (Real.pi : ℂ) * Complex.I * τ₀) with hB_def
+      set C := (2112:ℂ) * (Real.pi : ℂ) * Complex.I *
+        Complex.exp (3 * (Real.pi : ℂ) * Complex.I * τ₀) with hC_def
+      have h_eq : A = -(D - A + B - C) + B + (-C) + D := by ring
+      calc ‖A‖ = ‖-(D - A + B - C) + B + (-C) + D‖ := by rw [← h_eq]
+        _ ≤ ‖-(D - A + B - C) + B + (-C)‖ + ‖D‖ := norm_add_le _ _
+        _ ≤ ‖-(D - A + B - C) + B‖ + ‖-C‖ + ‖D‖ := by
+            have h := norm_add_le (-(D - A + B - C) + B) (-C)
+            linarith only [h]
+        _ ≤ ‖-(D - A + B - C)‖ + ‖B‖ + ‖-C‖ + ‖D‖ := by
+            have h := norm_add_le (-(D - A + B - C)) B
+            linarith only [h]
+        _ = ‖D - A + B - C‖ + ‖B‖ + ‖C‖ + ‖D‖ := by rw [norm_neg, norm_neg]
+    rw [hA_norm, hB_norm, hC_norm] at h_tri
+    have h_norm_lower : 16 * Real.pi * u - 256 * Real.pi * u ^ 2 -
+        2112 * Real.pi * u ^ 3 - 100000 * u ^ 4 ≤ ‖deriv modularLambdaH τ₀‖ := by
+      linarith only [h_bound, h_tri]
+    have h_pos := h_deep_pos Real.pi u hπ_gt3 hπ_lt4 hu_pos h_u_lt
+    exact norm_pos_iff.mp (lt_of_lt_of_le h_pos h_norm_lower)
+  -- ====================================================================
+  -- Step 6: smallness of the reference value: `‖λ(τ₀)‖ < c`.
+  -- ====================================================================
+  have h_w₀_lt_c : ‖modularLambdaH τ₀‖ < c := by
+    have h_im_ge_one : 1 ≤ τ₀.im := by rw [hτ₀_im]; linarith only [hT_ge_3]
+    have h_le := modularLambdaH_norm_le_exp_of_im_ge_one h_im_ge_one
+    rw [hτ₀_im] at h_le
+    have h_exp_eq : Real.exp (-Real.pi * T) = u := by
+      rw [hu_def]; congr 1; ring
+    rw [h_exp_eq] at h_le
+    -- `160000·u < c` from the choice of `T`
+    have h_ratio_pos : (0:ℝ) < 160000 / c := div_pos (by norm_num) hc_pos
+    have h_log_lt : Real.log (160000 / c) < Real.pi * T := by
+      have h1 : Real.log (160000 / c) / Real.pi ≤ T - 1 := by
+        linarith only [hT_ge_log]
+      have h2 : Real.log (160000 / c) ≤ (T - 1) * Real.pi := (div_le_iff₀ hπ_pos).mp h1
+      have h3 : (T - 1) * Real.pi < T * Real.pi :=
+        mul_lt_mul_of_pos_right (by linarith only []) hπ_pos
+      linarith only [h2, h3]
+    have h_lt_exp : 160000 / c < Real.exp (Real.pi * T) :=
+      (Real.log_lt_iff_lt_exp h_ratio_pos).mp h_log_lt
+    have h_uE : u * Real.exp (Real.pi * T) = 1 := by
+      rw [hu_def, ← Real.exp_add,
+        show -(Real.pi * T) + Real.pi * T = 0 by ring]
+      exact Real.exp_zero
+    have h3 : (160000 / c) * u < Real.exp (Real.pi * T) * u :=
+      mul_lt_mul_of_pos_right h_lt_exp hu_pos
+    rw [mul_comm (Real.exp (Real.pi * T)) u, h_uE] at h3
+    have h4 := mul_lt_mul_of_pos_left h3 hc_pos
+    rw [mul_one] at h4
+    have h5 : c * (160000 / c * u) = 160000 * u := by
+      field_simp
+    rw [h5] at h4
+    linarith only [h_le, h4]
+  -- ====================================================================
+  -- Step 7: the chart bridging identity.
+  -- ====================================================================
+  have h_bridge : ∀ σ : ℂ,
+      modularLambdaH_cusp (Complex.exp ((Real.pi : ℂ) * Complex.I * σ)) =
+        modularLambdaH σ := by
+    intro σ
+    have h_qe : Function.Periodic.qParam 2 σ =
+        Complex.exp ((Real.pi : ℂ) * Complex.I * σ) := by
+      unfold Function.Periodic.qParam
+      congr 1
+      push_cast
+      ring
+    rw [← h_qe]
+    exact modularLambdaH_cusp_qParam σ
+  have h_q₀_le : ‖Complex.exp ((Real.pi : ℂ) * Complex.I * τ₀)‖ ≤ 1/100 := by
+    rw [h_norm_E1]
+    linarith only [h_u_lt]
+  have h_q₀_mem : Complex.exp ((Real.pi : ℂ) * Complex.I * τ₀) ∈
+      Metric.closedBall (0:ℂ) (1/100) := by
+    rw [Metric.mem_closedBall, dist_zero_right]; exact h_q₀_le
+  -- ====================================================================
+  -- Step 8: assemble the five conjuncts.
+  -- ====================================================================
+  refine ⟨modularLambdaH τ₀, τ₀, modularLambdaH_F_im_pos τ₀ hτ₀_mem, hτ₀_mem, rfl,
+    h_deriv_ne, ?_⟩
+  intro τ hτ_mem hτ_eq
+  obtain ⟨hτ_im_pos, hτ_re_pos, hτ_re_lt, hτ_semi⟩ := hτ_mem
+  -- every `F^o`-preimage of `w₀` lives above height 2
+  have hτ_im_gt : 2 < τ.im := by
+    by_contra h_con
+    rw [not_lt] at h_con
+    have h_low := h_lower τ ⟨hτ_im_pos, hτ_re_pos, hτ_re_lt, hτ_semi⟩ h_con
+    rw [hτ_eq] at h_low
+    linarith only [h_low, h_w₀_lt_c]
+  -- its q-coordinate lies in the small disk
+  have h_qτ_norm : ‖Complex.exp ((Real.pi : ℂ) * Complex.I * τ)‖ =
+      Real.exp (-(Real.pi * τ.im)) := by
+    rw [Complex.norm_exp, h_re_pi τ]
+  have h_qτ_le : ‖Complex.exp ((Real.pi : ℂ) * Complex.I * τ)‖ ≤ 1/100 := by
+    rw [h_qτ_norm]
+    have hmul2 : Real.pi * 2 ≤ Real.pi * τ.im :=
+      mul_le_mul_of_nonneg_left hτ_im_gt.le hπ_pos.le
+    have h1 : Real.exp (-(Real.pi * τ.im)) ≤ Real.exp (-(Real.pi * 2)) :=
+      Real.exp_le_exp.mpr (by linarith only [hmul2])
+    linarith only [h1, h_exp_2pi_lt]
+  have h_qτ_mem : Complex.exp ((Real.pi : ℂ) * Complex.I * τ) ∈
+      Metric.closedBall (0:ℂ) (1/100) := by
+    rw [Metric.mem_closedBall, dist_zero_right]; exact h_qτ_le
+  -- equal chart values, hence equal q-coordinates
+  have h_vals : modularLambdaH_cusp (Complex.exp ((Real.pi : ℂ) * Complex.I * τ)) =
+      modularLambdaH_cusp (Complex.exp ((Real.pi : ℂ) * Complex.I * τ₀)) := by
+    rw [h_bridge τ, h_bridge τ₀, hτ_eq]
+  have h_q_eq : Complex.exp ((Real.pi : ℂ) * Complex.I * τ) =
+      Complex.exp ((Real.pi : ℂ) * Complex.I * τ₀) :=
+    h_cusp_injOn _ h_qτ_mem _ h_q₀_mem h_vals
+  -- unwind the exponential equality
+  rw [Complex.exp_eq_exp_iff_exists_int] at h_q_eq
+  obtain ⟨n, hn⟩ := h_q_eq
+  have hπI_ne : (Real.pi : ℂ) * Complex.I ≠ 0 :=
+    mul_ne_zero (Complex.ofReal_ne_zero.mpr (ne_of_gt hπ_pos)) Complex.I_ne_zero
+  have h_τ_eq : τ = τ₀ + 2 * (n : ℂ) := by
+    apply mul_left_cancel₀ hπI_ne
+    rw [hn]
+    ring
+  have h_re_eq : τ.re = 1/2 + 2 * (n:ℝ) := by
+    rw [h_τ_eq, Complex.add_re, hτ₀_re]
+    simp
+  rw [h_re_eq] at hτ_re_pos hτ_re_lt
+  have h1 : (n:ℝ) < 1 := by linarith only [hτ_re_lt]
+  have h2 : (-1:ℝ) < (n:ℝ) := by linarith only [hτ_re_pos]
+  have h1' : n < 1 := by exact_mod_cast h1
+  have h2' : (-1:ℤ) < n := by exact_mod_cast h2
+  have hn0 : n = 0 := by omega
+  rw [h_τ_eq, hn0]
+  simp
+
+
+set_option maxHeartbeats 400000 in
+-- The six-piece chain-rule/substitution conversion is elaboration-heavy.
 /-- **Bridge: F_Y boundary integral expression equals image-curve
 contour integral.** For valid F_Y parameters with `λ ≠ w` on each of
 the six boundary pieces, the six-term AP-derived boundary integral
@@ -2684,7 +3317,927 @@ theorem modularLambdaH_F_Y_image_curve_LHS_eq_pathContourIntegral
     Complex.pathContourIntegral
       (fun t => modularLambdaH (F_Y_boundary_parameterization δ Y R₀ t))
       0 6 (fun z => (z - w)⁻¹) := by
-  sorry
+  -- The γ_full integrand.
+  set u : ℝ → ℂ := fun t =>
+    (modularLambdaH (F_Y_boundary_parameterization δ Y R₀ t) - w)⁻¹ *
+      deriv (fun s => modularLambdaH (F_Y_boundary_parameterization δ Y R₀ s)) t
+  -- λ facts on ℍ.
+  have hH_open : IsOpen {τ : ℂ | 0 < τ.im} :=
+    Complex.continuous_im.isOpen_preimage _ isOpen_Ioi
+  have h_lam_deriv_cont : ContinuousOn (deriv modularLambdaH) {τ : ℂ | 0 < τ.im} :=
+    (modularLambdaH_differentiableOn.analyticOnNhd hH_open).deriv.continuousOn
+  have hst : IsScalarTower ℝ ℂ ℂ := IsScalarTower.right
+  have hY_pos : 0 < Y := lt_trans hδ hδY
+  -- Per-piece engine: a globally differentiable formula matching the boundary
+  -- parameterization on `[a, b]`, mapping `[a, b]` into `ℍ`, and avoiding `w`
+  -- yields the chain-rule identity for the piece, plus interval-integrability
+  -- of the γ_full integrand on the piece.
+  have h_piece : ∀ (a b : ℝ) (formula formula' : ℝ → ℂ),
+      a ≤ b →
+      (∀ t : ℝ, HasDerivAt formula (formula' t) t) →
+      Continuous formula' →
+      (∀ t ∈ Set.Icc a b, 0 < (formula t).im) →
+      (∀ t ∈ Set.Icc a b, F_Y_boundary_parameterization δ Y R₀ t = formula t) →
+      (∀ t ∈ Set.Icc a b, modularLambdaH (formula t) - w ≠ 0) →
+      ((∫ t in a..b, u t) =
+          ∫ t in a..b, (modularLambdaH (formula t) - w)⁻¹ *
+            (formula' t • deriv modularLambdaH (formula t))) ∧
+        IntervalIntegrable u MeasureTheory.volume a b := by
+    intro a b formula formula' hab h_form_d h_form'_cont h_im_pos h_F_eq h_ne
+    have h_form_cont : Continuous formula :=
+      continuous_iff_continuousAt.mpr fun t => (h_form_d t).continuousAt
+    set V : Set ℝ := {t : ℝ | 0 < (formula t).im}
+    have hV_open : IsOpen V :=
+      (Complex.continuous_im.comp h_form_cont).isOpen_preimage _ isOpen_Ioi
+    have h_Icc_V : Set.Icc a b ⊆ V := h_im_pos
+    -- Chain rule on V via scomp with explicit scalar-tower instance.
+    have h_chain : ∀ t ∈ V, HasDerivAt (fun s => modularLambdaH (formula s))
+        (formula' t • deriv modularLambdaH (formula t)) t := by
+      intro t ht
+      have h_im : 0 < (formula t).im := ht
+      have h_lam_d : HasDerivAt modularLambdaH
+          (deriv modularLambdaH (formula t)) (formula t) :=
+        (modularLambdaH_differentiableAt_of_im_pos h_im).hasDerivAt
+      exact @HasDerivAt.scomp ℝ _ ℂ _ _ t ℂ _ _ _ hst _ _ _ _ h_lam_d (h_form_d t)
+    have h_g_cont : ContinuousOn
+        (fun t => formula' t • deriv modularLambdaH (formula t)) V := by
+      refine ContinuousOn.smul h_form'_cont.continuousOn ?_
+      refine h_lam_deriv_cont.comp h_form_cont.continuousOn ?_
+      intro t ht; exact ht
+    have h_deriv_eqOn : Set.EqOn (deriv (fun s => modularLambdaH (formula s)))
+        (fun t => formula' t • deriv modularLambdaH (formula t)) V :=
+      fun t ht => (h_chain t ht).deriv
+    have h_deriv_cont : ContinuousOn
+        (deriv (fun s => modularLambdaH (formula s))) V :=
+      h_g_cont.congr h_deriv_eqOn
+    -- The formula integrand.
+    set v : ℝ → ℂ := fun t =>
+      (modularLambdaH (formula t) - w)⁻¹ *
+        deriv (fun s => modularLambdaH (formula s)) t
+    -- v is continuous on the closed piece, hence interval-integrable.
+    have h_v_cont : ContinuousOn v (Set.Icc a b) := by
+      intro t ht
+      have htV : t ∈ V := h_Icc_V ht
+      refine ContinuousAt.continuousWithinAt ?_
+      have h1 : ContinuousAt (fun s => modularLambdaH (formula s)) t :=
+        (h_chain t htV).continuousAt
+      have h2 : ContinuousAt (deriv (fun s => modularLambdaH (formula s))) t :=
+        h_deriv_cont.continuousAt (hV_open.mem_nhds htV)
+      refine ContinuousAt.mul ?_ h2
+      refine ContinuousAt.inv₀ (h1.sub continuousAt_const) ?_
+      exact h_ne t ht
+    have h_v_ii : IntervalIntegrable v MeasureTheory.volume a b := by
+      refine ContinuousOn.intervalIntegrable ?_
+      rw [Set.uIcc_of_le hab]; exact h_v_cont
+    -- u = v a.e. on uIoc a b: they can differ only at the corner b.
+    have h_ae_imp : ∀ᵐ x ∂(MeasureTheory.volume : MeasureTheory.Measure ℝ),
+        x ∈ Set.uIoc a b → u x = v x := by
+      rw [MeasureTheory.ae_iff]
+      refine MeasureTheory.measure_mono_null (t := {b}) ?_
+        (MeasureTheory.measure_singleton b)
+      intro x hx
+      simp only [Set.mem_setOf_eq] at hx
+      push Not at hx
+      obtain ⟨hx_ioc, hx_ne⟩ := hx
+      rw [Set.uIoc_of_le hab] at hx_ioc
+      rw [Set.mem_singleton_iff]
+      by_contra h_xb
+      apply hx_ne
+      have hx_oo : x ∈ Set.Ioo a b := ⟨hx_ioc.1, lt_of_le_of_ne hx_ioc.2 h_xb⟩
+      have hx_icc : x ∈ Set.Icc a b := ⟨le_of_lt hx_oo.1, le_of_lt hx_oo.2⟩
+      have h_eq_nbhd :
+          (fun s => modularLambdaH (F_Y_boundary_parameterization δ Y R₀ s)) =ᶠ[nhds x]
+          (fun s => modularLambdaH (formula s)) := by
+        rw [Filter.eventuallyEq_iff_exists_mem]
+        refine ⟨Set.Ioo a b, isOpen_Ioo.mem_nhds hx_oo, fun y hy => ?_⟩
+        change modularLambdaH (F_Y_boundary_parameterization δ Y R₀ y) =
+          modularLambdaH (formula y)
+        rw [h_F_eq y ⟨le_of_lt hy.1, le_of_lt hy.2⟩]
+      have h_deriv_eq :
+          deriv (fun s => modularLambdaH (F_Y_boundary_parameterization δ Y R₀ s)) x =
+          deriv (fun s => modularLambdaH (formula s)) x := h_eq_nbhd.deriv_eq
+      change (modularLambdaH (F_Y_boundary_parameterization δ Y R₀ x) - w)⁻¹ *
+          deriv (fun s => modularLambdaH (F_Y_boundary_parameterization δ Y R₀ s)) x =
+        (modularLambdaH (formula x) - w)⁻¹ *
+          deriv (fun s => modularLambdaH (formula s)) x
+      rw [h_F_eq x hx_icc, h_deriv_eq]
+    have h_int_eq : (∫ t in a..b, u t) = ∫ t in a..b, v t :=
+      intervalIntegral.integral_congr_ae h_ae_imp
+    have h_uv_ae : u =ᵐ[MeasureTheory.volume.restrict (Set.uIoc a b)] v :=
+      (MeasureTheory.ae_restrict_iff' measurableSet_uIoc).mpr h_ae_imp
+    have h_u_ii : IntervalIntegrable u MeasureTheory.volume a b :=
+      h_v_ii.congr_ae h_uv_ae.symm
+    -- Rewrite the deriv of the composition via the chain rule on all of [a, b].
+    have h_v_to_chain : (∫ t in a..b, v t) =
+        ∫ t in a..b, (modularLambdaH (formula t) - w)⁻¹ *
+          (formula' t • deriv modularLambdaH (formula t)) := by
+      refine intervalIntegral.integral_congr ?_
+      intro t ht
+      rw [Set.uIcc_of_le hab] at ht
+      have htV : t ∈ V := h_Icc_V ht
+      show (modularLambdaH (formula t) - w)⁻¹ *
+          deriv (fun s => modularLambdaH (formula s)) t =
+        (modularLambdaH (formula t) - w)⁻¹ *
+          (formula' t • deriv modularLambdaH (formula t))
+      rw [(h_chain t htV).deriv]
+    exact ⟨h_int_eq.trans h_v_to_chain, h_u_ii⟩
+  -- Continuity of the horizontal-edge target integrand.
+  have h_g_cont_horiz : ∀ (c A B : ℝ), 0 < c →
+      (∀ x ∈ Set.Icc A B, modularLambdaH ((x : ℂ) + (c : ℂ) * Complex.I) - w ≠ 0) →
+      ContinuousOn (fun s : ℝ => deriv modularLambdaH ((s : ℂ) + (c : ℂ) * Complex.I) /
+        (modularLambdaH ((s : ℂ) + (c : ℂ) * Complex.I) - w)) (Set.Icc A B) := by
+    intro c A B hc h_ne_c
+    have hφ : Continuous (fun s : ℝ => (s : ℂ) + (c : ℂ) * Complex.I) :=
+      Complex.continuous_ofReal.add continuous_const
+    have h_maps : ∀ s ∈ Set.Icc A B,
+        ((s : ℂ) + (c : ℂ) * Complex.I) ∈ {τ : ℂ | 0 < τ.im} := by
+      intro s _
+      show 0 < ((s : ℂ) + (c : ℂ) * Complex.I).im
+      simpa [Complex.add_im, Complex.mul_im, Complex.ofReal_im, Complex.ofReal_re,
+        Complex.I_im, Complex.I_re] using hc
+    have h_num : ContinuousOn
+        (fun s : ℝ => deriv modularLambdaH ((s : ℂ) + (c : ℂ) * Complex.I))
+        (Set.Icc A B) := h_lam_deriv_cont.comp hφ.continuousOn h_maps
+    have h_den : ContinuousOn
+        (fun s : ℝ => modularLambdaH ((s : ℂ) + (c : ℂ) * Complex.I) - w)
+        (Set.Icc A B) :=
+      (modularLambdaH_differentiableOn.continuousOn.comp hφ.continuousOn h_maps).sub
+        continuousOn_const
+    exact h_num.div h_den h_ne_c
+  -- Continuity of the vertical-edge target integrand.
+  have h_g_cont_vert : ∀ (e : ℂ), e.im = 0 →
+      (∀ y ∈ Set.Icc δ Y, modularLambdaH (e + (y : ℂ) * Complex.I) - w ≠ 0) →
+      ContinuousOn (fun s : ℝ => deriv modularLambdaH (e + (s : ℂ) * Complex.I) /
+        (modularLambdaH (e + (s : ℂ) * Complex.I) - w)) (Set.Icc δ Y) := by
+    intro e he_im h_ne_e
+    have hφ : Continuous (fun s : ℝ => e + (s : ℂ) * Complex.I) :=
+      continuous_const.add (Complex.continuous_ofReal.mul continuous_const)
+    have h_maps : ∀ s ∈ Set.Icc δ Y,
+        (e + (s : ℂ) * Complex.I) ∈ {τ : ℂ | 0 < τ.im} := by
+      intro s hs
+      show 0 < (e + (s : ℂ) * Complex.I).im
+      simp only [Complex.add_im, Complex.mul_im, Complex.ofReal_im, Complex.ofReal_re,
+        Complex.I_im, Complex.I_re, he_im]
+      have hs1 : δ ≤ s := hs.1
+      nlinarith
+    have h_num : ContinuousOn
+        (fun s : ℝ => deriv modularLambdaH (e + (s : ℂ) * Complex.I))
+        (Set.Icc δ Y) := h_lam_deriv_cont.comp hφ.continuousOn h_maps
+    have h_den : ContinuousOn
+        (fun s : ℝ => modularLambdaH (e + (s : ℂ) * Complex.I) - w)
+        (Set.Icc δ Y) :=
+      (modularLambdaH_differentiableOn.continuousOn.comp hφ.continuousOn h_maps).sub
+        continuousOn_const
+    exact h_num.div h_den h_ne_e
+  -- Continuity of the arc target integrand.
+  have h_g_arc_cont : ContinuousOn (fun θ : ℝ =>
+      deriv modularLambdaH
+        (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ) /
+      (modularLambdaH
+        (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ) - w) *
+      (Complex.I * R₀ * Complex.exp (Complex.I * θ))) (Set.Icc 0 Real.pi) := by
+    have hφ : Continuous (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀) :=
+      continuous_circleMap _ _
+    have h_maps : ∀ θ ∈ Set.Icc (0 : ℝ) Real.pi,
+        _root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ ∈
+          {τ : ℂ | 0 < τ.im} := by
+      intro θ hθ
+      have h_cm_im : ∀ (c : ℂ) (R θ' : ℝ),
+          (_root_.circleMap c R θ').im = c.im + R * Real.sin θ' := by
+        intro c R θ'
+        unfold _root_.circleMap
+        rw [Complex.exp_mul_I]
+        simp [Complex.add_im, Complex.mul_im, Complex.ofReal_im, Complex.ofReal_re,
+          Complex.I_im, Complex.I_re, Complex.sin_ofReal_re, Complex.cos_ofReal_im]
+      show 0 < (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ).im
+      rw [h_cm_im]
+      have h_c_im : ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I).im = δ := by
+        simp [Complex.add_im, Complex.mul_im, Complex.ofReal_im, Complex.ofReal_re,
+          Complex.I_im, Complex.I_re]
+      rw [h_c_im]
+      have h_sin_nn : 0 ≤ Real.sin θ :=
+        Real.sin_nonneg_of_nonneg_of_le_pi hθ.1 hθ.2
+      nlinarith [mul_nonneg hR₀_pos.le h_sin_nn]
+    have h_num : ContinuousOn (fun θ : ℝ =>
+        deriv modularLambdaH
+          (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ))
+        (Set.Icc 0 Real.pi) := h_lam_deriv_cont.comp hφ.continuousOn h_maps
+    have h_den : ContinuousOn (fun θ : ℝ =>
+        modularLambdaH
+          (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ) - w)
+        (Set.Icc 0 Real.pi) :=
+      (modularLambdaH_differentiableOn.continuousOn.comp hφ.continuousOn h_maps).sub
+        continuousOn_const
+    have h_exp_cont : Continuous
+        (fun θ : ℝ => Complex.I * R₀ * Complex.exp (Complex.I * θ)) :=
+      continuous_const.mul (Complex.continuous_exp.comp
+        (continuous_const.mul Complex.continuous_ofReal))
+    exact (h_num.div h_den hg_arc).mul h_exp_cont.continuousOn
+  -- Piece 0: bottom-left edge.
+  have h0_d : ∀ t : ℝ, HasDerivAt
+      (fun t : ℝ => (t * (1 / 2 - R₀) : ℂ) + (δ : ℂ) * Complex.I)
+      ((1 / 2 - R₀ : ℂ)) t := by
+    intro t
+    have h1 := Complex.ofRealCLM.hasDerivAt (x := t)
+    simpa using (h1.mul_const ((1 / 2 - R₀ : ℂ))).add_const ((δ : ℂ) * Complex.I)
+  have h0_im : ∀ t ∈ Set.Icc (0 : ℝ) 1,
+      0 < ((t * (1 / 2 - R₀) : ℂ) + (δ : ℂ) * Complex.I).im := by
+    intro t _
+    simpa [Complex.add_im, Complex.mul_im, Complex.ofReal_im, Complex.ofReal_re,
+      Complex.I_im, Complex.I_re] using hδ
+  have h0_eq : ∀ t ∈ Set.Icc (0 : ℝ) 1,
+      F_Y_boundary_parameterization δ Y R₀ t =
+      (t * (1 / 2 - R₀) : ℂ) + (δ : ℂ) * Complex.I := by
+    intro t ht
+    unfold F_Y_boundary_parameterization
+    rw [if_pos ht.2]
+  have h0_ne : ∀ t ∈ Set.Icc (0 : ℝ) 1,
+      modularLambdaH ((t * (1 / 2 - R₀) : ℂ) + (δ : ℂ) * Complex.I) - w ≠ 0 := by
+    intro t ht
+    obtain ⟨ht0, ht1⟩ := ht
+    have h_pt : (t * (1 / 2 - R₀) : ℂ) + (δ : ℂ) * Complex.I =
+        ((t * (1 / 2 - R₀) : ℝ) : ℂ) + (δ : ℂ) * Complex.I := by
+      push_cast; ring
+    rw [h_pt]
+    exact hg_bot_left (t * (1 / 2 - R₀)) ⟨by nlinarith, by nlinarith⟩
+  obtain ⟨hI0, hII0⟩ := h_piece 0 1
+    (fun t : ℝ => (t * (1 / 2 - R₀) : ℂ) + (δ : ℂ) * Complex.I)
+    (fun _ : ℝ => (1 / 2 - R₀ : ℂ))
+    (by norm_num) h0_d continuous_const h0_im h0_eq h0_ne
+  have h0_conv : (∫ t in (0 : ℝ)..1, u t) =
+      ∫ x in (0 : ℝ)..(1 / 2 - R₀),
+        deriv modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) /
+        (modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) - w) := by
+    have h_f_d : ∀ x ∈ Set.uIcc (0 : ℝ) 1,
+        HasDerivAt (fun t : ℝ => t * (1 / 2 - R₀)) ((fun _ : ℝ => 1 / 2 - R₀) x) x :=
+      fun x _ => hasDerivAt_mul_const _
+    have h_img : (fun t : ℝ => t * (1 / 2 - R₀)) '' Set.uIcc (0 : ℝ) 1 ⊆
+        Set.Icc (0 : ℝ) (1 / 2 - R₀) := by
+      intro p hp
+      obtain ⟨t, ht, h_eq⟩ := hp
+      rw [Set.uIcc_of_le (by norm_num : (0 : ℝ) ≤ 1)] at ht
+      obtain ⟨ht0, ht1⟩ := ht
+      have h_eq' : t * (1 / 2 - R₀) = p := h_eq
+      rw [← h_eq']
+      exact ⟨by nlinarith, by nlinarith⟩
+    have h_subst : (∫ t in (0 : ℝ)..1, (fun _ : ℝ => 1 / 2 - R₀) t •
+          ((fun x : ℝ => deriv modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) /
+            (modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) - w)) ∘
+            (fun t : ℝ => t * (1 / 2 - R₀))) t) =
+        ∫ x in ((0 : ℝ) * (1 / 2 - R₀))..((1 : ℝ) * (1 / 2 - R₀)),
+          deriv modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) /
+          (modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) - w) :=
+      intervalIntegral.integral_deriv_smul_comp' h_f_d continuousOn_const
+        ((h_g_cont_horiz δ 0 (1 / 2 - R₀) hδ hg_bot_left).mono h_img)
+    calc (∫ t in (0 : ℝ)..1, u t)
+        = ∫ t in (0 : ℝ)..1,
+            (modularLambdaH ((t * (1 / 2 - R₀) : ℂ) + (δ : ℂ) * Complex.I) - w)⁻¹ *
+              ((1 / 2 - R₀ : ℂ) *
+                deriv modularLambdaH ((t * (1 / 2 - R₀) : ℂ) + (δ : ℂ) * Complex.I)) := hI0
+      _ = ∫ t in (0 : ℝ)..1, (fun _ : ℝ => 1 / 2 - R₀) t •
+            ((fun x : ℝ => deriv modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) /
+              (modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) - w)) ∘
+              (fun t : ℝ => t * (1 / 2 - R₀))) t := by
+          refine intervalIntegral.integral_congr ?_
+          intro t _
+          show (modularLambdaH ((t * (1 / 2 - R₀) : ℂ) + (δ : ℂ) * Complex.I) - w)⁻¹ *
+              ((1 / 2 - R₀ : ℂ) *
+                deriv modularLambdaH ((t * (1 / 2 - R₀) : ℂ) + (δ : ℂ) * Complex.I)) =
+            (1 / 2 - R₀ : ℝ) •
+              (deriv modularLambdaH (((t * (1 / 2 - R₀) : ℝ) : ℂ) + (δ : ℂ) * Complex.I) /
+                (modularLambdaH (((t * (1 / 2 - R₀) : ℝ) : ℂ) + (δ : ℂ) * Complex.I) - w))
+          rw [Complex.real_smul]
+          push_cast
+          ring
+      _ = ∫ x in ((0 : ℝ) * (1 / 2 - R₀))..((1 : ℝ) * (1 / 2 - R₀)),
+            deriv modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) /
+            (modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) - w) := h_subst
+      _ = ∫ x in (0 : ℝ)..(1 / 2 - R₀),
+            deriv modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) /
+            (modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) - w) := by
+          rw [zero_mul, one_mul]
+  -- Piece 1: semicircular arc.
+  have h1_d : ∀ t : ℝ, HasDerivAt
+      (fun t : ℝ => _root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀
+        (Real.pi * (2 - t)))
+      ((Real.pi * -1 : ℝ) •
+        (_root_.circleMap 0 R₀ (Real.pi * (2 - t)) * Complex.I)) t := by
+    intro t
+    have h_inner : HasDerivAt (fun s : ℝ => Real.pi * (2 - s)) (Real.pi * -1) t := by
+      have h := ((hasDerivAt_id t).const_sub (2 : ℝ)).const_mul Real.pi
+      simpa using h
+    have h_outer := hasDerivAt_circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀
+      (Real.pi * (2 - t))
+    have h_comp := h_outer.scomp t h_inner
+    simpa [Function.comp] using h_comp
+  have h1_cont : Continuous (fun t : ℝ => (Real.pi * -1 : ℝ) •
+      (_root_.circleMap 0 R₀ (Real.pi * (2 - t)) * Complex.I)) := by
+    refine Continuous.const_smul ?_ _
+    refine Continuous.mul ?_ continuous_const
+    exact (continuous_circleMap 0 R₀).comp (by fun_prop)
+  have h1_im : ∀ t ∈ Set.Icc (1 : ℝ) 2,
+      0 < (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀
+        (Real.pi * (2 - t))).im := by
+    intro t ht
+    obtain ⟨ht1, ht2⟩ := ht
+    have h_cm_im : ∀ (c : ℂ) (R θ : ℝ),
+        (_root_.circleMap c R θ).im = c.im + R * Real.sin θ := by
+      intro c R θ
+      unfold _root_.circleMap
+      rw [Complex.exp_mul_I]
+      simp [Complex.add_im, Complex.mul_im, Complex.ofReal_im, Complex.ofReal_re,
+        Complex.I_im, Complex.I_re, Complex.sin_ofReal_re, Complex.cos_ofReal_im]
+    rw [h_cm_im]
+    have h_c_im : ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I).im = δ := by
+      simp [Complex.add_im, Complex.mul_im, Complex.ofReal_im, Complex.ofReal_re,
+        Complex.I_im, Complex.I_re]
+    rw [h_c_im]
+    have h_sin_nn : 0 ≤ Real.sin (Real.pi * (2 - t)) := by
+      refine Real.sin_nonneg_of_nonneg_of_le_pi ?_ ?_
+      · have h2t : (0 : ℝ) ≤ 2 - t := by linarith
+        positivity
+      · nlinarith [Real.pi_pos]
+    nlinarith [mul_nonneg hR₀_pos.le h_sin_nn]
+  have h1_eq : ∀ t ∈ Set.Icc (1 : ℝ) 2,
+      F_Y_boundary_parameterization δ Y R₀ t =
+      _root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ (Real.pi * (2 - t)) := by
+    intro t ht
+    obtain ⟨ht1, ht2⟩ := ht
+    unfold F_Y_boundary_parameterization
+    rcases eq_or_lt_of_le ht1 with h_eq | h_lt
+    · -- t = 1: junction with piece 0.
+      rw [← h_eq]
+      rw [if_pos (le_refl 1)]
+      unfold _root_.circleMap
+      have h_angle : ((Real.pi * (2 - 1) : ℝ) : ℂ) * Complex.I =
+          (Real.pi : ℂ) * Complex.I := by push_cast; ring
+      rw [h_angle, Complex.exp_pi_mul_I]
+      push_cast; ring
+    · rw [if_neg (not_le.mpr h_lt), if_pos ht2]
+  have h1_ne : ∀ t ∈ Set.Icc (1 : ℝ) 2,
+      modularLambdaH (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀
+        (Real.pi * (2 - t))) - w ≠ 0 := by
+    intro t ht
+    obtain ⟨ht1, ht2⟩ := ht
+    refine hg_arc (Real.pi * (2 - t)) ⟨?_, ?_⟩
+    · exact mul_nonneg Real.pi_pos.le (by linarith)
+    · nlinarith [Real.pi_pos]
+  obtain ⟨hI1, hII1⟩ := h_piece 1 2
+    (fun t : ℝ => _root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀
+      (Real.pi * (2 - t)))
+    (fun t : ℝ => (Real.pi * -1 : ℝ) •
+      (_root_.circleMap 0 R₀ (Real.pi * (2 - t)) * Complex.I))
+    (by norm_num) h1_d h1_cont h1_im h1_eq h1_ne
+  have h1_conv : (∫ t in (1 : ℝ)..2, u t) =
+      -∫ θ in (0 : ℝ)..Real.pi,
+        deriv modularLambdaH
+          (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ) /
+        (modularLambdaH
+          (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ) - w) *
+        (Complex.I * R₀ * Complex.exp (Complex.I * θ)) := by
+    have h_f_d : ∀ x ∈ Set.uIcc (1 : ℝ) 2,
+        HasDerivAt (fun t : ℝ => Real.pi * (2 - t)) ((fun _ : ℝ => Real.pi * -1) x) x := by
+      intro x _
+      simpa using ((hasDerivAt_id x).const_sub (2 : ℝ)).const_mul Real.pi
+    have h_img : (fun t : ℝ => Real.pi * (2 - t)) '' Set.uIcc (1 : ℝ) 2 ⊆
+        Set.Icc (0 : ℝ) Real.pi := by
+      intro p hp
+      obtain ⟨t, ht, h_eq⟩ := hp
+      rw [Set.uIcc_of_le (by norm_num : (1 : ℝ) ≤ 2)] at ht
+      obtain ⟨ht1, ht2⟩ := ht
+      have h_eq' : Real.pi * (2 - t) = p := h_eq
+      rw [← h_eq']
+      constructor
+      · exact mul_nonneg Real.pi_pos.le (by linarith)
+      · nlinarith [Real.pi_pos]
+    have h_cm : ∀ θ : ℝ, _root_.circleMap 0 R₀ θ * Complex.I =
+        Complex.I * (R₀ : ℂ) * Complex.exp (Complex.I * (θ : ℂ)) := by
+      intro θ
+      unfold _root_.circleMap
+      rw [mul_comm ((θ : ℝ) : ℂ) Complex.I]
+      ring
+    have h_subst : (∫ t in (1 : ℝ)..2, (fun _ : ℝ => Real.pi * -1) t •
+          ((fun θ : ℝ =>
+            deriv modularLambdaH
+              (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ) /
+            (modularLambdaH
+              (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ) - w) *
+            (Complex.I * R₀ * Complex.exp (Complex.I * θ))) ∘
+            (fun t : ℝ => Real.pi * (2 - t))) t) =
+        ∫ θ in (Real.pi * (2 - 1))..(Real.pi * (2 - 2)),
+          deriv modularLambdaH
+            (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ) /
+          (modularLambdaH
+            (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ) - w) *
+          (Complex.I * R₀ * Complex.exp (Complex.I * θ)) :=
+      intervalIntegral.integral_deriv_smul_comp' h_f_d continuousOn_const
+        (h_g_arc_cont.mono h_img)
+    calc (∫ t in (1 : ℝ)..2, u t)
+        = ∫ t in (1 : ℝ)..2,
+            (modularLambdaH (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀
+              (Real.pi * (2 - t))) - w)⁻¹ *
+              (((Real.pi * -1 : ℝ) •
+                (_root_.circleMap 0 R₀ (Real.pi * (2 - t)) * Complex.I)) *
+                deriv modularLambdaH (_root_.circleMap
+                  ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ (Real.pi * (2 - t)))) := hI1
+      _ = ∫ t in (1 : ℝ)..2, (fun _ : ℝ => Real.pi * -1) t •
+            ((fun θ : ℝ =>
+              deriv modularLambdaH
+                (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ) /
+              (modularLambdaH
+                (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ) - w) *
+              (Complex.I * R₀ * Complex.exp (Complex.I * θ))) ∘
+              (fun t : ℝ => Real.pi * (2 - t))) t := by
+          refine intervalIntegral.integral_congr ?_
+          intro t _
+          show (modularLambdaH (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀
+              (Real.pi * (2 - t))) - w)⁻¹ *
+              (((Real.pi * -1 : ℝ) •
+                (_root_.circleMap 0 R₀ (Real.pi * (2 - t)) * Complex.I)) *
+                deriv modularLambdaH (_root_.circleMap
+                  ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ (Real.pi * (2 - t)))) =
+            (Real.pi * -1 : ℝ) •
+              (deriv modularLambdaH (_root_.circleMap
+                ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ (Real.pi * (2 - t))) /
+              (modularLambdaH (_root_.circleMap
+                ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ (Real.pi * (2 - t))) - w) *
+              (Complex.I * R₀ * Complex.exp (Complex.I * ((Real.pi * (2 - t) : ℝ) : ℂ))))
+          rw [h_cm (Real.pi * (2 - t)), Complex.real_smul, Complex.real_smul]
+          push_cast
+          ring
+      _ = ∫ θ in (Real.pi * (2 - 1))..(Real.pi * (2 - 2)),
+            deriv modularLambdaH
+              (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ) /
+            (modularLambdaH
+              (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ) - w) *
+            (Complex.I * R₀ * Complex.exp (Complex.I * θ)) := h_subst
+      _ = ∫ θ in Real.pi..(0 : ℝ),
+            deriv modularLambdaH
+              (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ) /
+            (modularLambdaH
+              (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ) - w) *
+            (Complex.I * R₀ * Complex.exp (Complex.I * θ)) := by
+          rw [show Real.pi * (2 - 1) = Real.pi from by ring,
+            show Real.pi * (2 - 2) = 0 from by ring]
+      _ = -∫ θ in (0 : ℝ)..Real.pi,
+            deriv modularLambdaH
+              (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ) /
+            (modularLambdaH
+              (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ) - w) *
+            (Complex.I * R₀ * Complex.exp (Complex.I * θ)) :=
+          intervalIntegral.integral_symm 0 Real.pi
+  -- Piece 2: bottom-right edge.
+  have h2_d : ∀ t : ℝ, HasDerivAt
+      (fun t : ℝ => (((1 / 2 + R₀) + (t - 2) * (1 / 2 - R₀)) : ℂ) + (δ : ℂ) * Complex.I)
+      ((1 / 2 - R₀ : ℂ)) t := by
+    intro t
+    have h1 := Complex.ofRealCLM.hasDerivAt (x := t)
+    have h2 := (((h1.sub_const (2 : ℂ)).mul_const ((1 / 2 - R₀ : ℂ))).const_add
+      ((1 / 2 + R₀ : ℂ))).add_const ((δ : ℂ) * Complex.I)
+    simpa using h2
+  have h2_im : ∀ t ∈ Set.Icc (2 : ℝ) 3,
+      0 < ((((1 / 2 + R₀) + (t - 2) * (1 / 2 - R₀)) : ℂ) + (δ : ℂ) * Complex.I).im := by
+    intro t _
+    simpa [Complex.add_im, Complex.mul_im, Complex.sub_im, Complex.ofReal_im,
+      Complex.ofReal_re, Complex.sub_re, Complex.I_im, Complex.I_re] using hδ
+  have h2_eq : ∀ t ∈ Set.Icc (2 : ℝ) 3,
+      F_Y_boundary_parameterization δ Y R₀ t =
+      (((1 / 2 + R₀) + (t - 2) * (1 / 2 - R₀)) : ℂ) + (δ : ℂ) * Complex.I := by
+    intro t ht
+    obtain ⟨ht2, ht3⟩ := ht
+    unfold F_Y_boundary_parameterization
+    have h_not1 : ¬ t ≤ 1 := by linarith
+    rcases eq_or_lt_of_le ht2 with h_eq | h_lt
+    · -- t = 2: junction with the arc piece.
+      rw [← h_eq]
+      rw [if_neg (by norm_num : ¬ (2 : ℝ) ≤ 1), if_pos (le_refl (2 : ℝ))]
+      unfold _root_.circleMap
+      have h_angle : ((Real.pi * (2 - 2) : ℝ) : ℂ) * Complex.I = 0 := by
+        push_cast; ring
+      rw [h_angle, Complex.exp_zero]
+      push_cast; ring
+    · rw [if_neg h_not1, if_neg (not_le.mpr h_lt), if_pos ht3]
+  have h2_ne : ∀ t ∈ Set.Icc (2 : ℝ) 3,
+      modularLambdaH ((((1 / 2 + R₀) + (t - 2) * (1 / 2 - R₀)) : ℂ) +
+        (δ : ℂ) * Complex.I) - w ≠ 0 := by
+    intro t ht
+    obtain ⟨ht2, ht3⟩ := ht
+    have h_pt : (((1 / 2 + R₀) + (t - 2) * (1 / 2 - R₀)) : ℂ) + (δ : ℂ) * Complex.I =
+        ((1 / 2 + R₀ + (t - 2) * (1 / 2 - R₀) : ℝ) : ℂ) + (δ : ℂ) * Complex.I := by
+      push_cast; ring
+    rw [h_pt]
+    exact hg_bot_right (1 / 2 + R₀ + (t - 2) * (1 / 2 - R₀)) ⟨by nlinarith, by nlinarith⟩
+  obtain ⟨hI2, hII2⟩ := h_piece 2 3
+    (fun t : ℝ => (((1 / 2 + R₀) + (t - 2) * (1 / 2 - R₀)) : ℂ) + (δ : ℂ) * Complex.I)
+    (fun _ : ℝ => (1 / 2 - R₀ : ℂ))
+    (by norm_num) h2_d continuous_const h2_im h2_eq h2_ne
+  have h2_conv : (∫ t in (2 : ℝ)..3, u t) =
+      ∫ x in (1 / 2 + R₀ : ℝ)..1,
+        deriv modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) /
+        (modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) - w) := by
+    have h_f_d : ∀ x ∈ Set.uIcc (2 : ℝ) 3,
+        HasDerivAt (fun t : ℝ => 1 / 2 + R₀ + (t - 2) * (1 / 2 - R₀))
+          ((fun _ : ℝ => 1 / 2 - R₀) x) x := by
+      intro x _
+      simpa using (((hasDerivAt_id x).sub_const (2 : ℝ)).mul_const
+        (1 / 2 - R₀)).const_add (1 / 2 + R₀)
+    have h_img : (fun t : ℝ => 1 / 2 + R₀ + (t - 2) * (1 / 2 - R₀)) ''
+        Set.uIcc (2 : ℝ) 3 ⊆ Set.Icc (1 / 2 + R₀ : ℝ) 1 := by
+      intro p hp
+      obtain ⟨t, ht, h_eq⟩ := hp
+      rw [Set.uIcc_of_le (by norm_num : (2 : ℝ) ≤ 3)] at ht
+      obtain ⟨ht2, ht3⟩ := ht
+      have h_eq' : 1 / 2 + R₀ + (t - 2) * (1 / 2 - R₀) = p := h_eq
+      rw [← h_eq']
+      exact ⟨by nlinarith, by nlinarith⟩
+    have h_subst : (∫ t in (2 : ℝ)..3, (fun _ : ℝ => 1 / 2 - R₀) t •
+          ((fun x : ℝ => deriv modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) /
+            (modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) - w)) ∘
+            (fun t : ℝ => 1 / 2 + R₀ + (t - 2) * (1 / 2 - R₀))) t) =
+        ∫ x in (1 / 2 + R₀ + ((2 : ℝ) - 2) * (1 / 2 - R₀))..(1 / 2 + R₀ +
+            ((3 : ℝ) - 2) * (1 / 2 - R₀)),
+          deriv modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) /
+          (modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) - w) :=
+      intervalIntegral.integral_deriv_smul_comp' h_f_d continuousOn_const
+        ((h_g_cont_horiz δ (1 / 2 + R₀) 1 hδ hg_bot_right).mono h_img)
+    calc (∫ t in (2 : ℝ)..3, u t)
+        = ∫ t in (2 : ℝ)..3,
+            (modularLambdaH ((((1 / 2 + R₀) + (t - 2) * (1 / 2 - R₀)) : ℂ) +
+              (δ : ℂ) * Complex.I) - w)⁻¹ *
+              ((1 / 2 - R₀ : ℂ) *
+                deriv modularLambdaH ((((1 / 2 + R₀) + (t - 2) * (1 / 2 - R₀)) : ℂ) +
+                  (δ : ℂ) * Complex.I)) := hI2
+      _ = ∫ t in (2 : ℝ)..3, (fun _ : ℝ => 1 / 2 - R₀) t •
+            ((fun x : ℝ => deriv modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) /
+              (modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) - w)) ∘
+              (fun t : ℝ => 1 / 2 + R₀ + (t - 2) * (1 / 2 - R₀))) t := by
+          refine intervalIntegral.integral_congr ?_
+          intro t _
+          show (modularLambdaH ((((1 / 2 + R₀) + (t - 2) * (1 / 2 - R₀)) : ℂ) +
+              (δ : ℂ) * Complex.I) - w)⁻¹ *
+              ((1 / 2 - R₀ : ℂ) *
+                deriv modularLambdaH ((((1 / 2 + R₀) + (t - 2) * (1 / 2 - R₀)) : ℂ) +
+                  (δ : ℂ) * Complex.I)) =
+            (1 / 2 - R₀ : ℝ) •
+              (deriv modularLambdaH
+                (((1 / 2 + R₀ + (t - 2) * (1 / 2 - R₀) : ℝ) : ℂ) + (δ : ℂ) * Complex.I) /
+                (modularLambdaH
+                  (((1 / 2 + R₀ + (t - 2) * (1 / 2 - R₀) : ℝ) : ℂ) +
+                    (δ : ℂ) * Complex.I) - w))
+          rw [Complex.real_smul]
+          push_cast
+          ring
+      _ = ∫ x in (1 / 2 + R₀ + ((2 : ℝ) - 2) * (1 / 2 - R₀))..(1 / 2 + R₀ +
+            ((3 : ℝ) - 2) * (1 / 2 - R₀)),
+            deriv modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) /
+            (modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) - w) := h_subst
+      _ = ∫ x in (1 / 2 + R₀ : ℝ)..1,
+            deriv modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) /
+            (modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) - w) := by
+          rw [show 1 / 2 + R₀ + ((2 : ℝ) - 2) * (1 / 2 - R₀) = 1 / 2 + R₀ from by ring,
+            show 1 / 2 + R₀ + ((3 : ℝ) - 2) * (1 / 2 - R₀) = 1 from by ring]
+  -- Piece 3: right edge.
+  have h3_d : ∀ t : ℝ, HasDerivAt
+      (fun t : ℝ => (1 : ℂ) + ((δ + (t - 3) * (Y - δ)) : ℂ) * Complex.I)
+      (((Y - δ : ℂ)) * Complex.I) t := by
+    intro t
+    have h1 := Complex.ofRealCLM.hasDerivAt (x := t)
+    have h2 := ((((h1.sub_const (3 : ℂ)).mul_const ((Y - δ : ℂ))).const_add
+      ((δ : ℂ))).mul_const Complex.I).const_add (1 : ℂ)
+    simpa using h2
+  have h3_im : ∀ t ∈ Set.Icc (3 : ℝ) 4,
+      0 < ((1 : ℂ) + ((δ + (t - 3) * (Y - δ)) : ℂ) * Complex.I).im := by
+    intro t ht
+    obtain ⟨ht3, ht4⟩ := ht
+    simp [Complex.add_im, Complex.mul_im, Complex.sub_im, Complex.ofReal_im,
+      Complex.ofReal_re, Complex.sub_re, Complex.I_im, Complex.I_re]
+    nlinarith [mul_nonneg (by linarith : (0:ℝ) ≤ t - 3) (by linarith : (0:ℝ) ≤ Y - δ)]
+  have h3_eq : ∀ t ∈ Set.Icc (3 : ℝ) 4,
+      F_Y_boundary_parameterization δ Y R₀ t =
+      (1 : ℂ) + ((δ + (t - 3) * (Y - δ)) : ℂ) * Complex.I := by
+    intro t ht
+    obtain ⟨ht3, ht4⟩ := ht
+    unfold F_Y_boundary_parameterization
+    have h_not1 : ¬ t ≤ 1 := by linarith
+    have h_not2 : ¬ t ≤ 2 := by linarith
+    rcases eq_or_lt_of_le ht3 with h_eq | h_lt
+    · -- t = 3: junction with the bottom-right edge.
+      rw [← h_eq]
+      rw [if_neg (by norm_num : ¬ (3 : ℝ) ≤ 1), if_neg (by norm_num : ¬ (3 : ℝ) ≤ 2),
+        if_pos (le_refl (3 : ℝ))]
+      push_cast; ring
+    · rw [if_neg h_not1, if_neg h_not2, if_neg (not_le.mpr h_lt), if_pos ht4]
+  have h3_ne : ∀ t ∈ Set.Icc (3 : ℝ) 4,
+      modularLambdaH ((1 : ℂ) + ((δ + (t - 3) * (Y - δ)) : ℂ) * Complex.I) - w ≠ 0 := by
+    intro t ht
+    obtain ⟨ht3, ht4⟩ := ht
+    have h_pt : (1 : ℂ) + ((δ + (t - 3) * (Y - δ)) : ℂ) * Complex.I =
+        (1 : ℂ) + ((δ + (t - 3) * (Y - δ) : ℝ) : ℂ) * Complex.I := by
+      push_cast; ring
+    rw [h_pt]
+    exact hg_right (δ + (t - 3) * (Y - δ)) ⟨by nlinarith, by nlinarith⟩
+  obtain ⟨hI3, hII3⟩ := h_piece 3 4
+    (fun t : ℝ => (1 : ℂ) + ((δ + (t - 3) * (Y - δ)) : ℂ) * Complex.I)
+    (fun _ : ℝ => ((Y - δ : ℂ)) * Complex.I)
+    (by norm_num) h3_d continuous_const h3_im h3_eq h3_ne
+  have h3_conv : (∫ t in (3 : ℝ)..4, u t) =
+      Complex.I * (∫ y in (δ : ℝ)..Y,
+        deriv modularLambdaH ((1 : ℂ) + (y : ℂ) * Complex.I) /
+        (modularLambdaH ((1 : ℂ) + (y : ℂ) * Complex.I) - w)) := by
+    have h_f_d : ∀ x ∈ Set.uIcc (3 : ℝ) 4,
+        HasDerivAt (fun t : ℝ => δ + (t - 3) * (Y - δ)) ((fun _ : ℝ => Y - δ) x) x := by
+      intro x _
+      simpa using (((hasDerivAt_id x).sub_const (3 : ℝ)).mul_const (Y - δ)).const_add δ
+    have h_img : (fun t : ℝ => δ + (t - 3) * (Y - δ)) '' Set.uIcc (3 : ℝ) 4 ⊆
+        Set.Icc δ Y := by
+      intro p hp
+      obtain ⟨t, ht, h_eq⟩ := hp
+      rw [Set.uIcc_of_le (by norm_num : (3 : ℝ) ≤ 4)] at ht
+      obtain ⟨ht3, ht4⟩ := ht
+      have h_eq' : δ + (t - 3) * (Y - δ) = p := h_eq
+      rw [← h_eq']
+      exact ⟨by nlinarith, by nlinarith⟩
+    have h_subst : (∫ t in (3 : ℝ)..4, (fun _ : ℝ => Y - δ) t •
+          ((fun y : ℝ => deriv modularLambdaH ((1 : ℂ) + (y : ℂ) * Complex.I) /
+            (modularLambdaH ((1 : ℂ) + (y : ℂ) * Complex.I) - w)) ∘
+            (fun t : ℝ => δ + (t - 3) * (Y - δ))) t) =
+        ∫ y in (δ + ((3 : ℝ) - 3) * (Y - δ))..(δ + ((4 : ℝ) - 3) * (Y - δ)),
+          deriv modularLambdaH ((1 : ℂ) + (y : ℂ) * Complex.I) /
+          (modularLambdaH ((1 : ℂ) + (y : ℂ) * Complex.I) - w) :=
+      intervalIntegral.integral_deriv_smul_comp' h_f_d continuousOn_const
+        ((h_g_cont_vert 1 Complex.one_im hg_right).mono h_img)
+    calc (∫ t in (3 : ℝ)..4, u t)
+        = ∫ t in (3 : ℝ)..4,
+            (modularLambdaH ((1 : ℂ) + ((δ + (t - 3) * (Y - δ)) : ℂ) * Complex.I) - w)⁻¹ *
+              ((Y - δ : ℂ) * Complex.I *
+                deriv modularLambdaH ((1 : ℂ) +
+                  ((δ + (t - 3) * (Y - δ)) : ℂ) * Complex.I)) := hI3
+      _ = ∫ t in (3 : ℝ)..4, Complex.I *
+            ((fun _ : ℝ => Y - δ) t •
+              ((fun y : ℝ => deriv modularLambdaH ((1 : ℂ) + (y : ℂ) * Complex.I) /
+                (modularLambdaH ((1 : ℂ) + (y : ℂ) * Complex.I) - w)) ∘
+                (fun t : ℝ => δ + (t - 3) * (Y - δ))) t) := by
+          refine intervalIntegral.integral_congr ?_
+          intro t _
+          show (modularLambdaH ((1 : ℂ) +
+              ((δ + (t - 3) * (Y - δ)) : ℂ) * Complex.I) - w)⁻¹ *
+              ((Y - δ : ℂ) * Complex.I *
+                deriv modularLambdaH ((1 : ℂ) +
+                  ((δ + (t - 3) * (Y - δ)) : ℂ) * Complex.I)) =
+            Complex.I * ((Y - δ : ℝ) •
+              (deriv modularLambdaH ((1 : ℂ) +
+                ((δ + (t - 3) * (Y - δ) : ℝ) : ℂ) * Complex.I) /
+              (modularLambdaH ((1 : ℂ) +
+                ((δ + (t - 3) * (Y - δ) : ℝ) : ℂ) * Complex.I) - w)))
+          rw [Complex.real_smul]
+          push_cast
+          ring
+      _ = Complex.I * ∫ t in (3 : ℝ)..4,
+            (fun _ : ℝ => Y - δ) t •
+              ((fun y : ℝ => deriv modularLambdaH ((1 : ℂ) + (y : ℂ) * Complex.I) /
+                (modularLambdaH ((1 : ℂ) + (y : ℂ) * Complex.I) - w)) ∘
+                (fun t : ℝ => δ + (t - 3) * (Y - δ))) t :=
+          intervalIntegral.integral_const_mul Complex.I _
+      _ = Complex.I * ∫ y in (δ + ((3 : ℝ) - 3) * (Y - δ))..(δ + ((4 : ℝ) - 3) * (Y - δ)),
+            deriv modularLambdaH ((1 : ℂ) + (y : ℂ) * Complex.I) /
+            (modularLambdaH ((1 : ℂ) + (y : ℂ) * Complex.I) - w) := by
+          rw [h_subst]
+      _ = Complex.I * (∫ y in (δ : ℝ)..Y,
+            deriv modularLambdaH ((1 : ℂ) + (y : ℂ) * Complex.I) /
+            (modularLambdaH ((1 : ℂ) + (y : ℂ) * Complex.I) - w)) := by
+          rw [show δ + ((3 : ℝ) - 3) * (Y - δ) = δ from by ring,
+            show δ + ((4 : ℝ) - 3) * (Y - δ) = Y from by ring]
+  -- Piece 4: top edge.
+  have h4_d : ∀ t : ℝ, HasDerivAt
+      (fun t : ℝ => ((5 - t : ℝ) : ℂ) + (Y : ℂ) * Complex.I)
+      (((-1 : ℝ) : ℂ)) t := by
+    intro t
+    have h_inner : HasDerivAt (fun s : ℝ => 5 - s) (-1) t :=
+      (hasDerivAt_id t).const_sub 5
+    exact (h_inner.ofReal_comp).add_const ((Y : ℂ) * Complex.I)
+  have h4_im : ∀ t ∈ Set.Icc (4 : ℝ) 5,
+      0 < (((5 - t : ℝ) : ℂ) + (Y : ℂ) * Complex.I).im := by
+    intro t _
+    simpa [Complex.add_im, Complex.mul_im, Complex.ofReal_im, Complex.ofReal_re,
+      Complex.I_im, Complex.I_re] using hY_pos
+  have h4_eq : ∀ t ∈ Set.Icc (4 : ℝ) 5,
+      F_Y_boundary_parameterization δ Y R₀ t =
+      ((5 - t : ℝ) : ℂ) + (Y : ℂ) * Complex.I := by
+    intro t ht
+    obtain ⟨ht4, ht5⟩ := ht
+    unfold F_Y_boundary_parameterization
+    have h_not1 : ¬ t ≤ 1 := by linarith
+    have h_not2 : ¬ t ≤ 2 := by linarith
+    have h_not3 : ¬ t ≤ 3 := by linarith
+    rcases eq_or_lt_of_le ht4 with h_eq | h_lt
+    · -- t = 4: junction with the right edge.
+      rw [← h_eq]
+      rw [if_neg (by norm_num : ¬ (4 : ℝ) ≤ 1), if_neg (by norm_num : ¬ (4 : ℝ) ≤ 2),
+        if_neg (by norm_num : ¬ (4 : ℝ) ≤ 3), if_pos (le_refl (4 : ℝ))]
+      push_cast; ring
+    · rw [if_neg h_not1, if_neg h_not2, if_neg h_not3, if_neg (not_le.mpr h_lt),
+        if_pos ht5]
+  have h4_ne : ∀ t ∈ Set.Icc (4 : ℝ) 5,
+      modularLambdaH (((5 - t : ℝ) : ℂ) + (Y : ℂ) * Complex.I) - w ≠ 0 := by
+    intro t ht
+    obtain ⟨ht4, ht5⟩ := ht
+    exact hg_top (5 - t) ⟨by linarith, by linarith⟩
+  obtain ⟨hI4, hII4⟩ := h_piece 4 5
+    (fun t : ℝ => ((5 - t : ℝ) : ℂ) + (Y : ℂ) * Complex.I)
+    (fun _ : ℝ => ((-1 : ℝ) : ℂ))
+    (by norm_num) h4_d continuous_const h4_im h4_eq h4_ne
+  have h4_conv : (∫ t in (4 : ℝ)..5, u t) =
+      -∫ x in (0 : ℝ)..1,
+        deriv modularLambdaH ((x : ℂ) + (Y : ℂ) * Complex.I) /
+        (modularLambdaH ((x : ℂ) + (Y : ℂ) * Complex.I) - w) := by
+    have h_f_d : ∀ x ∈ Set.uIcc (4 : ℝ) 5,
+        HasDerivAt (fun t : ℝ => 5 - t) ((fun _ : ℝ => (-1 : ℝ)) x) x := by
+      intro x _
+      simpa using (hasDerivAt_id x).const_sub (5 : ℝ)
+    have h_img : (fun t : ℝ => 5 - t) '' Set.uIcc (4 : ℝ) 5 ⊆
+        Set.Icc (0 : ℝ) 1 := by
+      intro p hp
+      obtain ⟨t, ht, h_eq⟩ := hp
+      rw [Set.uIcc_of_le (by norm_num : (4 : ℝ) ≤ 5)] at ht
+      obtain ⟨ht4, ht5⟩ := ht
+      have h_eq' : 5 - t = p := h_eq
+      rw [← h_eq']
+      exact ⟨by linarith, by linarith⟩
+    have h_subst : (∫ t in (4 : ℝ)..5, (fun _ : ℝ => (-1 : ℝ)) t •
+          ((fun x : ℝ => deriv modularLambdaH ((x : ℂ) + (Y : ℂ) * Complex.I) /
+            (modularLambdaH ((x : ℂ) + (Y : ℂ) * Complex.I) - w)) ∘
+            (fun t : ℝ => 5 - t)) t) =
+        ∫ x in ((5 : ℝ) - 4)..((5 : ℝ) - 5),
+          deriv modularLambdaH ((x : ℂ) + (Y : ℂ) * Complex.I) /
+          (modularLambdaH ((x : ℂ) + (Y : ℂ) * Complex.I) - w) :=
+      intervalIntegral.integral_deriv_smul_comp' h_f_d continuousOn_const
+        ((h_g_cont_horiz Y 0 1 hY_pos hg_top).mono h_img)
+    calc (∫ t in (4 : ℝ)..5, u t)
+        = ∫ t in (4 : ℝ)..5,
+            (modularLambdaH (((5 - t : ℝ) : ℂ) + (Y : ℂ) * Complex.I) - w)⁻¹ *
+              (((-1 : ℝ) : ℂ) *
+                deriv modularLambdaH (((5 - t : ℝ) : ℂ) + (Y : ℂ) * Complex.I)) := hI4
+      _ = ∫ t in (4 : ℝ)..5, (fun _ : ℝ => (-1 : ℝ)) t •
+            ((fun x : ℝ => deriv modularLambdaH ((x : ℂ) + (Y : ℂ) * Complex.I) /
+              (modularLambdaH ((x : ℂ) + (Y : ℂ) * Complex.I) - w)) ∘
+              (fun t : ℝ => 5 - t)) t := by
+          refine intervalIntegral.integral_congr ?_
+          intro t _
+          show (modularLambdaH (((5 - t : ℝ) : ℂ) + (Y : ℂ) * Complex.I) - w)⁻¹ *
+              (((-1 : ℝ) : ℂ) *
+                deriv modularLambdaH (((5 - t : ℝ) : ℂ) + (Y : ℂ) * Complex.I)) =
+            (-1 : ℝ) •
+              (deriv modularLambdaH (((5 - t : ℝ) : ℂ) + (Y : ℂ) * Complex.I) /
+                (modularLambdaH (((5 - t : ℝ) : ℂ) + (Y : ℂ) * Complex.I) - w))
+          rw [Complex.real_smul]
+          push_cast
+          ring
+      _ = ∫ x in ((5 : ℝ) - 4)..((5 : ℝ) - 5),
+            deriv modularLambdaH ((x : ℂ) + (Y : ℂ) * Complex.I) /
+            (modularLambdaH ((x : ℂ) + (Y : ℂ) * Complex.I) - w) := h_subst
+      _ = ∫ x in (1 : ℝ)..(0 : ℝ),
+            deriv modularLambdaH ((x : ℂ) + (Y : ℂ) * Complex.I) /
+            (modularLambdaH ((x : ℂ) + (Y : ℂ) * Complex.I) - w) := by
+          rw [show (5 : ℝ) - 4 = 1 from by norm_num,
+            show (5 : ℝ) - 5 = 0 from by norm_num]
+      _ = -∫ x in (0 : ℝ)..1,
+            deriv modularLambdaH ((x : ℂ) + (Y : ℂ) * Complex.I) /
+            (modularLambdaH ((x : ℂ) + (Y : ℂ) * Complex.I) - w) :=
+          intervalIntegral.integral_symm 0 1
+  -- Piece 5: left edge.
+  have h5_d : ∀ t : ℝ, HasDerivAt
+      (fun t : ℝ => ((Y - (t - 5) * (Y - δ) : ℝ) : ℂ) * Complex.I)
+      (((-(Y - δ) : ℝ) : ℂ) * Complex.I) t := by
+    intro t
+    have h_inner : HasDerivAt (fun s : ℝ => Y - (s - 5) * (Y - δ)) (-(Y - δ)) t := by
+      have h := (((hasDerivAt_id t).sub_const (5 : ℝ)).mul_const (Y - δ)).const_sub Y
+      simpa using h
+    exact (h_inner.ofReal_comp).mul_const Complex.I
+  have h5_im : ∀ t ∈ Set.Icc (5 : ℝ) 6,
+      0 < (((Y - (t - 5) * (Y - δ) : ℝ) : ℂ) * Complex.I).im := by
+    intro t ht
+    obtain ⟨ht5, ht6⟩ := ht
+    simp [Complex.mul_im, Complex.ofReal_im, Complex.ofReal_re,
+      Complex.I_im, Complex.I_re]
+    have h_le_one : t - 5 ≤ 1 := by linarith
+    nlinarith [mul_le_mul_of_nonneg_right h_le_one (by linarith : (0:ℝ) ≤ Y - δ)]
+  have h5_eq : ∀ t ∈ Set.Icc (5 : ℝ) 6,
+      F_Y_boundary_parameterization δ Y R₀ t =
+      ((Y - (t - 5) * (Y - δ) : ℝ) : ℂ) * Complex.I := by
+    intro t ht
+    obtain ⟨ht5, ht6⟩ := ht
+    unfold F_Y_boundary_parameterization
+    have h_not1 : ¬ t ≤ 1 := by linarith
+    have h_not2 : ¬ t ≤ 2 := by linarith
+    have h_not3 : ¬ t ≤ 3 := by linarith
+    have h_not4 : ¬ t ≤ 4 := by linarith
+    rcases eq_or_lt_of_le ht5 with h_eq | h_lt
+    · -- t = 5: junction with the top edge.
+      rw [← h_eq]
+      rw [if_neg (by norm_num : ¬ (5 : ℝ) ≤ 1), if_neg (by norm_num : ¬ (5 : ℝ) ≤ 2),
+        if_neg (by norm_num : ¬ (5 : ℝ) ≤ 3), if_neg (by norm_num : ¬ (5 : ℝ) ≤ 4),
+        if_pos (le_refl (5 : ℝ))]
+      push_cast; ring
+    · rw [if_neg h_not1, if_neg h_not2, if_neg h_not3, if_neg h_not4,
+        if_neg (not_le.mpr h_lt), if_pos ht6]
+  have h5_ne : ∀ t ∈ Set.Icc (5 : ℝ) 6,
+      modularLambdaH (((Y - (t - 5) * (Y - δ) : ℝ) : ℂ) * Complex.I) - w ≠ 0 := by
+    intro t ht
+    obtain ⟨ht5, ht6⟩ := ht
+    have h := hg_left (Y - (t - 5) * (Y - δ)) ⟨by nlinarith, by nlinarith⟩
+    rwa [zero_add] at h
+  obtain ⟨hI5, hII5⟩ := h_piece 5 6
+    (fun t : ℝ => ((Y - (t - 5) * (Y - δ) : ℝ) : ℂ) * Complex.I)
+    (fun _ : ℝ => ((-(Y - δ) : ℝ) : ℂ) * Complex.I)
+    (by norm_num) h5_d continuous_const h5_im h5_eq h5_ne
+  have h5_conv : (∫ t in (5 : ℝ)..6, u t) =
+      Complex.I * -(∫ y in (δ : ℝ)..Y,
+        deriv modularLambdaH ((0 : ℂ) + (y : ℂ) * Complex.I) /
+        (modularLambdaH ((0 : ℂ) + (y : ℂ) * Complex.I) - w)) := by
+    have h_f_d : ∀ x ∈ Set.uIcc (5 : ℝ) 6,
+        HasDerivAt (fun t : ℝ => Y - (t - 5) * (Y - δ))
+          ((fun _ : ℝ => -(Y - δ)) x) x := by
+      intro x _
+      simpa using (((hasDerivAt_id x).sub_const (5 : ℝ)).mul_const (Y - δ)).const_sub Y
+    have h_img : (fun t : ℝ => Y - (t - 5) * (Y - δ)) '' Set.uIcc (5 : ℝ) 6 ⊆
+        Set.Icc δ Y := by
+      intro p hp
+      obtain ⟨t, ht, h_eq⟩ := hp
+      rw [Set.uIcc_of_le (by norm_num : (5 : ℝ) ≤ 6)] at ht
+      obtain ⟨ht5, ht6⟩ := ht
+      have h_eq' : Y - (t - 5) * (Y - δ) = p := h_eq
+      rw [← h_eq']
+      exact ⟨by nlinarith, by nlinarith⟩
+    have h_subst : (∫ t in (5 : ℝ)..6, (fun _ : ℝ => -(Y - δ)) t •
+          ((fun y : ℝ => deriv modularLambdaH ((0 : ℂ) + (y : ℂ) * Complex.I) /
+            (modularLambdaH ((0 : ℂ) + (y : ℂ) * Complex.I) - w)) ∘
+            (fun t : ℝ => Y - (t - 5) * (Y - δ))) t) =
+        ∫ y in (Y - ((5 : ℝ) - 5) * (Y - δ))..(Y - ((6 : ℝ) - 5) * (Y - δ)),
+          deriv modularLambdaH ((0 : ℂ) + (y : ℂ) * Complex.I) /
+          (modularLambdaH ((0 : ℂ) + (y : ℂ) * Complex.I) - w) :=
+      intervalIntegral.integral_deriv_smul_comp' h_f_d continuousOn_const
+        ((h_g_cont_vert 0 Complex.zero_im hg_left).mono h_img)
+    calc (∫ t in (5 : ℝ)..6, u t)
+        = ∫ t in (5 : ℝ)..6,
+            (modularLambdaH (((Y - (t - 5) * (Y - δ) : ℝ) : ℂ) * Complex.I) - w)⁻¹ *
+              ((((-(Y - δ) : ℝ) : ℂ) * Complex.I) *
+                deriv modularLambdaH
+                  (((Y - (t - 5) * (Y - δ) : ℝ) : ℂ) * Complex.I)) := hI5
+      _ = ∫ t in (5 : ℝ)..6, Complex.I *
+            ((fun _ : ℝ => -(Y - δ)) t •
+              ((fun y : ℝ => deriv modularLambdaH ((0 : ℂ) + (y : ℂ) * Complex.I) /
+                (modularLambdaH ((0 : ℂ) + (y : ℂ) * Complex.I) - w)) ∘
+                (fun t : ℝ => Y - (t - 5) * (Y - δ))) t) := by
+          refine intervalIntegral.integral_congr ?_
+          intro t _
+          show (modularLambdaH (((Y - (t - 5) * (Y - δ) : ℝ) : ℂ) * Complex.I) - w)⁻¹ *
+              ((((-(Y - δ) : ℝ) : ℂ) * Complex.I) *
+                deriv modularLambdaH
+                  (((Y - (t - 5) * (Y - δ) : ℝ) : ℂ) * Complex.I)) =
+            Complex.I * ((-(Y - δ) : ℝ) •
+              (deriv modularLambdaH ((0 : ℂ) +
+                ((Y - (t - 5) * (Y - δ) : ℝ) : ℂ) * Complex.I) /
+              (modularLambdaH ((0 : ℂ) +
+                ((Y - (t - 5) * (Y - δ) : ℝ) : ℂ) * Complex.I) - w)))
+          rw [zero_add (((Y - (t - 5) * (Y - δ) : ℝ) : ℂ) * Complex.I),
+            Complex.real_smul]
+          push_cast
+          ring
+      _ = Complex.I * ∫ t in (5 : ℝ)..6,
+            (fun _ : ℝ => -(Y - δ)) t •
+              ((fun y : ℝ => deriv modularLambdaH ((0 : ℂ) + (y : ℂ) * Complex.I) /
+                (modularLambdaH ((0 : ℂ) + (y : ℂ) * Complex.I) - w)) ∘
+                (fun t : ℝ => Y - (t - 5) * (Y - δ))) t :=
+          intervalIntegral.integral_const_mul Complex.I _
+      _ = Complex.I * ∫ y in (Y - ((5 : ℝ) - 5) * (Y - δ))..(Y - ((6 : ℝ) - 5) * (Y - δ)),
+            deriv modularLambdaH ((0 : ℂ) + (y : ℂ) * Complex.I) /
+            (modularLambdaH ((0 : ℂ) + (y : ℂ) * Complex.I) - w) := by
+          rw [h_subst]
+      _ = Complex.I * ∫ y in Y..(δ : ℝ),
+            deriv modularLambdaH ((0 : ℂ) + (y : ℂ) * Complex.I) /
+            (modularLambdaH ((0 : ℂ) + (y : ℂ) * Complex.I) - w) := by
+          rw [show Y - ((5 : ℝ) - 5) * (Y - δ) = Y from by ring,
+            show Y - ((6 : ℝ) - 5) * (Y - δ) = δ from by ring]
+      _ = Complex.I * -(∫ y in (δ : ℝ)..Y,
+            deriv modularLambdaH ((0 : ℂ) + (y : ℂ) * Complex.I) /
+            (modularLambdaH ((0 : ℂ) + (y : ℂ) * Complex.I) - w)) := by
+          rw [intervalIntegral.integral_symm δ Y]
+  -- Telescope the six pieces.
+  have e01 := intervalIntegral.integral_add_adjacent_intervals hII0 hII1
+  have hII02 := hII0.trans hII1
+  have e02 := intervalIntegral.integral_add_adjacent_intervals hII02 hII2
+  have hII03 := hII02.trans hII2
+  have e03 := intervalIntegral.integral_add_adjacent_intervals hII03 hII3
+  have hII04 := hII03.trans hII3
+  have e04 := intervalIntegral.integral_add_adjacent_intervals hII04 hII4
+  have hII05 := hII04.trans hII4
+  have e05 := intervalIntegral.integral_add_adjacent_intervals hII05 hII5
+  unfold Complex.pathContourIntegral
+  change _ = ∫ t in (0 : ℝ)..6, u t
+  rw [← e05, ← e04, ← e03, ← e02, ← e01,
+    h0_conv, h1_conv, h2_conv, h3_conv, h4_conv, h5_conv]
+  ring
+
 
 /-- **Continuous-homotopy invariance of the boundary contour integral.**
 Given a continuous closed homotopy `H : [0, 1] × [0, 6] → ℂ \ {w}`
@@ -2694,56 +4247,1952 @@ and the parameterized CCW circle `circleMap w ε (· · π/3)` at `s = 1`,
 the pathContourIntegrals of `(z − w)⁻¹` along the two endpoints are
 equal.
 
-This is the load-bearing topological sub-claim. The intended proof
-factors through three pieces:
+This is the load-bearing topological sub-claim. The proof factors
+through three pieces:
 
 1. `continuous_log_lift_param_of_continuous_ne_zero` (PathWinding.lean):
-   2D-parametric continuous log-lift of `H − w`.
+   a jointly continuous log lift `L` of `H − w` over the homotopy
+   rectangle `[0, 1] × [0, 6]`.
 
-2. `pathContourIntegral_inv_eq_log_lift_diff_of_contDiff`
-   (PathWinding.lean): FTC bridge identifying `pathContourIntegral` with
-   the log-lift boundary difference for C¹ paths (applied at s = 1 for
-   the C¹ circle, and piecewise for the piecewise-C¹ image curve via a
-   six-segment split).
+2. The integer-continuity argument: the cross-section boundary
+   difference `τ s := L s 6 − L s 0` is continuous in `s` and satisfies
+   `exp (τ s) = 1` by closedness of `H s`, hence takes values in
+   `2πi · ℤ`; by the intermediate value theorem applied to
+   `s ↦ (τ s).im / (2π)`, the endpoint values agree: `τ 0 = τ 1`.
 
-3. The integer-continuity argument: the lift restricted to each cross-
-   section gives a continuous map `s ↦ L(s, b) − L(s, a)`; for closed
-   paths this is in `2πi · ℤ`, and by connectedness, the endpoint
-   values agree.
-
-The structural difficulty is that `image_curve_lambda_F_Y_homotopic_to_circle`'s
-H is closed at intermediate s only when the image curve has winding 1
-(the conclusion we're proving) — a CIRCULAR dependency that requires a
-direct topological argument exploiting the specific log-space construction
-of H to break. Closure is multi-session work. -/
+3. The FTC bridges (PathWinding.lean): at `s = 0`, the piecewise-C¹
+   bridge `pathContourIntegral_inv_eq_log_lift_diff_F_Y_image_curve`
+   identifies the image-curve contour integral with `τ 0`; at `s = 1`,
+   the C¹ bridge `pathContourIntegral_inv_eq_log_lift_diff_of_contDiff`
+   identifies the circle contour integral with `τ 1`. -/
 theorem modularLambdaH_F_Y_image_curve_pathContourIntegral_eq_circle_via_homotopy
     {w : ℂ} {δ Y R₀ : ℝ}
+    (hδ : 0 < δ) (hδY : δ < Y) (hR₀_pos : 0 < R₀) (hR₀_lt : R₀ < 1 / 2)
     (ε : ℝ) (_hε_pos : 0 < ε) (H : ℝ → ℝ → ℂ)
-    (_hH_cont : ContinuousOn (Function.uncurry H)
+    (hH_cont : ContinuousOn (Function.uncurry H)
       (Set.Icc (0 : ℝ) 1 ×ˢ Set.Icc (0 : ℝ) 6))
-    (_hH_0 : ∀ t ∈ Set.Icc (0 : ℝ) 6,
+    (hH_0 : ∀ t ∈ Set.Icc (0 : ℝ) 6,
       H 0 t = modularLambdaH (F_Y_boundary_parameterization δ Y R₀ t))
-    (_hH_1 : ∀ t ∈ Set.Icc (0 : ℝ) 6,
+    (hH_1 : ∀ t ∈ Set.Icc (0 : ℝ) 6,
       H 1 t = _root_.circleMap w ε (t * Real.pi / 3))
-    (_hH_avoid : ∀ s ∈ Set.Icc (0 : ℝ) 1, ∀ t ∈ Set.Icc (0 : ℝ) 6, H s t ≠ w)
-    (_hH_closed : ∀ s ∈ Set.Icc (0 : ℝ) 1, H s 0 = H s 6) :
+    (hH_avoid : ∀ s ∈ Set.Icc (0 : ℝ) 1, ∀ t ∈ Set.Icc (0 : ℝ) 6, H s t ≠ w)
+    (hH_closed : ∀ s ∈ Set.Icc (0 : ℝ) 1, H s 0 = H s 6) :
     Complex.pathContourIntegral
       (fun t => modularLambdaH (F_Y_boundary_parameterization δ Y R₀ t))
       0 6 (fun z => (z - w)⁻¹) =
     Complex.pathContourIntegral
       (fun t : ℝ => _root_.circleMap w ε (t * Real.pi / 3))
       0 6 (fun z => (z - w)⁻¹) := by
-  sorry
+  -- The shifted homotopy u := H − w is jointly continuous and nonvanishing
+  -- on the rectangle, so it admits a jointly continuous log lift.
+  have h_u_cont : ContinuousOn (Function.uncurry (fun s t => H s t - w))
+      (Set.Icc (0 : ℝ) 1 ×ˢ Set.Icc (0 : ℝ) 6) := by
+    have h_eq : Function.uncurry (fun s t => H s t - w) =
+        fun p : ℝ × ℝ => Function.uncurry H p - w := rfl
+    rw [h_eq]
+    exact hH_cont.sub continuousOn_const
+  obtain ⟨L, hL_cont, hL_exp₀⟩ :=
+    continuous_log_lift_param_of_continuous_ne_zero
+      (by norm_num : (0 : ℝ) ≤ 1) (by norm_num : (0 : ℝ) ≤ 6)
+      (fun s t => H s t - w) h_u_cont
+      (fun s hs t ht => sub_ne_zero.mpr (hH_avoid s hs t ht))
+  have hL_exp : ∀ s ∈ Set.Icc (0 : ℝ) 1, ∀ t ∈ Set.Icc (0 : ℝ) 6,
+      Complex.exp (L s t) = H s t - w := hL_exp₀
+  -- Membership facts used throughout.
+  have h0_mem6 : (0 : ℝ) ∈ Set.Icc (0 : ℝ) 6 := by norm_num
+  have h6_mem6 : (6 : ℝ) ∈ Set.Icc (0 : ℝ) 6 := by norm_num
+  have h0_mem1 : (0 : ℝ) ∈ Set.Icc (0 : ℝ) 1 := by norm_num
+  have h1_mem1 : (1 : ℝ) ∈ Set.Icc (0 : ℝ) 1 := by norm_num
+  -- The cross-section boundary difference τ s := L s 6 − L s 0 is continuous
+  -- and lies in 2πi·ℤ for every s ∈ [0, 1] (closedness of H s).
+  have h_τ_cont : Continuous (fun s => L s 6 - L s 0) := by
+    have h6 : Continuous (fun s => L s 6) :=
+      hL_cont.comp (continuous_id.prodMk continuous_const)
+    have h0 : Continuous (fun s => L s 0) :=
+      hL_cont.comp (continuous_id.prodMk continuous_const)
+    exact h6.sub h0
+  have h_τ_int : ∀ s ∈ Set.Icc (0 : ℝ) 1,
+      ∃ n : ℤ, L s 6 - L s 0 = (n : ℂ) * (2 * Real.pi * Complex.I) := by
+    intro s hs
+    have h_exp_eq : Complex.exp (L s 6 - L s 0) = 1 := by
+      rw [Complex.exp_sub, hL_exp s hs 6 h6_mem6, hL_exp s hs 0 h0_mem6,
+        ← hH_closed s hs]
+      exact div_self (sub_ne_zero.mpr (hH_avoid s hs 0 h0_mem6))
+    exact Complex.exp_eq_one_iff.mp h_exp_eq
+  -- Integer continuity: τ 0 = τ 1.
+  have h_pi_ne : (2 * Real.pi : ℝ) ≠ 0 := by positivity
+  have hψ_int : ∀ s ∈ Set.Icc (0 : ℝ) 1,
+      ∃ n : ℤ, (L s 6 - L s 0).im / (2 * Real.pi) = (n : ℝ) := by
+    intro s hs
+    obtain ⟨n, hn⟩ := h_τ_int s hs
+    refine ⟨n, ?_⟩
+    have h_im : (L s 6 - L s 0).im = (n : ℝ) * (2 * Real.pi) := by
+      rw [hn]
+      simp [Complex.mul_im, Complex.mul_re, Complex.ofReal_re, Complex.ofReal_im,
+        Complex.I_re, Complex.I_im, Complex.intCast_re, Complex.intCast_im]
+    rw [h_im]
+    field_simp
+  have hψ_re : ∀ s ∈ Set.Icc (0 : ℝ) 1, (L s 6 - L s 0).re = 0 := by
+    intro s hs
+    obtain ⟨n, hn⟩ := h_τ_int s hs
+    rw [hn]
+    simp [Complex.mul_re, Complex.ofReal_re, Complex.ofReal_im, Complex.I_re,
+      Complex.I_im]
+  have h_τ_eq : L 0 6 - L 0 0 = L 1 6 - L 1 0 := by
+    have hψ_cont : Continuous (fun s => (L s 6 - L s 0).im / (2 * Real.pi)) :=
+      (Complex.continuous_im.comp h_τ_cont).div_const _
+    obtain ⟨n₀, hn₀⟩ := hψ_int 0 h0_mem1
+    obtain ⟨n₁, hn₁⟩ := hψ_int 1 h1_mem1
+    have h_n_eq : n₀ = n₁ := by
+      by_contra h_ne
+      rcases lt_or_gt_of_ne h_ne with h_lt | h_gt
+      · -- n₀ < n₁: hit the half-integer n₀ + 1/2 by IVT.
+        have h_le : (n₀ : ℝ) + 1 ≤ n₁ := by exact_mod_cast h_lt
+        have h_mem : ((n₀ : ℝ) + 1 / 2) ∈ Set.Icc
+            ((L (0 : ℝ) 6 - L 0 0).im / (2 * Real.pi))
+            ((L (1 : ℝ) 6 - L 1 0).im / (2 * Real.pi)) := by
+          rw [hn₀, hn₁]
+          constructor <;> linarith
+        obtain ⟨s, hs_mem, hs_val⟩ :=
+          intermediate_value_Icc (by norm_num : (0 : ℝ) ≤ 1)
+            hψ_cont.continuousOn h_mem
+        have hs_val' : (L s 6 - L s 0).im / (2 * Real.pi) = (n₀ : ℝ) + 1 / 2 := hs_val
+        obtain ⟨m, hm⟩ := hψ_int s hs_mem
+        have h_m_val : (m : ℝ) = (n₀ : ℝ) + 1 / 2 := by rw [← hm]; exact hs_val'
+        have h_cast : ((2 * m : ℤ) : ℝ) = ((2 * n₀ + 1 : ℤ) : ℝ) := by
+          push_cast; linarith
+        have h2m : (2 * m : ℤ) = 2 * n₀ + 1 := by exact_mod_cast h_cast
+        omega
+      · -- n₁ < n₀: symmetric, with the decreasing-form IVT.
+        have h_le : (n₁ : ℝ) + 1 ≤ n₀ := by exact_mod_cast h_gt
+        have h_mem : ((n₁ : ℝ) + 1 / 2) ∈ Set.Icc
+            ((L (1 : ℝ) 6 - L 1 0).im / (2 * Real.pi))
+            ((L (0 : ℝ) 6 - L 0 0).im / (2 * Real.pi)) := by
+          rw [hn₀, hn₁]
+          constructor <;> linarith
+        obtain ⟨s, hs_mem, hs_val⟩ :=
+          intermediate_value_Icc' (by norm_num : (0 : ℝ) ≤ 1)
+            hψ_cont.continuousOn h_mem
+        have hs_val' : (L s 6 - L s 0).im / (2 * Real.pi) = (n₁ : ℝ) + 1 / 2 := hs_val
+        obtain ⟨m, hm⟩ := hψ_int s hs_mem
+        have h_m_val : (m : ℝ) = (n₁ : ℝ) + 1 / 2 := by rw [← hm]; exact hs_val'
+        have h_cast : ((2 * m : ℤ) : ℝ) = ((2 * n₁ + 1 : ℤ) : ℝ) := by
+          push_cast; linarith
+        have h2m : (2 * m : ℤ) = 2 * n₁ + 1 := by exact_mod_cast h_cast
+        omega
+    -- Equal imaginary parts and zero real parts force τ 0 = τ 1.
+    have h_im0 : (L (0 : ℝ) 6 - L 0 0).im = (n₀ : ℝ) * (2 * Real.pi) := by
+      have h := hn₀
+      field_simp at h
+      linarith
+    have h_im1 : (L (1 : ℝ) 6 - L 1 0).im = (n₁ : ℝ) * (2 * Real.pi) := by
+      have h := hn₁
+      field_simp at h
+      linarith
+    refine Complex.ext ?_ ?_
+    · rw [hψ_re 0 h0_mem1, hψ_re 1 h1_mem1]
+    · rw [h_im0, h_im1, h_n_eq]
+  -- Left FTC bridge: the image-curve integral equals τ 0.
+  have h_γ_ne : ∀ t ∈ Set.Icc (0 : ℝ) 6,
+      modularLambdaH (F_Y_boundary_parameterization δ Y R₀ t) - w ≠ 0 := by
+    intro t ht
+    rw [← hH_0 t ht]
+    exact sub_ne_zero.mpr (hH_avoid 0 h0_mem1 t ht)
+  have h_L0_cont : Continuous (fun t => L 0 t) :=
+    hL_cont.comp (continuous_const.prodMk continuous_id)
+  have h_L0_exp : ∀ t ∈ Set.Icc (0 : ℝ) 6,
+      Complex.exp (L 0 t) =
+      modularLambdaH (F_Y_boundary_parameterization δ Y R₀ t) - w := by
+    intro t ht
+    rw [hL_exp 0 h0_mem1 t ht, hH_0 t ht]
+  have h_left := pathContourIntegral_inv_eq_log_lift_diff_F_Y_image_curve
+    hδ hδY hR₀_pos hR₀_lt h_γ_ne (fun t => L 0 t) h_L0_cont h_L0_exp
+  -- Right FTC bridge: the circle integral equals τ 1.
+  have h_circle_C1 : ContDiff ℝ 1
+      (fun t : ℝ => _root_.circleMap w ε (t * Real.pi / 3)) :=
+    (contDiff_circleMap w ε).comp (by fun_prop)
+  have h_circle_ne : ∀ t ∈ Set.Icc (0 : ℝ) 6,
+      _root_.circleMap w ε (t * Real.pi / 3) ≠ w := by
+    intro t ht
+    rw [← hH_1 t ht]
+    exact hH_avoid 1 h1_mem1 t ht
+  have h_L1_cont : Continuous (fun t => L 1 t) :=
+    hL_cont.comp (continuous_const.prodMk continuous_id)
+  have h_L1_exp : ∀ t ∈ Set.Icc (0 : ℝ) 6,
+      Complex.exp (L 1 t) = _root_.circleMap w ε (t * Real.pi / 3) - w := by
+    intro t ht
+    rw [hL_exp 1 h1_mem1 t ht, hH_1 t ht]
+  have h_right := pathContourIntegral_inv_eq_log_lift_diff_of_contDiff
+    (by norm_num : (0 : ℝ) ≤ 6)
+    (fun t : ℝ => _root_.circleMap w ε (t * Real.pi / 3))
+    h_circle_C1 h_circle_ne (fun t => L 1 t) h_L1_cont h_L1_exp
+  -- Chain the three identities.
+  rw [h_left, h_right]
+  exact h_τ_eq
+
+
+/-- **The truncated region avoids the unit semicircle.** Under the arc
+bound `√(1/4 − δ²) < R₀`, every point `τ` with `δ < Im τ` lying outside
+the closed ball `B(1/2 + δi, R₀)` satisfies `1 < ‖2τ − 1‖`.
+
+Together with the strip bounds `0 < Re τ < 1` this places the interior
+of the truncated region F_Y inside the open fundamental domain `F°`:
+the algebra `‖τ − (1/2 + δi)‖² = ‖τ − 1/2‖² − 2δ·Im τ + δ²` combined
+with `‖τ − (1/2 + δi)‖² > R₀² > 1/4 − δ²` and `Im τ > δ > 0` yields
+`‖τ − 1/2‖² > 1/4 + 2δ(Im τ − δ) > 1/4`. Consequently the zeros of
+`λ − w` counted by the F_Y argument principle are exactly the
+`F°`-preimages of `w` lying in F_Y. -/
+theorem F_Y_point_in_gamma2_semicircle_exterior
+    {δ R₀ : ℝ} (hδ : 0 < δ) (hR₀_lo : Real.sqrt (1 / 4 - δ ^ 2) < R₀)
+    {τ : ℂ} (h_im : δ < τ.im)
+    (h_arc : R₀ < ‖τ - ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I)‖) :
+    1 < ‖2 * τ - 1‖ := by
+  have hR₀_pos : 0 < R₀ := lt_of_le_of_lt (Real.sqrt_nonneg _) hR₀_lo
+  -- Square the arc bound: 1/4 − δ² < R₀².
+  have h_sq_lo : 1 / 4 - δ ^ 2 < R₀ ^ 2 := (Real.sqrt_lt' hR₀_pos).mp hR₀_lo
+  -- Square the distance bound: R₀² < ‖τ − (1/2 + δi)‖².
+  have h_sq_arc : R₀ ^ 2 < ‖τ - ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I)‖ ^ 2 := by
+    have h := mul_self_lt_mul_self hR₀_pos.le h_arc
+    nlinarith [h]
+  -- Coordinates.
+  have h_norm_arc : ‖τ - ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I)‖ ^ 2 =
+      (τ.re - 1 / 2) ^ 2 + (τ.im - δ) ^ 2 := by
+    rw [Complex.sq_norm, Complex.normSq_apply]
+    simp [Complex.sub_re, Complex.sub_im, Complex.add_re, Complex.add_im,
+      Complex.mul_re, Complex.mul_im, Complex.I_re, Complex.I_im,
+      Complex.ofReal_re, Complex.ofReal_im]
+    ring
+  have h_norm_semi : ‖2 * τ - 1‖ ^ 2 = (2 * τ.re - 1) ^ 2 + (2 * τ.im) ^ 2 := by
+    rw [Complex.sq_norm, Complex.normSq_apply]
+    simp [Complex.sub_re, Complex.sub_im, Complex.mul_re, Complex.mul_im]
+    ring
+  -- Conclude via the squares.
+  have h_one_lt_sq : 1 < ‖2 * τ - 1‖ ^ 2 := by
+    rw [h_norm_semi]
+    rw [h_norm_arc] at h_sq_arc
+    nlinarith [h_sq_lo, h_sq_arc, h_im, hδ]
+  by_contra h_le
+  push Not at h_le
+  nlinarith [norm_nonneg (2 * τ - 1), h_le, h_one_lt_sq]
+
+/-- **Contour-integral invariance along a `w`-segment avoided by the
+image curve.** If the image curve `λ ∘ ∂F_Y` avoids every point of the
+segment `[w₀, w₁]`, the contour integrals of `(z − w₀)⁻¹` and
+`(z − w₁)⁻¹` along it coincide.
+
+Proof: the moving difference `u(s, t) := λ(γ(t)) − ((1 − s)w₀ + s·w₁)`
+admits a jointly continuous log lift `L` over `[0, 1] × [0, 6]`
+(`continuous_log_lift_param_of_continuous_ne_zero`); the cross-section
+boundary difference `τ(s) := L s 6 − L s 0` is continuous and lies in
+`2πi·ℤ` (the curve closes up), so by the intermediate value theorem
+`τ(0) = τ(1)`; the piecewise FTC bridge identifies the two contour
+integrals with `τ(0)` and `τ(1)`. -/
+theorem modularLambdaH_F_Y_pathContourIntegral_eq_of_segment_avoids
+    {δ Y R₀ : ℝ} (hδ : 0 < δ) (hδY : δ < Y) (hR₀_pos : 0 < R₀) (hR₀_lt : R₀ < 1 / 2)
+    {w₀ w₁ : ℂ}
+    (h_avoid : ∀ s ∈ Set.Icc (0 : ℝ) 1, ∀ t ∈ Set.Icc (0 : ℝ) 6,
+      modularLambdaH (F_Y_boundary_parameterization δ Y R₀ t) ≠
+        (1 - (s : ℂ)) * w₀ + (s : ℂ) * w₁) :
+    Complex.pathContourIntegral
+      (fun t => modularLambdaH (F_Y_boundary_parameterization δ Y R₀ t))
+      0 6 (fun z => (z - w₀)⁻¹) =
+    Complex.pathContourIntegral
+      (fun t => modularLambdaH (F_Y_boundary_parameterization δ Y R₀ t))
+      0 6 (fun z => (z - w₁)⁻¹) := by
+  -- The moving difference u(s, t) := λ(γ t) − w(s) along the segment
+  -- w(s) := (1 − s)·w₀ + s·w₁ is jointly continuous and nonvanishing.
+  have h_image_cont : ContinuousOn
+      (fun t : ℝ => modularLambdaH (F_Y_boundary_parameterization δ Y R₀ t))
+      (Set.Icc (0 : ℝ) 6) := by
+    have h := F_Y_image_curve_continuousOn w₀ hδ hδY hR₀_pos hR₀_lt
+    have h_eq : (fun t : ℝ =>
+        modularLambdaH (F_Y_boundary_parameterization δ Y R₀ t)) =
+        fun t => (modularLambdaH (F_Y_boundary_parameterization δ Y R₀ t) - w₀) + w₀ := by
+      funext t; ring
+    rw [h_eq]
+    exact h.add continuousOn_const
+  have h_u_cont : ContinuousOn
+      (Function.uncurry (fun (s : ℝ) (t : ℝ) =>
+        modularLambdaH (F_Y_boundary_parameterization δ Y R₀ t) -
+          ((1 - (s : ℂ)) * w₀ + (s : ℂ) * w₁)))
+      (Set.Icc (0 : ℝ) 1 ×ˢ Set.Icc (0 : ℝ) 6) := by
+    have h1 : ContinuousOn
+        (fun p : ℝ × ℝ =>
+          modularLambdaH (F_Y_boundary_parameterization δ Y R₀ p.2))
+        (Set.Icc (0 : ℝ) 1 ×ˢ Set.Icc (0 : ℝ) 6) := by
+      refine ContinuousOn.comp h_image_cont continuousOn_snd ?_
+      intro p hp
+      exact hp.2
+    have h2 : Continuous (fun p : ℝ × ℝ =>
+        (1 - ((p.1 : ℝ) : ℂ)) * w₀ + ((p.1 : ℝ) : ℂ) * w₁) := by
+      fun_prop
+    exact h1.sub h2.continuousOn
+  obtain ⟨L, hL_cont, hL_exp₀⟩ :=
+    continuous_log_lift_param_of_continuous_ne_zero
+      (by norm_num : (0 : ℝ) ≤ 1) (by norm_num : (0 : ℝ) ≤ 6)
+      (fun (s : ℝ) (t : ℝ) =>
+        modularLambdaH (F_Y_boundary_parameterization δ Y R₀ t) -
+        ((1 - (s : ℂ)) * w₀ + (s : ℂ) * w₁)) h_u_cont
+      (fun s hs t ht => sub_ne_zero.mpr (h_avoid s hs t ht))
+  have hL_exp : ∀ s ∈ Set.Icc (0 : ℝ) 1, ∀ t ∈ Set.Icc (0 : ℝ) 6,
+      Complex.exp (L s t) =
+        modularLambdaH (F_Y_boundary_parameterization δ Y R₀ t) -
+          ((1 - (s : ℂ)) * w₀ + (s : ℂ) * w₁) := hL_exp₀
+  have h0_mem6 : (0 : ℝ) ∈ Set.Icc (0 : ℝ) 6 := by norm_num
+  have h6_mem6 : (6 : ℝ) ∈ Set.Icc (0 : ℝ) 6 := by norm_num
+  have h0_mem1 : (0 : ℝ) ∈ Set.Icc (0 : ℝ) 1 := by norm_num
+  have h1_mem1 : (1 : ℝ) ∈ Set.Icc (0 : ℝ) 1 := by norm_num
+  -- The F_Y boundary curve closes up.
+  have hγ_closed : F_Y_boundary_parameterization δ Y R₀ 0 =
+      F_Y_boundary_parameterization δ Y R₀ 6 := by
+    unfold F_Y_boundary_parameterization
+    have h0_le_1 : (0 : ℝ) ≤ 1 := by norm_num
+    have h6_not_le_1 : ¬((6 : ℝ) ≤ 1) := by norm_num
+    have h6_not_le_2 : ¬((6 : ℝ) ≤ 2) := by norm_num
+    have h6_not_le_3 : ¬((6 : ℝ) ≤ 3) := by norm_num
+    have h6_not_le_4 : ¬((6 : ℝ) ≤ 4) := by norm_num
+    have h6_not_le_5 : ¬((6 : ℝ) ≤ 5) := by norm_num
+    have h6_le_6 : (6 : ℝ) ≤ 6 := by norm_num
+    rw [if_pos h0_le_1, if_neg h6_not_le_1, if_neg h6_not_le_2,
+        if_neg h6_not_le_3, if_neg h6_not_le_4, if_neg h6_not_le_5, if_pos h6_le_6]
+    push_cast; ring
+  -- Cross-section boundary difference: continuous, valued in 2πi·ℤ.
+  have h_τ_cont : Continuous (fun s => L s 6 - L s 0) := by
+    have h6 : Continuous (fun s => L s 6) :=
+      hL_cont.comp (continuous_id.prodMk continuous_const)
+    have h0 : Continuous (fun s => L s 0) :=
+      hL_cont.comp (continuous_id.prodMk continuous_const)
+    exact h6.sub h0
+  have h_τ_int : ∀ s ∈ Set.Icc (0 : ℝ) 1,
+      ∃ n : ℤ, L s 6 - L s 0 = (n : ℂ) * (2 * Real.pi * Complex.I) := by
+    intro s hs
+    have h_exp_eq : Complex.exp (L s 6 - L s 0) = 1 := by
+      rw [Complex.exp_sub, hL_exp s hs 6 h6_mem6, hL_exp s hs 0 h0_mem6,
+        hγ_closed]
+      exact div_self (sub_ne_zero.mpr (by rw [← hγ_closed]; exact h_avoid s hs 0 h0_mem6))
+    exact Complex.exp_eq_one_iff.mp h_exp_eq
+  have h_pi_ne : (2 * Real.pi : ℝ) ≠ 0 := by positivity
+  have hψ_int : ∀ s ∈ Set.Icc (0 : ℝ) 1,
+      ∃ n : ℤ, (L s 6 - L s 0).im / (2 * Real.pi) = (n : ℝ) := by
+    intro s hs
+    obtain ⟨n, hn⟩ := h_τ_int s hs
+    refine ⟨n, ?_⟩
+    have h_im : (L s 6 - L s 0).im = (n : ℝ) * (2 * Real.pi) := by
+      rw [hn]
+      simp [Complex.mul_im, Complex.mul_re, Complex.ofReal_re, Complex.ofReal_im,
+        Complex.I_re, Complex.I_im, Complex.intCast_re, Complex.intCast_im]
+    rw [h_im]
+    field_simp
+  have hψ_re : ∀ s ∈ Set.Icc (0 : ℝ) 1, (L s 6 - L s 0).re = 0 := by
+    intro s hs
+    obtain ⟨n, hn⟩ := h_τ_int s hs
+    rw [hn]
+    simp [Complex.mul_re, Complex.ofReal_re, Complex.ofReal_im, Complex.I_re,
+      Complex.I_im]
+  have h_τ_eq : L 0 6 - L 0 0 = L 1 6 - L 1 0 := by
+    have hψ_cont : Continuous (fun s => (L s 6 - L s 0).im / (2 * Real.pi)) :=
+      (Complex.continuous_im.comp h_τ_cont).div_const _
+    obtain ⟨n₀, hn₀⟩ := hψ_int 0 h0_mem1
+    obtain ⟨n₁, hn₁⟩ := hψ_int 1 h1_mem1
+    have h_n_eq : n₀ = n₁ := by
+      by_contra h_ne
+      rcases lt_or_gt_of_ne h_ne with h_lt | h_gt
+      · have h_le : (n₀ : ℝ) + 1 ≤ n₁ := by exact_mod_cast h_lt
+        have h_mem : ((n₀ : ℝ) + 1 / 2) ∈ Set.Icc
+            ((L (0 : ℝ) 6 - L 0 0).im / (2 * Real.pi))
+            ((L (1 : ℝ) 6 - L 1 0).im / (2 * Real.pi)) := by
+          rw [hn₀, hn₁]
+          constructor <;> linarith
+        obtain ⟨s, hs_mem, hs_val⟩ :=
+          intermediate_value_Icc (by norm_num : (0 : ℝ) ≤ 1)
+            hψ_cont.continuousOn h_mem
+        have hs_val' : (L s 6 - L s 0).im / (2 * Real.pi) = (n₀ : ℝ) + 1 / 2 := hs_val
+        obtain ⟨m, hm⟩ := hψ_int s hs_mem
+        have h_m_val : (m : ℝ) = (n₀ : ℝ) + 1 / 2 := by rw [← hm]; exact hs_val'
+        have h_cast : ((2 * m : ℤ) : ℝ) = ((2 * n₀ + 1 : ℤ) : ℝ) := by
+          push_cast; linarith
+        have h2m : (2 * m : ℤ) = 2 * n₀ + 1 := by exact_mod_cast h_cast
+        omega
+      · have h_le : (n₁ : ℝ) + 1 ≤ n₀ := by exact_mod_cast h_gt
+        have h_mem : ((n₁ : ℝ) + 1 / 2) ∈ Set.Icc
+            ((L (1 : ℝ) 6 - L 1 0).im / (2 * Real.pi))
+            ((L (0 : ℝ) 6 - L 0 0).im / (2 * Real.pi)) := by
+          rw [hn₀, hn₁]
+          constructor <;> linarith
+        obtain ⟨s, hs_mem, hs_val⟩ :=
+          intermediate_value_Icc' (by norm_num : (0 : ℝ) ≤ 1)
+            hψ_cont.continuousOn h_mem
+        have hs_val' : (L s 6 - L s 0).im / (2 * Real.pi) = (n₁ : ℝ) + 1 / 2 := hs_val
+        obtain ⟨m, hm⟩ := hψ_int s hs_mem
+        have h_m_val : (m : ℝ) = (n₁ : ℝ) + 1 / 2 := by rw [← hm]; exact hs_val'
+        have h_cast : ((2 * m : ℤ) : ℝ) = ((2 * n₁ + 1 : ℤ) : ℝ) := by
+          push_cast; linarith
+        have h2m : (2 * m : ℤ) = 2 * n₁ + 1 := by exact_mod_cast h_cast
+        omega
+    have h_im0 : (L (0 : ℝ) 6 - L 0 0).im = (n₀ : ℝ) * (2 * Real.pi) := by
+      have h := hn₀
+      field_simp at h
+      linarith
+    have h_im1 : (L (1 : ℝ) 6 - L 1 0).im = (n₁ : ℝ) * (2 * Real.pi) := by
+      have h := hn₁
+      field_simp at h
+      linarith
+    refine Complex.ext ?_ ?_
+    · rw [hψ_re 0 h0_mem1, hψ_re 1 h1_mem1]
+    · rw [h_im0, h_im1, h_n_eq]
+  -- FTC at the two endpoints of the segment.
+  have h_γ_ne₀ : ∀ t ∈ Set.Icc (0 : ℝ) 6,
+      modularLambdaH (F_Y_boundary_parameterization δ Y R₀ t) - w₀ ≠ 0 := by
+    intro t ht
+    have h := h_avoid 0 h0_mem1 t ht
+    rw [show (1 - ((0 : ℝ) : ℂ)) * w₀ + ((0 : ℝ) : ℂ) * w₁ = w₀ by push_cast; ring] at h
+    exact sub_ne_zero.mpr h
+  have h_γ_ne₁ : ∀ t ∈ Set.Icc (0 : ℝ) 6,
+      modularLambdaH (F_Y_boundary_parameterization δ Y R₀ t) - w₁ ≠ 0 := by
+    intro t ht
+    have h := h_avoid 1 h1_mem1 t ht
+    rw [show (1 - ((1 : ℝ) : ℂ)) * w₀ + ((1 : ℝ) : ℂ) * w₁ = w₁ by push_cast; ring] at h
+    exact sub_ne_zero.mpr h
+  have h_L0_cont : Continuous (fun t => L 0 t) :=
+    hL_cont.comp (continuous_const.prodMk continuous_id)
+  have h_L1_cont : Continuous (fun t => L 1 t) :=
+    hL_cont.comp (continuous_const.prodMk continuous_id)
+  have h_L0_exp : ∀ t ∈ Set.Icc (0 : ℝ) 6,
+      Complex.exp (L 0 t) =
+      modularLambdaH (F_Y_boundary_parameterization δ Y R₀ t) - w₀ := by
+    intro t ht
+    rw [hL_exp 0 h0_mem1 t ht]
+    rw [show (1 - ((0 : ℝ) : ℂ)) * w₀ + ((0 : ℝ) : ℂ) * w₁ = w₀ by push_cast; ring]
+  have h_L1_exp : ∀ t ∈ Set.Icc (0 : ℝ) 6,
+      Complex.exp (L 1 t) =
+      modularLambdaH (F_Y_boundary_parameterization δ Y R₀ t) - w₁ := by
+    intro t ht
+    rw [hL_exp 1 h1_mem1 t ht]
+    rw [show (1 - ((1 : ℝ) : ℂ)) * w₀ + ((1 : ℝ) : ℂ) * w₁ = w₁ by push_cast; ring]
+  have h_left := pathContourIntegral_inv_eq_log_lift_diff_F_Y_image_curve
+    hδ hδY hR₀_pos hR₀_lt h_γ_ne₀ (fun t => L 0 t) h_L0_cont h_L0_exp
+  have h_right := pathContourIntegral_inv_eq_log_lift_diff_F_Y_image_curve
+    hδ hδY hR₀_pos hR₀_lt h_γ_ne₁ (fun t => L 1 t) h_L1_cont h_L1_exp
+  rw [h_left, h_right]
+  exact h_τ_eq
+
+
+/-- **Uniform smallness of `λ` on high horizontal edges.** For any
+`ν > 0` there is a height `Y₀ ≥ 1` beyond which `‖λ‖ < ν` on the whole
+horizontal segment `[0, 1] × {Y}`. Quantitative form of the cusp-`∞`
+decay, from `modularLambdaH_norm_le_exp_of_im_ge_one`. -/
+theorem modularLambdaH_top_edge_norm_lt_uniform {ν : ℝ} (hν : 0 < ν) :
+    ∃ Y₀ : ℝ, 1 ≤ Y₀ ∧ ∀ Y : ℝ, Y₀ ≤ Y → ∀ x : ℝ, 0 ≤ x → x ≤ 1 →
+      ‖modularLambdaH ((x : ℂ) + (Y : ℂ) * Complex.I)‖ < ν := by
+  -- Choose Y₀ with 160000·exp(−π·Y₀) < ν.
+  set Y₀ : ℝ := max 1 (Real.log (320000 / ν) / Real.pi) with hY₀_def
+  refine ⟨Y₀, le_max_left _ _, ?_⟩
+  intro Y hY x hx_nn hx_le
+  have hY_ge_one : 1 ≤ Y := le_trans (le_max_left _ _) hY
+  set τ : ℂ := (x : ℂ) + (Y : ℂ) * Complex.I with hτ_def
+  have hτ_im : τ.im = Y := by
+    simp [hτ_def, Complex.add_im, Complex.mul_im, Complex.I_re, Complex.I_im,
+      Complex.ofReal_re, Complex.ofReal_im]
+  have h_decay := modularLambdaH_norm_le_exp_of_im_ge_one (τ := τ) (by rw [hτ_im]; exact hY_ge_one)
+  rw [hτ_im] at h_decay
+  refine lt_of_le_of_lt h_decay ?_
+  -- 160000·exp(−π·Y) < ν since Y ≥ log(320000/ν)/π.
+  have h_log_le : Real.log (320000 / ν) / Real.pi ≤ Y :=
+    le_trans (le_max_right _ _) hY
+  have h_pi_pos : (0 : ℝ) < Real.pi := Real.pi_pos
+  have h_log_le' : Real.log (320000 / ν) ≤ Real.pi * Y := by
+    rw [div_le_iff₀ h_pi_pos] at h_log_le
+    linarith
+  have h_ratio_pos : (0 : ℝ) < 320000 / ν := by positivity
+  have h_exp_bound : 320000 / ν ≤ Real.exp (Real.pi * Y) := by
+    calc 320000 / ν = Real.exp (Real.log (320000 / ν)) := (Real.exp_log h_ratio_pos).symm
+      _ ≤ Real.exp (Real.pi * Y) := Real.exp_le_exp.mpr h_log_le'
+  have h_exp_pos : (0 : ℝ) < Real.exp (Real.pi * Y) := Real.exp_pos _
+  have h_neg_exp : Real.exp (-Real.pi * Y) = (Real.exp (Real.pi * Y))⁻¹ := by
+    rw [← Real.exp_neg]; ring_nf
+  rw [h_neg_exp]
+  rw [show (160000 : ℝ) * (Real.exp (Real.pi * Y))⁻¹ =
+    160000 / Real.exp (Real.pi * Y) from by ring]
+  rw [div_lt_iff₀ h_exp_pos]
+  have h_from_bound : 320000 / ν * ν ≤ Real.exp (Real.pi * Y) * ν := by
+    exact mul_le_mul_of_nonneg_right h_exp_bound hν.le
+  rw [div_mul_cancel₀ (320000 : ℝ) (ne_of_gt hν)] at h_from_bound
+  linarith
+
+
+/-- **Segment-uniform bottom-left strip bound.** Quantitative variant
+of `modularLambdaH_F_Y_bot_left_strip_ne`: a single strip width works
+simultaneously for every `w'` at distance at least `ρ` from `1`
+(near the cusp `0` the boundary values approach `1`). -/
+theorem modularLambdaH_F_Y_bot_left_strip_ne_uniform {ρ : ℝ} (hρ : 0 < ρ) :
+    ∃ δ_u : ℝ, 0 < δ_u ∧ δ_u < 1 / 2 ∧
+    ∀ δ : ℝ, 0 < δ → δ ≤ δ_u → ∀ x : ℝ, 0 ≤ x → x ≤ δ →
+      ∀ w' : ℂ, ρ ≤ ‖w' - 1‖ →
+      modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) - w' ≠ 0 := by
+  set L : ℝ := Real.log (160000 / ρ) with hL_def
+  set M : ℝ := max L 1 with hM_def
+  have hM_ge_one : 1 ≤ M := le_max_right _ _
+  have hM_pos : 0 < M := by linarith
+  have hL_le_M : L ≤ M := le_max_left _ _
+  set δ_w : ℝ := min (1/4) (1/(2*M)) with hδ_w_def
+  have h_2M_pos : 0 < 2 * M := by linarith
+  have hδ_w_pos : 0 < δ_w := lt_min (by norm_num) (by positivity)
+  have hδ_w_lt_half : δ_w < 1/2 :=
+    lt_of_le_of_lt (min_le_left _ _) (by norm_num)
+  refine ⟨δ_w, hδ_w_pos, hδ_w_lt_half, ?_⟩
+  intro δ hδ_pos hδ_le x hx_nn hx_le w' hw'_ρ h_eq
+  set τ : ℂ := (x : ℂ) + (δ : ℂ) * Complex.I with hτ_def
+  have h_lam_eq : modularLambdaH τ = w' := by linear_combination h_eq
+  have hτ_re : τ.re = x := by
+    simp [hτ_def, Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
+      Complex.ofReal_re, Complex.ofReal_im]
+  have hτ_im : τ.im = δ := by
+    simp [hτ_def, Complex.add_im, Complex.mul_im, Complex.I_re, Complex.I_im,
+      Complex.ofReal_re, Complex.ofReal_im]
+  have hτ_im_pos : 0 < τ.im := hτ_im ▸ hδ_pos
+  have hδ_le_quarter : δ ≤ 1/4 := le_trans hδ_le (min_le_left _ _)
+  have hδ_le_inv_2M : δ ≤ 1/(2*M) := le_trans hδ_le (min_le_right _ _)
+  have h_2δ_pos : 0 < 2 * δ := by linarith
+  have h_x_sq_le_δ_sq : x^2 ≤ δ^2 := by nlinarith
+  have h_x_sq_plus_δ_sq_pos : 0 < x^2 + δ^2 := by nlinarith
+  have h_normSq : Complex.normSq τ = x^2 + δ^2 := by
+    rw [Complex.normSq_apply, hτ_re, hτ_im]; ring
+  -- Im(-1/τ) = δ/(x² + δ²).
+  have h_im_inv : (-(τ : ℂ)⁻¹).im = δ / (x^2 + δ^2) := by
+    rw [Complex.neg_im, Complex.inv_im, hτ_im, h_normSq]; ring
+  -- 1/(2δ) ≤ Im(-1/τ): equivalent to x² + δ² ≤ 2δ² (i.e., x² ≤ δ²).
+  have h_im_inv_ge : 1/(2*δ) ≤ (-(τ : ℂ)⁻¹).im := by
+    rw [h_im_inv, div_le_div_iff₀ h_2δ_pos h_x_sq_plus_δ_sq_pos]
+    nlinarith
+  -- 1/(2δ) ≥ 2 (since δ ≤ 1/4).
+  have h_inv_2δ_ge_two : 2 ≤ 1/(2*δ) := by
+    rw [le_div_iff₀ h_2δ_pos]; linarith
+  have h_inv_im_ge_one : 1 ≤ (-(τ : ℂ)⁻¹).im := by linarith
+  -- Apply norm bound to -1/τ.
+  have h_norm_lam_inv : ‖modularLambdaH (-(τ : ℂ)⁻¹)‖ ≤
+      160000 * Real.exp (-Real.pi * (-(τ : ℂ)⁻¹).im) :=
+    modularLambdaH_norm_le_exp_of_im_ge_one h_inv_im_ge_one
+  -- Apply S-action identity: λ(τ) + λ(-1/τ) = 1.
+  have h_S : modularLambdaH τ + modularLambdaH (-1/τ) = 1 :=
+    modularLambdaH_add_S_smul_eq_one hτ_im_pos
+  have h_neg_eq : -1/τ = -τ⁻¹ := by field_simp
+  rw [h_neg_eq] at h_S
+  -- ‖λ(τ) - 1‖ = ‖λ(-τ⁻¹)‖.
+  have h_diff_eq : modularLambdaH τ - 1 = -modularLambdaH (-(τ : ℂ)⁻¹) := by
+    linear_combination h_S
+  have h_norm_diff : ‖modularLambdaH τ - 1‖ = ‖modularLambdaH (-(τ : ℂ)⁻¹)‖ := by
+    rw [h_diff_eq, norm_neg]
+  -- ‖λ(τ) - 1‖ ≤ 160000 · exp(-π · 1/(2δ)).
+  have h_exp_mono : Real.exp (-Real.pi * (-(τ : ℂ)⁻¹).im) ≤
+      Real.exp (-Real.pi * (1/(2*δ))) := by
+    apply Real.exp_le_exp.mpr
+    nlinarith [Real.pi_pos, h_im_inv_ge]
+  have h_bound : ‖modularLambdaH τ - 1‖ ≤ 160000 * Real.exp (-Real.pi * (1/(2*δ))) := by
+    rw [h_norm_diff]
+    refine le_trans h_norm_lam_inv ?_
+    exact mul_le_mul_of_nonneg_left h_exp_mono (by norm_num)
+  -- M ≤ 1/(2δ): δ ≤ 1/(2M) means 2δM ≤ 1.
+  have h_M_le_inv_2δ : M ≤ 1/(2*δ) := by
+    rw [le_div_iff₀ h_2δ_pos]
+    have h_step : δ * (2 * M) ≤ (1/(2*M)) * (2 * M) :=
+      mul_le_mul_of_nonneg_right hδ_le_inv_2M (le_of_lt h_2M_pos)
+    rw [div_mul_cancel₀ _ (ne_of_gt h_2M_pos)] at h_step
+    linarith
+  -- π * (1/(2δ)) > L since π > 1 and M ≥ L: π · M > M ≥ L, and π/(2δ) ≥ π·M.
+  have h_pi_gt_one : 1 < Real.pi := by linarith [Real.pi_gt_three]
+  have h_pi_M_ge_pi_M : Real.pi * M ≤ Real.pi * (1/(2*δ)) :=
+    mul_le_mul_of_nonneg_left h_M_le_inv_2δ (le_of_lt Real.pi_pos)
+  have h_L_lt_pi_M : L < Real.pi * M := by
+    calc L ≤ M := hL_le_M
+      _ = 1 * M := by ring
+      _ < Real.pi * M := by exact mul_lt_mul_of_pos_right h_pi_gt_one hM_pos
+  have h_L_lt_pi_inv_2δ : L < Real.pi * (1/(2*δ)) :=
+    lt_of_lt_of_le h_L_lt_pi_M h_pi_M_ge_pi_M
+  -- exp(-π·(1/(2δ))) < exp(-L) = ρ/160000.
+  have h_exp_lt : Real.exp (-Real.pi * (1/(2*δ))) < Real.exp (-L) := by
+    apply Real.exp_lt_exp.mpr
+    linarith
+  have h_quot_pos : (0 : ℝ) < 160000 / ρ := by positivity
+  have h_exp_neg_L : Real.exp (-L) = ρ / 160000 := by
+    rw [hL_def]
+    rw [show -Real.log (160000 / ρ) = Real.log ((160000 / ρ)⁻¹) from
+      (Real.log_inv _).symm]
+    rw [Real.exp_log (by positivity : (0:ℝ) < (160000 / ρ)⁻¹)]
+    rw [inv_div]
+  have h_final_bound : 160000 * Real.exp (-Real.pi * (1/(2*δ))) < ρ := by
+    calc 160000 * Real.exp (-Real.pi * (1/(2*δ)))
+        < 160000 * Real.exp (-L) := by
+          exact mul_lt_mul_of_pos_left h_exp_lt (by norm_num)
+      _ = 160000 * (ρ / 160000) := by rw [h_exp_neg_L]
+      _ = ρ := by field_simp
+  have h_strict : ‖modularLambdaH τ - 1‖ < ρ := lt_of_le_of_lt h_bound h_final_bound
+  have h_strict' : ‖modularLambdaH τ - 1‖ < ‖w' - 1‖ := lt_of_lt_of_le h_strict hw'_ρ
+  rw [h_lam_eq] at h_strict'
+  exact lt_irrefl _ h_strict'
+
+/-- Segment-uniform variant of `modularLambdaH_F_Y_bot_right_strip_ne`:
+the threshold `δ_u` depends only on an upper bound `‖w'‖ ≤ B`. -/
+theorem modularLambdaH_F_Y_bot_right_strip_ne_uniform {B : ℝ} (hB : 0 < B) :
+    ∃ δ_u : ℝ, 0 < δ_u ∧ δ_u < 1 / 2 ∧
+    ∀ δ : ℝ, 0 < δ → δ ≤ δ_u → ∀ x : ℝ, 1 - δ ≤ x → x ≤ 1 →
+      ∀ w' : ℂ, ‖w'‖ ≤ B →
+      modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) - w' ≠ 0 := by
+  -- Target: ‖λ(τ - 1) - 1‖ < 1/(B + 2). Then |λ(τ)| ≥ ‖w'‖ + 1 > ‖w'‖, so λ(τ) ≠ w'.
+  set L : ℝ := Real.log (160000 * (B + 2)) with hL_def
+  set M : ℝ := max L 1 with hM_def
+  have hM_ge_one : 1 ≤ M := le_max_right _ _
+  have hM_pos : 0 < M := by linarith
+  have hL_le_M : L ≤ M := le_max_left _ _
+  set δ_w : ℝ := min (1/4) (1/(2*M)) with hδ_w_def
+  have h_2M_pos : 0 < 2 * M := by linarith
+  have hδ_w_pos : 0 < δ_w := lt_min (by norm_num) (by positivity)
+  have hδ_w_lt_half : δ_w < 1/2 :=
+    lt_of_le_of_lt (min_le_left _ _) (by norm_num)
+  refine ⟨δ_w, hδ_w_pos, hδ_w_lt_half, ?_⟩
+  intro δ hδ_pos hδ_le x hx_ge hx_le w' hw'_B h_eq
+  set τ : ℂ := (x : ℂ) + (δ : ℂ) * Complex.I with hτ_def
+  have h_lam_eq : modularLambdaH τ = w' := by linear_combination h_eq
+  have hτ_re : τ.re = x := by
+    simp [hτ_def, Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
+      Complex.ofReal_re, Complex.ofReal_im]
+  have hτ_im : τ.im = δ := by
+    simp [hτ_def, Complex.add_im, Complex.mul_im, Complex.I_re, Complex.I_im,
+      Complex.ofReal_re, Complex.ofReal_im]
+  have hτ_im_pos : 0 < τ.im := hτ_im ▸ hδ_pos
+  have hδ_le_quarter : δ ≤ 1/4 := le_trans hδ_le (min_le_left _ _)
+  have hδ_le_inv_2M : δ ≤ 1/(2*M) := le_trans hδ_le (min_le_right _ _)
+  have h_2δ_pos : 0 < 2 * δ := by linarith
+  -- Define τ' := (1 - x) + δi (in bot_left strip).
+  set τ' : ℂ := ((1 - x : ℝ) : ℂ) + (δ : ℂ) * Complex.I with hτ'_def
+  have hτ'_re : τ'.re = 1 - x := by
+    simp [hτ'_def, Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
+      Complex.ofReal_re, Complex.ofReal_im]
+  have hτ'_im : τ'.im = δ := by
+    simp [hτ'_def, Complex.add_im, Complex.mul_im, Complex.I_re, Complex.I_im,
+      Complex.ofReal_re, Complex.ofReal_im]
+  have hτ'_im_pos : 0 < τ'.im := hτ'_im ▸ hδ_pos
+  have hτ'_re_nn : 0 ≤ τ'.re := by rw [hτ'_re]; linarith
+  have hτ'_re_le_δ : τ'.re ≤ δ := by rw [hτ'_re]; linarith
+  -- σ := τ - 1.
+  set σ : ℂ := τ - 1 with hσ_def
+  have hσ_im : σ.im = δ := by simp [hσ_def, hτ_im]
+  have hσ_im_pos : 0 < σ.im := hσ_im ▸ hδ_pos
+  -- -conj σ = τ', so λ(τ') = conj(λ(σ)).
+  have h_neg_conj_σ : -(starRingEnd ℂ σ) = τ' := by
+    apply Complex.ext
+    · simp [hσ_def, hτ_def, hτ'_def, Complex.neg_re,
+        Complex.sub_re, Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
+        Complex.ofReal_re, Complex.ofReal_im]
+    · simp [hσ_def, hτ_def, hτ'_def, Complex.neg_im,
+        Complex.sub_im, Complex.add_im, Complex.mul_im, Complex.I_re, Complex.I_im,
+        Complex.ofReal_re, Complex.ofReal_im]
+  have h_conj_lam : modularLambdaH τ' = starRingEnd ℂ (modularLambdaH σ) := by
+    rw [← h_neg_conj_σ]
+    exact modularLambdaH_conj_symmetry hσ_im_pos
+  -- Cusp-0 bound on τ' (in bot_left strip):
+  -- For τ' = (1-x) + δi with (1-x) ∈ [0, δ] and δ ∈ (0, 1/4]:
+  -- Compute Im(-1/τ'), apply norm bound, apply S-action identity.
+  have h_x_sq_le_δ_sq : (1 - x)^2 ≤ δ^2 := by nlinarith
+  have h_x_sq_plus_δ_sq_pos : 0 < (1 - x)^2 + δ^2 := by nlinarith
+  have h_normSq_τ' : Complex.normSq τ' = (1 - x)^2 + δ^2 := by
+    rw [Complex.normSq_apply, hτ'_re, hτ'_im]; ring
+  have h_im_inv_τ' : (-(τ' : ℂ)⁻¹).im = δ / ((1 - x)^2 + δ^2) := by
+    rw [Complex.neg_im, Complex.inv_im, hτ'_im, h_normSq_τ']; ring
+  have h_im_inv_τ'_ge : 1/(2*δ) ≤ (-(τ' : ℂ)⁻¹).im := by
+    rw [h_im_inv_τ', div_le_div_iff₀ h_2δ_pos h_x_sq_plus_δ_sq_pos]
+    nlinarith
+  have h_inv_2δ_ge_two : 2 ≤ 1/(2*δ) := by
+    rw [le_div_iff₀ h_2δ_pos]; linarith
+  have h_inv_im_τ'_ge_one : 1 ≤ (-(τ' : ℂ)⁻¹).im := by linarith
+  have h_norm_lam_inv_τ' : ‖modularLambdaH (-(τ' : ℂ)⁻¹)‖ ≤
+      160000 * Real.exp (-Real.pi * (-(τ' : ℂ)⁻¹).im) :=
+    modularLambdaH_norm_le_exp_of_im_ge_one h_inv_im_τ'_ge_one
+  have h_S_τ' : modularLambdaH τ' + modularLambdaH (-1/τ') = 1 :=
+    modularLambdaH_add_S_smul_eq_one hτ'_im_pos
+  have h_neg_eq_τ' : -1/τ' = -τ'⁻¹ := by field_simp
+  rw [h_neg_eq_τ'] at h_S_τ'
+  have h_diff_τ' : modularLambdaH τ' - 1 = -modularLambdaH (-(τ' : ℂ)⁻¹) := by
+    linear_combination h_S_τ'
+  have h_norm_diff_τ' : ‖modularLambdaH τ' - 1‖ = ‖modularLambdaH (-(τ' : ℂ)⁻¹)‖ := by
+    rw [h_diff_τ', norm_neg]
+  have h_exp_mono_τ' : Real.exp (-Real.pi * (-(τ' : ℂ)⁻¹).im) ≤
+      Real.exp (-Real.pi * (1/(2*δ))) := by
+    apply Real.exp_le_exp.mpr
+    nlinarith [Real.pi_pos, h_im_inv_τ'_ge]
+  have h_bound_τ' : ‖modularLambdaH τ' - 1‖ ≤ 160000 * Real.exp (-Real.pi * (1/(2*δ))) := by
+    rw [h_norm_diff_τ']
+    exact le_trans h_norm_lam_inv_τ' (mul_le_mul_of_nonneg_left h_exp_mono_τ' (by norm_num))
+  -- M ≤ 1/(2δ), so π·M ≤ π/(2δ).
+  have h_M_le_inv_2δ : M ≤ 1/(2*δ) := by
+    rw [le_div_iff₀ h_2δ_pos]
+    have h_step : δ * (2 * M) ≤ (1/(2*M)) * (2 * M) :=
+      mul_le_mul_of_nonneg_right hδ_le_inv_2M (le_of_lt h_2M_pos)
+    rw [div_mul_cancel₀ _ (ne_of_gt h_2M_pos)] at h_step
+    linarith
+  have h_pi_gt_one : 1 < Real.pi := by linarith [Real.pi_gt_three]
+  have h_pi_inv_2δ_ge_pi_M : Real.pi * M ≤ Real.pi * (1/(2*δ)) :=
+    mul_le_mul_of_nonneg_left h_M_le_inv_2δ (le_of_lt Real.pi_pos)
+  have h_L_lt_pi_M : L < Real.pi * M := by
+    calc L ≤ M := hL_le_M
+      _ = 1 * M := by ring
+      _ < Real.pi * M := mul_lt_mul_of_pos_right h_pi_gt_one hM_pos
+  have h_L_lt_pi_inv_2δ : L < Real.pi * (1/(2*δ)) :=
+    lt_of_lt_of_le h_L_lt_pi_M h_pi_inv_2δ_ge_pi_M
+  have h_exp_lt : Real.exp (-Real.pi * (1/(2*δ))) < Real.exp (-L) := by
+    apply Real.exp_lt_exp.mpr; linarith
+  have h_B_plus_two_pos : (0 : ℝ) < B + 2 := by linarith
+  have h_exp_neg_L : Real.exp (-L) = 1 / (160000 * (B + 2)) := by
+    rw [hL_def]
+    rw [show -Real.log (160000 * (B + 2)) = Real.log ((160000 * (B + 2))⁻¹) from
+      (Real.log_inv _).symm]
+    rw [Real.exp_log (by positivity : (0:ℝ) < (160000 * (B + 2))⁻¹)]
+    rw [one_div]
+  have h_final_bound : 160000 * Real.exp (-Real.pi * (1/(2*δ))) < 1 / (B + 2) := by
+    calc 160000 * Real.exp (-Real.pi * (1/(2*δ)))
+        < 160000 * Real.exp (-L) := mul_lt_mul_of_pos_left h_exp_lt (by norm_num)
+      _ = 160000 * (1 / (160000 * (B + 2))) := by rw [h_exp_neg_L]
+      _ = 1 / (B + 2) := by field_simp
+  have h_strict_τ' : ‖modularLambdaH τ' - 1‖ < 1 / (B + 2) :=
+    lt_of_le_of_lt h_bound_τ' h_final_bound
+  -- Transfer to σ via conjugation.
+  have h_norm_diff_σ : ‖modularLambdaH σ - 1‖ = ‖modularLambdaH τ' - 1‖ := by
+    rw [h_conj_lam]
+    rw [show starRingEnd ℂ (modularLambdaH σ) - 1 = starRingEnd ℂ (modularLambdaH σ - 1) by
+      rw [map_sub, map_one]]
+    rw [norm_conj]
+  have h_strict_σ : ‖modularLambdaH σ - 1‖ < 1 / (B + 2) := by
+    rw [h_norm_diff_σ]; exact h_strict_τ'
+  -- T-action: λ(τ) = λ(σ + 1) = λ(σ)/(λ(σ) - 1).
+  have h_T : modularLambdaH (σ + 1) = modularLambdaH σ / (modularLambdaH σ - 1) :=
+    modularLambdaH_add_one_eq_div_sub_one hσ_im_pos
+  have h_σ_plus_one : σ + 1 = τ := by simp [hσ_def]
+  rw [h_σ_plus_one] at h_T
+  -- λ(σ) - 1 ≠ 0 from λ(σ) ≠ 1.
+  have h_lam_σ_sub_one_ne : modularLambdaH σ - 1 ≠ 0 :=
+    sub_ne_zero.mpr (modularLambdaH_ne_one hσ_im_pos)
+  -- |λ(σ)| ≥ 1 - ‖λ(σ) - 1‖.
+  have h_lam_σ_norm_ge : 1 - ‖modularLambdaH σ - 1‖ ≤ ‖modularLambdaH σ‖ := by
+    have h_rtri : ‖(1 : ℂ)‖ - ‖modularLambdaH σ‖ ≤ ‖(1 : ℂ) - modularLambdaH σ‖ :=
+      norm_sub_norm_le (1 : ℂ) (modularLambdaH σ)
+    have h_simp : (1 : ℂ) - modularLambdaH σ = -(modularLambdaH σ - 1) := by ring
+    rw [norm_one, h_simp, norm_neg] at h_rtri
+    linarith
+  -- Now: |λ(τ)| = |λ(σ)| / |λ(σ) - 1|.
+  have h_norm_lam_τ : ‖modularLambdaH τ‖ = ‖modularLambdaH σ‖ / ‖modularLambdaH σ - 1‖ := by
+    rw [h_T, norm_div]
+  -- We want |λ(τ)| > ‖w'‖.
+  -- |λ(σ)| ≥ 1 - c, |λ(σ) - 1| < 1/(‖w'‖ + 2) where c = ‖λ(σ) - 1‖.
+  -- |λ(σ)| / |λ(σ) - 1| ≥ (1 - c)/c > ‖w'‖ + 1 > ‖w'‖.
+  set c : ℝ := ‖modularLambdaH σ - 1‖ with hc_def
+  have hc_lt_B : c < 1 / (B + 2) := h_strict_σ
+  have h_w'_plus_two_pos : (0 : ℝ) < ‖w'‖ + 2 := by
+    have : (0 : ℝ) ≤ ‖w'‖ := norm_nonneg _
+    linarith
+  have h_div_le : 1 / (B + 2) ≤ 1 / (‖w'‖ + 2) :=
+    one_div_le_one_div_of_le h_w'_plus_two_pos (by linarith)
+  have hc_lt : c < 1 / (‖w'‖ + 2) := lt_of_lt_of_le hc_lt_B h_div_le
+  have hc_pos : 0 < c := by
+    rw [hc_def, norm_pos_iff]; exact h_lam_σ_sub_one_ne
+  have h_one_minus_c_pos : 0 < 1 - c := by
+    have : c < 1 := by
+      have h_inv_pos : (0 : ℝ) < 1 / (‖w'‖ + 2) := by positivity
+      have h_inv_lt_one : 1 / (‖w'‖ + 2) ≤ 1 := by
+        rw [div_le_iff₀ h_w'_plus_two_pos]; linarith [norm_nonneg w']
+      linarith
+    linarith
+  have h_lam_σ_norm_pos : 0 < ‖modularLambdaH σ‖ := by linarith [h_lam_σ_norm_ge]
+  -- (1 - c)/c > ‖w'‖: equiv to (1 - c) > c·‖w'‖, i.e., 1 > c·(‖w'‖ + 1), i.e., c < 1/(‖w'‖ + 1).
+  have h_w_plus_one_pos : (0 : ℝ) < ‖w'‖ + 1 := by linarith [norm_nonneg w']
+  have hc_lt_inv : c < 1 / (‖w'‖ + 1) := by
+    calc c < 1 / (‖w'‖ + 2) := hc_lt
+      _ ≤ 1 / (‖w'‖ + 1) := by
+        apply one_div_le_one_div_of_le h_w_plus_one_pos
+        linarith
+  have h_c_w_plus_one_lt_one : c * (‖w'‖ + 1) < 1 := by
+    have := hc_lt_inv
+    rw [lt_div_iff₀ h_w_plus_one_pos] at this
+    linarith
+  have h_norm_lam_τ_gt : ‖w'‖ < ‖modularLambdaH τ‖ := by
+    rw [h_norm_lam_τ]
+    rw [lt_div_iff₀ hc_pos]
+    calc ‖w'‖ * c = c * ‖w'‖ := by ring
+      _ < c * ‖w'‖ + (1 - c * (‖w'‖ + 1)) := by linarith [h_c_w_plus_one_lt_one]
+      _ = 1 - c := by ring
+      _ ≤ ‖modularLambdaH σ‖ := h_lam_σ_norm_ge
+  -- λ(τ) = w' would give ‖λ(τ)‖ = ‖w'‖. Contradiction.
+  rw [h_lam_eq] at h_norm_lam_τ_gt
+  exact lt_irrefl _ h_norm_lam_τ_gt
+
+set_option maxHeartbeats 400000 in
+-- Cusp-1 case of three-case Sub-lemma 8 (uniform version): the
+-- reflection/conjugation machinery plus T-action elaborate slowly.
+/-- Cusp-1 branch of `modularLambdaH_F_Y_arc_ne_uniform`: for `θ` near `0`
+(below the returned threshold `θ_c`), conjugation symmetry plus the
+`T`-action give `‖λ(arc)‖ > B ≥ ‖w'‖`. Thresholds depend only on `B`. -/
+theorem modularLambdaH_F_Y_arc_ne_uniform_cusp_one_case {B : ℝ} (hB : 0 < B) :
+    ∃ δ_c θ_c : ℝ, 0 < δ_c ∧ 0 < θ_c ∧ θ_c ≤ Real.pi / 4 ∧
+    ∀ δ R₀ : ℝ, 0 < δ → δ ≤ δ_c → Real.sqrt (1 / 4 - δ ^ 2) < R₀ → R₀ < 1 / 2 →
+    ∀ θ : ℝ, 0 ≤ θ → θ ≤ θ_c → θ ≤ Real.pi →
+      ∀ w' : ℂ, ‖w'‖ ≤ B →
+      modularLambdaH (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ) - w' ≠ 0 := by
+  -- K_1 for cusp 1: 160000·exp(-π·K_1) < 1/(B + 2).
+  set L_1 : ℝ := Real.log (160000 * (B + 2)) with hL_1_def
+  set K_1 : ℝ := max L_1 1 + 1 with hK_1_def
+  have hK_1_pos : 0 < K_1 := by
+    rw [hK_1_def]; have : 1 ≤ max L_1 1 := le_max_right _ _; linarith
+  have hK_1_ge_one : 1 ≤ K_1 := by
+    rw [hK_1_def]; have : 1 ≤ max L_1 1 := le_max_right _ _; linarith
+  obtain ⟨δ_K_1, θ_K_1, hδ_K_1_pos, _hδ_K_1_le_quarter, hθ_K_1_pos, hθ_K_1_le_pi_4,
+    h_cusp_1_bound⟩ :=
+    modularLambdaH_F_Y_arc_im_inv_lower_cusp_0 K_1 hK_1_pos
+  refine ⟨δ_K_1, θ_K_1, hδ_K_1_pos, hθ_K_1_pos, hθ_K_1_le_pi_4, ?_⟩
+  intro δ R₀ hδ_pos hδ_le_δ_K_1 hR₀_lo hR₀_lt θ hθ_lo hθ_le hθ_hi w' hw'_B
+  have hR₀_pos : 0 < R₀ := by have := Real.sqrt_nonneg (1/4 - δ^2); linarith
+  set arc : ℂ := _root_.circleMap ((1/2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ
+    with harc_def
+  -- Assume λ(arc) = w' for contradiction.
+  intro h_lam_eq_w
+  have h_lam_arc_eq : modularLambdaH arc = w' := by
+    linear_combination h_lam_eq_w
+  have harc_im_pos : 0 < arc.im :=
+    modularLambdaH_F_Y_arc_im_pos hδ_pos hR₀_pos.le hθ_lo hθ_hi
+  -- arc(π - θ) is in [π - θ_K_1, π] (cusp 0 of arc).
+  have hπθ_le : Real.pi - θ ≤ Real.pi := by linarith [hθ_lo]
+  have hπθ_ge_θ_K_1 : Real.pi - θ_K_1 ≤ Real.pi - θ := by
+    linarith [hθ_le]
+  -- Im(-1/arc(π - θ)) ≥ K_1.
+  have h_im_inv_πθ_ge :
+      K_1 ≤ (-(_root_.circleMap ((1/2 : ℂ) + (δ : ℂ) * Complex.I) R₀
+        (Real.pi - θ))⁻¹).im :=
+    h_cusp_1_bound δ R₀ hδ_pos hδ_le_δ_K_1 hR₀_lo hR₀_lt (Real.pi - θ)
+      hπθ_ge_θ_K_1 hπθ_le
+  -- Define σ = arc - 1 and τ' = -conj σ = arc(π - θ).
+  set σ : ℂ := arc - 1 with hσ_def
+  set arcπθ : ℂ := _root_.circleMap ((1/2 : ℂ) + (δ : ℂ) * Complex.I) R₀
+    (Real.pi - θ) with harcπθ_def
+  -- arc.Im > 0 already established.
+  have hσ_im : σ.im = arc.im := by rw [hσ_def]; simp
+  have hσ_im_pos : 0 < σ.im := by rw [hσ_im]; exact harc_im_pos
+  -- arc(π - θ) = (1/2 - R₀ cos θ) + i(δ + R₀ sin θ) = 1 - conj(arc).
+  -- Compute arc.re, arc.im, arcπθ.re, arcπθ.im, σ.re separately.
+  have harc_re : arc.re = 1/2 + R₀ * Real.cos θ := by
+    rw [harc_def, _root_.circleMap]
+    simp [Complex.add_re, Complex.mul_re,
+      Complex.exp_ofReal_mul_I_re, Complex.exp_ofReal_mul_I_im,
+      Complex.I_re, Complex.I_im, Complex.ofReal_re, Complex.ofReal_im]
+  have harc_im_eq : arc.im = δ + R₀ * Real.sin θ := by
+    rw [harc_def, _root_.circleMap]
+    simp [Complex.add_im, Complex.mul_im,
+      Complex.exp_ofReal_mul_I_re, Complex.exp_ofReal_mul_I_im,
+      Complex.I_re, Complex.I_im, Complex.ofReal_re, Complex.ofReal_im]
+  have harcπθ_re : arcπθ.re = 1/2 - R₀ * Real.cos θ := by
+    have h_eq : arcπθ.re = 1/2 + R₀ * Real.cos (Real.pi - θ) := by
+      rw [harcπθ_def, _root_.circleMap]
+      simp only [Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
+        Complex.ofReal_re, Complex.ofReal_im, Complex.exp_ofReal_mul_I_re,
+        Complex.exp_ofReal_mul_I_im, mul_zero, zero_mul, sub_zero, mul_one,
+        add_zero]
+      have h_half_re : ((1 : ℂ) / 2).re = 1 / 2 := by rw [Complex.div_re]; simp
+      rw [h_half_re]
+    rw [h_eq, Real.cos_pi_sub]; ring
+  have harcπθ_im : arcπθ.im = δ + R₀ * Real.sin θ := by
+    have h_eq : arcπθ.im = δ + R₀ * Real.sin (Real.pi - θ) := by
+      rw [harcπθ_def, _root_.circleMap]
+      simp only [Complex.add_im, Complex.mul_im, Complex.I_re, Complex.I_im,
+        Complex.ofReal_re, Complex.ofReal_im, Complex.exp_ofReal_mul_I_re,
+        Complex.exp_ofReal_mul_I_im, mul_zero, zero_mul, mul_one]
+      have h_half_im : ((1 : ℂ) / 2).im = 0 := by rw [Complex.div_im]; simp
+      rw [h_half_im]; ring
+    rw [h_eq, Real.sin_pi_sub]
+  have hσ_re : σ.re = -1/2 + R₀ * Real.cos θ := by
+    rw [hσ_def, Complex.sub_re, harc_re, Complex.one_re]; ring
+  have hσ_im_eq : σ.im = δ + R₀ * Real.sin θ := by
+    rw [hσ_def, Complex.sub_im, harc_im_eq, Complex.one_im]; ring
+  -- Equivalently, -conj σ = arc(π - θ).
+  have h_neg_conj_σ_eq : -(starRingEnd ℂ σ) = arcπθ := by
+    apply Complex.ext
+    · rw [Complex.neg_re, Complex.conj_re, hσ_re, harcπθ_re]; ring
+    · rw [Complex.neg_im, Complex.conj_im, hσ_im_eq, harcπθ_im]; ring
+  -- λ(arc(π - θ)) = conj(λ σ).
+  have h_conj_lam : modularLambdaH arcπθ = starRingEnd ℂ (modularLambdaH σ) := by
+    rw [← h_neg_conj_σ_eq]
+    exact modularLambdaH_conj_symmetry hσ_im_pos
+  -- Norm bound on arc(π - θ).
+  have h_im_inv_πθ_ge_one : 1 ≤ (-(arcπθ)⁻¹).im := by
+    rw [harcπθ_def] at h_im_inv_πθ_ge ⊢
+    exact le_trans hK_1_ge_one h_im_inv_πθ_ge
+  have h_norm_lam_inv_πθ : ‖modularLambdaH (-(arcπθ : ℂ)⁻¹)‖ ≤
+      160000 * Real.exp (-Real.pi * (-(arcπθ : ℂ)⁻¹).im) :=
+    modularLambdaH_norm_le_exp_of_im_ge_one h_im_inv_πθ_ge_one
+  -- S-action on arc(π - θ): λ(arc(π-θ)) + λ(-1/arc(π-θ)) = 1.
+  have h_arcπθ_im_pos : 0 < arcπθ.im := by
+    rw [harcπθ_def]
+    exact modularLambdaH_F_Y_arc_im_pos hδ_pos hR₀_pos.le
+      (by linarith [hθ_hi]) hπθ_le
+  have h_S_πθ : modularLambdaH arcπθ + modularLambdaH (-1/arcπθ) = 1 :=
+    modularLambdaH_add_S_smul_eq_one h_arcπθ_im_pos
+  have h_neg_eq_πθ : -1/arcπθ = -arcπθ⁻¹ := by field_simp
+  rw [h_neg_eq_πθ] at h_S_πθ
+  have h_diff_πθ : modularLambdaH arcπθ - 1 = -modularLambdaH (-(arcπθ : ℂ)⁻¹) := by
+    linear_combination h_S_πθ
+  have h_norm_diff_πθ : ‖modularLambdaH arcπθ - 1‖ = ‖modularLambdaH (-(arcπθ : ℂ)⁻¹)‖ := by
+    rw [h_diff_πθ, norm_neg]
+  -- ‖λ(arc(π-θ)) - 1‖ ≤ 160000 · exp(-π · K_1) < 1/(B + 2).
+  have h_exp_mono_πθ : Real.exp (-Real.pi * (-(arcπθ : ℂ)⁻¹).im) ≤
+      Real.exp (-Real.pi * K_1) := by
+    apply Real.exp_le_exp.mpr
+    have := h_im_inv_πθ_ge
+    rw [harcπθ_def] at this
+    nlinarith [Real.pi_pos, this]
+  have h_bound_πθ : ‖modularLambdaH arcπθ - 1‖ ≤ 160000 * Real.exp (-Real.pi * K_1) := by
+    rw [h_norm_diff_πθ]
+    exact le_trans h_norm_lam_inv_πθ (mul_le_mul_of_nonneg_left h_exp_mono_πθ (by norm_num))
+  have h_B_plus_two_pos : (0 : ℝ) < B + 2 := by linarith
+  have h_inv_pos : (0 : ℝ) < 1 / (B + 2) := by positivity
+  -- 160000 · exp(-π K_1) < 1/(B+2) via exp_bound helper.
+  have h_final_πθ : 160000 * Real.exp (-Real.pi * K_1) < 1 / (B + 2) := by
+    have h_helper := modularLambdaH_F_Y_arc_ne_exp_bound_mul (B + 2) h_B_plus_two_pos
+    have hK_1_eq : K_1 = max (Real.log (160000 * (B + 2))) 1 + 1 := by
+      rw [hK_1_def, hL_1_def]
+    rw [hK_1_eq]; exact h_helper
+  have h_strict_πθ : ‖modularLambdaH arcπθ - 1‖ < 1 / (B + 2) :=
+    lt_of_le_of_lt h_bound_πθ h_final_πθ
+  -- Transfer to σ via conjugation.
+  have h_norm_diff_σ : ‖modularLambdaH σ - 1‖ = ‖modularLambdaH arcπθ - 1‖ := by
+    rw [h_conj_lam]
+    rw [show starRingEnd ℂ (modularLambdaH σ) - 1 = starRingEnd ℂ (modularLambdaH σ - 1) by
+      rw [map_sub, map_one]]
+    rw [norm_conj]
+  have h_strict_σ : ‖modularLambdaH σ - 1‖ < 1 / (B + 2) := by
+    rw [h_norm_diff_σ]; exact h_strict_πθ
+  -- T-action: λ(σ + 1) = λ σ / (λ σ - 1).
+  have h_T : modularLambdaH (σ + 1) = modularLambdaH σ / (modularLambdaH σ - 1) :=
+    modularLambdaH_add_one_eq_div_sub_one hσ_im_pos
+  have h_σ_plus_one : σ + 1 = arc := by simp [hσ_def]
+  rw [h_σ_plus_one] at h_T
+  -- λ(σ) - 1 ≠ 0.
+  have h_lam_σ_sub_one_ne : modularLambdaH σ - 1 ≠ 0 :=
+    sub_ne_zero.mpr (modularLambdaH_ne_one hσ_im_pos)
+  -- |λ(σ)| ≥ 1 - ‖λ(σ) - 1‖.
+  have h_lam_σ_norm_ge : 1 - ‖modularLambdaH σ - 1‖ ≤ ‖modularLambdaH σ‖ := by
+    have h_rtri : ‖(1 : ℂ)‖ - ‖modularLambdaH σ‖ ≤ ‖(1 : ℂ) - modularLambdaH σ‖ :=
+      norm_sub_norm_le (1 : ℂ) (modularLambdaH σ)
+    have h_simp : (1 : ℂ) - modularLambdaH σ = -(modularLambdaH σ - 1) := by ring
+    rw [norm_one, h_simp, norm_neg] at h_rtri
+    linarith
+  -- |λ(arc)| = |λ σ| / |λ σ - 1|.
+  have h_norm_lam_arc : ‖modularLambdaH arc‖ = ‖modularLambdaH σ‖ / ‖modularLambdaH σ - 1‖ := by
+    rw [h_T, norm_div]
+  -- Show |λ(arc)| > ‖w'‖.
+  set c : ℝ := ‖modularLambdaH σ - 1‖ with hc_def
+  have hc_lt_B : c < 1 / (B + 2) := h_strict_σ
+  have hc_pos : 0 < c := by
+    rw [hc_def, norm_pos_iff]; exact h_lam_σ_sub_one_ne
+  have h_w'_plus_two_pos : (0 : ℝ) < ‖w'‖ + 2 := by
+    have : (0 : ℝ) ≤ ‖w'‖ := norm_nonneg _
+    linarith
+  have h_div_le : 1 / (B + 2) ≤ 1 / (‖w'‖ + 2) :=
+    one_div_le_one_div_of_le h_w'_plus_two_pos (by linarith)
+  have hc_lt : c < 1 / (‖w'‖ + 2) := lt_of_lt_of_le hc_lt_B h_div_le
+  have h_lam_σ_ge : 1 - c ≤ ‖modularLambdaH σ‖ := by
+    rw [hc_def]; exact h_lam_σ_norm_ge
+  have h_norm_lam_arc_gt : ‖w'‖ < ‖modularLambdaH arc‖ := by
+    rw [h_norm_lam_arc]
+    exact modularLambdaH_F_Y_arc_cusp_1_norm_bound (norm_nonneg w') hc_pos hc_lt h_lam_σ_ge
+  rw [h_lam_arc_eq] at h_norm_lam_arc_gt
+  exact lt_irrefl _ h_norm_lam_arc_gt
+
+set_option maxHeartbeats 400000 in
+-- Cusp-0 case of three-case Sub-lemma 8 (uniform version): the
+-- S-action and exponential norm bounds elaborate slowly.
+/-- Cusp-0 branch of `modularLambdaH_F_Y_arc_ne_uniform`: for `θ` near `π`
+(above `π` minus the returned threshold `θ_c`), the `S`-action gives
+`‖λ(arc) - 1‖ < ρ ≤ ‖w' - 1‖`. Thresholds depend only on `ρ`. -/
+theorem modularLambdaH_F_Y_arc_ne_uniform_cusp_zero_case {ρ : ℝ} (hρ : 0 < ρ) :
+    ∃ δ_c θ_c : ℝ, 0 < δ_c ∧ 0 < θ_c ∧ θ_c ≤ Real.pi / 4 ∧
+    ∀ δ R₀ : ℝ, 0 < δ → δ ≤ δ_c → Real.sqrt (1 / 4 - δ ^ 2) < R₀ → R₀ < 1 / 2 →
+    ∀ θ : ℝ, 0 ≤ θ → Real.pi - θ_c ≤ θ → θ ≤ Real.pi →
+      ∀ w' : ℂ, ρ ≤ ‖w' - 1‖ →
+      modularLambdaH (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ) - w' ≠ 0 := by
+  -- K_0 for cusp 0: 160000·exp(-π·K_0) < ρ.
+  set L_0 : ℝ := Real.log (160000 / ρ) with hL_0_def
+  set K_0 : ℝ := max L_0 1 + 1 with hK_0_def
+  have hK_0_pos : 0 < K_0 := by
+    rw [hK_0_def]
+    have : 1 ≤ max L_0 1 := le_max_right _ _
+    linarith
+  have hK_0_ge_one : 1 ≤ K_0 := by
+    rw [hK_0_def]
+    have : 1 ≤ max L_0 1 := le_max_right _ _
+    linarith
+  obtain ⟨δ_K_0, θ_K_0, hδ_K_0_pos, _hδ_K_0_le_quarter, hθ_K_0_pos, hθ_K_0_le_pi_4,
+    h_cusp_0_bound⟩ :=
+    modularLambdaH_F_Y_arc_im_inv_lower_cusp_0 K_0 hK_0_pos
+  refine ⟨δ_K_0, θ_K_0, hδ_K_0_pos, hθ_K_0_pos, hθ_K_0_le_pi_4, ?_⟩
+  intro δ R₀ hδ_pos hδ_le_δ_K_0 hR₀_lo hR₀_lt θ hθ_lo hθ_in_cusp_0 hθ_hi w' hw'_ρ
+  have hR₀_pos : 0 < R₀ := by have := Real.sqrt_nonneg (1/4 - δ^2); linarith
+  set arc : ℂ := _root_.circleMap ((1/2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ
+    with harc_def
+  -- Assume λ(arc) = w' for contradiction.
+  intro h_lam_eq_w
+  have h_lam_arc_eq : modularLambdaH arc = w' := by
+    linear_combination h_lam_eq_w
+  have harc_im_pos : 0 < arc.im :=
+    modularLambdaH_F_Y_arc_im_pos hδ_pos hR₀_pos.le hθ_lo hθ_hi
+  have h_im_inv_ge : K_0 ≤ (-(arc)⁻¹).im := by
+    have := h_cusp_0_bound δ R₀ hδ_pos hδ_le_δ_K_0 hR₀_lo hR₀_lt θ hθ_in_cusp_0 hθ_hi
+    rw [harc_def]; exact this
+  have h_im_inv_ge_one : 1 ≤ (-(arc)⁻¹).im := le_trans hK_0_ge_one h_im_inv_ge
+  -- Norm bound: ‖λ(-arc⁻¹)‖ ≤ 160000 · exp(-π · Im(-arc⁻¹)) ≤ 160000 · exp(-π K_0).
+  have h_norm_lam_inv : ‖modularLambdaH (-(arc : ℂ)⁻¹)‖ ≤
+      160000 * Real.exp (-Real.pi * (-(arc : ℂ)⁻¹).im) :=
+    modularLambdaH_norm_le_exp_of_im_ge_one h_im_inv_ge_one
+  -- S-action: λ(τ) + λ(-1/τ) = 1.
+  have h_S : modularLambdaH arc + modularLambdaH (-1/arc) = 1 :=
+    modularLambdaH_add_S_smul_eq_one harc_im_pos
+  have h_neg_eq : -1/arc = -arc⁻¹ := by field_simp
+  rw [h_neg_eq] at h_S
+  have h_diff_eq : modularLambdaH arc - 1 = -modularLambdaH (-(arc : ℂ)⁻¹) := by
+    linear_combination h_S
+  have h_norm_diff : ‖modularLambdaH arc - 1‖ = ‖modularLambdaH (-(arc : ℂ)⁻¹)‖ := by
+    rw [h_diff_eq, norm_neg]
+  -- exp(-π · Im(-arc⁻¹)) ≤ exp(-π · K_0).
+  have h_exp_mono : Real.exp (-Real.pi * (-(arc : ℂ)⁻¹).im) ≤
+      Real.exp (-Real.pi * K_0) := by
+    apply Real.exp_le_exp.mpr
+    nlinarith [Real.pi_pos, h_im_inv_ge]
+  have h_bound : ‖modularLambdaH arc - 1‖ ≤ 160000 * Real.exp (-Real.pi * K_0) := by
+    rw [h_norm_diff]
+    refine le_trans h_norm_lam_inv ?_
+    exact mul_le_mul_of_nonneg_left h_exp_mono (by norm_num)
+  -- 160000 · exp(-π · K_0) < ρ via exp_bound helper.
+  have h_final_bound : 160000 * Real.exp (-Real.pi * K_0) < ρ := by
+    have h_helper := modularLambdaH_F_Y_arc_ne_exp_bound_div ρ hρ
+    have hK_0_eq : K_0 = max (Real.log (160000 / ρ)) 1 + 1 := by
+      rw [hK_0_def, hL_0_def]
+    rw [hK_0_eq]; exact h_helper
+  have h_strict : ‖modularLambdaH arc - 1‖ < ρ :=
+    lt_of_le_of_lt h_bound h_final_bound
+  have h_strict' : ‖modularLambdaH arc - 1‖ < ‖w' - 1‖ :=
+    lt_of_lt_of_le h_strict hw'_ρ
+  rw [h_lam_arc_eq] at h_strict'
+  exact lt_irrefl _ h_strict'
+
+set_option maxHeartbeats 400000 in
+-- Middle case of three-case Sub-lemma 8 (uniform version): the
+-- Lipschitz-ball extraction and semicircle computations elaborate slowly.
+/-- Middle branch of `modularLambdaH_F_Y_arc_ne_uniform`: for
+`θ ∈ [θ_0, π - θ_0]`, the Lipschitz bound for `Im λ` near the unit
+semicircle forces `|Im λ(arc)| < μ ≤ w'.im`. The threshold
+`δ_mid ≤ 1/4` depends only on `μ` and `θ_0`. -/
+theorem modularLambdaH_F_Y_arc_ne_uniform_middle_case {μ θ_0 : ℝ} (hμ : 0 < μ)
+    (hθ_0_pos : 0 < θ_0) (hθ_0_lt_pi_2 : θ_0 < Real.pi / 2) :
+    ∃ δ_mid : ℝ, 0 < δ_mid ∧ δ_mid ≤ 1 / 4 ∧
+    ∀ δ R₀ : ℝ, 0 < δ → δ ≤ δ_mid → Real.sqrt (1 / 4 - δ ^ 2) < R₀ → R₀ < 1 / 2 →
+    ∀ θ : ℝ, θ_0 ≤ θ → θ ≤ Real.pi - θ_0 →
+      ∀ w' : ℂ, μ ≤ w'.im →
+      modularLambdaH (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ) - w' ≠ 0 := by
+  have hθ_0_lt_pi : θ_0 < Real.pi := by linarith [Real.pi_pos]
+  have h_sin_θ_0_pos : 0 < Real.sin θ_0 :=
+    Real.sin_pos_of_pos_of_lt_pi hθ_0_pos hθ_0_lt_pi
+  -- Setup the ball for Lipschitz extraction (Helper 8.3's internal setup).
+  set τ_K : ℂ := (1/2 : ℂ) +
+    Complex.I * ((1 / (2 * Real.sin θ_0) : ℝ) : ℂ) with hτ_K_def
+  set r_K : ℝ := (1 + Real.cos θ_0) / (4 * Real.sin θ_0) with hr_K_def
+  have h_cos_θ_0_pos : 0 < Real.cos θ_0 :=
+    Real.cos_pos_of_mem_Ioo ⟨by linarith, hθ_0_lt_pi_2⟩
+  have h_4s_pos : 0 < 4 * Real.sin θ_0 := by linarith
+  have hr_K_pos : 0 < r_K := by
+    rw [hr_K_def]; exact div_pos (by linarith) h_4s_pos
+  -- τ_K.im = 1/(2 sin θ_0) > 0.
+  have hτ_K_im_eq : τ_K.im = 1/(2*Real.sin θ_0) := by
+    rw [hτ_K_def]
+    have h_half_im : ((1 : ℂ) / 2).im = 0 := by rw [Complex.div_im]; simp
+    rw [Complex.add_im, Complex.mul_im, Complex.I_re, Complex.I_im,
+      Complex.ofReal_im, Complex.ofReal_re, h_half_im]
+    ring
+  have hτ_K_im_pos : 0 < τ_K.im := by rw [hτ_K_im_eq]; positivity
+  -- Apply Helper 8.3.a (ball in UHP) and Helper 8.2 to get M.
+  have h_ball_in :=
+    modularLambdaH_arc_lipschitz_ball_in_uhp hθ_0_pos hθ_0_lt_pi_2
+  obtain ⟨M, hM_pos, hM_lipschitz⟩ :=
+    modularLambdaH_im_lipschitz_on_compact hτ_K_im_pos hr_K_pos h_ball_in
+  set δ_M : ℝ := μ / (4 * M) with hδ_M_def
+  have hδ_M_pos : 0 < δ_M := by rw [hδ_M_def]; positivity
+  refine ⟨min (Real.sin θ_0 / 4) (min δ_M (1/4)),
+    lt_min (by positivity) (lt_min hδ_M_pos (by norm_num)),
+    le_trans (min_le_right _ _) (min_le_right _ _), ?_⟩
+  intro δ R₀ hδ_pos hδ_le hR₀_lo hR₀_lt θ hθ_in_middle_lo hθ_in_middle_hi w' hw'_im
+  -- Extract individual constraints on δ.
+  have hδ_le_sin_θ_0_quarter : δ ≤ Real.sin θ_0 / 4 :=
+    le_trans hδ_le (min_le_left _ _)
+  have hδ_le_δ_M : δ ≤ δ_M :=
+    le_trans hδ_le (le_trans (min_le_right _ _) (min_le_left _ _))
+  have hδ_le_quarter : δ ≤ 1/4 :=
+    le_trans hδ_le (le_trans (min_le_right _ _) (min_le_right _ _))
+  have hR₀_pos : 0 < R₀ := by have := Real.sqrt_nonneg (1/4 - δ^2); linarith
+  set arc : ℂ := _root_.circleMap ((1/2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ
+    with harc_def
+  -- Assume λ(arc) = w' for contradiction.
+  intro h_lam_eq_w
+  have h_lam_arc_eq : modularLambdaH arc = w' := by
+    linear_combination h_lam_eq_w
+  -- arc ∈ closedBall τ_K r_K (Helper 8.3.c).
+  have h_arc_in_ball := modularLambdaH_arc_lipschitz_arc_in_ball
+    hδ_pos hR₀_lo hR₀_lt hθ_0_pos hθ_0_lt_pi_2 hδ_le_sin_θ_0_quarter
+    hθ_in_middle_lo hθ_in_middle_hi
+  -- semi ∈ closedBall τ_K r_K (Helper 8.3.b).
+  have h_semi_in_ball := modularLambdaH_arc_lipschitz_semi_in_ball
+    hθ_0_pos hθ_0_lt_pi_2 hθ_in_middle_lo hθ_in_middle_hi
+  -- Apply Lipschitz bound M.
+  have h_lipschitz_bd := hM_lipschitz arc
+    (_root_.circleMap (1/2 : ℂ) (1/2) θ)
+    (by rw [harc_def]; exact h_arc_in_ball) h_semi_in_ball
+  -- semicircle real-valued: Im λ(semi) = 0.
+  have hθ_pos : 0 < θ := by linarith [hθ_0_pos]
+  have hθ_lt_pi : θ < Real.pi := by linarith [hθ_0_pos]
+  have hθ_sin_pos : 0 < Real.sin θ :=
+    Real.sin_pos_of_pos_of_lt_pi hθ_pos hθ_lt_pi
+  have h_semi_im_pos : 0 < (_root_.circleMap (1/2 : ℂ) (1/2) θ).im := by
+    rw [_root_.circleMap]
+    show 0 < ((1/2 : ℂ) + ((1/2 : ℝ) : ℂ) * Complex.exp (θ * Complex.I)).im
+    rw [Complex.add_im, Complex.mul_im, Complex.ofReal_re, Complex.ofReal_im,
+      Complex.exp_ofReal_mul_I_re, Complex.exp_ofReal_mul_I_im]
+    have h_half_im : ((1 : ℂ) / 2).im = 0 := by rw [Complex.div_im]; simp
+    rw [h_half_im]
+    have h_pos : 0 < (1 / 2 : ℝ) * Real.sin θ := by positivity
+    linarith
+  have h_semi_circle : ‖2 * (_root_.circleMap (1/2 : ℂ) (1/2) θ) - 1‖ = 1 := by
+    rw [_root_.circleMap]
+    have : 2 * ((1/2 : ℂ) + ((1/2 : ℝ) : ℂ) * Complex.exp (θ * Complex.I)) - 1 =
+        Complex.exp (θ * Complex.I) := by push_cast; ring
+    rw [this, Complex.norm_exp]
+    simp [Complex.mul_re, Complex.ofReal_re, Complex.ofReal_im,
+      Complex.I_re, Complex.I_im]
+  have h_semi_im_zero : (modularLambdaH (_root_.circleMap (1/2 : ℂ) (1/2) θ)).im = 0 :=
+    modularLambdaH_semicircle_real h_semi_im_pos h_semi_circle
+  rw [h_semi_im_zero, sub_zero] at h_lipschitz_bd
+  -- Helper 8.1: distance bound.
+  have h_arc_to_semi := modularLambdaH_arc_to_semicircle_dist hδ_pos hR₀_pos hR₀_lt θ
+  -- |Im λ(arc)| ≤ M · ‖arc - semi‖ ≤ M · (δ + 1/2 - R₀).
+  have h_im_bound : |(modularLambdaH arc).im| ≤ M * (δ + (1/2 - R₀)) := by
+    calc |(modularLambdaH arc).im|
+        ≤ M * ‖arc - _root_.circleMap (1/2 : ℂ) (1/2) θ‖ := by
+          rw [harc_def] at h_lipschitz_bd ⊢; exact h_lipschitz_bd
+      _ ≤ M * (δ + (1/2 - R₀)) := by
+          apply mul_le_mul_of_nonneg_left _ hM_pos.le
+          rw [harc_def]
+          exact h_arc_to_semi
+  -- 1/2 - R₀ ≤ 2δ² (from R₀ > √(1/4 - δ²)).
+  have h_half_minus_R₀ : 1/2 - R₀ ≤ 2 * δ^2 :=
+    modularLambdaH_F_Y_arc_half_minus_R₀_bound hδ_pos hδ_le_quarter
+      hR₀_lo hR₀_lt hR₀_pos
+  -- δ ≤ μ/(4M) (from hδ_le_δ_M and δ_M definition).
+  have hδ_le_wim_4M : δ ≤ μ / (4*M) := by
+    have h_δ_M_eq : δ_M = μ / (4*M) := hδ_M_def
+    linarith [hδ_le_δ_M, h_δ_M_eq]
+  -- Apply the pure polynomial helper.
+  have h_M_bound : M * (δ + (1/2 - R₀)) < μ :=
+    modularLambdaH_F_Y_arc_middle_poly_bound hM_pos hδ_pos hδ_le_quarter
+      hδ_le_wim_4M h_half_minus_R₀ hμ
+  -- λ(arc) = w' gives Im λ(arc) = w'.im. |Im λ(arc)| = w'.im (since w'.im ≥ μ > 0).
+  -- But |Im λ(arc)| ≤ M · (δ + 1/2 - R₀) < μ ≤ w'.im. Contradiction.
+  rw [h_lam_arc_eq] at h_im_bound
+  have h_w'_im_pos : 0 < w'.im := lt_of_lt_of_le hμ hw'_im
+  have h_abs_w_im : |w'.im| = w'.im := abs_of_pos h_w'_im_pos
+  rw [h_abs_w_im] at h_im_bound
+  linarith [h_M_bound, h_im_bound, hw'_im]
+
+-- Three-case Sub-lemma 8 (middle Lipschitz + cusp-0 + cusp-1 conjugation),
+-- segment-uniform version: thresholds depend only on (μ, B, ρ).
+/-- Segment-uniform variant of `modularLambdaH_F_Y_arc_ne`: the threshold
+`δ_u` depends only on `μ ≤ w'.im`, `‖w'‖ ≤ B`, and `ρ ≤ ‖w' - 1‖`. -/
+theorem modularLambdaH_F_Y_arc_ne_uniform {μ B ρ : ℝ} (hμ : 0 < μ) (hB : 0 < B) (hρ : 0 < ρ) :
+    ∃ δ_u : ℝ, 0 < δ_u ∧ δ_u < 1 / 2 ∧
+    ∀ δ R₀ : ℝ, 0 < δ → δ ≤ δ_u → Real.sqrt (1 / 4 - δ ^ 2) < R₀ → R₀ < 1 / 2 →
+    ∀ θ : ℝ, 0 ≤ θ → θ ≤ Real.pi →
+      ∀ w' : ℂ, μ ≤ w'.im → ‖w'‖ ≤ B → ρ ≤ ‖w' - 1‖ →
+      modularLambdaH (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ) - w' ≠ 0 := by
+  -- Three-case proof, assembled from the three case helpers above:
+  -- (a) Middle θ ∈ [θ_0, π - θ_0]: Helper 8.3-style bound on |Im λ|.
+  -- (b) Cusp 0 θ ∈ (π - θ_K_0, π]: S-action + norm bound; ‖λ - 1‖ < ρ ≤ ‖w' - 1‖.
+  -- (c) Cusp 1 θ ∈ [0, θ_K_1): conjugation + T; |λ| > B ≥ ‖w'‖.
+  -- The three pieces of `δ_u` come from these three regimes.
+  obtain ⟨δ_K_0, θ_K_0, hδ_K_0_pos, hθ_K_0_pos, hθ_K_0_le_pi_4, h_cusp_0⟩ :=
+    modularLambdaH_F_Y_arc_ne_uniform_cusp_zero_case hρ
+  obtain ⟨δ_K_1, θ_K_1, hδ_K_1_pos, hθ_K_1_pos, _hθ_K_1_le_pi_4, h_cusp_1⟩ :=
+    modularLambdaH_F_Y_arc_ne_uniform_cusp_one_case hB
+  -- θ_0 := min(θ_K_0, θ_K_1).
+  set θ_0 : ℝ := min θ_K_0 θ_K_1
+  have hθ_0_pos : 0 < θ_0 := lt_min hθ_K_0_pos hθ_K_1_pos
+  have hθ_0_le_θ_K_0 : θ_0 ≤ θ_K_0 := min_le_left _ _
+  have hθ_0_le_θ_K_1 : θ_0 ≤ θ_K_1 := min_le_right _ _
+  have hθ_0_lt_pi_2 : θ_0 < Real.pi / 2 := by
+    have h1 : θ_0 ≤ Real.pi / 4 := le_trans hθ_0_le_θ_K_0 hθ_K_0_le_pi_4
+    linarith [Real.pi_pos]
+  obtain ⟨δ_mid, hδ_mid_pos, hδ_mid_le_quarter, h_middle⟩ :=
+    modularLambdaH_F_Y_arc_ne_uniform_middle_case hμ hθ_0_pos hθ_0_lt_pi_2
+  refine ⟨min (min δ_K_0 δ_K_1) δ_mid,
+    lt_min (lt_min hδ_K_0_pos hδ_K_1_pos) hδ_mid_pos, ?_, ?_⟩
+  · have h1 : min (min δ_K_0 δ_K_1) δ_mid ≤ δ_mid := min_le_right _ _
+    linarith
+  intro δ R₀ hδ_pos hδ_le hR₀_lo hR₀_lt θ hθ_lo hθ_hi w' hw'_im hw'_B hw'_ρ
+  -- Extract individual constraints on δ.
+  have hδ_le_δ_K_0 : δ ≤ δ_K_0 :=
+    le_trans hδ_le (le_trans (min_le_left _ _) (min_le_left _ _))
+  have hδ_le_δ_K_1 : δ ≤ δ_K_1 :=
+    le_trans hδ_le (le_trans (min_le_left _ _) (min_le_right _ _))
+  have hδ_le_δ_mid : δ ≤ δ_mid := le_trans hδ_le (min_le_right _ _)
+  -- Case split on θ position.
+  by_cases h_θ_le_θ_0 : θ ≤ θ_0
+  · -- Cusp 1 case: θ ∈ [0, θ_0] ⊆ [0, θ_K_1].
+    exact h_cusp_1 δ R₀ hδ_pos hδ_le_δ_K_1 hR₀_lo hR₀_lt θ hθ_lo
+      (le_trans h_θ_le_θ_0 hθ_0_le_θ_K_1) hθ_hi w' hw'_B
+  · push Not at h_θ_le_θ_0
+    -- θ > θ_0. Check if θ ≥ π - θ_0.
+    by_cases h_θ_ge : Real.pi - θ_0 ≤ θ
+    · -- Cusp 0 case: θ ∈ [π - θ_0, π] ⊆ [π - θ_K_0, π].
+      exact h_cusp_0 δ R₀ hδ_pos hδ_le_δ_K_0 hR₀_lo hR₀_lt θ hθ_lo
+        (by linarith [hθ_0_le_θ_K_0]) hθ_hi w' hw'_ρ
+    · -- Middle case: θ ∈ (θ_0, π - θ_0).
+      push Not at h_θ_ge
+      exact h_middle δ R₀ hδ_pos hδ_le_δ_mid hR₀_lo hR₀_lt θ
+        (le_of_lt h_θ_le_θ_0) (le_of_lt h_θ_ge) w' hw'_im
+
+
+set_option maxHeartbeats 400000 in
+-- Long single-declaration assembly of the degree argument (many large integral terms).
+/-- **Uniqueness of the `F°`-preimage (degree-argument bootstrap).** Proved by
+transporting the F_Y zero count along a `w`-segment to the deep-cusp reference
+value, where the fibre is a provably unique simple point. -/
+theorem modularLambdaH_F_interior_preimage_unique
+    {w : ℂ} (hw : 0 < w.im) {τ₁ τ₂ : ℂ}
+    (h₁_in : τ₁ ∈ Gamma2FundamentalDomainInterior)
+    (h₂_in : τ₂ ∈ Gamma2FundamentalDomainInterior)
+    (h₁_eq : modularLambdaH τ₁ = w) (h₂_eq : modularLambdaH τ₂ = w) :
+    τ₁ = τ₂ := by
+  by_contra h_τ_ne
+  -- ================== A. deep-cusp reference value ==================
+  obtain ⟨w_ref, τ_ref, hw_ref_im, _hτ_ref_in, _hτ_ref_eq, hτ_ref_deriv, hτ_ref_unique⟩ :=
+    modularLambdaH_cusp_reference_value
+  -- ================== B. segment bounds ==================
+  obtain ⟨μ, hμ_pos, hμ_le_w_im, hμ_le_wref_im⟩ :
+      ∃ m : ℝ, 0 < m ∧ m ≤ w.im ∧ m ≤ w_ref.im :=
+    ⟨min w.im w_ref.im, lt_min hw hw_ref_im, min_le_left _ _, min_le_right _ _⟩
+  obtain ⟨B, hB_pos, hB_ge_w, hB_ge_wref⟩ :
+      ∃ b : ℝ, 0 < b ∧ ‖w‖ ≤ b ∧ ‖w_ref‖ ≤ b :=
+    ⟨max ‖w‖ ‖w_ref‖,
+      lt_of_lt_of_le (lt_of_lt_of_le hw (Complex.im_le_norm w)) (le_max_left _ _),
+      le_max_left _ _, le_max_right _ _⟩
+  -- `Im z ≥ μ` forces `‖z − 1‖ ≥ μ`.
+  have h_im_to_sub_one : ∀ z : ℂ, μ ≤ z.im → μ ≤ ‖z - 1‖ := by
+    intro z hz
+    have h1 : (z - 1).im = z.im := by rw [Complex.sub_im, Complex.one_im, sub_zero]
+    calc μ ≤ (z - 1).im := by rw [h1]; exact hz
+      _ ≤ ‖z - 1‖ := Complex.im_le_norm _
+  have hw_sub_one : μ ≤ ‖w - 1‖ := h_im_to_sub_one w hμ_le_w_im
+  have hw_ref_sub_one : μ ≤ ‖w_ref - 1‖ := h_im_to_sub_one w_ref hμ_le_wref_im
+  -- Segment-point bounds (i): imaginary part.
+  have h_seg_im : ∀ s ∈ Set.Icc (0 : ℝ) 1,
+      μ ≤ ((1 - (s : ℂ)) * w + (s : ℂ) * w_ref).im := by
+    intro s hs
+    have h_im : ((1 - (s : ℂ)) * w + (s : ℂ) * w_ref).im
+        = (1 - s) * w.im + s * w_ref.im := by
+      simp only [Complex.add_im, Complex.mul_im, Complex.sub_re, Complex.sub_im,
+        Complex.one_re, Complex.one_im, Complex.ofReal_re, Complex.ofReal_im]
+      ring
+    rw [h_im]
+    have hP : 0 ≤ (1 - s) * (w.im - μ) :=
+      mul_nonneg (by linarith [hs.2]) (by linarith [hμ_le_w_im])
+    have hQ : 0 ≤ s * (w_ref.im - μ) :=
+      mul_nonneg hs.1 (by linarith [hμ_le_wref_im])
+    nlinarith [hP, hQ]
+  -- Segment-point bounds (ii): norm.
+  have h_seg_norm : ∀ s ∈ Set.Icc (0 : ℝ) 1,
+      ‖(1 - (s : ℂ)) * w + (s : ℂ) * w_ref‖ ≤ B := by
+    intro s hs
+    have h_tri := norm_add_le ((1 - (s : ℂ)) * w) ((s : ℂ) * w_ref)
+    have h1 : ‖(1 - (s : ℂ)) * w‖ = (1 - s) * ‖w‖ := by
+      rw [norm_mul]
+      congr 1
+      rw [show (1 : ℂ) - (s : ℂ) = ((1 - s : ℝ) : ℂ) by push_cast; ring,
+        Complex.norm_real, Real.norm_eq_abs, abs_of_nonneg (by linarith [hs.2])]
+    have h2 : ‖(s : ℂ) * w_ref‖ = s * ‖w_ref‖ := by
+      rw [norm_mul, Complex.norm_real, Real.norm_eq_abs, abs_of_nonneg hs.1]
+    rw [h1, h2] at h_tri
+    have hA := mul_le_mul_of_nonneg_left hB_ge_w (by linarith [hs.2] : (0 : ℝ) ≤ 1 - s)
+    have hC := mul_le_mul_of_nonneg_left hB_ge_wref hs.1
+    calc ‖(1 - (s : ℂ)) * w + (s : ℂ) * w_ref‖
+        ≤ (1 - s) * ‖w‖ + s * ‖w_ref‖ := h_tri
+      _ ≤ (1 - s) * B + s * B := add_le_add hA hC
+      _ = B := by ring
+  -- Segment-point bounds (iii): distance to `1`.
+  have h_seg_sub_one : ∀ s ∈ Set.Icc (0 : ℝ) 1,
+      μ ≤ ‖(1 - (s : ℂ)) * w + (s : ℂ) * w_ref - 1‖ :=
+    fun s hs => h_im_to_sub_one _ (h_seg_im s hs)
+  -- ================== C. thresholds and region parameters ==================
+  obtain ⟨δ_bl, hδ_bl_pos, _hδ_bl_lt, h_bl_prop⟩ :=
+    modularLambdaH_F_Y_bot_left_strip_ne_uniform hμ_pos
+  obtain ⟨δ_br, hδ_br_pos, _hδ_br_lt, h_br_prop⟩ :=
+    modularLambdaH_F_Y_bot_right_strip_ne_uniform hB_pos
+  obtain ⟨δ_arc, hδ_arc_pos, _hδ_arc_lt, h_arc_prop⟩ :=
+    modularLambdaH_F_Y_arc_ne_uniform hμ_pos hB_pos hμ_pos
+  obtain ⟨Y₀, _hY₀_ge_one, hY₀_prop⟩ := modularLambdaH_top_edge_norm_lt_uniform hμ_pos
+  obtain ⟨δ_max, hδ_max_pos, hδ_max_le_quarter, hδ_max_le_bl, hδ_max_le_br, hδ_max_le_arc⟩ :
+      ∃ δ_m : ℝ, 0 < δ_m ∧ δ_m ≤ 1 / 4 ∧ δ_m ≤ δ_bl ∧ δ_m ≤ δ_br ∧ δ_m ≤ δ_arc :=
+    ⟨min (min δ_bl δ_br) (min δ_arc (1 / 4)),
+      lt_min (lt_min hδ_bl_pos hδ_br_pos) (lt_min hδ_arc_pos (by norm_num)),
+      le_trans (min_le_right _ _) (min_le_right _ _),
+      le_trans (min_le_left _ _) (min_le_left _ _),
+      le_trans (min_le_left _ _) (min_le_right _ _),
+      le_trans (min_le_right _ _) (min_le_left _ _)⟩
+  obtain ⟨δ, Y_base, R₀, hδ_pos, hδ_le_δ_max, hδ_lt_τ₁_im, hδ_lt_τ₂_im,
+    hδ_lt_Y_base, hτ₁_im_lt_Y_base, hτ₂_im_lt_Y_base,
+    hR₀_pos, hR₀_lt, h_δR_lt_Y_base, hR₀_lo, hτ₁_norm_gt, hτ₂_norm_gt⟩ :=
+    modularLambdaH_F_Y_params_exist_arc hw h₁_in h₂_in hδ_max_pos hδ_max_le_quarter
+  obtain ⟨Y, hY_ge_base, hY_ge_Y₀⟩ : ∃ Y : ℝ, Y_base ≤ Y ∧ Y₀ ≤ Y :=
+    ⟨max Y_base Y₀, le_max_left _ _, le_max_right _ _⟩
+  have hδ_lt_Y : δ < Y := lt_of_lt_of_le hδ_lt_Y_base hY_ge_base
+  have hτ₁_im_lt_Y : τ₁.im < Y := lt_of_lt_of_le hτ₁_im_lt_Y_base hY_ge_base
+  have hτ₂_im_lt_Y : τ₂.im < Y := lt_of_lt_of_le hτ₂_im_lt_Y_base hY_ge_base
+  have h_δR_lt_Y : δ + R₀ < Y := lt_of_lt_of_le h_δR_lt_Y_base hY_ge_base
+  have hδ_le_δ_bl : δ ≤ δ_bl := le_trans hδ_le_δ_max hδ_max_le_bl
+  have hδ_le_δ_br : δ ≤ δ_br := le_trans hδ_le_δ_max hδ_max_le_br
+  have hδ_le_δ_arc : δ ≤ δ_arc := le_trans hδ_le_δ_max hδ_max_le_arc
+  have hδ_le_quarter : δ ≤ 1 / 4 := le_trans hδ_le_δ_max hδ_max_le_quarter
+  -- Coverage trick: the bottom edge intervals lie inside the cascade strips.
+  have h_half_minus_R₀ : 1 / 2 - R₀ ≤ 2 * δ ^ 2 :=
+    modularLambdaH_F_Y_arc_half_minus_R₀_bound hδ_pos hδ_le_quarter hR₀_lo hR₀_lt hR₀_pos
+  have h_2δ_sq_le_δ : 2 * δ ^ 2 ≤ δ := by nlinarith [hδ_pos.le, hδ_le_quarter]
+  have h_half_minus_R₀_le_δ : 1 / 2 - R₀ ≤ δ := le_trans h_half_minus_R₀ h_2δ_sq_le_δ
+  -- ================== D. segment-uniform boundary facts ==================
+  have hg_bot_left_u : ∀ w' : ℂ, μ ≤ ‖w' - 1‖ → ∀ x ∈ Set.Icc (0 : ℝ) (1 / 2 - R₀),
+      modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) - w' ≠ 0 := by
+    intro w' hw' x hx
+    exact h_bl_prop δ hδ_pos hδ_le_δ_bl x hx.1 (le_trans hx.2 h_half_minus_R₀_le_δ) w' hw'
+  have hg_bot_right_u : ∀ w' : ℂ, ‖w'‖ ≤ B → ∀ x ∈ Set.Icc (1 / 2 + R₀ : ℝ) 1,
+      modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) - w' ≠ 0 := by
+    intro w' hw' x hx
+    refine h_br_prop δ hδ_pos hδ_le_δ_br x ?_ hx.2 w' hw'
+    linarith [hx.1, h_half_minus_R₀_le_δ]
+  have hg_top_u : ∀ w' : ℂ, μ ≤ w'.im → ∀ x ∈ Set.Icc (0 : ℝ) 1,
+      modularLambdaH ((x : ℂ) + (Y : ℂ) * Complex.I) - w' ≠ 0 := by
+    intro w' hw'_im x hx h_eq0
+    have h_norm_lt : ‖modularLambdaH ((x : ℂ) + (Y : ℂ) * Complex.I)‖ < μ :=
+      hY₀_prop Y hY_ge_Y₀ x hx.1 hx.2
+    have h_lam_eq : modularLambdaH ((x : ℂ) + (Y : ℂ) * Complex.I) = w' := by
+      linear_combination h_eq0
+    rw [h_lam_eq] at h_norm_lt
+    linarith [Complex.im_le_norm w', hw'_im]
+  have hg_right_u : ∀ w' : ℂ, 0 < w'.im → ∀ y ∈ Set.Icc δ Y,
+      modularLambdaH ((1 : ℂ) + (y : ℂ) * Complex.I) - w' ≠ 0 := fun _ hw' _ hy =>
+    modularLambdaH_F_Y_right_edge_ne hw' (lt_of_lt_of_le hδ_pos hy.1)
+  have hg_left_u : ∀ w' : ℂ, 0 < w'.im → ∀ y ∈ Set.Icc δ Y,
+      modularLambdaH ((0 : ℂ) + (y : ℂ) * Complex.I) - w' ≠ 0 := fun _ hw' _ hy =>
+    modularLambdaH_F_Y_left_edge_ne hw' (lt_of_lt_of_le hδ_pos hy.1)
+  have hg_arc_u : ∀ w' : ℂ, μ ≤ w'.im → ‖w'‖ ≤ B → μ ≤ ‖w' - 1‖ →
+      ∀ θ ∈ Set.Icc (0 : ℝ) Real.pi,
+      modularLambdaH (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ) - w' ≠ 0 := by
+    intro w' h1 h2 h3 θ hθ
+    exact h_arc_prop δ R₀ hδ_pos hδ_le_δ_arc hR₀_lo hR₀_lt θ hθ.1 hθ.2 w' h1 h2 h3
+  -- The six boundary facts at `w`.
+  have hg_bot_left_w := hg_bot_left_u w hw_sub_one
+  have hg_bot_right_w := hg_bot_right_u w hB_ge_w
+  have hg_top_w := hg_top_u w hμ_le_w_im
+  have hg_right_w := hg_right_u w hw
+  have hg_left_w := hg_left_u w hw
+  have hg_arc_w := hg_arc_u w hμ_le_w_im hB_ge_w hw_sub_one
+  -- The six boundary facts at `w_ref`.
+  have hg_bot_left_wr := hg_bot_left_u w_ref hw_ref_sub_one
+  have hg_bot_right_wr := hg_bot_right_u w_ref hB_ge_wref
+  have hg_top_wr := hg_top_u w_ref hμ_le_wref_im
+  have hg_right_wr := hg_right_u w_ref hw_ref_im
+  have hg_left_wr := hg_left_u w_ref hw_ref_im
+  have hg_arc_wr := hg_arc_u w_ref hμ_le_wref_im hB_ge_wref hw_ref_sub_one
+  -- Transport hypothesis: the image curve avoids the whole segment.
+  have h_avoid : ∀ s ∈ Set.Icc (0 : ℝ) 1, ∀ t ∈ Set.Icc (0 : ℝ) 6,
+      modularLambdaH (F_Y_boundary_parameterization δ Y R₀ t) ≠
+        (1 - (s : ℂ)) * w + (s : ℂ) * w_ref := by
+    intro s hs t ht
+    have h_ne := F_Y_image_curve_ne_zero (w := (1 - (s : ℂ)) * w + (s : ℂ) * w_ref)
+      hR₀_pos hR₀_lt hδ_lt_Y.le
+      (hg_bot_left_u _ (h_seg_sub_one s hs))
+      (hg_bot_right_u _ (h_seg_norm s hs))
+      (hg_top_u _ (h_seg_im s hs))
+      (hg_right_u _ (lt_of_lt_of_le hμ_pos (h_seg_im s hs)))
+      (hg_left_u _ (lt_of_lt_of_le hμ_pos (h_seg_im s hs)))
+      (hg_arc_u _ (h_seg_im s hs) (h_seg_norm s hs) (h_seg_sub_one s hs))
+      t ht
+    exact sub_ne_zero.mp h_ne
+  -- ================== F. identity chain N(w) = N(w_ref) ==================
+  have h_div_w := modularLambdaH_F_Y_AP_integral_eq_divisor_sum
+    hδ_pos hδ_lt_Y hR₀_pos hR₀_lt h_δR_lt_Y
+    hg_bot_left_w hg_bot_right_w hg_top_w hg_right_w hg_left_w hg_arc_w
+  have h_div_wr := modularLambdaH_F_Y_AP_integral_eq_divisor_sum
+    hδ_pos hδ_lt_Y hR₀_pos hR₀_lt h_δR_lt_Y
+    hg_bot_left_wr hg_bot_right_wr hg_top_wr hg_right_wr hg_left_wr hg_arc_wr
+  have h_LHS_w := modularLambdaH_F_Y_image_curve_LHS_eq_pathContourIntegral
+    hδ_pos hδ_lt_Y hR₀_pos hR₀_lt h_δR_lt_Y
+    hg_bot_left_w hg_bot_right_w hg_top_w hg_right_w hg_left_w hg_arc_w
+  have h_LHS_wr := modularLambdaH_F_Y_image_curve_LHS_eq_pathContourIntegral
+    hδ_pos hδ_lt_Y hR₀_pos hR₀_lt h_δR_lt_Y
+    hg_bot_left_wr hg_bot_right_wr hg_top_wr hg_right_wr hg_left_wr hg_arc_wr
+  have h_transport := modularLambdaH_F_Y_pathContourIntegral_eq_of_segment_avoids
+    hδ_pos hδ_lt_Y hR₀_pos hR₀_lt h_avoid
+  have h_count_cast :
+      ((∑ᶠ u, MeromorphicOn.divisor (fun τ => modularLambdaH τ - w)
+        ((Set.Icc (0 : ℝ) 1 ×ℂ Set.Icc δ Y) \
+          Metric.ball ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀) u).toNat : ℂ) =
+      ((∑ᶠ u, MeromorphicOn.divisor (fun τ => modularLambdaH τ - w_ref)
+        ((Set.Icc (0 : ℝ) 1 ×ℂ Set.Icc δ Y) \
+          Metric.ball ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀) u).toNat : ℂ) := by
+    rw [← h_div_w, ← h_div_wr, h_LHS_w, h_LHS_wr, h_transport]
+  have h_count_eq :
+      (∑ᶠ u, MeromorphicOn.divisor (fun τ => modularLambdaH τ - w)
+        ((Set.Icc (0 : ℝ) 1 ×ℂ Set.Icc δ Y) \
+          Metric.ball ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀) u).toNat =
+      (∑ᶠ u, MeromorphicOn.divisor (fun τ => modularLambdaH τ - w_ref)
+        ((Set.Icc (0 : ℝ) 1 ×ℂ Set.Icc δ Y) \
+          Metric.ball ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀) u).toNat := by
+    exact_mod_cast h_count_cast
+  -- ================== G. count at w_ref is at most one ==================
+  have he_re : ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I).re = 1 / 2 := by
+    rw [Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
+      Complex.ofReal_re, Complex.ofReal_im]
+    have h_half_re : ((1 : ℂ) / 2).re = 1 / 2 := by rw [Complex.div_re]; simp
+    rw [h_half_re]; ring
+  have he_im : ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I).im = δ := by
+    rw [Complex.add_im, Complex.mul_im, Complex.I_re, Complex.I_im,
+      Complex.ofReal_re, Complex.ofReal_im]
+    have h_half_im : ((1 : ℂ) / 2).im = 0 := by rw [Complex.div_im]; simp
+    rw [h_half_im]; ring
+  -- Any zero of `λ − w_ref` in the truncated region is `τ_ref`.
+  have h_unique_δ : ∀ z ∈ (Set.Icc (0 : ℝ) 1 ×ℂ Set.Icc δ Y) \
+      Metric.ball ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀,
+      (fun τ => modularLambdaH τ - w_ref) z = 0 → z = τ_ref := by
+    intro z hz h_gz0
+    have h_gz : modularLambdaH z - w_ref = 0 := h_gz0
+    have h_lam_eq : modularLambdaH z = w_ref := sub_eq_zero.mp h_gz
+    obtain ⟨hz_box, hz_ball⟩ := hz
+    rw [Complex.mem_reProdIm] at hz_box
+    obtain ⟨hz_re, hz_im⟩ := hz_box
+    have hz_dist : R₀ ≤ ‖z - ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I)‖ := by
+      simp only [Metric.mem_ball, Complex.dist_eq, not_lt] at hz_ball
+      exact hz_ball
+    -- Left edge excluded.
+    by_cases h_re_0 : z.re = 0
+    · exfalso
+      have h_z_eq : z = (0 : ℂ) + (z.im : ℂ) * Complex.I := by
+        apply Complex.ext
+        · simp [Complex.mul_re, Complex.I_re, Complex.I_im,
+            Complex.ofReal_re, Complex.ofReal_im, h_re_0]
+        · simp [Complex.mul_im, Complex.I_re, Complex.I_im,
+            Complex.ofReal_re, Complex.ofReal_im]
+      exact hg_left_wr z.im hz_im (by rw [← h_z_eq]; exact h_gz)
+    -- Right edge excluded.
+    by_cases h_re_1 : z.re = 1
+    · exfalso
+      have h_z_eq : z = (1 : ℂ) + (z.im : ℂ) * Complex.I := by
+        apply Complex.ext
+        · simp [Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
+            Complex.ofReal_re, Complex.ofReal_im, h_re_1]
+        · simp [Complex.add_im, Complex.mul_im, Complex.I_re, Complex.I_im,
+            Complex.ofReal_re, Complex.ofReal_im]
+      exact hg_right_wr z.im hz_im (by rw [← h_z_eq]; exact h_gz)
+    -- Bottom edge excluded.
+    by_cases h_im_δ : z.im = δ
+    · exfalso
+      have h_z_sub : z - ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I)
+          = ((z.re - 1 / 2 : ℝ) : ℂ) := by
+        apply Complex.ext
+        · rw [Complex.sub_re, he_re, Complex.ofReal_re]
+        · rw [Complex.sub_im, he_im, Complex.ofReal_im, h_im_δ, sub_self]
+      rw [h_z_sub, Complex.norm_real, Real.norm_eq_abs] at hz_dist
+      have h_z_eq : z = (z.re : ℂ) + (δ : ℂ) * Complex.I := by
+        apply Complex.ext
+        · simp [Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
+            Complex.ofReal_re, Complex.ofReal_im]
+        · simp [Complex.add_im, Complex.mul_im, Complex.I_re, Complex.I_im,
+            Complex.ofReal_re, Complex.ofReal_im, h_im_δ]
+      rcases abs_cases (z.re - 1 / 2) with ⟨h_abs_eq, _⟩ | ⟨h_abs_eq, _⟩
+      · rw [h_abs_eq] at hz_dist
+        exact hg_bot_right_wr z.re (Set.mem_Icc.mpr ⟨by linarith, hz_re.2⟩)
+          (by rw [← h_z_eq]; exact h_gz)
+      · rw [h_abs_eq] at hz_dist
+        exact hg_bot_left_wr z.re (Set.mem_Icc.mpr ⟨hz_re.1, by linarith⟩)
+          (by rw [← h_z_eq]; exact h_gz)
+    -- Arc excluded, or interior point.
+    rcases eq_or_lt_of_le hz_dist with h_norm_eq | h_arc_gt
+    · exfalso
+      have h_polar := Complex.norm_mul_exp_arg_mul_I
+        (z - ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I))
+      have hζ_im_nonneg : 0 ≤ (z - ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I)).im := by
+        rw [Complex.sub_im, he_im]
+        linarith [hz_im.1]
+      have hθ_nonneg : 0 ≤ (z - ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I)).arg :=
+        Complex.arg_nonneg_iff.mpr hζ_im_nonneg
+      have hθ_le_pi : (z - ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I)).arg ≤ Real.pi :=
+        Complex.arg_le_pi _
+      have h_z_eq : z = _root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀
+          ((z - ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I)).arg) := by
+        have h_cm : _root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀
+            ((z - ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I)).arg) =
+            ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) + (R₀ : ℂ) *
+              Complex.exp (((z - ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I)).arg : ℂ) *
+                Complex.I) := rfl
+        rw [h_cm, h_norm_eq, h_polar]
+        ring
+      exact hg_arc_wr ((z - ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I)).arg)
+        (Set.mem_Icc.mpr ⟨hθ_nonneg, hθ_le_pi⟩) (by rw [← h_z_eq]; exact h_gz)
+    · -- Strictly interior: `z ∈ F°`, so `z = τ_ref` by the reference uniqueness.
+      have h_im_gt : δ < z.im := lt_of_le_of_ne hz_im.1 (Ne.symm h_im_δ)
+      have h_re_gt : 0 < z.re := lt_of_le_of_ne hz_re.1 (Ne.symm h_re_0)
+      have h_re_lt : z.re < 1 := lt_of_le_of_ne hz_re.2 h_re_1
+      have h_semi : 1 < ‖2 * z - 1‖ :=
+        F_Y_point_in_gamma2_semicircle_exterior hδ_pos hR₀_lo h_im_gt h_arc_gt
+      exact hτ_ref_unique z ⟨lt_trans hδ_pos h_im_gt, h_re_gt, h_re_lt, h_semi⟩ h_lam_eq
+  have h_simple : (fun τ => modularLambdaH τ - w_ref) τ_ref = 0 →
+      deriv (fun τ => modularLambdaH τ - w_ref) τ_ref ≠ 0 := by
+    intro _
+    have h_d : deriv (fun τ => modularLambdaH τ - w_ref) τ_ref
+        = deriv modularLambdaH τ_ref := deriv_sub_const w_ref
+    rw [h_d]
+    exact hτ_ref_deriv
+  have h_le_one : (∑ᶠ u, MeromorphicOn.divisor (fun τ => modularLambdaH τ - w_ref)
+      ((Set.Icc (0 : ℝ) 1 ×ℂ Set.Icc δ Y) \
+        Metric.ball ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀) u).toNat ≤ 1 := by
+    have key := Complex.divisor_sum_toNat_le_one_of_unique_simple_zero_on_rectMinusUpperHalfDisk
+      (fun τ => modularLambdaH τ - w_ref) 0 1 Y ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀
+      (by rw [he_im]; exact modularLambdaH_F_Y_analytic w_ref hδ_pos hδ_lt_Y hR₀_pos)
+      (by rw [he_im]; exact h_unique_δ)
+      h_simple
+    rw [he_im] at key
+    exact key
+  -- ================== H. count at w is at least two ==================
+  obtain ⟨_h₁_im_pos, h₁_re_lo, h₁_re_hi, _h₁_semi⟩ := h₁_in
+  obtain ⟨_h₂_im_pos, h₂_re_lo, h₂_re_hi, _h₂_semi⟩ := h₂_in
+  have hτ₁_mem : τ₁ ∈ (Set.Icc (0 : ℝ) 1 ×ℂ
+      Set.Icc (((1 / 2 : ℂ) + (δ : ℂ) * Complex.I).im) Y) \
+      Metric.ball ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ := by
+    rw [he_im]
+    refine ⟨?_, ?_⟩
+    · rw [Complex.mem_reProdIm]
+      exact ⟨Set.mem_Icc.mpr ⟨h₁_re_lo.le, h₁_re_hi.le⟩,
+        Set.mem_Icc.mpr ⟨hδ_lt_τ₁_im.le, hτ₁_im_lt_Y.le⟩⟩
+    · simp only [Metric.mem_ball, Complex.dist_eq, not_lt]
+      exact hτ₁_norm_gt.le
+  have hτ₂_mem : τ₂ ∈ (Set.Icc (0 : ℝ) 1 ×ℂ
+      Set.Icc (((1 / 2 : ℂ) + (δ : ℂ) * Complex.I).im) Y) \
+      Metric.ball ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ := by
+    rw [he_im]
+    refine ⟨?_, ?_⟩
+    · rw [Complex.mem_reProdIm]
+      exact ⟨Set.mem_Icc.mpr ⟨h₂_re_lo.le, h₂_re_hi.le⟩,
+        Set.mem_Icc.mpr ⟨hδ_lt_τ₂_im.le, hτ₂_im_lt_Y.le⟩⟩
+    · simp only [Metric.mem_ball, Complex.dist_eq, not_lt]
+      exact hτ₂_norm_gt.le
+  have hτ₁_zero : (fun τ => modularLambdaH τ - w) τ₁ = 0 := by
+    show modularLambdaH τ₁ - w = 0
+    rw [h₁_eq, sub_self]
+  have hτ₂_zero : (fun τ => modularLambdaH τ - w) τ₂ = 0 := by
+    show modularLambdaH τ₂ - w = 0
+    rw [h₂_eq, sub_self]
+  have h_two_le : 2 ≤ (∑ᶠ u, MeromorphicOn.divisor (fun τ => modularLambdaH τ - w)
+      ((Set.Icc (0 : ℝ) 1 ×ℂ Set.Icc δ Y) \
+        Metric.ball ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀) u).toNat := by
+    have key := Complex.two_le_divisor_sum_toNat_of_two_zeros_on_rectMinusUpperHalfDisk
+      (fun τ => modularLambdaH τ - w) 0 1 Y ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀
+      (by norm_num) hR₀_pos
+      (by rw [he_re]; linarith)
+      (by rw [he_re]; linarith)
+      (by rw [he_im]; exact h_δR_lt_Y)
+      (by rw [he_im]; exact modularLambdaH_F_Y_analytic w hδ_pos hδ_lt_Y hR₀_pos)
+      (by
+        rw [he_im]
+        intro h0
+        have h0' : modularLambdaH (((0 : ℝ) : ℂ) + (δ : ℂ) * Complex.I) - w = 0 := h0
+        rw [Complex.ofReal_zero] at h0'
+        exact hg_left_w δ (Set.mem_Icc.mpr ⟨le_refl δ, hδ_lt_Y.le⟩) h0')
+      h_τ_ne hτ₁_mem hτ₁_zero hτ₂_mem hτ₂_zero
+    rw [he_im] at key
+    exact key
+  omega
+
+set_option maxHeartbeats 400000 in
+-- Long single-declaration assembly of the degree argument (many large integral terms).
+/-- **Nonvanishing of `λ'` at `F°`-preimages (degree-argument bootstrap).** A
+vanishing derivative would make the preimage a double zero of `λ − w`, forcing
+the F_Y zero count to be at least two; transporting the count along a
+`w`-segment to the deep-cusp reference value caps it at one. -/
+theorem modularLambdaH_F_interior_preimage_deriv_ne_zero
+    {w : ℂ} (hw : 0 < w.im) {τ : ℂ}
+    (h_in : τ ∈ Gamma2FundamentalDomainInterior)
+    (h_eq : modularLambdaH τ = w) :
+    deriv modularLambdaH τ ≠ 0 := by
+  intro h_deriv_eq
+  -- ================== A. deep-cusp reference value ==================
+  obtain ⟨w_ref, τ_ref, hw_ref_im, _hτ_ref_in, _hτ_ref_eq, hτ_ref_deriv, hτ_ref_unique⟩ :=
+    modularLambdaH_cusp_reference_value
+  -- ================== B. segment bounds ==================
+  obtain ⟨μ, hμ_pos, hμ_le_w_im, hμ_le_wref_im⟩ :
+      ∃ m : ℝ, 0 < m ∧ m ≤ w.im ∧ m ≤ w_ref.im :=
+    ⟨min w.im w_ref.im, lt_min hw hw_ref_im, min_le_left _ _, min_le_right _ _⟩
+  obtain ⟨B, hB_pos, hB_ge_w, hB_ge_wref⟩ :
+      ∃ b : ℝ, 0 < b ∧ ‖w‖ ≤ b ∧ ‖w_ref‖ ≤ b :=
+    ⟨max ‖w‖ ‖w_ref‖,
+      lt_of_lt_of_le (lt_of_lt_of_le hw (Complex.im_le_norm w)) (le_max_left _ _),
+      le_max_left _ _, le_max_right _ _⟩
+  -- `Im z ≥ μ` forces `‖z − 1‖ ≥ μ`.
+  have h_im_to_sub_one : ∀ z : ℂ, μ ≤ z.im → μ ≤ ‖z - 1‖ := by
+    intro z hz
+    have h1 : (z - 1).im = z.im := by rw [Complex.sub_im, Complex.one_im, sub_zero]
+    calc μ ≤ (z - 1).im := by rw [h1]; exact hz
+      _ ≤ ‖z - 1‖ := Complex.im_le_norm _
+  have hw_sub_one : μ ≤ ‖w - 1‖ := h_im_to_sub_one w hμ_le_w_im
+  have hw_ref_sub_one : μ ≤ ‖w_ref - 1‖ := h_im_to_sub_one w_ref hμ_le_wref_im
+  -- Segment-point bounds (i): imaginary part.
+  have h_seg_im : ∀ s ∈ Set.Icc (0 : ℝ) 1,
+      μ ≤ ((1 - (s : ℂ)) * w + (s : ℂ) * w_ref).im := by
+    intro s hs
+    have h_im : ((1 - (s : ℂ)) * w + (s : ℂ) * w_ref).im
+        = (1 - s) * w.im + s * w_ref.im := by
+      simp only [Complex.add_im, Complex.mul_im, Complex.sub_re, Complex.sub_im,
+        Complex.one_re, Complex.one_im, Complex.ofReal_re, Complex.ofReal_im]
+      ring
+    rw [h_im]
+    have hP : 0 ≤ (1 - s) * (w.im - μ) :=
+      mul_nonneg (by linarith [hs.2]) (by linarith [hμ_le_w_im])
+    have hQ : 0 ≤ s * (w_ref.im - μ) :=
+      mul_nonneg hs.1 (by linarith [hμ_le_wref_im])
+    nlinarith [hP, hQ]
+  -- Segment-point bounds (ii): norm.
+  have h_seg_norm : ∀ s ∈ Set.Icc (0 : ℝ) 1,
+      ‖(1 - (s : ℂ)) * w + (s : ℂ) * w_ref‖ ≤ B := by
+    intro s hs
+    have h_tri := norm_add_le ((1 - (s : ℂ)) * w) ((s : ℂ) * w_ref)
+    have h1 : ‖(1 - (s : ℂ)) * w‖ = (1 - s) * ‖w‖ := by
+      rw [norm_mul]
+      congr 1
+      rw [show (1 : ℂ) - (s : ℂ) = ((1 - s : ℝ) : ℂ) by push_cast; ring,
+        Complex.norm_real, Real.norm_eq_abs, abs_of_nonneg (by linarith [hs.2])]
+    have h2 : ‖(s : ℂ) * w_ref‖ = s * ‖w_ref‖ := by
+      rw [norm_mul, Complex.norm_real, Real.norm_eq_abs, abs_of_nonneg hs.1]
+    rw [h1, h2] at h_tri
+    have hA := mul_le_mul_of_nonneg_left hB_ge_w (by linarith [hs.2] : (0 : ℝ) ≤ 1 - s)
+    have hC := mul_le_mul_of_nonneg_left hB_ge_wref hs.1
+    calc ‖(1 - (s : ℂ)) * w + (s : ℂ) * w_ref‖
+        ≤ (1 - s) * ‖w‖ + s * ‖w_ref‖ := h_tri
+      _ ≤ (1 - s) * B + s * B := add_le_add hA hC
+      _ = B := by ring
+  -- Segment-point bounds (iii): distance to `1`.
+  have h_seg_sub_one : ∀ s ∈ Set.Icc (0 : ℝ) 1,
+      μ ≤ ‖(1 - (s : ℂ)) * w + (s : ℂ) * w_ref - 1‖ :=
+    fun s hs => h_im_to_sub_one _ (h_seg_im s hs)
+  -- ================== C. thresholds and region parameters ==================
+  obtain ⟨δ_bl, hδ_bl_pos, _hδ_bl_lt, h_bl_prop⟩ :=
+    modularLambdaH_F_Y_bot_left_strip_ne_uniform hμ_pos
+  obtain ⟨δ_br, hδ_br_pos, _hδ_br_lt, h_br_prop⟩ :=
+    modularLambdaH_F_Y_bot_right_strip_ne_uniform hB_pos
+  obtain ⟨δ_arc, hδ_arc_pos, _hδ_arc_lt, h_arc_prop⟩ :=
+    modularLambdaH_F_Y_arc_ne_uniform hμ_pos hB_pos hμ_pos
+  obtain ⟨Y₀, _hY₀_ge_one, hY₀_prop⟩ := modularLambdaH_top_edge_norm_lt_uniform hμ_pos
+  obtain ⟨δ_max, hδ_max_pos, hδ_max_le_quarter, hδ_max_le_bl, hδ_max_le_br, hδ_max_le_arc⟩ :
+      ∃ δ_m : ℝ, 0 < δ_m ∧ δ_m ≤ 1 / 4 ∧ δ_m ≤ δ_bl ∧ δ_m ≤ δ_br ∧ δ_m ≤ δ_arc :=
+    ⟨min (min δ_bl δ_br) (min δ_arc (1 / 4)),
+      lt_min (lt_min hδ_bl_pos hδ_br_pos) (lt_min hδ_arc_pos (by norm_num)),
+      le_trans (min_le_right _ _) (min_le_right _ _),
+      le_trans (min_le_left _ _) (min_le_left _ _),
+      le_trans (min_le_left _ _) (min_le_right _ _),
+      le_trans (min_le_right _ _) (min_le_left _ _)⟩
+  obtain ⟨δ, Y_base, R₀, hδ_pos, hδ_le_δ_max, hδ_lt_τ_im, _hδ_lt_τ_im',
+    hδ_lt_Y_base, hτ_im_lt_Y_base, _hτ_im_lt_Y_base',
+    hR₀_pos, hR₀_lt, h_δR_lt_Y_base, hR₀_lo, hτ_norm_gt, _hτ_norm_gt'⟩ :=
+    modularLambdaH_F_Y_params_exist_arc hw h_in h_in hδ_max_pos hδ_max_le_quarter
+  obtain ⟨Y, hY_ge_base, hY_ge_Y₀⟩ : ∃ Y : ℝ, Y_base ≤ Y ∧ Y₀ ≤ Y :=
+    ⟨max Y_base Y₀, le_max_left _ _, le_max_right _ _⟩
+  have hδ_lt_Y : δ < Y := lt_of_lt_of_le hδ_lt_Y_base hY_ge_base
+  have hτ_im_lt_Y : τ.im < Y := lt_of_lt_of_le hτ_im_lt_Y_base hY_ge_base
+  have h_δR_lt_Y : δ + R₀ < Y := lt_of_lt_of_le h_δR_lt_Y_base hY_ge_base
+  have hδ_le_δ_bl : δ ≤ δ_bl := le_trans hδ_le_δ_max hδ_max_le_bl
+  have hδ_le_δ_br : δ ≤ δ_br := le_trans hδ_le_δ_max hδ_max_le_br
+  have hδ_le_δ_arc : δ ≤ δ_arc := le_trans hδ_le_δ_max hδ_max_le_arc
+  have hδ_le_quarter : δ ≤ 1 / 4 := le_trans hδ_le_δ_max hδ_max_le_quarter
+  -- Coverage trick: the bottom edge intervals lie inside the cascade strips.
+  have h_half_minus_R₀ : 1 / 2 - R₀ ≤ 2 * δ ^ 2 :=
+    modularLambdaH_F_Y_arc_half_minus_R₀_bound hδ_pos hδ_le_quarter hR₀_lo hR₀_lt hR₀_pos
+  have h_2δ_sq_le_δ : 2 * δ ^ 2 ≤ δ := by nlinarith [hδ_pos.le, hδ_le_quarter]
+  have h_half_minus_R₀_le_δ : 1 / 2 - R₀ ≤ δ := le_trans h_half_minus_R₀ h_2δ_sq_le_δ
+  -- ================== D. segment-uniform boundary facts ==================
+  have hg_bot_left_u : ∀ w' : ℂ, μ ≤ ‖w' - 1‖ → ∀ x ∈ Set.Icc (0 : ℝ) (1 / 2 - R₀),
+      modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) - w' ≠ 0 := by
+    intro w' hw' x hx
+    exact h_bl_prop δ hδ_pos hδ_le_δ_bl x hx.1 (le_trans hx.2 h_half_minus_R₀_le_δ) w' hw'
+  have hg_bot_right_u : ∀ w' : ℂ, ‖w'‖ ≤ B → ∀ x ∈ Set.Icc (1 / 2 + R₀ : ℝ) 1,
+      modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) - w' ≠ 0 := by
+    intro w' hw' x hx
+    refine h_br_prop δ hδ_pos hδ_le_δ_br x ?_ hx.2 w' hw'
+    linarith [hx.1, h_half_minus_R₀_le_δ]
+  have hg_top_u : ∀ w' : ℂ, μ ≤ w'.im → ∀ x ∈ Set.Icc (0 : ℝ) 1,
+      modularLambdaH ((x : ℂ) + (Y : ℂ) * Complex.I) - w' ≠ 0 := by
+    intro w' hw'_im x hx h_eq0
+    have h_norm_lt : ‖modularLambdaH ((x : ℂ) + (Y : ℂ) * Complex.I)‖ < μ :=
+      hY₀_prop Y hY_ge_Y₀ x hx.1 hx.2
+    have h_lam_eq : modularLambdaH ((x : ℂ) + (Y : ℂ) * Complex.I) = w' := by
+      linear_combination h_eq0
+    rw [h_lam_eq] at h_norm_lt
+    linarith [Complex.im_le_norm w', hw'_im]
+  have hg_right_u : ∀ w' : ℂ, 0 < w'.im → ∀ y ∈ Set.Icc δ Y,
+      modularLambdaH ((1 : ℂ) + (y : ℂ) * Complex.I) - w' ≠ 0 := fun _ hw' _ hy =>
+    modularLambdaH_F_Y_right_edge_ne hw' (lt_of_lt_of_le hδ_pos hy.1)
+  have hg_left_u : ∀ w' : ℂ, 0 < w'.im → ∀ y ∈ Set.Icc δ Y,
+      modularLambdaH ((0 : ℂ) + (y : ℂ) * Complex.I) - w' ≠ 0 := fun _ hw' _ hy =>
+    modularLambdaH_F_Y_left_edge_ne hw' (lt_of_lt_of_le hδ_pos hy.1)
+  have hg_arc_u : ∀ w' : ℂ, μ ≤ w'.im → ‖w'‖ ≤ B → μ ≤ ‖w' - 1‖ →
+      ∀ θ ∈ Set.Icc (0 : ℝ) Real.pi,
+      modularLambdaH (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ) - w' ≠ 0 := by
+    intro w' h1 h2 h3 θ hθ
+    exact h_arc_prop δ R₀ hδ_pos hδ_le_δ_arc hR₀_lo hR₀_lt θ hθ.1 hθ.2 w' h1 h2 h3
+  -- The six boundary facts at `w`.
+  have hg_bot_left_w := hg_bot_left_u w hw_sub_one
+  have hg_bot_right_w := hg_bot_right_u w hB_ge_w
+  have hg_top_w := hg_top_u w hμ_le_w_im
+  have hg_right_w := hg_right_u w hw
+  have hg_left_w := hg_left_u w hw
+  have hg_arc_w := hg_arc_u w hμ_le_w_im hB_ge_w hw_sub_one
+  -- The six boundary facts at `w_ref`.
+  have hg_bot_left_wr := hg_bot_left_u w_ref hw_ref_sub_one
+  have hg_bot_right_wr := hg_bot_right_u w_ref hB_ge_wref
+  have hg_top_wr := hg_top_u w_ref hμ_le_wref_im
+  have hg_right_wr := hg_right_u w_ref hw_ref_im
+  have hg_left_wr := hg_left_u w_ref hw_ref_im
+  have hg_arc_wr := hg_arc_u w_ref hμ_le_wref_im hB_ge_wref hw_ref_sub_one
+  -- Transport hypothesis: the image curve avoids the whole segment.
+  have h_avoid : ∀ s ∈ Set.Icc (0 : ℝ) 1, ∀ t ∈ Set.Icc (0 : ℝ) 6,
+      modularLambdaH (F_Y_boundary_parameterization δ Y R₀ t) ≠
+        (1 - (s : ℂ)) * w + (s : ℂ) * w_ref := by
+    intro s hs t ht
+    have h_ne := F_Y_image_curve_ne_zero (w := (1 - (s : ℂ)) * w + (s : ℂ) * w_ref)
+      hR₀_pos hR₀_lt hδ_lt_Y.le
+      (hg_bot_left_u _ (h_seg_sub_one s hs))
+      (hg_bot_right_u _ (h_seg_norm s hs))
+      (hg_top_u _ (h_seg_im s hs))
+      (hg_right_u _ (lt_of_lt_of_le hμ_pos (h_seg_im s hs)))
+      (hg_left_u _ (lt_of_lt_of_le hμ_pos (h_seg_im s hs)))
+      (hg_arc_u _ (h_seg_im s hs) (h_seg_norm s hs) (h_seg_sub_one s hs))
+      t ht
+    exact sub_ne_zero.mp h_ne
+  -- ================== F. identity chain N(w) = N(w_ref) ==================
+  have h_div_w := modularLambdaH_F_Y_AP_integral_eq_divisor_sum
+    hδ_pos hδ_lt_Y hR₀_pos hR₀_lt h_δR_lt_Y
+    hg_bot_left_w hg_bot_right_w hg_top_w hg_right_w hg_left_w hg_arc_w
+  have h_div_wr := modularLambdaH_F_Y_AP_integral_eq_divisor_sum
+    hδ_pos hδ_lt_Y hR₀_pos hR₀_lt h_δR_lt_Y
+    hg_bot_left_wr hg_bot_right_wr hg_top_wr hg_right_wr hg_left_wr hg_arc_wr
+  have h_LHS_w := modularLambdaH_F_Y_image_curve_LHS_eq_pathContourIntegral
+    hδ_pos hδ_lt_Y hR₀_pos hR₀_lt h_δR_lt_Y
+    hg_bot_left_w hg_bot_right_w hg_top_w hg_right_w hg_left_w hg_arc_w
+  have h_LHS_wr := modularLambdaH_F_Y_image_curve_LHS_eq_pathContourIntegral
+    hδ_pos hδ_lt_Y hR₀_pos hR₀_lt h_δR_lt_Y
+    hg_bot_left_wr hg_bot_right_wr hg_top_wr hg_right_wr hg_left_wr hg_arc_wr
+  have h_transport := modularLambdaH_F_Y_pathContourIntegral_eq_of_segment_avoids
+    hδ_pos hδ_lt_Y hR₀_pos hR₀_lt h_avoid
+  have h_count_cast :
+      ((∑ᶠ u, MeromorphicOn.divisor (fun τ' => modularLambdaH τ' - w)
+        ((Set.Icc (0 : ℝ) 1 ×ℂ Set.Icc δ Y) \
+          Metric.ball ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀) u).toNat : ℂ) =
+      ((∑ᶠ u, MeromorphicOn.divisor (fun τ' => modularLambdaH τ' - w_ref)
+        ((Set.Icc (0 : ℝ) 1 ×ℂ Set.Icc δ Y) \
+          Metric.ball ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀) u).toNat : ℂ) := by
+    rw [← h_div_w, ← h_div_wr, h_LHS_w, h_LHS_wr, h_transport]
+  have h_count_eq :
+      (∑ᶠ u, MeromorphicOn.divisor (fun τ' => modularLambdaH τ' - w)
+        ((Set.Icc (0 : ℝ) 1 ×ℂ Set.Icc δ Y) \
+          Metric.ball ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀) u).toNat =
+      (∑ᶠ u, MeromorphicOn.divisor (fun τ' => modularLambdaH τ' - w_ref)
+        ((Set.Icc (0 : ℝ) 1 ×ℂ Set.Icc δ Y) \
+          Metric.ball ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀) u).toNat := by
+    exact_mod_cast h_count_cast
+  -- ================== G. count at w_ref is at most one ==================
+  have he_re : ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I).re = 1 / 2 := by
+    rw [Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
+      Complex.ofReal_re, Complex.ofReal_im]
+    have h_half_re : ((1 : ℂ) / 2).re = 1 / 2 := by rw [Complex.div_re]; simp
+    rw [h_half_re]; ring
+  have he_im : ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I).im = δ := by
+    rw [Complex.add_im, Complex.mul_im, Complex.I_re, Complex.I_im,
+      Complex.ofReal_re, Complex.ofReal_im]
+    have h_half_im : ((1 : ℂ) / 2).im = 0 := by rw [Complex.div_im]; simp
+    rw [h_half_im]; ring
+  -- Any zero of `λ − w_ref` in the truncated region is `τ_ref`.
+  have h_unique_δ : ∀ z ∈ (Set.Icc (0 : ℝ) 1 ×ℂ Set.Icc δ Y) \
+      Metric.ball ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀,
+      (fun τ' => modularLambdaH τ' - w_ref) z = 0 → z = τ_ref := by
+    intro z hz h_gz0
+    have h_gz : modularLambdaH z - w_ref = 0 := h_gz0
+    have h_lam_eq : modularLambdaH z = w_ref := sub_eq_zero.mp h_gz
+    obtain ⟨hz_box, hz_ball⟩ := hz
+    rw [Complex.mem_reProdIm] at hz_box
+    obtain ⟨hz_re, hz_im⟩ := hz_box
+    have hz_dist : R₀ ≤ ‖z - ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I)‖ := by
+      simp only [Metric.mem_ball, Complex.dist_eq, not_lt] at hz_ball
+      exact hz_ball
+    -- Left edge excluded.
+    by_cases h_re_0 : z.re = 0
+    · exfalso
+      have h_z_eq : z = (0 : ℂ) + (z.im : ℂ) * Complex.I := by
+        apply Complex.ext
+        · simp [Complex.mul_re, Complex.I_re, Complex.I_im,
+            Complex.ofReal_re, Complex.ofReal_im, h_re_0]
+        · simp [Complex.mul_im, Complex.I_re, Complex.I_im,
+            Complex.ofReal_re, Complex.ofReal_im]
+      exact hg_left_wr z.im hz_im (by rw [← h_z_eq]; exact h_gz)
+    -- Right edge excluded.
+    by_cases h_re_1 : z.re = 1
+    · exfalso
+      have h_z_eq : z = (1 : ℂ) + (z.im : ℂ) * Complex.I := by
+        apply Complex.ext
+        · simp [Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
+            Complex.ofReal_re, Complex.ofReal_im, h_re_1]
+        · simp [Complex.add_im, Complex.mul_im, Complex.I_re, Complex.I_im,
+            Complex.ofReal_re, Complex.ofReal_im]
+      exact hg_right_wr z.im hz_im (by rw [← h_z_eq]; exact h_gz)
+    -- Bottom edge excluded.
+    by_cases h_im_δ : z.im = δ
+    · exfalso
+      have h_z_sub : z - ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I)
+          = ((z.re - 1 / 2 : ℝ) : ℂ) := by
+        apply Complex.ext
+        · rw [Complex.sub_re, he_re, Complex.ofReal_re]
+        · rw [Complex.sub_im, he_im, Complex.ofReal_im, h_im_δ, sub_self]
+      rw [h_z_sub, Complex.norm_real, Real.norm_eq_abs] at hz_dist
+      have h_z_eq : z = (z.re : ℂ) + (δ : ℂ) * Complex.I := by
+        apply Complex.ext
+        · simp [Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
+            Complex.ofReal_re, Complex.ofReal_im]
+        · simp [Complex.add_im, Complex.mul_im, Complex.I_re, Complex.I_im,
+            Complex.ofReal_re, Complex.ofReal_im, h_im_δ]
+      rcases abs_cases (z.re - 1 / 2) with ⟨h_abs_eq, _⟩ | ⟨h_abs_eq, _⟩
+      · rw [h_abs_eq] at hz_dist
+        exact hg_bot_right_wr z.re (Set.mem_Icc.mpr ⟨by linarith, hz_re.2⟩)
+          (by rw [← h_z_eq]; exact h_gz)
+      · rw [h_abs_eq] at hz_dist
+        exact hg_bot_left_wr z.re (Set.mem_Icc.mpr ⟨hz_re.1, by linarith⟩)
+          (by rw [← h_z_eq]; exact h_gz)
+    -- Arc excluded, or interior point.
+    rcases eq_or_lt_of_le hz_dist with h_norm_eq | h_arc_gt
+    · exfalso
+      have h_polar := Complex.norm_mul_exp_arg_mul_I
+        (z - ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I))
+      have hζ_im_nonneg : 0 ≤ (z - ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I)).im := by
+        rw [Complex.sub_im, he_im]
+        linarith [hz_im.1]
+      have hθ_nonneg : 0 ≤ (z - ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I)).arg :=
+        Complex.arg_nonneg_iff.mpr hζ_im_nonneg
+      have hθ_le_pi : (z - ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I)).arg ≤ Real.pi :=
+        Complex.arg_le_pi _
+      have h_z_eq : z = _root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀
+          ((z - ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I)).arg) := by
+        have h_cm : _root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀
+            ((z - ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I)).arg) =
+            ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) + (R₀ : ℂ) *
+              Complex.exp (((z - ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I)).arg : ℂ) *
+                Complex.I) := rfl
+        rw [h_cm, h_norm_eq, h_polar]
+        ring
+      exact hg_arc_wr ((z - ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I)).arg)
+        (Set.mem_Icc.mpr ⟨hθ_nonneg, hθ_le_pi⟩) (by rw [← h_z_eq]; exact h_gz)
+    · -- Strictly interior: `z ∈ F°`, so `z = τ_ref` by the reference uniqueness.
+      have h_im_gt : δ < z.im := lt_of_le_of_ne hz_im.1 (Ne.symm h_im_δ)
+      have h_re_gt : 0 < z.re := lt_of_le_of_ne hz_re.1 (Ne.symm h_re_0)
+      have h_re_lt : z.re < 1 := lt_of_le_of_ne hz_re.2 h_re_1
+      have h_semi : 1 < ‖2 * z - 1‖ :=
+        F_Y_point_in_gamma2_semicircle_exterior hδ_pos hR₀_lo h_im_gt h_arc_gt
+      exact hτ_ref_unique z ⟨lt_trans hδ_pos h_im_gt, h_re_gt, h_re_lt, h_semi⟩ h_lam_eq
+  have h_simple : (fun τ' => modularLambdaH τ' - w_ref) τ_ref = 0 →
+      deriv (fun τ' => modularLambdaH τ' - w_ref) τ_ref ≠ 0 := by
+    intro _
+    have h_d : deriv (fun τ' => modularLambdaH τ' - w_ref) τ_ref
+        = deriv modularLambdaH τ_ref := deriv_sub_const w_ref
+    rw [h_d]
+    exact hτ_ref_deriv
+  have h_le_one : (∑ᶠ u, MeromorphicOn.divisor (fun τ' => modularLambdaH τ' - w_ref)
+      ((Set.Icc (0 : ℝ) 1 ×ℂ Set.Icc δ Y) \
+        Metric.ball ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀) u).toNat ≤ 1 := by
+    have key := Complex.divisor_sum_toNat_le_one_of_unique_simple_zero_on_rectMinusUpperHalfDisk
+      (fun τ' => modularLambdaH τ' - w_ref) 0 1 Y ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀
+      (by rw [he_im]; exact modularLambdaH_F_Y_analytic w_ref hδ_pos hδ_lt_Y hR₀_pos)
+      (by rw [he_im]; exact h_unique_δ)
+      h_simple
+    rw [he_im] at key
+    exact key
+  -- ================== H. count at w is at least two (double zero) ==================
+  obtain ⟨_h_im_pos, h_re_lo, h_re_hi, _h_semi⟩ := h_in
+  have hτ_mem : τ ∈ (Set.Icc (0 : ℝ) 1 ×ℂ
+      Set.Icc (((1 / 2 : ℂ) + (δ : ℂ) * Complex.I).im) Y) \
+      Metric.ball ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ := by
+    rw [he_im]
+    refine ⟨?_, ?_⟩
+    · rw [Complex.mem_reProdIm]
+      exact ⟨Set.mem_Icc.mpr ⟨h_re_lo.le, h_re_hi.le⟩,
+        Set.mem_Icc.mpr ⟨hδ_lt_τ_im.le, hτ_im_lt_Y.le⟩⟩
+    · simp only [Metric.mem_ball, Complex.dist_eq, not_lt]
+      exact hτ_norm_gt.le
+  have hτ_zero : (fun τ' => modularLambdaH τ' - w) τ = 0 := by
+    show modularLambdaH τ - w = 0
+    rw [h_eq, sub_self]
+  have hτ_deriv_zero : deriv (fun τ' => modularLambdaH τ' - w) τ = 0 := by
+    have h_d : deriv (fun τ' => modularLambdaH τ' - w) τ
+        = deriv modularLambdaH τ := deriv_sub_const w
+    rw [h_d]
+    exact h_deriv_eq
+  have h_two_le : 2 ≤ (∑ᶠ u, MeromorphicOn.divisor (fun τ' => modularLambdaH τ' - w)
+      ((Set.Icc (0 : ℝ) 1 ×ℂ Set.Icc δ Y) \
+        Metric.ball ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀) u).toNat := by
+    have key := Complex.two_le_divisor_sum_toNat_of_double_zero_on_rectMinusUpperHalfDisk
+      (fun τ' => modularLambdaH τ' - w) 0 1 Y ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀
+      (by norm_num) hR₀_pos
+      (by rw [he_re]; linarith)
+      (by rw [he_re]; linarith)
+      (by rw [he_im]; exact h_δR_lt_Y)
+      (by rw [he_im]; exact modularLambdaH_F_Y_analytic w hδ_pos hδ_lt_Y hR₀_pos)
+      (by
+        rw [he_im]
+        intro h0
+        have h0' : modularLambdaH (((0 : ℝ) : ℂ) + (δ : ℂ) * Complex.I) - w = 0 := h0
+        rw [Complex.ofReal_zero] at h0'
+        exact hg_left_w δ (Set.mem_Icc.mpr ⟨le_refl δ, hδ_lt_Y.le⟩) h0')
+      hτ_mem hτ_zero hτ_deriv_zero
+    rw [he_im] at key
+    exact key
+  omega
 
 /-- **Topological-winding result: image-curve contour integral equals 2πi.**
-For `w ∈ ℍ` and valid F_Y parameters with `λ ≠ w` on each boundary piece,
+For `w ∈ ℍ` with a `λ`-preimage `τ₀ ∈ F°` located inside the truncated
+region (above the bottom edge, below the top edge, outside the excised
+arc-ball), and valid F_Y parameters satisfying the cusp-excision bounds
+`δ ≤ 1/4` and `√(1/4 − δ²) < R₀`, with `λ ≠ w` on each boundary piece:
 the contour integral of `(z − w)⁻¹` along the image curve
 `λ ∘ F_Y_boundary_parameterization δ Y R₀` over `[0, 6]` equals exactly
 `2πi`.
 
-Proof: by `image_curve_lambda_F_Y_homotopic_to_circle` the image curve
-is continuously homotopic to a parameterized CCW circle around `w` with
-angular speed `π/3`. Applying
+The hypothesis set is the minimal one making the statement true:
+
+* Without `hR₀_lo`, the region F_Y reaches into the cusp at `1/2`,
+  where the Γ(2)-orbit of `τ₀` clusters just above the bottom edge,
+  making the winding integer exceed `1`.
+* Without the preimage-location data (`hτ₀_im_lo`, `hτ₀_im_hi`,
+  `hτ₀_arc`), `w` may have no preimage in F_Y at all (e.g. when the
+  unique `F°`-preimage lies below the bottom edge `Im τ = δ`), making
+  the winding integer `0`.
+* By `F_Y_point_in_gamma2_semicircle_exterior`, the arc bound places
+  the interior of F_Y inside `F°`, so the zeros of `λ − w` in F_Y are
+  exactly its `F°`-preimages there — `τ₀` is one of them (simple,
+  since `λ' ≠ 0` on `{Im λ > 0}`), and the winding-1 claim is
+  equivalent to `τ₀` being the only one.
+
+Proof route: by `image_curve_lambda_F_Y_homotopic_to_circle` the image
+curve is continuously homotopic to a parameterized CCW circle around
+`w` with angular speed `π/3`. Applying
 `_pathContourIntegral_eq_circle_via_homotopy` equates the two contour
 integrals. The circle integral computes directly via chain rule:
 `d/dt(circleMap w ε (t π/3)) = (π/3) · ε · exp(I(t π/3)) · I`, so the
@@ -2753,6 +6202,7 @@ integrand `(circleMap - w)⁻¹ · deriv = (ε exp(I t π/3))⁻¹ ·
 theorem modularLambdaH_F_Y_image_curve_pathContourIntegral_eq_two_pi_I
     {w : ℂ} (hw : 0 < w.im) {δ Y R₀ : ℝ}
     (hδ : 0 < δ) (hδY : δ < Y) (hR₀_pos : 0 < R₀) (hR₀_lt : R₀ < 1 / 2)
+    (hδ_le : δ ≤ 1 / 4) (hR₀_lo : Real.sqrt (1 / 4 - δ ^ 2) < R₀)
     (h_δR_lt_Y : δ + R₀ < Y)
     (hg_bot_left : ∀ x ∈ Set.Icc (0 : ℝ) (1 / 2 - R₀),
       modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) - w ≠ 0)
@@ -2765,7 +6215,11 @@ theorem modularLambdaH_F_Y_image_curve_pathContourIntegral_eq_two_pi_I
     (hg_left : ∀ y ∈ Set.Icc δ Y,
       modularLambdaH ((0 : ℂ) + (y : ℂ) * Complex.I) - w ≠ 0)
     (hg_arc : ∀ θ ∈ Set.Icc (0 : ℝ) Real.pi,
-      modularLambdaH (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ) - w ≠ 0) :
+      modularLambdaH (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ) - w ≠ 0)
+    (τ₀ : ℂ) (hτ₀_in : τ₀ ∈ Gamma2FundamentalDomainInterior)
+    (hτ₀_eq : modularLambdaH τ₀ = w)
+    (hτ₀_im_lo : δ < τ₀.im) (hτ₀_im_hi : τ₀.im < Y)
+    (hτ₀_arc : R₀ < ‖τ₀ - ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I)‖) :
     Complex.pathContourIntegral
       (fun t => modularLambdaH (F_Y_boundary_parameterization δ Y R₀ t))
       0 6 (fun z => (z - w)⁻¹) = 2 * Real.pi * Complex.I := by
@@ -2785,8 +6239,8 @@ theorem modularLambdaH_F_Y_image_curve_pathContourIntegral_eq_two_pi_I
   -- (4) `K_eq_one_of_affine_int_valued_on_unit_interval` then forces `K = 1`,
   --     and `H_explicit_closed_of_K_eq_one` recovers `hH_closed`.
   -- The remaining input — the affine integer-valuedness on `[0, 1]` — is the
-  -- deep topological fact equivalent to `hH_closed`; it sits as an isolated
-  -- inline sorry below.
+  -- deep topological fact equivalent to `hH_closed`; it is proved below via
+  -- the degree-argument bootstrap.
   have hγ_closed : F_Y_boundary_parameterization δ Y R₀ 0 =
       F_Y_boundary_parameterization δ Y R₀ 6 := by
     unfold F_Y_boundary_parameterization
@@ -2810,10 +6264,217 @@ theorem modularLambdaH_F_Y_image_curve_pathContourIntegral_eq_two_pi_I
     rw [h0, h6, hγ_closed]
   obtain ⟨K, hK_eq⟩ := winding_lift_integer_coeff L hL_lift_closed
   -- Deep topological fact: the affine real map `s ↦ K + s·(1 − K)` is
-  -- integer-valued at every `s ∈ [0, 1]`. Equivalent to `hH_closed`; the
-  -- isolated form makes the integer-continuity content explicit. -/
+  -- integer-valued at every `s ∈ [0, 1]` — equivalent (via
+  -- `K_eq_one_of_affine_int_valued_on_unit_interval`) to the winding
+  -- integer `K` being `1`. The hypothesis set is exactly what makes
+  -- this true: by `F_Y_point_in_gamma2_semicircle_exterior` (using
+  -- `hR₀_lo`), the interior of F_Y lies in `F°`, so `K` equals the
+  -- number of `F°`-preimages of `w` inside F_Y counted with
+  -- multiplicity; `τ₀` is one such preimage (`hτ₀_im_lo`/`hτ₀_im_hi`/
+  -- `hτ₀_arc` place it inside, and it is a simple zero since `λ' ≠ 0`
+  -- on `{Im λ > 0}`). `K = 1` is therefore equivalent to `τ₀` being
+  -- the unique `F°`-preimage of `w` in F_Y — provable either by the
+  -- direct boundary-tracking argument (total argument variation of
+  -- `λ − w` along the six near-real boundary pieces equals `2π`) or
+  -- by the Γ(2) orbit-uniqueness property of the fundamental domain.
+  -- Proved here by the degree argument: `K` equals the divisor sum `N` of
+  -- `λ − w` on the truncated region (FTC + AP chain), and `N = 1` since
+  -- `τ₀` is its unique simple zero there (degree-argument bootstrap
+  -- `modularLambdaH_F_interior_preimage_unique` / `_deriv_ne_zero`).
   have h_tau_int_valued : ∀ s ∈ Set.Icc (0 : ℝ) 1,
-      ∃ n : ℤ, (K : ℝ) + s * (1 - K) = n := by sorry
+      ∃ n : ℤ, (K : ℝ) + s * (1 - K) = n := by
+    -- (a) The image curve avoids zero on `[0, 6]`.
+    have hγ_ne : ∀ t ∈ Set.Icc (0 : ℝ) 6,
+        modularLambdaH (F_Y_boundary_parameterization δ Y R₀ t) - w ≠ 0 :=
+      F_Y_image_curve_ne_zero hR₀_pos hR₀_lt hδY.le
+        hg_bot_left hg_bot_right hg_top hg_right hg_left hg_arc
+    -- (b) FTC along the log lift: the contour integral is `L 6 − L 0`.
+    have h_ftc := pathContourIntegral_inv_eq_log_lift_diff_F_Y_image_curve
+      hδ hδY hR₀_pos hR₀_lt hγ_ne L hL_cont hL_exp
+    -- (c) Bridge: six-term boundary expression = path contour integral.
+    have h_lhs := modularLambdaH_F_Y_image_curve_LHS_eq_pathContourIntegral
+      hδ hδY hR₀_pos hR₀_lt h_δR_lt_Y
+      hg_bot_left hg_bot_right hg_top hg_right hg_left hg_arc
+    -- (d) Argument principle: normalized expression = divisor sum `N`.
+    have h_div := modularLambdaH_F_Y_AP_integral_eq_divisor_sum
+      hδ hδY hR₀_pos hR₀_lt h_δR_lt_Y
+      hg_bot_left hg_bot_right hg_top hg_right hg_left hg_arc
+    -- (e) Combine (b)–(d) with `hK_eq`: `(K : ℂ) = (N : ℂ)`.
+    rw [h_lhs, h_ftc, hK_eq] at h_div
+    have hpi : (2 * Real.pi * Complex.I : ℂ) ≠ 0 :=
+      mul_ne_zero (mul_ne_zero two_ne_zero
+        (by exact_mod_cast Real.pi_ne_zero)) Complex.I_ne_zero
+    have h_cancel : (2 * Real.pi * Complex.I : ℂ)⁻¹ *
+        ((K : ℂ) * (2 * Real.pi * Complex.I)) = (K : ℂ) := by
+      rw [mul_comm ((K : ℂ)) (2 * Real.pi * Complex.I), ← mul_assoc,
+        inv_mul_cancel₀ hpi, one_mul]
+    rw [h_cancel] at h_div
+    -- Coordinates of the excised-ball center.
+    have he_re : ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I).re = 1 / 2 := by
+      rw [Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
+        Complex.ofReal_re, Complex.ofReal_im]
+      have h_half_re : ((1 : ℂ) / 2).re = 1 / 2 := by rw [Complex.div_re]; simp
+      rw [h_half_re]; ring
+    have he_im : ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I).im = δ := by
+      rw [Complex.add_im, Complex.mul_im, Complex.I_re, Complex.I_im,
+        Complex.ofReal_re, Complex.ofReal_im]
+      have h_half_im : ((1 : ℂ) / 2).im = 0 := by rw [Complex.div_im]; simp
+      rw [h_half_im]; ring
+    obtain ⟨hτ₀_im_pos, hτ₀_re_lo, hτ₀_re_hi, hτ₀_semi⟩ := id hτ₀_in
+    have hτ₀_zero : (fun τ => modularLambdaH τ - w) τ₀ = 0 := by
+      show modularLambdaH τ₀ - w = 0
+      rw [hτ₀_eq, sub_self]
+    -- (f) Lower bound: `τ₀` is a zero in the region, so `1 ≤ N`.
+    have h_one_le : 1 ≤ (∑ᶠ u, MeromorphicOn.divisor (fun τ => modularLambdaH τ - w)
+        ((Set.Icc (0 : ℝ) 1 ×ℂ Set.Icc δ Y) \
+          Metric.ball ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀) u).toNat := by
+      have hτ₀_mem : τ₀ ∈ (Set.Icc (0 : ℝ) 1 ×ℂ
+          Set.Icc (((1 / 2 : ℂ) + (δ : ℂ) * Complex.I).im) Y) \
+          Metric.ball ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ := by
+        rw [he_im]
+        refine ⟨?_, ?_⟩
+        · rw [Complex.mem_reProdIm]
+          exact ⟨Set.mem_Icc.mpr ⟨hτ₀_re_lo.le, hτ₀_re_hi.le⟩,
+            Set.mem_Icc.mpr ⟨hτ₀_im_lo.le, hτ₀_im_hi.le⟩⟩
+        · simp only [Metric.mem_ball, Complex.dist_eq, not_lt]
+          exact hτ₀_arc.le
+      have key := Complex.one_le_divisor_sum_toNat_of_zero_on_rectMinusUpperHalfDisk
+        (fun τ => modularLambdaH τ - w) 0 1 Y ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀
+        (by norm_num) hR₀_pos
+        (by rw [he_re]; linarith)
+        (by rw [he_re]; linarith)
+        (by rw [he_im]; exact h_δR_lt_Y)
+        (by rw [he_im]; exact modularLambdaH_F_Y_analytic w hδ hδY hR₀_pos)
+        (by
+          rw [he_im]
+          intro h0
+          have h0' : modularLambdaH (((0 : ℝ) : ℂ) + (δ : ℂ) * Complex.I) - w = 0 := h0
+          rw [Complex.ofReal_zero] at h0'
+          exact hg_left δ (Set.mem_Icc.mpr ⟨le_refl δ, hδY.le⟩) h0')
+        hτ₀_mem hτ₀_zero
+      rw [he_im] at key
+      exact key
+    -- (g) Upper bound: `τ₀` is the unique simple zero, so `N ≤ 1`.
+    have h_unique_δ : ∀ z ∈ (Set.Icc (0 : ℝ) 1 ×ℂ Set.Icc δ Y) \
+        Metric.ball ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀,
+        (fun τ => modularLambdaH τ - w) z = 0 → z = τ₀ := by
+      intro z hz h_gz0
+      have h_gz : modularLambdaH z - w = 0 := h_gz0
+      have h_lam_eq : modularLambdaH z = w := sub_eq_zero.mp h_gz
+      obtain ⟨hz_box, hz_ball⟩ := hz
+      rw [Complex.mem_reProdIm] at hz_box
+      obtain ⟨hz_re, hz_im⟩ := hz_box
+      have hz_dist : R₀ ≤ ‖z - ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I)‖ := by
+        simp only [Metric.mem_ball, Complex.dist_eq, not_lt] at hz_ball
+        exact hz_ball
+      -- Left edge excluded.
+      by_cases h_re_0 : z.re = 0
+      · exfalso
+        have h_z_eq : z = (0 : ℂ) + (z.im : ℂ) * Complex.I := by
+          apply Complex.ext
+          · simp [Complex.mul_re, Complex.I_re, Complex.I_im,
+              Complex.ofReal_re, Complex.ofReal_im, h_re_0]
+          · simp [Complex.mul_im, Complex.I_re, Complex.I_im,
+              Complex.ofReal_re, Complex.ofReal_im]
+        exact hg_left z.im hz_im (by rw [← h_z_eq]; exact h_gz)
+      -- Right edge excluded.
+      by_cases h_re_1 : z.re = 1
+      · exfalso
+        have h_z_eq : z = (1 : ℂ) + (z.im : ℂ) * Complex.I := by
+          apply Complex.ext
+          · simp [Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
+              Complex.ofReal_re, Complex.ofReal_im, h_re_1]
+          · simp [Complex.add_im, Complex.mul_im, Complex.I_re, Complex.I_im,
+              Complex.ofReal_re, Complex.ofReal_im]
+        exact hg_right z.im hz_im (by rw [← h_z_eq]; exact h_gz)
+      -- Top edge excluded.
+      by_cases h_im_Y : z.im = Y
+      · exfalso
+        have h_z_eq : z = (z.re : ℂ) + (Y : ℂ) * Complex.I := by
+          apply Complex.ext
+          · simp [Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
+              Complex.ofReal_re, Complex.ofReal_im]
+          · simp [Complex.add_im, Complex.mul_im, Complex.I_re, Complex.I_im,
+              Complex.ofReal_re, Complex.ofReal_im, h_im_Y]
+        exact hg_top z.re hz_re (by rw [← h_z_eq]; exact h_gz)
+      -- Bottom edge excluded.
+      by_cases h_im_δ : z.im = δ
+      · exfalso
+        have h_z_sub : z - ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I)
+            = ((z.re - 1 / 2 : ℝ) : ℂ) := by
+          apply Complex.ext
+          · rw [Complex.sub_re, he_re, Complex.ofReal_re]
+          · rw [Complex.sub_im, he_im, Complex.ofReal_im, h_im_δ, sub_self]
+        rw [h_z_sub, Complex.norm_real, Real.norm_eq_abs] at hz_dist
+        have h_z_eq : z = (z.re : ℂ) + (δ : ℂ) * Complex.I := by
+          apply Complex.ext
+          · simp [Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
+              Complex.ofReal_re, Complex.ofReal_im]
+          · simp [Complex.add_im, Complex.mul_im, Complex.I_re, Complex.I_im,
+              Complex.ofReal_re, Complex.ofReal_im, h_im_δ]
+        rcases abs_cases (z.re - 1 / 2) with ⟨h_abs_eq, _⟩ | ⟨h_abs_eq, _⟩
+        · rw [h_abs_eq] at hz_dist
+          exact hg_bot_right z.re (Set.mem_Icc.mpr ⟨by linarith, hz_re.2⟩)
+            (by rw [← h_z_eq]; exact h_gz)
+        · rw [h_abs_eq] at hz_dist
+          exact hg_bot_left z.re (Set.mem_Icc.mpr ⟨hz_re.1, by linarith⟩)
+            (by rw [← h_z_eq]; exact h_gz)
+      -- Arc excluded, or interior point.
+      rcases eq_or_lt_of_le hz_dist with h_norm_eq | h_arc_gt
+      · exfalso
+        have h_polar := Complex.norm_mul_exp_arg_mul_I
+          (z - ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I))
+        have hζ_im_nonneg : 0 ≤ (z - ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I)).im := by
+          rw [Complex.sub_im, he_im]
+          linarith [hz_im.1]
+        have hθ_nonneg : 0 ≤ (z - ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I)).arg :=
+          Complex.arg_nonneg_iff.mpr hζ_im_nonneg
+        have hθ_le_pi : (z - ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I)).arg ≤ Real.pi :=
+          Complex.arg_le_pi _
+        have h_z_eq : z = _root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀
+            ((z - ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I)).arg) := by
+          have h_cm : _root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀
+              ((z - ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I)).arg) =
+              ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) + (R₀ : ℂ) *
+                Complex.exp (((z - ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I)).arg : ℂ) *
+                  Complex.I) := rfl
+          rw [h_cm, h_norm_eq, h_polar]
+          ring
+        exact hg_arc ((z - ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I)).arg)
+          (Set.mem_Icc.mpr ⟨hθ_nonneg, hθ_le_pi⟩) (by rw [← h_z_eq]; exact h_gz)
+      · -- Strictly interior: `z ∈ F°`, so `z = τ₀` by the bootstrap uniqueness.
+        have h_im_gt : δ < z.im := lt_of_le_of_ne hz_im.1 (Ne.symm h_im_δ)
+        have h_re_gt : 0 < z.re := lt_of_le_of_ne hz_re.1 (Ne.symm h_re_0)
+        have h_re_lt : z.re < 1 := lt_of_le_of_ne hz_re.2 h_re_1
+        have h_semi : 1 < ‖2 * z - 1‖ :=
+          F_Y_point_in_gamma2_semicircle_exterior hδ hR₀_lo h_im_gt h_arc_gt
+        exact modularLambdaH_F_interior_preimage_unique hw
+          ⟨lt_trans hδ h_im_gt, h_re_gt, h_re_lt, h_semi⟩ hτ₀_in h_lam_eq hτ₀_eq
+    have h_simple : (fun τ => modularLambdaH τ - w) τ₀ = 0 →
+        deriv (fun τ => modularLambdaH τ - w) τ₀ ≠ 0 := by
+      intro _
+      have h_d : deriv (fun τ => modularLambdaH τ - w) τ₀
+          = deriv modularLambdaH τ₀ := deriv_sub_const w
+      rw [h_d]
+      exact modularLambdaH_F_interior_preimage_deriv_ne_zero hw hτ₀_in hτ₀_eq
+    have h_le_one : (∑ᶠ u, MeromorphicOn.divisor (fun τ => modularLambdaH τ - w)
+        ((Set.Icc (0 : ℝ) 1 ×ℂ Set.Icc δ Y) \
+          Metric.ball ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀) u).toNat ≤ 1 := by
+      have key := Complex.divisor_sum_toNat_le_one_of_unique_simple_zero_on_rectMinusUpperHalfDisk
+        (fun τ => modularLambdaH τ - w) 0 1 Y ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀
+        (by rw [he_im]; exact modularLambdaH_F_Y_analytic w hδ hδY hR₀_pos)
+        (by rw [he_im]; exact h_unique_δ)
+        h_simple
+      rw [he_im] at key
+      exact key
+    -- (h) `N = 1`, hence `K = 1`, hence the affine map is constantly `1`.
+    have hN_eq : (∑ᶠ u, MeromorphicOn.divisor (fun τ => modularLambdaH τ - w)
+        ((Set.Icc (0 : ℝ) 1 ×ℂ Set.Icc δ Y) \
+          Metric.ball ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀) u).toNat = 1 :=
+      le_antisymm h_le_one h_one_le
+    rw [hN_eq] at h_div
+    have hK_one : K = 1 := by exact_mod_cast h_div
+    exact fun s _ => ⟨1, by rw [hK_one]; push_cast; ring⟩
   have hK_one : K = 1 :=
     K_eq_one_of_affine_int_valued_on_unit_interval h_tau_int_valued
   have hL_eq : L 6 - L 0 = (2 * Real.pi * Complex.I : ℂ) := by
@@ -2825,7 +6486,7 @@ theorem modularLambdaH_F_Y_image_curve_pathContourIntegral_eq_two_pi_I
     exact hH_explicit_closed s hs
   -- Apply continuous-homotopy invariance to equate image and circle integrals.
   rw [modularLambdaH_F_Y_image_curve_pathContourIntegral_eq_circle_via_homotopy
-    ε hε_pos H hH_cont hH_0 hH_1 hH_avoid hH_closed]
+    hδ hδY hR₀_pos hR₀_lt ε hε_pos H hH_cont hH_0 hH_1 hH_avoid hH_closed]
   -- Compute the circle integral directly.
   unfold Complex.pathContourIntegral
   -- Goal: ∫ t in 0..6, (circleMap w ε (t * π / 3) - w)⁻¹ * deriv (.) t = 2πi.
@@ -2885,6 +6546,7 @@ gives `(n : ℂ) = 1`, hence `n = 1`. -/
 theorem modularLambdaH_F_Y_image_curve_winding_index_eq_one
     {w : ℂ} (hw : 0 < w.im) {δ Y R₀ : ℝ}
     (hδ : 0 < δ) (hδY : δ < Y) (hR₀_pos : 0 < R₀) (hR₀_lt : R₀ < 1 / 2)
+    (hδ_le : δ ≤ 1 / 4) (hR₀_lo : Real.sqrt (1 / 4 - δ ^ 2) < R₀)
     (h_δR_lt_Y : δ + R₀ < Y)
     (hg_bot_left : ∀ x ∈ Set.Icc (0 : ℝ) (1 / 2 - R₀),
       modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) - w ≠ 0)
@@ -2898,6 +6560,10 @@ theorem modularLambdaH_F_Y_image_curve_winding_index_eq_one
       modularLambdaH ((0 : ℂ) + (y : ℂ) * Complex.I) - w ≠ 0)
     (hg_arc : ∀ θ ∈ Set.Icc (0 : ℝ) Real.pi,
       modularLambdaH (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ) - w ≠ 0)
+    (τ₀ : ℂ) (hτ₀_in : τ₀ ∈ Gamma2FundamentalDomainInterior)
+    (hτ₀_eq : modularLambdaH τ₀ = w)
+    (hτ₀_im_lo : δ < τ₀.im) (hτ₀_im_hi : τ₀.im < Y)
+    (hτ₀_arc : R₀ < ‖τ₀ - ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I)‖)
     {n : ℕ}
     (hn : (2 * Real.pi * Complex.I)⁻¹ * ((∫ x in (0 : ℝ)..(1 / 2 - R₀),
         deriv modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) /
@@ -2927,8 +6593,9 @@ theorem modularLambdaH_F_Y_image_curve_winding_index_eq_one
     hg_bot_left hg_bot_right hg_top hg_right hg_left hg_arc
   -- Topological winding via homotopy + circle.
   have h_topo := modularLambdaH_F_Y_image_curve_pathContourIntegral_eq_two_pi_I
-    hw hδ hδY hR₀_pos hR₀_lt h_δR_lt_Y
+    hw hδ hδY hR₀_pos hR₀_lt hδ_le hR₀_lo h_δR_lt_Y
     hg_bot_left hg_bot_right hg_top hg_right hg_left hg_arc
+    τ₀ hτ₀_in hτ₀_eq hτ₀_im_lo hτ₀_im_hi hτ₀_arc
   -- Combine: (2πi)⁻¹ · 2πi = 1 = (n : ℂ).
   rw [h_bridge, h_topo] at hn
   have hpi : (2 * Real.pi * Complex.I : ℂ) ≠ 0 := by
@@ -2952,6 +6619,7 @@ while isolating the topological core for future refinement. -/
 theorem modularLambdaH_F_Y_AP_count_eq_one
     {w : ℂ} (hw : 0 < w.im) {δ Y R₀ : ℝ}
     (hδ : 0 < δ) (hδY : δ < Y) (hR₀_pos : 0 < R₀) (hR₀_lt : R₀ < 1 / 2)
+    (hδ_le : δ ≤ 1 / 4) (hR₀_lo : Real.sqrt (1 / 4 - δ ^ 2) < R₀)
     (h_δR_lt_Y : δ + R₀ < Y)
     (hg_bot_left : ∀ x ∈ Set.Icc (0 : ℝ) (1 / 2 - R₀),
       modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) - w ≠ 0)
@@ -2965,6 +6633,10 @@ theorem modularLambdaH_F_Y_AP_count_eq_one
       modularLambdaH ((0 : ℂ) + (y : ℂ) * Complex.I) - w ≠ 0)
     (hg_arc : ∀ θ ∈ Set.Icc (0 : ℝ) Real.pi,
       modularLambdaH (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ) - w ≠ 0)
+    (τ₀ : ℂ) (hτ₀_in : τ₀ ∈ Gamma2FundamentalDomainInterior)
+    (hτ₀_eq : modularLambdaH τ₀ = w)
+    (hτ₀_im_lo : δ < τ₀.im) (hτ₀_im_hi : τ₀.im < Y)
+    (hτ₀_arc : R₀ < ‖τ₀ - ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I)‖)
     {n : ℕ}
     (hn : (2 * Real.pi * Complex.I)⁻¹ * ((∫ x in (0 : ℝ)..(1 / 2 - R₀),
         deriv modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) /
@@ -2989,7 +6661,8 @@ theorem modularLambdaH_F_Y_AP_count_eq_one
         (Complex.I * R₀ * Complex.exp (Complex.I * θ)))) = (n : ℂ)) :
     n = 1 :=
   modularLambdaH_F_Y_image_curve_winding_index_eq_one hw hδ hδY hR₀_pos hR₀_lt
-    h_δR_lt_Y hg_bot_left hg_bot_right hg_top hg_right hg_left hg_arc hn
+    hδ_le hR₀_lo h_δR_lt_Y hg_bot_left hg_bot_right hg_top hg_right hg_left hg_arc
+    τ₀ hτ₀_in hτ₀_eq hτ₀_im_lo hτ₀_im_hi hτ₀_arc hn
 
 /-- **Sub-lemma 9.aux — F_Y boundary integral of `λ'/(λ − w)` equals `2πi`.**
 
@@ -3004,6 +6677,7 @@ Proof: combine `modularLambdaH_F_Y_AP_integral_eq_nat_form` (returning
 theorem modularLambdaH_F_Y_boundary_integral_eq_two_pi_I
     {w : ℂ} (hw : 0 < w.im) {δ Y R₀ : ℝ}
     (hδ : 0 < δ) (hδY : δ < Y) (hR₀_pos : 0 < R₀) (hR₀_lt : R₀ < 1 / 2)
+    (hδ_le : δ ≤ 1 / 4) (hR₀_lo : Real.sqrt (1 / 4 - δ ^ 2) < R₀)
     (h_δR_lt_Y : δ + R₀ < Y)
     (hg_bot_left : ∀ x ∈ Set.Icc (0 : ℝ) (1 / 2 - R₀),
       modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) - w ≠ 0)
@@ -3016,7 +6690,11 @@ theorem modularLambdaH_F_Y_boundary_integral_eq_two_pi_I
     (hg_left : ∀ y ∈ Set.Icc δ Y,
       modularLambdaH ((0 : ℂ) + (y : ℂ) * Complex.I) - w ≠ 0)
     (hg_arc : ∀ θ ∈ Set.Icc (0 : ℝ) Real.pi,
-      modularLambdaH (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ) - w ≠ 0) :
+      modularLambdaH (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ) - w ≠ 0)
+    (τ₀ : ℂ) (hτ₀_in : τ₀ ∈ Gamma2FundamentalDomainInterior)
+    (hτ₀_eq : modularLambdaH τ₀ = w)
+    (hτ₀_im_lo : δ < τ₀.im) (hτ₀_im_hi : τ₀.im < Y)
+    (hτ₀_arc : R₀ < ‖τ₀ - ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I)‖) :
     (∫ x in (0 : ℝ)..(1 / 2 - R₀),
       deriv modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) /
       (modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) - w)) +
@@ -3042,7 +6720,8 @@ theorem modularLambdaH_F_Y_boundary_integral_eq_two_pi_I
   obtain ⟨n, hn⟩ := modularLambdaH_F_Y_AP_integral_eq_nat_form hδ hδY hR₀_pos hR₀_lt
     h_δR_lt_Y hg_bot_left hg_bot_right hg_top hg_right hg_left hg_arc
   have h_n_one : n = 1 := modularLambdaH_F_Y_AP_count_eq_one hw hδ hδY hR₀_pos hR₀_lt
-    h_δR_lt_Y hg_bot_left hg_bot_right hg_top hg_right hg_left hg_arc hn
+    hδ_le hR₀_lo h_δR_lt_Y hg_bot_left hg_bot_right hg_top hg_right hg_left hg_arc
+    τ₀ hτ₀_in hτ₀_eq hτ₀_im_lo hτ₀_im_hi hτ₀_arc hn
   rw [h_n_one, Nat.cast_one] at hn
   have hpi : (2 * Real.pi * Complex.I : ℂ) ≠ 0 := by
     refine mul_ne_zero (mul_ne_zero ?_ ?_) Complex.I_ne_zero
@@ -3064,6 +6743,7 @@ boundary integral equals `2πi`. Then `(2πi)⁻¹ · (2πi) = 1`. -/
 theorem modularLambdaH_F_Y_winding_eq_one
     {w : ℂ} (hw : 0 < w.im) {δ Y R₀ : ℝ}
     (hδ : 0 < δ) (hδY : δ < Y) (hR₀_pos : 0 < R₀) (hR₀_lt : R₀ < 1 / 2)
+    (hδ_le : δ ≤ 1 / 4) (hR₀_lo : Real.sqrt (1 / 4 - δ ^ 2) < R₀)
     (h_δR_lt_Y : δ + R₀ < Y)
     (hg_bot_left : ∀ x ∈ Set.Icc (0 : ℝ) (1 / 2 - R₀),
       modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) - w ≠ 0)
@@ -3076,7 +6756,11 @@ theorem modularLambdaH_F_Y_winding_eq_one
     (hg_left : ∀ y ∈ Set.Icc δ Y,
       modularLambdaH ((0 : ℂ) + (y : ℂ) * Complex.I) - w ≠ 0)
     (hg_arc : ∀ θ ∈ Set.Icc (0 : ℝ) Real.pi,
-      modularLambdaH (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ) - w ≠ 0) :
+      modularLambdaH (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ) - w ≠ 0)
+    (τ₀ : ℂ) (hτ₀_in : τ₀ ∈ Gamma2FundamentalDomainInterior)
+    (hτ₀_eq : modularLambdaH τ₀ = w)
+    (hτ₀_im_lo : δ < τ₀.im) (hτ₀_im_hi : τ₀.im < Y)
+    (hτ₀_arc : R₀ < ‖τ₀ - ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I)‖) :
     (2 * Real.pi * Complex.I)⁻¹ * (
       (∫ x in (0 : ℝ)..(1 / 2 - R₀),
         deriv modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) /
@@ -3100,7 +6784,8 @@ theorem modularLambdaH_F_Y_winding_eq_one
           (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ) - w) *
         (Complex.I * R₀ * Complex.exp (Complex.I * θ)))) = 1 := by
   have h_integral := modularLambdaH_F_Y_boundary_integral_eq_two_pi_I hw hδ hδY hR₀_pos
-    hR₀_lt h_δR_lt_Y hg_bot_left hg_bot_right hg_top hg_right hg_left hg_arc
+    hR₀_lt hδ_le hR₀_lo h_δR_lt_Y hg_bot_left hg_bot_right hg_top hg_right hg_left hg_arc
+    τ₀ hτ₀_in hτ₀_eq hτ₀_im_lo hτ₀_im_hi hτ₀_arc
   rw [h_integral]
   have hpi : (2 * Real.pi * Complex.I : ℂ) ≠ 0 := by
     refine mul_ne_zero (mul_ne_zero ?_ ?_) Complex.I_ne_zero
@@ -3282,7 +6967,8 @@ theorem modularLambdaH_F_unique_preimage_via_AP
     h_δR_lt_Y hg_bot_left hg_bot_right hg_top hg_right hg_left hg_arc
   -- Apply _winding_eq_one to get (2πi)⁻¹ * integral = 1.
   have h_winding := modularLambdaH_F_Y_winding_eq_one hw hδ_pos hδ_lt_Y hR₀_pos hR₀_lt
-    h_δR_lt_Y hg_bot_left hg_bot_right hg_top hg_right hg_left hg_arc
+    hδ_le_quarter hR₀_lo h_δR_lt_Y hg_bot_left hg_bot_right hg_top hg_right hg_left hg_arc
+    τ₁ h₁_in h₁_eq hδ_lt_τ₁_im hτ₁_im_lt_Y hτ₁_norm_gt
   -- Conclude (n : ℂ) = 1.
   have h_n_eq_one_cast : (n : ℂ) = 1 := by rw [← hn]; exact h_winding
   have h_n_eq_one : n = 1 := by exact_mod_cast h_n_eq_one_cast

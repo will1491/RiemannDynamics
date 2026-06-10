@@ -3691,7 +3691,7 @@ neighborhood of `F_Y`), split the log-derivative as
 zero), and reduce the `r'/r` integral to a Finset sum of single-zero
 contributions, each evaluated via the rectangle and upper-semicircle
 winding numbers. -/
-theorem cIntegralLogDeriv_isNat_of_nonzero_on_rectMinusUpperHalfDisk
+theorem cIntegralLogDeriv_eq_divisor_sum_of_nonzero_on_rectMinusUpperHalfDisk
     (g : ℂ → ℂ) (a b d : ℝ) (e : ℂ) (R₀ : ℝ)
     (hab : a < b) (hR₀ : 0 < R₀)
     (h_a_lt : a < e.re - R₀) (h_lt_b : e.re + R₀ < b)
@@ -3707,7 +3707,7 @@ theorem cIntegralLogDeriv_isNat_of_nonzero_on_rectMinusUpperHalfDisk
     (hg_left : ∀ y ∈ Set.Icc e.im d, g ((a : ℂ) + (y : ℂ) * Complex.I) ≠ 0)
     (hg_arc : ∀ θ ∈ Set.Icc (0 : ℝ) Real.pi,
       g (_root_.circleMap e R₀ θ) ≠ 0) :
-    ∃ n : ℕ, (2 * Real.pi * Complex.I)⁻¹ * (
+    (2 * Real.pi * Complex.I)⁻¹ * (
       (∫ x in a..(e.re - R₀), deriv g ((x : ℂ) + (e.im : ℂ) * Complex.I) /
         g ((x : ℂ) + (e.im : ℂ) * Complex.I)) +
       (∫ x in (e.re + R₀)..b, deriv g ((x : ℂ) + (e.im : ℂ) * Complex.I) /
@@ -3720,7 +3720,9 @@ theorem cIntegralLogDeriv_isNat_of_nonzero_on_rectMinusUpperHalfDisk
         g ((a : ℂ) + (y : ℂ) * Complex.I)) -
       (∫ θ in (0 : ℝ)..Real.pi, deriv g (_root_.circleMap e R₀ θ) /
         g (_root_.circleMap e R₀ θ) *
-        (Complex.I * R₀ * Complex.exp (Complex.I * θ)))) = (n : ℂ) := by
+        (Complex.I * R₀ * Complex.exp (Complex.I * θ)))) =
+    ((∑ᶠ u, MeromorphicOn.divisor g
+      ((Set.Icc a b ×ℂ Set.Icc e.im d) \ Metric.ball e R₀) u).toNat : ℂ) := by
   -- Closed F_Y region.
   set F : Set ℂ := (Set.Icc a b ×ℂ Set.Icc e.im d) \ Metric.ball e R₀ with hF_def
   have hg_mer : MeromorphicOn g F := hg.meromorphicOn
@@ -5021,7 +5023,6 @@ theorem cIntegralLogDeriv_isNat_of_nonzero_on_rectMinusUpperHalfDisk
       (f := fun u => MeromorphicOn.divisor g F u) hdiv_finite
     simp only [RingHom.toAddMonoidHom_eq_coe, AddMonoidHom.coe_coe, Int.coe_castRingHom] at hcast
     rw [← hcast]
-  refine ⟨(∑ᶠ u, MeromorphicOn.divisor g F u).toNat, ?_⟩
   calc (2 * Real.pi * Complex.I)⁻¹ * (
         (∫ x in a..(e.re - R₀), deriv g ((x : ℂ) + (e.im : ℂ) * Complex.I) /
           g ((x : ℂ) + (e.im : ℂ) * Complex.I)) +
@@ -5151,5 +5152,412 @@ theorem cIntegralLogDeriv_isNat_of_nonzero_on_rectMinusUpperHalfDisk
           rw [mul_comm ((∑ u ∈ Dsupp, (MeromorphicOn.divisor g F u : ℂ))) (2 * Real.pi * Complex.I)]
           rw [inv_mul_cancel_left₀ hpi]
           exact h_finset_eq_finsum.trans (h_finsum_int_eq_nat.trans (by push_cast; rfl))
+
+
+/-- **Argument principle on the truncated region (existential form).**
+The `(2πi)⁻¹`-normalized boundary integral of `g'/g` is a non-negative
+integer: the existential weakening of
+`cIntegralLogDeriv_eq_divisor_sum_of_nonzero_on_rectMinusUpperHalfDisk`,
+which identifies the integer as the divisor sum (total zero count with
+multiplicity) of `g` on the region. -/
+theorem cIntegralLogDeriv_isNat_of_nonzero_on_rectMinusUpperHalfDisk
+    (g : ℂ → ℂ) (a b d : ℝ) (e : ℂ) (R₀ : ℝ)
+    (hab : a < b) (hR₀ : 0 < R₀)
+    (h_a_lt : a < e.re - R₀) (h_lt_b : e.re + R₀ < b)
+    (h_e_im_R0_lt_d : e.im + R₀ < d)
+    (hg : AnalyticOnNhd ℂ g
+      ((Set.Icc a b ×ℂ Set.Icc e.im d) \ Metric.ball e R₀))
+    (hg_bot_left : ∀ x ∈ Set.Icc a (e.re - R₀),
+      g ((x : ℂ) + (e.im : ℂ) * Complex.I) ≠ 0)
+    (hg_bot_right : ∀ x ∈ Set.Icc (e.re + R₀) b,
+      g ((x : ℂ) + (e.im : ℂ) * Complex.I) ≠ 0)
+    (hg_top : ∀ x ∈ Set.Icc a b, g ((x : ℂ) + (d : ℂ) * Complex.I) ≠ 0)
+    (hg_right : ∀ y ∈ Set.Icc e.im d, g ((b : ℂ) + (y : ℂ) * Complex.I) ≠ 0)
+    (hg_left : ∀ y ∈ Set.Icc e.im d, g ((a : ℂ) + (y : ℂ) * Complex.I) ≠ 0)
+    (hg_arc : ∀ θ ∈ Set.Icc (0 : ℝ) Real.pi,
+      g (_root_.circleMap e R₀ θ) ≠ 0) :
+    ∃ n : ℕ, (2 * Real.pi * Complex.I)⁻¹ * (
+      (∫ x in a..(e.re - R₀), deriv g ((x : ℂ) + (e.im : ℂ) * Complex.I) /
+        g ((x : ℂ) + (e.im : ℂ) * Complex.I)) +
+      (∫ x in (e.re + R₀)..b, deriv g ((x : ℂ) + (e.im : ℂ) * Complex.I) /
+        g ((x : ℂ) + (e.im : ℂ) * Complex.I)) +
+      Complex.I * (∫ y in e.im..d, deriv g ((b : ℂ) + (y : ℂ) * Complex.I) /
+        g ((b : ℂ) + (y : ℂ) * Complex.I)) -
+      (∫ x in a..b, deriv g ((x : ℂ) + (d : ℂ) * Complex.I) /
+        g ((x : ℂ) + (d : ℂ) * Complex.I)) -
+      Complex.I * (∫ y in e.im..d, deriv g ((a : ℂ) + (y : ℂ) * Complex.I) /
+        g ((a : ℂ) + (y : ℂ) * Complex.I)) -
+      (∫ θ in (0 : ℝ)..Real.pi, deriv g (_root_.circleMap e R₀ θ) /
+        g (_root_.circleMap e R₀ θ) *
+        (Complex.I * R₀ * Complex.exp (Complex.I * θ)))) = (n : ℂ) :=
+  ⟨_, cIntegralLogDeriv_eq_divisor_sum_of_nonzero_on_rectMinusUpperHalfDisk
+    g a b d e R₀ hab hR₀ h_a_lt h_lt_b h_e_im_R0_lt_d hg
+    hg_bot_left hg_bot_right hg_top hg_right hg_left hg_arc⟩
+
+
+/-- **Lower bound for the zero count.** If `g` vanishes at a point of
+the truncated region (and is nonzero at the bottom-left corner, so its
+orders are finite throughout), the total divisor sum is at least one. -/
+theorem one_le_divisor_sum_toNat_of_zero_on_rectMinusUpperHalfDisk
+    (g : ℂ → ℂ) (a b d : ℝ) (e : ℂ) (R₀ : ℝ)
+    (hab : a < b) (hR₀ : 0 < R₀)
+    (h_a_lt : a < e.re - R₀) (h_lt_b : e.re + R₀ < b)
+    (h_e_im_R0_lt_d : e.im + R₀ < d)
+    (hg : AnalyticOnNhd ℂ g
+      ((Set.Icc a b ×ℂ Set.Icc e.im d) \ Metric.ball e R₀))
+    (h_corner_ne : g ((a : ℂ) + (e.im : ℂ) * Complex.I) ≠ 0)
+    {z₀ : ℂ}
+    (hz₀_mem : z₀ ∈ (Set.Icc a b ×ℂ Set.Icc e.im d) \ Metric.ball e R₀)
+    (hz₀_zero : g z₀ = 0) :
+    1 ≤ (∑ᶠ u, MeromorphicOn.divisor g
+      ((Set.Icc a b ×ℂ Set.Icc e.im d) \ Metric.ball e R₀) u).toNat := by
+  set F : Set ℂ := (Set.Icc a b ×ℂ Set.Icc e.im d) \ Metric.ball e R₀ with hF_def
+  have hg_mer : MeromorphicOn g F := hg.meromorphicOn
+  have hF_pathConnected : IsPathConnected F :=
+    isPathConnected_rectMinusUpperHalfDisk a b d e R₀ hR₀ hab h_a_lt h_lt_b
+      h_e_im_R0_lt_d
+  have hF_preconn : IsPreconnected F := hF_pathConnected.isConnected.isPreconnected
+  have hF_compact : IsCompact F :=
+    (IsCompact.reProdIm isCompact_Icc isCompact_Icc).diff Metric.isOpen_ball
+  have hdiv_finite : (MeromorphicOn.divisor g F).support.Finite :=
+    Function.locallyFinsuppWithin.finiteSupport _ hF_compact
+  have hD_nonneg : 0 ≤ MeromorphicOn.divisor g F :=
+    MeromorphicOn.AnalyticOnNhd.divisor_nonneg hg
+  -- The corner is in F and g does not vanish there, so all orders are finite.
+  set z₁ : ℂ := (a : ℂ) + (e.im : ℂ) * Complex.I with hz₁_def
+  have hz₁_re : z₁.re = a := by
+    simp [hz₁_def, Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
+      Complex.ofReal_re, Complex.ofReal_im]
+  have hz₁_im : z₁.im = e.im := by
+    simp [hz₁_def, Complex.add_im, Complex.mul_im, Complex.I_re, Complex.I_im,
+      Complex.ofReal_re, Complex.ofReal_im]
+  have hz₁_in_F : z₁ ∈ F := by
+    refine ⟨?_, ?_⟩
+    · rw [Complex.mem_reProdIm]
+      refine ⟨?_, ?_⟩
+      · rw [hz₁_re, Set.mem_Icc]; exact ⟨le_refl _, hab.le⟩
+      · rw [hz₁_im, Set.mem_Icc]; exact ⟨le_refl _, by linarith⟩
+    · rw [Metric.mem_ball, Complex.dist_eq]; push Not
+      have h_re_diff : (z₁ - e).re = a - e.re := by
+        rw [Complex.sub_re, hz₁_re]
+      have h_abs := Complex.abs_re_le_norm (z₁ - e)
+      rw [h_re_diff, abs_of_neg (by linarith : a - e.re < 0)] at h_abs
+      linarith
+  have hz₁_order_ne_top : meromorphicOrderAt g z₁ ≠ ⊤ := by
+    rw [(hg z₁ hz₁_in_F).meromorphicOrderAt_eq]
+    intro h
+    rw [ENat.map_eq_top_iff] at h
+    have h0 : analyticOrderAt g z₁ = 0 :=
+      analyticOrderAt_eq_zero.mpr (Or.inr h_corner_ne)
+    rw [h0] at h
+    exact ENat.zero_ne_top h
+  have hz₀_order_ne_top : meromorphicOrderAt g z₀ ≠ ⊤ :=
+    hg_mer.meromorphicOrderAt_ne_top_of_isPreconnected hF_preconn
+      hz₁_in_F hz₀_mem hz₁_order_ne_top
+  -- The divisor value at z₀ is at least 1.
+  have hD_z₀ : 1 ≤ (MeromorphicOn.divisor g F) z₀ := by
+    rw [MeromorphicOn.divisor_apply hg_mer hz₀_mem]
+    rw [(hg z₀ hz₀_mem).meromorphicOrderAt_eq] at hz₀_order_ne_top ⊢
+    have h_ord_ne_zero : analyticOrderAt g z₀ ≠ 0 := by
+      rw [Ne, analyticOrderAt_eq_zero]
+      push Not
+      exact ⟨hg z₀ hz₀_mem, by simpa using hz₀_zero⟩
+    have h_ord_ne_top : analyticOrderAt g z₀ ≠ ⊤ := by
+      intro h
+      rw [h] at hz₀_order_ne_top
+      simp at hz₀_order_ne_top
+    obtain ⟨n, hn⟩ := ENat.ne_top_iff_exists.mp h_ord_ne_top
+    have hn_pos : 1 ≤ n := by
+      rcases Nat.eq_zero_or_pos n with h0 | h1
+      · exfalso; apply h_ord_ne_zero; rw [← hn, h0]; rfl
+      · exact h1
+    rw [← hn, ENat.map_coe]
+    simp only [WithTop.untop₀_coe]
+    exact_mod_cast hn_pos
+  -- The total divisor sum dominates the single value at z₀.
+  have h_single := single_le_finsum z₀
+    (hdiv_finite : Function.HasFiniteSupport
+      (⇑(MeromorphicOn.divisor g F)))
+    (fun u => hD_nonneg u)
+  have h_sum_ge : 1 ≤ ∑ᶠ u, (MeromorphicOn.divisor g F) u :=
+    le_trans hD_z₀ h_single
+  rw [Int.le_toNat (le_trans zero_le_one h_sum_ge)]
+  exact_mod_cast h_sum_ge
+
+
+/-- **Upper bound for the zero count.** If `z₀` is the only possible
+zero of `g` on the truncated region and it is simple (nonvanishing
+derivative), the total divisor sum is at most one. -/
+theorem divisor_sum_toNat_le_one_of_unique_simple_zero_on_rectMinusUpperHalfDisk
+    (g : ℂ → ℂ) (a b d : ℝ) (e : ℂ) (R₀ : ℝ)
+    (hg : AnalyticOnNhd ℂ g
+      ((Set.Icc a b ×ℂ Set.Icc e.im d) \ Metric.ball e R₀))
+    {z₀ : ℂ}
+    (h_unique : ∀ z ∈ (Set.Icc a b ×ℂ Set.Icc e.im d) \ Metric.ball e R₀,
+      g z = 0 → z = z₀)
+    (h_simple : g z₀ = 0 → deriv g z₀ ≠ 0) :
+    (∑ᶠ u, MeromorphicOn.divisor g
+      ((Set.Icc a b ×ℂ Set.Icc e.im d) \ Metric.ball e R₀) u).toNat ≤ 1 := by
+  set F : Set ℂ := (Set.Icc a b ×ℂ Set.Icc e.im d) \ Metric.ball e R₀ with hF_def
+  have hg_mer : MeromorphicOn g F := hg.meromorphicOn
+  -- The divisor vanishes away from z₀.
+  have h_supp : ∀ z, z ≠ z₀ → (MeromorphicOn.divisor g F) z = 0 := by
+    intro z hz_ne
+    by_contra h_ne_zero
+    have hz_in_F : z ∈ F :=
+      (MeromorphicOn.divisor g F).supportWithinDomain
+        (by simpa [Function.mem_support] using h_ne_zero)
+    have hg_z_ne : g z ≠ 0 := fun h0 => hz_ne (h_unique z hz_in_F h0)
+    apply h_ne_zero
+    rw [MeromorphicOn.divisor_apply hg_mer hz_in_F,
+      (hg z hz_in_F).meromorphicOrderAt_eq,
+      analyticOrderAt_eq_zero.mpr (Or.inr hg_z_ne)]
+    simp
+  have h_sum_eq : (∑ᶠ u, (MeromorphicOn.divisor g F) u) =
+      (MeromorphicOn.divisor g F) z₀ :=
+    finsum_eq_single _ z₀ h_supp
+  rw [h_sum_eq]
+  -- The divisor value at z₀ is at most 1.
+  by_cases hz₀_in : z₀ ∈ F
+  · by_cases hz₀_zero : g z₀ = 0
+    · have h_ord : analyticOrderAt g z₀ = 1 :=
+        (hg z₀ hz₀_in).analyticOrderAt_eq_one_of_zero_deriv_ne_zero hz₀_zero
+          (h_simple hz₀_zero)
+      rw [MeromorphicOn.divisor_apply hg_mer hz₀_in,
+        (hg z₀ hz₀_in).meromorphicOrderAt_eq, h_ord,
+        show (1 : ℕ∞) = ((1 : ℕ) : ℕ∞) from rfl, ENat.map_coe]
+      rfl
+    · rw [MeromorphicOn.divisor_apply hg_mer hz₀_in,
+        (hg z₀ hz₀_in).meromorphicOrderAt_eq,
+        analyticOrderAt_eq_zero.mpr (Or.inr hz₀_zero)]
+      simp
+  · have h_zero : (MeromorphicOn.divisor g F) z₀ = 0 := by
+      by_contra h_ne
+      exact hz₀_in ((MeromorphicOn.divisor g F).supportWithinDomain
+        (by simpa [Function.mem_support] using h_ne))
+    rw [h_zero]
+    simp
+
+
+/-- **Two distinct zeros force a zero count of at least two.** If `g`
+vanishes at two distinct points of the truncated region (and is nonzero
+at the bottom-left corner), the total divisor sum is at least two. -/
+theorem two_le_divisor_sum_toNat_of_two_zeros_on_rectMinusUpperHalfDisk
+    (g : ℂ → ℂ) (a b d : ℝ) (e : ℂ) (R₀ : ℝ)
+    (hab : a < b) (hR₀ : 0 < R₀)
+    (h_a_lt : a < e.re - R₀) (h_lt_b : e.re + R₀ < b)
+    (h_e_im_R0_lt_d : e.im + R₀ < d)
+    (hg : AnalyticOnNhd ℂ g
+      ((Set.Icc a b ×ℂ Set.Icc e.im d) \ Metric.ball e R₀))
+    (h_corner_ne : g ((a : ℂ) + (e.im : ℂ) * Complex.I) ≠ 0)
+    {z₀ z₁ : ℂ} (h_ne : z₀ ≠ z₁)
+    (hz₀_mem : z₀ ∈ (Set.Icc a b ×ℂ Set.Icc e.im d) \ Metric.ball e R₀)
+    (hz₀_zero : g z₀ = 0)
+    (hz₁_mem : z₁ ∈ (Set.Icc a b ×ℂ Set.Icc e.im d) \ Metric.ball e R₀)
+    (hz₁_zero : g z₁ = 0) :
+    2 ≤ (∑ᶠ u, MeromorphicOn.divisor g
+      ((Set.Icc a b ×ℂ Set.Icc e.im d) \ Metric.ball e R₀) u).toNat := by
+  set F : Set ℂ := (Set.Icc a b ×ℂ Set.Icc e.im d) \ Metric.ball e R₀ with hF_def
+  have hg_mer : MeromorphicOn g F := hg.meromorphicOn
+  have hF_pathConnected : IsPathConnected F :=
+    isPathConnected_rectMinusUpperHalfDisk a b d e R₀ hR₀ hab h_a_lt h_lt_b
+      h_e_im_R0_lt_d
+  have hF_preconn : IsPreconnected F := hF_pathConnected.isConnected.isPreconnected
+  have hF_compact : IsCompact F :=
+    (IsCompact.reProdIm isCompact_Icc isCompact_Icc).diff Metric.isOpen_ball
+  have hdiv_finite : (MeromorphicOn.divisor g F).support.Finite :=
+    Function.locallyFinsuppWithin.finiteSupport _ hF_compact
+  have hD_nonneg : 0 ≤ MeromorphicOn.divisor g F :=
+    MeromorphicOn.AnalyticOnNhd.divisor_nonneg hg
+  -- The corner is in F and g does not vanish there, so all orders are finite.
+  set zc : ℂ := (a : ℂ) + (e.im : ℂ) * Complex.I with hzc_def
+  have hzc_re : zc.re = a := by
+    simp [hzc_def, Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
+      Complex.ofReal_re, Complex.ofReal_im]
+  have hzc_im : zc.im = e.im := by
+    simp [hzc_def, Complex.add_im, Complex.mul_im, Complex.I_re, Complex.I_im,
+      Complex.ofReal_re, Complex.ofReal_im]
+  have hzc_in_F : zc ∈ F := by
+    refine ⟨?_, ?_⟩
+    · rw [Complex.mem_reProdIm]
+      refine ⟨?_, ?_⟩
+      · rw [hzc_re, Set.mem_Icc]; exact ⟨le_refl _, hab.le⟩
+      · rw [hzc_im, Set.mem_Icc]; exact ⟨le_refl _, by linarith⟩
+    · rw [Metric.mem_ball, Complex.dist_eq]; push Not
+      have h_re_diff : (zc - e).re = a - e.re := by
+        rw [Complex.sub_re, hzc_re]
+      have h_abs := Complex.abs_re_le_norm (zc - e)
+      rw [h_re_diff, abs_of_neg (by linarith : a - e.re < 0)] at h_abs
+      linarith
+  have hzc_order_ne_top : meromorphicOrderAt g zc ≠ ⊤ := by
+    rw [(hg zc hzc_in_F).meromorphicOrderAt_eq]
+    intro h
+    rw [ENat.map_eq_top_iff] at h
+    have h0 : analyticOrderAt g zc = 0 :=
+      analyticOrderAt_eq_zero.mpr (Or.inr h_corner_ne)
+    rw [h0] at h
+    exact ENat.zero_ne_top h
+  -- Each of the two zeros has divisor value at least 1.
+  have hD_ge_one : ∀ z ∈ F, g z = 0 → 1 ≤ (MeromorphicOn.divisor g F) z := by
+    intro z hz_mem hz_zero
+    have hz_order_ne_top : meromorphicOrderAt g z ≠ ⊤ :=
+      hg_mer.meromorphicOrderAt_ne_top_of_isPreconnected hF_preconn
+        hzc_in_F hz_mem hzc_order_ne_top
+    rw [MeromorphicOn.divisor_apply hg_mer hz_mem]
+    rw [(hg z hz_mem).meromorphicOrderAt_eq] at hz_order_ne_top ⊢
+    have h_ord_ne_zero : analyticOrderAt g z ≠ 0 := by
+      rw [Ne, analyticOrderAt_eq_zero]
+      push Not
+      exact ⟨hg z hz_mem, by simpa using hz_zero⟩
+    have h_ord_ne_top : analyticOrderAt g z ≠ ⊤ := by
+      intro h
+      rw [h] at hz_order_ne_top
+      simp at hz_order_ne_top
+    obtain ⟨n, hn⟩ := ENat.ne_top_iff_exists.mp h_ord_ne_top
+    have hn_pos : 1 ≤ n := by
+      rcases Nat.eq_zero_or_pos n with h0 | h1
+      · exfalso; apply h_ord_ne_zero; rw [← hn, h0]; rfl
+      · exact h1
+    rw [← hn, ENat.map_coe]
+    simp only [WithTop.untop₀_coe]
+    exact_mod_cast hn_pos
+  -- Sum over the support dominates the two-point sum.
+  have h_sum_repr : (∑ᶠ u, (MeromorphicOn.divisor g F) u) =
+      ∑ u ∈ hdiv_finite.toFinset, (MeromorphicOn.divisor g F) u := by
+    refine finsum_eq_sum_of_support_subset _ ?_
+    rw [Set.Finite.coe_toFinset]
+  have hz₀_supp : z₀ ∈ hdiv_finite.toFinset := by
+    rw [Set.Finite.mem_toFinset, Function.mem_support]
+    have := hD_ge_one z₀ hz₀_mem hz₀_zero
+    omega
+  have hz₁_supp : z₁ ∈ hdiv_finite.toFinset := by
+    rw [Set.Finite.mem_toFinset, Function.mem_support]
+    have := hD_ge_one z₁ hz₁_mem hz₁_zero
+    omega
+  have h_pair_le : ∑ u ∈ ({z₀, z₁} : Finset ℂ), (MeromorphicOn.divisor g F) u ≤
+      ∑ u ∈ hdiv_finite.toFinset, (MeromorphicOn.divisor g F) u := by
+    refine Finset.sum_le_sum_of_subset_of_nonneg ?_ ?_
+    · intro u hu
+      rcases Finset.mem_insert.mp hu with h | h
+      · rw [h]; exact hz₀_supp
+      · rw [Finset.mem_singleton.mp h]; exact hz₁_supp
+    · intro u _ _
+      exact hD_nonneg u
+  have h_pair_sum : ∑ u ∈ ({z₀, z₁} : Finset ℂ), (MeromorphicOn.divisor g F) u =
+      (MeromorphicOn.divisor g F) z₀ + (MeromorphicOn.divisor g F) z₁ :=
+    Finset.sum_pair h_ne
+  have h_two_le : 2 ≤ ∑ᶠ u, (MeromorphicOn.divisor g F) u := by
+    rw [h_sum_repr]
+    calc (2 : ℤ) ≤ (MeromorphicOn.divisor g F) z₀ + (MeromorphicOn.divisor g F) z₁ := by
+          have h0 := hD_ge_one z₀ hz₀_mem hz₀_zero
+          have h1 := hD_ge_one z₁ hz₁_mem hz₁_zero
+          omega
+      _ = ∑ u ∈ ({z₀, z₁} : Finset ℂ), (MeromorphicOn.divisor g F) u := h_pair_sum.symm
+      _ ≤ _ := h_pair_le
+  rw [Int.le_toNat (le_trans (by norm_num) h_two_le)]
+  exact_mod_cast h_two_le
+
+
+/-- **A double zero forces a zero count of at least two.** If `g` and
+its derivative both vanish at a point of the truncated region (and `g`
+is nonzero at the bottom-left corner), the total divisor sum is at
+least two: the analytic order at the point is at least `2` by
+`AnalyticAt.analyticOrderAt_deriv_add_one`. -/
+theorem two_le_divisor_sum_toNat_of_double_zero_on_rectMinusUpperHalfDisk
+    (g : ℂ → ℂ) (a b d : ℝ) (e : ℂ) (R₀ : ℝ)
+    (hab : a < b) (hR₀ : 0 < R₀)
+    (h_a_lt : a < e.re - R₀) (h_lt_b : e.re + R₀ < b)
+    (h_e_im_R0_lt_d : e.im + R₀ < d)
+    (hg : AnalyticOnNhd ℂ g
+      ((Set.Icc a b ×ℂ Set.Icc e.im d) \ Metric.ball e R₀))
+    (h_corner_ne : g ((a : ℂ) + (e.im : ℂ) * Complex.I) ≠ 0)
+    {z₀ : ℂ}
+    (hz₀_mem : z₀ ∈ (Set.Icc a b ×ℂ Set.Icc e.im d) \ Metric.ball e R₀)
+    (hz₀_zero : g z₀ = 0) (hz₀_deriv : deriv g z₀ = 0) :
+    2 ≤ (∑ᶠ u, MeromorphicOn.divisor g
+      ((Set.Icc a b ×ℂ Set.Icc e.im d) \ Metric.ball e R₀) u).toNat := by
+  set F : Set ℂ := (Set.Icc a b ×ℂ Set.Icc e.im d) \ Metric.ball e R₀ with hF_def
+  have hg_mer : MeromorphicOn g F := hg.meromorphicOn
+  have hF_pathConnected : IsPathConnected F :=
+    isPathConnected_rectMinusUpperHalfDisk a b d e R₀ hR₀ hab h_a_lt h_lt_b
+      h_e_im_R0_lt_d
+  have hF_preconn : IsPreconnected F := hF_pathConnected.isConnected.isPreconnected
+  have hF_compact : IsCompact F :=
+    (IsCompact.reProdIm isCompact_Icc isCompact_Icc).diff Metric.isOpen_ball
+  have hdiv_finite : (MeromorphicOn.divisor g F).support.Finite :=
+    Function.locallyFinsuppWithin.finiteSupport _ hF_compact
+  have hD_nonneg : 0 ≤ MeromorphicOn.divisor g F :=
+    MeromorphicOn.AnalyticOnNhd.divisor_nonneg hg
+  set zc : ℂ := (a : ℂ) + (e.im : ℂ) * Complex.I with hzc_def
+  have hzc_re : zc.re = a := by
+    simp [hzc_def, Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
+      Complex.ofReal_re, Complex.ofReal_im]
+  have hzc_im : zc.im = e.im := by
+    simp [hzc_def, Complex.add_im, Complex.mul_im, Complex.I_re, Complex.I_im,
+      Complex.ofReal_re, Complex.ofReal_im]
+  have hzc_in_F : zc ∈ F := by
+    refine ⟨?_, ?_⟩
+    · rw [Complex.mem_reProdIm]
+      refine ⟨?_, ?_⟩
+      · rw [hzc_re, Set.mem_Icc]; exact ⟨le_refl _, hab.le⟩
+      · rw [hzc_im, Set.mem_Icc]; exact ⟨le_refl _, by linarith⟩
+    · rw [Metric.mem_ball, Complex.dist_eq]; push Not
+      have h_re_diff : (zc - e).re = a - e.re := by
+        rw [Complex.sub_re, hzc_re]
+      have h_abs := Complex.abs_re_le_norm (zc - e)
+      rw [h_re_diff, abs_of_neg (by linarith : a - e.re < 0)] at h_abs
+      linarith
+  have hzc_order_ne_top : meromorphicOrderAt g zc ≠ ⊤ := by
+    rw [(hg zc hzc_in_F).meromorphicOrderAt_eq]
+    intro h
+    rw [ENat.map_eq_top_iff] at h
+    have h0 : analyticOrderAt g zc = 0 :=
+      analyticOrderAt_eq_zero.mpr (Or.inr h_corner_ne)
+    rw [h0] at h
+    exact ENat.zero_ne_top h
+  -- The double zero has divisor value at least 2.
+  have hD_z₀ : 2 ≤ (MeromorphicOn.divisor g F) z₀ := by
+    have hz_order_ne_top : meromorphicOrderAt g z₀ ≠ ⊤ :=
+      hg_mer.meromorphicOrderAt_ne_top_of_isPreconnected hF_preconn
+        hzc_in_F hz₀_mem hzc_order_ne_top
+    have h_an : AnalyticAt ℂ g z₀ := hg z₀ hz₀_mem
+    -- analyticOrderAt g z₀ = analyticOrderAt (deriv g) z₀ + 1 ≥ 2.
+    have h_key := h_an.analyticOrderAt_deriv_add_one
+    have h_sub_eq : (fun x => g x - g z₀) = g := by
+      funext x
+      rw [hz₀_zero, sub_zero]
+    rw [h_sub_eq] at h_key
+    have h_deriv_ord_ne_zero : analyticOrderAt (deriv g) z₀ ≠ 0 := by
+      rw [Ne, analyticOrderAt_eq_zero]
+      push Not
+      exact ⟨h_an.deriv, by simpa using hz₀_deriv⟩
+    have h_ord_ge_two : 2 ≤ analyticOrderAt g z₀ := by
+      rw [← h_key]
+      have h_one_le : 1 ≤ analyticOrderAt (deriv g) z₀ :=
+        ENat.one_le_iff_ne_zero.mpr h_deriv_ord_ne_zero
+      calc (2 : ℕ∞) = 1 + 1 := by norm_num
+        _ ≤ analyticOrderAt (deriv g) z₀ + 1 :=
+            add_le_add h_one_le (le_refl 1)
+    rw [MeromorphicOn.divisor_apply hg_mer hz₀_mem]
+    rw [(hg z₀ hz₀_mem).meromorphicOrderAt_eq] at hz_order_ne_top ⊢
+    have h_ord_ne_top : analyticOrderAt g z₀ ≠ ⊤ := by
+      intro h
+      rw [h] at hz_order_ne_top
+      simp at hz_order_ne_top
+    obtain ⟨n, hn⟩ := ENat.ne_top_iff_exists.mp h_ord_ne_top
+    have hn_ge : 2 ≤ n := by
+      rw [← hn] at h_ord_ge_two
+      exact_mod_cast h_ord_ge_two
+    rw [← hn, ENat.map_coe]
+    simp only [WithTop.untop₀_coe]
+    exact_mod_cast hn_ge
+  have h_single := single_le_finsum z₀
+    (hdiv_finite : Function.HasFiniteSupport
+      (⇑(MeromorphicOn.divisor g F)))
+    (fun u => hD_nonneg u)
+  have h_sum_ge : 2 ≤ ∑ᶠ u, (MeromorphicOn.divisor g F) u :=
+    le_trans hD_z₀ h_single
+  rw [Int.le_toNat (le_trans (by norm_num) h_sum_ge)]
+  exact_mod_cast h_sum_ge
 
 end Complex
