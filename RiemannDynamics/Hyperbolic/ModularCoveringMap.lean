@@ -45,6 +45,69 @@ turning `γ = ⟨⟨a, b⟩, ⟨c, d⟩⟩` into `γ' = ⟨⟨a, -b⟩, ⟨-c, d
 in `Γ(2)`. The `Im(λ) = 0` boundary branch closes by density of the
 upper `λ`-fibre together with closedness of the `Γ(2)`-orbit
 relation.
+
+## Organization
+
+The file is ordered by dependency; the section structure follows the
+proof architecture.
+
+**Fundamental-domain geometry.**
+* *The reflected domain and the strict fundamental-domain property*:
+  the reflection `F^σ`, twelve explicit tiles of the standard
+  `SL(2, ℤ)` domain, and `gamma2_translate_in_F_union_F_sigma` —
+  every `Γ(2)`-orbit meets `F ∪ F^σ`.
+* *Reduction to the half-domain*: `Im λ ≥ 0` on the closed `F`, and
+  every orbit with `Im(λ) > 0` meets `F`.
+* *Boundary nonvanishing*: `λ ≠ w` on the three boundary arcs of `F`
+  when `Im w > 0`.
+
+**The interior biholomorphism (input to both pillars).** The chain
+establishing that `λ : F^o → {Im w > 0}` is injective:
+* *The F_Y contour*: a rectangle-minus-half-disk region approximating
+  `F^o`, with analyticity of `λ − w` and nonvanishing on each of the
+  six boundary pieces (edge, strip, and arc cases; the arc requires
+  Lipschitz control of `Im λ` near the cusps `0` and `1`).
+* *The argument principle on F_Y*: the boundary integral of
+  `λ′/(λ − w)` counts zeros — in existential (`ℕ`-valued) and
+  divisor-sum form.
+* *The deep-cusp reference value*, *the boundary-integral bridge and
+  homotopy to the circle*, *segment transport and uniform boundary
+  clearance*: the ingredients of the degree argument — the zero count
+  is invariant along `w`-segments avoided by the boundary image, and
+  at a deep-cusp reference value the fibre is a single simple point.
+* *Fibre uniqueness on `F^o`*: the degree-argument bootstrap —
+  `λ` is injective on every `F^o`-fibre, and `λ′ ≠ 0` there.
+* *The winding number of the image curve*: `λ ∘ ∂F_Y` winds exactly
+  once around `w` (`..._winding_index_eq_one`, boundary integral
+  `= 2πi`), and two distinct zeros would force a count `≥ 2`.
+* *Existence, uniqueness, and injectivity of `λ` on `F`*: the
+  `∃!`-form on `F^o`, injectivity on `F^o`, the boundary-arc
+  analysis (ranges `(0,1)`, `(−∞,0)`, `(1,∞)` and monotonicity),
+  injectivity on `∂F`, and injectivity on the closed `F`.
+
+**Pillars 3 and 4.**
+* *Pillar 4, upper branch*: `λ`-equality on `F` forces a
+  `Γ(2)`-translate; the `Im(λ) > 0` orbit case.
+* *Local multiplicity of analytic maps*: a nonconstant analytic map
+  with vanishing derivative is locally `≥ 2`-to-`1` — the engine for
+  the `λ′ ≠ 0` contradictions.
+* *Pillar 3 sub-lemmas*: `λ′ ≠ 0` by the sign of `Im λ` (on `F`,
+  then `Im λ > 0`, `< 0` by conjugation, `= 0` by the multiplicity
+  argument).
+* *Pillar 4, lower and boundary branches*: conjugation for
+  `Im λ < 0`; closedness of the orbit relation plus fibre density
+  for `Im λ = 0`.
+* The two *main statement* sections package the pillars.
+
+**The covering map.**
+* *The covering-map assembly*: junk values off `ℍ`, the faithful
+  quotient `Γ(2)/{±I}` and its descended free, properly discontinuous
+  action, the corestricted quotient map
+  `λ : ℍ → {w // w ≠ 0 ∧ w ≠ 1}`, Mathlib's quotient-covering
+  machinery, and the transport back to `modularLambdaH : ℂ → ℂ`.
+* *Main theorems*: `modularLambdaH_isCoveringMapOn` on `ℍ` and
+  `modularLambda_isCoveringMapOn` on the unit disk (via the Cayley
+  transform).
 -/
 
 namespace RiemannDynamics
@@ -52,7 +115,7 @@ namespace RiemannDynamics
 open Complex Metric Set UpperHalfPlane CongruenceSubgroup
 open scoped MatrixGroups
 
-/-! ## Half-fundamental-domain infrastructure (sub-lemmas) -/
+/-! ## The reflected domain and the strict fundamental-domain property -/
 
 /-- The reflected half-fundamental domain `F^σ := { τ : -1 ≤ Re τ ≤ 0,
 |2τ + 1| ≥ 1, Im τ > 0 }`. This is `-conj(F)`: the conjugation
@@ -704,6 +767,8 @@ theorem gamma2_translate_in_F_union_F_sigma (τ : UpperHalfPlane) :
   -- (1,1,1,1): impossible
   · rw [ha, hb, hc, hd] at hparity; norm_num at hparity
 
+/-! ## Reduction to the half-domain: sign of `Im λ` on `F` and orbit placement -/
+
 /-- **`Im λ ≥ 0` on the closed half-fundamental domain `F`.**
 Combines `modularLambdaH_F_im_pos` (strict positivity on the open
 interior `F^o`) with the three boundary-arc lemmas
@@ -814,7 +879,7 @@ theorem gamma2_orbit_meets_F_when_im_lambda_pos (τ : UpperHalfPlane)
     -- But h_im_lam_γτ : 0 < (modularLambdaH γτ_c).im. Contradiction.
     linarith
 
-/-! ## Half-fundamental-domain injectivity (architectural helper)
+/-! ## Boundary nonvanishing: `λ ≠ w` on `∂F` for `Im w > 0`
 
 The closure of `modularLambdaH_existsUnique_in_F_interior_of_im_pos`
 rests on the F_Y argument principle
@@ -990,7 +1055,7 @@ theorem modularLambdaH_top_edge_far_of_im_pos {w : ℂ} (hw : 0 < w.im) :
       _ = 160000 * Real.exp (-Real.pi * Y) := by ring
   linarith [h_lam_norm_le, h_lam_bound, h_lam_norm]
 
-/-! ## Path-(a) F_Y AP application scaffold
+/-! ## The F_Y contour: geometry, analyticity, and edge nonvanishing
 
 The F_Y argument principle
 `cIntegralLogDeriv_eq_divisor_sum_of_nonzero_on_rectMinusUpperHalfDisk`
@@ -1007,7 +1072,7 @@ and large `Y`. The chosen parameters are
 are picked to satisfy the strict AP hypothesis `a < e.re − R₀` (giving
 `R₀' < 1/2`) while keeping `τ₁, τ₂` inside the F_Y interior. -/
 
-/-- **Sub-lemma 1 — F_Y geometric setup.** For `w ∈ ℍ` and any
+/-- **F_Y geometric setup.** For `w ∈ ℍ` and any
 `τ₁, τ₂ ∈ F^o`, there exists a parameter triple `(δ, Y, R₀)` with:
 * `0 < δ ≤ δ_max ≤ 1/4` (rectangle bottom above the real axis);
 * `δ < τᵢ.im < Y` (rectangle covers both `τᵢ`);
@@ -1097,7 +1162,7 @@ theorem modularLambdaH_F_Y_params_exist
     rw [h_norm_δ] at h_rtri
     linarith
 
-/-- **Sub-lemma 1' — F_Y geometric setup adapted for sub-lemma 8.**
+/-- **F_Y geometric setup adapted for the arc.**
 A stronger variant of `modularLambdaH_F_Y_params_exist` that additionally
 ensures `R₀ > √(1/4 − δ²)`, so the shifted-disk arc lies strictly inside
 F^o (where each arc point satisfies `|τ − 1/2| > 1/2`).
@@ -1260,7 +1325,7 @@ theorem modularLambdaH_F_Y_params_exist_arc
     hY_gt_τ₁_im, hY_gt_τ₂_im, hR₀_pos, hR₀_lt_half, h_δ_plus_R₀_lt_Y, h_sqrt_lt_R₀,
     h_τ₁_norm_gt, h_τ₂_norm_gt⟩
 
-/-- **Sub-lemma 2 — analyticity on the closed F_Y region.** Given F_Y
+/-- **Analyticity on the closed F_Y region.** Given F_Y
 parameters with `δ > 0`, the function `g(τ) := λ(τ) − w` is analytic on
 an open neighbourhood of the closed F_Y region
 `(Set.Icc 0 1 ×ℂ Set.Icc δ Y) \ Metric.ball (1/2 + δ·i) R₀`.
@@ -1289,7 +1354,7 @@ theorem modularLambdaH_F_Y_analytic
     (modularLambdaH_differentiableOn.analyticOnNhd h_open_H) τ hτ_im_pos
   exact h_lam_an.sub analyticAt_const
 
-/-- **Sub-lemma 3 — left edge non-vanishing.** For `w ∈ ℍ` and any
+/-- **Left edge non-vanishing.** For `w ∈ ℍ` and any
 `y > 0`, `λ(0 + i·y) − w ≠ 0`. Direct from
 `modularLambdaH_left_edge_ne_of_im_pos`. -/
 theorem modularLambdaH_F_Y_left_edge_ne
@@ -1302,7 +1367,7 @@ theorem modularLambdaH_F_Y_left_edge_ne
   rw [h_z_eq] at h_lam_eq
   exact modularLambdaH_left_edge_ne_of_im_pos hw hy h_lam_eq
 
-/-- **Sub-lemma 4 — right edge non-vanishing.** For `w ∈ ℍ` and any
+/-- **Right edge non-vanishing.** For `w ∈ ℍ` and any
 `y > 0`, `λ(1 + i·y) − w ≠ 0`. Direct from
 `modularLambdaH_right_edge_ne_of_im_pos`. -/
 theorem modularLambdaH_F_Y_right_edge_ne
@@ -1315,7 +1380,7 @@ theorem modularLambdaH_F_Y_right_edge_ne
   rw [h_z_eq] at h_lam_eq
   exact modularLambdaH_right_edge_ne_of_im_pos hw hy h_lam_eq
 
-/-- **Sub-lemma 5 — top edge non-vanishing for `Y` sufficiently large.**
+/-- **Top edge non-vanishing for `Y` sufficiently large.**
 For `w ∈ ℍ`, there exists `Y₀` such that for all `Y ≥ Y₀` and
 `x ∈ [0, 1]`, `λ(x + i·Y) − w ≠ 0`. Direct from
 `modularLambdaH_top_edge_far_of_im_pos`. -/
@@ -1328,7 +1393,7 @@ theorem modularLambdaH_F_Y_top_edge_ne {w : ℂ} (hw : 0 < w.im) :
     linear_combination h_eq
   exact hY₀ Y hY x hx_nn hx_le h_lam_eq
 
-/-- **Sub-lemma 6 — bot_left coupled strip non-vanishing.** For
+/-- **Bot_left coupled strip non-vanishing.** For
 `w ∈ ℍ`, there exists `δ_w ∈ (0, 1/2)` such that for all
 `δ ∈ (0, δ_w]` and `x ∈ [0, δ]`, `λ(x + i·δ) − w ≠ 0`.
 
@@ -1450,7 +1515,7 @@ theorem modularLambdaH_F_Y_bot_left_strip_ne
   rw [h_lam_eq] at h_strict
   exact lt_irrefl _ h_strict
 
-/-- **Sub-lemma 7 — bot_right coupled strip non-vanishing.** For
+/-- **Bot_right coupled strip non-vanishing.** For
 `w ∈ ℍ`, there exists `δ_w ∈ (0, 1/2)` such that for all
 `δ ∈ (0, δ_w]` and `x ∈ [1 − δ, 1]`, `λ(x + i·δ) − w ≠ 0`.
 
@@ -1458,7 +1523,7 @@ The strip width is coupled to `δ` (matching the bot_right segment of
 the F_Y region when `R₀ = 1/2 − δ`). For `τ = x + δi` with
 `x ∈ [1 − δ, 1]`, write `τ − 1 = (x − 1) + δi` and use conjugation
 symmetry `modularLambdaH_conj_symmetry` to relate to the bot_left
-strip point `(1 − x) + δi`. By sub-lemma 6 applied to `(1 − x) + δi`,
+strip point `(1 − x) + δi`. By `modularLambdaH_F_Y_bot_left_strip_ne` applied to `(1 − x) + δi`,
 `‖λ((1 − x) + δi) − 1‖` is small for `δ` small; hence
 `‖λ(τ − 1) − 1‖` is small (conjugation preserves the bound).
 The T-action identity `modularLambdaH_add_one_eq_div_sub_one`
@@ -1652,7 +1717,7 @@ theorem modularLambdaH_F_Y_bot_right_strip_ne
   rw [h_lam_eq] at h_norm_lam_τ_gt
   exact lt_irrefl _ h_norm_lam_τ_gt
 
-/-! ### Lipschitz infrastructure for sub-lemma 8
+/-! ### Lipschitz control of `Im λ` along the arc
 
 The shifted arc `|τ − (1/2 + δ·i)| = R₀` (for `R₀ > √(1/4 − δ²)`) lies
 inside `F^o`, and is close to the F^o semicircle `|τ − 1/2| = 1/2` with
@@ -2239,7 +2304,7 @@ Apply Helper 8.2 to obtain a Lipschitz constant `M`, then chain with
 Helper 8.1's distance bound to conclude.
 
 The cusp endpoints (`θ ∈ [0, θ_0) ∪ (π − θ_0, π]`) are handled
-separately in Sub-lemma 8 via cusp asymptotics. -/
+separately in `modularLambdaH_F_Y_arc_ne` via cusp asymptotics. -/
 theorem modularLambdaH_arc_lipschitz_away_from_cusps
     {δ R₀ : ℝ} (hδ : 0 < δ) (hR₀_pos : 0 < R₀)
     (hR₀_lo : Real.sqrt (1 / 4 - δ ^ 2) < R₀) (hR₀_lt : R₀ < 1 / 2)
@@ -2316,7 +2381,9 @@ theorem modularLambdaH_arc_lipschitz_away_from_cusps
         apply mul_le_mul_of_nonneg_left _ hM_pos.le
         convert h_dist using 1
 
-/-- **Sub-lemma 8.aux — arc has positive imaginary part.** For
+/-! ### Arc nonvanishing near the cusps -/
+
+/-- **Arc has positive imaginary part.** For
 `δ > 0` and `θ ∈ [0, π]`, the arc point `circleMap (1/2 + δi) R₀ θ`
 has `Im > 0`. -/
 theorem modularLambdaH_F_Y_arc_im_pos
@@ -2334,7 +2401,7 @@ theorem modularLambdaH_F_Y_arc_im_pos
   have h_term : 0 ≤ R₀ * Real.sin θ := mul_nonneg hR₀_nn h_sin_nn
   linarith [hδ, h_term]
 
-/-- **Sub-lemma 8.aux — squared norm of the arc.** Convenience lemma. -/
+/-- **Squared norm of the arc.** Convenience lemma. -/
 theorem modularLambdaH_F_Y_arc_normSq_eq
     (δ R₀ : ℝ) (θ : ℝ) :
     Complex.normSq (_root_.circleMap ((1/2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ) =
@@ -2354,7 +2421,7 @@ theorem modularLambdaH_F_Y_arc_normSq_eq
       Complex.I_re, Complex.I_im, Complex.ofReal_re, Complex.ofReal_im]
   rw [h_re, h_im]; ring
 
-/-- **Sub-lemma 8.aux.aux — `η²/4 ≤ R₀ sin η` for the cusp range.**
+/-- **`η²/4 ≤ R₀ sin η` for the cusp range.**
 Used to prove `arc.Re ≤ arc.Im` in the cusp 0 region. Combines Jordan's
 inequality `sin η ≥ 2η/π` with `R₀ > 1/3` and `η ≤ 1/π`. -/
 theorem modularLambdaH_F_Y_arc_eta_sq_le_R₀_sin
@@ -2398,7 +2465,7 @@ theorem modularLambdaH_F_Y_arc_eta_sq_le_R₀_sin
     linarith [h_mul, h_lhs, h_rhs]
   linarith [h_η_sq_le_target, h_R₀_sin_lower]
 
-/-- **Sub-lemma 8.aux.aux — pure polynomial inequality.**
+/-- **Pure polynomial inequality.**
 For `u ≥ 0`, `v > 0` with `u ≤ v` and `v ≤ 1/(2K)`, we have
 `K · (u² + v²) ≤ v` (i.e., `K ≤ v/(u² + v²)`). Used to derive
 `K ≤ Im(−1/arc)` from `arc.Re ≤ arc.Im` and `arc.Im ≤ 1/(2K)`. -/
@@ -2421,7 +2488,7 @@ theorem modularLambdaH_F_Y_arc_cusp_0_poly_bound
   -- K · (u² + v²) ≤ K · 2v² = 2Kv · v ≤ 1 · v = v.
   nlinarith [h_uv_sum, hv_pos, h_2Kv_le, hK_pos, sq_nonneg v]
 
-/-- **Sub-lemma 8.aux.aux — v ≤ 1/(2K) bound.**
+/-- **V ≤ 1/(2K) bound.**
 For δ + R₀ sin η bounded above by `1/(2K)` when `δ, η ≤ 1/(4K)`. -/
 theorem modularLambdaH_F_Y_arc_cusp_0_v_bound
     {δ R₀ η K : ℝ} (_hδ_nn : 0 ≤ δ) (hR₀_pos : 0 < R₀) (hR₀_lt : R₀ < 1 / 2)
@@ -2461,7 +2528,7 @@ theorem modularLambdaH_F_Y_arc_cusp_0_v_bound
 set_option maxHeartbeats 400000 in
 -- Cusp-0 helper combines five polynomial sub-helpers and arc-point
 -- complex-arithmetic simp chains; exceeds the default 200000 budget.
-/-- **Sub-lemma 8.aux — lower bound on `Im(−1/arc(θ))` in cusp region.**
+/-- **Lower bound on `Im(−1/arc(θ))` in cusp region.**
 Given any target `K > 0`, there exist parameters `δ_K, θ_K` (depending
 on `K`) such that for `δ ≤ δ_K`, `R₀ ∈ (√(1/4 − δ²), 1/2)`, and
 `θ ∈ [π − θ_K, π]`: `Im(−1/arc(θ)) ≥ K`. The cusp width `θ_K` shrinks
@@ -2637,7 +2704,7 @@ theorem modularLambdaH_F_Y_arc_im_inv_lower_cusp_0
   exact modularLambdaH_F_Y_arc_cusp_0_poly_bound hu_nn hv_pos hu_le_v hv_upper hK_pos
 
 
-/-- **Sub-lemma 8.aux — `1/2 - R₀ ≤ 2δ²` from `R₀ > √(1/4 - δ²)`.** -/
+/-- **`1/2 - R₀ ≤ 2δ²` from `R₀ > √(1/4 - δ²)`.** -/
 theorem modularLambdaH_F_Y_arc_half_minus_R₀_bound
     {δ R₀ : ℝ} (hδ_pos : 0 < δ) (hδ_le_quarter : δ ≤ 1 / 4)
     (hR₀_lo : Real.sqrt (1 / 4 - δ ^ 2) < R₀) (hR₀_lt : R₀ < 1 / 2)
@@ -2649,7 +2716,7 @@ theorem modularLambdaH_F_Y_arc_half_minus_R₀_bound
     nlinarith [hR₀_lo, Real.sqrt_nonneg (1 / 4 - δ ^ 2), sq_nonneg R₀, h3]
   nlinarith [hR₀_sq_gt, hR₀_lt, hR₀_pos]
 
-/-- **Sub-lemma 8.aux — middle-case polynomial bound.**
+/-- **Middle-case polynomial bound.**
 Given `M, δ, R₀, w_im` with the appropriate hypotheses (`δ ≤ 1/4`,
 `δ ≤ w_im/(4M)`, `1/2 − R₀ ≤ 2δ²`, `w_im > 0`), `M · (δ + (1/2 − R₀)) < w_im`. -/
 theorem modularLambdaH_F_Y_arc_middle_poly_bound
@@ -2674,7 +2741,7 @@ theorem modularLambdaH_F_Y_arc_middle_poly_bound
   have h_final : (3/2 : ℝ) * (w_im / 4) < w_im := by linarith
   linarith
 
-/-- **Sub-lemma 8.aux — cusp-1 norm inequality.**
+/-- **Cusp-1 norm inequality.**
 Given `0 ≤ w_norm`, `0 < c`, `c < 1/(w_norm + 2)`, `1 - c ≤ X`,
 we have `w_norm < X / c`. -/
 theorem modularLambdaH_F_Y_arc_cusp_1_norm_bound
@@ -2687,7 +2754,7 @@ theorem modularLambdaH_F_Y_arc_cusp_1_norm_bound
   rw [lt_div_iff₀ hc_pos]
   nlinarith [h_one_minus_c_le_X, h_c_w_plus_two_lt_one, hc_pos, hw_nn]
 
-/-- **Sub-lemma 8.aux — exponential bound (mul form).** Given `C > 0`,
+/-- **Exponential bound (mul form).** Given `C > 0`,
 with `L := log(160000 · C)` and `K := max L 1 + 1`, we have
 `160000 · exp(-π · K) < 1/C`. Used for cusp 1 where `C = ‖w‖ + 2`. -/
 theorem modularLambdaH_F_Y_arc_ne_exp_bound_mul (C : ℝ) (hC_pos : 0 < C) :
@@ -2715,7 +2782,7 @@ theorem modularLambdaH_F_Y_arc_ne_exp_bound_mul (C : ℝ) (hC_pos : 0 < C) :
     _ = 160000 * (1 / (160000 * C)) := by rw [h_exp_neg_L]
     _ = 1 / C := by field_simp
 
-/-- **Sub-lemma 8.aux — exponential bound (div form).** Given `C > 0`,
+/-- **Exponential bound (div form).** Given `C > 0`,
 with `L := log(160000 / C)` and `K := max L 1 + 1`, we have
 `160000 · exp(-π · K) < C`. Used for cusp 0 where `C = ‖w − 1‖`. -/
 theorem modularLambdaH_F_Y_arc_ne_exp_bound_div (C : ℝ) (hC_pos : 0 < C) :
@@ -2744,18 +2811,19 @@ theorem modularLambdaH_F_Y_arc_ne_exp_bound_div (C : ℝ) (hC_pos : 0 < C) :
     _ = C := by field_simp
 
 set_option maxHeartbeats 400000 in
--- Three-case Sub-lemma 8 (middle Lipschitz + cusp-0 + cusp-1 conjugation)
+-- Three-case arc nonvanishing (middle Lipschitz + cusp-0 + cusp-1 conjugation)
 -- with extensive complex-arithmetic and bound chaining; exceeds the default
 -- 200000 budget even after extracting many sub-helpers.
-/-- **Sub-lemma 8 — shifted arc non-vanishing (existential δ_w form).**
+/-- **Shifted arc non-vanishing (existential δ_w form).**
 For `w ∈ ℍ`, there exists `δ_w ∈ (0, 1/2)` such that for all `δ ∈ (0, δ_w]`,
 `R₀ ∈ (√(1/4 − δ²), 1/2)`, and `θ ∈ [0, π]`:
 `λ(circleMap (1/2 + δ·i) R₀ θ) − w ≠ 0`.
 
-The existential form (matching sub-lemmas 6, 7) replaces the previous
+The existential form (matching the two strip lemmas) replaces the previous
 universal statement, since the proof genuinely requires `δ` small enough
 relative to `w` to control the arc's `Im λ` against `Im w > 0`. In the
-main F_Y theorem, this `δ_w` is passed to sub-lemma 1' as `δ_max`.
+main F_Y theorem, this `δ_w` is passed to
+`modularLambdaH_F_Y_params_exist_arc` as `δ_max`.
 
 Proof structure: `θ_0 := min(θ_K_0, θ_K_1)` where `K_0, K_1` are derived
 from `‖w − 1‖` and `‖w‖ + 2`. Middle of arc handled by extracting
@@ -3131,7 +3199,9 @@ theorem modularLambdaH_F_Y_arc_ne
       rw [h_abs_w_im] at h_im_bound
       linarith [h_M_bound, h_im_bound]
 
-/-- **Sub-lemma 9.aux.B1 — AP application packager.** Direct wrapper
+/-! ## The argument principle on the F_Y region -/
+
+/-- **AP application packager.** Direct wrapper
 around `cIntegralLogDeriv_isNat_of_nonzero_on_rectMinusUpperHalfDisk`
 applied to `g(τ) = λ(τ) − w` over the F_Y region. Returns the existence
 of a natural number `n` such that `(2πi)⁻¹ · (boundary integral) = n`.
@@ -3331,6 +3401,8 @@ theorem modularLambdaH_F_Y_AP_integral_eq_divisor_sum
   simp_rw [h_deriv, hg_def, he_def] at hn
   convert hn using 2
 
+
+/-! ## The deep-cusp reference value -/
 
 set_option maxHeartbeats 400000 in
 -- The quantitative cusp-chart estimates make this declaration elaboration-heavy.
@@ -3867,6 +3939,8 @@ theorem modularLambdaH_cusp_reference_value :
   rw [h_τ_eq, hn0]
   simp
 
+
+/-! ## The boundary-integral bridge and the homotopy to the circle -/
 
 set_option maxHeartbeats 400000 in
 -- The six-piece chain-rule/substitution conversion is elaboration-heavy.
@@ -5041,6 +5115,8 @@ theorem modularLambdaH_F_Y_image_curve_pathContourIntegral_eq_circle_via_homotop
   exact h_τ_eq
 
 
+/-! ## Segment transport and uniform boundary clearance -/
+
 /-- **The truncated region avoids the unit semicircle.** Under the arc
 bound `√(1/4 − δ²) < R₀`, every point `τ` with `δ < Im τ` lying outside
 the closed ball `B(1/2 + δi, R₀)` satisfies `1 < ‖2τ − 1‖`.
@@ -5634,7 +5710,7 @@ theorem modularLambdaH_F_Y_bot_right_strip_ne_uniform {B : ℝ} (hB : 0 < B) :
   exact lt_irrefl _ h_norm_lam_τ_gt
 
 set_option maxHeartbeats 400000 in
--- Cusp-1 case of three-case Sub-lemma 8 (uniform version): the
+-- Cusp-1 case of the three-case arc nonvanishing (uniform version): the
 -- reflection/conjugation machinery plus T-action elaborate slowly.
 /-- Cusp-1 branch of `modularLambdaH_F_Y_arc_ne_uniform`: for `θ` near `0`
 (below the returned threshold `θ_c`), conjugation symmetry plus the
@@ -5813,7 +5889,7 @@ theorem modularLambdaH_F_Y_arc_ne_uniform_cusp_one_case {B : ℝ} (hB : 0 < B) :
   exact lt_irrefl _ h_norm_lam_arc_gt
 
 set_option maxHeartbeats 400000 in
--- Cusp-0 case of three-case Sub-lemma 8 (uniform version): the
+-- Cusp-0 case of the three-case arc nonvanishing (uniform version): the
 -- S-action and exponential norm bounds elaborate slowly.
 /-- Cusp-0 branch of `modularLambdaH_F_Y_arc_ne_uniform`: for `θ` near `π`
 (above `π` minus the returned threshold `θ_c`), the `S`-action gives
@@ -5889,7 +5965,7 @@ theorem modularLambdaH_F_Y_arc_ne_uniform_cusp_zero_case {ρ : ℝ} (hρ : 0 < �
   exact lt_irrefl _ h_strict'
 
 set_option maxHeartbeats 400000 in
--- Middle case of three-case Sub-lemma 8 (uniform version): the
+-- Middle case of the three-case arc nonvanishing (uniform version): the
 -- Lipschitz-ball extraction and semicircle computations elaborate slowly.
 /-- Middle branch of `modularLambdaH_F_Y_arc_ne_uniform`: for
 `θ ∈ [θ_0, π - θ_0]`, the Lipschitz bound for `Im λ` near the unit
@@ -6013,7 +6089,7 @@ theorem modularLambdaH_F_Y_arc_ne_uniform_middle_case {μ θ_0 : ℝ} (hμ : 0 <
   rw [h_abs_w_im] at h_im_bound
   linarith [h_M_bound, h_im_bound, hw'_im]
 
--- Three-case Sub-lemma 8 (middle Lipschitz + cusp-0 + cusp-1 conjugation),
+-- Three-case arc nonvanishing (middle Lipschitz + cusp-0 + cusp-1 conjugation),
 -- segment-uniform version: thresholds depend only on (μ, B, ρ).
 /-- Segment-uniform variant of `modularLambdaH_F_Y_arc_ne`: the threshold
 `δ_u` depends only on `μ ≤ w'.im`, `‖w'‖ ≤ B`, and `ρ ≤ ‖w' - 1‖`. -/
@@ -6069,6 +6145,8 @@ theorem modularLambdaH_F_Y_arc_ne_uniform {μ B ρ : ℝ} (hμ : 0 < μ) (hB : 0
       exact h_middle δ R₀ hδ_pos hδ_le_δ_mid hR₀_lo hR₀_lt θ
         (le_of_lt h_θ_le_θ_0) (le_of_lt h_θ_ge) w' hw'_im
 
+
+/-! ## Fibre uniqueness on `F^o`: the degree argument -/
 
 set_option maxHeartbeats 400000 in
 -- Long single-declaration assembly of the degree argument (many large integral terms).
@@ -6776,6 +6854,8 @@ theorem modularLambdaH_F_interior_preimage_deriv_ne_zero
     exact key
   omega
 
+/-! ## The winding number of the image curve -/
+
 /-- **Topological-winding result: image-curve contour integral equals 2πi.**
 For `w ∈ ℍ` with a `λ`-preimage `τ₀ ∈ F°` located inside the truncated
 region (above the bottom edge, below the top edge, outside the excised
@@ -7142,7 +7222,7 @@ theorem modularLambdaH_F_Y_image_curve_pathContourIntegral_eq_two_pi_I
   push_cast
   ring
 
-/-- **Sub-lemma 9.aux.B2.core — Image curve winding index is 1.**
+/-- **Image curve winding index is 1.**
 The load-bearing topological/geometric core sub-helper for B2. For any
 `n : ℕ` satisfying the AP-derived identity, `n` equals the winding
 index of the image curve `λ ∘ ∂F_Y` around `w`, which is `1`.
@@ -7215,66 +7295,7 @@ theorem modularLambdaH_F_Y_image_curve_winding_index_eq_one
   rw [inv_mul_cancel₀ hpi] at hn
   exact_mod_cast hn.symm
 
-/-- **Sub-lemma 9.aux.B2 — AP natural-count equals 1.**
-For `w ∈ ℍ` and any `n : ℕ` satisfying the AP-derived identity
-`(2πi)⁻¹ · (boundary integral) = (n : ℂ)`, the count `n` equals 1.
-Mathematically, this asserts the winding number of `λ ∘ ∂F_Y` around `w`
-equals 1.
-
-Body: trivial wrapper around
-`modularLambdaH_F_Y_image_curve_winding_index_eq_one`, which carries
-the load-bearing topological argument. The split keeps B2's role in the
-B1/B2/`_boundary_integral_eq_two_pi_I`/`_winding_eq_one` chain clean
-while isolating the topological core for future refinement. -/
-theorem modularLambdaH_F_Y_AP_count_eq_one
-    {w : ℂ} (hw : 0 < w.im) {δ Y R₀ : ℝ}
-    (hδ : 0 < δ) (hδY : δ < Y) (hR₀_pos : 0 < R₀) (hR₀_lt : R₀ < 1 / 2)
-    (hδ_le : δ ≤ 1 / 4) (hR₀_lo : Real.sqrt (1 / 4 - δ ^ 2) < R₀)
-    (h_δR_lt_Y : δ + R₀ < Y)
-    (hg_bot_left : ∀ x ∈ Set.Icc (0 : ℝ) (1 / 2 - R₀),
-      modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) - w ≠ 0)
-    (hg_bot_right : ∀ x ∈ Set.Icc (1 / 2 + R₀ : ℝ) 1,
-      modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) - w ≠ 0)
-    (hg_top : ∀ x ∈ Set.Icc (0 : ℝ) 1,
-      modularLambdaH ((x : ℂ) + (Y : ℂ) * Complex.I) - w ≠ 0)
-    (hg_right : ∀ y ∈ Set.Icc δ Y,
-      modularLambdaH ((1 : ℂ) + (y : ℂ) * Complex.I) - w ≠ 0)
-    (hg_left : ∀ y ∈ Set.Icc δ Y,
-      modularLambdaH ((0 : ℂ) + (y : ℂ) * Complex.I) - w ≠ 0)
-    (hg_arc : ∀ θ ∈ Set.Icc (0 : ℝ) Real.pi,
-      modularLambdaH (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ) - w ≠ 0)
-    (τ₀ : ℂ) (hτ₀_in : τ₀ ∈ Gamma2FundamentalDomainInterior)
-    (hτ₀_eq : modularLambdaH τ₀ = w)
-    (hτ₀_im_lo : δ < τ₀.im) (hτ₀_im_hi : τ₀.im < Y)
-    (hτ₀_arc : R₀ < ‖τ₀ - ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I)‖)
-    {n : ℕ}
-    (hn : (2 * Real.pi * Complex.I)⁻¹ * ((∫ x in (0 : ℝ)..(1 / 2 - R₀),
-        deriv modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) /
-        (modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) - w)) +
-      (∫ x in (1 / 2 + R₀ : ℝ)..1,
-        deriv modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) /
-        (modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) - w)) +
-      Complex.I * (∫ y in (δ : ℝ)..Y,
-        deriv modularLambdaH ((1 : ℂ) + (y : ℂ) * Complex.I) /
-        (modularLambdaH ((1 : ℂ) + (y : ℂ) * Complex.I) - w)) -
-      (∫ x in (0 : ℝ)..1,
-        deriv modularLambdaH ((x : ℂ) + (Y : ℂ) * Complex.I) /
-        (modularLambdaH ((x : ℂ) + (Y : ℂ) * Complex.I) - w)) -
-      Complex.I * (∫ y in (δ : ℝ)..Y,
-        deriv modularLambdaH ((0 : ℂ) + (y : ℂ) * Complex.I) /
-        (modularLambdaH ((0 : ℂ) + (y : ℂ) * Complex.I) - w)) -
-      (∫ θ in (0 : ℝ)..Real.pi,
-        deriv modularLambdaH
-          (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ) /
-        (modularLambdaH
-          (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ) - w) *
-        (Complex.I * R₀ * Complex.exp (Complex.I * θ)))) = (n : ℂ)) :
-    n = 1 :=
-  modularLambdaH_F_Y_image_curve_winding_index_eq_one hw hδ hδY hR₀_pos hR₀_lt
-    hδ_le hR₀_lo h_δR_lt_Y hg_bot_left hg_bot_right hg_top hg_right hg_left hg_arc
-    τ₀ hτ₀_in hτ₀_eq hτ₀_im_lo hτ₀_im_hi hτ₀_arc hn
-
-/-- **Sub-lemma 9.aux — F_Y boundary integral of `λ'/(λ − w)` equals `2πi`.**
+/-- **F_Y boundary integral of `λ'/(λ − w)` equals `2πi`.**
 
 For `w ∈ ℍ` and valid F_Y parameters with `λ ≠ w` on each of the six
 boundary pieces, the closed-boundary integral of `λ'/(λ − w)` around
@@ -7283,7 +7304,8 @@ the image curve `λ ∘ ∂F_Y` has winding number `1` around `w`.
 
 Proof: combine `modularLambdaH_F_Y_AP_integral_eq_nat_form` (returning
 `(2πi)⁻¹ · integral = n` for some `n : ℕ`) with
-`modularLambdaH_F_Y_AP_count_eq_one` (`n = 1`), then multiply by `2πi`. -/
+`modularLambdaH_F_Y_image_curve_winding_index_eq_one` (`n = 1`), then
+multiply by `2πi`. -/
 theorem modularLambdaH_F_Y_boundary_integral_eq_two_pi_I
     {w : ℂ} (hw : 0 < w.im) {δ Y R₀ : ℝ}
     (hδ : 0 < δ) (hδY : δ < Y) (hR₀_pos : 0 < R₀) (hR₀_lt : R₀ < 1 / 2)
@@ -7329,7 +7351,8 @@ theorem modularLambdaH_F_Y_boundary_integral_eq_two_pi_I
     2 * Real.pi * Complex.I := by
   obtain ⟨n, hn⟩ := modularLambdaH_F_Y_AP_integral_eq_nat_form hδ hδY hR₀_pos hR₀_lt
     h_δR_lt_Y hg_bot_left hg_bot_right hg_top hg_right hg_left hg_arc
-  have h_n_one : n = 1 := modularLambdaH_F_Y_AP_count_eq_one hw hδ hδY hR₀_pos hR₀_lt
+  have h_n_one : n = 1 :=
+    modularLambdaH_F_Y_image_curve_winding_index_eq_one hw hδ hδY hR₀_pos hR₀_lt
     hδ_le hR₀_lo h_δR_lt_Y hg_bot_left hg_bot_right hg_top hg_right hg_left hg_arc
     τ₀ hτ₀_in hτ₀_eq hτ₀_im_lo hτ₀_im_hi hτ₀_arc hn
   rw [h_n_one, Nat.cast_one] at hn
@@ -7342,75 +7365,15 @@ theorem modularLambdaH_F_Y_boundary_integral_eq_two_pi_I
   rw [← mul_assoc, mul_inv_cancel₀ hpi, one_mul, mul_one] at h_mul
   exact h_mul
 
-/-- **Sub-lemma 9 — winding number computation = 1.** For `w ∈ ℍ` and
-valid F_Y parameters with `λ ≠ w` on each of the six boundary pieces,
-the boundary integral expression from the F_Y AP — applied to
-`g(τ) := λ(τ) − w` — divided by `2πi` equals `1`. Hence the natural-
-number count from the F_Y AP equals `1`.
-
-Proof: by `modularLambdaH_F_Y_boundary_integral_eq_two_pi_I`, the
-boundary integral equals `2πi`. Then `(2πi)⁻¹ · (2πi) = 1`. -/
-theorem modularLambdaH_F_Y_winding_eq_one
-    {w : ℂ} (hw : 0 < w.im) {δ Y R₀ : ℝ}
-    (hδ : 0 < δ) (hδY : δ < Y) (hR₀_pos : 0 < R₀) (hR₀_lt : R₀ < 1 / 2)
-    (hδ_le : δ ≤ 1 / 4) (hR₀_lo : Real.sqrt (1 / 4 - δ ^ 2) < R₀)
-    (h_δR_lt_Y : δ + R₀ < Y)
-    (hg_bot_left : ∀ x ∈ Set.Icc (0 : ℝ) (1 / 2 - R₀),
-      modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) - w ≠ 0)
-    (hg_bot_right : ∀ x ∈ Set.Icc (1 / 2 + R₀ : ℝ) 1,
-      modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) - w ≠ 0)
-    (hg_top : ∀ x ∈ Set.Icc (0 : ℝ) 1,
-      modularLambdaH ((x : ℂ) + (Y : ℂ) * Complex.I) - w ≠ 0)
-    (hg_right : ∀ y ∈ Set.Icc δ Y,
-      modularLambdaH ((1 : ℂ) + (y : ℂ) * Complex.I) - w ≠ 0)
-    (hg_left : ∀ y ∈ Set.Icc δ Y,
-      modularLambdaH ((0 : ℂ) + (y : ℂ) * Complex.I) - w ≠ 0)
-    (hg_arc : ∀ θ ∈ Set.Icc (0 : ℝ) Real.pi,
-      modularLambdaH (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ) - w ≠ 0)
-    (τ₀ : ℂ) (hτ₀_in : τ₀ ∈ Gamma2FundamentalDomainInterior)
-    (hτ₀_eq : modularLambdaH τ₀ = w)
-    (hτ₀_im_lo : δ < τ₀.im) (hτ₀_im_hi : τ₀.im < Y)
-    (hτ₀_arc : R₀ < ‖τ₀ - ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I)‖) :
-    (2 * Real.pi * Complex.I)⁻¹ * (
-      (∫ x in (0 : ℝ)..(1 / 2 - R₀),
-        deriv modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) /
-        (modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) - w)) +
-      (∫ x in (1 / 2 + R₀ : ℝ)..1,
-        deriv modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) /
-        (modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) - w)) +
-      Complex.I * (∫ y in (δ : ℝ)..Y,
-        deriv modularLambdaH ((1 : ℂ) + (y : ℂ) * Complex.I) /
-        (modularLambdaH ((1 : ℂ) + (y : ℂ) * Complex.I) - w)) -
-      (∫ x in (0 : ℝ)..1,
-        deriv modularLambdaH ((x : ℂ) + (Y : ℂ) * Complex.I) /
-        (modularLambdaH ((x : ℂ) + (Y : ℂ) * Complex.I) - w)) -
-      Complex.I * (∫ y in (δ : ℝ)..Y,
-        deriv modularLambdaH ((0 : ℂ) + (y : ℂ) * Complex.I) /
-        (modularLambdaH ((0 : ℂ) + (y : ℂ) * Complex.I) - w)) -
-      (∫ θ in (0 : ℝ)..Real.pi,
-        deriv modularLambdaH
-          (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ) /
-        (modularLambdaH
-          (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ) - w) *
-        (Complex.I * R₀ * Complex.exp (Complex.I * θ)))) = 1 := by
-  have h_integral := modularLambdaH_F_Y_boundary_integral_eq_two_pi_I hw hδ hδY hR₀_pos
-    hR₀_lt hδ_le hR₀_lo h_δR_lt_Y hg_bot_left hg_bot_right hg_top hg_right hg_left hg_arc
-    τ₀ hτ₀_in hτ₀_eq hτ₀_im_lo hτ₀_im_hi hτ₀_arc
-  rw [h_integral]
-  have hpi : (2 * Real.pi * Complex.I : ℂ) ≠ 0 := by
-    refine mul_ne_zero (mul_ne_zero ?_ ?_) Complex.I_ne_zero
-    · exact two_ne_zero
-    · exact_mod_cast Real.pi_ne_zero
-  exact inv_mul_cancel₀ hpi
-
-/-- **Sub-lemma 9.aux.B3 — Two distinct zeros force AP count `≥ 2`.**
+/-- **Two distinct zeros force AP count `≥ 2`.**
 A refinement of the F_Y argument principle exposing the natural-number
 count as the divisor sum. For `g(τ) = λ(τ) − w` with two distinct zeros
 `τ₁, τ₂` in the **open** F_Y interior, the natural number `n` returned
 by the AP existential (`(2πi)⁻¹ · integral = (n : ℂ)`) satisfies `n ≥ 2`.
 
-Combined with `_winding_eq_one` (giving `(2πi)⁻¹ · integral = 1`, hence
-`n = 1`), this yields a contradiction, proving uniqueness of preimages
+Combined with `_image_curve_winding_index_eq_one` (giving `n = 1` from
+`(2πi)⁻¹ · integral = (n : ℂ)`), this yields a contradiction, proving
+uniqueness of preimages
 in F_Y interior.
 
 Proof strategy: factor `g = r · h` via `MeromorphicOn.extract_zeros_poles`
@@ -7535,6 +7498,8 @@ theorem modularLambdaH_F_Y_AP_count_ge_two_of_two_distinct_zeros
   rw [he_im] at key
   omega
 
+/-! ## Existence, uniqueness, and injectivity of `λ` on `F` -/
+
 /-- **Existence and uniqueness of `λ`-preimage in `F^o`.** For each
 `w` with `Im w > 0`, there is a unique `τ ∈ F^o` with `λ(τ) = w`.
 
@@ -7570,6 +7535,8 @@ theorem modularLambdaH_injOn_F_interior :
   have h_τ₁ : τ₁ = τ := hτ_unique τ₁ ⟨h₁, rfl⟩
   have h_τ₂ : τ₂ = τ := hτ_unique τ₂ ⟨h₂, h_eq.symm⟩
   rw [h_τ₁, h_τ₂]
+
+/-! ### Boundary-arc analysis: ranges and monotonicity -/
 
 /-- **`T`-translation in `λ`-form.** `λ(τ + 1) = λ(τ)/(λ(τ) − 1)`
 on `ℍ`: combine `modularLambdaH_T_smul` (`λ(τ+1) = −θ₂⁴/θ₄⁴`) with
@@ -8043,6 +8010,8 @@ theorem modularLambdaH_injOn_F_closed :
         ⟨hτ₁_im, hτ₁_re_nn, hτ₁_re_le, hτ₁_semi⟩ h₁_int
         ⟨hτ₂_im, hτ₂_re_nn, hτ₂_re_le, hτ₂_semi⟩ h₂_int h_eq
 
+/-! ## Pillar 4, upper branch: `Im λ > 0` -/
+
 /-- **Injectivity of `λ` on `F` modulo `Γ(2)`.** For
 `τ₁, τ₂ ∈ F ⊂ ℍ` with `λ(τ₁) = λ(τ₂)`, there is `γ ∈ Γ(2)` taking
 `τ₁` to `τ₂`. Direct consequence of `modularLambdaH_injOn_F_closed`:
@@ -8059,8 +8028,6 @@ theorem modularLambdaH_injOn_F_mod_gamma2
   have h_eq_h : τ₁ = τ₂ := UpperHalfPlane.ext h_eq_c
   refine ⟨1, (CongruenceSubgroup.Gamma 2).one_mem, ?_⟩
   rw [h_eq_h]; exact one_smul _ _
-
-/-! ## Pillar-4 sub-lemmas (orbit identification, three branches) -/
 
 /-- **Pillar-4 upper branch.** For `τ₁, τ₂ ∈ ℍ` with
 `Im(λ τ₁) > 0` and `λ(τ₁) = λ(τ₂)`, there is `γ ∈ Γ(2)` taking
@@ -8091,7 +8058,7 @@ theorem gamma2_lambda_eq_implies_orbit_when_im_lambda_pos
         ((CongruenceSubgroup.Gamma 2).inv_mem hγ₂_in) hγ_in) hγ₁_in
   · rw [mul_smul, mul_smul, hγ_eq, ← mul_smul, inv_mul_cancel, one_smul]
 
-/-! ## Analytic non-injectivity helper -/
+/-! ## Local multiplicity of analytic maps -/
 
 set_option maxHeartbeats 400000 in
 -- Composes the multiplicity factorization with an analytic n-th root
@@ -8461,6 +8428,8 @@ theorem analyticAt_localOpen_with_multiplicity
     exact hζ_ne_distinct h_eq'
   -- Wrap up.
   exact ⟨ψ ζ_0, hψ_ζ₀_U, ψ ζ_1, hψ_ζ₁_U, hψ_ne, h_f_ψ_ζ₀_eq_w, h_f_ψ_ζ₁_eq_w⟩
+
+/-! ## Pillar 3 sub-lemmas: `λ′ ≠ 0` by the sign of `Im λ` -/
 
 /-- **Pillar-3 boundary `= 0` branch.** For `τ ∈ ℍ` with
 `Im(λ τ) = 0`, `deriv λ τ ≠ 0`. Suppose `deriv λ τ = 0` for
@@ -9084,6 +9053,8 @@ theorem modularLambdaH_deriv_ne_zero_when_im_lambda_non_pos
   · exact modularLambdaH_deriv_ne_zero_when_im_lambda_neg hτ h
   · exact modularLambdaH_deriv_ne_zero_when_im_lambda_zero hτ h
 
+/-! ## Pillar 4, lower and boundary branches: `Im λ ≤ 0` -/
+
 /-- **Pillar-4 LHP branch (Im λ < 0).** For `τ₁, τ₂ ∈ ℍ` with
 `Im(λ τ₁) < 0` and `λ(τ₁) = λ(τ₂)`, there is `γ ∈ Γ(2)` taking
 `τ₁` to `τ₂`.
@@ -9470,7 +9441,7 @@ theorem gamma2_lambda_eq_implies_orbit_when_im_lambda_non_pos
   · exact gamma2_lambda_eq_implies_orbit_when_im_lambda_neg h_lt h_eq
   · exact gamma2_lambda_eq_implies_orbit_when_im_lambda_zero h_eq_zero h_eq
 
-/-! ## Pillar 3: non-vanishing of the derivative -/
+/-! ## Pillar 3, main statement: `λ′ ≠ 0` on `ℍ` -/
 
 /-- **Pillar 3: `λ'(τ) ≠ 0` for every `τ ∈ ℍ`.** Case split on the
 sign of `Im(λ τ)`. -/
@@ -9481,7 +9452,7 @@ theorem modularLambdaH_deriv_ne_zero_on_upperHalf
   · exact modularLambdaH_deriv_ne_zero_when_im_lambda_non_pos hτ h_im_le
   · exact modularLambdaH_deriv_ne_zero_when_im_lambda_pos hτ h_im_pos
 
-/-! ## Pillar 4: orbit identification -/
+/-! ## Pillar 4, main statement: `λ` separates `Γ(2)`-orbits -/
 
 /-- **Pillar 4: `λ` separates `Γ(2)`-orbits.** Case split on the
 sign of `Im(λ τ₁)` (which equals `Im(λ τ₂)` by hypothesis). -/
@@ -9498,7 +9469,7 @@ theorem modularLambdaH_eq_iff_gamma2_orbit
     rw [← h_eq]
     exact (modularLambdaH_gamma2_invariant γ hγ_in τ₁).symm
 
-/-! ## Covering-map assembly
+/-! ## The covering-map assembly
 
 The route to `IsCoveringMapOn modularLambdaH {w | w ≠ 0 ∧ w ≠ 1}`:
 
@@ -9882,7 +9853,7 @@ theorem modularLambdaH_isEvenlyCovered {w : ℂ}
     IsCoveringMapOn.of_isCoveringMap_restrictPreimage _ hS_open hpre_open hrestrict
   exact hcov w ⟨hw0, hw1⟩
 
-/-! ## Main covering-map theorems -/
+/-! ## Main theorems: `λ` is a covering map of the triply-punctured plane -/
 
 /-- **Covering map property of `λ : ℍ → ℂ ∖ {0, 1}`.**
 
