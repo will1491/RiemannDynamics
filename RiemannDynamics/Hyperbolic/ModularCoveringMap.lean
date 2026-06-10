@@ -64,20 +64,645 @@ under `λ` is the closed lower half of `ℂ ∖ {0, 1}` (by
 def Gamma2FundamentalDomainReflected : Set ℂ :=
   { τ : ℂ | 0 < τ.im ∧ -1 ≤ τ.re ∧ τ.re ≤ 0 ∧ 1 ≤ ‖2 * τ + 1‖ }
 
+/-! ### Tiles of the standard fundamental domain inside `F ∪ F^σ`
+
+For `z` in the standard `SL(2, ℤ)` fundamental domain `𝒟`
+(`1 ≤ |z|²`, `|Re z| ≤ 1/2`, `Im z > 0`), the twelve lemmas below
+place an explicit Möbius image of `z` into the half-fundamental
+domain `F` or its reflection `F^σ`, with the image chosen by the
+sign of `Re z`. Together they cover the six classes of
+`SL(2, ℤ/2) ≅ S₃`: the identity class (`z` itself), `S` (`−1/z`),
+`T` (`z ± 1`), the lower-unipotent class (`z/(z+1)`, `z/(1−z)`),
+`ST` (`−1/(z ± 1)`), and `TS` (`±1 − 1/z`). Each membership reduces
+to a `normSq` inequality of the form `‖az + b‖² − ‖cz + d‖² ≥ 0`
+valid on `𝒟`. -/
+
+/-- **Identity tile, right half.** `z ∈ 𝒟` with `Re z ≥ 0` lies in `F`:
+`‖2z − 1‖² = 4|z|² − 4 Re z + 1 ≥ 4 − 2 + 1 = 3 ≥ 1`. -/
+theorem gamma2_tile_id_F {z : ℂ} (hz_im : 0 < z.im)
+    (hz_norm : 1 ≤ Complex.normSq z) (hz_re : |z.re| ≤ 1 / 2)
+    (h_sign : 0 ≤ z.re) : z ∈ Gamma2FundamentalDomain := by
+  obtain ⟨hre_lo, hre_hi⟩ := abs_le.mp hz_re
+  have hn := hz_norm
+  rw [Complex.normSq_apply] at hn
+  simp only [Gamma2FundamentalDomain, Set.mem_setOf_eq]
+  refine ⟨hz_im, h_sign, by linarith, ?_⟩
+  have hq : (1 : ℝ) ≤ Complex.normSq (2 * z - 1) := by
+    rw [Complex.normSq_apply]
+    have h1 : (2 * z - 1).re = 2 * z.re - 1 := by simp
+    have h2 : (2 * z - 1).im = 2 * z.im := by simp
+    rw [h1, h2]
+    nlinarith
+  have hsq := Complex.sq_norm (2 * z - 1)
+  nlinarith [norm_nonneg (2 * z - 1)]
+
+/-- **Identity tile, left half.** `z ∈ 𝒟` with `Re z ≤ 0` lies in `F^σ`:
+`‖2z + 1‖² = 4|z|² + 4 Re z + 1 ≥ 4 − 2 + 1 = 3 ≥ 1`. -/
+theorem gamma2_tile_id_Fsigma {z : ℂ} (hz_im : 0 < z.im)
+    (hz_norm : 1 ≤ Complex.normSq z) (hz_re : |z.re| ≤ 1 / 2)
+    (h_sign : z.re ≤ 0) : z ∈ Gamma2FundamentalDomainReflected := by
+  obtain ⟨hre_lo, hre_hi⟩ := abs_le.mp hz_re
+  have hn := hz_norm
+  rw [Complex.normSq_apply] at hn
+  simp only [Gamma2FundamentalDomainReflected, Set.mem_setOf_eq]
+  refine ⟨hz_im, by linarith, h_sign, ?_⟩
+  have hq : (1 : ℝ) ≤ Complex.normSq (2 * z + 1) := by
+    rw [Complex.normSq_apply]
+    have h1 : (2 * z + 1).re = 2 * z.re + 1 := by simp
+    have h2 : (2 * z + 1).im = 2 * z.im := by simp
+    rw [h1, h2]
+    nlinarith
+  have hsq := Complex.sq_norm (2 * z + 1)
+  nlinarith [norm_nonneg (2 * z + 1)]
+
+/-- **`S`-tile, left half.** For `z ∈ 𝒟` with `Re z ≤ 0`, the image
+`−1/z` lies in `F`: `Re(−1/z) = −Re z/|z|² ∈ [0, 1/2]`, and
+`‖2(−1/z) − 1‖ = ‖z + 2‖/‖z‖ ≥ 1` since `‖z + 2‖² − ‖z‖² = 4 Re z + 4 ≥ 2`. -/
+theorem gamma2_tile_S_F {z : ℂ} (hz_im : 0 < z.im)
+    (hz_norm : 1 ≤ Complex.normSq z) (hz_re : |z.re| ≤ 1 / 2)
+    (h_sign : z.re ≤ 0) : -1 / z ∈ Gamma2FundamentalDomain := by
+  obtain ⟨hre_lo, hre_hi⟩ := abs_le.mp hz_re
+  have hz_ne : z ≠ 0 := by
+    intro h
+    rw [h] at hz_im
+    simp at hz_im
+  have h_nsq_pos : 0 < Complex.normSq z := Complex.normSq_pos.mpr hz_ne
+  have him : (-1 / z).im = z.im / Complex.normSq z := by
+    rw [Complex.div_im]
+    simp
+    ring
+  have hre : (-1 / z).re = -z.re / Complex.normSq z := by
+    rw [Complex.div_re]
+    simp [neg_div]
+  simp only [Gamma2FundamentalDomain, Set.mem_setOf_eq]
+  refine ⟨?_, ?_, ?_, ?_⟩
+  · rw [him]
+    exact div_pos hz_im h_nsq_pos
+  · rw [hre]
+    exact div_nonneg (by linarith) h_nsq_pos.le
+  · rw [hre, div_le_one h_nsq_pos]
+    linarith
+  · have key : 2 * (-1 / z) - 1 = -(z + 2) / z := by
+      field_simp
+      ring
+    have hq : (1 : ℝ) ≤ Complex.normSq (2 * (-1 / z) - 1) := by
+      rw [key, Complex.normSq_div, Complex.normSq_neg, le_div_iff₀ h_nsq_pos, one_mul]
+      rw [Complex.normSq_apply, Complex.normSq_apply]
+      have h1 : (z + 2).re = z.re + 2 := by simp
+      have h2 : (z + 2).im = z.im := by simp
+      rw [h1, h2]
+      nlinarith
+    have hsq := Complex.sq_norm (2 * (-1 / z) - 1)
+    nlinarith [norm_nonneg (2 * (-1 / z) - 1)]
+
+/-- **`S`-tile, right half.** For `z ∈ 𝒟` with `Re z ≥ 0`, the image
+`−1/z` lies in `F^σ`: mirror of `gamma2_tile_S_F` using
+`‖z − 2‖² − ‖z‖² = −4 Re z + 4 ≥ 2`. -/
+theorem gamma2_tile_S_Fsigma {z : ℂ} (hz_im : 0 < z.im)
+    (hz_norm : 1 ≤ Complex.normSq z) (hz_re : |z.re| ≤ 1 / 2)
+    (h_sign : 0 ≤ z.re) : -1 / z ∈ Gamma2FundamentalDomainReflected := by
+  obtain ⟨hre_lo, hre_hi⟩ := abs_le.mp hz_re
+  have hz_ne : z ≠ 0 := by
+    intro h
+    rw [h] at hz_im
+    simp at hz_im
+  have h_nsq_pos : 0 < Complex.normSq z := Complex.normSq_pos.mpr hz_ne
+  have him : (-1 / z).im = z.im / Complex.normSq z := by
+    rw [Complex.div_im]
+    simp
+    ring
+  have hre : (-1 / z).re = -z.re / Complex.normSq z := by
+    rw [Complex.div_re]
+    simp [neg_div]
+  simp only [Gamma2FundamentalDomainReflected, Set.mem_setOf_eq]
+  refine ⟨?_, ?_, ?_, ?_⟩
+  · rw [him]
+    exact div_pos hz_im h_nsq_pos
+  · rw [hre, neg_div]
+    have h1 : z.re / Complex.normSq z ≤ 1 := by
+      rw [div_le_one h_nsq_pos]
+      linarith
+    linarith
+  · rw [hre]
+    exact div_nonpos_of_nonpos_of_nonneg (by linarith) h_nsq_pos.le
+  · have key : 2 * (-1 / z) + 1 = (z - 2) / z := by
+      field_simp
+      ring
+    have hq : (1 : ℝ) ≤ Complex.normSq (2 * (-1 / z) + 1) := by
+      rw [key, Complex.normSq_div, le_div_iff₀ h_nsq_pos, one_mul]
+      rw [Complex.normSq_apply, Complex.normSq_apply]
+      have h1 : (z - 2).re = z.re - 2 := by simp
+      have h2 : (z - 2).im = z.im := by simp
+      rw [h1, h2]
+      nlinarith
+    have hsq := Complex.sq_norm (2 * (-1 / z) + 1)
+    nlinarith [norm_nonneg (2 * (-1 / z) + 1)]
+
+/-- **`T`-tile, left half.** For `z ∈ 𝒟` with `Re z ≤ 0`, the translate
+`z + 1` lies in `F`: `Re(z + 1) ∈ [1/2, 1]` and
+`‖2(z + 1) − 1‖² = ‖2z + 1‖² = 4|z|² + 4 Re z + 1 ≥ 3`. -/
+theorem gamma2_tile_T_F {z : ℂ} (hz_im : 0 < z.im)
+    (hz_norm : 1 ≤ Complex.normSq z) (hz_re : |z.re| ≤ 1 / 2)
+    (h_sign : z.re ≤ 0) : z + 1 ∈ Gamma2FundamentalDomain := by
+  obtain ⟨hre_lo, hre_hi⟩ := abs_le.mp hz_re
+  have him : (z + 1).im = z.im := by simp
+  have hre : (z + 1).re = z.re + 1 := by simp
+  refine ⟨?_, ?_, ?_, ?_⟩
+  · rw [him]; exact hz_im
+  · rw [hre]; linarith
+  · rw [hre]; linarith
+  · have hsq : (1 : ℝ) ≤ Complex.normSq (2 * (z + 1) - 1) := by
+      have hval : Complex.normSq (2 * (z + 1) - 1)
+          = 4 * Complex.normSq z + 4 * z.re + 1 := by
+        simp only [Complex.normSq_apply, Complex.mul_re, Complex.mul_im,
+          Complex.add_re, Complex.add_im, Complex.sub_re, Complex.sub_im,
+          Complex.one_re, Complex.one_im, Complex.re_ofNat, Complex.im_ofNat]
+        ring
+      rw [hval]; nlinarith
+    have hsq' : (1 : ℝ) ≤ ‖2 * (z + 1) - 1‖ ^ 2 := by
+      rw [← Complex.normSq_eq_norm_sq]; exact hsq
+    nlinarith [norm_nonneg (2 * (z + 1) - 1)]
+
+/-- **`T`-tile, right half.** For `z ∈ 𝒟` with `Re z ≥ 0`, the translate
+`z − 1` lies in `F^σ`: mirror of `gamma2_tile_T_F`. -/
+theorem gamma2_tile_T_Fsigma {z : ℂ} (hz_im : 0 < z.im)
+    (hz_norm : 1 ≤ Complex.normSq z) (hz_re : |z.re| ≤ 1 / 2)
+    (h_sign : 0 ≤ z.re) : z - 1 ∈ Gamma2FundamentalDomainReflected := by
+  obtain ⟨hre_lo, hre_hi⟩ := abs_le.mp hz_re
+  have him : (z - 1).im = z.im := by simp
+  have hre : (z - 1).re = z.re - 1 := by simp
+  refine ⟨?_, ?_, ?_, ?_⟩
+  · rw [him]; exact hz_im
+  · rw [hre]; linarith
+  · rw [hre]; linarith
+  · have hsq : (1 : ℝ) ≤ Complex.normSq (2 * (z - 1) + 1) := by
+      have hval : Complex.normSq (2 * (z - 1) + 1)
+          = 4 * Complex.normSq z - 4 * z.re + 1 := by
+        simp only [Complex.normSq_apply, Complex.mul_re, Complex.mul_im,
+          Complex.add_re, Complex.add_im, Complex.sub_re, Complex.sub_im,
+          Complex.one_re, Complex.one_im, Complex.re_ofNat, Complex.im_ofNat]
+        ring
+      rw [hval]; nlinarith
+    have hsq' : (1 : ℝ) ≤ ‖2 * (z - 1) + 1‖ ^ 2 := by
+      rw [← Complex.normSq_eq_norm_sq]; exact hsq
+    nlinarith [norm_nonneg (2 * (z - 1) + 1)]
+
+/-- **Lower-unipotent tile, left half.** For `z ∈ 𝒟` with `Re z ≤ 0`,
+the image `z/(z + 1)` lies in `F`: `Im(z/(z+1)) = Im z/‖z+1‖² > 0`,
+`Re(z/(z+1)) = (|z|² + Re z)/‖z+1‖² ∈ [0, 1]`, and
+`‖2 z/(z+1) − 1‖ = ‖z − 1‖/‖z + 1‖ ≥ 1` iff `Re z ≤ 0`. -/
+theorem gamma2_tile_L_F {z : ℂ} (hz_im : 0 < z.im)
+    (hz_norm : 1 ≤ Complex.normSq z) (hz_re : |z.re| ≤ 1 / 2)
+    (h_sign : z.re ≤ 0) : z / (z + 1) ∈ Gamma2FundamentalDomain := by
+  obtain ⟨hre_lo, hre_hi⟩ := abs_le.mp hz_re
+  have hz1 : z + 1 ≠ 0 := by
+    intro h
+    have h' : (z + 1).im = 0 := by rw [h]; simp
+    simp only [Complex.add_im, Complex.one_im, add_zero] at h'
+    linarith
+  have hN : 0 < Complex.normSq (z + 1) := Complex.normSq_pos.mpr hz1
+  have h1re : (z + 1).re = z.re + 1 := by simp
+  have h1im : (z + 1).im = z.im := by simp
+  have hN_eq : Complex.normSq (z + 1) = Complex.normSq z + 2 * z.re + 1 := by
+    rw [Complex.normSq_apply, Complex.normSq_apply]
+    simp only [Complex.add_re, Complex.add_im, Complex.one_re, Complex.one_im]
+    ring
+  have him : (z / (z + 1)).im = z.im / Complex.normSq (z + 1) := by
+    rw [Complex.div_im, h1re, h1im]
+    ring
+  have hre : (z / (z + 1)).re
+      = (Complex.normSq z + z.re) / Complex.normSq (z + 1) := by
+    rw [Complex.div_re, h1re, h1im, Complex.normSq_apply z]
+    ring
+  refine ⟨?_, ?_, ?_, ?_⟩
+  · rw [him]; exact div_pos hz_im hN
+  · rw [hre]
+    apply div_nonneg _ hN.le
+    linarith
+  · rw [hre, div_le_one hN]
+    linarith
+  · have hquot : 2 * (z / (z + 1)) - 1 = (z - 1) / (z + 1) := by
+      field_simp
+      ring
+    rw [hquot, Complex.norm_div, one_le_div₀ (norm_pos_iff.mpr hz1)]
+    have hsq : Complex.normSq (z + 1) ≤ Complex.normSq (z - 1) := by
+      simp only [Complex.normSq_apply, Complex.add_re, Complex.add_im,
+        Complex.sub_re, Complex.sub_im, Complex.one_re, Complex.one_im]
+      nlinarith
+    rw [Complex.normSq_eq_norm_sq, Complex.normSq_eq_norm_sq] at hsq
+    nlinarith [norm_nonneg (z + 1), norm_nonneg (z - 1)]
+
+/-- **Lower-unipotent tile, right half.** For `z ∈ 𝒟` with `Re z ≥ 0`,
+the image `z/(1 − z)` lies in `F^σ`: `Re(z/(1−z)) = (Re z − |z|²)/‖1−z‖²
+∈ [−1, 0]` and `‖2 z/(1−z) + 1‖ = ‖z + 1‖/‖1 − z‖ ≥ 1` iff `Re z ≥ 0`. -/
+theorem gamma2_tile_L_Fsigma {z : ℂ} (hz_im : 0 < z.im)
+    (hz_norm : 1 ≤ Complex.normSq z) (hz_re : |z.re| ≤ 1 / 2)
+    (h_sign : 0 ≤ z.re) : z / (1 - z) ∈ Gamma2FundamentalDomainReflected := by
+  obtain ⟨hre_lo, hre_hi⟩ := abs_le.mp hz_re
+  have hz1 : (1 : ℂ) - z ≠ 0 := by
+    intro h
+    have h' : ((1 : ℂ) - z).im = 0 := by rw [h]; simp
+    simp only [Complex.sub_im, Complex.one_im, zero_sub, neg_eq_zero] at h'
+    linarith
+  have hN : 0 < Complex.normSq (1 - z) := Complex.normSq_pos.mpr hz1
+  have h1re : ((1 : ℂ) - z).re = 1 - z.re := by simp
+  have h1im : ((1 : ℂ) - z).im = -z.im := by simp
+  have hN_eq : Complex.normSq (1 - z) = Complex.normSq z - 2 * z.re + 1 := by
+    rw [Complex.normSq_apply, Complex.normSq_apply]
+    simp only [Complex.sub_re, Complex.sub_im, Complex.one_re, Complex.one_im]
+    ring
+  have him : (z / (1 - z)).im = z.im / Complex.normSq (1 - z) := by
+    rw [Complex.div_im, h1re, h1im]
+    ring
+  have hre : (z / (1 - z)).re
+      = (z.re - Complex.normSq z) / Complex.normSq (1 - z) := by
+    rw [Complex.div_re, h1re, h1im, Complex.normSq_apply z]
+    ring
+  refine ⟨?_, ?_, ?_, ?_⟩
+  · rw [him]; exact div_pos hz_im hN
+  · rw [hre, le_div_iff₀ hN]
+    nlinarith
+  · rw [hre]
+    apply div_nonpos_of_nonpos_of_nonneg _ hN.le
+    linarith
+  · have hquot : 2 * (z / (1 - z)) + 1 = (z + 1) / (1 - z) := by
+      field_simp
+      ring
+    rw [hquot, Complex.norm_div, one_le_div₀ (norm_pos_iff.mpr hz1)]
+    have hsq : Complex.normSq (1 - z) ≤ Complex.normSq (z + 1) := by
+      simp only [Complex.normSq_apply, Complex.add_re, Complex.add_im,
+        Complex.sub_re, Complex.sub_im, Complex.one_re, Complex.one_im]
+      nlinarith
+    rw [Complex.normSq_eq_norm_sq, Complex.normSq_eq_norm_sq] at hsq
+    nlinarith [norm_nonneg (1 - z), norm_nonneg (z + 1)]
+
+/-- **`ST`-tile, left half.** For `z ∈ 𝒟` with `Re z ≤ 0`, the image
+`−1/(z + 1)` lies in `F^σ`: `Re(−1/(z+1)) = −(Re z + 1)/‖z+1‖² ∈ [−1, 0]`
+and `‖2(−1/(z+1)) + 1‖ = ‖z − 1‖/‖z + 1‖ ≥ 1` iff `Re z ≤ 0`. -/
+theorem gamma2_tile_ST_Fsigma {z : ℂ} (hz_im : 0 < z.im)
+    (hz_norm : 1 ≤ Complex.normSq z) (hz_re : |z.re| ≤ 1 / 2)
+    (h_sign : z.re ≤ 0) : -1 / (z + 1) ∈ Gamma2FundamentalDomainReflected := by
+  obtain ⟨hre1, hre2⟩ := abs_le.mp hz_re
+  have hd_ne : z + 1 ≠ 0 := by
+    intro h
+    have h' : (z + 1).im = 0 := by rw [h, Complex.zero_im]
+    rw [Complex.add_im, Complex.one_im, add_zero] at h'
+    linarith
+  have hd_pos : 0 < Complex.normSq (z + 1) := Complex.normSq_pos.mpr hd_ne
+  have hd_eq : Complex.normSq (z + 1) = Complex.normSq z + 2 * z.re + 1 := by
+    simp only [Complex.normSq_apply, Complex.add_re, Complex.add_im, Complex.one_re,
+      Complex.one_im, add_zero]
+    ring
+  have hre_w : (-1 / (z + 1)).re = -(z.re + 1) / Complex.normSq (z + 1) := by
+    rw [Complex.div_re]
+    simp only [Complex.neg_re, Complex.neg_im, Complex.one_re, Complex.one_im,
+      Complex.add_re, Complex.add_im, Complex.one_re, Complex.one_im, neg_zero,
+      add_zero, zero_mul, zero_div]
+    ring
+  have him_w : (-1 / (z + 1)).im = z.im / Complex.normSq (z + 1) := by
+    rw [Complex.div_im]
+    simp only [Complex.neg_re, Complex.neg_im, Complex.one_re, Complex.one_im,
+      Complex.add_re, Complex.add_im, neg_zero, add_zero, zero_mul, zero_div]
+    ring
+  refine ⟨?_, ?_, ?_, ?_⟩
+  · rw [him_w]
+    exact div_pos hz_im hd_pos
+  · rw [hre_w, le_div_iff₀ hd_pos]
+    nlinarith [hd_eq]
+  · rw [hre_w, div_le_iff₀ hd_pos]
+    nlinarith
+  · have key : 2 * (-1 / (z + 1)) + 1 = (z - 1) / (z + 1) := by
+      field_simp
+      ring
+    have h1 : Complex.normSq (z + 1) ≤ Complex.normSq (z - 1) := by
+      simp only [Complex.normSq_apply, Complex.add_re, Complex.add_im, Complex.sub_re,
+        Complex.sub_im, Complex.one_re, Complex.one_im, add_zero, sub_zero]
+      nlinarith
+    have h2 : ‖z + 1‖ ≤ ‖z - 1‖ := by
+      have e1 := Complex.normSq_eq_norm_sq (z + 1)
+      have e2 := Complex.normSq_eq_norm_sq (z - 1)
+      nlinarith [norm_nonneg (z + 1), norm_nonneg (z - 1)]
+    rw [key, norm_div, le_div_iff₀ (norm_pos_iff.mpr hd_ne), one_mul]
+    exact h2
+
+/-- **`ST`-tile, right half.** For `z ∈ 𝒟` with `Re z ≥ 0`, the image
+`−1/(z − 1)` lies in `F`: `Re(−1/(z−1)) = (1 − Re z)/‖z−1‖² ∈ [0, 1]`
+and `‖2(−1/(z−1)) − 1‖ = ‖z + 1‖/‖z − 1‖ ≥ 1` iff `Re z ≥ 0`. -/
+theorem gamma2_tile_ST_F {z : ℂ} (hz_im : 0 < z.im)
+    (hz_norm : 1 ≤ Complex.normSq z) (hz_re : |z.re| ≤ 1 / 2)
+    (h_sign : 0 ≤ z.re) : -1 / (z - 1) ∈ Gamma2FundamentalDomain := by
+  obtain ⟨hre1, hre2⟩ := abs_le.mp hz_re
+  have hd_ne : z - 1 ≠ 0 := by
+    intro h
+    have h' : (z - 1).im = 0 := by rw [h, Complex.zero_im]
+    rw [Complex.sub_im, Complex.one_im, sub_zero] at h'
+    linarith
+  have hd_pos : 0 < Complex.normSq (z - 1) := Complex.normSq_pos.mpr hd_ne
+  have hd_eq : Complex.normSq (z - 1) = Complex.normSq z - 2 * z.re + 1 := by
+    simp only [Complex.normSq_apply, Complex.sub_re, Complex.sub_im, Complex.one_re,
+      Complex.one_im, sub_zero]
+    ring
+  have hre_w : (-1 / (z - 1)).re = (1 - z.re) / Complex.normSq (z - 1) := by
+    rw [Complex.div_re]
+    simp only [Complex.neg_re, Complex.neg_im, Complex.one_re, Complex.one_im,
+      Complex.sub_re, Complex.sub_im, neg_zero, sub_zero, zero_mul, zero_div]
+    ring
+  have him_w : (-1 / (z - 1)).im = z.im / Complex.normSq (z - 1) := by
+    rw [Complex.div_im]
+    simp only [Complex.neg_re, Complex.neg_im, Complex.one_re, Complex.one_im,
+      Complex.sub_re, Complex.sub_im, neg_zero, sub_zero, zero_mul, zero_div]
+    ring
+  refine ⟨?_, ?_, ?_, ?_⟩
+  · rw [him_w]
+    exact div_pos hz_im hd_pos
+  · rw [hre_w, le_div_iff₀ hd_pos]
+    nlinarith
+  · rw [hre_w, div_le_iff₀ hd_pos]
+    nlinarith [hd_eq]
+  · have key : 2 * (-1 / (z - 1)) - 1 = -(z + 1) / (z - 1) := by
+      field_simp
+      ring
+    have h1 : Complex.normSq (z - 1) ≤ Complex.normSq (z + 1) := by
+      simp only [Complex.normSq_apply, Complex.add_re, Complex.add_im, Complex.sub_re,
+        Complex.sub_im, Complex.one_re, Complex.one_im, add_zero, sub_zero]
+      nlinarith
+    have h2 : ‖z - 1‖ ≤ ‖z + 1‖ := by
+      have e1 := Complex.normSq_eq_norm_sq (z + 1)
+      have e2 := Complex.normSq_eq_norm_sq (z - 1)
+      nlinarith [norm_nonneg (z + 1), norm_nonneg (z - 1)]
+    rw [key, norm_div, norm_neg, le_div_iff₀ (norm_pos_iff.mpr hd_ne), one_mul]
+    exact h2
+
+/-- **`TS`-tile, right half.** For `z ∈ 𝒟` with `Re z ≥ 0`, the image
+`1 − 1/z` lies in `F`: `Re(1 − 1/z) = 1 − Re z/|z|² ∈ [1/2, 1]` and
+`‖2(1 − 1/z) − 1‖ = ‖z − 2‖/‖z‖ ≥ 1` since `‖z − 2‖² − ‖z‖² = 4 − 4 Re z ≥ 2`. -/
+theorem gamma2_tile_TS_F {z : ℂ} (hz_im : 0 < z.im)
+    (hz_norm : 1 ≤ Complex.normSq z) (hz_re : |z.re| ≤ 1 / 2)
+    (h_sign : 0 ≤ z.re) : 1 - 1 / z ∈ Gamma2FundamentalDomain := by
+  obtain ⟨hre1, hre2⟩ := abs_le.mp hz_re
+  have hz_ne : z ≠ 0 := by
+    intro h
+    rw [h, Complex.zero_im] at hz_im
+    linarith
+  have hN_pos : 0 < Complex.normSq z := Complex.normSq_pos.mpr hz_ne
+  have hN_ne : Complex.normSq z ≠ 0 := ne_of_gt hN_pos
+  have hre_w : (1 - 1 / z).re = (Complex.normSq z - z.re) / Complex.normSq z := by
+    rw [Complex.sub_re, Complex.div_re]
+    simp only [Complex.one_re, Complex.one_im, one_mul, zero_mul, zero_div, add_zero]
+    field_simp
+  have him_w : (1 - 1 / z).im = z.im / Complex.normSq z := by
+    rw [Complex.sub_im, Complex.div_im]
+    simp only [Complex.one_re, Complex.one_im, one_mul, zero_mul, zero_div, zero_sub]
+    ring
+  refine ⟨?_, ?_, ?_, ?_⟩
+  · rw [him_w]
+    exact div_pos hz_im hN_pos
+  · rw [hre_w, le_div_iff₀ hN_pos]
+    nlinarith
+  · rw [hre_w, div_le_iff₀ hN_pos]
+    nlinarith
+  · have key : 2 * (1 - 1 / z) - 1 = (z - 2) / z := by
+      field_simp
+      ring
+    have h1 : Complex.normSq z ≤ Complex.normSq (z - 2) := by
+      simp only [Complex.normSq_apply, Complex.sub_re, Complex.sub_im, Complex.re_ofNat,
+        Complex.im_ofNat, sub_zero]
+      nlinarith
+    have h2 : ‖z‖ ≤ ‖z - 2‖ := by
+      have e1 := Complex.normSq_eq_norm_sq z
+      have e2 := Complex.normSq_eq_norm_sq (z - 2)
+      nlinarith [norm_nonneg z, norm_nonneg (z - 2)]
+    rw [key, norm_div, le_div_iff₀ (norm_pos_iff.mpr hz_ne), one_mul]
+    exact h2
+
+/-- **`TS`-tile, left half.** For `z ∈ 𝒟` with `Re z ≤ 0`, the image
+`−1 − 1/z` lies in `F^σ`: `Re(−1 − 1/z) = −1 − Re z/|z|² ∈ [−1, −1/2]`
+and `‖2(−1 − 1/z) + 1‖ = ‖z + 2‖/‖z‖ ≥ 1` since
+`‖z + 2‖² − ‖z‖² = 4 Re z + 4 ≥ 2`. -/
+theorem gamma2_tile_TS_Fsigma {z : ℂ} (hz_im : 0 < z.im)
+    (hz_norm : 1 ≤ Complex.normSq z) (hz_re : |z.re| ≤ 1 / 2)
+    (h_sign : z.re ≤ 0) : -1 - 1 / z ∈ Gamma2FundamentalDomainReflected := by
+  obtain ⟨hre1, hre2⟩ := abs_le.mp hz_re
+  have hz_ne : z ≠ 0 := by
+    intro h
+    rw [h, Complex.zero_im] at hz_im
+    linarith
+  have hN_pos : 0 < Complex.normSq z := Complex.normSq_pos.mpr hz_ne
+  have hN_ne : Complex.normSq z ≠ 0 := ne_of_gt hN_pos
+  have hre_w : (-1 - 1 / z).re = -(Complex.normSq z + z.re) / Complex.normSq z := by
+    rw [Complex.sub_re, Complex.neg_re, Complex.div_re]
+    simp only [Complex.one_re, Complex.one_im, one_mul, zero_mul, zero_div, add_zero]
+    field_simp
+    ring
+  have him_w : (-1 - 1 / z).im = z.im / Complex.normSq z := by
+    rw [Complex.sub_im, Complex.neg_im, Complex.div_im]
+    simp only [Complex.one_re, Complex.one_im, one_mul, zero_mul, zero_div, neg_zero,
+      zero_sub]
+    ring
+  refine ⟨?_, ?_, ?_, ?_⟩
+  · rw [him_w]
+    exact div_pos hz_im hN_pos
+  · rw [hre_w, le_div_iff₀ hN_pos]
+    nlinarith
+  · rw [hre_w, div_le_iff₀ hN_pos]
+    nlinarith
+  · have key : 2 * (-1 - 1 / z) + 1 = -(z + 2) / z := by
+      field_simp
+      ring
+    have h1 : Complex.normSq z ≤ Complex.normSq (z + 2) := by
+      simp only [Complex.normSq_apply, Complex.add_re, Complex.add_im, Complex.re_ofNat,
+        Complex.im_ofNat, add_zero]
+      nlinarith
+    have h2 : ‖z‖ ≤ ‖z + 2‖ := by
+      have e1 := Complex.normSq_eq_norm_sq z
+      have e2 := Complex.normSq_eq_norm_sq (z + 2)
+      nlinarith [norm_nonneg z, norm_nonneg (z + 2)]
+    rw [key, norm_div, norm_neg, le_div_iff₀ (norm_pos_iff.mpr hz_ne), one_mul]
+    exact h2
+
+/-- **Coercion formula for the `SL(2, ℤ)` action on `ℍ`.** The complex
+coordinate of `g • z` is the Möbius image `(az + b)/(cz + d)` with the
+integer entries of `g` cast into `ℂ`. Unfolds
+`UpperHalfPlane.specialLinearGroup_apply` through the cast chain
+`ℤ → ℝ → ℂ`. -/
+theorem sl2z_smul_coe (g : Matrix.SpecialLinearGroup (Fin 2) ℤ)
+    (z : UpperHalfPlane) :
+    ((g • z : UpperHalfPlane) : ℂ) =
+      ((g 0 0 : ℤ) * (z : ℂ) + (g 0 1 : ℤ)) /
+        ((g 1 0 : ℤ) * (z : ℂ) + (g 1 1 : ℤ)) := by
+  rw [UpperHalfPlane.specialLinearGroup_apply]
+  simp [eq_intCast, Complex.ofReal_intCast]
+
 /-- **Existence of a `Γ(2)`-translate in `F ∪ F^σ`.** For every
 `τ ∈ ℍ`, there is `γ ∈ Γ(2)` such that `γ • τ` lies in either the
 half-fundamental domain `F` or its reflection `F^σ`. This is the
-classical strict fundamental-domain property of `Γ(2)`: the six
-right cosets `SL(2, ℤ) / Γ(2) ≃ S₃` partition `SL(2, ℤ)`; combined
-with the Mathlib reduction `ModularGroup.exists_smul_mem_fd`
-(placing every orbit into the standard `SL(2, ℤ)` fundamental
-domain `𝒟`), each of the six tiles `c⁻¹ · 𝒟` lies in `F ∪ F^σ`
-(verifiable explicitly per coset rep). -/
+classical strict fundamental-domain property of `Γ(2)`: place the
+orbit into the standard `SL(2, ℤ)` fundamental domain `𝒟` via the
+Mathlib reduction `ModularGroup.exists_smul_mem_fd`, say `g • τ ∈ 𝒟`;
+the mod-2 reduction of `g⁻¹` is one of the six elements of
+`SL(2, ℤ/2) ≅ S₃`, and for each class an explicit correction matrix
+`h ≡ g⁻¹ (mod 2)` — chosen between two candidates by the sign of
+`Re (g • τ)` — sends `g • τ` into `F ∪ F^σ` by the twelve tile
+lemmas above. Then `γ := h * g ∈ Γ(2)` and
+`γ • τ = h • (g • τ) ∈ F ∪ F^σ`. -/
 theorem gamma2_translate_in_F_union_F_sigma (τ : UpperHalfPlane) :
     ∃ γ ∈ CongruenceSubgroup.Gamma 2,
       ((γ • τ : UpperHalfPlane) : ℂ) ∈
         Gamma2FundamentalDomain ∪ Gamma2FundamentalDomainReflected := by
-  sorry
+  obtain ⟨g, hg_fd⟩ := ModularGroup.exists_smul_mem_fd τ
+  have hg_pair : 1 ≤ Complex.normSq ((g • τ : UpperHalfPlane) : ℂ) ∧
+      |(g • τ : UpperHalfPlane).re| ≤ 1 / 2 := hg_fd
+  set z : ℂ := ((g • τ : UpperHalfPlane) : ℂ) with hz_def
+  have hz_norm : 1 ≤ Complex.normSq z := hg_pair.1
+  have hz_re : |z.re| ≤ 1 / 2 := by
+    have h2 := hg_pair.2
+    rwa [← UpperHalfPlane.coe_re, ← hz_def] at h2
+  have hz_im : 0 < z.im := by
+    rw [hz_def, UpperHalfPlane.coe_im]
+    exact (g • τ).im_pos
+  have hz_ne : z ≠ 0 := by
+    intro h0
+    rw [h0] at hz_im
+    simp at hz_im
+  -- determinant of `g`
+  have hdet : g 0 0 * g 1 1 - g 0 1 * g 1 0 = 1 := by
+    have hp := g.2
+    rwa [Matrix.det_fin_two] at hp
+  -- `ZMod 2` cast helpers
+  have cast1 : ∀ x : ℤ, x % 2 = 1 → ((x : ZMod 2) = 1) := by
+    intro x hx
+    have hcast : ((x : ℤ) : ZMod 2) = ((1 : ℤ) : ZMod 2) := by
+      rw [ZMod.intCast_eq_intCast_iff]
+      change x % ((2 : ℕ) : ℤ) = 1 % ((2 : ℕ) : ℤ)
+      omega
+    simpa using hcast
+  have cast0 : ∀ x : ℤ, x % 2 = 0 → ((x : ZMod 2) = 0) := by
+    intro x hx
+    rw [ZMod.intCast_zmod_eq_zero_iff_dvd]
+    omega
+  -- master construction: given a correction matrix `h = !![p,q;r,s]` with
+  -- `h * g ≡ 1 (mod 2)` and the Möbius image of `z` under `h` in `F ∪ F^σ`,
+  -- produce the required `γ ∈ Γ(2)`.
+  have main : ∀ p q r s : ℤ, ∀ u : ℂ, p * s - q * r = 1 →
+      (p * g 0 0 + q * g 1 0) % 2 = 1 →
+      (p * g 0 1 + q * g 1 1) % 2 = 0 →
+      (r * g 0 0 + s * g 1 0) % 2 = 0 →
+      (r * g 0 1 + s * g 1 1) % 2 = 1 →
+      ((p : ℂ) * z + (q : ℂ)) / ((r : ℂ) * z + (s : ℂ)) = u →
+      u ∈ Gamma2FundamentalDomain ∪ Gamma2FundamentalDomainReflected →
+      ∃ γ ∈ CongruenceSubgroup.Gamma 2,
+        ((γ • τ : UpperHalfPlane) : ℂ) ∈
+          Gamma2FundamentalDomain ∪ Gamma2FundamentalDomainReflected := by
+    intro p q r s u hpqrs h1 h2 h3 h4 hu hmem
+    have hdet_h : (!![p, q; r, s] : Matrix (Fin 2) (Fin 2) ℤ).det = 1 := by
+      rw [Matrix.det_fin_two_of]; exact hpqrs
+    obtain ⟨hM, hM_val⟩ : ∃ hM : SL(2, ℤ), (hM : Matrix (Fin 2) (Fin 2) ℤ) = !![p, q; r, s] :=
+      ⟨⟨!![p, q; r, s], hdet_h⟩, rfl⟩
+    have e00 : (hM * g) 0 0 = p * g 0 0 + q * g 1 0 := by
+      rw [Matrix.SpecialLinearGroup.coe_mul, Matrix.mul_apply, Fin.sum_univ_two, hM_val]
+      simp [Matrix.of_apply, Matrix.cons_val_zero, Matrix.cons_val_one]
+    have e01 : (hM * g) 0 1 = p * g 0 1 + q * g 1 1 := by
+      rw [Matrix.SpecialLinearGroup.coe_mul, Matrix.mul_apply, Fin.sum_univ_two, hM_val]
+      simp [Matrix.of_apply, Matrix.cons_val_zero, Matrix.cons_val_one]
+    have e10 : (hM * g) 1 0 = r * g 0 0 + s * g 1 0 := by
+      rw [Matrix.SpecialLinearGroup.coe_mul, Matrix.mul_apply, Fin.sum_univ_two, hM_val]
+      simp [Matrix.of_apply, Matrix.cons_val_zero, Matrix.cons_val_one]
+    have e11 : (hM * g) 1 1 = r * g 0 1 + s * g 1 1 := by
+      rw [Matrix.SpecialLinearGroup.coe_mul, Matrix.mul_apply, Fin.sum_univ_two, hM_val]
+      simp [Matrix.of_apply, Matrix.cons_val_zero, Matrix.cons_val_one]
+    refine ⟨hM * g, ?_, ?_⟩
+    · rw [CongruenceSubgroup.Gamma_mem]
+      exact ⟨by rw [e00]; exact cast1 _ h1, by rw [e01]; exact cast0 _ h2,
+        by rw [e10]; exact cast0 _ h3, by rw [e11]; exact cast1 _ h4⟩
+    · rw [mul_smul, sl2z_smul_coe, ← hz_def, hM_val]
+      simp only [Matrix.of_apply, Matrix.cons_val_zero, Matrix.cons_val_one]
+      rw [hu]
+      exact hmem
+  -- parity obstruction: `det ≡ 1 (mod 2)` rules out ten parity patterns
+  have hparity : (g 0 0 % 2) * (g 1 1 % 2) % 2 ≠ (g 0 1 % 2) * (g 1 0 % 2) % 2 := by
+    rw [← Int.mul_emod, ← Int.mul_emod]
+    intro hEq
+    have hsub : (g 0 0 * g 1 1 - g 0 1 * g 1 0) % 2 = 0 := by
+      rw [Int.sub_emod, hEq, sub_self, Int.zero_emod]
+    rw [hdet] at hsub
+    norm_num at hsub
+  rcases Int.emod_two_eq (g 0 0) with ha | ha <;>
+    rcases Int.emod_two_eq (g 0 1) with hb | hb <;>
+      rcases Int.emod_two_eq (g 1 0) with hc | hc <;>
+        rcases Int.emod_two_eq (g 1 1) with hd | hd
+  -- (0,0,0,0): impossible
+  · rw [ha, hb, hc, hd] at hparity; norm_num at hparity
+  -- (0,0,0,1): impossible
+  · rw [ha, hb, hc, hd] at hparity; norm_num at hparity
+  -- (0,0,1,0): impossible
+  · rw [ha, hb, hc, hd] at hparity; norm_num at hparity
+  -- (0,0,1,1): impossible
+  · rw [ha, hb, hc, hd] at hparity; norm_num at hparity
+  -- (0,1,0,0): impossible
+  · rw [ha, hb, hc, hd] at hparity; norm_num at hparity
+  -- (0,1,0,1): impossible
+  · rw [ha, hb, hc, hd] at hparity; norm_num at hparity
+  -- (0,1,1,0): `S`-class, h = [[0,-1],[1,0]], image -1/z
+  · rcases le_or_gt z.re 0 with hsign | hsign
+    · exact main 0 (-1) 1 0 (-1 / z) (by norm_num) (by omega) (by omega) (by omega)
+        (by omega) (by push_cast; ring)
+        (Set.mem_union_left _ (gamma2_tile_S_F hz_im hz_norm hz_re hsign))
+    · exact main 0 (-1) 1 0 (-1 / z) (by norm_num) (by omega) (by omega) (by omega)
+        (by omega) (by push_cast; ring)
+        (Set.mem_union_right _ (gamma2_tile_S_Fsigma hz_im hz_norm hz_re hsign.le))
+  -- (0,1,1,1): `TS`-class, h = [[∓1,-1],[1,0]], image ∓1 - 1/z
+  · rcases le_or_gt z.re 0 with hsign | hsign
+    · exact main (-1) (-1) 1 0 (-1 - 1 / z) (by norm_num) (by omega) (by omega) (by omega)
+        (by omega)
+        (by push_cast
+            rw [neg_one_mul, one_mul, add_zero, ← sub_eq_add_neg, sub_div, neg_div,
+              div_self hz_ne])
+        (Set.mem_union_right _ (gamma2_tile_TS_Fsigma hz_im hz_norm hz_re hsign))
+    · exact main 1 (-1) 1 0 (1 - 1 / z) (by norm_num) (by omega) (by omega) (by omega)
+        (by omega)
+        (by push_cast
+            rw [one_mul, add_zero, ← sub_eq_add_neg, sub_div, div_self hz_ne])
+        (Set.mem_union_left _ (gamma2_tile_TS_F hz_im hz_norm hz_re hsign.le))
+  -- (1,0,0,0): impossible
+  · rw [ha, hb, hc, hd] at hparity; norm_num at hparity
+  -- (1,0,0,1): identity class, γ = g itself
+  · rcases le_or_gt z.re 0 with hsign | hsign
+    · exact main 1 0 0 1 z (by norm_num) (by omega) (by omega) (by omega) (by omega)
+        (by push_cast; ring)
+        (Set.mem_union_right _ (gamma2_tile_id_Fsigma hz_im hz_norm hz_re hsign))
+    · exact main 1 0 0 1 z (by norm_num) (by omega) (by omega) (by omega) (by omega)
+        (by push_cast; ring)
+        (Set.mem_union_left _ (gamma2_tile_id_F hz_im hz_norm hz_re hsign.le))
+  -- (1,0,1,0): impossible
+  · rw [ha, hb, hc, hd] at hparity; norm_num at hparity
+  -- (1,0,1,1): lower-unipotent class, h = [[1,0],[±1,1]], image z/(z+1) or z/(1-z)
+  · rcases le_or_gt z.re 0 with hsign | hsign
+    · exact main 1 0 1 1 (z / (z + 1)) (by norm_num) (by omega) (by omega) (by omega)
+        (by omega) (by push_cast; ring)
+        (Set.mem_union_left _ (gamma2_tile_L_F hz_im hz_norm hz_re hsign))
+    · exact main 1 0 (-1) 1 (z / (1 - z)) (by norm_num) (by omega) (by omega) (by omega)
+        (by omega) (by push_cast; ring)
+        (Set.mem_union_right _ (gamma2_tile_L_Fsigma hz_im hz_norm hz_re hsign.le))
+  -- (1,1,0,0): impossible
+  · rw [ha, hb, hc, hd] at hparity; norm_num at hparity
+  -- (1,1,0,1): `T`-class, h = [[1,±1],[0,1]], image z ± 1
+  · rcases le_or_gt z.re 0 with hsign | hsign
+    · exact main 1 1 0 1 (z + 1) (by norm_num) (by omega) (by omega) (by omega) (by omega)
+        (by push_cast; ring)
+        (Set.mem_union_left _ (gamma2_tile_T_F hz_im hz_norm hz_re hsign))
+    · exact main 1 (-1) 0 1 (z - 1) (by norm_num) (by omega) (by omega) (by omega) (by omega)
+        (by push_cast; ring)
+        (Set.mem_union_right _ (gamma2_tile_T_Fsigma hz_im hz_norm hz_re hsign.le))
+  -- (1,1,1,0): `ST`-class, h = [[0,-1],[1,±1]], image -1/(z±1)
+  · rcases le_or_gt z.re 0 with hsign | hsign
+    · exact main 0 (-1) 1 1 (-1 / (z + 1)) (by norm_num) (by omega) (by omega) (by omega)
+        (by omega) (by push_cast; ring)
+        (Set.mem_union_right _ (gamma2_tile_ST_Fsigma hz_im hz_norm hz_re hsign))
+    · exact main 0 (-1) 1 (-1) (-1 / (z - 1)) (by norm_num) (by omega) (by omega) (by omega)
+        (by omega) (by push_cast; ring)
+        (Set.mem_union_left _ (gamma2_tile_ST_F hz_im hz_norm hz_re hsign.le))
+  -- (1,1,1,1): impossible
+  · rw [ha, hb, hc, hd] at hparity; norm_num at hparity
 
 /-- **`Im λ ≥ 0` on the closed half-fundamental domain `F`.**
 Combines `modularLambdaH_F_im_pos` (strict positivity on the open
