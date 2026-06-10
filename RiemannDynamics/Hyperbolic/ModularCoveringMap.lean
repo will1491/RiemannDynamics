@@ -42,9 +42,9 @@ by the sign of `Im(λ τ)`. The `Im(λ) > 0` branch reduces to `F` via
 the half-FD property. The `Im(λ) < 0` branch is handled by the
 conjugation argument: for Pillar 4 by a direct matrix conjugation
 turning `γ = ⟨⟨a, b⟩, ⟨c, d⟩⟩` into `γ' = ⟨⟨a, -b⟩, ⟨-c, d⟩⟩`, also
-in `Γ(2)`. The `Im(λ) = 0` boundary branch reduces to the closed
-boundary arcs of `F` and is handled by Schwarz reflection (still an
-architectural sub-lemma).
+in `Γ(2)`. The `Im(λ) = 0` boundary branch closes by density of the
+upper `λ`-fibre together with closedness of the `Γ(2)`-orbit
+relation.
 -/
 
 namespace RiemannDynamics
@@ -9498,6 +9498,390 @@ theorem modularLambdaH_eq_iff_gamma2_orbit
     rw [← h_eq]
     exact (modularLambdaH_gamma2_invariant γ hγ_in τ₁).symm
 
+/-! ## Covering-map assembly
+
+The route to `IsCoveringMapOn modularLambdaH {w | w ≠ 0 ∧ w ≠ 1}`:
+
+1. **Junk values** (`theta3_eq_zero_of_im_nonpos`,
+   `modularLambdaH_eq_zero_of_im_nonpos`): off `ℍ`, the theta series
+   is non-summable, `tsum` returns `0`, and `λ` collapses to the junk
+   value `0`, which the base set excludes. Hence preimages of base
+   neighborhoods stay inside `ℍ`.
+2. **The faithful quotient** `Γ(2)/{±1}` (`Gamma2PMOne`,
+   `gamma2QuotMulAction`): `−I ∈ Γ(2)` acts trivially on `ℍ`, so the
+   matrix group itself never acts freely; the action descends to the
+   quotient by `zpowers (−I)`, where Pillar 1 makes every stabilizer
+   trivial. Pillar 2 (proper discontinuity) and continuity transfer
+   along the projection.
+3. **The `ℍ`-level covering** (`modularLambdaHRestrict_*`): the
+   corestriction `λ : ℍ → {w // w ≠ 0 ∧ w ≠ 1}` is a quotient map
+   (continuous + open by the nonvanishing derivative, Pillar 3 +
+   surjective by `modularLambdaH_image`), identifies fibres with
+   quotient orbits (Pillar 4), and Mathlib's
+   `IsQuotientMap.isCoveringMapOn_of_properlyDiscontinuousSMul`
+   yields the covering on the full base.
+4. **Transport** (`modularLambdaH_isEvenlyCovered`): each subtype
+   trivialization is conjugated by the open embeddings
+   `ℍ ↪ ℂ` and `{w // w ≠ 0 ∧ w ≠ 1} ↪ ℂ` into a trivialization of
+   the bare `modularLambdaH : ℂ → ℂ`, using step 1 to identify the
+   `ℂ`-level preimage of the base set with the `ℍ`-level one. -/
+
+/-- **Junk value of `θ₃` off `ℍ`.** For `Im τ ≤ 0` the series
+`∑' n : ℤ, cexp (π i n² τ)` has terms of norm `exp (−π n² Im τ) ≥ 1`,
+hence is not summable, and `tsum` returns `0`. -/
+theorem theta3_eq_zero_of_im_nonpos {τ : ℂ} (hτ : τ.im ≤ 0) :
+    theta3 τ = 0 := by
+  unfold theta3 jacobiTheta
+  apply tsum_eq_zero_of_not_summable
+  intro hs
+  have htend := hs.tendsto_cofinite_zero
+  have hev : ∀ᶠ n : ℤ in Filter.cofinite,
+      ‖Complex.exp (↑Real.pi * Complex.I * (n : ℂ) ^ 2 * τ)‖ < 1 := by
+    filter_upwards [htend.eventually (Metric.ball_mem_nhds (0 : ℂ) one_pos)] with n hn
+    simpa [Metric.mem_ball, dist_zero_right] using hn
+  obtain ⟨n, hn⟩ := hev.exists
+  have hge : (1 : ℝ) ≤ ‖Complex.exp (↑Real.pi * Complex.I * (n : ℂ) ^ 2 * τ)‖ := by
+    rw [Complex.norm_exp]
+    apply Real.one_le_exp
+    have h1 : (↑Real.pi * Complex.I * (n : ℂ) ^ 2 * τ)
+        = ((Real.pi * (n : ℝ) ^ 2 : ℝ) : ℂ) * (Complex.I * τ) := by
+      push_cast; ring
+    rw [h1, Complex.re_ofReal_mul]
+    have h2 : (Complex.I * τ).re = -τ.im := by
+      simp [Complex.mul_re]
+    rw [h2]
+    have h3 : (0 : ℝ) ≤ Real.pi * (n : ℝ) ^ 2 := by positivity
+    nlinarith
+  linarith
+
+/-- **Junk value of `λ` off `ℍ`.** With `θ₃ τ = 0`, the quotient
+`θ₂⁴/θ₃⁴` is a division by zero, hence `0`. -/
+theorem modularLambdaH_eq_zero_of_im_nonpos {τ : ℂ} (hτ : τ.im ≤ 0) :
+    modularLambdaH τ = 0 := by
+  unfold modularLambdaH
+  rw [theta3_eq_zero_of_im_nonpos hτ]
+  simp
+
+/-- `−I ∈ Γ(2)`: all four entries are congruent to those of `I`
+modulo `2`. -/
+theorem gamma2_neg_one_mem :
+    (-1 : SL(2, ℤ)) ∈ CongruenceSubgroup.Gamma 2 := by
+  rw [CongruenceSubgroup.Gamma_mem]
+  refine ⟨?_, ?_, ?_, ?_⟩ <;> simp
+
+/-- **`−I` acts trivially on `ℍ`.** The Möbius action of `−I` is
+`τ ↦ (−τ + 0)/(0 − 1) = τ`. -/
+theorem sl2z_neg_one_smul (τ : UpperHalfPlane) :
+    (-1 : SL(2, ℤ)) • τ = τ := by
+  apply UpperHalfPlane.ext
+  rw [sl2z_smul_coe]
+  have h00 : ((-1 : SL(2, ℤ)) 0 0 : ℤ) = -1 := by simp
+  have h01 : ((-1 : SL(2, ℤ)) 0 1 : ℤ) = 0 := by simp
+  have h10 : ((-1 : SL(2, ℤ)) 1 0 : ℤ) = 0 := by simp
+  have h11 : ((-1 : SL(2, ℤ)) 1 1 : ℤ) = -1 := by simp
+  rw [h00, h01, h10, h11]
+  push_cast
+  ring
+
+/-- **Elements of `zpowers (−I)` act trivially on `ℍ`.** `(−I)^k` is
+`I` or `−I` by parity, and both act trivially. -/
+theorem gamma2PMOne_smul_eq
+    (z : ↥(CongruenceSubgroup.Gamma 2))
+    (hz : z ∈ Subgroup.zpowers
+      (⟨-1, gamma2_neg_one_mem⟩ : ↥(CongruenceSubgroup.Gamma 2)))
+    (τ : UpperHalfPlane) : z • τ = τ := by
+  obtain ⟨k, hk⟩ := Subgroup.mem_zpowers_iff.mp hz
+  rw [← hk]
+  change ((((⟨-1, gamma2_neg_one_mem⟩ : ↥(CongruenceSubgroup.Gamma 2)) ^ k :
+      ↥(CongruenceSubgroup.Gamma 2)) : SL(2, ℤ))) • τ = τ
+  rw [SubgroupClass.coe_zpow]
+  change ((-1 : SL(2, ℤ)) ^ k) • τ = τ
+  rcases Int.even_or_odd k with hk' | hk'
+  · rw [hk'.neg_one_zpow, one_smul]
+  · obtain ⟨m, rfl⟩ := hk'
+    rw [zpow_add_one, (even_two_mul m).neg_one_zpow, one_mul]
+    exact sl2z_neg_one_smul τ
+
+/-- The central subgroup `{±I}` of `Γ(2)`, as the integer powers of
+`−I`. The quotient `Γ(2)/{±I}` is the group that acts freely on `ℍ`. -/
+def Gamma2PMOne : Subgroup ↥(CongruenceSubgroup.Gamma 2) :=
+  Subgroup.zpowers ⟨-1, gamma2_neg_one_mem⟩
+
+/-- `{±I}` is normal in `Γ(2)`: `−I` is central in `SL(2, ℤ)`. -/
+instance gamma2PMOne_normal : (Gamma2PMOne).Normal := by
+  constructor
+  intro n hn g
+  obtain ⟨k, hk⟩ := Subgroup.mem_zpowers_iff.mp hn
+  rw [← hk]
+  -- −I is central in Γ(2)
+  have hcomm : Commute (g : ↥(CongruenceSubgroup.Gamma 2))
+      (⟨-1, gamma2_neg_one_mem⟩ : ↥(CongruenceSubgroup.Gamma 2)) := by
+    apply Subtype.ext
+    change ((g : SL(2, ℤ)) * (-1)) = ((-1) * (g : SL(2, ℤ)))
+    rw [mul_neg_one, neg_one_mul]
+  -- g commutes with (−I)^k, so conjugation is the identity
+  have : g * ⟨-1, gamma2_neg_one_mem⟩ ^ k * g⁻¹
+      = ⟨-1, gamma2_neg_one_mem⟩ ^ k := by
+    rw [(hcomm.zpow_right k).eq, mul_assoc, mul_inv_cancel, mul_one]
+  rw [this]
+  exact Subgroup.zpow_mem_zpowers _ k
+
+/-- **The descended action of `Γ(2)/{±I}` on `ℍ`.** Well-defined
+because `{±I}` acts trivially (`gamma2PMOne_smul_eq`). -/
+noncomputable instance gamma2QuotMulAction :
+    MulAction (↥(CongruenceSubgroup.Gamma 2) ⧸ Gamma2PMOne)
+      UpperHalfPlane where
+  smul q τ := Quotient.liftOn' q (fun γ => γ • τ) (fun γ₁ γ₂ h => by
+    rw [QuotientGroup.leftRel_apply] at h
+    have hz : (γ₁⁻¹ * γ₂) • τ = τ := gamma2PMOne_smul_eq _ h τ
+    calc γ₁ • τ = γ₁ • ((γ₁⁻¹ * γ₂) • τ) := by rw [hz]
+      _ = (γ₁ * (γ₁⁻¹ * γ₂)) • τ := (mul_smul _ _ _).symm
+      _ = γ₂ • τ := by rw [mul_inv_cancel_left])
+  one_smul τ := by
+    change Quotient.liftOn' (Quotient.mk'' 1) _ _ = τ
+    rw [Quotient.liftOn'_mk'']
+    exact one_smul _ τ
+  mul_smul q₁ q₂ τ := by
+    induction q₁ using Quotient.inductionOn' with
+    | h γ₁ =>
+      induction q₂ using Quotient.inductionOn' with
+      | h γ₂ =>
+        change Quotient.liftOn' (Quotient.mk'' (γ₁ * γ₂)) _ _ =
+          Quotient.liftOn' (Quotient.mk'' γ₁) _ _
+        rw [Quotient.liftOn'_mk'', Quotient.liftOn'_mk'']
+        change _ = γ₁ • (Quotient.liftOn' (Quotient.mk'' γ₂) _ _)
+        rw [Quotient.liftOn'_mk'']
+        exact mul_smul γ₁ γ₂ τ
+
+/-- The descended action computes via any representative. -/
+theorem gamma2Quot_mk_smul (γ : ↥(CongruenceSubgroup.Gamma 2))
+    (τ : UpperHalfPlane) :
+    (QuotientGroup.mk γ :
+      ↥(CongruenceSubgroup.Gamma 2) ⧸ Gamma2PMOne) • τ = γ • τ :=
+  rfl
+
+/-- **Continuity of the descended action.** Each class acts as some
+`γ ∈ Γ(2) ⊆ SL(2, ℝ)`, which acts continuously. -/
+instance gamma2Quot_continuousConstSMul :
+    ContinuousConstSMul (↥(CongruenceSubgroup.Gamma 2) ⧸ Gamma2PMOne)
+      UpperHalfPlane := by
+  constructor
+  intro q
+  induction q using Quotient.inductionOn' with
+  | h γ =>
+    change Continuous (fun σ : UpperHalfPlane => ((γ.val : SL(2, ℝ)) • σ))
+    exact continuous_const_smul _
+
+/-- **Proper discontinuity of the descended action.** The set of
+classes moving a compact `K` into a compact `L` is the image under
+the projection of the corresponding finite set in `Γ(2)`
+(Pillar 2, `gamma_two_properlyDiscontinuousSMul`). -/
+instance gamma2Quot_properlyDiscontinuousSMul :
+    ProperlyDiscontinuousSMul
+      (↥(CongruenceSubgroup.Gamma 2) ⧸ Gamma2PMOne) UpperHalfPlane := by
+  constructor
+  intro K L hK hL
+  have hG2 := gamma_two_properlyDiscontinuousSMul.finite_disjoint_inter_image hK hL
+  refine Set.Finite.subset (hG2.image (QuotientGroup.mk :
+    ↥(CongruenceSubgroup.Gamma 2) →
+      ↥(CongruenceSubgroup.Gamma 2) ⧸ Gamma2PMOne)) ?_
+  rintro q hq
+  obtain ⟨γ, rfl⟩ := QuotientGroup.mk_surjective q
+  exact ⟨γ, hq, rfl⟩
+
+/-- **The descended action is free.** A class fixing `τ` lifts to
+`γ ∈ Γ(2)` fixing `τ`, hence `γ = ±I` (Pillar 1,
+`gamma_two_fixed_point_implies_pm_one`), hence the class is trivial. -/
+theorem gamma2Quot_stabilizer_eq_bot (τ : UpperHalfPlane) :
+    MulAction.stabilizer
+      (↥(CongruenceSubgroup.Gamma 2) ⧸ Gamma2PMOne) τ = ⊥ := by
+  rw [eq_bot_iff]
+  intro q hq
+  rw [MulAction.mem_stabilizer_iff] at hq
+  obtain ⟨γ, rfl⟩ := QuotientGroup.mk_surjective q
+  rw [Subgroup.mem_bot]
+  refine (QuotientGroup.eq_one_iff γ).mpr ?_
+  have hfix : (γ.val : SL(2, ℤ)) • τ = τ := hq
+  rcases gamma_two_fixed_point_implies_pm_one γ.val γ.2 τ hfix with h1 | hneg
+  · have hγ : γ = 1 := Subtype.ext h1
+    rw [hγ]
+    exact Subgroup.one_mem _
+  · have hγ : γ = ⟨-1, gamma2_neg_one_mem⟩ := Subtype.ext hneg
+    rw [hγ]
+    exact Subgroup.mem_zpowers _
+
+/-- **Fibres of `λ` are the orbits of the descended action**
+(Pillar 4, `modularLambdaH_eq_iff_gamma2_orbit`, with the existential
+inverted to match `MulAction.orbit`). -/
+theorem gamma2Quot_orbit_iff {τ₁ τ₂ : UpperHalfPlane} :
+    modularLambdaH (τ₁ : ℂ) = modularLambdaH (τ₂ : ℂ) ↔
+      τ₁ ∈ MulAction.orbit
+        (↥(CongruenceSubgroup.Gamma 2) ⧸ Gamma2PMOne) τ₂ := by
+  rw [modularLambdaH_eq_iff_gamma2_orbit, MulAction.mem_orbit_iff]
+  constructor
+  · rintro ⟨γ, hmem, heq⟩
+    refine ⟨QuotientGroup.mk
+      ((⟨γ, hmem⟩ : ↥(CongruenceSubgroup.Gamma 2))⁻¹), ?_⟩
+    have h1 : (⟨γ, hmem⟩ : ↥(CongruenceSubgroup.Gamma 2)) • τ₁ = τ₂ := heq
+    have h2 : (⟨γ, hmem⟩ : ↥(CongruenceSubgroup.Gamma 2))⁻¹ • τ₂ = τ₁ := by
+      rw [inv_smul_eq_iff]
+      exact h1.symm
+    exact h2
+  · rintro ⟨q, heq⟩
+    obtain ⟨δ, rfl⟩ := QuotientGroup.mk_surjective q
+    have h1 : δ • τ₂ = τ₁ := heq
+    refine ⟨(δ⁻¹ : ↥(CongruenceSubgroup.Gamma 2)).val, (δ⁻¹).2, ?_⟩
+    have h2 : δ⁻¹ • τ₁ = τ₂ := by
+      rw [inv_smul_eq_iff]
+      exact h1.symm
+    exact h2
+
+/-- The corestriction of `λ` to `ℍ → ℂ ∖ {0, 1}`, the map whose
+covering property is established at the subtype level before being
+transported to the bare `modularLambdaH : ℂ → ℂ`. -/
+noncomputable def modularLambdaHRestrict
+    (τ : UpperHalfPlane) : { w : ℂ // w ≠ 0 ∧ w ≠ 1 } :=
+  ⟨modularLambdaH (τ : ℂ),
+    modularLambdaH_ne_zero τ.2, modularLambdaH_ne_one τ.2⟩
+
+/-- **Continuity of the corestriction:** `λ` is differentiable on the
+open set `ℍ` (`modularLambdaH_differentiableAt_of_im_pos`). -/
+theorem modularLambdaHRestrict_continuous :
+    Continuous modularLambdaHRestrict := by
+  have h : Continuous fun τ : UpperHalfPlane => modularLambdaH (τ : ℂ) := by
+    rw [continuous_iff_continuousAt]
+    intro τ
+    exact (modularLambdaH_differentiableAt_of_im_pos τ.2).continuousAt.comp
+      UpperHalfPlane.continuous_coe.continuousAt
+  exact h.subtype_mk _
+
+/-- **Openness of the corestriction.** At every `τ ∈ ℍ`, `λ` is
+analytic with `λ'(τ) ≠ 0` (Pillar 3), so it maps neighborhoods onto
+neighborhoods (`HasStrictDerivAt.map_nhds_eq`). -/
+theorem modularLambdaHRestrict_isOpenMap :
+    IsOpenMap modularLambdaHRestrict := by
+  intro U hU
+  have hopen_coe : IsOpen (UpperHalfPlane.coe '' U) :=
+    UpperHalfPlane.isOpenEmbedding_coe.isOpenMap U hU
+  have hsub : UpperHalfPlane.coe '' U ⊆ { z : ℂ | 0 < z.im } := by
+    rintro z ⟨τ, hτ, rfl⟩
+    exact τ.2
+  have hopen_img : IsOpen (modularLambdaH '' (UpperHalfPlane.coe '' U)) := by
+    rw [isOpen_iff_mem_nhds]
+    rintro w ⟨z, hzU, rfl⟩
+    have him : 0 < z.im := hsub hzU
+    have hA : AnalyticAt ℂ modularLambdaH z := by
+      refine DifferentiableOn.analyticAt (s := { z : ℂ | 0 < z.im })
+        (fun z' hz' =>
+          (modularLambdaH_differentiableAt_of_im_pos hz').differentiableWithinAt) ?_
+      exact (isOpen_lt continuous_const Complex.continuous_im).mem_nhds him
+    have hmap : Filter.map modularLambdaH (nhds z) = nhds (modularLambdaH z) :=
+      hA.hasStrictDerivAt.map_nhds_eq (modularLambdaH_deriv_ne_zero_on_upperHalf him)
+    rw [← hmap]
+    exact Filter.image_mem_map (hopen_coe.mem_nhds hzU)
+  have hset : modularLambdaHRestrict '' U =
+      Subtype.val ⁻¹' (modularLambdaH '' (UpperHalfPlane.coe '' U)) := by
+    ext s
+    constructor
+    · rintro ⟨τ, hτU, rfl⟩
+      exact ⟨(τ : ℂ), ⟨τ, hτU, rfl⟩, rfl⟩
+    · rintro ⟨z, ⟨τ, hτU, rfl⟩, hval⟩
+      exact ⟨τ, hτU, Subtype.ext hval⟩
+  rw [hset]
+  exact hopen_img.preimage continuous_subtype_val
+
+/-- **Surjectivity of the corestriction**, from the image computation
+`modularLambdaH_image`. -/
+theorem modularLambdaHRestrict_surjective :
+    Function.Surjective modularLambdaHRestrict := by
+  intro w
+  have hmem : (w : ℂ) ∈ { w : ℂ | w ≠ 0 ∧ w ≠ 1 } := ⟨w.2.1, w.2.2⟩
+  rw [← modularLambdaH_image] at hmem
+  obtain ⟨τc, hτ_im, heq⟩ := hmem
+  exact ⟨⟨τc, hτ_im⟩, Subtype.ext heq⟩
+
+/-- The corestriction is a quotient map: continuous, open,
+surjective. -/
+theorem modularLambdaHRestrict_isQuotientMap :
+    Topology.IsQuotientMap modularLambdaHRestrict :=
+  modularLambdaHRestrict_isOpenMap.isQuotientMap
+    modularLambdaHRestrict_continuous modularLambdaHRestrict_surjective
+
+/-- **The `ℍ`-level covering.** Mathlib's
+`IsQuotientMap.isCoveringMapOn_of_properlyDiscontinuousSMul` applied
+to the free, properly discontinuous action of `Γ(2)/{±I}`; the
+trivial-stabilizer set is all of `ℍ` and its image is the whole base
+by surjectivity. -/
+theorem modularLambdaHRestrict_isCoveringMapOn :
+    IsCoveringMapOn modularLambdaHRestrict Set.univ := by
+  have hfG : ∀ {e₁ e₂ : UpperHalfPlane},
+      modularLambdaHRestrict e₁ = modularLambdaHRestrict e₂ ↔
+        e₁ ∈ MulAction.orbit
+          (↥(CongruenceSubgroup.Gamma 2) ⧸ Gamma2PMOne) e₂ :=
+    fun {e₁ e₂} => Subtype.ext_iff.trans gamma2Quot_orbit_iff
+  have h :=
+    modularLambdaHRestrict_isQuotientMap.isCoveringMapOn_of_properlyDiscontinuousSMul hfG
+  have hstab : { e : UpperHalfPlane |
+      MulAction.stabilizer
+        (↥(CongruenceSubgroup.Gamma 2) ⧸ Gamma2PMOne) e = ⊥ } = Set.univ :=
+    Set.eq_univ_iff_forall.mpr gamma2Quot_stabilizer_eq_bot
+  rw [hstab, Set.image_univ, modularLambdaHRestrict_surjective.range_eq] at h
+  exact h
+
+/-- **Transport of the evenly-covered property to `ℂ`.** The subtype
+trivialization through `w` is conjugated by the open embeddings
+`ℍ ↪ ℂ` (domain) and `{w // w ≠ 0 ∧ w ≠ 1} ↪ ℂ` (base) into a
+trivialization of `modularLambdaH : ℂ → ℂ`; the junk-value lemma
+keeps the `ℂ`-level preimage of the base set inside `ℍ`. -/
+theorem modularLambdaH_isEvenlyCovered {w : ℂ}
+    (hw0 : w ≠ 0) (hw1 : w ≠ 1) :
+    IsEvenlyCovered modularLambdaH w (modularLambdaH ⁻¹' {w}) := by
+  -- The base set is open.
+  have hS_open : IsOpen {w : ℂ | w ≠ 0 ∧ w ≠ 1} := by
+    rw [Set.setOf_and]
+    exact isOpen_ne.inter isOpen_ne
+  -- By the junk-value lemma, the ℂ-level preimage of the base set is exactly ℍ.
+  have hpre : modularLambdaH ⁻¹' {w : ℂ | w ≠ 0 ∧ w ≠ 1} = {z : ℂ | 0 < z.im} := by
+    ext z
+    simp only [Set.mem_preimage, Set.mem_setOf_eq]
+    constructor
+    · rintro ⟨h0, -⟩
+      by_contra hz
+      exact h0 (modularLambdaH_eq_zero_of_im_nonpos (not_lt.mp hz))
+    · intro hz
+      exact ⟨modularLambdaH_ne_zero hz, modularLambdaH_ne_one hz⟩
+  have hpre_open : IsOpen (modularLambdaH ⁻¹' {w : ℂ | w ≠ 0 ∧ w ≠ 1}) := by
+    rw [hpre]
+    exact isOpen_lt continuous_const Complex.continuous_im
+  -- The preimage subtype is canonically homeomorphic to `UpperHalfPlane`.
+  have him : ∀ e : (modularLambdaH ⁻¹' {w : ℂ | w ≠ 0 ∧ w ≠ 1} : Set ℂ),
+      0 < (e : ℂ).im := by
+    intro e
+    exact (Set.ext_iff.mp hpre _).mp e.2
+  have hmem : ∀ τ : UpperHalfPlane,
+      (τ : ℂ) ∈ modularLambdaH ⁻¹' {w : ℂ | w ≠ 0 ∧ w ≠ 1} := by
+    intro τ
+    rw [hpre]
+    exact τ.2
+  let g : (modularLambdaH ⁻¹' {w : ℂ | w ≠ 0 ∧ w ≠ 1} : Set ℂ) ≃ₜ UpperHalfPlane :=
+    { toFun := fun e => ⟨(e : ℂ), him e⟩
+      invFun := fun τ => ⟨(τ : ℂ), hmem τ⟩
+      left_inv := fun e => rfl
+      right_inv := fun τ => rfl
+      continuous_toFun := by
+        rw [UpperHalfPlane.isEmbedding_coe.continuous_iff]
+        exact continuous_subtype_val
+      continuous_invFun := UpperHalfPlane.continuous_coe.subtype_mk hmem }
+  -- Transport the ℍ-level covering through `g` to the restriction of the bare map.
+  have hrestrict : IsCoveringMap
+      (Set.restrictPreimage {w : ℂ | w ≠ 0 ∧ w ≠ 1} modularLambdaH) := by
+    rw [isCoveringMap_iff_isCoveringMapOn_univ]
+    exact modularLambdaHRestrict_isCoveringMapOn.comp_homeomorph g
+  -- Undo the restriction on both sides using openness of base set and preimage.
+  have hcov : IsCoveringMapOn modularLambdaH {w : ℂ | w ≠ 0 ∧ w ≠ 1} :=
+    IsCoveringMapOn.of_isCoveringMap_restrictPreimage _ hS_open hpre_open hrestrict
+  exact hcov w ⟨hw0, hw1⟩
+
 /-! ## Main covering-map theorems -/
 
 /-- **Covering map property of `λ : ℍ → ℂ ∖ {0, 1}`.**
@@ -9512,18 +9896,133 @@ any `τ ∉ ℍ`, so `f⁻¹ U ⊆ ℍ`. Because `ℍ` is open in `ℂ`, the sub
 topology on `f⁻¹ U` from `ℂ` agrees with that from `ℍ`, and the standard
 covering-map property of `λ : ℍ → ℂ ∖ {0, 1}` transports verbatim. -/
 theorem modularLambdaH_isCoveringMapOn :
-    IsCoveringMapOn modularLambdaH { w : ℂ | w ≠ 0 ∧ w ≠ 1 } := by
-  sorry
+    IsCoveringMapOn modularLambdaH { w : ℂ | w ≠ 0 ∧ w ≠ 1 } :=
+  fun _ hw => modularLambdaH_isEvenlyCovered hw.1 hw.2
+
+/-- **The Cayley image of the disk exterior has nonpositive imaginary
+part.** By `cayleyToHalfPlane_im`, the imaginary part is
+`(1 − ‖z‖²)/‖1 − z‖²`, whose numerator is nonpositive for `‖z‖ ≥ 1`
+(the `z = 1` division-by-zero case yields `0`). -/
+theorem cayleyToHalfPlane_im_nonpos_of_not_mem_ball {z : ℂ}
+    (hz : z ∉ Metric.ball (0 : ℂ) 1) :
+    (cayleyToHalfPlane z).im ≤ 0 := by
+  rw [cayleyToHalfPlane_im]
+  have hz1 : 1 ≤ ‖z‖ := by
+    rw [Metric.mem_ball, dist_zero_right, not_lt] at hz
+    exact hz
+  have hnum : 1 - ‖z‖ ^ 2 ≤ 0 := by nlinarith
+  exact div_nonpos_of_nonpos_of_nonneg hnum (sq_nonneg _)
+
+/-- **Junk value of the disk-level `λ` off `𝔻`.** The Cayley image has
+nonpositive imaginary part, where `modularLambdaH` takes the junk
+value `0`. -/
+theorem modularLambda_eq_zero_of_not_mem_ball {z : ℂ}
+    (hz : z ∉ Metric.ball (0 : ℂ) 1) :
+    modularLambda z = 0 := by
+  exact modularLambdaH_eq_zero_of_im_nonpos
+    (cayleyToHalfPlane_im_nonpos_of_not_mem_ball hz)
 
 /-- **Covering property of `λ` on the unit disk.**
 
 Same source-topology subtlety as `modularLambdaH_isCoveringMapOn`: the
 Cayley transform composition `modularLambda := modularLambdaH ∘
 cayleyToHalfPlane` is typed as `ℂ → ℂ`, but the junk value off `𝔻` lands
-on the excluded point `0`, so the preimage of any open `U` around a base
-point sits inside `𝔻` and the covering property transports through. -/
+on the excluded point `0` (`modularLambda_eq_zero_of_not_mem_ball`), so
+the `ℂ`-level preimage of the base set is exactly `𝔻`. The restriction
+of `modularLambda` over the base set is the restriction of
+`modularLambdaH` conjugated by the Cayley homeomorphism
+`𝔻 ≃ₜ {Im > 0}` (`cayleyToHalfPlane`/`halfPlaneToCayley`), so the
+covering property transports through
+`IsCoveringMapOn.of_isCoveringMap_restrictPreimage`. -/
 theorem modularLambda_isCoveringMapOn :
     IsCoveringMapOn modularLambda { w : ℂ | w ≠ 0 ∧ w ≠ 1 } := by
-  sorry
+  -- The base set is open.
+  have hS_open : IsOpen {w : ℂ | w ≠ 0 ∧ w ≠ 1} := by
+    rw [Set.setOf_and]
+    exact isOpen_ne.inter isOpen_ne
+  -- By the junk-value lemma, the ℂ-level preimage of the base set is exactly 𝔻.
+  have hpre : modularLambda ⁻¹' {w : ℂ | w ≠ 0 ∧ w ≠ 1} = Metric.ball (0 : ℂ) 1 := by
+    ext z
+    simp only [Set.mem_preimage, Set.mem_setOf_eq]
+    constructor
+    · rintro ⟨h0, -⟩
+      by_contra hz
+      exact h0 (modularLambda_eq_zero_of_not_mem_ball hz)
+    · intro hz
+      have him := cayleyToHalfPlane_im_pos hz
+      exact ⟨modularLambdaH_ne_zero him, modularLambdaH_ne_one him⟩
+  have hpre_open : IsOpen (modularLambda ⁻¹' {w : ℂ | w ≠ 0 ∧ w ≠ 1}) := by
+    rw [hpre]
+    exact Metric.isOpen_ball
+  -- The analogous ℍ-level preimage identity.
+  have hpreH : modularLambdaH ⁻¹' {w : ℂ | w ≠ 0 ∧ w ≠ 1} = {τ : ℂ | 0 < τ.im} := by
+    ext τ
+    simp only [Set.mem_preimage, Set.mem_setOf_eq]
+    constructor
+    · rintro ⟨h0, -⟩
+      by_contra hτ
+      exact h0 (modularLambdaH_eq_zero_of_im_nonpos (not_lt.mp hτ))
+    · intro hτ
+      exact ⟨modularLambdaH_ne_zero hτ, modularLambdaH_ne_one hτ⟩
+  -- Membership helpers between the literal preimage subtypes.
+  have hball : ∀ e : (modularLambda ⁻¹' {w : ℂ | w ≠ 0 ∧ w ≠ 1} : Set ℂ),
+      (e : ℂ) ∈ Metric.ball (0 : ℂ) 1 :=
+    fun e => (Set.ext_iff.mp hpre _).mp e.2
+  have himpos : ∀ t : (modularLambdaH ⁻¹' {w : ℂ | w ≠ 0 ∧ w ≠ 1} : Set ℂ),
+      0 < (t : ℂ).im :=
+    fun t => (Set.ext_iff.mp hpreH _).mp t.2
+  have hmemH : ∀ e : (modularLambda ⁻¹' {w : ℂ | w ≠ 0 ∧ w ≠ 1} : Set ℂ),
+      cayleyToHalfPlane (e : ℂ) ∈ modularLambdaH ⁻¹' {w : ℂ | w ≠ 0 ∧ w ≠ 1} := by
+    intro e
+    rw [hpreH]
+    exact cayleyToHalfPlane_im_pos (hball e)
+  have hmemD : ∀ t : (modularLambdaH ⁻¹' {w : ℂ | w ≠ 0 ∧ w ≠ 1} : Set ℂ),
+      halfPlaneToCayley (t : ℂ) ∈ modularLambda ⁻¹' {w : ℂ | w ≠ 0 ∧ w ≠ 1} := by
+    intro t
+    rw [hpre]
+    exact halfPlaneToCayley_mem_ball (himpos t)
+  -- The Cayley transform as a homeomorphism between the two preimage subtypes.
+  let g : (modularLambda ⁻¹' {w : ℂ | w ≠ 0 ∧ w ≠ 1} : Set ℂ) ≃ₜ
+      (modularLambdaH ⁻¹' {w : ℂ | w ≠ 0 ∧ w ≠ 1} : Set ℂ) :=
+    { toFun := fun e => ⟨cayleyToHalfPlane (e : ℂ), hmemH e⟩
+      invFun := fun t => ⟨halfPlaneToCayley (t : ℂ), hmemD t⟩
+      left_inv := fun e =>
+        Subtype.ext (halfPlaneToCayley_cayleyToHalfPlane (hball e))
+      right_inv := fun t =>
+        Subtype.ext (cayleyToHalfPlane_halfPlaneToCayley (himpos t))
+      continuous_toFun := by
+        refine Continuous.subtype_mk ?_ _
+        rw [continuous_iff_continuousAt]
+        intro e
+        have h_ne : (1 : ℂ) - (e : ℂ) ≠ 0 := one_sub_ne_zero_of_mem_ball (hball e)
+        have hC : ContinuousAt cayleyToHalfPlane (e : ℂ) := by
+          unfold cayleyToHalfPlane
+          exact (continuousAt_const.mul (continuousAt_const.add continuousAt_id)).div
+            (continuousAt_const.sub continuousAt_id) h_ne
+        exact hC.comp continuous_subtype_val.continuousAt
+      continuous_invFun := by
+        refine Continuous.subtype_mk ?_ _
+        rw [continuous_iff_continuousAt]
+        intro t
+        have h_ne : (t : ℂ) + Complex.I ≠ 0 := add_I_ne_zero_of_im_pos (himpos t)
+        have hC : ContinuousAt halfPlaneToCayley (t : ℂ) := by
+          unfold halfPlaneToCayley
+          exact (continuousAt_id.sub continuousAt_const).div
+            (continuousAt_id.add continuousAt_const) h_ne
+        exact hC.comp continuous_subtype_val.continuousAt }
+  -- The restriction of the ℍ-level map over the base set is a covering map.
+  have hrestrictH : IsCoveringMap
+      (Set.restrictPreimage {w : ℂ | w ≠ 0 ∧ w ≠ 1} modularLambdaH) :=
+    IsCoveringMapOn.isCoveringMap_restrictPreimage _ modularLambdaH_isCoveringMapOn
+  -- The restriction of the disk-level map factors through `g`.
+  have hcomp : Set.restrictPreimage {w : ℂ | w ≠ 0 ∧ w ≠ 1} modularLambda =
+      (Set.restrictPreimage {w : ℂ | w ≠ 0 ∧ w ≠ 1} modularLambdaH) ∘ g := by
+    funext e
+    exact Subtype.ext rfl
+  have hrestrict : IsCoveringMap
+      (Set.restrictPreimage {w : ℂ | w ≠ 0 ∧ w ≠ 1} modularLambda) := by
+    rw [hcomp]
+    exact hrestrictH.comp_homeomorph g
+  exact IsCoveringMapOn.of_isCoveringMap_restrictPreimage _ hS_open hpre_open hrestrict
 
 end RiemannDynamics
