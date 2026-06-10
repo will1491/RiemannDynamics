@@ -7571,18 +7571,263 @@ theorem modularLambdaH_injOn_F_interior :
   have h_τ₂ : τ₂ = τ := hτ_unique τ₂ ⟨h₂, h_eq.symm⟩
   rw [h_τ₁, h_τ₂]
 
+/-- **`T`-translation in `λ`-form.** `λ(τ + 1) = λ(τ)/(λ(τ) − 1)`
+on `ℍ`: combine `modularLambdaH_T_smul` (`λ(τ+1) = −θ₂⁴/θ₄⁴`) with
+the Jacobi identity `θ₂⁴ + θ₄⁴ = θ₃⁴` and nonvanishing of `θ₃, θ₄`. -/
+theorem modularLambdaH_T_smul_div {τ : ℂ} (hτ : 0 < τ.im) :
+    modularLambdaH (τ + 1) = modularLambdaH τ / (modularLambdaH τ - 1) := by
+  have h3 : theta3 τ ≠ 0 := theta3_ne_zero hτ
+  have h4 : theta4 τ ≠ 0 := theta4_ne_zero hτ
+  have h3' : (theta3 τ) ^ 4 ≠ 0 := pow_ne_zero 4 h3
+  have h4' : (theta4 τ) ^ 4 ≠ 0 := pow_ne_zero 4 h4
+  have hjac : theta2 τ ^ 4 + theta4 τ ^ 4 = theta3 τ ^ 4 := jacobi_identity hτ
+  have hne : modularLambdaH τ - 1 ≠ 0 := sub_ne_zero.mpr (modularLambdaH_ne_one hτ)
+  rw [modularLambdaH_T_smul, eq_div_iff hne]
+  unfold modularLambdaH
+  field_simp
+  linear_combination (-(theta2 τ ^ 4)) * hjac
+
+/-- **Range of `λ` on the imaginary axis.** For `y > 0`, the real
+value `λ(iy)` lies strictly between `0` and `1`: strict antitonicity
+(`modularLambdaH_iy_strictAntitone`) pinches it between the cusp
+limits `λ(iy) → 1` as `y → 0⁺` and `λ(iy) → 0` as `y → ∞`
+(`modularLambdaH_iy_tendsto_one_atZeroPos`,
+`modularLambdaH_iy_tendsto_zero_atTop`). -/
+theorem modularLambdaH_iy_re_mem_Ioo {y : ℝ} (hy : 0 < y) :
+    (modularLambdaH (Complex.I * y)).re ∈ Set.Ioo (0 : ℝ) 1 := by
+  -- real-part limits
+  have h0 : Filter.Tendsto (fun t : ℝ => (modularLambdaH (Complex.I * (t : ℂ))).re)
+      Filter.atTop (nhds (0 : ℝ)) := by
+    have := (Complex.continuous_re.tendsto (0 : ℂ)).comp modularLambdaH_iy_tendsto_zero_atTop
+    simpa using this
+  have h1 : Filter.Tendsto (fun t : ℝ => (modularLambdaH (Complex.I * (t : ℂ))).re)
+      (nhdsWithin 0 (Set.Ioi 0)) (nhds (1 : ℝ)) := by
+    have := (Complex.continuous_re.tendsto (1 : ℂ)).comp modularLambdaH_iy_tendsto_one_atZeroPos
+    simpa using this
+  -- membership facts
+  have hy_mem : y ∈ Set.Ioi (0 : ℝ) := Set.mem_Ioi.mpr hy
+  have hy2_mem : y / 2 ∈ Set.Ioi (0 : ℝ) := Set.mem_Ioi.mpr (by linarith)
+  have h2y_mem : 2 * y ∈ Set.Ioi (0 : ℝ) := Set.mem_Ioi.mpr (by linarith)
+  -- strict antitonicity comparisons
+  have hab : (modularLambdaH (Complex.I * (y : ℂ))).re
+      < (modularLambdaH (Complex.I * ((y / 2 : ℝ) : ℂ))).re :=
+    modularLambdaH_iy_strictAntitone hy2_mem hy_mem (by linarith)
+  have hca : (modularLambdaH (Complex.I * ((2 * y : ℝ) : ℂ))).re
+      < (modularLambdaH (Complex.I * (y : ℂ))).re :=
+    modularLambdaH_iy_strictAntitone hy_mem h2y_mem (by linarith)
+  -- upper bound: L (y/2) ≤ 1
+  have hb1 : (modularLambdaH (Complex.I * ((y / 2 : ℝ) : ℂ))).re ≤ 1 := by
+    apply ge_of_tendsto h1
+    filter_upwards [Ioo_mem_nhdsGT (show (0 : ℝ) < y / 2 by linarith)] with t ht
+    exact (modularLambdaH_iy_strictAntitone (Set.mem_Ioi.mpr ht.1) hy2_mem ht.2).le
+  -- lower bound: 0 ≤ L (2*y)
+  have hc0 : (0 : ℝ) ≤ (modularLambdaH (Complex.I * ((2 * y : ℝ) : ℂ))).re := by
+    apply le_of_tendsto h0
+    filter_upwards [Filter.eventually_gt_atTop (2 * y)] with t ht
+    exact (modularLambdaH_iy_strictAntitone h2y_mem
+      (Set.mem_Ioi.mpr (by linarith : (0 : ℝ) < t)) ht).le
+  refine Set.mem_Ioo.mpr ⟨?_, ?_⟩
+  · linarith [hc0, hca]
+  · linarith [hab, hb1]
+
+/-- **Range of `λ` on the right edge.** For `y > 0`,
+`λ(1 + iy) = u/(u − 1)` with `u = λ(iy) ∈ (0, 1)` real, so the value
+is real and strictly negative. -/
+theorem modularLambdaH_one_add_iy_re_neg {y : ℝ} (hy : 0 < y) :
+    (modularLambdaH (1 + Complex.I * y)).re < 0 := by
+  have h_im_pos : 0 < (Complex.I * (y : ℂ)).im := by
+    have : (Complex.I * (y : ℂ)).im = y := by
+      simp [Complex.mul_im, Complex.I_re, Complex.I_im]
+    rw [this]; exact hy
+  have hu_im : (modularLambdaH (Complex.I * (y : ℂ))).im = 0 := modularLambdaH_pure_imag_real hy
+  have hu_mem := modularLambdaH_iy_re_mem_Ioo hy
+  obtain ⟨hpos, hlt⟩ := Set.mem_Ioo.mp hu_mem
+  have h_div := modularLambdaH_T_smul_div h_im_pos
+  have hcomm : (1 : ℂ) + Complex.I * (y : ℂ) = Complex.I * (y : ℂ) + 1 := by ring
+  rw [hcomm, h_div]
+  set u := modularLambdaH (Complex.I * (y : ℂ)) with hu_def
+  have hu_eq : u = (u.re : ℂ) := by
+    apply Complex.ext <;> simp [hu_im]
+  have hden : (u.re : ℝ) - 1 < 0 := by linarith
+  rw [hu_eq]
+  rw [show (u.re : ℂ) - 1 = ((u.re - 1 : ℝ) : ℂ) from by push_cast; ring]
+  rw [← Complex.ofReal_div, Complex.ofReal_re]
+  exact div_neg_of_pos_of_neg hpos hden
+
+/-- **Injectivity of `λ` along the right edge.** The Möbius map
+`u ↦ u/(u − 1)` is injective away from `u = 1`, and `y ↦ λ(iy)` is
+injective by strict antitonicity of the real part together with
+`λ(iy)` being real. -/
+theorem modularLambdaH_one_add_iy_injOn {y₁ y₂ : ℝ}
+    (hy₁ : 0 < y₁) (hy₂ : 0 < y₂)
+    (h_eq : modularLambdaH (1 + Complex.I * y₁) =
+      modularLambdaH (1 + Complex.I * y₂)) :
+    y₁ = y₂ := by
+  have him1 : 0 < (Complex.I * (y₁ : ℂ)).im := by
+    simp only [Complex.mul_im, Complex.I_re, Complex.ofReal_im, mul_zero, Complex.I_im,
+      Complex.ofReal_re, one_mul, zero_add]
+    exact hy₁
+  have him2 : 0 < (Complex.I * (y₂ : ℂ)).im := by
+    simp only [Complex.mul_im, Complex.I_re, Complex.ofReal_im, mul_zero, Complex.I_im,
+      Complex.ofReal_re, one_mul, zero_add]
+    exact hy₂
+  have e1 : (1 + Complex.I * (y₁ : ℂ)) = Complex.I * (y₁ : ℂ) + 1 := by ring
+  have e2 : (1 + Complex.I * (y₂ : ℂ)) = Complex.I * (y₂ : ℂ) + 1 := by ring
+  rw [e1, e2, modularLambdaH_T_smul_div him1, modularLambdaH_T_smul_div him2] at h_eq
+  have hne1 : modularLambdaH (Complex.I * (y₁ : ℂ)) - 1 ≠ 0 :=
+    sub_ne_zero.mpr (modularLambdaH_ne_one him1)
+  have hne2 : modularLambdaH (Complex.I * (y₂ : ℂ)) - 1 ≠ 0 :=
+    sub_ne_zero.mpr (modularLambdaH_ne_one him2)
+  rw [div_eq_div_iff hne1 hne2] at h_eq
+  have hu_eq : modularLambdaH (Complex.I * (y₁ : ℂ)) =
+      modularLambdaH (Complex.I * (y₂ : ℂ)) := by
+    linear_combination -h_eq
+  have hre : (modularLambdaH (Complex.I * (y₁ : ℂ))).re =
+      (modularLambdaH (Complex.I * (y₂ : ℂ))).re :=
+    congrArg Complex.re hu_eq
+  exact modularLambdaH_iy_strictAntitone.injOn (Set.mem_Ioi.mpr hy₁) (Set.mem_Ioi.mpr hy₂) hre
+
+/-- **Semicircle reduction to the right edge.** For `τ` on the open
+upper semicircle `‖2τ − 1‖ = 1`, `Im τ > 0`, the circle equation
+gives `|τ|² = Re τ > 0`, hence `−1/τ = −1 + i·(Im τ/Re τ)`; combining
+`modularLambdaH_add_S_smul_eq_one` with the `2`-periodicity of `λ`
+yields `λ(τ) = 1 − λ(1 + i·(Im τ/Re τ))`. -/
+theorem modularLambdaH_semicircle_eq {τ : ℂ} (hτ_im : 0 < τ.im)
+    (h_circle : ‖2 * τ - 1‖ = 1) :
+    modularLambdaH τ =
+      1 - modularLambdaH (1 + Complex.I * (τ.im / τ.re)) := by
+  -- Step a: normSq τ = τ.re
+  have h_nsq : Complex.normSq (2 * τ - 1) = 1 := by
+    rw [Complex.normSq_eq_norm_sq, h_circle]; norm_num
+  have h_re : Complex.normSq τ = τ.re := by
+    have hns := h_nsq
+    simp only [Complex.normSq_apply, Complex.sub_re, Complex.sub_im, Complex.mul_re,
+      Complex.mul_im, Complex.one_re, Complex.one_im, Complex.re_ofNat, Complex.im_ofNat] at hns
+    simp only [Complex.normSq_apply]
+    linear_combination hns / 4
+  -- Step b: τ.re > 0
+  have hτ_ne : τ ≠ 0 := by
+    intro h; rw [h] at hτ_im; simp at hτ_im
+  have hre_pos : 0 < τ.re := by
+    rw [← h_re]; exact Complex.normSq_pos.mpr hτ_ne
+  have hre_ne : τ.re ≠ 0 := ne_of_gt hre_pos
+  -- Step c: -1/τ = -1 + I * (τ.im / τ.re)
+  have hq : ((τ.im : ℂ) / (τ.re : ℂ)) = ((τ.im / τ.re : ℝ) : ℂ) := by push_cast; ring
+  have h_inv : -1 / τ = -1 + Complex.I * (τ.im / τ.re) := by
+    rw [hq]
+    apply Complex.ext
+    · simp only [Complex.div_re, Complex.add_re, Complex.neg_re, Complex.one_re,
+        Complex.neg_im, Complex.one_im, neg_zero, Complex.mul_re, Complex.I_re,
+        Complex.I_im, Complex.ofReal_re, Complex.ofReal_im, zero_mul, mul_zero,
+        sub_zero, add_zero, h_re]
+      field_simp
+      ring
+    · simp only [Complex.div_im, Complex.add_im, Complex.neg_re, Complex.one_re,
+        Complex.neg_im, Complex.one_im, neg_zero, Complex.mul_im, Complex.I_re,
+        Complex.I_im, Complex.ofReal_re, Complex.ofReal_im, zero_mul, mul_zero,
+        zero_add, h_re]
+      ring
+  -- Step d: λ τ = 1 - λ(-1/τ)
+  have h_S := modularLambdaH_add_S_smul_eq_one hτ_im
+  rw [h_inv] at h_S
+  -- Step e: periodicity moves -1 to 1
+  have h_per := modularLambdaH_periodic (-1 + Complex.I * (τ.im / τ.re))
+  have harg : (-1 + Complex.I * (τ.im / τ.re)) + ((2 : ℝ) : ℂ)
+      = 1 + Complex.I * (τ.im / τ.re) := by push_cast; ring
+  rw [harg] at h_per
+  rw [← h_per] at h_S
+  linear_combination h_S
+
+/-- **Range of `λ` on the semicircle.** For `τ` on the open upper
+semicircle, `λ(τ) = 1 − λ(1 + i·s)` with `λ(1 + i·s)` real negative,
+so `Re λ(τ) > 1`. -/
+theorem modularLambdaH_semicircle_re_gt_one {τ : ℂ} (hτ_im : 0 < τ.im)
+    (h_circle : ‖2 * τ - 1‖ = 1) :
+    1 < (modularLambdaH τ).re := by
+  have h_nsq : Complex.normSq (2 * τ - 1) = 1 := by
+    rw [Complex.normSq_eq_norm_sq, h_circle]; norm_num
+  have h_re : Complex.normSq τ = τ.re := by
+    have hns := h_nsq
+    simp only [Complex.normSq_apply, Complex.sub_re, Complex.sub_im, Complex.mul_re,
+      Complex.mul_im, Complex.one_re, Complex.one_im, Complex.re_ofNat, Complex.im_ofNat] at hns
+    simp only [Complex.normSq_apply]
+    linear_combination hns / 4
+  have hτ_ne : τ ≠ 0 := by
+    intro h; rw [h] at hτ_im; simp at hτ_im
+  have hre_pos : 0 < τ.re := by
+    rw [← h_re]; exact Complex.normSq_pos.mpr hτ_ne
+  have hs_pos : 0 < τ.im / τ.re := div_pos hτ_im hre_pos
+  have hbridge : ((τ.im : ℂ) / (τ.re : ℂ)) = ((τ.im / τ.re : ℝ) : ℂ) := by push_cast; ring
+  rw [modularLambdaH_semicircle_eq hτ_im h_circle, Complex.sub_re, Complex.one_re, hbridge]
+  have hneg := modularLambdaH_one_add_iy_re_neg hs_pos
+  linarith
+
+/-- **Semicircle points are determined by the slope `Im τ/Re τ`.**
+On `‖2τ − 1‖ = 1`, `Im τ > 0`, the circle equation `|τ|² = Re τ`
+forces `Re τ = 1/(1 + s²)` and `Im τ = s/(1 + s²)` for
+`s = Im τ/Re τ`, so equal slopes give equal points. -/
+theorem semicircle_eq_of_im_div_re_eq {τ₁ τ₂ : ℂ}
+    (h₁_im : 0 < τ₁.im) (h₁_circle : ‖2 * τ₁ - 1‖ = 1)
+    (h₂_im : 0 < τ₂.im) (h₂_circle : ‖2 * τ₂ - 1‖ = 1)
+    (h_ratio : τ₁.im / τ₁.re = τ₂.im / τ₂.re) :
+    τ₁ = τ₂ := by
+  -- normSq facts and re positivity for both points
+  have h1_re : Complex.normSq τ₁ = τ₁.re := by
+    have hns : Complex.normSq (2 * τ₁ - 1) = 1 := by
+      rw [Complex.normSq_eq_norm_sq, h₁_circle]; norm_num
+    simp only [Complex.normSq_apply, Complex.sub_re, Complex.sub_im, Complex.mul_re,
+      Complex.mul_im, Complex.one_re, Complex.one_im, Complex.re_ofNat, Complex.im_ofNat] at hns
+    simp only [Complex.normSq_apply]
+    linear_combination hns / 4
+  have h2_re : Complex.normSq τ₂ = τ₂.re := by
+    have hns : Complex.normSq (2 * τ₂ - 1) = 1 := by
+      rw [Complex.normSq_eq_norm_sq, h₂_circle]; norm_num
+    simp only [Complex.normSq_apply, Complex.sub_re, Complex.sub_im, Complex.mul_re,
+      Complex.mul_im, Complex.one_re, Complex.one_im, Complex.re_ofNat, Complex.im_ofNat] at hns
+    simp only [Complex.normSq_apply]
+    linear_combination hns / 4
+  have h1ne : τ₁ ≠ 0 := by intro h; rw [h] at h₁_im; simp at h₁_im
+  have h2ne : τ₂ ≠ 0 := by intro h; rw [h] at h₂_im; simp at h₂_im
+  have h1re_pos : 0 < τ₁.re := by rw [← h1_re]; exact Complex.normSq_pos.mpr h1ne
+  have h2re_pos : 0 < τ₂.re := by rw [← h2_re]; exact Complex.normSq_pos.mpr h2ne
+  have h1re_ne : τ₁.re ≠ 0 := ne_of_gt h1re_pos
+  have h2re_ne : τ₂.re ≠ 0 := ne_of_gt h2re_pos
+  -- re² + im² = re from normSq
+  have e1 : τ₁.re * τ₁.re + τ₁.im * τ₁.im = τ₁.re := by
+    rw [← Complex.normSq_apply]; exact h1_re
+  have e2 : τ₂.re * τ₂.re + τ₂.im * τ₂.im = τ₂.re := by
+    rw [← Complex.normSq_apply]; exact h2_re
+  -- common slope s, im = s * re
+  set s := τ₁.im / τ₁.re with hs
+  have him1 : τ₁.im = s * τ₁.re := by rw [hs]; field_simp
+  have him2 : τ₂.im = s * τ₂.re := by rw [h_ratio]; field_simp
+  -- re * (1 + s²) = 1
+  have hf1 : τ₁.re * (1 + s ^ 2) = 1 := by
+    have h := e1; rw [him1] at h
+    have key : τ₁.re * (τ₁.re * (1 + s ^ 2)) = τ₁.re * 1 := by linear_combination h
+    exact mul_left_cancel₀ h1re_ne key
+  have hf2 : τ₂.re * (1 + s ^ 2) = 1 := by
+    have h := e2; rw [him2] at h
+    have key : τ₂.re * (τ₂.re * (1 + s ^ 2)) = τ₂.re * 1 := by linear_combination h
+    exact mul_left_cancel₀ h2re_ne key
+  have hsq_pos : 0 < 1 + s ^ 2 := by positivity
+  have hre_eq : τ₁.re = τ₂.re :=
+    mul_right_cancel₀ (ne_of_gt hsq_pos) (by rw [hf1, hf2])
+  have him_eq : τ₁.im = τ₂.im := by rw [him1, him2, hre_eq]
+  exact Complex.ext hre_eq him_eq
+
 /-- **Injectivity of `λ` on the boundary `∂F`.** For two boundary
 points `τ₁, τ₂ ∈ F \ F^o` with `λ(τ₁) = λ(τ₂)`, we have `τ₁ = τ₂`.
 The proof case-splits on which of the three boundary arcs each `τᵢ`
 lies on (left edge `Re τ = 0`, right edge `Re τ = 1`, upper
-semicircle `|2τ − 1| = 1`). Same arc ⟹ same point by strict
-monotonicity (left edge: existing `modularLambdaH_iy_strictAntitone`;
-right edge: derivable from `modularLambdaH_T_smul` + left-edge
-antitone, with `λ(1 + iy) = λ(iy) / (λ(iy) − 1)` after the Jacobi
-identity simplification; semicircle: derivable from
-`modularLambdaH_add_S_smul_eq_one` + left-edge antitone via
-`−1/τ = −1 + i tan(θ/2)`). Different arcs ⟹ disjoint images in
-`(0, 1)`, `(−∞, 0)`, `(1, +∞)` contradict `λ`-equality. -/
+semicircle `‖2τ − 1‖ = 1`). Same arc ⟹ same point by strict
+monotonicity (left edge: `modularLambdaH_iy_strictAntitone`;
+right edge: `modularLambdaH_one_add_iy_injOn`; semicircle:
+`modularLambdaH_semicircle_eq` + right-edge injectivity +
+`semicircle_eq_of_im_div_re_eq`). Different arcs ⟹ the disjoint
+ranges `(0, 1)`, `(−∞, 0)`, `(1, +∞)` (lemmas
+`modularLambdaH_iy_re_mem_Ioo`, `modularLambdaH_one_add_iy_re_neg`,
+`modularLambdaH_semicircle_re_gt_one`) contradict `λ`-equality. -/
 theorem modularLambdaH_injOn_F_boundary
     {τ₁ τ₂ : ℂ}
     (h₁ : τ₁ ∈ Gamma2FundamentalDomain)
@@ -7591,7 +7836,141 @@ theorem modularLambdaH_injOn_F_boundary
     (h₂_not_int : τ₂ ∉ Gamma2FundamentalDomainInterior)
     (h_eq : modularLambdaH τ₁ = modularLambdaH τ₂) :
     τ₁ = τ₂ := by
-  sorry
+  obtain ⟨hτ₁_im, hτ₁_re_nn, hτ₁_re_le, hτ₁_semi⟩ := h₁
+  obtain ⟨hτ₂_im, hτ₂_re_nn, hτ₂_re_le, hτ₂_semi⟩ := h₂
+  -- Arc trichotomy for each point: at least one boundary equation holds.
+  have h_arc1 : τ₁.re = 0 ∨ τ₁.re = 1 ∨ ‖2 * τ₁ - 1‖ = 1 := by
+    by_contra h
+    push Not at h
+    obtain ⟨hne0, hne1, hnec⟩ := h
+    exact h₁_not_int ⟨hτ₁_im, lt_of_le_of_ne hτ₁_re_nn (Ne.symm hne0),
+      lt_of_le_of_ne hτ₁_re_le hne1, lt_of_le_of_ne hτ₁_semi (Ne.symm hnec)⟩
+  have h_arc2 : τ₂.re = 0 ∨ τ₂.re = 1 ∨ ‖2 * τ₂ - 1‖ = 1 := by
+    by_contra h
+    push Not at h
+    obtain ⟨hne0, hne1, hnec⟩ := h
+    exact h₂_not_int ⟨hτ₂_im, lt_of_le_of_ne hτ₂_re_nn (Ne.symm hne0),
+      lt_of_le_of_ne hτ₂_re_le hne1, lt_of_le_of_ne hτ₂_semi (Ne.symm hnec)⟩
+  -- Real-part equality from λ-equality.
+  have h_re_eq : (modularLambdaH τ₁).re = (modularLambdaH τ₂).re := by rw [h_eq]
+  rcases h_arc1 with hre1 | hre1 | hcirc1
+  · -- τ₁ on left edge (re = 0).
+    have h_τ₁_eq : τ₁ = Complex.I * τ₁.im := by
+      apply Complex.ext
+      · simp [Complex.mul_re, Complex.I_re, Complex.I_im, hre1]
+      · simp [Complex.mul_im, Complex.I_re, Complex.I_im]
+    have hL1 : (modularLambdaH τ₁).re ∈ Set.Ioo (0 : ℝ) 1 := by
+      rw [h_τ₁_eq]; exact modularLambdaH_iy_re_mem_Ioo hτ₁_im
+    rcases h_arc2 with hre2 | hre2 | hcirc2
+    · -- L-L: strict antitonicity.
+      have h_τ₂_eq : τ₂ = Complex.I * τ₂.im := by
+        apply Complex.ext
+        · simp [Complex.mul_re, Complex.I_re, Complex.I_im, hre2]
+        · simp [Complex.mul_im, Complex.I_re, Complex.I_im]
+      have key : (modularLambdaH (Complex.I * (τ₁.im : ℂ))).re =
+          (modularLambdaH (Complex.I * (τ₂.im : ℂ))).re := by
+        rw [← h_τ₁_eq, ← h_τ₂_eq, h_eq]
+      have him_eq : τ₁.im = τ₂.im :=
+        modularLambdaH_iy_strictAntitone.injOn (Set.mem_Ioi.mpr hτ₁_im)
+          (Set.mem_Ioi.mpr hτ₂_im) key
+      calc τ₁ = Complex.I * (τ₁.im : ℂ) := h_τ₁_eq
+        _ = Complex.I * (τ₂.im : ℂ) := by rw [him_eq]
+        _ = τ₂ := h_τ₂_eq.symm
+    · -- L-R: cross, contradiction.
+      exfalso
+      have h_τ₂_eq : τ₂ = 1 + Complex.I * τ₂.im := by
+        apply Complex.ext
+        · simp [Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im, hre2]
+        · simp [Complex.add_im, Complex.mul_im, Complex.I_re, Complex.I_im]
+      have hR2 : (modularLambdaH τ₂).re < 0 := by
+        rw [h_τ₂_eq]; exact modularLambdaH_one_add_iy_re_neg hτ₂_im
+      have := hL1.1
+      linarith [h_re_eq]
+    · -- L-C: cross, contradiction.
+      exfalso
+      have hC2 : 1 < (modularLambdaH τ₂).re :=
+        modularLambdaH_semicircle_re_gt_one hτ₂_im hcirc2
+      have := hL1.2
+      linarith [h_re_eq]
+  · -- τ₁ on right edge (re = 1).
+    have h_τ₁_eq : τ₁ = 1 + Complex.I * τ₁.im := by
+      apply Complex.ext
+      · simp [Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im, hre1]
+      · simp [Complex.add_im, Complex.mul_im, Complex.I_re, Complex.I_im]
+    have hR1 : (modularLambdaH τ₁).re < 0 := by
+      rw [h_τ₁_eq]; exact modularLambdaH_one_add_iy_re_neg hτ₁_im
+    rcases h_arc2 with hre2 | hre2 | hcirc2
+    · -- R-L: cross, contradiction.
+      exfalso
+      have h_τ₂_eq : τ₂ = Complex.I * τ₂.im := by
+        apply Complex.ext
+        · simp [Complex.mul_re, Complex.I_re, Complex.I_im, hre2]
+        · simp [Complex.mul_im, Complex.I_re, Complex.I_im]
+      have hL2 : (modularLambdaH τ₂).re ∈ Set.Ioo (0 : ℝ) 1 := by
+        rw [h_τ₂_eq]; exact modularLambdaH_iy_re_mem_Ioo hτ₂_im
+      have := hL2.1
+      linarith [h_re_eq]
+    · -- R-R: Möbius injectivity along the right edge.
+      have h_τ₂_eq : τ₂ = 1 + Complex.I * τ₂.im := by
+        apply Complex.ext
+        · simp [Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im, hre2]
+        · simp [Complex.add_im, Complex.mul_im, Complex.I_re, Complex.I_im]
+      have h_eq' : modularLambdaH (1 + Complex.I * (τ₁.im : ℂ)) =
+          modularLambdaH (1 + Complex.I * (τ₂.im : ℂ)) := by
+        rw [← h_τ₁_eq, ← h_τ₂_eq, h_eq]
+      have him_eq : τ₁.im = τ₂.im :=
+        modularLambdaH_one_add_iy_injOn hτ₁_im hτ₂_im h_eq'
+      calc τ₁ = 1 + Complex.I * (τ₁.im : ℂ) := h_τ₁_eq
+        _ = 1 + Complex.I * (τ₂.im : ℂ) := by rw [him_eq]
+        _ = τ₂ := h_τ₂_eq.symm
+    · -- R-C: cross, contradiction.
+      exfalso
+      have hC2 : 1 < (modularLambdaH τ₂).re :=
+        modularLambdaH_semicircle_re_gt_one hτ₂_im hcirc2
+      linarith [h_re_eq]
+  · -- τ₁ on semicircle.
+    have hC1 : 1 < (modularLambdaH τ₁).re :=
+      modularLambdaH_semicircle_re_gt_one hτ₁_im hcirc1
+    rcases h_arc2 with hre2 | hre2 | hcirc2
+    · -- C-L: cross, contradiction.
+      exfalso
+      have h_τ₂_eq : τ₂ = Complex.I * τ₂.im := by
+        apply Complex.ext
+        · simp [Complex.mul_re, Complex.I_re, Complex.I_im, hre2]
+        · simp [Complex.mul_im, Complex.I_re, Complex.I_im]
+      have hL2 : (modularLambdaH τ₂).re ∈ Set.Ioo (0 : ℝ) 1 := by
+        rw [h_τ₂_eq]; exact modularLambdaH_iy_re_mem_Ioo hτ₂_im
+      have := hL2.2
+      linarith [h_re_eq]
+    · -- C-R: cross, contradiction.
+      exfalso
+      have h_τ₂_eq : τ₂ = 1 + Complex.I * τ₂.im := by
+        apply Complex.ext
+        · simp [Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im, hre2]
+        · simp [Complex.add_im, Complex.mul_im, Complex.I_re, Complex.I_im]
+      have hR2 : (modularLambdaH τ₂).re < 0 := by
+        rw [h_τ₂_eq]; exact modularLambdaH_one_add_iy_re_neg hτ₂_im
+      linarith [h_re_eq]
+    · -- C-C: semicircle reduction + right-edge injectivity + slope determinacy.
+      have hτ₁_ne : τ₁ ≠ 0 := fun h => by simp [h] at hτ₁_im
+      have hτ₂_ne : τ₂ ≠ 0 := fun h => by simp [h] at hτ₂_im
+      have hre₁_pos : 0 < τ₁.re := by
+        have h_normSq : Complex.normSq τ₁ = τ₁.re :=
+          Gamma2FundamentalDomain_semicircle_normSq_eq_re hcirc1
+        rw [← h_normSq]; exact Complex.normSq_pos.mpr hτ₁_ne
+      have hre₂_pos : 0 < τ₂.re := by
+        have h_normSq : Complex.normSq τ₂ = τ₂.re :=
+          Gamma2FundamentalDomain_semicircle_normSq_eq_re hcirc2
+        rw [← h_normSq]; exact Complex.normSq_pos.mpr hτ₂_ne
+      have hs₁_pos : 0 < τ₁.im / τ₁.re := div_pos hτ₁_im hre₁_pos
+      have hs₂_pos : 0 < τ₂.im / τ₂.re := div_pos hτ₂_im hre₂_pos
+      rw [modularLambdaH_semicircle_eq hτ₁_im hcirc1,
+          modularLambdaH_semicircle_eq hτ₂_im hcirc2] at h_eq
+      have h_eq' := sub_right_inj.mp h_eq
+      rw [← Complex.ofReal_div, ← Complex.ofReal_div] at h_eq'
+      have him_eq : τ₁.im / τ₁.re = τ₂.im / τ₂.re :=
+        modularLambdaH_one_add_iy_injOn hs₁_pos hs₂_pos h_eq'
+      exact semicircle_eq_of_im_div_re_eq hτ₁_im hcirc1 hτ₂_im hcirc2 him_eq
 
 /-- **Injectivity of `λ` on the closed half-fundamental domain `F`.**
 Case split on `F^o` vs `∂F` for each of `τ₁`, `τ₂`:
