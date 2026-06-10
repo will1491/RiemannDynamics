@@ -78,6 +78,29 @@ domain. The four building-block CG theorems are:
   fundamental domain.
 * Analogous circle and rectangle argument-principle theorems for the
   simpler closed-disk and closed-rectangle base cases.
+
+## Log-lift bridges (in `PathWinding.lean`)
+
+The definitions `pathContourIntegral` / `pathWindingNumber` introduced
+here are connected to continuous logarithms in `PathWinding.lean`,
+which completes the path-winding toolkit on top of this file:
+
+* continuous log lifts through the universal cover `z ↦ exp z` of
+  `ℂ \ {0}`, both for a single curve on a closed interval
+  (`continuous_log_lift_of_continuous_ne_zero_Icc`) and jointly in a
+  parameter over a rectangle
+  (`continuous_log_lift_param_of_continuous_ne_zero`);
+* FTC bridges identifying `pathContourIntegral γ a b ((z − w)⁻¹)` with
+  the boundary difference `L b − L a` of any continuous log lift `L`
+  of `γ − w` — for globally `C¹` paths
+  (`pathContourIntegral_inv_eq_log_lift_diff_of_contDiff`), for paths
+  `C¹` on an open neighborhood of `[a, b]` (`…_of_contDiffOn`), and
+  for the piecewise-`C¹` image curve `λ ∘ ∂F_Y`
+  (`…_F_Y_image_curve`).
+
+Consequently the winding number of a closed curve avoiding `w` can be
+read off as `(2πi)⁻¹ (L b − L a)`, the total change of a continuous
+argument along the curve.
 -/
 
 namespace Complex
