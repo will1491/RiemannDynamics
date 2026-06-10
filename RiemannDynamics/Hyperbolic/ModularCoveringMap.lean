@@ -192,13 +192,13 @@ theorem gamma2_orbit_meets_F_when_im_lambda_pos (τ : UpperHalfPlane)
 /-! ## Half-fundamental-domain injectivity (architectural helper)
 
 The closure of `modularLambdaH_existsUnique_in_F_interior_of_im_pos`
-proceeds via `cIntegralLogDeriv_isNat_of_nonzero_on_rectMinusUpperHalfDisk`
-(the F_Y argument principle). The five non-vanishing boundary conditions
-required by the AP decompose into the four boundary helpers below
-(left edge, right edge, semicircle, top edge) plus the winding-number
-computation. The high-level wrapper
-`modularLambdaH_F_unique_preimage_via_AP` packages the entire AP
-application together with a δ-thickening argument bridging the AP's
+rests on the F_Y argument principle
+`cIntegralLogDeriv_eq_divisor_sum_of_nonzero_on_rectMinusUpperHalfDisk`.
+The non-vanishing boundary conditions required by the AP decompose into
+the four boundary helpers below (left edge, right edge, semicircle, top
+edge). Uniqueness itself is delivered by the degree-argument bootstrap
+`modularLambdaH_F_interior_preimage_unique`, which combines the AP's
+divisor-count form with a δ-thickening argument bridging the AP's
 shifted-disk geometry (centered at `1/2 + δ·i`) to F's actual semicircle
 geometry (centered at `1/2`). -/
 
@@ -367,35 +367,20 @@ theorem modularLambdaH_top_edge_far_of_im_pos {w : ℂ} (hw : 0 < w.im) :
 
 /-! ## Path-(a) F_Y AP application scaffold
 
-The closure of `modularLambdaH_F_unique_preimage_via_AP` (uniqueness of
-`λ`-preimage in `F^o`) proceeds via the F_Y argument principle
-`cIntegralLogDeriv_isNat_of_nonzero_on_rectMinusUpperHalfDisk` from
-`WindingNumber.lean`. The scaffold below decomposes the application into
-nine sub-lemmas with explicit statements; the main theorem combines them.
+The F_Y argument principle
+`cIntegralLogDeriv_eq_divisor_sum_of_nonzero_on_rectMinusUpperHalfDisk`
+from `WindingNumber.lean` drives both the winding-index theorem
+`modularLambdaH_F_Y_image_curve_winding_index_eq_one` and the
+degree-argument bootstrap `modularLambdaH_F_interior_preimage_unique`
+(uniqueness of the `λ`-preimage in `F^o`). The scaffold below
+decomposes the application into sub-lemmas with explicit statements.
 
 The F_Y region is a rectangle minus an upper half-disk on its bottom edge,
 shaped to approximate the closure of `F^o ∩ {δ ≤ Im ≤ Y}` for small `δ`
 and large `Y`. The chosen parameters are
 `a = 0, b = 1, e = 1/2 + δ·i, R₀ = R₀'`, where `δ > 0` and `R₀' ∈ (0, 1/2)`
 are picked to satisfy the strict AP hypothesis `a < e.re − R₀` (giving
-`R₀' < 1/2`) while keeping `τ₁, τ₂` inside the F_Y interior. The proof
-structure below distributes the closure responsibility across nine sub-
-lemmas, each isolated for independent attack.
-
-**Closure cost estimate**: ≈ 1100–1500 LOC across 8–9 sub-sorries;
-realistically 3–5 sessions of focused work. -/
-
-/-- **F_Y parameter packet for the path-(a) AP application.** Packages the
-six geometric parameters `(δ, Y, R₀)` along with the strict-inequality
-hypotheses required by `cIntegralLogDeriv_isNat_of_nonzero_on_rectMinusUpperHalfDisk`,
-plus the membership witnesses placing `τ₁` and `τ₂` strictly inside the
-F_Y interior. The parameters are chosen as functions of `(w, τ₁, τ₂)` in
-`modularLambdaH_F_Y_params_exist`. -/
-structure ModularLambdaHFYParams (w : ℂ) (τ₁ τ₂ : ℂ) : Prop where
-  /-- Shift of the rectangle bottom above the real axis. -/
-  δ_pos : ∃ δ : ℝ, 0 < δ
-  -- (Full structural fields will be elaborated when sub-lemma 1 below is
-  -- closed; this structure is a placeholder anchoring the proof shape.)
+`R₀' < 1/2`) while keeping `τ₁, τ₂` inside the F_Y interior. -/
 
 /-- **Sub-lemma 1 — F_Y geometric setup.** For `w ∈ ℍ` and any
 `τ₁, τ₂ ∈ F^o`, there exists a parameter triple `(δ, Y, R₀)` with:
@@ -2941,7 +2926,7 @@ theorem modularLambdaH_cusp_reference_value :
     · rw [Metric.mem_closedBall, dist_zero_right, norm_mul, Complex.norm_real,
         Complex.norm_I, Real.norm_eq_abs, abs_of_pos hε₀_pos, mul_one]
       linarith only [hε₀_le_quarter]
-    · show ε₀ ≤ ((ε₀ : ℂ) * Complex.I).im
+    · change ε₀ ≤ ((ε₀ : ℂ) * Complex.I).im
       simp
   have h_cont : ContinuousOn (fun z => ‖modularLambdaH z‖) K := by
     intro z hz
@@ -3435,7 +3420,7 @@ theorem modularLambdaH_F_Y_image_curve_LHS_eq_pathContourIntegral
       intro t ht
       rw [Set.uIcc_of_le hab] at ht
       have htV : t ∈ V := h_Icc_V ht
-      show (modularLambdaH (formula t) - w)⁻¹ *
+      change (modularLambdaH (formula t) - w)⁻¹ *
           deriv (fun s => modularLambdaH (formula s)) t =
         (modularLambdaH (formula t) - w)⁻¹ *
           (formula' t • deriv modularLambdaH (formula t))
@@ -3452,7 +3437,7 @@ theorem modularLambdaH_F_Y_image_curve_LHS_eq_pathContourIntegral
     have h_maps : ∀ s ∈ Set.Icc A B,
         ((s : ℂ) + (c : ℂ) * Complex.I) ∈ {τ : ℂ | 0 < τ.im} := by
       intro s _
-      show 0 < ((s : ℂ) + (c : ℂ) * Complex.I).im
+      change 0 < ((s : ℂ) + (c : ℂ) * Complex.I).im
       simpa [Complex.add_im, Complex.mul_im, Complex.ofReal_im, Complex.ofReal_re,
         Complex.I_im, Complex.I_re] using hc
     have h_num : ContinuousOn
@@ -3475,7 +3460,7 @@ theorem modularLambdaH_F_Y_image_curve_LHS_eq_pathContourIntegral
     have h_maps : ∀ s ∈ Set.Icc δ Y,
         (e + (s : ℂ) * Complex.I) ∈ {τ : ℂ | 0 < τ.im} := by
       intro s hs
-      show 0 < (e + (s : ℂ) * Complex.I).im
+      change 0 < (e + (s : ℂ) * Complex.I).im
       simp only [Complex.add_im, Complex.mul_im, Complex.ofReal_im, Complex.ofReal_re,
         Complex.I_im, Complex.I_re, he_im]
       have hs1 : δ ≤ s := hs.1
@@ -3509,7 +3494,7 @@ theorem modularLambdaH_F_Y_image_curve_LHS_eq_pathContourIntegral
         rw [Complex.exp_mul_I]
         simp [Complex.add_im, Complex.mul_im, Complex.ofReal_im, Complex.ofReal_re,
           Complex.I_im, Complex.I_re, Complex.sin_ofReal_re, Complex.cos_ofReal_im]
-      show 0 < (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ).im
+      change 0 < (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ).im
       rw [h_cm_im]
       have h_c_im : ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I).im = δ := by
         simp [Complex.add_im, Complex.mul_im, Complex.ofReal_im, Complex.ofReal_re,
@@ -3600,7 +3585,7 @@ theorem modularLambdaH_F_Y_image_curve_LHS_eq_pathContourIntegral
               (fun t : ℝ => t * (1 / 2 - R₀))) t := by
           refine intervalIntegral.integral_congr ?_
           intro t _
-          show (modularLambdaH ((t * (1 / 2 - R₀) : ℂ) + (δ : ℂ) * Complex.I) - w)⁻¹ *
+          change (modularLambdaH ((t * (1 / 2 - R₀) : ℂ) + (δ : ℂ) * Complex.I) - w)⁻¹ *
               ((1 / 2 - R₀ : ℂ) *
                 deriv modularLambdaH ((t * (1 / 2 - R₀) : ℂ) + (δ : ℂ) * Complex.I)) =
             (1 / 2 - R₀ : ℝ) •
@@ -3750,7 +3735,7 @@ theorem modularLambdaH_F_Y_image_curve_LHS_eq_pathContourIntegral
               (fun t : ℝ => Real.pi * (2 - t))) t := by
           refine intervalIntegral.integral_congr ?_
           intro t _
-          show (modularLambdaH (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀
+          change (modularLambdaH (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀
               (Real.pi * (2 - t))) - w)⁻¹ *
               (((Real.pi * -1 : ℝ) •
                 (_root_.circleMap 0 R₀ (Real.pi * (2 - t)) * Complex.I)) *
@@ -3873,7 +3858,7 @@ theorem modularLambdaH_F_Y_image_curve_LHS_eq_pathContourIntegral
               (fun t : ℝ => 1 / 2 + R₀ + (t - 2) * (1 / 2 - R₀))) t := by
           refine intervalIntegral.integral_congr ?_
           intro t _
-          show (modularLambdaH ((((1 / 2 + R₀) + (t - 2) * (1 / 2 - R₀)) : ℂ) +
+          change (modularLambdaH ((((1 / 2 + R₀) + (t - 2) * (1 / 2 - R₀)) : ℂ) +
               (δ : ℂ) * Complex.I) - w)⁻¹ *
               ((1 / 2 - R₀ : ℂ) *
                 deriv modularLambdaH ((((1 / 2 + R₀) + (t - 2) * (1 / 2 - R₀)) : ℂ) +
@@ -3979,7 +3964,7 @@ theorem modularLambdaH_F_Y_image_curve_LHS_eq_pathContourIntegral
                 (fun t : ℝ => δ + (t - 3) * (Y - δ))) t) := by
           refine intervalIntegral.integral_congr ?_
           intro t _
-          show (modularLambdaH ((1 : ℂ) +
+          change (modularLambdaH ((1 : ℂ) +
               ((δ + (t - 3) * (Y - δ)) : ℂ) * Complex.I) - w)⁻¹ *
               ((Y - δ : ℂ) * Complex.I *
                 deriv modularLambdaH ((1 : ℂ) +
@@ -4083,7 +4068,7 @@ theorem modularLambdaH_F_Y_image_curve_LHS_eq_pathContourIntegral
               (fun t : ℝ => 5 - t)) t := by
           refine intervalIntegral.integral_congr ?_
           intro t _
-          show (modularLambdaH (((5 - t : ℝ) : ℂ) + (Y : ℂ) * Complex.I) - w)⁻¹ *
+          change (modularLambdaH (((5 - t : ℝ) : ℂ) + (Y : ℂ) * Complex.I) - w)⁻¹ *
               (((-1 : ℝ) : ℂ) *
                 deriv modularLambdaH (((5 - t : ℝ) : ℂ) + (Y : ℂ) * Complex.I)) =
             (-1 : ℝ) •
@@ -4190,7 +4175,7 @@ theorem modularLambdaH_F_Y_image_curve_LHS_eq_pathContourIntegral
                 (fun t : ℝ => Y - (t - 5) * (Y - δ))) t) := by
           refine intervalIntegral.integral_congr ?_
           intro t _
-          show (modularLambdaH (((Y - (t - 5) * (Y - δ) : ℝ) : ℂ) * Complex.I) - w)⁻¹ *
+          change (modularLambdaH (((Y - (t - 5) * (Y - δ) : ℝ) : ℂ) * Complex.I) - w)⁻¹ *
               ((((-(Y - δ) : ℝ) : ℂ) * Complex.I) *
                 deriv modularLambdaH
                   (((Y - (t - 5) * (Y - δ) : ℝ) : ℂ) * Complex.I)) =
@@ -5792,10 +5777,10 @@ theorem modularLambdaH_F_interior_preimage_unique
     · simp only [Metric.mem_ball, Complex.dist_eq, not_lt]
       exact hτ₂_norm_gt.le
   have hτ₁_zero : (fun τ => modularLambdaH τ - w) τ₁ = 0 := by
-    show modularLambdaH τ₁ - w = 0
+    change modularLambdaH τ₁ - w = 0
     rw [h₁_eq, sub_self]
   have hτ₂_zero : (fun τ => modularLambdaH τ - w) τ₂ = 0 := by
-    show modularLambdaH τ₂ - w = 0
+    change modularLambdaH τ₂ - w = 0
     rw [h₂_eq, sub_self]
   have h_two_le : 2 ≤ (∑ᶠ u, MeromorphicOn.divisor (fun τ => modularLambdaH τ - w)
       ((Set.Icc (0 : ℝ) 1 ×ℂ Set.Icc δ Y) \
@@ -6138,7 +6123,7 @@ theorem modularLambdaH_F_interior_preimage_deriv_ne_zero
     · simp only [Metric.mem_ball, Complex.dist_eq, not_lt]
       exact hτ_norm_gt.le
   have hτ_zero : (fun τ' => modularLambdaH τ' - w) τ = 0 := by
-    show modularLambdaH τ - w = 0
+    change modularLambdaH τ - w = 0
     rw [h_eq, sub_self]
   have hτ_deriv_zero : deriv (fun τ' => modularLambdaH τ' - w) τ = 0 := by
     have h_d : deriv (fun τ' => modularLambdaH τ' - w) τ
@@ -6202,7 +6187,7 @@ integrand `(circleMap - w)⁻¹ · deriv = (ε exp(I t π/3))⁻¹ ·
 theorem modularLambdaH_F_Y_image_curve_pathContourIntegral_eq_two_pi_I
     {w : ℂ} (hw : 0 < w.im) {δ Y R₀ : ℝ}
     (hδ : 0 < δ) (hδY : δ < Y) (hR₀_pos : 0 < R₀) (hR₀_lt : R₀ < 1 / 2)
-    (hδ_le : δ ≤ 1 / 4) (hR₀_lo : Real.sqrt (1 / 4 - δ ^ 2) < R₀)
+    (_hδ_le : δ ≤ 1 / 4) (hR₀_lo : Real.sqrt (1 / 4 - δ ^ 2) < R₀)
     (h_δR_lt_Y : δ + R₀ < Y)
     (hg_bot_left : ∀ x ∈ Set.Icc (0 : ℝ) (1 / 2 - R₀),
       modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) - w ≠ 0)
@@ -6322,7 +6307,7 @@ theorem modularLambdaH_F_Y_image_curve_pathContourIntegral_eq_two_pi_I
       rw [h_half_im]; ring
     obtain ⟨hτ₀_im_pos, hτ₀_re_lo, hτ₀_re_hi, hτ₀_semi⟩ := id hτ₀_in
     have hτ₀_zero : (fun τ => modularLambdaH τ - w) τ₀ = 0 := by
-      show modularLambdaH τ₀ - w = 0
+      change modularLambdaH τ₀ - w = 0
       rw [hτ₀_eq, sub_self]
     -- (f) Lower bound: `τ₀` is a zero in the region, so `1 ≤ N`.
     have h_one_le : 1 ≤ (∑ᶠ u, MeromorphicOn.divisor (fun τ => modularLambdaH τ - w)
@@ -6812,31 +6797,31 @@ sum (multiplicity ≥ 1 since `g τᵢ = 0` and `g` analytic, distinct from
 the analyticOrder-defined `0` value). Two distinct zeros ⟹ sum ≥ 2. -/
 theorem modularLambdaH_F_Y_AP_count_ge_two_of_two_distinct_zeros
     {w : ℂ} {δ Y R₀ : ℝ}
-    (hδ : 0 < δ) (_hδY : δ < Y) (hR₀_pos : 0 < R₀) (_hR₀_lt : R₀ < 1 / 2)
-    (_h_δR_lt_Y : δ + R₀ < Y)
-    (_hg_bot_left : ∀ x ∈ Set.Icc (0 : ℝ) (1 / 2 - R₀),
+    (hδ : 0 < δ) (hδY : δ < Y) (hR₀_pos : 0 < R₀) (hR₀_lt : R₀ < 1 / 2)
+    (h_δR_lt_Y : δ + R₀ < Y)
+    (hg_bot_left : ∀ x ∈ Set.Icc (0 : ℝ) (1 / 2 - R₀),
       modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) - w ≠ 0)
-    (_hg_bot_right : ∀ x ∈ Set.Icc (1 / 2 + R₀ : ℝ) 1,
+    (hg_bot_right : ∀ x ∈ Set.Icc (1 / 2 + R₀ : ℝ) 1,
       modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) - w ≠ 0)
-    (_hg_top : ∀ x ∈ Set.Icc (0 : ℝ) 1,
+    (hg_top : ∀ x ∈ Set.Icc (0 : ℝ) 1,
       modularLambdaH ((x : ℂ) + (Y : ℂ) * Complex.I) - w ≠ 0)
-    (_hg_right : ∀ y ∈ Set.Icc δ Y,
+    (hg_right : ∀ y ∈ Set.Icc δ Y,
       modularLambdaH ((1 : ℂ) + (y : ℂ) * Complex.I) - w ≠ 0)
-    (_hg_left : ∀ y ∈ Set.Icc δ Y,
+    (hg_left : ∀ y ∈ Set.Icc δ Y,
       modularLambdaH ((0 : ℂ) + (y : ℂ) * Complex.I) - w ≠ 0)
-    (_hg_arc : ∀ θ ∈ Set.Icc (0 : ℝ) Real.pi,
+    (hg_arc : ∀ θ ∈ Set.Icc (0 : ℝ) Real.pi,
       modularLambdaH (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ) - w ≠ 0)
     {τ₁ τ₂ : ℂ}
-    (_hτ₁_re_lo : 0 < τ₁.re) (_hτ₁_re_hi : τ₁.re < 1)
-    (_hτ₁_im_lo : δ < τ₁.im) (_hτ₁_im_hi : τ₁.im < Y)
-    (_hτ₁_outside : R₀ < ‖τ₁ - ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I)‖)
-    (_hτ₂_re_lo : 0 < τ₂.re) (_hτ₂_re_hi : τ₂.re < 1)
-    (_hτ₂_im_lo : δ < τ₂.im) (_hτ₂_im_hi : τ₂.im < Y)
-    (_hτ₂_outside : R₀ < ‖τ₂ - ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I)‖)
-    (_hτ_ne : τ₁ ≠ τ₂)
-    (_hlam_τ₁ : modularLambdaH τ₁ = w) (_hlam_τ₂ : modularLambdaH τ₂ = w)
+    (hτ₁_re_lo : 0 < τ₁.re) (hτ₁_re_hi : τ₁.re < 1)
+    (hτ₁_im_lo : δ < τ₁.im) (hτ₁_im_hi : τ₁.im < Y)
+    (hτ₁_outside : R₀ < ‖τ₁ - ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I)‖)
+    (hτ₂_re_lo : 0 < τ₂.re) (hτ₂_re_hi : τ₂.re < 1)
+    (hτ₂_im_lo : δ < τ₂.im) (hτ₂_im_hi : τ₂.im < Y)
+    (hτ₂_outside : R₀ < ‖τ₂ - ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I)‖)
+    (hτ_ne : τ₁ ≠ τ₂)
+    (hlam_τ₁ : modularLambdaH τ₁ = w) (hlam_τ₂ : modularLambdaH τ₂ = w)
     {n : ℕ}
-    (_hn : (2 * Real.pi * Complex.I)⁻¹ * ((∫ x in (0 : ℝ)..(1 / 2 - R₀),
+    (hn : (2 * Real.pi * Complex.I)⁻¹ * ((∫ x in (0 : ℝ)..(1 / 2 - R₀),
         deriv modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) /
         (modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) - w)) +
       (∫ x in (1 / 2 + R₀ : ℝ)..1,
@@ -6858,133 +6843,71 @@ theorem modularLambdaH_F_Y_AP_count_ge_two_of_two_distinct_zeros
           (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ) - w) *
         (Complex.I * R₀ * Complex.exp (Complex.I * θ)))) = (n : ℂ)) :
     2 ≤ n := by
-  sorry
-
-/-- **Injectivity of `λ` on `F^o` via the F_Y argument principle.** For `w`
-with `Im w > 0` and `τ₁, τ₂ ∈ F^o` both mapping to `w`, `τ₁ = τ₂`.
-
-The proof combines the nine sub-lemmas above. The δ-cascade:
-
-0. Extract `Y₀` from `_top_edge_ne`, `δ_w_6` from `_bot_left_strip_ne`,
-   `δ_w_7` from `_bot_right_strip_ne`, `δ_w_8` from `_arc_ne` (all
-   existential forms). Set `δ_max := min(δ_w_6, δ_w_7, δ_w_8, 1/4)`.
-1. Apply `_params_exist_arc` with `δ_max` to obtain F_Y params
-   `(δ, Y_base, R₀)` with `δ ≤ δ_max`, both `τᵢ` in the interior, and
-   `R₀ > √(1/4 − δ²)` (for the arc bound to engage). Augment
-   `Y := max(Y_base, Y₀)` to satisfy the top-edge cascade.
-2. Verify boundary non-vanishing on each of the five edges + arc.
-3. Apply `_AP_integral_eq_nat_form` (B1) to obtain
-   `(2πi)⁻¹ · (boundary integral) = (n : ℂ)` for some `n : ℕ`.
-4. By `_winding_eq_one`, the boundary integral satisfies
-   `(2πi)⁻¹ · integral = 1`, so `(n : ℂ) = 1`, hence `n = 1`.
-5. If `τ₁ ≠ τ₂`, apply `_AP_count_ge_two_of_two_distinct_zeros` to get
-   `n ≥ 2`. Contradict `n = 1`. -/
-theorem modularLambdaH_F_unique_preimage_via_AP
-    {w : ℂ} (hw : 0 < w.im)
-    {τ₁ τ₂ : ℂ}
-    (h₁_in : τ₁ ∈ Gamma2FundamentalDomainInterior)
-    (h₁_eq : modularLambdaH τ₁ = w)
-    (h₂_in : τ₂ ∈ Gamma2FundamentalDomainInterior)
-    (h₂_eq : modularLambdaH τ₂ = w) :
-    τ₁ = τ₂ := by
-  by_contra h_τ_ne
-  -- Extract cascading existentials.
-  obtain ⟨Y₀_top, hY₀_top⟩ := modularLambdaH_F_Y_top_edge_ne hw
-  obtain ⟨δ_w_6, hδ_w_6_pos, _hδ_w_6_lt, hδ_w_6_prop⟩ :=
-    modularLambdaH_F_Y_bot_left_strip_ne hw
-  obtain ⟨δ_w_7, hδ_w_7_pos, _hδ_w_7_lt, hδ_w_7_prop⟩ :=
-    modularLambdaH_F_Y_bot_right_strip_ne hw
-  obtain ⟨δ_w_8, hδ_w_8_pos, _hδ_w_8_lt, hδ_w_8_prop⟩ :=
-    modularLambdaH_F_Y_arc_ne hw
-  -- δ_max := min(δ_w_6, δ_w_7, δ_w_8, 1/4).
-  set δ_max : ℝ := min (min δ_w_6 δ_w_7) (min δ_w_8 (1 / 4)) with hδ_max_def
-  have hδ_max_pos : 0 < δ_max :=
-    lt_min (lt_min hδ_w_6_pos hδ_w_7_pos) (lt_min hδ_w_8_pos (by norm_num))
-  have hδ_max_le_quarter : δ_max ≤ 1 / 4 := by
-    rw [hδ_max_def]
-    exact le_trans (min_le_right _ _) (min_le_right _ _)
-  -- Apply _params_exist_arc.
-  obtain ⟨δ, Y_base, R₀, hδ_pos, hδ_le_δ_max, hδ_lt_τ₁_im, hδ_lt_τ₂_im,
-    hδ_lt_Y_base, hτ₁_im_lt_Y_base, hτ₂_im_lt_Y_base,
-    hR₀_pos, hR₀_lt, h_δR_lt_Y_base, hR₀_lo, hτ₁_norm_gt, hτ₂_norm_gt⟩ :=
-    modularLambdaH_F_Y_params_exist_arc hw h₁_in h₂_in hδ_max_pos hδ_max_le_quarter
-  -- Augment Y to satisfy top-edge cascade.
-  set Y : ℝ := max Y_base Y₀_top with hY_def
-  have hY_ge_base : Y_base ≤ Y := le_max_left _ _
-  have hY_ge_Y₀_top : Y₀_top ≤ Y := le_max_right _ _
-  have hδ_lt_Y : δ < Y := lt_of_lt_of_le hδ_lt_Y_base hY_ge_base
-  have hτ₁_im_lt_Y : τ₁.im < Y := lt_of_lt_of_le hτ₁_im_lt_Y_base hY_ge_base
-  have hτ₂_im_lt_Y : τ₂.im < Y := lt_of_lt_of_le hτ₂_im_lt_Y_base hY_ge_base
-  have h_δR_lt_Y : δ + R₀ < Y := lt_of_lt_of_le h_δR_lt_Y_base hY_ge_base
-  -- Extract δ ≤ δ_w_i.
-  have hδ_le_δ_w_6 : δ ≤ δ_w_6 := by
-    refine le_trans hδ_le_δ_max ?_
-    rw [hδ_max_def]; exact le_trans (min_le_left _ _) (min_le_left _ _)
-  have hδ_le_δ_w_7 : δ ≤ δ_w_7 := by
-    refine le_trans hδ_le_δ_max ?_
-    rw [hδ_max_def]; exact le_trans (min_le_left _ _) (min_le_right _ _)
-  have hδ_le_δ_w_8 : δ ≤ δ_w_8 := by
-    refine le_trans hδ_le_δ_max ?_
-    rw [hδ_max_def]; exact le_trans (min_le_right _ _) (min_le_left _ _)
-  have hδ_le_quarter : δ ≤ 1 / 4 := by
-    refine le_trans hδ_le_δ_max ?_
-    rw [hδ_max_def]; exact le_trans (min_le_right _ _) (min_le_right _ _)
-  -- For bot_left/bot_right, the strip helpers cover x ≤ δ. We need to
-  -- show x ∈ [0, 1/2 - R₀] ⟹ x ≤ δ, via _arc_half_minus_R₀_bound.
-  have h_half_minus_R₀ : 1 / 2 - R₀ ≤ 2 * δ ^ 2 :=
-    modularLambdaH_F_Y_arc_half_minus_R₀_bound hδ_pos hδ_le_quarter hR₀_lo hR₀_lt hR₀_pos
-  have h_2δ_sq_le_δ : 2 * δ ^ 2 ≤ δ := by nlinarith [hδ_pos.le, hδ_le_quarter]
-  have h_half_minus_R₀_le_δ : 1 / 2 - R₀ ≤ δ := le_trans h_half_minus_R₀ h_2δ_sq_le_δ
-  -- Now produce the 6 boundary non-vanishing hypotheses.
-  have hg_bot_left : ∀ x ∈ Set.Icc (0 : ℝ) (1 / 2 - R₀),
-      modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) - w ≠ 0 := by
-    intro x hx
-    refine hδ_w_6_prop δ hδ_pos hδ_le_δ_w_6 x hx.1 ?_
-    exact le_trans hx.2 h_half_minus_R₀_le_δ
-  have hg_bot_right : ∀ x ∈ Set.Icc (1 / 2 + R₀ : ℝ) 1,
-      modularLambdaH ((x : ℂ) + (δ : ℂ) * Complex.I) - w ≠ 0 := by
-    intro x hx
-    refine hδ_w_7_prop δ hδ_pos hδ_le_δ_w_7 x ?_ hx.2
-    linarith [hx.1, h_half_minus_R₀_le_δ]
-  have hg_top : ∀ x ∈ Set.Icc (0 : ℝ) 1,
-      modularLambdaH ((x : ℂ) + (Y : ℂ) * Complex.I) - w ≠ 0 := by
-    intro x hx h_eq
-    refine hY₀_top Y hY_ge_Y₀_top x hx.1 hx.2 ?_
-    linear_combination h_eq
-  have hg_right : ∀ y ∈ Set.Icc δ Y,
-      modularLambdaH ((1 : ℂ) + (y : ℂ) * Complex.I) - w ≠ 0 := fun y hy =>
-    modularLambdaH_F_Y_right_edge_ne hw (lt_of_lt_of_le hδ_pos hy.1)
-  have hg_left : ∀ y ∈ Set.Icc δ Y,
-      modularLambdaH ((0 : ℂ) + (y : ℂ) * Complex.I) - w ≠ 0 := fun y hy =>
-    modularLambdaH_F_Y_left_edge_ne hw (lt_of_lt_of_le hδ_pos hy.1)
-  have hg_arc : ∀ θ ∈ Set.Icc (0 : ℝ) Real.pi,
-      modularLambdaH (_root_.circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ θ) - w ≠ 0 := by
-    intro θ hθ h_eq
-    refine hδ_w_8_prop δ R₀ hδ_pos hδ_le_δ_w_8 hR₀_lo hR₀_lt θ hθ.1 hθ.2 ?_
-    linear_combination h_eq
-  -- Apply B1 to get ⟨n, hn⟩.
-  obtain ⟨n, hn⟩ := modularLambdaH_F_Y_AP_integral_eq_nat_form hδ_pos hδ_lt_Y hR₀_pos hR₀_lt
-    h_δR_lt_Y hg_bot_left hg_bot_right hg_top hg_right hg_left hg_arc
-  -- Apply _winding_eq_one to get (2πi)⁻¹ * integral = 1.
-  have h_winding := modularLambdaH_F_Y_winding_eq_one hw hδ_pos hδ_lt_Y hR₀_pos hR₀_lt
-    hδ_le_quarter hR₀_lo h_δR_lt_Y hg_bot_left hg_bot_right hg_top hg_right hg_left hg_arc
-    τ₁ h₁_in h₁_eq hδ_lt_τ₁_im hτ₁_im_lt_Y hτ₁_norm_gt
-  -- Conclude (n : ℂ) = 1.
-  have h_n_eq_one_cast : (n : ℂ) = 1 := by rw [← hn]; exact h_winding
-  have h_n_eq_one : n = 1 := by exact_mod_cast h_n_eq_one_cast
-  -- Extract τᵢ box conditions from F^o.
-  obtain ⟨h₁_im, h₁_re_lo, h₁_re_hi, _h₁_semi⟩ := h₁_in
-  obtain ⟨h₂_im, h₂_re_lo, h₂_re_hi, _h₂_semi⟩ := h₂_in
-  have hlam_τ₁ : modularLambdaH τ₁ = w := h₁_eq
-  have hlam_τ₂ : modularLambdaH τ₂ = w := h₂_eq
-  -- Apply refined helper to get n ≥ 2.
-  have h_n_ge_two : 2 ≤ n :=
-    modularLambdaH_F_Y_AP_count_ge_two_of_two_distinct_zeros hδ_pos hδ_lt_Y hR₀_pos
-      hR₀_lt h_δR_lt_Y hg_bot_left hg_bot_right hg_top hg_right hg_left hg_arc
-      h₁_re_lo h₁_re_hi hδ_lt_τ₁_im hτ₁_im_lt_Y hτ₁_norm_gt
-      h₂_re_lo h₂_re_hi hδ_lt_τ₂_im hτ₂_im_lt_Y hτ₂_norm_gt
-      h_τ_ne hlam_τ₁ hlam_τ₂ hn
-  -- Contradiction: n = 1 and 2 ≤ n.
+  -- (1) Argument principle: the normalized boundary expression equals the
+  -- divisor sum `N` of `λ − w` on the truncated region.
+  have h_div := modularLambdaH_F_Y_AP_integral_eq_divisor_sum
+    hδ hδY hR₀_pos hR₀_lt h_δR_lt_Y
+    hg_bot_left hg_bot_right hg_top hg_right hg_left hg_arc
+  -- (2) Identify `n` with the divisor sum.
+  have h_cast := hn.symm.trans h_div
+  have h_n_eq : n = (∑ᶠ u, MeromorphicOn.divisor (fun τ => modularLambdaH τ - w)
+      ((Set.Icc (0 : ℝ) 1 ×ℂ Set.Icc δ Y) \
+        Metric.ball ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀) u).toNat := by
+    exact_mod_cast h_cast
+  -- Coordinates of the excised-ball center.
+  have he_re : ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I).re = 1 / 2 := by
+    rw [Complex.add_re, Complex.mul_re, Complex.I_re, Complex.I_im,
+      Complex.ofReal_re, Complex.ofReal_im]
+    have h_half_re : ((1 : ℂ) / 2).re = 1 / 2 := by rw [Complex.div_re]; simp
+    rw [h_half_re]; ring
+  have he_im : ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I).im = δ := by
+    rw [Complex.add_im, Complex.mul_im, Complex.I_re, Complex.I_im,
+      Complex.ofReal_re, Complex.ofReal_im]
+    have h_half_im : ((1 : ℂ) / 2).im = 0 := by rw [Complex.div_im]; simp
+    rw [h_half_im]; ring
+  -- (3) `τ₁`, `τ₂` are two distinct zeros of `λ − w` in the region.
+  have hτ₁_zero : (fun τ => modularLambdaH τ - w) τ₁ = 0 := by
+    change modularLambdaH τ₁ - w = 0
+    rw [hlam_τ₁, sub_self]
+  have hτ₂_zero : (fun τ => modularLambdaH τ - w) τ₂ = 0 := by
+    change modularLambdaH τ₂ - w = 0
+    rw [hlam_τ₂, sub_self]
+  have hτ₁_mem : τ₁ ∈ (Set.Icc (0 : ℝ) 1 ×ℂ
+      Set.Icc (((1 / 2 : ℂ) + (δ : ℂ) * Complex.I).im) Y) \
+      Metric.ball ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ := by
+    rw [he_im]
+    refine ⟨?_, ?_⟩
+    · rw [Complex.mem_reProdIm]
+      exact ⟨Set.mem_Icc.mpr ⟨hτ₁_re_lo.le, hτ₁_re_hi.le⟩,
+        Set.mem_Icc.mpr ⟨hτ₁_im_lo.le, hτ₁_im_hi.le⟩⟩
+    · simp only [Metric.mem_ball, Complex.dist_eq, not_lt]
+      exact hτ₁_outside.le
+  have hτ₂_mem : τ₂ ∈ (Set.Icc (0 : ℝ) 1 ×ℂ
+      Set.Icc (((1 / 2 : ℂ) + (δ : ℂ) * Complex.I).im) Y) \
+      Metric.ball ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀ := by
+    rw [he_im]
+    refine ⟨?_, ?_⟩
+    · rw [Complex.mem_reProdIm]
+      exact ⟨Set.mem_Icc.mpr ⟨hτ₂_re_lo.le, hτ₂_re_hi.le⟩,
+        Set.mem_Icc.mpr ⟨hτ₂_im_lo.le, hτ₂_im_hi.le⟩⟩
+    · simp only [Metric.mem_ball, Complex.dist_eq, not_lt]
+      exact hτ₂_outside.le
+  -- (4) Two distinct zeros force the divisor sum to be at least 2.
+  have key := Complex.two_le_divisor_sum_toNat_of_two_zeros_on_rectMinusUpperHalfDisk
+    (fun τ => modularLambdaH τ - w) 0 1 Y ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀
+    (by norm_num) hR₀_pos
+    (by rw [he_re]; linarith)
+    (by rw [he_re]; linarith)
+    (by rw [he_im]; exact h_δR_lt_Y)
+    (by rw [he_im]; exact modularLambdaH_F_Y_analytic w hδ hδY hR₀_pos)
+    (by
+      rw [he_im]
+      intro h0
+      have h0' : modularLambdaH (((0 : ℝ) : ℂ) + (δ : ℂ) * Complex.I) - w = 0 := h0
+      rw [Complex.ofReal_zero] at h0'
+      exact hg_left δ (Set.mem_Icc.mpr ⟨le_refl δ, hδY.le⟩) h0')
+    hτ_ne hτ₁_mem hτ₁_zero hτ₂_mem hτ₂_zero
+  rw [he_im] at key
   omega
 
 /-- **Existence and uniqueness of `λ`-preimage in `F^o`.** For each
@@ -6993,15 +6916,11 @@ theorem modularLambdaH_F_unique_preimage_via_AP
 Existence: directly from `modularLambdaH_image_F_supset_upperHalf`
 (the surjectivity half of Step D).
 
-Uniqueness: via `modularLambdaH_F_unique_preimage_via_AP`, which applies
-`cIntegralLogDeriv_isNat_of_nonzero_on_rectMinusUpperHalfDisk` (the F_Y
-argument principle) to `g(τ) := λ(τ) − w` on a shifted F_Y region,
-combined with the four boundary helpers
-(`modularLambdaH_left_edge_ne_of_im_pos`,
-`modularLambdaH_right_edge_ne_of_im_pos`,
-`modularLambdaH_semicircle_ne_of_im_pos`,
-`modularLambdaH_top_edge_far_of_im_pos`) and a winding-number
-computation. -/
+Uniqueness: via `modularLambdaH_F_interior_preimage_unique` (the
+degree-argument bootstrap), which transports the F_Y zero count of
+`g(τ) := λ(τ) − w` along a `w`-segment avoided by the boundary image
+to the deep-cusp reference value, where the fibre is a provably
+unique simple point. -/
 theorem modularLambdaH_existsUnique_in_F_interior_of_im_pos
     {w : ℂ} (hw : 0 < w.im) :
     ∃! τ : ℂ, τ ∈ Gamma2FundamentalDomainInterior ∧ modularLambdaH τ = w := by
@@ -7009,7 +6928,7 @@ theorem modularLambdaH_existsUnique_in_F_interior_of_im_pos
     modularLambdaH_image_F_supset_upperHalf hw
   refine ⟨τ_ex, ⟨hτ_ex_in, hτ_ex_eq⟩, ?_⟩
   rintro τ' ⟨hτ'_in, hτ'_eq⟩
-  exact modularLambdaH_F_unique_preimage_via_AP hw hτ'_in hτ'_eq hτ_ex_in hτ_ex_eq
+  exact modularLambdaH_F_interior_preimage_unique hw hτ'_in hτ_ex_in hτ'_eq hτ_ex_eq
 
 /-- **Injectivity of `λ` on the open interior `F^o`.** Combined
 with the surjectivity from Step D
