@@ -33,3 +33,5 @@ import RiemannDynamics.Dynamics.JuliaFatou.Nonempty
 import RiemannDynamics.Dynamics.JuliaFatou.Perfect
 import RiemannDynamics.Dynamics.JuliaFatou.RepellingCycles
 import RiemannDynamics.Dynamics.JuliaFatou.PeriodicDensity
+import RiemannDynamics.NormalFamilies.Zalcman
+import RiemannDynamics.Dynamics.JuliaFatou.RepellingDensity
