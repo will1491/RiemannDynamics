@@ -36,4 +36,29 @@ the family is uniformly bounded on every compact subset of `U`. -/
 def LocallyUniformlyBounded (𝓕 : Set (ℂ → ℂ)) (U : Set ℂ) : Prop :=
   ∀ K, K ⊆ U → IsCompact K → ∃ M : ℝ, ∀ f ∈ 𝓕, ∀ z ∈ K, ‖f z‖ ≤ M
 
+/-- Normality transfers along post-composition with a uniformly continuous
+map: locally uniform convergence of a subsequence is preserved by `T ∘ ·`. -/
+theorem IsNormal.comp_uniformContinuous {Y Z : Type*} [UniformSpace Y]
+    [UniformSpace Z] {𝓕 : Set (ℂ → Y)} {U : Set ℂ} (hN : IsNormal 𝓕 U)
+    {T : Y → Z} (hT : UniformContinuous T) :
+    IsNormal ((fun f => fun z => T (f z)) '' 𝓕) U := by
+  intro seq
+  choose f hf hfe using fun n => (seq n).2
+  obtain ⟨φ, hφ, g, hg⟩ := hN fun n => ⟨f n, hf n⟩
+  refine ⟨φ, hφ, fun z => T (g z), ?_⟩
+  exact (hT.comp_tendstoLocallyUniformlyOn hg).congr
+    fun n z _ => congrFun (hfe (φ n)) z
+
+/-- Normality only depends on the restrictions of the family members to `U`:
+if every member of `𝓖` agrees on `U` with some member of a normal family
+`𝓕`, then `𝓖` is normal. -/
+theorem IsNormal.of_forall_exists_eqOn {Y : Type*} [UniformSpace Y]
+    {𝓕 𝓖 : Set (ℂ → Y)} {U : Set ℂ} (hN : IsNormal 𝓕 U)
+    (h : ∀ g ∈ 𝓖, ∃ f ∈ 𝓕, Set.EqOn f g U) :
+    IsNormal 𝓖 U := by
+  intro seq
+  choose f hf hfe using fun n => h (seq n) (seq n).2
+  obtain ⟨φ, hφ, g, hg⟩ := hN fun n => ⟨f n, hf n⟩
+  exact ⟨φ, hφ, g, hg.congr fun n => hfe (φ n)⟩
+
 end RiemannDynamics

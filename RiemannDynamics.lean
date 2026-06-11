@@ -22,3 +22,6 @@ import RiemannDynamics.Hyperbolic.Gamma2FundamentalDomain
 import RiemannDynamics.Hyperbolic.ModularCoveringMap
 import RiemannDynamics.NormalFamilies.StrongMontel.ModularLift
 import RiemannDynamics.NormalFamilies.StrongMontel.MontelCaratheodory
+import RiemannDynamics.Sphere.MobiusAction
+import RiemannDynamics.Sphere.SphereHolomorphic
+import RiemannDynamics.NormalFamilies.StrongMontel.SphereMontel
