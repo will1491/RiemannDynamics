@@ -24,7 +24,7 @@ Mathlib leaves open:
   interchanges the two standard charts of `ℂ̂`.
 -/
 
-open OnePoint Matrix
+open OnePoint Matrix Filter Topology
 
 namespace RiemannDynamics
 
@@ -269,5 +269,226 @@ theorem exists_glSMul_eq_zero_one_infty {a b c : ℂ̂}
     have hcond : ((g₂ : Matrix (Fin 2) (Fin 2) ℂ) 1 0 : ℂ) = 0 := by
       rw [hg₂, hcoe₂]; simp
     rw [if_pos hcond]
+
+
+/-- A Möbius transformation with explicit coefficients, as a total map on
+the sphere: `x ↦ (a·x + b)/(c·x + d)` with poles sent to `∞` and
+`∞ ↦ a/c` (or `∞` when `c = 0`). Used with variable coefficients, where
+the bundled group action is unavailable. -/
+noncomputable def mobiusApply (a b c d : ℂ) : ℂ̂ → ℂ̂ := fun w =>
+  match w with
+  | (x : ℂ) =>
+      if c * x + d = 0 then ∞ else (((a * x + b) / (c * x + d) : ℂ) : ℂ̂)
+  | ∞ => if c = 0 then ∞ else ((a / c : ℂ) : ℂ̂)
+
+theorem mobiusApply_coe (a b c d x : ℂ) :
+    mobiusApply a b c d ((x : ℂ̂))
+      = if c * x + d = 0 then ∞
+        else (((a * x + b) / (c * x + d) : ℂ) : ℂ̂) := by
+  rfl
+
+theorem mobiusApply_infty (a b c d : ℂ) :
+    mobiusApply a b c d (∞ : ℂ̂)
+      = if c = 0 then ∞ else ((a / c : ℂ) : ℂ̂) := by
+  rfl
+
+/-- **Joint continuity of the Möbius application** in the coefficients and
+the argument, on the locus of invertible coefficient matrices. The
+`∞`-valued and `∞`-argument configurations reduce to the finite one through
+the row-swap identity `mobiusApply a b c d = inversionGL • mobiusApply c d a b`
+and the inversion parameterization of neighborhoods of `∞`. -/
+theorem continuousOn_mobiusApply :
+    ContinuousOn (fun q : (ℂ × ℂ × ℂ × ℂ) × ℂ̂ =>
+        mobiusApply q.1.1 q.1.2.1 q.1.2.2.1 q.1.2.2.2 q.2)
+      {q : (ℂ × ℂ × ℂ × ℂ) × ℂ̂ |
+        q.1.1 * q.1.2.2.2 - q.1.2.1 * q.1.2.2.1 ≠ 0} := by
+  -- Definitional value lemmas.
+  have hcoe_val : ∀ a b c d x : ℂ, mobiusApply a b c d ((x : ℂ̂))
+      = if c * x + d = 0 then ∞ else (((a * x + b) / (c * x + d) : ℂ) : ℂ̂) :=
+    fun _ _ _ _ _ => rfl
+  have hinfty_val : ∀ a b c d : ℂ, mobiusApply a b c d (∞ : ℂ̂)
+      = if c = 0 then ∞ else ((a / c : ℂ) : ℂ̂) := fun _ _ _ _ => rfl
+  have hinv0 : inversionGL • ((0 : ℂ) : ℂ̂) = (∞ : ℂ̂) := by
+    rw [inversionGL_smul_coe, if_pos rfl]
+  -- (I) Row swap: on the determinant locus,
+  -- `mobiusApply a b c d = inversionGL • mobiusApply c d a b`.
+  have hrow : ∀ a b c d : ℂ, a * d - b * c ≠ 0 → ∀ w : ℂ̂,
+      mobiusApply a b c d w = inversionGL • mobiusApply c d a b w := by
+    intro a b c d hdet w
+    cases w with
+    | coe x =>
+      rw [hcoe_val, hcoe_val]
+      by_cases hcd : c * x + d = 0
+      · have hab : a * x + b ≠ 0 := fun h => hdet (by linear_combination a * hcd - c * h)
+        rw [if_pos hcd, if_neg hab, inversionGL_smul_coe, hcd, zero_div, if_pos rfl]
+      · by_cases hab : a * x + b = 0
+        · rw [if_neg hcd, if_pos hab, inversionGL_smul_infty, hab, zero_div]
+        · rw [if_neg hcd, if_neg hab, inversionGL_smul_coe,
+            if_neg (div_ne_zero hcd hab), inv_div]
+    | infty =>
+      rw [hinfty_val, hinfty_val]
+      by_cases hc : c = 0
+      · have ha : a ≠ 0 := fun h => hdet (by rw [h, hc]; ring)
+        rw [if_pos hc, if_neg ha, inversionGL_smul_coe, hc, zero_div, if_pos rfl]
+      · by_cases ha : a = 0
+        · rw [if_neg hc, if_pos ha, inversionGL_smul_infty, ha, zero_div]
+        · rw [if_neg hc, if_neg ha, inversionGL_smul_coe,
+            if_neg (div_ne_zero hc ha), inv_div]
+  -- (II) Column swap through the inversion parameterization of `∞`.
+  have hcol : ∀ a b c d t : ℂ,
+      mobiusApply a b c d (inversionGL • (t : ℂ̂)) = mobiusApply b a d c ((t : ℂ̂)) := by
+    intro a b c d t
+    by_cases ht : t = 0
+    · subst ht
+      rw [hinv0, hinfty_val, hcoe_val]
+      norm_num
+    · rw [inversionGL_smul_coe, if_neg ht, hcoe_val, hcoe_val]
+      by_cases hdc : d * t + c = 0
+      · have h1 : c * t⁻¹ + d = 0 := by
+          field_simp
+          linear_combination hdc
+        rw [if_pos h1, if_pos hdc]
+      · have h1 : c * t⁻¹ + d ≠ 0 := by
+          intro h
+          apply hdc
+          field_simp at h
+          linear_combination h
+        rw [if_neg h1, if_neg hdc, OnePoint.coe_eq_coe, div_eq_div_iff h1 hdc]
+        field_simp
+        ring
+  -- Neighborhood transport along the finite-chart parameterization.
+  have hφmap : ∀ (p : ℂ × ℂ × ℂ × ℂ) (x : ℂ),
+      Filter.map (fun q : (ℂ × ℂ × ℂ × ℂ) × ℂ => (q.1, (q.2 : ℂ̂))) (𝓝 (p, x))
+        = 𝓝 (p, (x : ℂ̂)) :=
+    fun p x => (IsOpenEmbedding.id.prodMap OnePoint.isOpenEmbedding_coe).map_nhds_eq (p, x)
+  -- The inversion parameterization `t ↦ inversionGL • ↑t` is an open embedding.
+  have hoeψ : IsOpenEmbedding (fun t : ℂ => inversionGL • (t : ℂ̂)) := by
+    have hJJ : inversionGL * inversionGL = 1 := by
+      ext i j
+      fin_cases i <;> fin_cases j <;>
+        simp [inversionGL, Matrix.GeneralLinearGroup.mkOfDetNeZero,
+          Matrix.mul_apply, Fin.sum_univ_two]
+    have hinvol : ∀ z : ℂ̂, inversionGL • inversionGL • z = z := by
+      intro z
+      rw [← SemigroupAction.mul_smul, hJJ, one_smul]
+    exact (Homeomorph.isOpenEmbedding
+      ⟨⟨fun z => inversionGL • z, fun z => inversionGL • z, hinvol, hinvol⟩,
+        continuous_glSMul _, continuous_glSMul _⟩).comp OnePoint.isOpenEmbedding_coe
+  -- Neighborhood transport onto `𝓝 (p, ∞)` along the inversion parameterization.
+  have hΘ : ∀ p : ℂ × ℂ × ℂ × ℂ,
+      Filter.map (fun q : (ℂ × ℂ × ℂ × ℂ) × ℂ => (q.1, inversionGL • (q.2 : ℂ̂)))
+        (𝓝 (p, (0 : ℂ))) = 𝓝 (p, (∞ : ℂ̂)) := by
+    intro p
+    have h2 : (p, inversionGL • ((0 : ℂ) : ℂ̂)) = (p, (∞ : ℂ̂)) := by rw [hinv0]
+    exact ((IsOpenEmbedding.id.prodMap hoeψ).map_nhds_eq (p, (0 : ℂ))).trans
+      (congrArg nhds h2)
+  -- Base case: joint continuity at a finite argument with nonvanishing denominator.
+  have hbase : ∀ (p : ℂ × ℂ × ℂ × ℂ) (x : ℂ), p.2.2.1 * x + p.2.2.2 ≠ 0 →
+      ContinuousAt (fun q : (ℂ × ℂ × ℂ × ℂ) × ℂ̂ =>
+        mobiusApply q.1.1 q.1.2.1 q.1.2.2.1 q.1.2.2.2 q.2) (p, (x : ℂ̂)) := by
+    intro p x hden
+    have hcnum : Continuous (fun q : (ℂ × ℂ × ℂ × ℂ) × ℂ => q.1.1 * q.2 + q.1.2.1) :=
+      (continuous_fst.fst.mul continuous_snd).add continuous_fst.snd.fst
+    have hcden : Continuous (fun q : (ℂ × ℂ × ℂ × ℂ) × ℂ =>
+        q.1.2.2.1 * q.2 + q.1.2.2.2) :=
+      (continuous_fst.snd.snd.fst.mul continuous_snd).add continuous_fst.snd.snd.snd
+    have hev : ∀ᶠ q : (ℂ × ℂ × ℂ × ℂ) × ℂ in 𝓝 (p, x),
+        q.1.2.2.1 * q.2 + q.1.2.2.2 ≠ 0 := hcden.continuousAt.eventually_ne hden
+    have hg : ContinuousAt (fun q : (ℂ × ℂ × ℂ × ℂ) × ℂ =>
+        (((q.1.1 * q.2 + q.1.2.1) / (q.1.2.2.1 * q.2 + q.1.2.2.2) : ℂ) : ℂ̂)) (p, x) :=
+      OnePoint.continuous_coe.continuousAt.comp
+        (hcnum.continuousAt.div hcden.continuousAt hden)
+    have key : Filter.Tendsto (fun q : (ℂ × ℂ × ℂ × ℂ) × ℂ =>
+        mobiusApply q.1.1 q.1.2.1 q.1.2.2.1 q.1.2.2.2 ((q.2 : ℂ̂))) (𝓝 (p, x))
+        (𝓝 (mobiusApply p.1 p.2.1 p.2.2.1 p.2.2.2 ((x : ℂ̂)))) := by
+      have hvx : mobiusApply p.1 p.2.1 p.2.2.1 p.2.2.2 ((x : ℂ̂))
+          = (((p.1 * x + p.2.1) / (p.2.2.1 * x + p.2.2.2) : ℂ) : ℂ̂) := by
+        rw [hcoe_val, if_neg hden]
+      rw [hvx]
+      refine Filter.Tendsto.congr' ?_ hg.tendsto
+      filter_upwards [hev] with q hq
+      simp only [hcoe_val, if_neg hq]
+    have hfin : Filter.Tendsto (fun q : (ℂ × ℂ × ℂ × ℂ) × ℂ̂ =>
+        mobiusApply q.1.1 q.1.2.1 q.1.2.2.1 q.1.2.2.2 q.2) (𝓝 (p, (x : ℂ̂)))
+        (𝓝 (mobiusApply p.1 p.2.1 p.2.2.1 p.2.2.2 ((x : ℂ̂)))) := by
+      rw [← hφmap p x, Filter.tendsto_map'_iff]
+      exact key
+    exact hfin
+  -- Continuity at `∞`-argument points whose lower-left coefficient is nonzero.
+  have hbaseInf : ∀ p : ℂ × ℂ × ℂ × ℂ, p.2.2.1 ≠ 0 →
+      ContinuousAt (fun q : (ℂ × ℂ × ℂ × ℂ) × ℂ̂ =>
+        mobiusApply q.1.1 q.1.2.1 q.1.2.2.1 q.1.2.2.2 q.2) (p, (∞ : ℂ̂)) := by
+    intro p hc
+    have hτ : Continuous (fun q : (ℂ × ℂ × ℂ × ℂ) × ℂ =>
+        (((q.1.2.1, q.1.1, q.1.2.2.2, q.1.2.2.1) : ℂ × ℂ × ℂ × ℂ), (q.2 : ℂ̂))) :=
+      (continuous_fst.snd.fst.prodMk (continuous_fst.fst.prodMk
+        (continuous_fst.snd.snd.snd.prodMk continuous_fst.snd.snd.fst))).prodMk
+        (OnePoint.continuous_coe.comp continuous_snd)
+    have hFτ : ContinuousAt (fun q : (ℂ × ℂ × ℂ × ℂ) × ℂ =>
+        mobiusApply q.1.2.1 q.1.1 q.1.2.2.2 q.1.2.2.1 ((q.2 : ℂ̂))) (p, (0 : ℂ)) :=
+      ContinuousAt.comp (f := fun q : (ℂ × ℂ × ℂ × ℂ) × ℂ =>
+          (((q.1.2.1, q.1.1, q.1.2.2.2, q.1.2.2.1) : ℂ × ℂ × ℂ × ℂ), (q.2 : ℂ̂)))
+        (x := (p, (0 : ℂ)))
+        (hbase (p.2.1, p.1, p.2.2.2, p.2.2.1) 0 (by simpa using hc)) hτ.continuousAt
+    have hvals : mobiusApply p.1 p.2.1 p.2.2.1 p.2.2.2 (∞ : ℂ̂)
+        = mobiusApply p.2.1 p.1 p.2.2.2 p.2.2.1 (((0 : ℂ) : ℂ̂)) := by
+      rw [← hinv0]
+      exact hcol p.1 p.2.1 p.2.2.1 p.2.2.2 0
+    have key : Filter.Tendsto (fun q : (ℂ × ℂ × ℂ × ℂ) × ℂ =>
+        mobiusApply q.1.1 q.1.2.1 q.1.2.2.1 q.1.2.2.2 (inversionGL • (q.2 : ℂ̂)))
+        (𝓝 (p, (0 : ℂ))) (𝓝 (mobiusApply p.1 p.2.1 p.2.2.1 p.2.2.2 (∞ : ℂ̂))) := by
+      rw [hvals]
+      refine Filter.Tendsto.congr' ?_ hFτ.tendsto
+      exact Filter.Eventually.of_forall fun q =>
+        (hcol q.1.1 q.1.2.1 q.1.2.2.1 q.1.2.2.2 q.2).symm
+    have hfin : Filter.Tendsto (fun q : (ℂ × ℂ × ℂ × ℂ) × ℂ̂ =>
+        mobiusApply q.1.1 q.1.2.1 q.1.2.2.1 q.1.2.2.2 q.2) (𝓝 (p, (∞ : ℂ̂)))
+        (𝓝 (mobiusApply p.1 p.2.1 p.2.2.1 p.2.2.2 (∞ : ℂ̂))) := by
+      rw [← hΘ p, Filter.tendsto_map'_iff]
+      exact key
+    exact hfin
+  -- Reduction along the row swap: within-continuity at a point follows from
+  -- continuity of the swapped application at the swapped coefficients.
+  have hswap : ∀ (a b c d : ℂ) (w : ℂ̂), a * d - b * c ≠ 0 →
+      ContinuousAt (fun q : (ℂ × ℂ × ℂ × ℂ) × ℂ̂ =>
+        mobiusApply q.1.1 q.1.2.1 q.1.2.2.1 q.1.2.2.2 q.2) ((c, d, a, b), w) →
+      ContinuousWithinAt (fun q : (ℂ × ℂ × ℂ × ℂ) × ℂ̂ =>
+          mobiusApply q.1.1 q.1.2.1 q.1.2.2.1 q.1.2.2.2 q.2)
+        {q : (ℂ × ℂ × ℂ × ℂ) × ℂ̂ |
+          q.1.1 * q.1.2.2.2 - q.1.2.1 * q.1.2.2.1 ≠ 0} ((a, b, c, d), w) := by
+    intro a b c d w hdet hcont
+    have hσ : Continuous (fun q : (ℂ × ℂ × ℂ × ℂ) × ℂ̂ =>
+        (((q.1.2.2.1, q.1.2.2.2, q.1.1, q.1.2.1) : ℂ × ℂ × ℂ × ℂ), q.2)) :=
+      (continuous_fst.snd.snd.fst.prodMk (continuous_fst.snd.snd.snd.prodMk
+        (continuous_fst.fst.prodMk continuous_fst.snd.fst))).prodMk continuous_snd
+    have hinner : ContinuousAt (fun q : (ℂ × ℂ × ℂ × ℂ) × ℂ̂ =>
+        mobiusApply q.1.2.2.1 q.1.2.2.2 q.1.1 q.1.2.1 q.2) ((a, b, c, d), w) :=
+      ContinuousAt.comp (f := fun q : (ℂ × ℂ × ℂ × ℂ) × ℂ̂ =>
+          (((q.1.2.2.1, q.1.2.2.2, q.1.1, q.1.2.1) : ℂ × ℂ × ℂ × ℂ), q.2))
+        (x := ((a, b, c, d), w)) hcont hσ.continuousAt
+    have hG : ContinuousAt (fun q : (ℂ × ℂ × ℂ × ℂ) × ℂ̂ =>
+        inversionGL • mobiusApply q.1.2.2.1 q.1.2.2.2 q.1.1 q.1.2.1 q.2)
+        ((a, b, c, d), w) :=
+      (continuous_glSMul inversionGL).continuousAt.comp hinner
+    refine hG.continuousWithinAt.congr (fun y hy => ?_) ?_
+    · exact hrow y.1.1 y.1.2.1 y.1.2.2.1 y.1.2.2.2 hy y.2
+    · exact hrow a b c d hdet w
+  -- Assembly: case analysis on the argument and the relevant coefficient.
+  intro q hq
+  obtain ⟨⟨a, b, c, d⟩, w⟩ := q
+  simp only [Set.mem_setOf_eq] at hq
+  cases w with
+  | coe x =>
+    by_cases hcd : c * x + d = 0
+    · refine hswap a b c d ((x : ℂ̂)) hq (hbase (c, d, a, b) x ?_)
+      change a * x + b ≠ 0
+      exact fun h => hq (by linear_combination a * hcd - c * h)
+    · exact (hbase (a, b, c, d) x hcd).continuousWithinAt
+  | infty =>
+    by_cases hc : c = 0
+    · refine hswap a b c d (∞ : ℂ̂) hq (hbaseInf (c, d, a, b) ?_)
+      change a ≠ 0
+      exact fun h => hq (by rw [h, hc]; ring)
+    · exact (hbaseInf (a, b, c, d) hc).continuousWithinAt
 
 end RiemannDynamics

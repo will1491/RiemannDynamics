@@ -5,6 +5,7 @@ Authors: Will (Ziang) Li
 -/
 import Mathlib.Analysis.Analytic.IsolatedZeros
 import Mathlib.Analysis.Complex.OpenMapping
+import Mathlib.Analysis.Calculus.InverseFunctionTheorem.Deriv
 import RiemannDynamics.Sphere.RationalMap
 import RiemannDynamics.Sphere.MobiusAction
 import RiemannDynamics.Sphere.SphereHolomorphic
@@ -660,5 +661,206 @@ theorem IsRational.sphereHolomorphicOn_comp_inversionGL {f : ℂ̂ → ℂ̂}
       refine hdiv.congr fun w hw => ?_
       simp only [hread]
       rw [if_neg (ht_ne w hw.2), cf, div_eq_mul_inv]
+
+
+/-- The Wronskian `num′·den − num·den′` of the reduced representation. Its
+zeros among non-poles are exactly the critical points of the finite-chart
+reading. -/
+noncomputable def RationalData.wronskian (r : RationalData) : ℂ[X] :=
+  Polynomial.derivative r.numReduced * r.denReduced
+    - r.numReduced * Polynomial.derivative r.denReduced
+
+/-- The Wronskian of a rational map of degree at least two is a nonzero
+polynomial: its vanishing would force both reduced polynomials to be
+constant. -/
+theorem RationalData.wronskian_ne_zero (r : RationalData) (hdeg : 2 ≤ r.degree) :
+    r.wronskian ≠ 0 := by
+  intro h0
+  have hcop : IsCoprime r.numReduced r.denReduced :=
+    isCoprime_div_gcd_div_gcd r.den_ne_zero
+  have hdenR_ne_zero : r.denReduced ≠ 0 := by
+    unfold RationalData.denReduced
+    intro hz
+    have h1 : r.den = gcd r.num r.den * (r.den / gcd r.num r.den) :=
+      (EuclideanDomain.mul_div_cancel' (gcd_ne_zero_of_right r.den_ne_zero)
+        (gcd_dvd_right _ _)).symm
+    rw [hz, mul_zero] at h1
+    exact r.den_ne_zero h1
+  have hid : Polynomial.derivative r.numReduced * r.denReduced
+      = r.numReduced * Polynomial.derivative r.denReduced := by
+    have h0' : Polynomial.derivative r.numReduced * r.denReduced
+        - r.numReduced * Polynomial.derivative r.denReduced = 0 := h0
+    exact sub_eq_zero.mp h0'
+  have hdvd : r.denReduced ∣ r.numReduced * Polynomial.derivative r.denReduced := by
+    rw [← hid]
+    exact dvd_mul_left _ _
+  have hdvd' : r.denReduced ∣ Polynomial.derivative r.denReduced :=
+    hcop.symm.dvd_of_dvd_mul_left hdvd
+  have hderD : Polynomial.derivative r.denReduced = 0 := by
+    by_cases hd0 : r.denReduced.natDegree = 0
+    · obtain ⟨c, hc⟩ := Polynomial.natDegree_eq_zero.mp hd0
+      rw [← hc, Polynomial.derivative_C]
+    · exact Polynomial.eq_zero_of_dvd_of_natDegree_lt hdvd'
+        (Polynomial.natDegree_derivative_lt hd0)
+  have hdD : r.denReduced.natDegree = 0 :=
+    Polynomial.natDegree_eq_zero_of_derivative_eq_zero hderD
+  have hderN : Polynomial.derivative r.numReduced = 0 := by
+    have h2 : Polynomial.derivative r.numReduced * r.denReduced = 0 := by
+      rw [hid, hderD, mul_zero]
+    exact (mul_eq_zero.mp h2).resolve_right hdenR_ne_zero
+  have hdN : r.numReduced.natDegree = 0 :=
+    Polynomial.natDegree_eq_zero_of_derivative_eq_zero hderN
+  have hmax : r.degree = max r.numReduced.natDegree r.denReduced.natDegree := rfl
+  omega
+
+/-- At a non-pole, the derivative of the finite-chart reading is the
+Wronskian divided by the squared denominator. -/
+theorem RationalData.deriv_reading (r : RationalData) {w : ℂ}
+    (hden : r.denReduced.eval w ≠ 0) :
+    deriv (fun x : ℂ => chartFiniteMap (r.toSphereMap ((x : ℂ̂)))) w
+      = r.wronskian.eval w / (r.denReduced.eval w) ^ 2 := by
+  have hev : (fun x : ℂ => chartFiniteMap (r.toSphereMap ((x : ℂ̂))))
+      =ᶠ[𝓝 w] fun x : ℂ => r.numReduced.eval x / r.denReduced.eval x := by
+    filter_upwards [r.denReduced.continuous.continuousAt.eventually_ne hden] with x hx
+    have hread : r.toSphereMap ↑x
+        = if r.denReduced.eval x = 0 then (∞ : ℂ̂)
+          else ((r.numReduced.eval x / r.denReduced.eval x : ℂ) : ℂ̂) := rfl
+    rw [hread, if_neg hx]
+    rfl
+  have hdiv : HasDerivAt (fun x : ℂ => r.numReduced.eval x / r.denReduced.eval x)
+      (((Polynomial.derivative r.numReduced).eval w * r.denReduced.eval w
+          - r.numReduced.eval w * (Polynomial.derivative r.denReduced).eval w)
+        / r.denReduced.eval w ^ 2) w :=
+    (r.numReduced.hasDerivAt w).div (r.denReduced.hasDerivAt w) hden
+  have hwr : r.wronskian.eval w
+      = (Polynomial.derivative r.numReduced).eval w * r.denReduced.eval w
+        - r.numReduced.eval w * (Polynomial.derivative r.denReduced).eval w := by
+    simp only [RationalData.wronskian, Polynomial.eval_sub, Polynomial.eval_mul]
+  rw [hev.deriv_eq, hdiv.deriv, hwr]
+
+/-- **Local inverse branches at non-critical points.** If `f ↑b = ↑a` and
+the finite-chart reading of `f` has nonvanishing derivative at `b`, there
+is a holomorphic local section of `f` through `b` defined near `a`. -/
+theorem exists_branch_of_deriv_ne_zero {f : ℂ̂ → ℂ̂} (hf : IsRational f)
+    {a b : ℂ} (hab : f ((b : ℂ̂)) = ((a : ℂ̂)))
+    (hcrit : deriv (fun x : ℂ => chartFiniteMap (f ((x : ℂ̂)))) b ≠ 0) :
+    ∃ (V : Set ℂ) (g : ℂ → ℂ), IsOpen V ∧ a ∈ V ∧ g a = b ∧
+      DifferentiableOn ℂ g V ∧ ∀ y ∈ V, f ((g y : ℂ̂)) = ((y : ℂ̂)) := by
+  classical
+  have cf : ∀ x : ℂ, chartFiniteMap ((x : ℂ̂)) = x := fun _ => rfl
+  set φ : ℂ → ℂ := fun x : ℂ => chartFiniteMap (f ((x : ℂ̂))) with hφ_def
+  have hcrit' : deriv φ b ≠ 0 := by rw [hφ_def]; exact hcrit
+  -- The open set where `f` takes finite values.
+  set U₀ : Set ℂ := {x : ℂ | f ((x : ℂ̂)) ≠ ∞} with hU₀_def
+  have hU₀_open : IsOpen U₀ := by
+    have hcont : Continuous fun x : ℂ => f ((x : ℂ̂)) :=
+      hf.continuous.comp OnePoint.continuous_coe
+    rw [hU₀_def]
+    exact (OnePoint.isClosed_infty.isOpen_compl).preimage hcont
+  have hb₀ : b ∈ U₀ := by
+    have hb' : f ((b : ℂ̂)) ≠ ∞ := by
+      rw [hab]; exact OnePoint.coe_ne_infty a
+    exact hb'
+  -- On `U₀` the map is the coercion of its finite reading `φ`.
+  have hread : ∀ x ∈ U₀, f ((x : ℂ̂)) = ((φ x : ℂ̂)) := by
+    intro x hx
+    have hx' : f ((x : ℂ̂)) ≠ ∞ := hx
+    cases hfx : f ((x : ℂ̂)) with
+    | infty => exact absurd hfx hx'
+    | coe t =>
+      have hphi : φ x = t := by simp only [hφ_def, hfx, cf]
+      rw [hphi]
+  have hφb : φ b = a := by simp only [hφ_def, hab, cf]
+  -- The finite reading is analytic on `U₀`, with continuous derivative.
+  have hφ_diff : DifferentiableOn ℂ φ U₀ := by
+    rw [hφ_def]
+    exact (hf.sphereHolomorphicOn_comp_coe hU₀_open).differentiableOn_chartFiniteMap
+      fun z hz => hz
+  have hφ_an : AnalyticOnNhd ℂ φ U₀ := hφ_diff.analyticOnNhd hU₀_open
+  have hderiv_cont : ContinuousOn (deriv φ) U₀ := hφ_an.deriv.continuousOn
+  -- Shrink to the open locus of nonvanishing derivative.
+  set U₁ : Set ℂ := U₀ ∩ deriv φ ⁻¹' {(0 : ℂ)}ᶜ with hU₁_def
+  have hU₁_open : IsOpen U₁ :=
+    hderiv_cont.isOpen_inter_preimage hU₀_open isOpen_compl_singleton
+  have hU₁_sub : U₁ ⊆ U₀ := Set.inter_subset_left
+  have hb₁ : b ∈ U₁ := by
+    rw [hU₁_def]
+    exact ⟨hb₀, hcrit'⟩
+  -- The inverse-function-theorem partial homeomorphism at `b`.
+  have hb_strict : HasStrictDerivAt φ (deriv φ b) b := (hφ_an b hb₀).hasStrictDerivAt
+  have hb_strictF := hb_strict.hasStrictFDerivAt_equiv hcrit'
+  set e := hb_strictF.toOpenPartialHomeomorph φ with he_def
+  have hcoe : ⇑e = φ := hb_strictF.toOpenPartialHomeomorph_coe
+  have hb_source : b ∈ e.source := hb_strictF.mem_toOpenPartialHomeomorph_source
+  have heb : e b = a := by rw [hcoe]; exact hφb
+  have ha_target : a ∈ e.target := by
+    rw [← heb]
+    exact e.map_source hb_source
+  have hsymm_a : e.symm a = b := by
+    rw [← heb]
+    exact e.left_inv hb_source
+  -- The branch domain: target points whose inverse lies in the good locus.
+  set V : Set ℂ := e.target ∩ ⇑e.symm ⁻¹' (U₁ ∩ e.source) with hV_def
+  have hV_open : IsOpen V :=
+    e.continuousOn_symm.isOpen_inter_preimage e.open_target (hU₁_open.inter e.open_source)
+  have ha_V : a ∈ V := by
+    rw [hV_def]
+    refine ⟨ha_target, ?_⟩
+    rw [Set.mem_preimage, hsymm_a]
+    exact ⟨hb₁, hb_source⟩
+  -- `e.symm` is a right inverse for the reading on `V`.
+  have hright : ∀ y, y ∈ V → φ (e.symm y) = y := by
+    intro y hy
+    rw [hV_def] at hy
+    have h := e.right_inv hy.1
+    rw [hcoe] at h
+    exact h
+  refine ⟨V, ⇑e.symm, hV_open, ha_V, hsymm_a, ?_, ?_⟩
+  · -- Differentiability, pointwise from the local inverse at each branch point.
+    intro y hy
+    have hφx : φ (e.symm y) = y := hright y hy
+    rw [hV_def] at hy
+    obtain ⟨hy_t, hy_pre⟩ := hy
+    have hx_mem : e.symm y ∈ U₁ ∩ e.source := hy_pre
+    obtain ⟨hx₁, hx_src⟩ := hx_mem
+    have hx₁' := hx₁
+    rw [hU₁_def] at hx₁'
+    have hx₀ : e.symm y ∈ U₀ := hx₁'.1
+    have hx_ne : deriv φ (e.symm y) ≠ 0 := hx₁'.2
+    have hx_strict : HasStrictDerivAt φ (deriv φ (e.symm y)) (e.symm y) :=
+      (hφ_an _ hx₀).hasStrictDerivAt
+    obtain ⟨gx, hgx_left, hgx_right, hgx_strict⟩ :
+        ∃ gx : ℂ → ℂ, (∀ᶠ x' in 𝓝 (e.symm y), gx (φ x') = x') ∧
+          (∀ᶠ z in 𝓝 (φ (e.symm y)), φ (gx z) = z) ∧
+          HasStrictDerivAt gx (deriv φ (e.symm y))⁻¹ (φ (e.symm y)) :=
+      ⟨hx_strict.localInverse φ (deriv φ (e.symm y)) (e.symm y) hx_ne,
+        hx_strict.eventually_left_inverse hx_ne,
+        hx_strict.eventually_right_inverse hx_ne,
+        hx_strict.to_localInverse hx_ne⟩
+    rw [hφx] at hgx_right hgx_strict
+    have hgx_diff : DifferentiableAt ℂ gx y := hgx_strict.hasDerivAt.differentiableAt
+    have hgx_yx : gx y = e.symm y := by
+      have h := hgx_left.self_of_nhds
+      rwa [hφx] at h
+    have hev_t : ∀ᶠ y' in 𝓝 y, y' ∈ e.target := e.open_target.mem_nhds hy_t
+    have hev_s : ∀ᶠ y' in 𝓝 y, gx y' ∈ e.source := by
+      have hmem : e.source ∈ 𝓝 (gx y) := by
+        rw [hgx_yx]
+        exact e.open_source.mem_nhds hx_src
+      exact hgx_diff.continuousAt.eventually_mem hmem
+    -- Near `y` the branch agrees with the differentiable local inverse `gx`.
+    have heq : ⇑e.symm =ᶠ[𝓝 y] gx := by
+      filter_upwards [hev_t, hgx_right, hev_s] with y' h1 h2 h3
+      refine e.injOn (e.map_target h1) h3 ?_
+      rw [e.right_inv h1, hcoe]
+      exact h2.symm
+    exact (hgx_diff.congr_of_eventuallyEq heq).differentiableWithinAt
+  · -- The branch property.
+    intro y hy
+    have hx₀ : e.symm y ∈ U₀ := by
+      have hy' := hy
+      rw [hV_def] at hy'
+      exact hU₁_sub hy'.2.1
+    rw [hread _ hx₀, hright y hy]
 
 end RiemannDynamics

@@ -32,3 +32,4 @@ import RiemannDynamics.Dynamics.JuliaFatou.Invariance
 import RiemannDynamics.Dynamics.JuliaFatou.Nonempty
 import RiemannDynamics.Dynamics.JuliaFatou.Perfect
 import RiemannDynamics.Dynamics.JuliaFatou.RepellingCycles
+import RiemannDynamics.Dynamics.JuliaFatou.PeriodicDensity
