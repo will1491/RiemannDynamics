@@ -255,6 +255,66 @@ theorem IsNormal.uniformEquicontinuous {X Y : Type*} [MetricSpace X]
       _ < ε₀ := by linarith
   exact absurd (hd (φ n)) (not_le.mpr hlt)
 
+/-- A family that is normal at a point and consists of continuous maps is
+equicontinuous at that point: a failure of equicontinuity at `p` yields a
+sequence of members and points converging to `p` whose extracted locally
+uniform limit would be both continuous and discontinuous at `p`. -/
+theorem IsNormalAt.equicontinuousAt {X Y : Type*} [MetricSpace X]
+    [MetricSpace Y] {𝓕 : Set (X → Y)} {p : X} (hN : IsNormalAt 𝓕 p)
+    (hc : ∀ F ∈ 𝓕, Continuous F) :
+    ∀ ε : ℝ, 0 < ε → ∃ δ : ℝ, 0 < δ ∧ ∀ F ∈ 𝓕, ∀ z : X,
+      dist z p < δ → dist (F z) (F p) < ε := by
+  by_contra hcon
+  push Not at hcon
+  obtain ⟨ε₀, hε₀, hbad⟩ := hcon
+  -- select witnesses of failure at scale `1 / (n + 1)`
+  have hsel : ∀ n : ℕ, ∃ F ∈ 𝓕, ∃ z : X,
+      dist z p < 1 / ((n : ℝ) + 1) ∧ ε₀ ≤ dist (F z) (F p) :=
+    fun n => hbad (1 / ((n : ℝ) + 1)) (by positivity)
+  choose F hF z hzp hd using hsel
+  obtain ⟨U, hU, hNU⟩ := hN
+  obtain ⟨φ, hφ, g, hg⟩ := hNU fun n => ⟨F n, hF n⟩
+  have hpU : p ∈ U := mem_of_mem_nhds hU
+  -- the extracted subsequence converges pointwise at `p`
+  have htp : Tendsto (fun j => F (φ j) p) atTop (𝓝 (g p)) := hg.tendsto_at hpU
+  -- the limit is continuous at `p`
+  have hgc : ContinuousAt g p :=
+    (hg.continuousOn (Frequently.of_forall fun n =>
+      (hc _ (hF (φ n))).continuousOn)).continuousAt hU
+  -- locally uniform closeness at scale `ε₀ / 4` on a neighborhood `t` of `p`
+  obtain ⟨t, ht, e1⟩ := hg {q : Y × Y | dist q.1 q.2 < ε₀ / 4}
+    (Metric.dist_mem_uniformity (by positivity)) p hpU
+  rw [nhdsWithin_eq_nhds.mpr hU] at ht
+  -- the witness points converge to `p` along the subsequence
+  have hz : Tendsto (fun j => z (φ j)) atTop (𝓝 p) := by
+    rw [Metric.tendsto_nhds]
+    intro ε' hε'
+    have h2 : ∀ᶠ j : ℕ in atTop, (1 : ℝ) / ((j : ℝ) + 1) < ε' :=
+      (tendsto_order.mp tendsto_one_div_add_atTop_nhds_zero_nat).2 ε' hε'
+    refine h2.mono fun j hj => ?_
+    have hle : (1 : ℝ) / ((φ j : ℝ) + 1) ≤ 1 / ((j : ℝ) + 1) :=
+      one_div_le_one_div_of_le (by positivity)
+        (by exact_mod_cast Nat.add_le_add_right hφ.le_apply 1)
+    exact ((hzp (φ j)).trans_le hle).trans hj
+  -- collect the remaining eventual facts and pick a common index
+  have e2 : ∀ᶠ j : ℕ in atTop, dist (F (φ j) p) (g p) < ε₀ / 4 :=
+    Metric.tendsto_nhds.mp htp (ε₀ / 4) (by positivity)
+  have e3 : ∀ᶠ j : ℕ in atTop, z (φ j) ∈ t := hz.eventually_mem ht
+  have e4 : ∀ᶠ j : ℕ in atTop, dist (g (z (φ j))) (g p) < ε₀ / 4 :=
+    hz.eventually (Metric.tendsto_nhds.mp hgc.tendsto (ε₀ / 4) (by positivity))
+  obtain ⟨j, ⟨⟨h1, h2⟩, h3⟩, h4⟩ := (((e1.and e2).and e3).and e4).exists
+  -- contradiction with the failure of equicontinuity at index `φ j`
+  have hzg : dist (F (φ j) (z (φ j))) (g (z (φ j))) < ε₀ / 4 := by
+    rw [dist_comm]; exact h1 _ h3
+  have hpg : dist (g p) (F (φ j) p) < ε₀ / 4 := by
+    rw [dist_comm]; exact h2
+  have hlt : dist (F (φ j) (z (φ j))) (F (φ j) p) < ε₀ := by
+    calc dist (F (φ j) (z (φ j))) (F (φ j) p)
+        ≤ dist (F (φ j) (z (φ j))) (g (z (φ j))) + dist (g (z (φ j))) (g p)
+          + dist (g p) (F (φ j) p) := dist_triangle4 _ _ _ _
+      _ < ε₀ := by linarith
+  exact absurd (hd (φ j)) (not_le.mpr hlt)
+
 /-- Normality transfers along post-composition with a uniformly continuous
 map: locally uniform convergence of a subsequence is preserved by `T ∘ ·`. -/
 theorem IsNormal.comp_uniformContinuous {X Y Z : Type*} [TopologicalSpace X]
