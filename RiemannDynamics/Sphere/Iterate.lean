@@ -22,7 +22,7 @@ structures used throughout Phases 5–11:
 We use Mathlib's `f^[n]` (= `Nat.iterate f n`) for iteration.
 -/
 
-open OnePoint Function
+open OnePoint Function Polynomial
 
 namespace RiemannDynamics
 
@@ -114,5 +114,161 @@ theorem grandOrbit_eq_union_iterate :
     exact ⟨m, n, h.symm⟩
   · rintro ⟨m, n, h⟩
     exact ⟨m, n, h.symm⟩
+
+
+/-! ## Rationality and degree of iterates -/
+
+/-- The identity is a rational map (numerator `X`, denominator `1`). -/
+theorem isRational_id : IsRational (id : ℂ̂ → ℂ̂) := by
+  refine ⟨⟨Polynomial.X, 1, one_ne_zero⟩, ?_⟩
+  have hu : IsUnit (gcd (Polynomial.X : ℂ[X]) 1) := isUnit_of_dvd_one (gcd_dvd_right _ _)
+  obtain ⟨c, hc_unit, hc⟩ := Polynomial.isUnit_iff.mp hu
+  have hc_ne : c ≠ 0 := hc_unit.ne_zero
+  have hC_ne : (Polynomial.C c : ℂ[X]) ≠ 0 := Polynomial.C_ne_zero.mpr hc_ne
+  have hXdiv : Polynomial.C c * ((Polynomial.X : ℂ[X]) / Polynomial.C c) = Polynomial.X :=
+    EuclideanDomain.mul_div_cancel' hC_ne (Polynomial.isUnit_C.mpr hc_unit).dvd
+  have h1div : Polynomial.C c * ((1 : ℂ[X]) / Polynomial.C c) = 1 :=
+    EuclideanDomain.mul_div_cancel' hC_ne (Polynomial.isUnit_C.mpr hc_unit).dvd
+  have hnumR : (⟨Polynomial.X, 1, one_ne_zero⟩ : RationalData).numReduced
+      = Polynomial.X / Polynomial.C c := by
+    change Polynomial.X / gcd Polynomial.X 1 = Polynomial.X / Polynomial.C c
+    rw [hc]
+  have hdenR : (⟨Polynomial.X, 1, one_ne_zero⟩ : RationalData).denReduced
+      = 1 / Polynomial.C c := by
+    change 1 / gcd Polynomial.X 1 = 1 / Polynomial.C c
+    rw [hc]
+  funext z
+  match z with
+  | OnePoint.some w =>
+      have hn : c * ((Polynomial.X : ℂ[X]) / Polynomial.C c).eval w = w := by
+        have h := congrArg (Polynomial.eval w) hXdiv
+        rwa [Polynomial.eval_mul, Polynomial.eval_C, Polynomial.eval_X] at h
+      have hd1 : c * ((1 : ℂ[X]) / Polynomial.C c).eval w = 1 := by
+        have h := congrArg (Polynomial.eval w) h1div
+        rwa [Polynomial.eval_mul, Polynomial.eval_C, Polynomial.eval_one] at h
+      have hnum_val : ((Polynomial.X : ℂ[X]) / Polynomial.C c).eval w = w / c :=
+        (eq_div_iff hc_ne).mpr (by rw [mul_comm]; exact hn)
+      have hden_val : ((1 : ℂ[X]) / Polynomial.C c).eval w = 1 / c :=
+        (eq_div_iff hc_ne).mpr (by rw [mul_comm]; exact hd1)
+      have hden_ne : ((1 : ℂ[X]) / Polynomial.C c).eval w ≠ 0 := by
+        rw [hden_val]
+        exact one_div_ne_zero hc_ne
+      have hval : ((Polynomial.X : ℂ[X]) / Polynomial.C c).eval w
+          / ((1 : ℂ[X]) / Polynomial.C c).eval w = w := by
+        rw [hnum_val, hden_val, div_div, mul_one_div, div_self hc_ne, div_one]
+      simp only [id_eq, RationalData.toSphereMap, hnumR, hdenR]
+      rw [if_neg hden_ne, hval]
+  | ∞ =>
+      have hndeg : ((Polynomial.X : ℂ[X]) / Polynomial.C c).natDegree = 1 := by
+        have h := congrArg Polynomial.natDegree hXdiv
+        rwa [Polynomial.natDegree_C_mul hc_ne, Polynomial.natDegree_X] at h
+      have hddeg : ((1 : ℂ[X]) / Polynomial.C c).natDegree = 0 := by
+        have h := congrArg Polynomial.natDegree h1div
+        rwa [Polynomial.natDegree_C_mul hc_ne, Polynomial.natDegree_one] at h
+      simp only [id_eq, RationalData.toSphereMap, hnumR, hdenR, hndeg, hddeg]
+      norm_num
+
+/-- The identity has degree one. -/
+theorem degreeOfRational_id : degreeOfRational (id : ℂ̂ → ℂ̂) = 1 := by
+  have hu : IsUnit (gcd (Polynomial.X : ℂ[X]) 1) := isUnit_of_dvd_one (gcd_dvd_right _ _)
+  obtain ⟨c, hc_unit, hc⟩ := Polynomial.isUnit_iff.mp hu
+  have hc_ne : c ≠ 0 := hc_unit.ne_zero
+  have hC_ne : (Polynomial.C c : ℂ[X]) ≠ 0 := Polynomial.C_ne_zero.mpr hc_ne
+  have hXdiv : Polynomial.C c * ((Polynomial.X : ℂ[X]) / Polynomial.C c) = Polynomial.X :=
+    EuclideanDomain.mul_div_cancel' hC_ne (Polynomial.isUnit_C.mpr hc_unit).dvd
+  have h1div : Polynomial.C c * ((1 : ℂ[X]) / Polynomial.C c) = 1 :=
+    EuclideanDomain.mul_div_cancel' hC_ne (Polynomial.isUnit_C.mpr hc_unit).dvd
+  have hnumR : (⟨Polynomial.X, 1, one_ne_zero⟩ : RationalData).numReduced
+      = Polynomial.X / Polynomial.C c := by
+    change Polynomial.X / gcd Polynomial.X 1 = Polynomial.X / Polynomial.C c
+    rw [hc]
+  have hdenR : (⟨Polynomial.X, 1, one_ne_zero⟩ : RationalData).denReduced
+      = 1 / Polynomial.C c := by
+    change 1 / gcd Polynomial.X 1 = 1 / Polynomial.C c
+    rw [hc]
+  have hndeg : ((Polynomial.X : ℂ[X]) / Polynomial.C c).natDegree = 1 := by
+    have h := congrArg Polynomial.natDegree hXdiv
+    rwa [Polynomial.natDegree_C_mul hc_ne, Polynomial.natDegree_X] at h
+  have hddeg : ((1 : ℂ[X]) / Polynomial.C c).natDegree = 0 := by
+    have h := congrArg Polynomial.natDegree h1div
+    rwa [Polynomial.natDegree_C_mul hc_ne, Polynomial.natDegree_one] at h
+  have hmap : (id : ℂ̂ → ℂ̂)
+      = (⟨Polynomial.X, 1, one_ne_zero⟩ : RationalData).toSphereMap := by
+    funext z
+    match z with
+    | OnePoint.some w =>
+        have hn : c * ((Polynomial.X : ℂ[X]) / Polynomial.C c).eval w = w := by
+          have h := congrArg (Polynomial.eval w) hXdiv
+          rwa [Polynomial.eval_mul, Polynomial.eval_C, Polynomial.eval_X] at h
+        have hd1 : c * ((1 : ℂ[X]) / Polynomial.C c).eval w = 1 := by
+          have h := congrArg (Polynomial.eval w) h1div
+          rwa [Polynomial.eval_mul, Polynomial.eval_C, Polynomial.eval_one] at h
+        have hnum_val : ((Polynomial.X : ℂ[X]) / Polynomial.C c).eval w = w / c :=
+          (eq_div_iff hc_ne).mpr (by rw [mul_comm]; exact hn)
+        have hden_val : ((1 : ℂ[X]) / Polynomial.C c).eval w = 1 / c :=
+          (eq_div_iff hc_ne).mpr (by rw [mul_comm]; exact hd1)
+        have hden_ne : ((1 : ℂ[X]) / Polynomial.C c).eval w ≠ 0 := by
+          rw [hden_val]
+          exact one_div_ne_zero hc_ne
+        have hval : ((Polynomial.X : ℂ[X]) / Polynomial.C c).eval w
+            / ((1 : ℂ[X]) / Polynomial.C c).eval w = w := by
+          rw [hnum_val, hden_val, div_div, mul_one_div, div_self hc_ne, div_one]
+        simp only [id_eq, RationalData.toSphereMap, hnumR, hdenR]
+        rw [if_neg hden_ne, hval]
+    | ∞ =>
+        simp only [id_eq, RationalData.toSphereMap, hnumR, hdenR, hndeg, hddeg]
+        norm_num
+  rw [degreeOfRational_eq_of_witness _ _ hmap]
+  change max ((⟨Polynomial.X, 1, one_ne_zero⟩ : RationalData).numReduced.natDegree)
+      ((⟨Polynomial.X, 1, one_ne_zero⟩ : RationalData).denReduced.natDegree) = 1
+  rw [hnumR, hdenR, hndeg, hddeg]
+  rfl
+
+/-- Iterates of a rational map of degree at least one are rational. -/
+theorem IsRational.iterate {f : ℂ̂ → ℂ̂} (hf : IsRational f)
+    (hd : 1 ≤ degreeOfRational f) (n : ℕ) : IsRational (f^[n]) := by
+  have key : ∀ m : ℕ,
+      IsRational (f^[m]) ∧ degreeOfRational (f^[m]) = degreeOfRational f ^ m := by
+    intro m
+    induction m with
+    | zero =>
+        refine ⟨?_, ?_⟩
+        · simpa using isRational_id
+        · simpa using degreeOfRational_id
+    | succ k ih =>
+        have h1 : 1 ≤ degreeOfRational (f^[k]) := by
+          rw [ih.2]
+          exact Nat.one_le_pow _ _ hd
+        have hcomp : f^[k + 1] = f ∘ f^[k] := Function.iterate_succ' f k
+        refine ⟨?_, ?_⟩
+        · rw [hcomp]
+          exact isRational_comp hf ih.1 h1
+        · rw [hcomp, degreeOfRational_comp hf ih.1 hd h1, ih.2, pow_succ]
+          exact mul_comm _ _
+  exact (key n).1
+
+/-- The degree of an iterate is the power of the degree. -/
+theorem degreeOfRational_iterate {f : ℂ̂ → ℂ̂} (hf : IsRational f)
+    (hd : 1 ≤ degreeOfRational f) (n : ℕ) :
+    degreeOfRational (f^[n]) = degreeOfRational f ^ n := by
+  have key : ∀ m : ℕ,
+      IsRational (f^[m]) ∧ degreeOfRational (f^[m]) = degreeOfRational f ^ m := by
+    intro m
+    induction m with
+    | zero =>
+        refine ⟨?_, ?_⟩
+        · simpa using isRational_id
+        · simpa using degreeOfRational_id
+    | succ k ih =>
+        have h1 : 1 ≤ degreeOfRational (f^[k]) := by
+          rw [ih.2]
+          exact Nat.one_le_pow _ _ hd
+        have hcomp : f^[k + 1] = f ∘ f^[k] := Function.iterate_succ' f k
+        refine ⟨?_, ?_⟩
+        · rw [hcomp]
+          exact isRational_comp hf ih.1 h1
+        · rw [hcomp, degreeOfRational_comp hf ih.1 hd h1, ih.2, pow_succ]
+          exact mul_comm _ _
+  exact (key n).2
 
 end RiemannDynamics

@@ -29,3 +29,4 @@ import RiemannDynamics.Sphere.OpenMapping
 import RiemannDynamics.Dynamics.JuliaFatou.Def
 import RiemannDynamics.Dynamics.JuliaFatou.Basic
 import RiemannDynamics.Dynamics.JuliaFatou.Invariance
+import RiemannDynamics.Dynamics.JuliaFatou.Nonempty
