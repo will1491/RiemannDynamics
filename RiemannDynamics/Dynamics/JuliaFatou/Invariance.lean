@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Will (Ziang) Li
 -/
 import RiemannDynamics.Dynamics.JuliaFatou.Def
+import RiemannDynamics.Sphere.OpenMapping
 
 /-!
 # Complete invariance of the Fatou and Julia sets
@@ -179,5 +180,52 @@ theorem juliaSet_image_eq {f : ℂ̂ → ℂ̂} (hf : Continuous f)
     f '' (JuliaSet f) = JuliaSet f := by
   conv_lhs => rw [← juliaSet_preimage_eq hf hfo]
   exact Set.image_preimage_eq _ hsurj
+
+/-! ## Rational-map instantiations
+
+A rational map of degree at least one is continuous, open, and surjective
+(`Sphere/OpenMapping.lean`), so the invariance theorems above apply. -/
+
+/-- **Complete invariance of the Fatou set of a rational map** (preimage
+form). -/
+theorem fatouSet_preimage_eq_of_isRational {f : ℂ̂ → ℂ̂}
+    (hf : IsRational f) (hd : 1 ≤ degreeOfRational f) :
+    f ⁻¹' (FatouSet f) = FatouSet f := by
+  have hc := hf.continuous
+  have hnc := hf.ne_const hd
+  have ho := hf.isOpenMap hnc
+  exact fatouSet_preimage_eq hc ho
+
+/-- **Complete invariance of the Julia set of a rational map** (preimage
+form). -/
+theorem juliaSet_preimage_eq_of_isRational {f : ℂ̂ → ℂ̂}
+    (hf : IsRational f) (hd : 1 ≤ degreeOfRational f) :
+    f ⁻¹' (JuliaSet f) = JuliaSet f := by
+  have hc := hf.continuous
+  have hnc := hf.ne_const hd
+  have ho := hf.isOpenMap hnc
+  exact juliaSet_preimage_eq hc ho
+
+/-- **Complete invariance of the Fatou set of a rational map** (image
+form). -/
+theorem fatouSet_image_eq_of_isRational {f : ℂ̂ → ℂ̂}
+    (hf : IsRational f) (hd : 1 ≤ degreeOfRational f) :
+    f '' (FatouSet f) = FatouSet f := by
+  have hc := hf.continuous
+  have hnc := hf.ne_const hd
+  have ho := hf.isOpenMap hnc
+  have hs := hf.surjective hnc
+  exact fatouSet_image_eq hc ho hs
+
+/-- **Complete invariance of the Julia set of a rational map** (image
+form). -/
+theorem juliaSet_image_eq_of_isRational {f : ℂ̂ → ℂ̂}
+    (hf : IsRational f) (hd : 1 ≤ degreeOfRational f) :
+    f '' (JuliaSet f) = JuliaSet f := by
+  have hc := hf.continuous
+  have hnc := hf.ne_const hd
+  have ho := hf.isOpenMap hnc
+  have hs := hf.surjective hnc
+  exact juliaSet_image_eq hc ho hs
 
 end RiemannDynamics
