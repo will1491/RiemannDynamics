@@ -7,6 +7,7 @@ import Mathlib.Analysis.Analytic.IsolatedZeros
 import Mathlib.Analysis.Complex.OpenMapping
 import RiemannDynamics.Sphere.RationalMap
 import RiemannDynamics.Sphere.MobiusAction
+import RiemannDynamics.Sphere.SphereHolomorphic
 
 /-!
 # Nonconstant rational maps are open and surjective
@@ -541,5 +542,123 @@ theorem IsRational.ne_const {f : ℂ̂ → ℂ̂} (hf : IsRational f)
       rw [hn_deg, hd_deg]
       exact Nat.max_self 0
     omega
+
+
+/-- The finite-chart reading of a rational map is sphere-holomorphic: near a
+regular point it reads holomorphically in the finite chart, and near a pole
+the infinity-chart reading is the reciprocal quotient, which extends
+holomorphically across the pole. -/
+theorem IsRational.sphereHolomorphicOn_comp_coe {f : ℂ̂ → ℂ̂}
+    (hf : IsRational f) {U : Set ℂ} (hU : IsOpen U) :
+    SphereHolomorphicOn (fun w => f ((w : ℂ̂))) U := by
+  obtain ⟨r, rfl⟩ := hf
+  have cf : ∀ x : ℂ, chartFiniteMap (x : ℂ̂) = x := fun _ => rfl
+  have ci : ∀ x : ℂ, chartInftyMap (x : ℂ̂) = x⁻¹ := fun _ => rfl
+  have ci0 : chartInftyMap (∞ : ℂ̂) = 0 := rfl
+  have hread : ∀ w : ℂ, r.toSphereMap ↑w
+      = if r.denReduced.eval w = 0 then (∞ : ℂ̂)
+        else ((r.numReduced.eval w / r.denReduced.eval w : ℂ) : ℂ̂) := fun _ => rfl
+  intro z hz
+  by_cases hden : r.denReduced.eval z = 0
+  · -- Pole: read in the infinity chart as the reciprocal quotient.
+    have hnum : r.numReduced.eval z ≠ 0 :=
+      (r.eval_ne_zero_or z).resolve_right fun h => h hden
+    have hcont : ContinuousAt (fun w => r.numReduced.eval w) z :=
+      r.numReduced.continuous.continuousAt
+    obtain ⟨t, ht_ne, ht_open, hzt⟩ := eventually_nhds_iff.mp (hcont.eventually_ne hnum)
+    refine ⟨U ∩ t, hU.inter ht_open, ⟨hz, hzt⟩, Set.inter_subset_left, Or.inr ⟨?_, ?_⟩⟩
+    · intro w hw
+      simp only [hread]
+      split_ifs with hdw
+      · exact OnePoint.infty_ne_coe 0
+      · intro hc
+        exact div_ne_zero (ht_ne w hw.2) hdw (OnePoint.coe_eq_coe.mp hc)
+    · have hinv : DifferentiableOn ℂ (fun w => (r.numReduced.eval w)⁻¹) (U ∩ t) :=
+        r.numReduced.differentiable.differentiableOn.inv fun w hw => ht_ne w hw.2
+      have hdiv : DifferentiableOn ℂ
+          (fun w => r.denReduced.eval w * (r.numReduced.eval w)⁻¹) (U ∩ t) :=
+        r.denReduced.differentiable.differentiableOn.mul hinv
+      refine hdiv.congr fun w _ => ?_
+      simp only [hread]
+      split_ifs with hdw
+      · rw [ci0, hdw, zero_mul]
+      · rw [ci, inv_div, div_eq_mul_inv]
+  · -- Regular point: read in the finite chart as the quotient itself.
+    have hcont : ContinuousAt (fun w => r.denReduced.eval w) z :=
+      r.denReduced.continuous.continuousAt
+    obtain ⟨t, ht_ne, ht_open, hzt⟩ := eventually_nhds_iff.mp (hcont.eventually_ne hden)
+    refine ⟨U ∩ t, hU.inter ht_open, ⟨hz, hzt⟩, Set.inter_subset_left, Or.inl ⟨?_, ?_⟩⟩
+    · intro w hw
+      simp only [hread]
+      rw [if_neg (ht_ne w hw.2)]
+      exact OnePoint.coe_ne_infty _
+    · have hinv : DifferentiableOn ℂ (fun w => (r.denReduced.eval w)⁻¹) (U ∩ t) :=
+        r.denReduced.differentiable.differentiableOn.inv fun w hw => ht_ne w hw.2
+      have hdiv : DifferentiableOn ℂ
+          (fun w => r.numReduced.eval w * (r.denReduced.eval w)⁻¹) (U ∩ t) :=
+        r.numReduced.differentiable.differentiableOn.mul hinv
+      refine hdiv.congr fun w hw => ?_
+      simp only [hread]
+      rw [if_neg (ht_ne w hw.2), cf, div_eq_mul_inv]
+
+/-- The infinity-chart reading of a rational map is sphere-holomorphic: the
+reading through the inversion parameterization of a neighborhood of `∞` is
+the quotient of the reflected polynomials. -/
+theorem IsRational.sphereHolomorphicOn_comp_inversionGL {f : ℂ̂ → ℂ̂}
+    (hf : IsRational f) {U : Set ℂ} (hU : IsOpen U) :
+    SphereHolomorphicOn (fun w => f (inversionGL • (w : ℂ̂))) U := by
+  obtain ⟨r, rfl⟩ := hf
+  have cf : ∀ x : ℂ, chartFiniteMap (x : ℂ̂) = x := fun _ => rfl
+  have ci : ∀ x : ℂ, chartInftyMap (x : ℂ̂) = x⁻¹ := fun _ => rfl
+  have ci0 : chartInftyMap (∞ : ℂ̂) = 0 := rfl
+  have hread := r.toSphereMap_inversionGL_smul_coe
+  intro z hz
+  by_cases hden : (Polynomial.reflect r.degree r.denReduced).eval z = 0
+  · -- Pole: read in the infinity chart as the reciprocal reflected quotient.
+    have hnum : (Polynomial.reflect r.degree r.numReduced).eval z ≠ 0 :=
+      (r.reflect_eval_ne_zero_or z).resolve_right fun h => h hden
+    have hcont : ContinuousAt (fun w => (Polynomial.reflect r.degree r.numReduced).eval w) z :=
+      (Polynomial.reflect r.degree r.numReduced).continuous.continuousAt
+    obtain ⟨t, ht_ne, ht_open, hzt⟩ := eventually_nhds_iff.mp (hcont.eventually_ne hnum)
+    refine ⟨U ∩ t, hU.inter ht_open, ⟨hz, hzt⟩, Set.inter_subset_left, Or.inr ⟨?_, ?_⟩⟩
+    · intro w hw
+      simp only [hread]
+      split_ifs with hdw
+      · exact OnePoint.infty_ne_coe 0
+      · intro hc
+        exact div_ne_zero (ht_ne w hw.2) hdw (OnePoint.coe_eq_coe.mp hc)
+    · have hinv : DifferentiableOn ℂ
+          (fun w => ((Polynomial.reflect r.degree r.numReduced).eval w)⁻¹) (U ∩ t) :=
+        (Polynomial.reflect r.degree r.numReduced).differentiable.differentiableOn.inv
+          fun w hw => ht_ne w hw.2
+      have hdiv : DifferentiableOn ℂ
+          (fun w => (Polynomial.reflect r.degree r.denReduced).eval w
+            * ((Polynomial.reflect r.degree r.numReduced).eval w)⁻¹) (U ∩ t) :=
+        (Polynomial.reflect r.degree r.denReduced).differentiable.differentiableOn.mul hinv
+      refine hdiv.congr fun w _ => ?_
+      simp only [hread]
+      split_ifs with hdw
+      · rw [ci0, hdw, zero_mul]
+      · rw [ci, inv_div, div_eq_mul_inv]
+  · -- Regular point: read in the finite chart as the reflected quotient.
+    have hcont : ContinuousAt (fun w => (Polynomial.reflect r.degree r.denReduced).eval w) z :=
+      (Polynomial.reflect r.degree r.denReduced).continuous.continuousAt
+    obtain ⟨t, ht_ne, ht_open, hzt⟩ := eventually_nhds_iff.mp (hcont.eventually_ne hden)
+    refine ⟨U ∩ t, hU.inter ht_open, ⟨hz, hzt⟩, Set.inter_subset_left, Or.inl ⟨?_, ?_⟩⟩
+    · intro w hw
+      simp only [hread]
+      rw [if_neg (ht_ne w hw.2)]
+      exact OnePoint.coe_ne_infty _
+    · have hinv : DifferentiableOn ℂ
+          (fun w => ((Polynomial.reflect r.degree r.denReduced).eval w)⁻¹) (U ∩ t) :=
+        (Polynomial.reflect r.degree r.denReduced).differentiable.differentiableOn.inv
+          fun w hw => ht_ne w hw.2
+      have hdiv : DifferentiableOn ℂ
+          (fun w => (Polynomial.reflect r.degree r.numReduced).eval w
+            * ((Polynomial.reflect r.degree r.denReduced).eval w)⁻¹) (U ∩ t) :=
+        (Polynomial.reflect r.degree r.numReduced).differentiable.differentiableOn.mul hinv
+      refine hdiv.congr fun w hw => ?_
+      simp only [hread]
+      rw [if_neg (ht_ne w hw.2), cf, div_eq_mul_inv]
 
 end RiemannDynamics

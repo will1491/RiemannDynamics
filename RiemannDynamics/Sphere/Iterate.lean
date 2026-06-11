@@ -271,4 +271,20 @@ theorem degreeOfRational_iterate {f : ℂ̂ → ℂ̂} (hf : IsRational f)
           exact mul_comm _ _
   exact (key n).2
 
+
+/-- The forward orbit of a periodic point is finite: it is covered by the
+first `k` iterates. -/
+theorem forwardOrbit_finite_of_iterate_fixed {f : ℂ̂ → ℂ̂} {z : ℂ̂} {k : ℕ}
+    (hk : 1 ≤ k) (hfix : f^[k] z = z) : (ForwardOrbit f z).Finite := by
+  have hmod : ∀ n : ℕ, f^[n] z = f^[n % k] z := by
+    intro n
+    calc f^[n] z = f^[n % k + k * (n / k)] z := by rw [Nat.mod_add_div]
+      _ = f^[n % k] (f^[k * (n / k)] z) := Function.iterate_add_apply f _ _ z
+      _ = f^[n % k] ((f^[k])^[n / k] z) := by rw [Function.iterate_mul]
+      _ = f^[n % k] z := by rw [Function.iterate_fixed hfix (n / k)]
+  have hsub : ForwardOrbit f z ⊆ (fun i => f^[i] z) '' (Set.Iio k) := by
+    rintro w ⟨n, rfl⟩
+    exact ⟨n % k, Nat.mod_lt n hk, (hmod n).symm⟩
+  exact (((Set.finite_Iio k).image _).subset hsub)
+
 end RiemannDynamics

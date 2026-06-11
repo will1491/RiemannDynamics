@@ -159,6 +159,49 @@ theorem isNormal_univ_of_forall_isNormalAt {X Y : Type*} [TopologicalSpace X]
         (isOpen_biUnion fun z _ => isOpen_interior) (hVnorm a) ih
   exact (key t).mono ht
 
+/-- Normality transfers from chart readings to the original family: if the
+pre-compositions with an open embedding `e` form a normal family on `U`,
+the original family is normal on `e '' U`. The limit is pushed forward
+through the local inverse of `e`. -/
+theorem IsNormal.of_comp_isOpenEmbedding {X X' Y : Type*} [TopologicalSpace X]
+    [TopologicalSpace X'] [UniformSpace Y] {e : X' → X}
+    (he : Topology.IsOpenEmbedding e) {𝓕 : Set (X → Y)} {U : Set X'}
+    (hN : IsNormal ((fun F => F ∘ e) '' 𝓕) U) : IsNormal 𝓕 (e '' U) := by
+  classical
+  intro seq
+  rcases U.eq_empty_or_nonempty with hUe | ⟨x'₀, hx'₀⟩
+  · refine ⟨id, strictMono_id, (seq 0 : X → Y), ?_⟩
+    intro u hu x hx
+    rw [hUe, Set.image_empty] at hx
+    exact absurd hx (Set.notMem_empty x)
+  · obtain ⟨φ, hφ, g, hg⟩ :=
+      hN fun n => ⟨(seq n : X → Y) ∘ e, (seq n : X → Y), (seq n).2, rfl⟩
+    have hg' : TendstoLocallyUniformlyOn (fun n => (seq (φ n) : X → Y) ∘ e) g
+        Filter.atTop U := hg
+    have hinj : Function.Injective e := he.isEmbedding.injective
+    -- a left inverse of `e`, defined globally via `Function.extend`
+    obtain ⟨einv, heinv⟩ : ∃ einv : X → X', ∀ x' : X', einv (e x') = x' :=
+      ⟨Function.extend e id fun _ => x'₀,
+        fun x' => hinj.extend_apply id (fun _ => x'₀) x'⟩
+    have hmaps : Set.MapsTo einv (e '' U) U := by
+      rintro _ ⟨x', hx', rfl⟩
+      rw [heinv x']
+      exact hx'
+    -- `einv` is continuous on `e '' U` because `e` maps `𝓝 x'` onto `𝓝 (e x')`
+    have hcont : ContinuousOn einv (e '' U) := by
+      rintro _ ⟨x', hx', rfl⟩
+      have h1 : Filter.Tendsto einv (nhds (e x')) (nhds (einv (e x'))) := by
+        rw [heinv x', ← he.map_nhds_eq x', Filter.tendsto_map'_iff]
+        have h2 : einv ∘ e = id := funext heinv
+        rw [h2]
+        exact tendsto_id
+      exact ContinuousAt.continuousWithinAt h1
+    have hcomp := hg'.comp einv hmaps hcont
+    refine ⟨φ, hφ, g ∘ einv, hcomp.congr fun n x hx => ?_⟩
+    obtain ⟨x', hx', rfl⟩ := hx
+    simp only [Function.comp_apply]
+    rw [heinv x']
+
 /-- A normal family of continuous maps on a compact metric space is
 uniformly equicontinuous: a failure of uniform equicontinuity yields a
 sequence of members and point pairs whose extracted uniform limit would be
