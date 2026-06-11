@@ -397,10 +397,9 @@ theorem SphereHolomorphicOn.differentiableAt_stereoEmbed {F : ℂ → ℂ̂}
         (hrot (chartInftyMap (F w)))
     exact hb.congr_of_eventuallyEq heq
 
-set_option linter.unusedVariables false in
 /-- The spherical derivative of a sphere-holomorphic map is continuous. -/
 theorem SphereHolomorphicOn.continuousOn_sphericalDeriv {F : ℂ → ℂ̂}
-    {U : Set ℂ} (hU : IsOpen U) (hF : SphereHolomorphicOn F U) :
+    {U : Set ℂ} (hF : SphereHolomorphicOn F U) :
     ContinuousOn (sphericalDeriv F) U := by
   refine continuousOn_of_forall_continuousAt fun z hz => ?_
   -- The continuity argument in a single chart, applied to a map `G` that reads
@@ -452,12 +451,11 @@ theorem SphereHolomorphicOn.continuousOn_sphericalDeriv {F : ℂ → ℂ̂}
     exact key (fun w => inversionGL • F w) (fun w => chartInftyMap (F w)) V hVo hzV
       hGv hdiff
 
-set_option linter.unusedVariables false in
 /-- **The Marty–Lipschitz estimate**: a spherical-derivative bound on a
 convex subset of the domain bounds the spherical distance between values
 by `M` times the Euclidean distance. -/
 theorem sphericalDist_le_of_sphericalDeriv_le {F : ℂ → ℂ̂} {U s : Set ℂ}
-    (hU : IsOpen U) (hF : SphereHolomorphicOn F U) (hsU : s ⊆ U)
+    (hF : SphereHolomorphicOn F U) (hsU : s ⊆ U)
     (hs : Convex ℝ s) {M : ℝ} (hM : ∀ z ∈ s, sphericalDeriv F z ≤ M)
     {x y : ℂ} (hx : x ∈ s) (hy : y ∈ s) :
     sphericalDist (F x) (F y) ≤ M * ‖x - y‖ := by
@@ -493,7 +491,7 @@ theorem isNormal_of_sphericalDeriv_le {𝓕 : Set (ℂ → ℂ̂)} {U : Set ℂ}
   have key : ∀ G ∈ 𝓕, ∀ (z : ℂ) (δ : ℝ), ball z δ ⊆ U →
       ∀ x ∈ ball z δ, ∀ y ∈ ball z δ, dist (G x) (G y) ≤ M' * ‖x - y‖ := by
     intro G hG z δ hsub x hx y hy
-    exact sphericalDist_le_of_sphericalDeriv_le hU (hol G hG) hsub (convex_ball z δ)
+    exact sphericalDist_le_of_sphericalDeriv_le (hol G hG) hsub (convex_ball z δ)
       (fun w hw => hM' G hG w (hsub hw)) hx hy
   intro seq
   have hch : ∀ n : ℕ, ∃ f₀ : ℂ → ℂ̂, f₀ ∈ 𝓕 ∧ f₀ = (seq n : ℂ → ℂ̂) :=
@@ -1061,7 +1059,7 @@ theorem exists_zalcman_rescale {𝓕 : Set (ℂ → ℂ̂)} {U : Set ℂ}
       ⟨z₀, mem_closedBall_self (hrpos k).le⟩ ?_
     exact ((continuous_const.sub
         ((continuous_id.sub continuous_const).norm)).continuousOn).mul
-      (((hol _ (hF₀ k)).continuousOn_sphericalDeriv hU).mono (hballU k))
+      (((hol _ (hF₀ k)).continuousOn_sphericalDeriv).mono (hballU k))
   choose z hz hzmax using hmaxsel
   -- abbreviations: derivative `D`, gap `s`, max value `L`, scale `ρ`
   obtain ⟨D, hD⟩ : ∃ D : ℕ → ℝ, ∀ k, D k = sphericalDeriv (F₀ k) (z k) :=

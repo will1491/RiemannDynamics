@@ -689,15 +689,12 @@ theorem ne_const_comp_coe_of_isRational {f : ℂ̂ → ℂ̂} (hf : IsRational f
     OnePoint.denseRange_coe.equalizer hf.continuous continuous_const hv
   exact hf.ne_const hd v hext
 
--- `hf` is part of the repo's exact statement but the embedding transfer
--- needs no continuity hypothesis; silence the unused-variable warning.
-set_option linter.unusedVariables false in
 /-- **The chart bridge for non-normality**: at a finite Julia point the
 family of iterates read through the coercion chart is not normal — a
 normal restriction would transfer through the open embedding `ℂ → ℂ̂` to
 normality of the iterate family itself. -/
 theorem not_isNormalAt_comp_coe_of_mem_juliaSet {f : ℂ̂ → ℂ̂}
-    (hf : IsRational f) {p : ℂ} (hp : ((p : ℂ̂)) ∈ JuliaSet f) :
+    {p : ℂ} (hp : ((p : ℂ̂)) ∈ JuliaSet f) :
     ¬ IsNormalAt
       {F : ℂ → ℂ̂ | ∃ n : ℕ, F = fun w : ℂ => f^[n] ((w : ℂ̂))} p := by
   rintro ⟨U, hU, hN⟩
@@ -777,7 +774,7 @@ theorem juliaSet_subset_closure_repelling {f : ℂ̂ → ℂ̂}
       exact hFm_hol n
     have hnot : ¬ IsNormalAt
         {F : ℂ → ℂ̂ | ∃ n : ℕ, F = fun w : ℂ => f^[n] ((w : ℂ̂))} zb :=
-      not_isNormalAt_comp_coe_of_mem_juliaSet hf hz₀J
+      not_isNormalAt_comp_coe_of_mem_juliaSet hz₀J
     obtain ⟨F, z, ρ, g, hFmem, hz, hρpos, hρ0, hg, hg1, -, hTLU⟩ :=
       exists_zalcman_rescale isOpen_univ hol (Set.mem_univ zb) hnot
     choose n hn using hFmem
