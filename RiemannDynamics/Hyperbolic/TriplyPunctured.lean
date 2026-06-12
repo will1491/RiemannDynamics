@@ -5,7 +5,7 @@ Authors: Will (Ziang) Li
 -/
 import Mathlib.Topology.Homotopy.Lifting
 import RiemannDynamics.Hyperbolic.DiskMetric
-import RiemannDynamics.Hyperbolic.ModularCoveringMap
+import RiemannDynamics.Hyperbolic.ModularCoveringMap.CoveringAssembly
 
 /-!
 # Hyperbolic metric on the triply-punctured sphere `ℂ ∖ {0, 1}`
