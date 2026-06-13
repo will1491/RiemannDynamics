@@ -49,3 +49,7 @@ import RiemannDynamics.Dynamics.JuliaFatou.RepellingCycles
 import RiemannDynamics.Dynamics.JuliaFatou.PeriodicDensity
 import RiemannDynamics.NormalFamilies.Zalcman
 import RiemannDynamics.Dynamics.JuliaFatou.RepellingDensity
+import RiemannDynamics.Sphere.LocallyConnected
+import RiemannDynamics.Dynamics.FatouComponents.Def
+import RiemannDynamics.Dynamics.FatouComponents.GrandOrbit
+import RiemannDynamics.Dynamics.FatouComponents.Periodic
