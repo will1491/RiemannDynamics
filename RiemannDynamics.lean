@@ -1,12 +1,23 @@
 import RiemannDynamics.Basic
+
 import RiemannDynamics.Sphere.Basic
 import RiemannDynamics.Sphere.SphericalMetric
 import RiemannDynamics.Sphere.RationalMap
 import RiemannDynamics.Sphere.Iterate
 import RiemannDynamics.Sphere.DegreeFinite
+import RiemannDynamics.Sphere.MobiusAction
+import RiemannDynamics.Sphere.SphereHolomorphic
+import RiemannDynamics.Sphere.OpenMapping
+import RiemannDynamics.Sphere.LocallyConnected
+
 import RiemannDynamics.NormalFamilies.Basic
 import RiemannDynamics.NormalFamilies.Spherical
 import RiemannDynamics.NormalFamilies.Montel
+import RiemannDynamics.NormalFamilies.StrongMontel.ModularLift
+import RiemannDynamics.NormalFamilies.StrongMontel.MontelCaratheodory
+import RiemannDynamics.NormalFamilies.StrongMontel.SphereMontel
+import RiemannDynamics.NormalFamilies.Zalcman
+
 import RiemannDynamics.Hyperbolic.DiskMetric
 import RiemannDynamics.Hyperbolic.MobiusDisk
 import RiemannDynamics.Hyperbolic.SchwarzPick
@@ -34,12 +45,7 @@ import RiemannDynamics.Hyperbolic.ModularCoveringMap.ArgumentPrincipleBridge
 import RiemannDynamics.Hyperbolic.ModularCoveringMap.DegreeArgument
 import RiemannDynamics.Hyperbolic.ModularCoveringMap.WindingInjectivity
 import RiemannDynamics.Hyperbolic.ModularCoveringMap.CoveringAssembly
-import RiemannDynamics.NormalFamilies.StrongMontel.ModularLift
-import RiemannDynamics.NormalFamilies.StrongMontel.MontelCaratheodory
-import RiemannDynamics.Sphere.MobiusAction
-import RiemannDynamics.Sphere.SphereHolomorphic
-import RiemannDynamics.NormalFamilies.StrongMontel.SphereMontel
-import RiemannDynamics.Sphere.OpenMapping
+
 import RiemannDynamics.Dynamics.JuliaFatou.Def
 import RiemannDynamics.Dynamics.JuliaFatou.Basic
 import RiemannDynamics.Dynamics.JuliaFatou.Invariance
@@ -47,9 +53,7 @@ import RiemannDynamics.Dynamics.JuliaFatou.Nonempty
 import RiemannDynamics.Dynamics.JuliaFatou.Perfect
 import RiemannDynamics.Dynamics.JuliaFatou.RepellingCycles
 import RiemannDynamics.Dynamics.JuliaFatou.PeriodicDensity
-import RiemannDynamics.NormalFamilies.Zalcman
 import RiemannDynamics.Dynamics.JuliaFatou.RepellingDensity
-import RiemannDynamics.Sphere.LocallyConnected
 import RiemannDynamics.Dynamics.FatouComponents.Def
 import RiemannDynamics.Dynamics.FatouComponents.GrandOrbit
 import RiemannDynamics.Dynamics.FatouComponents.Periodic
