@@ -29,9 +29,10 @@ Cauchy–Riemann equation `(fderiv ℝ f z) I = I • (fderiv ℝ f z) 1`
 holomorphic Wirtinger derivative agrees with the ordinary complex derivative,
 `dz f z = deriv f z`.
 
-The Wirtinger derivatives are `ℝ`-linear, satisfy the Leibniz product rule,
-and intertwine with complex conjugation through `dz (conj ∘ f) = conj (dzbar f)`
-and `dzbar (conj ∘ f) = conj (dz f)`. These identities are the calculus the
+The Wirtinger derivatives are `ℝ`-linear, satisfy the Leibniz product rule and
+the chain rule `∂(g∘f) = (∂g∘f)·∂f + (∂̄g∘f)·conj(∂̄f)`, and intertwine with
+complex conjugation through `dz (conj ∘ f) = conj (dzbar f)` and
+`dzbar (conj ∘ f) = conj (dz f)`. These identities are the calculus the
 Beltrami equation `∂̄f = μ ∂f` and the Cauchy/Beurling transforms of the
 analytic engine are written in.
 -/
@@ -160,6 +161,68 @@ theorem dzbar_mul (hf : DifferentiableAt ℝ f z) (hg : DifferentiableAt ℝ g z
   have key : fderiv ℝ (fun w => f w * g w) z = f z • fderiv ℝ g z + g z • fderiv ℝ f z :=
     fderiv_mul hf hg
   simp only [dzbar, key, ContinuousLinearMap.add_apply, ContinuousLinearMap.smul_apply, smul_eq_mul]
+  ring
+
+/-- **Wirtinger chain rule for `∂`.** With `f̄ = conj ∘ f` (so `∂̄(f̄) = conj (∂̄f)`),
+`∂(g∘f) = (∂g∘f)·∂f + (∂̄g∘f)·∂̄(f̄)`. -/
+theorem dz_comp (hf : DifferentiableAt ℝ f z) (hg : DifferentiableAt ℝ g (f z)) :
+    dz (fun w => g (f w)) z = dz g (f z) * dz f z + dzbar g (f z) * conj (dzbar f z) := by
+  have repr : ∀ (L : ℂ →L[ℝ] ℂ) (w : ℂ),
+      L w = (1 / 2 : ℂ) * ((L 1) - I * (L I)) * w
+        + (1 / 2 : ℂ) * ((L 1) + I * (L I)) * conj w := by
+    intro L w
+    have hLw : L w = (↑w.re : ℂ) * L 1 + (↑w.im : ℂ) * L I := by
+      conv_lhs => rw [show w = w.re • (1 : ℂ) + w.im • I by
+        rw [Complex.real_smul, Complex.real_smul, mul_one, Complex.re_add_im]]
+      rw [map_add, map_smul, map_smul, Complex.real_smul, Complex.real_smul]
+    have hcw : conj w = (↑w.re : ℂ) - ↑w.im * I := by
+      conv_lhs => rw [← Complex.re_add_im w]
+      simp only [map_add, map_mul, Complex.conj_I, Complex.conj_ofReal]
+      ring
+    have hw : w = (↑w.re : ℂ) + ↑w.im * I := (Complex.re_add_im w).symm
+    rw [hLw, hcw]
+    set a : ℂ := (↑w.re : ℂ) with ha
+    set b : ℂ := (↑w.im : ℂ) with hb
+    rw [hw]
+    linear_combination (b * L I) * Complex.I_mul_I
+  have hhalf : (starRingEnd ℂ) (1 / 2 : ℂ) = 1 / 2 := by rw [map_div₀, map_one, map_ofNat]
+  have hcomp : fderiv ℝ (fun w => g (f w)) z = (fderiv ℝ g (f z)).comp (fderiv ℝ f z) :=
+    fderiv_comp z hg hf
+  simp only [dz, dzbar, hcomp, ContinuousLinearMap.comp_apply]
+  rw [repr (fderiv ℝ g (f z)) ((fderiv ℝ f z) 1),
+    repr (fderiv ℝ g (f z)) ((fderiv ℝ f z) I)]
+  simp only [map_add, map_mul, Complex.conj_I, hhalf]
+  ring
+
+/-- **Wirtinger chain rule for `∂̄`.** With `f̄ = conj ∘ f` (so `∂̄(f̄) = conj (∂f)`),
+`∂̄(g∘f) = (∂g∘f)·∂̄f + (∂̄g∘f)·∂̄(f̄)`. -/
+theorem dzbar_comp (hf : DifferentiableAt ℝ f z) (hg : DifferentiableAt ℝ g (f z)) :
+    dzbar (fun w => g (f w)) z = dz g (f z) * dzbar f z + dzbar g (f z) * conj (dz f z) := by
+  have repr : ∀ (L : ℂ →L[ℝ] ℂ) (w : ℂ),
+      L w = (1 / 2 : ℂ) * ((L 1) - I * (L I)) * w
+        + (1 / 2 : ℂ) * ((L 1) + I * (L I)) * conj w := by
+    intro L w
+    have hLw : L w = (↑w.re : ℂ) * L 1 + (↑w.im : ℂ) * L I := by
+      conv_lhs => rw [show w = w.re • (1 : ℂ) + w.im • I by
+        rw [Complex.real_smul, Complex.real_smul, mul_one, Complex.re_add_im]]
+      rw [map_add, map_smul, map_smul, Complex.real_smul, Complex.real_smul]
+    have hcw : conj w = (↑w.re : ℂ) - ↑w.im * I := by
+      conv_lhs => rw [← Complex.re_add_im w]
+      simp only [map_add, map_mul, Complex.conj_I, Complex.conj_ofReal]
+      ring
+    have hw : w = (↑w.re : ℂ) + ↑w.im * I := (Complex.re_add_im w).symm
+    rw [hLw, hcw]
+    set a : ℂ := (↑w.re : ℂ) with ha
+    set b : ℂ := (↑w.im : ℂ) with hb
+    rw [hw]
+    linear_combination (b * L I) * Complex.I_mul_I
+  have hhalf : (starRingEnd ℂ) (1 / 2 : ℂ) = 1 / 2 := by rw [map_div₀, map_one, map_ofNat]
+  have hcomp : fderiv ℝ (fun w => g (f w)) z = (fderiv ℝ g (f z)).comp (fderiv ℝ f z) :=
+    fderiv_comp z hg hf
+  simp only [dz, dzbar, hcomp, ContinuousLinearMap.comp_apply]
+  rw [repr (fderiv ℝ g (f z)) ((fderiv ℝ f z) 1),
+    repr (fderiv ℝ g (f z)) ((fderiv ℝ f z) I)]
+  simp only [map_sub, map_mul, Complex.conj_I, hhalf]
   ring
 
 end RiemannDynamics

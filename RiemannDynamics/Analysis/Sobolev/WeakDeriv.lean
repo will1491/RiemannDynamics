@@ -5,6 +5,7 @@ Authors: Will (Ziang) Li
 -/
 import RiemannDynamics.Analysis.Sobolev.Wirtinger
 import Mathlib.Analysis.Distribution.AEEqOfIntegralContDiff
+import Mathlib.Analysis.Calculus.LineDeriv.IntegrationByParts
 import Mathlib.MeasureTheory.Function.LocallyIntegrable
 import Mathlib.MeasureTheory.Function.LpSeminorm.Defs
 import Mathlib.MeasureTheory.Measure.Lebesgue.Complex
@@ -36,12 +37,16 @@ On top of weak gradients we define:
 * `MemW12loc f` — the abbreviation `MemWklocP f 1 2 univ`, the `W^{1,2}_loc(ℂ)`
   class the analytic quasiconformal theory lives in.
 
-The basic calculus proved here is what the rest of the engine consumes: weak
+The calculus proved here is what the rest of the engine consumes: weak
 derivatives are unique almost everywhere (the fundamental lemma of the calculus
-of variations), they restrict to open subsets, and the class is closed under
-multiplication by smooth functions (the Leibniz rule). The absolute-continuity-
-on-lines characterization is developed in `QC/Equivalence.lean`, its only
-consumer.
+of variations); they are linear (`add`/`sub`/`neg`/`const_smul`), restrict to
+subsets, and are closed under multiplication by smooth functions (the Leibniz
+rule); and a `C¹` function's classical directional derivative is a weak
+derivative (`of_contDiffOn`, by integration by parts), which identifies the
+strong Wirtinger derivatives `dz`/`dzbar` as weak `∂`/`∂̄` derivatives
+(`HasWeakDz`/`HasWeakDzbar`). The absolute-continuity-on-lines characterization
+— the genuine converse, that a `W^{1,p}` function is differentiable a.e. — is
+developed in `QC/Equivalence.lean`, its only consumer.
 -/
 
 open MeasureTheory Complex
@@ -82,6 +87,20 @@ def MemWklocP (f : ℂ → ℂ) (k : ℕ) (p : ℝ≥0∞) (Ω : Set ℂ) : Prop
 /-- The class `W^{1,2}_loc(ℂ)` the analytic quasiconformal theory lives in. -/
 def MemW12loc (f : ℂ → ℂ) : Prop :=
   MemWklocP f 1 2 Set.univ
+
+/-- `g` is a **weak `∂`-derivative** (weak holomorphic Wirtinger derivative) of
+`f` on `Ω`: there are weak partial derivatives `gx` (direction `1`) and `gy`
+(direction `I`) of `f` with `g = ½(gx − i gy)` pointwise. -/
+def HasWeakDz (g f : ℂ → ℂ) (Ω : Set ℂ) : Prop :=
+  ∃ gx gy : ℂ → ℂ, HasWeakDirDeriv 1 gx f Ω ∧ HasWeakDirDeriv Complex.I gy f Ω ∧
+    ∀ z, g z = (1 / 2 : ℂ) * (gx z - Complex.I * gy z)
+
+/-- `g` is a **weak `∂̄`-derivative** (weak antiholomorphic Wirtinger derivative)
+of `f` on `Ω`: there are weak partial derivatives `gx` (direction `1`) and `gy`
+(direction `I`) of `f` with `g = ½(gx + i gy)` pointwise. -/
+def HasWeakDzbar (g f : ℂ → ℂ) (Ω : Set ℂ) : Prop :=
+  ∃ gx gy : ℂ → ℂ, HasWeakDirDeriv 1 gx f Ω ∧ HasWeakDirDeriv Complex.I gy f Ω ∧
+    ∀ z, g z = (1 / 2 : ℂ) * (gx z + Complex.I * gy z)
 
 /-- **Uniqueness of weak derivatives.** On an open set two weak directional
 derivatives of the same function in the same direction agree almost everywhere
@@ -214,5 +233,226 @@ theorem HasWeakDirDeriv.smul_smooth (hf : HasWeakDirDeriv v g f Ω)
     simp only [hΦ]; module
   rw [goalLHS, goalRHS, neg_add, ← hfΦ']
   ring
+
+/-- Weak directional derivatives are additive. -/
+theorem HasWeakDirDeriv.add {f₁ f₂ g₁ g₂ : ℂ → ℂ}
+    (h₁ : HasWeakDirDeriv v g₁ f₁ Ω) (h₂ : HasWeakDirDeriv v g₂ f₂ Ω)
+    (hf₁ : LocallyIntegrableOn f₁ Ω) (hf₂ : LocallyIntegrableOn f₂ Ω)
+    (hg₁ : LocallyIntegrableOn g₁ Ω) (hg₂ : LocallyIntegrableOn g₂ Ω) :
+    HasWeakDirDeriv v (fun z => g₁ z + g₂ z) (fun z => f₁ z + f₂ z) Ω := by
+  -- (continuous real, compactly supported in `Ω`) • (locally integrable on `Ω`) is integrable.
+  have integ : ∀ (m : ℂ → ℝ), Continuous m → HasCompactSupport m → tsupport m ⊆ Ω →
+      ∀ {h : ℂ → ℂ}, LocallyIntegrableOn h Ω → Integrable (fun z => m z • h z) volume := by
+    intro m hm hcsm htsuppm h hh
+    have hK : IsCompact (tsupport m) := hcsm
+    have hhon : IntegrableOn h (tsupport m) volume :=
+      hh.integrableOn_compact_subset htsuppm hK
+    have hon : IntegrableOn (fun z => m z • h z) (tsupport m) volume :=
+      hhon.continuousOn_smul hm.continuousOn hK
+    have hsupp : Function.support (fun z => m z • h z) ⊆ tsupport m := by
+      intro z hz
+      apply subset_tsupport m
+      simp only [Function.mem_support] at hz ⊢
+      intro hmz; apply hz; simp [hmz]
+    exact (integrableOn_iff_integrable_of_support_subset hsupp).mp hon
+  intro φ hφ hcs htsupp
+  change ∫ z, ((fderiv ℝ φ z) v) • (f₁ z + f₂ z) = - ∫ z, φ z • (g₁ z + g₂ z)
+  -- Integrability facts for the directional-derivative test function and `φ` itself.
+  have hcont_dφ : Continuous (fun z => (fderiv ℝ φ z) v) :=
+    (hφ.continuous_fderiv (by norm_num)).clm_apply continuous_const
+  have hcs_dφ : HasCompactSupport (fun z => (fderiv ℝ φ z) v) :=
+    HasCompactSupport.fderiv_apply ℝ hcs v
+  have hts_dφ : tsupport (fun z => (fderiv ℝ φ z) v) ⊆ Ω :=
+    (tsupport_fderiv_apply_subset ℝ v).trans htsupp
+  have iIf₁ : Integrable (fun z => ((fderiv ℝ φ z) v) • f₁ z) volume :=
+    integ _ hcont_dφ hcs_dφ hts_dφ hf₁
+  have iIf₂ : Integrable (fun z => ((fderiv ℝ φ z) v) • f₂ z) volume :=
+    integ _ hcont_dφ hcs_dφ hts_dφ hf₂
+  have iIg₁ : Integrable (fun z => φ z • g₁ z) volume :=
+    integ _ hφ.continuous hcs htsupp hg₁
+  have iIg₂ : Integrable (fun z => φ z • g₂ z) volume :=
+    integ _ hφ.continuous hcs htsupp hg₂
+  have hlhs : (∫ z, ((fderiv ℝ φ z) v) • (f₁ z + f₂ z))
+      = (∫ z, ((fderiv ℝ φ z) v) • f₁ z) + ∫ z, ((fderiv ℝ φ z) v) • f₂ z := by
+    rw [← integral_add iIf₁ iIf₂]
+    apply integral_congr_ae
+    filter_upwards with z
+    exact smul_add _ _ _
+  have hrhs : (∫ z, φ z • (g₁ z + g₂ z))
+      = (∫ z, φ z • g₁ z) + ∫ z, φ z • g₂ z := by
+    rw [← integral_add iIg₁ iIg₂]
+    apply integral_congr_ae
+    filter_upwards with z
+    exact smul_add _ _ _
+  rw [hlhs, hrhs, h₁ φ hφ hcs htsupp, h₂ φ hφ hcs htsupp]
+  ring
+
+/-- Weak directional derivatives respect negation. -/
+theorem HasWeakDirDeriv.neg (h : HasWeakDirDeriv v g f Ω) :
+    HasWeakDirDeriv v (fun z => -g z) (fun z => -f z) Ω := by
+  intro φ hφ hcs htsupp
+  have hL : (∫ z, ((fderiv ℝ φ z) v) • (-f z)) = - ∫ z, ((fderiv ℝ φ z) v) • f z := by
+    rw [← integral_neg]
+    apply integral_congr_ae
+    filter_upwards with z
+    exact smul_neg _ _
+  have hR : (∫ z, φ z • (-g z)) = - ∫ z, φ z • g z := by
+    rw [← integral_neg]
+    apply integral_congr_ae
+    filter_upwards with z
+    exact smul_neg _ _
+  change (∫ z, ((fderiv ℝ φ z) v) • (-f z)) = - ∫ z, φ z • (-g z)
+  rw [hL, hR, h φ hφ hcs htsupp]
+
+/-- Weak directional derivatives are subtractive. -/
+theorem HasWeakDirDeriv.sub {f₁ f₂ g₁ g₂ : ℂ → ℂ}
+    (h₁ : HasWeakDirDeriv v g₁ f₁ Ω) (h₂ : HasWeakDirDeriv v g₂ f₂ Ω)
+    (hf₁ : LocallyIntegrableOn f₁ Ω) (hf₂ : LocallyIntegrableOn f₂ Ω)
+    (hg₁ : LocallyIntegrableOn g₁ Ω) (hg₂ : LocallyIntegrableOn g₂ Ω) :
+    HasWeakDirDeriv v (fun z => g₁ z - g₂ z) (fun z => f₁ z - f₂ z) Ω := by
+  -- (continuous real, compactly supported in `Ω`) • (locally integrable on `Ω`) is integrable.
+  have integ : ∀ (m : ℂ → ℝ), Continuous m → HasCompactSupport m → tsupport m ⊆ Ω →
+      ∀ {h : ℂ → ℂ}, LocallyIntegrableOn h Ω → Integrable (fun z => m z • h z) volume := by
+    intro m hm hcsm htsuppm h hh
+    have hK : IsCompact (tsupport m) := hcsm
+    have hhon : IntegrableOn h (tsupport m) volume :=
+      hh.integrableOn_compact_subset htsuppm hK
+    have hon : IntegrableOn (fun z => m z • h z) (tsupport m) volume :=
+      hhon.continuousOn_smul hm.continuousOn hK
+    have hsupp : Function.support (fun z => m z • h z) ⊆ tsupport m := by
+      intro z hz
+      apply subset_tsupport m
+      simp only [Function.mem_support] at hz ⊢
+      intro hmz; apply hz; simp [hmz]
+    exact (integrableOn_iff_integrable_of_support_subset hsupp).mp hon
+  intro φ hφ hcs htsupp
+  change ∫ z, ((fderiv ℝ φ z) v) • (f₁ z - f₂ z) = - ∫ z, φ z • (g₁ z - g₂ z)
+  have hcont_dφ : Continuous (fun z => (fderiv ℝ φ z) v) :=
+    (hφ.continuous_fderiv (by norm_num)).clm_apply continuous_const
+  have hcs_dφ : HasCompactSupport (fun z => (fderiv ℝ φ z) v) :=
+    HasCompactSupport.fderiv_apply ℝ hcs v
+  have hts_dφ : tsupport (fun z => (fderiv ℝ φ z) v) ⊆ Ω :=
+    (tsupport_fderiv_apply_subset ℝ v).trans htsupp
+  have iIf₁ : Integrable (fun z => ((fderiv ℝ φ z) v) • f₁ z) volume :=
+    integ _ hcont_dφ hcs_dφ hts_dφ hf₁
+  have iIf₂ : Integrable (fun z => ((fderiv ℝ φ z) v) • f₂ z) volume :=
+    integ _ hcont_dφ hcs_dφ hts_dφ hf₂
+  have iIg₁ : Integrable (fun z => φ z • g₁ z) volume :=
+    integ _ hφ.continuous hcs htsupp hg₁
+  have iIg₂ : Integrable (fun z => φ z • g₂ z) volume :=
+    integ _ hφ.continuous hcs htsupp hg₂
+  have hlhs : (∫ z, ((fderiv ℝ φ z) v) • (f₁ z - f₂ z))
+      = (∫ z, ((fderiv ℝ φ z) v) • f₁ z) - ∫ z, ((fderiv ℝ φ z) v) • f₂ z := by
+    rw [← integral_sub iIf₁ iIf₂]
+    apply integral_congr_ae
+    filter_upwards with z
+    exact smul_sub _ _ _
+  have hrhs : (∫ z, φ z • (g₁ z - g₂ z))
+      = (∫ z, φ z • g₁ z) - ∫ z, φ z • g₂ z := by
+    rw [← integral_sub iIg₁ iIg₂]
+    apply integral_congr_ae
+    filter_upwards with z
+    exact smul_sub _ _ _
+  rw [hlhs, hrhs, h₁ φ hφ hcs htsupp, h₂ φ hφ hcs htsupp]
+  ring
+
+/-- Weak directional derivatives are homogeneous: scaling `f` by a complex
+constant scales its weak derivative by the same constant. -/
+theorem HasWeakDirDeriv.const_smul (c : ℂ) (h : HasWeakDirDeriv v g f Ω) :
+    HasWeakDirDeriv v (fun z => c • g z) (fun z => c • f z) Ω := by
+  intro φ hφ hcs htsupp
+  change ∫ z, ((fderiv ℝ φ z) v) • (c • f z) = - ∫ z, φ z • (c • g z)
+  have hlhs : (∫ z, ((fderiv ℝ φ z) v) • (c • f z))
+      = c • ∫ z, ((fderiv ℝ φ z) v) • f z := by
+    rw [← integral_smul]
+    apply integral_congr_ae
+    filter_upwards with z
+    exact smul_comm _ c _
+  have hrhs : (∫ z, φ z • (c • g z)) = c • ∫ z, φ z • g z := by
+    rw [← integral_smul]
+    apply integral_congr_ae
+    filter_upwards with z
+    exact smul_comm _ c _
+  rw [hlhs, hrhs, h φ hφ hcs htsupp, smul_neg]
+
+/-- **Classical derivatives are weak derivatives.** A `C¹` function on an open
+set has its classical directional derivative `z ↦ (fderiv ℝ f z) v` as a weak
+directional derivative — integration by parts with no boundary term. -/
+theorem HasWeakDirDeriv.of_contDiffOn (hΩ : IsOpen Ω) (hf : ContDiffOn ℝ 1 f Ω) :
+    HasWeakDirDeriv v (fun z => (fderiv ℝ f z) v) f Ω := by
+  -- (continuous real, compactly supported in `Ω`) • (locally integrable on `Ω`) is integrable.
+  have integ : ∀ (m : ℂ → ℝ), Continuous m → HasCompactSupport m → tsupport m ⊆ Ω →
+      ∀ {h : ℂ → ℂ}, LocallyIntegrableOn h Ω → Integrable (fun z => m z • h z) volume := by
+    intro m hm hcsm htsuppm h hh
+    have hK : IsCompact (tsupport m) := hcsm
+    have hhon : IntegrableOn h (tsupport m) volume :=
+      hh.integrableOn_compact_subset htsuppm hK
+    have hon : IntegrableOn (fun z => m z • h z) (tsupport m) volume :=
+      hhon.continuousOn_smul hm.continuousOn hK
+    have hsupp : Function.support (fun z => m z • h z) ⊆ tsupport m := by
+      intro z hz
+      apply subset_tsupport m
+      simp only [Function.mem_support] at hz ⊢
+      intro hmz; apply hz; simp [hmz]
+    exact (integrableOn_iff_integrable_of_support_subset hsupp).mp hon
+  intro φ hφ hcs htsupp
+  change ∫ z, ((fderiv ℝ φ z) v) • f z = - ∫ z, φ z • ((fderiv ℝ f z) v)
+  -- Local integrability of `f` and of its directional derivative on `Ω`.
+  have hfloc : LocallyIntegrableOn f Ω :=
+    hf.continuousOn.locallyIntegrableOn hΩ.measurableSet
+  have hf'loc : LocallyIntegrableOn (fun z => (fderiv ℝ f z) v) Ω :=
+    ((hf.continuousOn_fderiv_of_isOpen hΩ le_rfl).clm_apply continuousOn_const).locallyIntegrableOn
+      hΩ.measurableSet
+  have hcont_dφ : Continuous (fun z => (fderiv ℝ φ z) v) :=
+    (hφ.continuous_fderiv (by norm_num)).clm_apply continuous_const
+  have hcs_dφ : HasCompactSupport (fun z => (fderiv ℝ φ z) v) :=
+    HasCompactSupport.fderiv_apply ℝ hcs v
+  have hts_dφ : tsupport (fun z => (fderiv ℝ φ z) v) ⊆ Ω :=
+    (tsupport_fderiv_apply_subset ℝ v).trans htsupp
+  -- The three integrability hypotheses of the integration-by-parts lemma.
+  have h1 : Integrable (fun x => (fderiv ℝ φ x) v • f x) volume :=
+    integ _ hcont_dφ hcs_dφ hts_dφ hfloc
+  have h2 : Integrable (fun x => φ x • (fderiv ℝ f x) v) volume :=
+    integ _ hφ.continuous hcs htsupp hf'loc
+  have h3 : Integrable (fun x => φ x • f x) volume :=
+    integ _ hφ.continuous hcs htsupp hfloc
+  -- Differentiability witnesses on the relevant supports.
+  have hd1 : ∀ x ∈ tsupport f, DifferentiableAt ℝ φ x :=
+    fun x _ => (hφ.differentiable (by norm_num)).differentiableAt
+  have hd2 : ∀ x ∈ tsupport φ, DifferentiableAt ℝ f x :=
+    fun x hx => (hf.differentiableOn one_ne_zero).differentiableAt (hΩ.mem_nhds (htsupp hx))
+  have L := integral_smul_fderiv_eq_neg_fderiv_smul_of_integrable h1 h2 h3 hd1 hd2
+  have L' : (∫ z, φ z • ((fderiv ℝ f z) v)) = -∫ z, ((fderiv ℝ φ z) v) • f z := L
+  rw [L', neg_neg]
+
+/-- For a `C¹` function the strong holomorphic Wirtinger derivative `dz f` is a
+weak `∂`-derivative. -/
+theorem hasWeakDz_of_contDiffOn (hΩ : IsOpen Ω) (hf : ContDiffOn ℝ 1 f Ω) :
+    HasWeakDz (fun z => dz f z) f Ω := by
+  exact ⟨fun z => (fderiv ℝ f z) 1, fun z => (fderiv ℝ f z) Complex.I,
+    HasWeakDirDeriv.of_contDiffOn hΩ hf, HasWeakDirDeriv.of_contDiffOn hΩ hf, fun z => rfl⟩
+
+/-- For a `C¹` function the strong antiholomorphic Wirtinger derivative `dzbar f`
+is a weak `∂̄`-derivative. -/
+theorem hasWeakDzbar_of_contDiffOn (hΩ : IsOpen Ω) (hf : ContDiffOn ℝ 1 f Ω) :
+    HasWeakDzbar (fun z => dzbar f z) f Ω := by
+  exact ⟨fun z => (fderiv ℝ f z) 1, fun z => (fderiv ℝ f z) Complex.I,
+    HasWeakDirDeriv.of_contDiffOn hΩ hf, HasWeakDirDeriv.of_contDiffOn hΩ hf, fun z => rfl⟩
+
+/-- Local `Lᵖ` membership restricts to subsets. -/
+theorem MemLpLocOn.mono {p : ℝ≥0∞} (h : MemLpLocOn f p Ω) {Ω' : Set ℂ}
+    (hsub : Ω' ⊆ Ω) : MemLpLocOn f p Ω' := by
+  intro K hK hKc
+  exact h K (hK.trans hsub) hKc
+
+/-- Local Sobolev membership restricts to subsets. -/
+theorem MemWklocP.mono {k : ℕ} {p : ℝ≥0∞} (h : MemWklocP f k p Ω) {Ω' : Set ℂ}
+    (hsub : Ω' ⊆ Ω) : MemWklocP f k p Ω' := by
+  induction k generalizing f with
+  | zero => exact MemLpLocOn.mono h hsub
+  | succ k ih =>
+      obtain ⟨hLp, gx, gy, ⟨hgx, hgy⟩, hmgx, hmgy⟩ := h
+      exact ⟨MemLpLocOn.mono hLp hsub, gx, gy,
+        ⟨hgx.mono hsub, hgy.mono hsub⟩, ih hmgx, ih hmgy⟩
 
 end RiemannDynamics
