@@ -479,7 +479,140 @@ integrand (the Cauchy transform is a convolution with a locally integrable
 kernel, and `ω` is `C¹` with compact support). -/
 theorem dzbar_cauchyTransform_eq (hω : ContDiff ℝ 1 ω) (hωc : HasCompactSupport ω) (z : ℂ) :
     dzbar (cauchyTransform ω) z = cauchyTransform (fun ζ => dzbar ω ζ) z := by
-  sorry
+  set L : ℂ →L[ℝ] ℂ →L[ℝ] ℂ := ContinuousLinearMap.mul ℝ ℂ with hL
+  set k : ℂ → ℂ := fun u => -u⁻¹ with hk
+  -- Step A: the translated Cauchy kernel `-u⁻¹` is locally integrable on `ℂ`.
+  have hk_loc : LocallyIntegrable k volume := by
+    rw [hk]
+    apply LocallyIntegrable.neg
+    rw [MeasureTheory.locallyIntegrable_iff]
+    intro K hK
+    obtain ⟨R, hR⟩ := hK.isBounded.subset_closedBall 0
+    apply MeasureTheory.IntegrableOn.mono_set _ hR
+    rw [IntegrableOn]
+    refine ⟨measurable_inv.aestronglyMeasurable.restrict, ?_⟩
+    rw [hasFiniteIntegral_iff_enorm, ← lintegral_indicator measurableSet_closedBall,
+      ← Complex.lintegral_comp_polarCoord_symm]
+    set lhs : ℝ × ℝ → ENNReal := fun p =>
+      ENNReal.ofReal p.1 •
+        (Metric.closedBall (0 : ℂ) R).indicator (fun u : ℂ => ‖u⁻¹‖ₑ) (Complex.polarCoord.symm p)
+      with hlhs
+    set box : ℝ × ℝ → ENNReal :=
+      (Set.Ioc (0 : ℝ) R ×ˢ Set.Ioo (-π) π).indicator (fun _ => (1 : ENNReal)) with hbox
+    have hbound : ∀ p ∈ polarCoord.target, lhs p ≤ box p := by
+      intro p hp
+      simp only [hlhs, hbox]
+      rw [polarCoord_target, Set.mem_prod] at hp
+      obtain ⟨hp1, hp2⟩ := hp
+      simp only [Set.mem_Ioi] at hp1
+      by_cases hmem : Complex.polarCoord.symm p ∈ Metric.closedBall (0 : ℂ) R
+      · rw [Set.indicator_of_mem hmem]
+        have hnorm : ‖Complex.polarCoord.symm p‖ = p.1 := by
+          rw [Complex.norm_polarCoord_symm, abs_of_pos hp1]
+        have hsymm_ne : Complex.polarCoord.symm p ≠ 0 := by
+          rw [← norm_ne_zero_iff, hnorm]; exact ne_of_gt hp1
+        rw [enorm_inv hsymm_ne]
+        have henorm : ‖Complex.polarCoord.symm p‖ₑ = ENNReal.ofReal p.1 := by
+          rw [← ofReal_norm_eq_enorm, hnorm]
+        rw [henorm, smul_eq_mul,
+          ENNReal.mul_inv_cancel (by simp only [ne_eq, ENNReal.ofReal_eq_zero, not_le]; exact hp1)
+            ENNReal.ofReal_lt_top.ne]
+        have hpR : p.1 ≤ R := by
+          rw [Metric.mem_closedBall, dist_zero_right, hnorm] at hmem
+          exact hmem
+        have hmem2 : p ∈ Set.Ioc (0 : ℝ) R ×ˢ Set.Ioo (-π) π :=
+          Set.mem_prod.mpr ⟨Set.mem_Ioc.mpr ⟨hp1, hpR⟩, hp2⟩
+        rw [Set.indicator_of_mem hmem2]
+      · rw [Set.indicator_of_notMem hmem]
+        simp
+    have hmeas : Measurable box :=
+      measurable_const.indicator (measurableSet_Ioc.prod measurableSet_Ioo)
+    have hbox_meas : MeasurableSet (Set.Ioc (0 : ℝ) R ×ˢ Set.Ioo (-π) π) :=
+      measurableSet_Ioc.prod measurableSet_Ioo
+    calc
+      ∫⁻ p in polarCoord.target, lhs p
+          ≤ ∫⁻ p in polarCoord.target, box p := setLIntegral_mono hmeas hbound
+      _ ≤ ∫⁻ p, box p := setLIntegral_le_lintegral _ _
+      _ = volume (Set.Ioc (0 : ℝ) R ×ˢ Set.Ioo (-π) π) := by
+            rw [hbox, lintegral_indicator hbox_meas]; simp
+      _ < ⊤ := by
+            have hvol : (volume : Measure (ℝ × ℝ)) = volume.prod volume :=
+              Measure.volume_eq_prod ℝ ℝ
+            rw [hvol, Measure.prod_prod, Real.volume_Ioc, Real.volume_Ioo]
+            exact ENNReal.mul_lt_top ENNReal.ofReal_lt_top ENNReal.ofReal_lt_top
+  -- Step B: the Cauchy transform is the convolution of `ω` with the kernel `k`.
+  have hCT : cauchyTransform ω
+      = fun w => (-(1 / (π : ℂ))) • (MeasureTheory.convolution ω k L volume) w := by
+    funext w
+    rw [cauchyTransform, MeasureTheory.convolution_def, smul_eq_mul]
+    congr 1
+    apply integral_congr_ae (ae_of_all _ fun ζ => ?_)
+    rw [hL, ContinuousLinearMap.mul_apply']
+    change ω ζ / (ζ - w) = ω ζ * -(w - ζ)⁻¹
+    have hflip : -(w - ζ)⁻¹ = (ζ - w)⁻¹ := by rw [← neg_sub ζ w, inv_neg, neg_neg]
+    rw [hflip, div_eq_mul_inv]
+  -- Step C: differentiate the convolution, passing the derivative onto the smooth factor `ω`.
+  have hfd0 : HasFDerivAt (MeasureTheory.convolution ω k L volume)
+      (MeasureTheory.convolution (fderiv ℝ ω) k (ContinuousLinearMap.precompL ℂ L) volume z) z :=
+    hωc.hasFDerivAt_convolution_left L hω hk_loc z
+  set D₀ := MeasureTheory.convolution (fderiv ℝ ω) k (ContinuousLinearMap.precompL ℂ L) volume z
+    with hD₀
+  have hfderiv : fderiv ℝ (cauchyTransform ω) z = (-(1 / (π : ℂ))) • D₀ := by
+    have hfd : HasFDerivAt (cauchyTransform ω) ((-(1 / (π : ℂ))) • D₀) z := by
+      rw [hCT]; exact hfd0.const_smul (-(1 / (π : ℂ)))
+    exact hfd.fderiv
+  -- Step D: existence of the differentiated convolution and its directional values.
+  have hex : ConvolutionExistsAt (fderiv ℝ ω) k z (ContinuousLinearMap.precompL ℂ L) volume :=
+    ((hωc.fderiv ℝ).convolutionExists_left (ContinuousLinearMap.precompL ℂ L)
+      (hω.continuous_fderiv one_ne_zero) hk_loc) z
+  have hex_int :
+      Integrable (fun t => (ContinuousLinearMap.precompL ℂ L) (fderiv ℝ ω t) (k (z - t))) volume :=
+    hex
+  set A : ℂ → ℂ := fun t => (fderiv ℝ ω t) 1 * k (z - t) with hA
+  set B : ℂ → ℂ := fun t => (fderiv ℝ ω t) Complex.I * k (z - t) with hB
+  have hA_int : Integrable A volume := by
+    have h := hex_int.apply_continuousLinearMap (1 : ℂ)
+    apply h.congr; apply ae_of_all _ fun t => ?_
+    change (ContinuousLinearMap.precompL ℂ L) (fderiv ℝ ω t) (k (z - t)) 1 = A t
+    rw [ContinuousLinearMap.precompL_apply, hL, ContinuousLinearMap.mul_apply']
+  have hB_int : Integrable B volume := by
+    have h := hex_int.apply_continuousLinearMap Complex.I
+    apply h.congr; apply ae_of_all _ fun t => ?_
+    change (ContinuousLinearMap.precompL ℂ L) (fderiv ℝ ω t) (k (z - t)) Complex.I = B t
+    rw [ContinuousLinearMap.precompL_apply, hL, ContinuousLinearMap.mul_apply']
+  have hD₀_eval : ∀ v : ℂ, D₀ v = ∫ t, ((fderiv ℝ ω t) v) * (k (z - t)) ∂volume := by
+    intro v
+    rw [hD₀, MeasureTheory.convolution_def, ContinuousLinearMap.integral_apply hex_int]
+    apply integral_congr_ae (ae_of_all _ fun t => ?_)
+    rw [ContinuousLinearMap.precompL_apply, hL, ContinuousLinearMap.mul_apply']
+  have hD₀1 : D₀ 1 = ∫ t, A t := hD₀_eval 1
+  have hD₀I : D₀ Complex.I = ∫ t, B t := hD₀_eval Complex.I
+  -- The Cauchy transform of `∂̄ω`, expressed through the same `A`, `B` integrals.
+  have hRHS : cauchyTransform (fun ζ => dzbar ω ζ) z
+      = (-(1 / (π : ℂ))) * ((1 / 2) * ((∫ t, A t) + Complex.I * (∫ t, B t))) := by
+    rw [cauchyTransform]
+    congr 1
+    have hker : ∀ t : ℂ, (dzbar ω t) / (t - z) = (1 / 2 : ℂ) * (A t + Complex.I * B t) := by
+      intro t
+      rw [dzbar]
+      have hk_eq : (t - z)⁻¹ = k (z - t) := by
+        rw [hk]; change (t - z)⁻¹ = -(z - t)⁻¹
+        rw [← neg_sub t z, inv_neg, neg_neg]
+      rw [div_eq_mul_inv, hk_eq, hA, hB]; ring
+    rw [integral_congr_ae (ae_of_all _ hker)]
+    have h1 : ∫ (a : ℂ), (1 : ℂ) / 2 * (A a + Complex.I * B a)
+        = (1 : ℂ) / 2 * ∫ a, (A a + Complex.I * B a) :=
+      MeasureTheory.integral_const_mul ((1 : ℂ) / 2) _
+    rw [h1]; congr 1
+    have h2 : ∫ a, (A a + Complex.I * B a) = (∫ a, A a) + ∫ a, Complex.I * B a :=
+      integral_add hA_int (hB_int.const_mul Complex.I)
+    rw [h2]; congr 1
+    exact MeasureTheory.integral_const_mul Complex.I B
+  -- Step E: assemble the Wirtinger derivative of `Pω` from the directional values.
+  rw [hRHS, dzbar, hfderiv]
+  rw [ContinuousLinearMap.smul_apply, ContinuousLinearMap.smul_apply, smul_eq_mul, smul_eq_mul]
+  rw [hD₀1, hD₀I]
+  ring
 
 /-- **The Cauchy transform solves `∂̄`.** For a `C¹` function of compact support,
 `∂̄(Pω) = ω` — the composition of `dzbar_cauchyTransform_eq` (`∂̄P = P∂̄`) and
