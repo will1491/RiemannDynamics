@@ -57,3 +57,7 @@ import RiemannDynamics.Dynamics.JuliaFatou.RepellingDensity
 import RiemannDynamics.Dynamics.FatouComponents.Def
 import RiemannDynamics.Dynamics.FatouComponents.GrandOrbit
 import RiemannDynamics.Dynamics.FatouComponents.Periodic
+
+import RiemannDynamics.Analysis.Sobolev.Wirtinger
+import RiemannDynamics.Analysis.Sobolev.WeakDeriv
+import RiemannDynamics.Analysis.Sobolev.Mollification
