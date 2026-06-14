@@ -400,4 +400,41 @@ theorem sphericalDist_inducesTopology :
         refine ⟨w, hws, ?_⟩
         rw [dist_self]; exact hε w hws
 
+
+/-! ## Access lemmas and the Euclidean comparison -/
+
+/-- The spherical distance between finite points is the chordal distance. -/
+theorem sphericalDist_coe_coe (z w : ℂ) :
+    sphericalDist (z : ℂ̂) (w : ℂ̂) = chordalDist z w := rfl
+
+/-- The spherical distance from a finite point to `∞`. -/
+theorem sphericalDist_coe_infty (z : ℂ) :
+    sphericalDist (z : ℂ̂) (∞ : ℂ̂) = chordalDistInfty z := rfl
+
+/-- On a norm-bounded region, the Euclidean distance is controlled by the
+spherical (chordal) distance: the chordal denominators are at most
+`1 + M ^ 2`. -/
+theorem norm_sub_le_sphericalDist_mul {z w : ℂ} {M : ℝ} (hz : ‖z‖ ≤ M)
+    (hw : ‖w‖ ≤ M) :
+    ‖z - w‖ ≤ (1 + M ^ 2) / 2 * sphericalDist (z : ℂ̂) (w : ℂ̂) := by
+  rw [sphericalDist_coe_coe]
+  unfold chordalDist
+  have hposz : (0 : ℝ) < Real.sqrt (1 + ‖z‖ ^ 2) := Real.sqrt_pos.mpr (by positivity)
+  have hposw : (0 : ℝ) < Real.sqrt (1 + ‖w‖ ^ 2) := Real.sqrt_pos.mpr (by positivity)
+  have hprod_pos : (0 : ℝ) < Real.sqrt (1 + ‖z‖ ^ 2) * Real.sqrt (1 + ‖w‖ ^ 2) :=
+    mul_pos hposz hposw
+  have hz2 : Real.sqrt (1 + ‖z‖ ^ 2) ≤ Real.sqrt (1 + M ^ 2) :=
+    Real.sqrt_le_sqrt (by nlinarith [norm_nonneg z])
+  have hw2 : Real.sqrt (1 + ‖w‖ ^ 2) ≤ Real.sqrt (1 + M ^ 2) :=
+    Real.sqrt_le_sqrt (by nlinarith [norm_nonneg w])
+  have hMsq : Real.sqrt (1 + M ^ 2) * Real.sqrt (1 + M ^ 2) = 1 + M ^ 2 := by
+    rw [← pow_two, Real.sq_sqrt (by positivity)]
+  have hprod_le : Real.sqrt (1 + ‖z‖ ^ 2) * Real.sqrt (1 + ‖w‖ ^ 2) ≤ 1 + M ^ 2 := by
+    calc Real.sqrt (1 + ‖z‖ ^ 2) * Real.sqrt (1 + ‖w‖ ^ 2)
+        ≤ Real.sqrt (1 + M ^ 2) * Real.sqrt (1 + M ^ 2) :=
+          mul_le_mul hz2 hw2 hposw.le (Real.sqrt_nonneg _)
+      _ = 1 + M ^ 2 := hMsq
+  rw [← mul_div_assoc, le_div_iff₀ hprod_pos]
+  nlinarith [mul_nonneg (norm_nonneg (z - w)) (sub_nonneg.mpr hprod_le)]
+
 end RiemannDynamics
