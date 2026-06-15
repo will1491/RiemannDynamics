@@ -61,6 +61,7 @@ import RiemannDynamics.Dynamics.FatouComponents.Periodic
 import RiemannDynamics.Analysis.Sobolev.Wirtinger
 import RiemannDynamics.Analysis.Sobolev.WeakDeriv
 import RiemannDynamics.Analysis.Sobolev.Mollification
+import RiemannDynamics.Analysis.Sobolev.AbsolutelyContinuousLines
 
 import RiemannDynamics.Analysis.SingularIntegral.Cauchy
 import RiemannDynamics.Analysis.SingularIntegral.CalderonZygmund
@@ -74,3 +75,6 @@ import RiemannDynamics.Analysis.SingularIntegral.Beurling.Convolution
 import RiemannDynamics.Analysis.SingularIntegral.Beurling.L2Core
 import RiemannDynamics.Analysis.SingularIntegral.Beurling.LpLow
 import RiemannDynamics.Analysis.SingularIntegral.Beurling.LpHighOpNorm
+
+import RiemannDynamics.QC.BeltramiCoeff
+import RiemannDynamics.QC.Analytic
