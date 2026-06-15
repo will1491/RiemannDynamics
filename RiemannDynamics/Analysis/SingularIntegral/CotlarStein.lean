@@ -48,7 +48,7 @@ theorem noncomm_sum_pow {M : Type*} [Ring M] {ι : Type*} [Fintype ι]
 
 /-- Reassociation of an ordered product of pairs:
 `prod (a k * b k) = a 0 * (prod (b k.castSucc * a k.succ)) * b last`. -/
-theorem chain_regroup {M : Type*} [Monoid M] (m : ℕ) (a b : Fin (m+1) → M) :
+theorem chain_regroup {M : Type*} [Monoid M] (m : ℕ) (a b : Fin (m + 1) → M) :
     (List.ofFn (fun k => a k * b k)).prod
       = a 0 * (List.ofFn (fun k : Fin m => b k.castSucc * a k.succ)).prod * b (Fin.last m) := by
   induction m with
@@ -69,7 +69,9 @@ theorem sqrt_prod_ofFn {n : ℕ} (f : Fin n → ℝ) (hf : ∀ k, 0 ≤ f k) :
       rw [List.ofFn_succ', List.prod_concat, Real.sqrt_mul,
         ih (fun k => f k.castSucc) (fun k => hf _)]
       · rw [List.ofFn_succ' (fun k => Real.sqrt (f k)), List.prod_concat]
-      · exact List.prod_nonneg (by simp; exact fun k => hf _)
+      · exact List.prod_nonneg
+          (by simp only [List.mem_ofFn, forall_exists_index, forall_apply_eq_imp_iff]
+              exact fun k => hf _)
 
 /-- Geometric-mean estimate: `x ≤ a`, `x ≤ b`, `0 ≤ x` imply `x ≤ √a * √b`. -/
 theorem geom_mean_le (x a b : ℝ) (hx : 0 ≤ x) (ha : x ≤ a) (hb : x ≤ b) :
@@ -79,7 +81,7 @@ theorem geom_mean_le (x a b : ℝ) (hx : 0 ≤ x) (ha : x ≤ a) (hb : x ≤ b) 
   exact Real.sqrt_le_sqrt (mul_le_mul ha hb hx h0a)
 
 /-- Reindex a sum over `Fin (m+2) -> Fin N` by splitting off the last coordinate. -/
-theorem reindex_snoc {N m : ℕ} (f : (Fin (m+2) → Fin N) → ℝ) :
+theorem reindex_snoc {N m : ℕ} (f : (Fin (m + 2) → Fin N) → ℝ) :
     (∑ i : Fin (m+2) → Fin N, f i)
       = ∑ i' : Fin (m+1) → Fin N, ∑ iL : Fin N, f (Fin.snoc i' iL) := by
   rw [← (Fin.snocEquiv (fun _ : Fin (m+2) => Fin N)).sum_comp (g := f),
@@ -87,7 +89,7 @@ theorem reindex_snoc {N m : ℕ} (f : (Fin (m+2) → Fin N) → ℝ) :
   rfl
 
 /-- Reindex a double sum over chains by splitting off the last coordinate of each. -/
-theorem reindex_double {N m : ℕ} (S : (Fin (m+2) → Fin N) → (Fin (m+2) → Fin N) → ℝ) :
+theorem reindex_double {N m : ℕ} (S : (Fin (m + 2) → Fin N) → (Fin (m + 2) → Fin N) → ℝ) :
     (∑ i : Fin (m+2) → Fin N, ∑ j : Fin (m+2) → Fin N, S i j)
       = ∑ i' : Fin (m+1) → Fin N, ∑ j' : Fin (m+1) → Fin N,
           ∑ iL : Fin N, ∑ jL : Fin N,
@@ -105,10 +107,11 @@ theorem reindex_double {N m : ℕ} (S : (Fin (m+2) → Fin N) → (Fin (m+2) →
 theorem chain_inner_step {N : ℕ} (A : ℝ) (hA0 : 0 ≤ A) (β γ : Fin N → Fin N → ℝ)
     (hβ0 : ∀ i j, 0 ≤ β i j) (hγ0 : ∀ i j, 0 ≤ γ i j)
     (hβ : ∀ i, ∑ j, β i j ≤ A) (hγ : ∀ i, ∑ j, γ i j ≤ A) (m : ℕ)
-    (i' j' : Fin (m+1) → Fin N) :
+    (i' j' : Fin (m + 1) → Fin N) :
     (∑ iL : Fin N, ∑ jL : Fin N,
         (List.ofFn (fun k : Fin (m+2) =>
-            β ((Fin.snoc i' iL : Fin (m+2) → Fin N) k) ((Fin.snoc j' jL : Fin (m+2) → Fin N) k))).prod
+            β ((Fin.snoc i' iL : Fin (m+2) → Fin N) k)
+              ((Fin.snoc j' jL : Fin (m+2) → Fin N) k))).prod
           * (List.ofFn (fun k : Fin (m+1) =>
               γ ((Fin.snoc j' jL : Fin (m+2) → Fin N) k.castSucc)
                 ((Fin.snoc i' iL : Fin (m+2) → Fin N) k.succ))).prod)
@@ -244,7 +247,7 @@ controlled by `Mb` times the product of `√‖(T iₖ)* (T jₖ)‖` and the pr
 `√‖(T jₖ) (T iₖ₊₁)*‖`, obtained from the two regroupings and the geometric mean. -/
 theorem cotlarStein_perChain {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H]
     [CompleteSpace H] {N : ℕ} (T : Fin N → (H →L[ℂ] H)) (Mb : ℝ)
-    (hMb : ∀ i, ‖T i‖ ≤ Mb) (hMb0 : 0 ≤ Mb) (m' : ℕ) (i j : Fin (m'+1) → Fin N) :
+    (hMb : ∀ i, ‖T i‖ ≤ Mb) (hMb0 : 0 ≤ Mb) (m' : ℕ) (i j : Fin (m' + 1) → Fin N) :
     ‖(List.ofFn (fun k => (adjoint (T (i k))) ∘L (T (j k)))).prod‖
       ≤ Mb * ((List.ofFn (fun k => Real.sqrt ‖(adjoint (T (i k))) ∘L (T (j k))‖)).prod
             * (List.ofFn (fun k : Fin m' =>
@@ -252,7 +255,8 @@ theorem cotlarStein_perChain {H : Type*} [NormedAddCommGroup H] [InnerProductSpa
   set chainN := ‖(List.ofFn (fun k => (adjoint (T (i k))) ∘L (T (j k)))).prod‖ with hchainN_def
   set prodBnorm := (List.ofFn (fun k => ‖(adjoint (T (i k))) ∘L (T (j k))‖)).prod with hprodB
   set prodCnorm :=
-    (List.ofFn (fun k : Fin m' => ‖(T (j k.castSucc)) ∘L (adjoint (T (i k.succ)))‖)).prod with hprodC
+    (List.ofFn (fun k : Fin m' => ‖(T (j k.castSucc)) ∘L (adjoint (T (i k.succ)))‖)).prod
+      with hprodC
   have hchainN0 : 0 ≤ chainN := norm_nonneg _
   have hprodC0 : 0 ≤ prodCnorm := List.prod_nonneg (by simp)
   -- bound (a): group adjacent factors as (T i)* (T j)
@@ -272,9 +276,11 @@ theorem cotlarStein_perChain {H : Type*} [NormedAddCommGroup H] [InnerProductSpa
     rw [chain_regroup m' (fun k => adjoint (T (i k))) (fun k => T (j k))]
     set A0 := adjoint (T (i 0))
     set Blast := T (j (Fin.last m'))
-    set P := (List.ofFn (fun k : Fin m' => (T (j k.castSucc)) * (adjoint (T (i k.succ))))).prod with hP
+    set P := (List.ofFn (fun k : Fin m' => (T (j k.castSucc)) * (adjoint (T (i k.succ))))).prod
+      with hP
     have hPbound : ‖P‖
-        ≤ (List.ofFn (fun k : Fin m' => ‖(T (j k.castSucc)) ∘L (adjoint (T (i k.succ)))‖)).prod := by
+        ≤ (List.ofFn (fun k : Fin m' => ‖(T (j k.castSucc)) ∘L (adjoint (T (i k.succ)))‖)).prod :=
+          by
       rw [hP]
       rcases Nat.eq_zero_or_pos m' with hm0 | hmpos
       · subst hm0
@@ -352,7 +358,7 @@ theorem cotlarStein {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H]
   have hadjS : adjoint S = ∑ i, adjoint (T i) := map_sum (adjoint) T Finset.univ
   have hRexp : star S * S = ∑ p : Fin N × Fin N, (adjoint (T p.1)) ∘L (T p.2) := by
     rw [ContinuousLinearMap.star_eq_adjoint, hadjS]
-    show (∑ i, adjoint (T i)) ∘L (∑ j, T j) = _
+    change (∑ i, adjoint (T i)) ∘L (∑ j, T j) = _
     rw [Fintype.sum_prod_type, ContinuousLinearMap.finset_sum_comp]
     refine Finset.sum_congr rfl (fun i _ => ?_)
     rw [ContinuousLinearMap.comp_finset_sum]
@@ -381,7 +387,7 @@ theorem cotlarStein {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H]
       rw [Finset.mul_sum]
       apply Finset.sum_le_sum
       intro j _
-      show ‖(List.ofFn (fun k => (adjoint (T (i k))) ∘L (T (j k)))).prod‖ ≤ _
+      change ‖(List.ofFn (fun k => (adjoint (T (i k))) ∘L (T (j k)))).prod‖ ≤ _
       exact cotlarStein_perChain T Mb hMb hMb0 m' i j
     have step3 :
         (∑ i : Fin (m'+1) → Fin N, ∑ j : Fin (m'+1) → Fin N,

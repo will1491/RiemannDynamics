@@ -4,11 +4,39 @@ import Mathlib.Analysis.SpecialFunctions.Integrals.Basic
 -- Provides the `MeasureSpace ℂ` instance (`instMeasureSpaceComplex`) needed for `∫⁻ u : ℂ ∂volume`.
 import Mathlib.Analysis.Complex.UpperHalfPlane.Measure
 
+/-!
+# Annular integral of the inverse-square weight
+
+The elementary area-integral computation underlying the `Lᵖ` mapping properties of
+the **Beurling kernel** `K(z, ζ) = (z - ζ)⁻²`: over an annulus `{a ≤ ‖u‖ < b}` the
+integral of the squared modulus `‖u ^ (-2)‖ = ‖u‖⁻²` against the planar Lebesgue
+measure is `2π · log(b/a)`.
+
+In polar coordinates the area element is `ρ dρ dθ`, so the integrand
+`‖u‖⁻² dA = ρ⁻² · ρ dρ dθ = ρ⁻¹ dρ dθ` is constant in the angle `θ ∈ (-π, π)`
+(contributing the factor `2π`) and reduces to the radial integral
+`∫_a^b ρ⁻¹ dρ = log(b/a)` (`radial_lintegral_inv`). The logarithmic growth in
+`b/a` is exactly the borderline (non-)integrability of the Beurling kernel: its
+`L¹` mass over `{‖u‖ ≥ r}` diverges, but every higher power `‖u‖^{-2q}` with
+`q > 1` is integrable.
+
+`Analysis/SingularIntegral/Beurling.lean` consumes `annulus_lintegral` (and its
+`Lᵖ` variants built from the same polar reduction) to show the truncated Beurling
+kernel section `1_{‖·‖ ≥ r}(·) · ‖·‖⁻²` lies in `Lᵖ'`, so the singular integral is
+well-defined against `Lᵖ` data, and in the Cotlar–Stein / Schur kernel bounds.
+-/
+
 open MeasureTheory Complex Set
 open scoped Real ENNReal
 
 namespace RiemannDynamics.SingularIntegral
 
+/-- **Radial integral of `ρ⁻¹`.** For `0 < a < b`,
+`∫_{[a, b)} ρ⁻¹ dρ = log(b/a)` (as an `ℝ≥0∞`-integral of `ENNReal.ofReal ρ⁻¹`).
+This is the radial part of `annulus_lintegral`, where the polar area element
+`ρ dρ dθ` cancels one power of `ρ` from `‖u‖⁻²`. The proof bridges the
+`ℝ≥0∞`-integral to the Bochner integral of `ρ⁻¹` (`ofReal_integral_eq_lintegral_ofReal`),
+which equals `log(b/a)` by `integral_inv` since `0 ∉ [a, b]`. -/
 theorem radial_lintegral_inv (a b : ℝ) (ha : 0 < a) (hab : a < b) :
     ∫⁻ ρ in Set.Ico a b, ENNReal.ofReal ρ⁻¹ ∂volume = ENNReal.ofReal (Real.log (b / a)) := by
   have hb : 0 < b := ha.trans hab
@@ -38,6 +66,15 @@ theorem radial_lintegral_inv (a b : ℝ) (ha : 0 < a) (hab : a < b) :
     exact inv_nonneg.mpr (le_of_lt (lt_of_lt_of_le ha hρ.1))
 
 set_option maxHeartbeats 400000 in
+-- The `annulus_lintegral` polar-coordinate reduction elaborates a long
+-- `ENNReal`/`Real` rewrite chain in one theorem, exceeding the default budget.
+/-- **Annular integral of the inverse-square weight.** For `0 < a < b`,
+`∫_{a ≤ ‖u‖ < b} ‖u ^ (-2)‖ₑ dA = 2π · log(b/a)`; equivalently, the
+`ℝ≥0∞`-integral of `‖u‖⁻²` over the annulus equals `2π log(b/a)`. Proved by changing
+to polar coordinates (`Complex.lintegral_comp_polarCoord_symm`), on whose target the
+integrand collapses (Tonelli) to the angle-independent radial weight `ρ⁻¹` over
+`Ico a b ×ˢ Ioo (-π) π`; the angular factor gives `volume (Ioo (-π) π) = 2π` and the
+radial factor is `radial_lintegral_inv`. -/
 theorem annulus_lintegral (a b : ℝ) (ha : 0 < a) (hab : a < b) :
     ∫⁻ u : ℂ in {u : ℂ | a ≤ ‖u‖ ∧ ‖u‖ < b}, ‖(u ^ (-2 : ℤ) : ℂ)‖ₑ ∂volume
       = ENNReal.ofReal (2 * Real.pi * Real.log (b / a)) := by

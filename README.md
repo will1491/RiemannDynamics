@@ -1,15 +1,14 @@
 # Complex Dynamics, Teichmüller Theory & Hyperbolic Geometry in Lean 4
 
+A formalization of complex dynamics, Teichmüller theory, and hyperbolic geometry in Lean 4, from the Riemann sphere and normal families through the quasiconformal / Measurable Riemann Mapping engine, working towards complete formalizations of **Sullivan's No Wandering Domains theorem** and the **Nielsen–Thurston classification**. The development follows the first half of McMullen's *Riemann surfaces, dynamics and geometry* lecture notes, building directly on Mathlib and the vendored **RMT4** project.
+
 ## ⭐ Highlighted theorems
 
 Headline results formalized so far — click to jump to the Lean source:
 
 1. **Schwarz–Pick inequality** — [`schwarzPick`](RiemannDynamics/Hyperbolic/SchwarzPick.lean#L89): a holomorphic self-map of the open unit disk is non-expansive for the Poincaré hyperbolic distance.
-2. **Covering property of the thrice-punctured sphere by the unit disk** — [`modularLambda_isCoveringMapOn`](RiemannDynamics/Hyperbolic/ModularCoveringMap/CoveringAssembly.lean#L1498): the modular function `λ` is a covering map of `ℂ ∖ {0, 1}` (`= ℂ̂ ∖ {0, 1, ∞}`) from `𝔻`.
+2. **Covering property of the triply-punctured sphere by the unit disk** — [`modularLambda_isCoveringMapOn`](RiemannDynamics/Hyperbolic/ModularCoveringMap/CoveringAssembly.lean#L1498): the modular function `λ` is a covering map of `ℂ ∖ {0, 1}` (`= ℂ̂ ∖ {0, 1, ∞}`) from `𝔻`.
 3. **Montel–Carathéodory (strong Montel) theorem** — [`montel_caratheodory_sphere`](RiemannDynamics/NormalFamilies/StrongMontel/SphereMontel.lean#L37): a family of sphere-holomorphic maps omitting three fixed values is normal.
-
-A formalization of complex dynamics, Teichmüller theory, and hyperbolic geometry in Lean 4, from the Riemann sphere and normal families through the quasiconformal / Measurable Riemann Mapping engine, working towards complete formalizations of **Sullivan's No Wandering Domains theorem** and the **Nielsen–Thurston classification**. The development follows the first half of McMullen's *Riemann surfaces, dynamics and geometry* lecture notes, building directly on Mathlib and the vendored **RMT4** project.
-
 
 ## Project Structure
 ```mermaid

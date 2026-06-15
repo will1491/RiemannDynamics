@@ -1639,7 +1639,7 @@ bounded `L^{p₀} → L^{p₀}` with constant `M₀` and `L^{p₁} → L^{p₁}`
 theorem eLpNorm_interpolation_of_hasStrongType
     {T : (ℂ → ℂ) → ℂ → ℂ} {p₀ p₁ p : ℝ≥0∞} {M₀ M₁ : ℝ≥0} {θ : ℝ}
     (hp₀ : 1 ≤ p₀) (hp₀top : p₀ ≠ ⊤) (hp₁ : 1 ≤ p₁) (hp₁top : p₁ ≠ ⊤) (hp₀p₁ : p₀ ≠ p₁)
-    (hθ : θ ∈ Set.Ioo (0:ℝ) 1)
+    (hθ : θ ∈ Set.Ioo (0 : ℝ) 1)
     (hp : p⁻¹ = ENNReal.ofReal (1 - θ) * p₀⁻¹ + ENNReal.ofReal θ * p₁⁻¹)
     (hmeas : ∀ s : ℂ → ℂ, MemLp s p volume → AEStronglyMeasurable (T s) volume)
     (hadd : ∀ s t : ℂ → ℂ, (MemLp s p₀ volume ∨ MemLp s p₁ volume) →
