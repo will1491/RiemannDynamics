@@ -62,6 +62,7 @@ import RiemannDynamics.Analysis.Sobolev.Wirtinger
 import RiemannDynamics.Analysis.Sobolev.WeakDeriv
 import RiemannDynamics.Analysis.Sobolev.Mollification
 import RiemannDynamics.Analysis.Sobolev.AbsolutelyContinuousLines
+import RiemannDynamics.Analysis.Sobolev.SobolevToACL
 
 import RiemannDynamics.Analysis.SingularIntegral.Cauchy
 import RiemannDynamics.Analysis.SingularIntegral.CalderonZygmund
