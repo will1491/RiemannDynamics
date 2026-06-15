@@ -17,8 +17,8 @@ flowchart BT
         DirMathlib[Mathlib]
         DirRMT4[RMT4]
         DirCarleson[Carleson]
-        DirRMT4 --> DirMathlib
-        DirCarleson --> DirMathlib
+        DirMathlib --> DirRMT4
+        DirMathlib --> DirCarleson
     end
 
     subgraph DynamicsLine [Dynamics Line]
