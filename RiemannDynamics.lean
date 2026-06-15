@@ -64,4 +64,8 @@ import RiemannDynamics.Analysis.Sobolev.Mollification
 
 import RiemannDynamics.Analysis.SingularIntegral.Cauchy
 import RiemannDynamics.Analysis.SingularIntegral.CalderonZygmund
+import RiemannDynamics.Analysis.SingularIntegral.LpDuality
+import RiemannDynamics.Analysis.SingularIntegral.AnnulusIntegral
+import RiemannDynamics.Analysis.SingularIntegral.CotlarStein
+import RiemannDynamics.Analysis.SingularIntegral.RieszThorin
 import RiemannDynamics.Analysis.SingularIntegral.Beurling

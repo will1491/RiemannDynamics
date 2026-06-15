@@ -6,6 +6,9 @@ Authors: Will (Ziang) Li
 import Mathlib.MeasureTheory.Measure.Haar.OfBasis
 import Mathlib.MeasureTheory.Constructions.BorelSpace.Complex
 import Mathlib.LinearAlgebra.Complex.FiniteDimensional
+import Mathlib.MeasureTheory.Function.LpSpace.Complete
+import Mathlib.MeasureTheory.Function.LpSeminorm.CompareExp
+import Mathlib.MeasureTheory.Integral.MeanInequalities
 import Carleson.ToMathlib.RealInterpolation.Main
 
 /-!
@@ -32,8 +35,8 @@ the Beurling transform: a constant `C_p` for every `1 < p < ∞`, continuous in
 for `‖μ‖∞ < 1` and `p` near `2`.
 -/
 
-open MeasureTheory Set
-open scoped ENNReal NNReal
+open MeasureTheory Set Filter
+open scoped ENNReal NNReal Topology
 
 namespace RiemannDynamics
 
@@ -118,5 +121,152 @@ theorem isCalderonZygmundBound_of_hasWeakType
   -- hbound : eLpNorm (T f) p volume ≤ ↑c * eLpNorm f p volume
   rw [show ENNReal.ofReal (c : ℝ) = (c : ℝ≥0∞) from ENNReal.ofReal_coe_nnreal]
   exact hbound
+
+/-! ## Abstract analysis input for the `Lᵖ` theory
+
+A general measure-theory fact that Mathlib/Carleson do not package, used to push
+the Carleson Calderón–Zygmund weak-type bounds (stated for `BoundedFiniteSupport`
+test functions) up to all of `Lᵖ`. The companion `Lᵖ`–`Lᵖ'` duality lemma used
+for the `p > 2` range lives in `Analysis/SingularIntegral/LpDuality.lean`. -/
+
+/-- **Lower semicontinuity of the weak `Lᵖ` quasinorm under a.e. convergence**
+(weak-type Fatou). If `wnorm (f n) p μ ≤ C` eventually and `f n → g` a.e., then
+`wnorm g p μ ≤ C`. The distribution function `t ↦ μ {‖·‖ₑ > t}` is lower
+semicontinuous along a.e. limits (set-Fatou), and `⨆ₜ liminfₙ ≤ liminfₙ ⨆ₜ`. -/
+theorem wnorm_le_of_ae_tendsto {α E : Type*} [MeasurableSpace α] {μ : Measure α}
+    [NormedAddCommGroup E] {ι : Type*} {u : Filter ι} [u.NeBot] [u.IsCountablyGenerated]
+    {f : ι → α → E} {g : α → E} {p : ℝ≥0∞} {C : ℝ≥0∞}
+    (bound : ∀ᶠ n in u, wnorm (f n) p μ ≤ C)
+    (hf : ∀ n, AEStronglyMeasurable (f n) μ)
+    (h_tendsto : ∀ᵐ x ∂μ, Filter.Tendsto (fun n => f n x) u (𝓝 (g x))) :
+    wnorm g p μ ≤ C := by
+  -- The limit `g` is a.e. strongly measurable as an a.e. limit of such functions.
+  have hg : AEStronglyMeasurable g μ := aestronglyMeasurable_of_tendsto_ae u hf h_tendsto
+  by_cases hptop : p = ⊤
+  · -- `p = ⊤`: `wnorm · ⊤ μ = eLpNormEssSup · μ = eLpNorm · ⊤ μ`, so the strong
+    -- `eLpNorm` Fatou lemma `Lp.eLpNorm_le_of_ae_tendsto` applies directly.
+    subst hptop
+    rw [wnorm_top, ← eLpNorm_exponent_top]
+    refine MeasureTheory.Lp.eLpNorm_le_of_ae_tendsto (u := u) ?_ hf h_tendsto
+    filter_upwards [bound] with n hn
+    rwa [eLpNorm_exponent_top, ← wnorm_top]
+  -- `p ≠ ⊤`: work with `q := p.toReal` and `wnorm' = ⨆ₜ t · (distribution)^(1/q)`.
+  rw [wnorm_ne_top hptop]
+  set q : ℝ := p.toReal with hq_def
+  by_cases hq0 : q = 0
+  · -- `q = 0` (i.e. `p = 0`): `wnorm' g 0 μ = ∞`, and `bound` forces `C = ∞`.
+    rw [hq0, wnorm'_zero]
+    obtain ⟨n, hn⟩ := bound.exists
+    rw [wnorm_ne_top hptop, ← hq_def, hq0, wnorm'_zero] at hn
+    exact hn
+  have hq : 0 < q := lt_of_le_of_ne (by positivity) (Ne.symm hq0)
+  -- Reduce to a sequence: pick `v : ℕ → ι` with `Tendsto v atTop u`, set `F := f ∘ v`.
+  obtain ⟨v, hv⟩ := exists_seq_tendsto u
+  set F : ℕ → α → E := fun k => f (v k) with hF_def
+  have hFmeas : ∀ k, AEStronglyMeasurable (F k) μ := fun k => hf (v k)
+  have hbound' : ∀ᶠ k in atTop, wnorm' (F k) q μ ≤ C := by
+    have hcomp := hv.eventually bound
+    filter_upwards [hcomp] with k hk
+    rwa [wnorm_ne_top hptop] at hk
+  have h_tendsto' : ∀ᵐ x ∂μ, Filter.Tendsto (fun k => F k x) atTop (𝓝 (g x)) := by
+    filter_upwards [h_tendsto] with x hx
+    exact hx.comp hv
+  -- Lower semicontinuity of the distribution function along the sequence (set-Fatou).
+  have lsc : ∀ t : ℝ≥0, distribution g (t : ℝ≥0∞) μ
+      ≤ liminf (fun k => distribution (F k) (t : ℝ≥0∞) μ) atTop := by
+    intro t
+    -- Strongly measurable representatives, so that the level sets are genuinely measurable.
+    set F' : ℕ → α → E := fun k => (hFmeas k).mk (F k) with hF'def
+    set g' : α → E := hg.mk g with hg'def
+    have hF'eq : ∀ k, F k =ᵐ[μ] F' k := fun k => (hFmeas k).ae_eq_mk
+    have hg'eq : g =ᵐ[μ] g' := hg.ae_eq_mk
+    have hF'meas : ∀ k, Measurable (fun x => ‖F' k x‖ₑ) := fun k =>
+      ((hFmeas k).stronglyMeasurable_mk).enorm
+    have hg'meas : Measurable (fun x => ‖g' x‖ₑ) := hg.stronglyMeasurable_mk.enorm
+    -- The distribution function only sees `f` up to a.e. equality.
+    have hdc : ∀ (f₁ f₂ : α → E), f₁ =ᵐ[μ] f₂ →
+        distribution f₁ (t : ℝ≥0∞) μ = distribution f₂ (t : ℝ≥0∞) μ := by
+      intro f₁ f₂ heq
+      refine measure_congr ?_
+      filter_upwards [heq] with x hx
+      change ((t : ℝ≥0∞) < ‖f₁ x‖ₑ) = ((t : ℝ≥0∞) < ‖f₂ x‖ₑ)
+      rw [hx]
+    have hdist_eq : ∀ k, distribution (F k) (t : ℝ≥0∞) μ = distribution (F' k) (t : ℝ≥0∞) μ :=
+      fun k => hdc (F k) (F' k) (hF'eq k)
+    have hdist_g : distribution g (t : ℝ≥0∞) μ = distribution g' (t : ℝ≥0∞) μ := hdc g g' hg'eq
+    set A : ℕ → Set α := fun k => {x | (t : ℝ≥0∞) < ‖F' k x‖ₑ} with hAdef
+    have hAmeas : ∀ k, MeasurableSet (A k) := fun k =>
+      measurableSet_lt measurable_const (hF'meas k)
+    have hAdist : ∀ k, μ (A k) = distribution (F' k) (t : ℝ≥0∞) μ := fun k => rfl
+    set Bg : Set α := {x | (t : ℝ≥0∞) < ‖g' x‖ₑ} with hBgdef
+    have hBgmeas : MeasurableSet Bg := measurableSet_lt measurable_const hg'meas
+    have hBgdist : distribution g' (t : ℝ≥0∞) μ = μ Bg := rfl
+    -- `‖F' k x‖ₑ → ‖g' x‖ₑ` a.e.
+    have h_tendsto'' : ∀ᵐ x ∂μ, Filter.Tendsto (fun k => ‖F' k x‖ₑ) atTop (𝓝 ‖g' x‖ₑ) := by
+      have hall : ∀ᵐ x ∂μ, ∀ k, F k x = F' k x := by rw [ae_all_iff]; exact fun k => hF'eq k
+      filter_upwards [h_tendsto', hall, hg'eq] with x hx hxall hxg
+      have heq : (fun k => F k x) = (fun k => F' k x) := funext hxall
+      rw [heq] at hx; rw [hxg] at hx
+      exact hx.enorm
+    -- Pointwise a.e. domination of indicators: membership in `Bg` ⟹ eventual membership in `A k`.
+    have hpt : ∀ᵐ x ∂μ, Bg.indicator (1 : α → ℝ≥0∞) x
+        ≤ liminf (fun k => (A k).indicator (1 : α → ℝ≥0∞) x) atTop := by
+      filter_upwards [h_tendsto''] with x hx
+      by_cases hxg : x ∈ Bg
+      · rw [Set.indicator_of_mem hxg]
+        refine le_liminf_of_le (by isBoundedDefault) ?_
+        have hev : ∀ᶠ k in atTop, (t : ℝ≥0∞) < ‖F' k x‖ₑ :=
+          Tendsto.eventually_const_lt hxg hx
+        filter_upwards [hev] with k hk
+        rw [Set.indicator_of_mem (show x ∈ A k from hk)]
+      · rw [Set.indicator_of_notMem hxg]; exact zero_le _
+    calc distribution g (t : ℝ≥0∞) μ
+        = μ Bg := by rw [hdist_g, hBgdist]
+      _ = ∫⁻ x, Bg.indicator (1 : α → ℝ≥0∞) x ∂μ := by rw [lintegral_indicator_one hBgmeas]
+      _ ≤ ∫⁻ x, liminf (fun k => (A k).indicator (1 : α → ℝ≥0∞) x) atTop ∂μ :=
+          lintegral_mono_ae hpt
+      _ ≤ liminf (fun k => ∫⁻ x, (A k).indicator (1 : α → ℝ≥0∞) x ∂μ) atTop :=
+          lintegral_liminf_le (fun k => (measurable_const.indicator (hAmeas k)))
+      _ = liminf (fun k => distribution (F' k) (t : ℝ≥0∞) μ) atTop := by
+          congr 1; ext k; rw [lintegral_indicator_one (hAmeas k), hAdist k]
+      _ = liminf (fun k => distribution (F k) (t : ℝ≥0∞) μ) atTop := by
+          congr 1; ext k; exact (hdist_eq k).symm
+  -- Push the distribution bound through `t · (·)^(1/q)` and take the supremum over `t`.
+  have hmain : wnorm' g q μ ≤ liminf (fun k => wnorm' (F k) q μ) atTop := by
+    set a : ℝ := q⁻¹ with ha_def
+    have ha : 0 ≤ a := by positivity
+    have hterm : ∀ t : ℝ≥0, (t : ℝ≥0∞) * (distribution g (t : ℝ≥0∞) μ) ^ a
+        ≤ liminf (fun k => wnorm' (F k) q μ) atTop := by
+      intro t
+      -- `φ := t · (·)^a` is monotone and continuous on `ℝ≥0∞`, so it commutes with `liminf`.
+      set φ : ℝ≥0∞ → ℝ≥0∞ := fun x => (t : ℝ≥0∞) * x ^ a with hφ_def
+      have hmono : Monotone φ := fun x y hxy =>
+        mul_le_mul_of_nonneg_left (ENNReal.rpow_le_rpow hxy ha) (zero_le _)
+      set D : ℕ → ℝ≥0∞ := fun k => distribution (F k) (t : ℝ≥0∞) μ with hD_def
+      have hcont : ContinuousAt φ (liminf D atTop) := by
+        have h2 : ContinuousAt (fun x : ℝ≥0∞ => x ^ a) (liminf D atTop) :=
+          (ENNReal.continuous_rpow_const).continuousAt
+        have h1 : ContinuousAt (fun y : ℝ≥0∞ => (t : ℝ≥0∞) * y) ((liminf D atTop) ^ a) :=
+          ENNReal.continuousAt_const_mul (Or.inl ENNReal.coe_ne_top)
+        exact ContinuousAt.comp h1 h2
+      have hmap : φ (liminf D atTop) = liminf (fun k => φ (D k)) atTop :=
+        hmono.map_liminf_of_continuousAt _ hcont
+      have h1 : (t : ℝ≥0∞) * (distribution g (t : ℝ≥0∞) μ) ^ a ≤ φ (liminf D atTop) :=
+        hmono (lsc t)
+      rw [hmap] at h1
+      refine h1.trans ?_
+      refine liminf_le_liminf ?_
+      filter_upwards with k
+      change (t : ℝ≥0∞) * (distribution (F k) (t : ℝ≥0∞) μ) ^ a ≤ wnorm' (F k) q μ
+      unfold wnorm'
+      exact le_iSup (fun s : ℝ≥0 => (s : ℝ≥0∞) * distribution (F k) (s : ℝ≥0∞) μ ^ (q : ℝ)⁻¹) t
+    unfold wnorm'
+    exact iSup_le hterm
+  -- Finally `liminf (wnorm' (F k) q μ) ≤ C`, from the eventual bound.
+  refine hmain.trans ?_
+  refine liminf_le_of_le (by isBoundedDefault) ?_
+  intro b hb
+  obtain ⟨k, hk⟩ := (hb.and hbound').exists
+  exact hk.1.trans hk.2
 
 end RiemannDynamics
