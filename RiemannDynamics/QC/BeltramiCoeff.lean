@@ -54,8 +54,16 @@ namespace BeltramiCoeff
 `[0, 1)` by `normInf_nonneg` and `normInf_lt_one`. -/
 noncomputable def normInf (b : BeltramiCoeff) : ℝ := (eLpNormEssSup b.μ volume).toReal
 
+/-- The `L∞` norm `‖μ‖∞` of a Beltrami coefficient is nonnegative: it is the
+`ENNReal.toReal` of an essential supremum, and `toReal` is always nonnegative. -/
 theorem normInf_nonneg (b : BeltramiCoeff) : 0 ≤ b.normInf := ENNReal.toReal_nonneg
 
+/-- The `L∞` norm `‖μ‖∞` of a Beltrami coefficient is strictly below `1`. This is
+the real-number form of the structure's `bound` field
+`eLpNormEssSup μ volume < 1`: the essential supremum is finite (it is `< 1 < ⊤`),
+so passing to `ENNReal.toReal` preserves the strict inequality. The strict bound
+`‖μ‖∞ < 1` (rather than `≤ 1`) is what makes the Beltrami equation elliptic and
+drives the convergence of the measurable-Riemann-mapping Neumann series. -/
 theorem normInf_lt_one (b : BeltramiCoeff) : b.normInf < 1 := by
   have h := b.bound
   have hlt : b.normInf < (1 : ℝ≥0∞).toReal :=
@@ -67,6 +75,10 @@ coefficient. It satisfies `1 ≤ K` (`one_le_K`) and is the bridge to the
 geometric `K`-quasiconformal track. -/
 noncomputable def K (b : BeltramiCoeff) : ℝ := (1 + b.normInf) / (1 - b.normInf)
 
+/-- The maximal dilatation `K = (1 + ‖μ‖∞) / (1 − ‖μ‖∞)` of a Beltrami coefficient
+is at least `1` (with equality exactly in the conformal case `‖μ‖∞ = 0`).
+Immediate from `0 ≤ ‖μ‖∞ < 1`: the denominator `1 − ‖μ‖∞` is positive and is
+dominated by the numerator `1 + ‖μ‖∞`. -/
 theorem one_le_K (b : BeltramiCoeff) : 1 ≤ b.K := by
   have h0 : 0 ≤ b.normInf := b.normInf_nonneg
   have h1 : b.normInf < 1 := b.normInf_lt_one
