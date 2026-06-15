@@ -1,15 +1,14 @@
 # Complex Dynamics, Teichmüller Theory & Hyperbolic Geometry in Lean 4
 
+A formalization of complex dynamics, Teichmüller theory, and hyperbolic geometry in Lean 4, from the Riemann sphere and normal families through the quasiconformal / Measurable Riemann Mapping engine, working towards complete formalizations of **Sullivan's No Wandering Domains theorem** and the **Nielsen–Thurston classification**. The development follows the first half of McMullen's *Riemann surfaces, dynamics and geometry* lecture notes, building directly on Mathlib and the vendored **RMT4** and **Carleson** projects.
+
 ## ⭐ Highlighted theorems
 
 Headline results formalized so far — click to jump to the Lean source:
 
 1. **Schwarz–Pick inequality** — [`schwarzPick`](RiemannDynamics/Hyperbolic/SchwarzPick.lean#L89): a holomorphic self-map of the open unit disk is non-expansive for the Poincaré hyperbolic distance.
-2. **Covering property of the thrice-punctured sphere by the unit disk** — [`modularLambda_isCoveringMapOn`](RiemannDynamics/Hyperbolic/ModularCoveringMap/CoveringAssembly.lean#L1498): the modular function `λ` is a covering map of `ℂ ∖ {0, 1}` (`= ℂ̂ ∖ {0, 1, ∞}`) from `𝔻`.
+2. **Covering property of the triply-punctured sphere by the unit disk** — [`modularLambda_isCoveringMapOn`](RiemannDynamics/Hyperbolic/ModularCoveringMap/CoveringAssembly.lean#L1498): the modular function `λ` is a covering map of `ℂ ∖ {0, 1}` (`= ℂ̂ ∖ {0, 1, ∞}`) from `𝔻`.
 3. **Montel–Carathéodory (strong Montel) theorem** — [`montel_caratheodory_sphere`](RiemannDynamics/NormalFamilies/StrongMontel/SphereMontel.lean#L37): a family of sphere-holomorphic maps omitting three fixed values is normal.
-
-A formalization of complex dynamics, Teichmüller theory, and hyperbolic geometry in Lean 4, from the Riemann sphere and normal families through the quasiconformal / Measurable Riemann Mapping engine, working towards complete formalizations of **Sullivan's No Wandering Domains theorem** and the **Nielsen–Thurston classification**. The development follows the first half of McMullen's *Riemann surfaces, dynamics and geometry* lecture notes, building directly on Mathlib and the vendored **RMT4** project.
-
 
 ## Project Structure
 ```mermaid
@@ -17,7 +16,9 @@ flowchart BT
     subgraph Foundations [Inherited Foundations]
         DirMathlib[Mathlib]
         DirRMT4[RMT4]
+        DirCarleson[Carleson]
         DirRMT4 --> DirMathlib
+        DirCarleson --> DirMathlib
     end
 
     subgraph DynamicsLine [Dynamics Line]
@@ -69,6 +70,7 @@ flowchart BT
     DirRMT4 --> DirNF
     DirRMT4 --> DirHyp
     DirMathlib --> DirSob
+    DirCarleson --> DirSI
 ```
 
 ## Architecture
@@ -77,12 +79,13 @@ The goal of this project is to work towards the formalization of complex dynamic
 
 ### Inherited foundations
 
-The project is a fresh build on top of two mature layers, which are consumed directly rather than re-derived:
+The project is a fresh build on top of three mature layers, which are consumed directly rather than re-derived:
 
 1. **Mathlib** — complex analysis (Cauchy theory, `DifferentiableOn ℂ`, locally-uniform limits, Schwarz lemma, Hurwitz), measure / `Lᵖ` machinery, Arzelà–Ascoli, `OnePoint ℂ`, `UpperHalfPlane`, the modular group action, covering-space theory, `FundamentalGroup`.
 2. **RMT4 (Beffara), vendored** — the Riemann mapping theorem on simply connected proper open `Ω ⊊ ℂ`, together with the normal-families / Montel / Hurwitz / Schwarz scaffolding it depends on. Parts of the dynamics line are largely *porting and repackaging* RMT4's internal lemmas.
+3. **Carleson (van Doorn et al.), vendored** — the two-sided metric Calderón–Zygmund theory developed for the generalized Carleson theorem: the truncated singular-integral operator `czOperator`, two-sided CZ kernels (`IsTwoSidedKernel`), the weak-`(1,1)` theorem `czOperator_weak_1_1`, the Hardy–Littlewood maximal function, and the nontangential maximal operator. The Beurling transform's `Lᵖ` bounds in `SingularIntegral` consume this machinery directly — the Beurling kernel `(z − ζ)⁻²` is registered as a two-sided CZ kernel.
 
-**Non-axioms.** No new `axiom`, no `sorry`. Every result comes from Mathlib, from RMT4, or is proved here.
+**Non-axioms.** No new `axiom`, no `sorry`. Every result comes from Mathlib, from RMT4, from Carleson, or is proved here.
 
 ### Dynamics line — endpoint: Sullivan's No Wandering Domains
 
@@ -181,7 +184,7 @@ Substantial portions of the project are appropriate Mathlib targets and are deve
 
 **What's the dependency on existing Lean projects?**
 
-Mathlib (current) and the **RMT4** project of Beffara, vendored as a `lake` dependency on a pinned commit. RMT4 provides the Riemann mapping theorem and the normal-families / Montel / Hurwitz / Schwarz scaffolding the dynamics line builds on.
+Mathlib (current), the **RMT4** project of Beffara, and the **Carleson** project of van Doorn et al., the latter two vendored as `lake` dependencies on pinned commits. RMT4 provides the Riemann mapping theorem and the normal-families / Montel / Hurwitz / Schwarz scaffolding the dynamics line builds on; Carleson (pinned at `v4.29.0`) provides the two-sided Calderón–Zygmund / weak-`(1,1)` machinery the Beurling transform's `Lᵖ` bounds build on.
 
 **Why concrete `ℂ̂` rather than general Riemann surfaces from the start?**
 
@@ -225,3 +228,4 @@ The abstractions and formalizations in this library are heavily inspired by and 
 - Hubbard, J. H. *Teichmüller Theory and Applications to Geometry, Topology, and Dynamics*, Vol. 1: Teichmüller Theory. Matrix Editions. (ISBN 978-0-9715766-2-9)
 - Farb, B., & Margalit, D. *A Primer on Mapping Class Groups.* Princeton Mathematical Series 49. (ISBN 978-0-691-14794-9)
 - Beffara, V. **RMT4**: a formalization of the Riemann mapping theorem in Lean 4. [github.com/vbeffara/RMT4](https://github.com/vbeffara/RMT4)
+- van Doorn, F., et al. **Carleson**: a formalization of a generalized Carleson's theorem — and the two-sided metric Calderón–Zygmund theory it develops — in Lean 4. [github.com/fpvandoorn/carleson](https://github.com/fpvandoorn/carleson)

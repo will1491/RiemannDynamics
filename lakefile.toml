@@ -19,5 +19,10 @@ name = "RMT4"
 git = "https://github.com/will1491/RMT4.git"
 rev = "98a3e70faeb66ca20bf9753db8cd1e132bda9470"
 
+[[require]]
+name = "carleson"
+git = "https://github.com/fpvandoorn/carleson.git"
+rev = "v4.29.0"
+
 [[lean_lib]]
 name = "RiemannDynamics"
