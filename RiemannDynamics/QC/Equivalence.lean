@@ -386,7 +386,7 @@ Assembling the two pieces via `curveModulus_union_zero` gives the genuine bound.
 theorem isQCGeometric_of_isQCAnalytic {f : ℂ → ℂ} {K : ℝ} (hK : 1 ≤ K)
     {b : BeltramiCoeff} (hb : b.normInf ≤ (K - 1) / (K + 1)) (hf : IsQCAnalytic f b) :
     IsQCGeometric f K := by
-  refine ⟨hf.1, fun Q => ?_⟩
+  refine ⟨hK, SensePreserving.of_orientationPreservingHomeo hf.1, fun Q => ?_⟩
   sorry
 
 /-- **Geometric ⇒ analytic** (the hard direction). A `K`-quasiconformal map in the

@@ -40,9 +40,13 @@ namespace RiemannDynamics
 `f : ℂ → ℂ` whose real Jacobian determinant `det (Df z)` is positive for almost
 every `z`. (For a quasiconformal map the differential `Df` exists almost
 everywhere; where `f` is not differentiable `fderiv ℝ f z` is `0`, so the
-almost-everywhere positivity is the substantive sense-preserving condition.) It is
-shared by both quasiconformal definitions: the analytic `IsQCAnalytic` below and
-the geometric `IsQCGeometric` in `QC/Geometric.lean`. -/
+almost-everywhere positivity is the substantive sense-preserving condition.) This
+is the orientation condition of the analytic definition `IsQCAnalytic` below; the
+geometric definition `IsQCGeometric` instead uses the purely topological
+`SensePreserving` (in `QC/SensePreserving.lean`), so that a.e. differentiability and
+positivity of the Jacobian remain conclusions of the geometric ⇒ analytic direction
+rather than hypotheses. The two are reconciled by the translation bridges
+`SensePreserving.of_orientationPreservingHomeo` and `SensePreserving.ae_det_pos`. -/
 def OrientationPreservingHomeo (f : ℂ → ℂ) : Prop :=
   IsHomeomorph f ∧ ∀ᵐ z, 0 < (fderiv ℝ f z).det
 

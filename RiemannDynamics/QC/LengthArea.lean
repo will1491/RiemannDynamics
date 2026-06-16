@@ -1553,7 +1553,8 @@ continuous (Lipschitz composition) with a.e. derivatives `(h' ·).re`, `(h' ·).
 the real FTC applies to each part and recombines through `Complex.re_add_im`. -/
 private theorem complex_ac_ftc {h h' : ℝ → ℂ} {a c : ℝ}
     (hac : AbsolutelyContinuousOnInterval h a c)
-    (hderiv : ∀ᵐ t : ℝ, HasDerivAt h (h' t) t)
+    (hderiv : ∀ᵐ t : ℝ ∂(MeasureTheory.volume.restrict (Set.uIoc a c)),
+      HasDerivAt h (h' t) t)
     (hint : IntervalIntegrable h' MeasureTheory.volume a c) :
     h c - h a = ∫ t in a..c, h' t := by
   -- Lipschitz-composition: real/imaginary parts of an AC curve are AC.
@@ -1579,18 +1580,22 @@ private theorem complex_ac_ftc {h h' : ℝ → ℂ} {a c : ℝ}
     hLipComp Complex.imCLM ‖Complex.imCLM‖₊ Complex.imCLM.lipschitz
   -- a.e. derivatives of the real/imaginary parts (compose with the `ℝ`-linear CLMs
   -- `reCLM`, `imCLM`).
-  have hre_deriv : ∀ᵐ t : ℝ, HasDerivAt (fun s => (h s).re) (h' t).re t := by
+  have hre_deriv : ∀ᵐ t : ℝ ∂(MeasureTheory.volume.restrict (Set.uIoc a c)),
+      HasDerivAt (fun s => (h s).re) (h' t).re t := by
     filter_upwards [hderiv] with t ht
     have := Complex.reCLM.hasFDerivAt.comp_hasDerivAt t ht
     simpa using this
-  have him_deriv : ∀ᵐ t : ℝ, HasDerivAt (fun s => (h s).im) (h' t).im t := by
+  have him_deriv : ∀ᵐ t : ℝ ∂(MeasureTheory.volume.restrict (Set.uIoc a c)),
+      HasDerivAt (fun s => (h s).im) (h' t).im t := by
     filter_upwards [hderiv] with t ht
     have := Complex.imCLM.hasFDerivAt.comp_hasDerivAt t ht
     simpa using this
   -- Identify the a.e. `deriv` of each part with the corresponding component of `h'`.
-  have hre_deriv_eq : ∀ᵐ t : ℝ, deriv (fun s => (h s).re) t = (h' t).re := by
+  have hre_deriv_eq : ∀ᵐ t : ℝ ∂(MeasureTheory.volume.restrict (Set.uIoc a c)),
+      deriv (fun s => (h s).re) t = (h' t).re := by
     filter_upwards [hre_deriv] with t ht using ht.deriv
-  have him_deriv_eq : ∀ᵐ t : ℝ, deriv (fun s => (h s).im) t = (h' t).im := by
+  have him_deriv_eq : ∀ᵐ t : ℝ ∂(MeasureTheory.volume.restrict (Set.uIoc a c)),
+      deriv (fun s => (h s).im) t = (h' t).im := by
     filter_upwards [him_deriv] with t ht using ht.deriv
   -- Real FTC on each part.
   have hre_ftc : ∫ t in a..c, deriv (fun s => (h s).re) t = (h c).re - (h a).re :=
@@ -1605,10 +1610,12 @@ private theorem complex_ac_ftc {h h' : ℝ → ℂ} {a c : ℝ}
   -- Replace the `deriv (… .re)` integrand by `(h' ·).re` under the integral sign.
   have hre_congr : (∫ t in a..c, deriv (fun s => (h s).re) t) = ∫ t in a..c, (h' t).re :=
     intervalIntegral.integral_congr_ae (by
-      filter_upwards [hre_deriv_eq] with t ht _ using ht)
+      filter_upwards [(ae_restrict_iff' measurableSet_uIoc).mp hre_deriv_eq]
+        with t ht hmem using ht hmem)
   have him_congr : (∫ t in a..c, deriv (fun s => (h s).im) t) = ∫ t in a..c, (h' t).im :=
     intervalIntegral.integral_congr_ae (by
-      filter_upwards [him_deriv_eq] with t ht _ using ht)
+      filter_upwards [(ae_restrict_iff' measurableSet_uIoc).mp him_deriv_eq]
+        with t ht hmem using ht hmem)
   have hre_int : ∫ t in a..c, (h' t).re = (h c).re - (h a).re := by
     rw [← hre_congr, hre_ftc]
   have him_int : ∫ t in a..c, (h' t).im = (h c).im - (h a).im := by
@@ -1635,16 +1642,17 @@ Componentwise: `Complex.reCLM ∘ γ`, `Complex.imCLM ∘ γ` are real absolutel
 interval-integrable; these agree a.e. with `(deriv γ ·).re`, `(deriv γ ·).im`, which
 recombine to `deriv γ`. -/
 private theorem intervalIntegrable_deriv_of_complex_ac {γ : ℝ → ℂ}
-    (hγac : ∀ a c : ℝ, AbsolutelyContinuousOnInterval γ a c) (a b : ℝ) :
+    (hγac : AbsolutelyContinuousOnInterval γ 0 1) (a b : ℝ)
+    (hab : Set.uIcc a b ⊆ Set.Icc (0 : ℝ) 1) :
     IntervalIntegrable (deriv γ) MeasureTheory.volume a b := by
   -- a.e. differentiability of `γ` on `uIcc a b` (bounded variation ⇒ a.e. differentiable).
   have hγ_diff : ∀ᵐ t : ℝ, t ∈ Set.uIcc a b → DifferentiableAt ℝ γ t :=
-    (hγac a b).boundedVariationOn.ae_differentiableAt_of_mem_uIcc
+    (hγac.mono_subinterval hab).boundedVariationOn.ae_differentiableAt_of_mem_uIcc
   -- Lipschitz-composition: real/imaginary parts of `γ` are AC.
   have hLipComp : ∀ {Y : Type} [PseudoMetricSpace Y] (l : ℂ → Y) (K : NNReal),
       LipschitzWith K l → AbsolutelyContinuousOnInterval (fun t => l (γ t)) a b := by
     intro Y _ l K hl
-    have hγab := hγac a b
+    have hγab := hγac.mono_subinterval hab
     rw [absolutelyContinuousOnInterval_iff] at hγab ⊢
     intro ε hε
     obtain ⟨δ, hδ, hδ'⟩ := hγab (ε / (K + 1)) (by positivity)
@@ -1709,46 +1717,34 @@ derivative `(fderiv ℝ g (γ t)) (deriv γ t)` (chain rule); the ℂ-valued FTC
 (`complex_ac_ftc`) plus `norm_integral_le_integral_norm` and the operator-norm bound
 `‖(fderiv ℝ g (γ t)) (deriv γ t)‖ ≤ ‖fderiv ℝ g (γ t)‖ · ‖deriv γ t‖` give the claim. -/
 private theorem dist_comp_le_setIntegral_of_contDiff {g : ℂ → ℂ} (hg : ContDiff ℝ 1 g)
-    {γ : ℝ → ℂ} (hγac : ∀ a c : ℝ, AbsolutelyContinuousOnInterval γ a c)
-    (x y : ℝ) :
+    {γ : ℝ → ℂ} (hγcont : Continuous γ)
+    (hγac : AbsolutelyContinuousOnInterval γ 0 1)
+    (x y : ℝ) (hxy : Set.uIcc x y ⊆ Set.Icc (0 : ℝ) 1) :
     dist (g (γ x)) (g (γ y)) ≤ ∫ t in Set.uIoc x y, ‖fderiv ℝ g (γ t)‖ * ‖deriv γ t‖ := by
-  -- `γ` is continuous (AC on every interval ⇒ continuous on every interval).
-  have hγcont : Continuous γ := by
-    rw [continuous_iff_continuousAt]
-    intro z
-    have hcon : ContinuousOn γ (Set.uIcc (z - 1) (z + 1)) := (hγac (z - 1) (z + 1)).continuousOn
-    have hmem : Set.uIcc (z - 1) (z + 1) ∈ nhds z := by
-      rw [Set.uIcc_of_le (by linarith)]; exact Icc_mem_nhds (by linarith) (by linarith)
-    exact hcon.continuousAt hmem
   -- `g` is differentiable with continuous derivative, hence `HasFDerivAt g (fderiv) z`.
   have hgdiff : ∀ z : ℂ, HasFDerivAt g (fderiv ℝ g z) z :=
     fun z => (hg.differentiable (by norm_num)).differentiableAt.hasFDerivAt
-  -- a.e. derivative of `γ`: AC ⇒ differentiable a.e., and there `deriv` witnesses it.
-  have hγ_diff : ∀ᵐ t : ℝ, DifferentiableAt ℝ γ t := by
-    -- Build a.e. differentiability on every `[-n, n]`, then take the union.
-    have hball : ∀ n : ℕ, ∀ᵐ t : ℝ, t ∈ Set.uIcc (-(n : ℝ)) (n : ℝ) → DifferentiableAt ℝ γ t := by
-      intro n
-      have hbv : BoundedVariationOn γ (Set.uIcc (-(n : ℝ)) (n : ℝ)) :=
-        (hγac (-(n : ℝ)) (n : ℝ)).boundedVariationOn
-      exact hbv.ae_differentiableAt_of_mem_uIcc
-    rw [← MeasureTheory.ae_all_iff] at hball
-    filter_upwards [hball] with t ht
-    obtain ⟨n, hn⟩ := exists_nat_gt |t|
-    have htmem : t ∈ Set.uIcc (-(n : ℝ)) (n : ℝ) := by
-      have h1 : -(n : ℝ) ≤ t := by
-        have := (abs_le.mp hn.le).1; linarith
-      have h2 : t ≤ (n : ℝ) := (abs_le.mp hn.le).2
-      rw [Set.uIcc_of_le (by linarith)]
-      exact ⟨h1, h2⟩
-    exact ht n htmem
-  have hγ_deriv : ∀ᵐ t : ℝ, HasDerivAt γ (deriv γ t) t := by
-    filter_upwards [hγ_diff] with t ht using ht.hasDerivAt
+  -- a.e. derivative of `γ` on `uIoc x y ⊆ [0,1]`: AC on `[0,1]` ⇒ differentiable a.e.
+  -- there, and `deriv` witnesses it.
+  have hγ_deriv : ∀ᵐ t : ℝ ∂(MeasureTheory.volume.restrict (Set.uIoc x y)),
+      HasDerivAt γ (deriv γ t) t := by
+    have hbv : BoundedVariationOn γ (Set.uIcc (0 : ℝ) 1) := hγac.boundedVariationOn
+    have hdiff01 : ∀ᵐ t : ℝ ∂(MeasureTheory.volume.restrict (Set.Icc (0 : ℝ) 1)),
+        DifferentiableAt ℝ γ t := by
+      rw [ae_restrict_iff' measurableSet_Icc]
+      filter_upwards [hbv.ae_differentiableAt_of_mem_uIcc] with t ht htmem
+      exact ht (by rw [Set.uIcc_of_le (by norm_num)]; exact htmem)
+    have hsub : MeasureTheory.volume.restrict (Set.uIoc x y) ≤
+        MeasureTheory.volume.restrict (Set.Icc (0 : ℝ) 1) :=
+      Measure.restrict_mono (Set.uIoc_subset_uIcc.trans hxy) le_rfl
+    filter_upwards [hsub.absolutelyContinuous hdiff01] with t ht using ht.hasDerivAt
   -- The composed curve `g ∘ γ`, its a.e. derivative, integrability of the integrand,
   -- and the ℂ-valued FTC, are assembled below.
   set G : ℝ → ℂ := fun t => g (γ t) with hG
   set G' : ℝ → ℂ := fun t => (fderiv ℝ g (γ t)) (deriv γ t) with hG'
-  -- a.e. chain rule: `HasDerivAt (g ∘ γ) ((fderiv g (γ t)) (deriv γ t)) t`.
-  have hG_deriv : ∀ᵐ t : ℝ, HasDerivAt G (G' t) t := by
+  -- a.e. chain rule: `HasDerivAt (g ∘ γ) ((fderiv g (γ t)) (deriv γ t)) t` on `uIoc x y`.
+  have hG_deriv : ∀ᵐ t : ℝ ∂(MeasureTheory.volume.restrict (Set.uIoc x y)),
+      HasDerivAt G (G' t) t := by
     filter_upwards [hγ_deriv] with t ht
     exact (hgdiff (γ t)).comp_hasDerivAt t ht
   -- `g ∘ γ` is AC on `uIcc x y`: `g` is Lipschitz on a ball containing the compact
@@ -1765,7 +1761,7 @@ private theorem dist_comp_le_setIntegral_of_contDiff {g : ℂ → ℂ} (hg : Con
       (hg.contDiffOn).exists_lipschitzOnWith (by norm_num) (convex_closedBall _ _)
         (isCompact_closedBall _ _)
     -- Lipschitz-on-trace ∘ AC ⇒ AC, by the ε–δ bound on distances.
-    have hγxy := hγac x y
+    have hγxy := hγac.mono_subinterval hxy
     rw [absolutelyContinuousOnInterval_iff] at hγxy ⊢
     intro ε hε
     obtain ⟨δ, hδ, hδ'⟩ := hγxy (ε / (K + 1)) (by positivity)
@@ -1790,7 +1786,7 @@ private theorem dist_comp_le_setIntegral_of_contDiff {g : ℂ → ℂ} (hg : Con
     (hfd_cont.comp hγcont).norm
   -- `‖deriv γ ·‖` is interval-integrable (AC ⇒ deriv interval-integrable, then `.norm`).
   have hnormγ'_int : IntervalIntegrable (fun t => ‖deriv γ t‖) MeasureTheory.volume x y :=
-    (intervalIntegrable_deriv_of_complex_ac hγac x y).norm
+    (intervalIntegrable_deriv_of_complex_ac hγac x y hxy).norm
   -- The real density `‖fderiv g (γ ·)‖ · ‖deriv γ ·‖` is interval-integrable on `x..y`.
   have hdens_II : IntervalIntegrable (fun t => ‖fderiv ℝ g (γ t)‖ * ‖deriv γ t‖)
       MeasureTheory.volume x y :=
@@ -2497,8 +2493,8 @@ Proof: the reverse triangle inequality bounds the excess by the arc-length integ
 the differential difference `‖fderiv ℝ f_n − fderiv ℝ f‖`, which tends to `0` by
 `hgood_φ`. -/
 theorem fderiv_mollified_lineIntegral_le {f : ℂ → ℂ} {b : BeltramiCoeff}
-    (hf : IsQCAnalytic f b) {γ : ℝ → ℂ}
-    (hγac : ∀ a c : ℝ, AbsolutelyContinuousOnInterval γ a c)
+    (hf : IsQCAnalytic f b) {γ : ℝ → ℂ} (hγcont : Continuous γ)
+    (_hγac : AbsolutelyContinuousOnInterval γ 0 1)
     (hfin : arcLengthLineIntegral (fun z => (‖fderiv ℝ f z‖₊ : ℝ≥0∞)) γ ≠ ∞)
     (x y : ℝ) (hxy : Set.uIcc x y ⊆ Set.Icc (0 : ℝ) 1)
     {ε : ℝ} (hε : 0 < ε) (φ : ℕ → ContDiffBump (0 : ℂ))
@@ -2519,16 +2515,6 @@ theorem fderiv_mollified_lineIntegral_le {f : ℂ → ℂ} {b : BeltramiCoeff}
       (ContinuousLinearMap.lsmul ℝ ℝ) MeasureTheory.volume with hfndef
   have hfcont : Continuous f := hf.1.1.continuous
   have hfloc : MeasureTheory.LocallyIntegrable f := hfcont.locallyIntegrable
-  -- `γ` is continuous (AC on every interval ⇒ continuous).
-  have hγcont : Continuous γ := by
-    rw [continuous_iff_continuousAt]
-    intro x
-    have hcon : ContinuousOn γ (Set.uIcc (x - 1) (x + 1)) :=
-      (hγac (x - 1) (x + 1)).continuousOn
-    have hmem : Set.uIcc (x - 1) (x + 1) ∈ nhds x := by
-      rw [Set.uIcc_of_le (by linarith)]
-      exact Icc_mem_nhds (by linarith) (by linarith)
-    exact hcon.continuousAt hmem
   -- Each `fn n` is `C¹`, hence `fderiv ℝ (fn n)` is continuous.
   have hfn_contDiff : ∀ n, ContDiff ℝ 1 (fn n) := fun n =>
     ((φ n).hasCompactSupport_normed).contDiff_convolution_left
@@ -2696,8 +2682,8 @@ part (i) is the pointwise convergence `f_n (z) → f (z)`
 (`ContDiffBump.convolution_tendsto_right_of_continuous`, `f` continuous), and part (ii)
 is exactly the isolated residual. -/
 theorem exists_contDiff_approx_along_curve {f : ℂ → ℂ} {b : BeltramiCoeff}
-    (hf : IsQCAnalytic f b) {γ : ℝ → ℂ}
-    (hγac : ∀ a c : ℝ, AbsolutelyContinuousOnInterval γ a c)
+    (hf : IsQCAnalytic f b) {γ : ℝ → ℂ} (hγcont : Continuous γ)
+    (hγac : AbsolutelyContinuousOnInterval γ 0 1)
     (hfin : arcLengthLineIntegral (fun z => (‖fderiv ℝ f z‖₊ : ℝ≥0∞)) γ ≠ ∞)
     (x y : ℝ) (hxy : Set.uIcc x y ⊆ Set.Icc (0 : ℝ) 1) (hgood : GoodCurve f γ) :
     ∀ ε > (0 : ℝ), ∃ g : ℂ → ℂ, ContDiff ℝ 1 g ∧
@@ -2726,7 +2712,7 @@ theorem exists_contDiff_approx_along_curve {f : ℂ → ℂ} {b : BeltramiCoeff}
   have hfn_density : ∀ᶠ n in Filter.atTop,
       (∫ t in Set.uIoc x y, ‖fderiv ℝ (fn n) (γ t)‖ * ‖deriv γ t‖) ≤
         (∫ t in Set.uIoc x y, fdNormMulDeriv f γ t) + ε :=
-    fderiv_mollified_lineIntegral_le hf hγac hfin x y hxy hε φ hφrout hgood_φ
+    fderiv_mollified_lineIntegral_le hf hγcont hγac hfin x y hxy hε φ hφrout hgood_φ
   -- The endpoint convergences give eventual `ε`-closeness.
   have hev_close : ∀ z : ℂ, ∀ᶠ n in Filter.atTop, dist (f z) (fn n z) ≤ ε := by
     intro z
@@ -2757,8 +2743,8 @@ closes the inequality. All the mollification setup, smooth chain-rule/FTC bound,
 ℂ-valued density integrability are discharged in the helpers above; only the
 trace-convergence core remains, isolated in `exists_contDiff_approx_along_curve`. -/
 theorem fugledeUpperGradient {f : ℂ → ℂ} {b : BeltramiCoeff}
-    (hf : IsQCAnalytic f b) {γ : ℝ → ℂ}
-    (hγac : ∀ a c : ℝ, AbsolutelyContinuousOnInterval γ a c)
+    (hf : IsQCAnalytic f b) {γ : ℝ → ℂ} (hγcont : Continuous γ)
+    (hγac : AbsolutelyContinuousOnInterval γ 0 1)
     (hfin : arcLengthLineIntegral (fun z => (‖fderiv ℝ f z‖₊ : ℝ≥0∞)) γ ≠ ∞)
     (x y : ℝ) (hxy : Set.uIcc x y ⊆ Set.Icc (0 : ℝ) 1) (hgood : GoodCurve f γ) :
     dist ((f ∘ γ) x) ((f ∘ γ) y) ≤ ∫ t in Set.uIoc x y, fdNormMulDeriv f γ t := by
@@ -2767,9 +2753,9 @@ theorem fugledeUpperGradient {f : ℂ → ℂ} {b : BeltramiCoeff}
   refine le_of_forall_pos_le_add (fun ε hε => ?_)
   -- Obtain the `C¹` approximant `g` for tolerance `ε / 3`.
   obtain ⟨g, hg_smooth, hgx, hgy, hg_int⟩ :=
-    exists_contDiff_approx_along_curve hf hγac hfin x y hxy hgood (ε / 3) (by positivity)
+    exists_contDiff_approx_along_curve hf hγcont hγac hfin x y hxy hgood (ε / 3) (by positivity)
   -- The proven smooth upper-gradient bound for `g`.
-  have hsmooth := dist_comp_le_setIntegral_of_contDiff hg_smooth hγac x y
+  have hsmooth := dist_comp_le_setIntegral_of_contDiff hg_smooth hγcont hγac x y hxy
   -- Triangle inequality: insert `g (γ x)`, `g (γ y)` between the `f`-endpoints.
   have htri : dist (f (γ x)) (f (γ y)) ≤
       dist (f (γ x)) (g (γ x)) + dist (g (γ x)) (g (γ y)) + dist (g (γ y)) (f (γ y)) := by
@@ -2793,12 +2779,12 @@ gradient line integral over `[0,1]`, and the downstream length–area assembly o
 ever integrates along `[0,1]`. A thin wrapper over the isolated residual
 `fugledeUpperGradient`. -/
 theorem dist_le_setIntegral_fderiv_norm_mul_deriv {f : ℂ → ℂ} {b : BeltramiCoeff}
-    (hf : IsQCAnalytic f b) {γ : ℝ → ℂ}
-    (hγac : ∀ a c : ℝ, AbsolutelyContinuousOnInterval γ a c)
+    (hf : IsQCAnalytic f b) {γ : ℝ → ℂ} (hγcont : Continuous γ)
+    (hγac : AbsolutelyContinuousOnInterval γ 0 1)
     (hfin : arcLengthLineIntegral (fun z => (‖fderiv ℝ f z‖₊ : ℝ≥0∞)) γ ≠ ∞)
     (x y : ℝ) (hxy : Set.uIcc x y ⊆ Set.Icc (0 : ℝ) 1) (hgood : GoodCurve f γ) :
     dist ((f ∘ γ) x) ((f ∘ γ) y) ≤ ∫ t in Set.uIoc x y, fdNormMulDeriv f γ t :=
-  fugledeUpperGradient hf hγac hfin x y hxy hgood
+  fugledeUpperGradient hf hγcont hγac hfin x y hxy hgood
 
 /-- **(Interval integrability of the density, helper 2 of 2.)** The real
 arc-length integrand `g t := ‖fderiv ℝ f (γ t)‖ · ‖deriv γ t‖` is integrable on
@@ -2811,21 +2797,10 @@ integral of its enorm over `[0,1]` equals
 measurable function with finite lower integral is integrable, and
 `IntegrableOn.mono_set` restricts from `[0,1]` to `uIcc a c`. -/
 theorem integrableOn_fderiv_norm_mul_deriv_uIcc {f : ℂ → ℂ} {b : BeltramiCoeff}
-    (_hf : IsQCAnalytic f b) {γ : ℝ → ℂ}
-    (hγac : ∀ a c : ℝ, AbsolutelyContinuousOnInterval γ a c)
+    (_hf : IsQCAnalytic f b) {γ : ℝ → ℂ} (hγcont : Continuous γ)
     (hfin : arcLengthLineIntegral (fun z => (‖fderiv ℝ f z‖₊ : ℝ≥0∞)) γ ≠ ∞)
     (a c : ℝ) (huIcc : Set.uIcc a c ⊆ Set.Icc (0 : ℝ) 1) :
     IntegrableOn (fdNormMulDeriv f γ) (Set.uIcc a c) := by
-  -- `γ` is continuous (AC on every interval ⇒ continuous).
-  have hγcont : Continuous γ := by
-    rw [continuous_iff_continuousAt]
-    intro x
-    have hcon : ContinuousOn γ (Set.uIcc (x - 1) (x + 1)) :=
-      (hγac (x - 1) (x + 1)).continuousOn
-    have hmem : Set.uIcc (x - 1) (x + 1) ∈ nhds x := by
-      rw [Set.uIcc_of_le (by linarith)]
-      exact Icc_mem_nhds (by linarith) (by linarith)
-    exact hcon.continuousAt hmem
   -- Measurability of the integrand.
   have hmeas : Measurable (fdNormMulDeriv f γ) := by
     have h1 : Measurable (fun t => ‖fderiv ℝ f (γ t)‖) :=
@@ -2866,8 +2841,8 @@ distance-sum over a disjoint interval family by the set-integral of the density
 over their union and using that the integral over a small-measure set is small
 (`Integrable.tendsto_setIntegral_nhds_zero`). -/
 theorem absolutelyContinuous_comp_of_finite_lineIntegral {f : ℂ → ℂ}
-    {b : BeltramiCoeff} (hf : IsQCAnalytic f b) {γ : ℝ → ℂ}
-    (hγac : ∀ a c : ℝ, AbsolutelyContinuousOnInterval γ a c)
+    {b : BeltramiCoeff} (hf : IsQCAnalytic f b) {γ : ℝ → ℂ} (hγcont : Continuous γ)
+    (hγac : AbsolutelyContinuousOnInterval γ 0 1)
     (hfin : arcLengthLineIntegral (fun z => (‖fderiv ℝ f z‖₊ : ℝ≥0∞)) γ ≠ ∞)
     (hgood : GoodCurve f γ) :
     ∀ a c : ℝ, Set.uIcc a c ⊆ Set.Icc (0 : ℝ) 1 →
@@ -2876,7 +2851,7 @@ theorem absolutelyContinuous_comp_of_finite_lineIntegral {f : ℂ → ℂ}
   -- The density `g` and its integrability on `uIcc a c`.
   set g : ℝ → ℝ := fdNormMulDeriv f γ with hg
   have hgint : IntegrableOn g (Set.uIcc a c) :=
-    integrableOn_fderiv_norm_mul_deriv_uIcc hf hγac hfin a c huIcc
+    integrableOn_fderiv_norm_mul_deriv_uIcc hf hγcont hfin a c huIcc
   -- `g` is nonnegative.
   have hgnonneg : ∀ t, 0 ≤ g t := fun t => by
     rw [hg, fdNormMulDeriv]; positivity
@@ -2943,7 +2918,7 @@ theorem absolutelyContinuous_comp_of_finite_lineIntegral {f : ℂ → ℂ}
             ∫ t in Set.uIoc (I i).1 (I i).2, g t ∂(volume.restrict (Set.uIoc a c)) := by
           refine Finset.sum_le_sum (fun i hi => ?_)
           rw [Measure.restrict_restrict_of_subset (hsub i hi)]
-          exact dist_le_setIntegral_fderiv_norm_mul_deriv hf hγac hfin (I i).1 (I i).2
+          exact dist_le_setIntegral_fderiv_norm_mul_deriv hf hγcont hγac hfin (I i).1 (I i).2
             (hsub01 i hi) hgood
       _ = ∫ t in s (n, I), g t ∂(volume.restrict (Set.uIoc a c)) := by
           rw [hs]
@@ -2965,8 +2940,8 @@ which forces the parameter footprint `{t ∈ [0,1] | deriv γ t ≠ 0 ∧ γ t �
 be Lebesgue-null; off it, `deriv γ t ≠ 0` implies `DifferentiableAt ℝ f (γ t)`.
 Combining the two a.e. facts gives the chain rule a.e. on `[0,1]`. -/
 theorem chainRule_hasDerivAt_of_finite {f : ℂ → ℂ} {b : BeltramiCoeff}
-    (_hf : IsQCAnalytic f b) {γ : ℝ → ℂ}
-    (hγac : ∀ a c : ℝ, AbsolutelyContinuousOnInterval γ a c)
+    (_hf : IsQCAnalytic f b) {γ : ℝ → ℂ} (hγcont : Continuous γ)
+    (hγac : AbsolutelyContinuousOnInterval γ 0 1)
     (_hfin : arcLengthLineIntegral (fun z => (‖fderiv ℝ f z‖₊ : ℝ≥0∞)) γ ≠ ∞)
     (hmeet : ¬ 1 ≤ arcLengthLineIntegral
       ({z | ¬ (DifferentiableAt ℝ f z ∧ 0 < (fderiv ℝ f z).det)}.indicator
@@ -2974,16 +2949,6 @@ theorem chainRule_hasDerivAt_of_finite {f : ℂ → ℂ} {b : BeltramiCoeff}
     ∀ᵐ t : ℝ ∂(volume.restrict (Set.Icc (0 : ℝ) 1)), deriv γ t ≠ 0 →
       HasDerivAt (f ∘ γ) ((fderiv ℝ f (γ t)) (deriv γ t)) t := by
   classical
-  -- `γ` is continuous: it is absolutely continuous, hence continuous, on every
-  -- interval `uIcc (x-1) (x+1)`, which is a neighborhood of `x`.
-  have hγcont : Continuous γ := by
-    rw [continuous_iff_continuousAt]
-    intro x
-    have hcon : ContinuousOn γ (Set.uIcc (x - 1) (x + 1)) := (hγac (x - 1) (x + 1)).continuousOn
-    have hmem : Set.uIcc (x - 1) (x + 1) ∈ nhds x := by
-      rw [Set.uIcc_of_le (by linarith)]
-      exact Icc_mem_nhds (by linarith) (by linarith)
-    exact hcon.continuousAt hmem
   -- The degeneracy set `N` (where `f` is not differentiable with positive Jacobian).
   set N : Set ℂ := {z | ¬ (DifferentiableAt ℝ f z ∧ 0 < (fderiv ℝ f z).det)} with hN
   have hNmeas : MeasurableSet N := by
@@ -3050,7 +3015,7 @@ theorem chainRule_hasDerivAt_of_finite {f : ℂ → ℂ} {b : BeltramiCoeff}
   have hdiffγ : ∀ᵐ t : ℝ ∂(volume.restrict (Set.Icc (0 : ℝ) 1)),
       DifferentiableAt ℝ γ t := by
     rw [ae_restrict_iff' measurableSet_Icc]
-    have hbv : BoundedVariationOn γ (Set.uIcc (0 : ℝ) 1) := (hγac 0 1).boundedVariationOn
+    have hbv : BoundedVariationOn γ (Set.uIcc (0 : ℝ) 1) := hγac.boundedVariationOn
     filter_upwards [hbv.ae_differentiableAt_of_mem_uIcc] with t ht htmem
     exact ht (by rw [Set.uIcc_of_le (by norm_num)]; exact htmem)
   -- Combine the three a.e. facts and compose via `HasFDerivAt.comp_hasDerivAt`.
@@ -3094,7 +3059,7 @@ Fuglede/chain-rule content and are isolated as named helper hypotheses:
     `absolutelyContinuous_comp_of_finite_lineIntegral`. -/
 theorem chainRule_good_of_finite {f : ℂ → ℂ} {b : BeltramiCoeff}
     (hf : IsQCAnalytic f b) {γ : ℝ → ℂ} (hγcont : Continuous γ)
-    (hγac : ∀ a c : ℝ, AbsolutelyContinuousOnInterval γ a c)
+    (hγac : AbsolutelyContinuousOnInterval γ 0 1)
     (hfin : arcLengthLineIntegral (fun z => (‖fderiv ℝ f z‖₊ : ℝ≥0∞)) γ ≠ ∞)
     (hmeet : ¬ 1 ≤ arcLengthLineIntegral
       ({z | ¬ (DifferentiableAt ℝ f z ∧ 0 < (fderiv ℝ f z).det)}.indicator
@@ -3183,8 +3148,9 @@ theorem chainRule_good_of_finite {f : ℂ → ℂ} {b : BeltramiCoeff}
   -- ===================================================================
   -- CLAUSES 1 and 3 (isolated): the genuine Fuglede / chain-rule content.
   -- ===================================================================
-  refine ⟨absolutelyContinuous_comp_of_finite_lineIntegral hf hγac hfin hgood, hclause2, ?_⟩
-  exact chainRule_hasDerivAt_of_finite hf hγac hfin hmeet
+  refine ⟨absolutelyContinuous_comp_of_finite_lineIntegral hf hγcont hγac hfin hgood,
+    hclause2, ?_⟩
+  exact chainRule_hasDerivAt_of_finite hf hγcont hγac hfin hmeet
 
 /-- **Fuglede: the non-good curves of a family have zero modulus.** Assembled from
 the mollified-gradient `L²` energy decay (`mollified_fderiv_ball_energy_tendsto_zero`)
@@ -3373,7 +3339,7 @@ Monotonicity (`curveModulus_mono`) and subadditivity for null families
 (`curveModulus_union_zero`) finish. -/
 theorem IsQCAnalytic.chainRule_exceptional_modulus_zero {f : ℂ → ℂ} {b : BeltramiCoeff}
     (hf : IsQCAnalytic f b) (Γ : Set (ℝ → ℂ)) (hcont : ∀ γ ∈ Γ, Continuous γ)
-    (hac : ∀ γ ∈ Γ, ∀ a c : ℝ, AbsolutelyContinuousOnInterval γ a c) :
+    (hac : ∀ γ ∈ Γ, AbsolutelyContinuousOnInterval γ 0 1) :
     curveModulus {γ ∈ Γ | ¬ ((∀ a c : ℝ, Set.uIcc a c ⊆ Set.Icc (0 : ℝ) 1 →
         AbsolutelyContinuousOnInterval (f ∘ γ) a c) ∧
       (∀ᵐ t : ℝ ∂(volume.restrict (Set.Icc (0 : ℝ) 1)),
@@ -3451,7 +3417,7 @@ crux is a planar Lusin-(N) property: the image `f '' N` of the degeneracy null s
 theorem IsQCAnalytic.image_chainRule_exceptional_modulus_zero {f : ℂ → ℂ}
     {b : BeltramiCoeff} (hf : IsQCAnalytic f b) (Γ : Set (ℝ → ℂ))
     (hcont : ∀ γ ∈ Γ, Continuous γ)
-    (hac : ∀ γ ∈ Γ, ∀ a c : ℝ, AbsolutelyContinuousOnInterval γ a c) :
+    (hac : ∀ γ ∈ Γ, AbsolutelyContinuousOnInterval γ 0 1) :
     curveModulus ((fun γ : ℝ → ℂ => f ∘ γ) ''
       {γ ∈ Γ | ¬ ((∀ a c : ℝ, Set.uIcc a c ⊆ Set.Icc (0 : ℝ) 1 →
           AbsolutelyContinuousOnInterval (f ∘ γ) a c) ∧
@@ -3473,7 +3439,7 @@ subadditivity. -/
 theorem IsQCAnalytic.image_modulus_zero {f : ℂ → ℂ} {b : BeltramiCoeff}
     (hf : IsQCAnalytic f b) {Γ' : Set (ℝ → ℂ)}
     (hcont : ∀ γ ∈ Γ', Continuous γ)
-    (hac : ∀ γ ∈ Γ', ∀ a c : ℝ, AbsolutelyContinuousOnInterval γ a c)
+    (hac : ∀ γ ∈ Γ', AbsolutelyContinuousOnInterval γ 0 1)
     (h0 : curveModulus Γ' = 0) :
     curveModulus ((fun γ : ℝ → ℂ => f ∘ γ) '' Γ') = 0 := by
   classical
