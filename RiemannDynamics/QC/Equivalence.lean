@@ -40,13 +40,23 @@ open scoped ENNReal
 
 namespace RiemannDynamics
 
-/-- **Analytic ⇒ geometric.** A map satisfying the analytic definition with a
-Beltrami coefficient of norm at most `(K − 1)/(K + 1)` is `K`-quasiconformal in the
-geometric (modulus) sense. The `Sobolev ⇒ ACL` theorems give absolute continuity on
-lines, and the length–area estimate bounds the modulus distortion by `K`. -/
-theorem isQCGeometric_of_isQCAnalytic {f : ℂ → ℂ} {K : ℝ} (hK : 1 ≤ K)
+/-- **Analytic ⇒ geometric, pushforward bound.** A map satisfying the analytic
+definition with a Beltrami coefficient of norm at most `(K − 1)/(K + 1)` distorts
+the modulus of the **pushforward** curve family `(f ∘ ·) '' Q.curveFamily` by at
+most `K`. The `Sobolev ⇒ ACL` theorems give absolute continuity on lines, and the
+length–area estimate bounds the modulus distortion by `K`.
+
+This is the length–area half of the geometric definition. It bounds the modulus of
+the pushforward of `Q`'s connecting family, which is the sub-family of the genuine
+image family `Q.imageCurveFamily f` consisting of curves `f ∘ γ` with `γ`
+absolutely continuous and `f` good along `γ`. The genuine bound `M(f(Q)) ≤ K · M(Q)`
+(`isQCGeometric_of_isQCAnalytic`) follows from this together with the nullity of the
+complementary image curves (image-side Fuglede); see the note there. -/
+theorem isQCGeometric_of_isQCAnalytic_pushforward {f : ℂ → ℂ} {K : ℝ} (hK : 1 ≤ K)
     {b : BeltramiCoeff} (hb : b.normInf ≤ (K - 1) / (K + 1)) (hf : IsQCAnalytic f b) :
-    IsQCGeometric f K := by
+    OrientationPreservingHomeo f ∧ ∀ Q : Quadrilateral,
+      curveModulus ((fun γ : ℝ → ℂ => f ∘ γ) '' Q.curveFamily)
+        ≤ ENNReal.ofReal K * Q.modulus := by
   classical
   -- Notation.
   set hhom : IsHomeomorph f := hf.1.1 with hhom_def
@@ -356,6 +366,28 @@ theorem isQCGeometric_of_isQCAnalytic {f : ℂ → ℂ} {K : ℝ} (hK : 1 ≤ K)
   refine le_iInf fun hρ => ?_
   exact key ρ hρ
 
+/-- **Analytic ⇒ geometric.** A map satisfying the analytic definition with a
+Beltrami coefficient of norm at most `(K − 1)/(K + 1)` is `K`-quasiconformal in the
+geometric (modulus) sense: `M(f(Q)) ≤ K · M(Q)` for every quadrilateral `Q`, where
+`M(f(Q))` is the modulus of the genuine image family `Q.imageCurveFamily f`.
+
+The orientation clause is immediate from `IsQCAnalytic`. For the modulus bound, the
+genuine image family `Q.imageCurveFamily f` splits into the curves whose `f⁻¹`-image
+is an absolutely continuous, chain-rule-good curve of `Q.curveFamily` — these embed
+in the pushforward `(f ∘ ·) '' Q.curveFamily`, already bounded by `K · M(Q)` via
+`isQCGeometric_of_isQCAnalytic_pushforward` — and the complementary curves (image AC
+curves whose `f⁻¹`-image fails absolute continuity), which form a **zero-modulus
+family**. The latter nullity is the image-side Fuglede fact: it follows from
+`f⁻¹` being itself analytic-quasiconformal (inverse-is-QC), applying the source-side
+`IsQCAnalytic.chainRule_exceptional_modulus_zero` to `f⁻¹` over the image family. It
+is the same wall isolated by `IsQCAnalytic.image_chainRule_exceptional_modulus_zero`
+in `QC/LengthArea.lean`, whose crux is planar Lusin-(N) `volume (f '' {¬diff}) = 0`.
+Assembling the two pieces via `curveModulus_union_zero` gives the genuine bound. -/
+theorem isQCGeometric_of_isQCAnalytic {f : ℂ → ℂ} {K : ℝ} (hK : 1 ≤ K)
+    {b : BeltramiCoeff} (hb : b.normInf ≤ (K - 1) / (K + 1)) (hf : IsQCAnalytic f b) :
+    IsQCGeometric f K := by
+  refine ⟨hf.1, fun Q => ?_⟩
+  sorry
 
 /-- **Geometric ⇒ analytic** (the hard direction). A `K`-quasiconformal map in the
 geometric (modulus) sense is absolutely continuous on lines, hence lies in

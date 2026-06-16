@@ -87,17 +87,37 @@ def curveFamily (Q : Quadrilateral) : Set (ℝ → ℂ) :=
 curve family. -/
 noncomputable def modulus (Q : Quadrilateral) : ℝ≥0∞ := curveModulus Q.curveFamily
 
+/-- The **image connecting curve family** of the quadrilateral under a map `f`: the
+absolutely continuous curves that join the image left side `f '' leftSide` to the
+image right side `f '' rightSide` while staying inside the image region
+`f '' image`. When `f` is a homeomorphism this is exactly the connecting family of
+the image quadrilateral `f ∘ Q` (since `f '' (Q.toFun '' S) = (f ∘ Q.toFun) '' S`),
+so its modulus is the genuine modulus `M(f(Q))`.
+
+This is the mathematically correct object for the geometric definition: it ranges
+over *all* AC curves in the image quadrilateral, not only those of the form `f ∘ γ`
+with `γ` absolutely continuous. A quasiconformal map is ACL but need not send every
+AC curve to an AC curve, so the pushforward `(f ∘ ·) '' Q.curveFamily` is in general
+a proper subfamily with strictly smaller modulus — using it would state a condition
+strictly weaker than `M(f(Q)) ≤ K · M(Q)`. -/
+def imageCurveFamily (Q : Quadrilateral) (f : ℂ → ℂ) : Set (ℝ → ℂ) :=
+  {δ | Continuous δ ∧ (∀ a c : ℝ, AbsolutelyContinuousOnInterval δ a c) ∧
+    δ 0 ∈ f '' Q.leftSide ∧ δ 1 ∈ f '' Q.rightSide ∧
+    ∀ t ∈ Set.Icc (0 : ℝ) 1, δ t ∈ f '' Q.image}
+
 end Quadrilateral
 
 /-- The **geometric definition of a `K`-quasiconformal map**: an
 orientation-preserving homeomorphism `f : ℂ → ℂ` that distorts the modulus of every
-quadrilateral by at most the factor `K`. The image curve family `f ∘ γ` for
-`γ` in the connecting family of `Q` is the connecting family of the image
-quadrilateral `f ∘ Q`, so this is exactly modulus quasi-invariance with constant
-`K`. -/
+quadrilateral by at most the factor `K`, i.e. `M(f(Q)) ≤ K · M(Q)`. Here `M(f(Q))`
+is the modulus of `Q.imageCurveFamily f`, the connecting family of the image
+quadrilateral `f ∘ Q` — *all* absolutely continuous curves joining the two image
+sides inside the image region. (It must be this family rather than the pushforward
+`(f ∘ ·) '' Q.curveFamily`: a quasiconformal map need not carry every AC curve to an
+AC curve, so the pushforward is a proper subfamily of strictly smaller modulus and
+would yield a strictly weaker condition.) -/
 def IsQCGeometric (f : ℂ → ℂ) (K : ℝ) : Prop :=
   OrientationPreservingHomeo f ∧ ∀ Q : Quadrilateral,
-    curveModulus ((fun γ : ℝ → ℂ => f ∘ γ) '' Q.curveFamily)
-      ≤ ENNReal.ofReal K * Q.modulus
+    curveModulus (Q.imageCurveFamily f) ≤ ENNReal.ofReal K * Q.modulus
 
 end RiemannDynamics
