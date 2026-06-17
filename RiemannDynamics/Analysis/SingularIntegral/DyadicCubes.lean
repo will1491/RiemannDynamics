@@ -30,11 +30,15 @@ half-open square `[2^n j.1, 2^n (j.1+1)) × [2^n j.2, 2^n (j.2+1))`, transported
   squares are nested or disjoint.
 * `dyadicParent`, `dyadicSquare_subset_parent` — the unique one-generation-coarser
   parent and the nesting into it.
-* `exists_dyadicSquare_sandwich` — every ball lies in a dyadic square of comparable size
-  (the device transferring a ball reverse-Hölder hypothesis to dyadic squares).
-* `exists_dyadic_CZ_stopping` — the Calderón–Zygmund / stopping-time decomposition of a
-  super-level set at a height above the ambient average: a countable disjoint family of
-  maximal dyadic subsquares with the two-sided average bound, nested in the ambient square.
+* `dyadicCenter`, `dyadicSquare_subset_ball`, `ball_subset_dyadicSquare` — the centre of a
+  square and its inscribed/circumscribed ball comparability, the device transferring a
+  metric-ball reverse-Hölder hypothesis to the dyadic squares.
+* `dyadicIndexAt`, `mem_dyadicSquare_dyadicIndexAt` — the index of the generation-`m` square
+  containing a point, and the membership witnessing it.
+
+The analytic results built on this combinatorial foundation — the dyadic Lebesgue
+differentiation theorem and the Calderón–Zygmund stopping-time decomposition — live in
+`DyadicLebesgue.lean`.
 -/
 
 open MeasureTheory Set Metric
@@ -391,25 +395,32 @@ theorem ball_subset_dyadicSquare (n : ℤ) (j : ℤ × ℤ) :
   · have : z.im < s * (j.2 : ℝ) + s := by linarith
     nlinarith [this]
 
-/-- **Calderón–Zygmund dyadic stopping-time decomposition.**  Fix an ambient dyadic square
-`Q = dyadicSquare N J` and a nonnegative locally integrable `f`.  For any height
-`lam` strictly above the ambient average `⨍_Q f`, the super-level set `{f > lam}` inside `Q`
-is, up to a null set, the disjoint union of a countable family of *maximal* dyadic subsquares
-`Q i = dyadicSquare (n i) (k i) ⊆ Q`, each satisfying the two-sided stopping bound
-`lam < ⨍_{Q i} f ≤ 4 * lam` (the factor `4 = 2^2` is the planar parent/child area ratio).
-This is the irreducible covering core of the dyadic Gehring argument. -/
-theorem exists_dyadic_CZ_stopping {f : ℂ → ℝ≥0∞} (hf : AEMeasurable f volume)
-    (N : ℤ) (J : ℤ × ℤ) {lam : ℝ≥0∞}
-    (hlam : (⨍⁻ z in dyadicSquare N J, f z ∂volume) < lam)
-    (hlamfin : lam ≠ ⊤) :
-    ∃ (ι : Type) (B : Set ι) (n : ι → ℤ) (k : ι → ℤ × ℤ),
-      B.Countable ∧
-      (∀ i ∈ B, dyadicSquare (n i) (k i) ⊆ dyadicSquare N J) ∧
-      (Pairwise (fun i j => Disjoint (dyadicSquare (n i) (k i)) (dyadicSquare (n j) (k j)))) ∧
-      ({z ∈ dyadicSquare N J | lam < f z} =ᵐ[volume]
-        ⋃ i ∈ B, dyadicSquare (n i) (k i)) ∧
-      (∀ i ∈ B, lam < ⨍⁻ z in dyadicSquare (n i) (k i), f z ∂volume ∧
-        (⨍⁻ z in dyadicSquare (n i) (k i), f z ∂volume) ≤ 4 * lam) := by
-  sorry
+/-- The index `(⌊z.re / 2^m⌋, ⌊z.im / 2^m⌋)` of the unique generation-`m` dyadic square
+containing `z`. -/
+noncomputable def dyadicIndexAt (m : ℤ) (z : ℂ) : ℤ × ℤ :=
+  (⌊z.re / (2 : ℝ) ^ m⌋, ⌊z.im / (2 : ℝ) ^ m⌋)
+
+/-- `z` lies in the generation-`m` dyadic square selected by `dyadicIndexAt m z`. -/
+theorem mem_dyadicSquare_dyadicIndexAt (m : ℤ) (z : ℂ) :
+    z ∈ dyadicSquare m (dyadicIndexAt m z) := by
+  have hpos : (0:ℝ) < (2:ℝ) ^ m := zpow_pos (by norm_num) m
+  simp only [mem_dyadicSquare, dyadicIndexAt]
+  refine ⟨?_, ?_, ?_, ?_⟩
+  · have hfl := Int.floor_le (z.re / (2:ℝ)^m)
+    rw [le_div_iff₀ hpos] at hfl
+    calc (2:ℝ)^m * (⌊z.re / (2:ℝ)^m⌋ : ℝ) = (⌊z.re / (2:ℝ)^m⌋ : ℝ) * (2:ℝ)^m := by ring
+    _ ≤ z.re := hfl
+  · have hfl := Int.lt_floor_add_one (z.re / (2:ℝ)^m)
+    rw [div_lt_iff₀ hpos] at hfl
+    calc z.re < ((⌊z.re / (2:ℝ)^m⌋ : ℝ) + 1) * (2:ℝ)^m := hfl
+    _ = (2:ℝ)^m * ((⌊z.re / (2:ℝ)^m⌋ : ℝ) + 1) := by ring
+  · have hfl := Int.floor_le (z.im / (2:ℝ)^m)
+    rw [le_div_iff₀ hpos] at hfl
+    calc (2:ℝ)^m * (⌊z.im / (2:ℝ)^m⌋ : ℝ) = (⌊z.im / (2:ℝ)^m⌋ : ℝ) * (2:ℝ)^m := by ring
+    _ ≤ z.im := hfl
+  · have hfl := Int.lt_floor_add_one (z.im / (2:ℝ)^m)
+    rw [div_lt_iff₀ hpos] at hfl
+    calc z.im < ((⌊z.im / (2:ℝ)^m⌋ : ℝ) + 1) * (2:ℝ)^m := hfl
+    _ = (2:ℝ)^m * ((⌊z.im / (2:ℝ)^m⌋ : ℝ) + 1) := by ring
 
 end RiemannDynamics
