@@ -4305,6 +4305,210 @@ theorem reverseHolder_of_weakGradient {μ : ℂ → ℂ}
 
 /-! ## S2 — the general Gehring self-improvement lemma -/
 
+/-- **Giaquinta–Giusti iteration lemma.** A nonnegative function `Z` that is bounded
+on `[r, R]` and satisfies the hole-filling inequality
+`Z t ≤ θ · Z s + A / (s - t)^α + B` for every `r ≤ t < s ≤ R` (with `0 ≤ θ < 1`,
+`α > 0`, `A, B ≥ 0`) is controlled at the inner endpoint by the data at scale `R - r`:
+`Z r ≤ c(α, θ) · (A / (R - r)^α + B)`, with `c` depending only on `α` and `θ`.
+
+This is the standard absorption device (Giusti, *Direct Methods in the Calculus of
+Variations*, Lemma 6.1): the smallness `θ < 1` is iterated along a geometric chain of
+radii `r = ρ₀ < ρ₁ < ⋯ → R` (with ratio `τ ∈ (θ^{1/α}, 1)`, so `θ·τ^{-α} < 1`), summing
+the geometric series; the boundedness `Z ≤ M` makes the tail `θ^k · Z(ρ_k) → 0`.  It is
+what closes the G2 layer-cake of `gehring_selfImprovement`, absorbing the reconstructed
+`w^{q+ε}`-mass over the enlargement `16B₀` back onto the inner ball `4B₀`. -/
+theorem giaquinta_iteration {α θ : ℝ} (hα : 0 < α) (hθ0 : 0 ≤ θ) (hθ1 : θ < 1) :
+    ∃ c : ℝ, 0 ≤ c ∧
+      ∀ {Z : ℝ → ℝ} {r R A B M : ℝ}, r < R → 0 ≤ A → 0 ≤ B →
+        (∀ t ∈ Set.Icc r R, 0 ≤ Z t) →
+        (∀ t ∈ Set.Icc r R, Z t ≤ M) →
+        (∀ t s, r ≤ t → t < s → s ≤ R → Z t ≤ θ * Z s + A / (s - t) ^ α + B) →
+        Z r ≤ c * (A / (R - r) ^ α + B) := by
+  -- STEP 1: choose the ratio τ.
+  have hθα0 : (0:ℝ) ≤ θ ^ (1/α) := Real.rpow_nonneg hθ0 _
+  have hinvα : (0:ℝ) < 1/α := by positivity
+  have hθα1 : θ ^ (1/α) < 1 := Real.rpow_lt_one hθ0 hθ1 hinvα
+  set τ : ℝ := (θ ^ (1/α) + 1) / 2 with hτdef
+  have hτ_gt : θ ^ (1/α) < τ := by rw [hτdef]; linarith
+  have hτ1 : τ < 1 := by rw [hτdef]; linarith
+  have hτ0 : 0 < τ := by rw [hτdef]; linarith
+  -- τ^α > θ
+  have hτα_pos : 0 < τ ^ α := Real.rpow_pos_of_pos hτ0 α
+  have hθlt : θ < τ ^ α := by
+    have h := Real.rpow_lt_rpow hθα0 hτ_gt hα
+    rwa [← Real.rpow_mul hθ0, one_div_mul_cancel hα.ne', Real.rpow_one] at h
+  -- q₀ := θ / τ^α
+  set q₀ : ℝ := θ / τ ^ α with hq0def
+  have hq0_nonneg : 0 ≤ q₀ := by rw [hq0def]; positivity
+  have hq0_lt : q₀ < 1 := by
+    rw [hq0def, div_lt_one hτα_pos]; exact hθlt
+  -- STEP 2: the constant.
+  have h1τ : 0 < 1 - τ := by linarith
+  have h1q0 : 0 < 1 - q₀ := by linarith
+  have h1θ : 0 < 1 - θ := by linarith
+  have h1τα_pos : 0 < (1 - τ) ^ (-α) := Real.rpow_pos_of_pos h1τ _
+  set c : ℝ := max ((1 - τ) ^ (-α) / (1 - q₀)) (1 / (1 - θ)) with hcdef
+  have hc_nonneg : 0 ≤ c := by
+    rw [hcdef]; apply le_max_of_le_right; positivity
+  refine ⟨c, hc_nonneg, ?_⟩
+  -- STEP 3: the ∀-body.
+  intro Z r R A B M hrR hA hB hZpos hZbdd hstep
+  have hRr : 0 < R - r := by linarith
+  have hM0 : 0 ≤ M := le_trans (hZpos r ⟨le_refl r, hrR.le⟩) (hZbdd r ⟨le_refl r, hrR.le⟩)
+  -- radius chain
+  set ρ : ℕ → ℝ := fun i => r + (1 - τ ^ i) * (R - r) with hρdef
+  have hρ0 : ρ 0 = r := by simp [hρdef]
+  have hτi_nonneg : ∀ i, (0:ℝ) ≤ τ ^ i := fun i => pow_nonneg hτ0.le i
+  have hτi_le_one : ∀ i, τ ^ i ≤ 1 := fun i => pow_le_one₀ hτ0.le hτ1.le
+  have hρ_mem : ∀ i, ρ i ∈ Set.Icc r R := by
+    intro i
+    constructor
+    · simp only [hρdef]; nlinarith [hτi_le_one i, hRr, hτi_nonneg i]
+    · simp only [hρdef]; nlinarith [hτi_nonneg i, hRr, hτi_le_one i]
+  have hρ_ge_r : ∀ i, r ≤ ρ i := fun i => (hρ_mem i).1
+  have hρ_le_R : ∀ i, ρ i ≤ R := fun i => (hρ_mem i).2
+  -- the gap
+  have hgap : ∀ i, ρ (i+1) - ρ i = (τ ^ i) * (1 - τ) * (R - r) := by
+    intro i
+    simp only [hρdef, pow_succ]
+    ring
+  have hgap_pos : ∀ i, 0 < ρ (i+1) - ρ i := by
+    intro i
+    rw [hgap i]
+    have : 0 < τ ^ i := pow_pos hτ0 i
+    positivity
+  have hρ_mono : ∀ i, ρ i < ρ (i+1) := fun i => by linarith [hgap_pos i]
+  -- gap rpow
+  have hgap_rpow : ∀ i, (ρ (i+1) - ρ i) ^ α = (τ ^ α) ^ i * (1 - τ) ^ α * (R - r) ^ α := by
+    intro i
+    rw [hgap i, Real.mul_rpow (by positivity) hRr.le, Real.mul_rpow (hτi_nonneg i) h1τ.le]
+    congr 2
+    rw [← Real.rpow_natCast τ i, ← Real.rpow_natCast (τ ^ α) i, ← Real.rpow_mul hτ0.le,
+        ← Real.rpow_mul hτ0.le, mul_comm]
+  -- D and Dstep
+  set D : ℝ := A * (1 - τ) ^ (-α) * (R - r) ^ (-α) with hDdef
+  have hD0 : 0 ≤ D := by rw [hDdef]; positivity
+  set Dstep : ℕ → ℝ := fun i => A / (ρ (i+1) - ρ i) ^ α with hDstepdef
+  have hDstep_val : ∀ i, Dstep i = D * ((τ ^ α) ^ i)⁻¹ := by
+    intro i
+    simp only [hDstepdef, hgap_rpow i, hDdef]
+    rw [Real.rpow_neg h1τ.le, Real.rpow_neg hRr.le]
+    field_simp
+  have hDstep_nonneg : ∀ i, 0 ≤ Dstep i := by
+    intro i
+    simp only [hDstepdef]
+    exact div_nonneg hA (Real.rpow_nonneg (hgap_pos i).le α)
+  -- per-step bound: θ^i * Dstep i = D * q₀^i
+  have hstep_geom : ∀ i, θ ^ i * Dstep i = D * q₀ ^ i := by
+    intro i
+    rw [hDstep_val i, hq0def, div_pow]
+    have : (τ ^ α) ^ i ≠ 0 := by positivity
+    field_simp
+  -- the per-step inequality from hstep
+  have hper : ∀ i, Z (ρ i) ≤ θ * Z (ρ (i+1)) + Dstep i + B := by
+    intro i
+    have h := hstep (ρ i) (ρ (i+1)) (hρ_ge_r i) (hρ_mono i) (hρ_le_R (i+1))
+    simpa only [hDstepdef] using h
+  -- TELESCOPE
+  have htele : ∀ k, Z (ρ 0) ≤ θ ^ k * Z (ρ k) + ∑ i ∈ Finset.range k, θ ^ i * (Dstep i + B) := by
+    intro k
+    induction k with
+    | zero => simp
+    | succ k ih =>
+        have hθk : (0:ℝ) ≤ θ ^ k := pow_nonneg hθ0 k
+        have hstepk := hper k
+        have hmul : θ ^ k * Z (ρ k) ≤ θ ^ k * (θ * Z (ρ (k+1)) + Dstep k + B) :=
+          mul_le_mul_of_nonneg_left hstepk hθk
+        have hexp : θ ^ k * (θ * Z (ρ (k+1)) + Dstep k + B)
+            = θ ^ (k+1) * Z (ρ (k+1)) + θ ^ k * (Dstep k + B) := by
+          rw [pow_succ]; ring
+        rw [Finset.sum_range_succ]
+        calc Z (ρ 0) ≤ θ ^ k * Z (ρ k) + ∑ i ∈ Finset.range k, θ ^ i * (Dstep i + B) := ih
+          _ ≤ θ ^ k * (θ * Z (ρ (k+1)) + Dstep k + B)
+                + ∑ i ∈ Finset.range k, θ ^ i * (Dstep i + B) := by linarith
+          _ = θ ^ (k+1) * Z (ρ (k+1))
+                + (∑ i ∈ Finset.range k, θ ^ i * (Dstep i + B) + θ ^ k * (Dstep k + B)) := by
+              rw [hexp]; ring
+  -- bound the sum uniformly
+  -- geometric partial sums
+  have hgeom_bound : ∀ (x : ℝ) (hx0 : 0 ≤ x) (hx1 : x < 1) (k : ℕ),
+      ∑ i ∈ Finset.range k, x ^ i ≤ 1 / (1 - x) := by
+    intro x hx0 hx1 k
+    rw [geom_sum_eq (by linarith : x ≠ 1)]
+    have hxk : (0:ℝ) ≤ x ^ k := pow_nonneg hx0 k
+    have hh1x : (0:ℝ) < 1 - x := by linarith
+    have heq : (x ^ k - 1) / (x - 1) = (1 - x ^ k) / (1 - x) := by
+      rw [← neg_div_neg_eq]; congr 1 <;> ring
+    rw [heq]; gcongr; linarith
+  have hsum_bound : ∀ k, ∑ i ∈ Finset.range k, θ ^ i * (Dstep i + B)
+      ≤ D / (1 - q₀) + B / (1 - θ) := by
+    intro k
+    have hsplit : ∑ i ∈ Finset.range k, θ ^ i * (Dstep i + B)
+        = (∑ i ∈ Finset.range k, θ ^ i * Dstep i) + B * ∑ i ∈ Finset.range k, θ ^ i := by
+      rw [Finset.mul_sum, ← Finset.sum_add_distrib]
+      apply Finset.sum_congr rfl
+      intro i _; ring
+    rw [hsplit]
+    have hA1 : (∑ i ∈ Finset.range k, θ ^ i * Dstep i)
+        = D * ∑ i ∈ Finset.range k, q₀ ^ i := by
+      rw [Finset.mul_sum]
+      apply Finset.sum_congr rfl
+      intro i _; exact hstep_geom i
+    rw [hA1]
+    have hb1 : D * ∑ i ∈ Finset.range k, q₀ ^ i ≤ D / (1 - q₀) := by
+      rw [div_eq_mul_one_div]
+      apply mul_le_mul_of_nonneg_left (hgeom_bound q₀ hq0_nonneg hq0_lt k) hD0
+    have hb2 : B * ∑ i ∈ Finset.range k, θ ^ i ≤ B / (1 - θ) := by
+      rw [div_eq_mul_one_div]
+      apply mul_le_mul_of_nonneg_left (hgeom_bound θ hθ0 hθ1 k) hB
+    linarith
+  -- combine: ∀ k, Z r ≤ θ^k * Z(ρ k) + (D/(1-q₀) + B/(1-θ))
+  set C : ℝ := D / (1 - q₀) + B / (1 - θ) with hCdef
+  have hbound_k : ∀ k, Z r ≤ θ ^ k * Z (ρ k) + C := by
+    intro k
+    have h1 := htele k
+    have h2 := hsum_bound k
+    rw [hρ0] at h1
+    linarith
+  -- LIMIT k→∞
+  have htend_left : Tendsto (fun k : ℕ => θ ^ k * Z (ρ k)) atTop (𝓝 0) := by
+    apply squeeze_zero (g := fun k : ℕ => θ ^ k * M)
+    · intro k
+      have hZk := hZpos (ρ k) (hρ_mem k)
+      have hθk : (0:ℝ) ≤ θ ^ k := pow_nonneg hθ0 k
+      positivity
+    · intro k
+      have hZk := hZbdd (ρ k) (hρ_mem k)
+      have hθk : (0:ℝ) ≤ θ ^ k := pow_nonneg hθ0 k
+      exact mul_le_mul_of_nonneg_left hZk hθk
+    · have : Tendsto (fun k : ℕ => θ ^ k * M) atTop (𝓝 (0 * M)) :=
+        (tendsto_pow_atTop_nhds_zero_of_lt_one hθ0 hθ1).mul_const M
+      simpa using this
+  have hZr_le_C : Z r ≤ C := by
+    have htend_rhs : Tendsto (fun k : ℕ => θ ^ k * Z (ρ k) + C) atTop (𝓝 (0 + C)) :=
+      htend_left.add_const C
+    have htend_lhs : Tendsto (fun _ : ℕ => Z r) atTop (𝓝 (Z r)) := tendsto_const_nhds
+    have := le_of_tendsto_of_tendsto' htend_lhs htend_rhs hbound_k
+    simpa using this
+  -- FINISH: C = (1-τ)^(-α)/(1-q₀) * (A/(R-r)^α) + (1/(1-θ)) * B ≤ c*(A/(R-r)^α + B)
+  have hRrα_pos : 0 < (R - r) ^ α := Real.rpow_pos_of_pos hRr α
+  have hAdiv_nonneg : 0 ≤ A / (R - r) ^ α := by positivity
+  -- rewrite C
+  have hCval : C = ((1 - τ) ^ (-α) / (1 - q₀)) * (A / (R - r) ^ α) + (1 / (1 - θ)) * B := by
+    rw [hCdef, hDdef]
+    rw [Real.rpow_neg hRr.le]
+    field_simp
+  rw [hCval] at hZr_le_C
+  -- bound coefficients by c
+  have hcoef1 : (1 - τ) ^ (-α) / (1 - q₀) ≤ c := by rw [hcdef]; exact le_max_left _ _
+  have hcoef2 : 1 / (1 - θ) ≤ c := by rw [hcdef]; exact le_max_right _ _
+  calc Z r ≤ ((1 - τ) ^ (-α) / (1 - q₀)) * (A / (R - r) ^ α) + (1 / (1 - θ)) * B := hZr_le_C
+    _ ≤ c * (A / (R - r) ^ α) + c * B := by
+        apply add_le_add
+        · exact mul_le_mul_of_nonneg_right hcoef1 hAdiv_nonneg
+        · exact mul_le_mul_of_nonneg_right hcoef2 hB
+    _ = c * (A / (R - r) ^ α + B) := by ring
+
 /-- **S2 (`gehring_selfImprovement`).** The **abstract Gehring reverse-Hölder
 self-improvement lemma**, stated equation-agnostically so it is reusable.
 
@@ -4391,175 +4595,46 @@ theorem gehring_selfImprovement {q A : ℝ} (hq : 1 < q) (hA : 0 ≤ A) :
   -- ===========================================================================
   -- G1 (good-λ / Calderón–Zygmund) — the FIRST hard node.
   --
-  -- The level-set / distributional inequality at the heart of Gehring's lemma,
-  -- in the SINGLE-MASTER-BALL form: both the LHS super-level volume and the RHS
-  -- `wᵠ`-mass live over the SAME master ball `4B₀ = ball x₀ (4 R₀)`.  This is the
-  -- classical Calderón–Zygmund normalization (Giaquinta–Modica, Gehring): the CZ
-  -- stopping balls are built so that their `4`-enlargement (the Vitali factor
-  -- `2² = 4`) stays INSIDE the master ball `4B₀`, hence the `wᵠ`-mass collected
-  -- from the covering is localized to `4B₀`, NOT to a strictly larger ball.  With
-  -- the two balls matched the G2 layer-cake absorption is no longer obstructed by
-  -- a ball mismatch (the absorbed term then lives over the same `4B₀` as the
-  -- reconstructed left side):
-  --   `λ^q · vol({cλ < w} ∩ 4B₀)  ≤  C · ∫_{{cλ < w} ∩ 4B₀} wᵠ
-  --                                    + C · ∫_{16B₀} b^{q+ε}`.
-  -- Mathematically this is produced by the Hardy–Littlewood maximal-function
-  -- stopping decomposition of the level set `{M(wᵠ) > λ^q}` localized to `4B₀`,
-  -- the Vitali covering `Vitali.exists_disjoint_subfamily_covering_enlargement_ball`
-  -- (whose enlargement factor `2² = 4` matches the `4`-enlargement of the
-  -- reverse-Hölder hypothesis `hRH`), and the per-ball reverse-Hölder estimate
-  -- applied to each stopping ball, with `Set.Countable.measure_biUnion_le_lintegral`
-  -- summing the disjoint family.  The forcing term `b` rides along at the higher
-  -- exponent `q+ε` over `16B₀`, finite by `hbloc`.
+  -- The Giaquinta–Modica good-λ inequality at the heart of Gehring's lemma.  For
+  -- a level `λ ≥ λ₀` the super-level `wᵠ`-mass over the master ball `4B₀` is
+  -- controlled by a `λ^{q-1}`-weighted mass of `w` at EXPONENT ONE over a smaller
+  -- super-level set, plus a super-level `bᵠ`-forcing:
+  --   `∫_{{w>λ}∩4B₀} wᵠ  ≤  C · λ^{q-1} · ∫_{{w>βλ}∩16B₀} w
+  --                           + C · ∫_{{b>βλ}∩16B₀} bᵠ`,
+  -- with `0 < β < 1` and a FIXED constant `C` (depending only on `q`, `A` and the
+  -- planar doubling/overlap constant).  Three features are load-bearing:
+  --  * the exponent `1` on the right `w`-mass together with the `λ^{q-1}` factor
+  --    make the G2 layer-cake absorbed coefficient `K(ε) = C·ε/((q+ε−1)·β^{q+ε−1})`
+  --    tend to `0` as `ε → 0` (the ε-prefactor survives because the radial inner
+  --    integral over `λ^{q+ε−2}` stays bounded, `q+ε−2 > −1`), so a FIXED `C` is
+  --    absorbed for small `ε` — the constant need NOT shrink;
+  --  * the forcing is a SUPER-LEVEL set of `b` at exponent `q`, not a λ-independent
+  --    constant (which would make `∫_{λ₀}^∞ λ^{ε−1} dλ` diverge);
+  --  * the threshold `λ₀ ~ (⨍_{4B₀} wᵠ)^{1/q}` is genuine: for `λ < λ₀` the
+  --    inequality fails (as `λ → 0` the left side → `∫_{4B₀} wᵠ > 0` while the
+  --    `λ^{q-1}`-weighted right `w`-term → `0`).
   --
-  -- This is the genuinely hard analytic core (the stopping-time / CZ argument is
-  -- not available in Mathlib and is several hundred lines of delicate covering
-  -- theory). It is laid here as a faithful node; its concrete constants `c`, `C`
-  -- are produced by the covering.
+  -- Mathematically this is the Calderón–Zygmund stopping decomposition of `wᵠ` at
+  -- height `λ^q` on `4B₀` (`Vitali.exists_disjoint_subfamily_covering_enlargement_ball`,
+  -- `Set.Countable.measure_biUnion_le_lintegral`): each stopping ball `Bᵢ ⊆ 4B₀`
+  -- has `⨍_{Bᵢ} wᵠ > λ^q`, and the per-ball reverse-Hölder inequality `hRH` on the
+  -- enlargement `4Bᵢ ⊆ 16B₀` splits `Bᵢ` into `w`-dominated balls (`⨍_{4Bᵢ} w > cλ`,
+  -- contributing the `λ^{q-1}·∫_{{w>βλ}} w` term) and `b`-dominated balls
+  -- (`⨍_{4Bᵢ} bᵠ > c'λ^q`, contributing `∫_{{b>βλ}} bᵠ`).  This several-hundred-line
+  -- stopping-time / CZ argument is not available in Mathlib; it is laid here as a
+  -- faithful node.
   -- ===========================================================================
-  obtain ⟨c, hc0, C, goodLambda⟩ :
-      ∃ c : ℝ, 0 < c ∧ ∃ C : ℝ≥0∞,
-        ∀ lam : ℝ, 0 < lam →
-          ENNReal.ofReal (lam ^ q) *
-              volume ({z | ENNReal.ofReal (c * lam) < w z} ∩ Metric.ball x₀ (4 * R₀))
-            ≤ C * (∫⁻ z in {z | ENNReal.ofReal (c * lam) < w z} ∩ Metric.ball x₀ (4 * R₀),
-                      w z ^ q)
-                + C * (∫⁻ z in Metric.ball x₀ (16 * R₀), b z ^ (q + ε)) := by
-    -- =========================================================================
-    -- G1, good-λ / Calderón–Zygmund decomposition — REAL PROOF.
-    --
-    -- The doubling datum on `ℂ` is `defaultA 4` (so `A = (defaultA 4 : ℝ≥0)` and
-    -- `A^2 = 256`); it is the constant appearing in the Carleson covering engine
-    -- `Set.Countable.measure_biUnion_le_lintegral`, which packages the Vitali
-    -- enlargement covering (`Vitali.exists_disjoint_subfamily_covering_enlargement_ball`,
-    -- enlargement factor `2^2 = 4`, matching the `4`-enlargement of the
-    -- reverse-Hölder hypothesis `hRH`) together with the disjoint-family sum.
-    --
-    -- We take the threshold constant `c := 1` and the output constant
-    -- `C := A^2 = (defaultA 4)^2`. The whole-plane integrand that the engine
-    -- integrates is
-    --   `u z := ({1·λ < w} ∩ 16B₀).indicator (w^q) z
-    --             + (16B₀).indicator (b^{q+ε}) z`,
-    -- supported in `16B₀`, so its total integral is exactly the localized sum
-    -- `∫_{{λ<w}∩16B₀} w^q + ∫_{16B₀} b^{q+ε}` appearing on the right.
-    --
-    -- ISOLATED COVERING CORE. The single irreducible fact we cannot inline in
-    -- one pass is the stopping-time / reverse-Hölder construction of the covering
-    -- family. It produces, for the level `λ`, a countable index set `𝓑` of stopping
-    -- balls `ball (cen i) (rad i)` whose radii are bounded by a common `R`, which
-    --   (i) COVER the super-level set `{λ < w} ∩ 4B₀`, and
-    --   (ii) satisfy the per-ball CZ/reverse-Hölder STOPPING inequality
-    --        `ofReal(λ^q) · volume (ball (cen i) (rad i)) ≤ ∫_{ball (cen i) (rad i)} u`.
-    -- Everything else below — the engine application, the cover monotonicity, the
-    -- localization of `∫ u`, and the constant bookkeeping — is fully discharged.
-    -- =========================================================================
-    classical
-    refine ⟨1, one_pos, (((defaultA 4 : ℕ) : ℝ≥0) : ℝ≥0∞) ^ 2, ?_⟩
-    intro lam hlam
-    -- Abbreviations for the master ball `4B₀`, the `b`-forcing super-ball `16B₀`,
-    -- and the super-level set.  In the master-ball form the `wᵠ`-piece of the
-    -- covering integrand is localized to `4B₀` (NOT `16B₀`); only the `b`-forcing
-    -- term rides over the larger `16B₀`.
-    set S : Set ℂ := {z | ENNReal.ofReal (1 * lam) < w z} with hS_def
-    set B4 : Set ℂ := Metric.ball x₀ (4 * R₀) with hB4_def
-    set B16 : Set ℂ := Metric.ball x₀ (16 * R₀) with hB16_def
-    -- The whole-plane integrand integrated by the covering engine.  Its `wᵠ`-piece
-    -- is the indicator of `S ∩ 4B₀` (the master ball), matching the LHS volume.
-    set u : ℂ → ℝ≥0∞ :=
-      fun z => (S ∩ B4).indicator (fun z => w z ^ q) z
-                  + B16.indicator (fun z => b z ^ (q + ε)) z with hu_def
-    -- Measurability facts used below. The level set `S` is only NULL-measurable,
-    -- since `w` is merely `AEMeasurable`; that is enough for every indicator
-    -- manipulation we perform (`lintegral_indicator₀`).
-    have hB4meas : MeasurableSet B4 := measurableSet_ball
-    have hB16meas : MeasurableSet B16 := measurableSet_ball
-    have hS0 : NullMeasurableSet S volume := by
-      have hconst : AEMeasurable (fun _ : ℂ => ENNReal.ofReal (1 * lam)) volume :=
-        aemeasurable_const
-      exact (nullMeasurableSet_lt hconst hwmeas)
-    have hSB0 : NullMeasurableSet (S ∩ B4) volume :=
-      hS0.inter hB4meas.nullMeasurableSet
-    -- AE-measurability of the two indicator summands of `u`.
-    have hwq_meas : AEMeasurable (fun z => w z ^ q) volume :=
-      hwmeas.pow_const q
-    have hbqε_meas : AEMeasurable (fun z => b z ^ (q + ε)) volume :=
-      hbmeas.pow_const (q + ε)
-    -- LOCALIZATION OF `∫ u`. Since each summand of `u` is an indicator of a set,
-    -- its whole-plane integral collapses to the corresponding localized integral,
-    -- and `∫ (f + g) = ∫ f + ∫ g` for the two nonnegative pieces.  The `wᵠ`-piece
-    -- localizes to the master ball `4B₀`; the `b`-piece to `16B₀`.
-    have hu_int :
-        (∫⁻ z, u z ∂volume)
-          = (∫⁻ z in S ∩ B4, w z ^ q ∂volume)
-              + (∫⁻ z in B16, b z ^ (q + ε) ∂volume) := by
-      rw [hu_def]
-      rw [lintegral_add_left' ((hwq_meas.indicator₀ hSB0))]
-      rw [lintegral_indicator₀ hSB0, lintegral_indicator₀ hB16meas.nullMeasurableSet]
-    -- =======================================================================
-    -- THE ISOLATED COVERING CORE.  (Residual sorry #1 of ≤2.)
-    --
-    -- Stopping-time / reverse-Hölder Vitali construction at level `λ`, in the
-    -- MASTER-BALL normalization.  It delivers a countable index set `𝓑` of
-    -- stopping balls `ball (cen i)(rad i)` with a uniform radius bound `R`,
-    -- which COVER the super-level set `{1·λ < w} ∩ 4B₀`, and on each of which
-    -- the Calderón–Zygmund / reverse-Hölder STOPPING inequality holds against
-    -- the localized integrand `u`.  Mathematically: stop the localized maximal
-    -- function of `w^q` at height `(λ)^q`; on a stopping ball the average of
-    -- `w^q` exceeds `λ^q`, i.e. `ofReal(λ^q) · vol(ball) ≤ ∫_ball w^q`.  The CRUX
-    -- of the master-ball normalization: the stopping construction is run so that
-    -- each stopping ball AND its `4`-enlargement (the Vitali factor `2² = 4`,
-    -- matching the `4`-enlargement of `hRH`) stay INSIDE the master ball `4B₀`.
-    -- Consequently the `w^q`-mass on each stopping ball is `∫_ball (S ∩ 4B₀)`-
-    -- indicated `w^q`, which is exactly the FIRST summand of the localized `u`-
-    -- mass, so the per-ball stopping inequality is against `u` itself.  The
-    -- `b`-forcing term rides over `16B₀` (independent of the stopping geometry).
-    -- The radius bound `R := 4·R₀` is the master-ball localization radius.
-    -- =======================================================================
-    obtain ⟨ι, 𝓑, cen, rad, R, hcount, hRrad', hcover, hstop⟩ :
-        ∃ (ι : Type) (𝓑 : Set ι) (cen : ι → ℂ) (rad : ι → ℝ) (R : ℝ),
-          𝓑.Countable ∧
-          (∀ i ∈ 𝓑, rad i ≤ R) ∧
-          ({z | ENNReal.ofReal (1 * lam) < w z} ∩ Metric.ball x₀ (4 * R₀)
-            ⊆ ⋃ i ∈ 𝓑, Metric.ball (cen i) (rad i)) ∧
-          (∀ i ∈ 𝓑, ENNReal.ofReal (lam ^ q) * volume (Metric.ball (cen i) (rad i))
-              ≤ ∫⁻ z in Metric.ball (cen i) (rad i), u z ∂volume) := by
-      sorry
-    -- =======================================================================
-    -- ASSEMBLY from the covering core.  Everything below is fully discharged.
-    -- =======================================================================
-    -- Step 1: the Carleson covering engine sums the stopping balls.
-    --   `ofReal(λ^q) · vol(⋃ balls) ≤ A^2 · ∫ u`.
-    have hengine :
-        ENNReal.ofReal (lam ^ q)
-            * volume (⋃ i ∈ 𝓑, Metric.ball (cen i) (rad i))
-          ≤ (((defaultA 4 : ℕ) : ℝ≥0) : ℝ≥0∞) ^ 2 * ∫⁻ z, u z ∂volume :=
-      Set.Countable.measure_biUnion_le_lintegral (μ := volume) (c := cen) (r := rad)
-        hcount (ENNReal.ofReal (lam ^ q)) u R hRrad' hstop
-    -- Step 2: the cover gives `vol({1·λ<w}∩4B₀) ≤ vol(⋃ balls)`.
-    have hmono :
-        volume ({z | ENNReal.ofReal (1 * lam) < w z} ∩ Metric.ball x₀ (4 * R₀))
-          ≤ volume (⋃ i ∈ 𝓑, Metric.ball (cen i) (rad i)) :=
-      measure_mono hcover
-    -- Step 3: chain.
-    calc ENNReal.ofReal (lam ^ q)
-            * volume ({z | ENNReal.ofReal (1 * lam) < w z} ∩ Metric.ball x₀ (4 * R₀))
-          ≤ ENNReal.ofReal (lam ^ q)
-              * volume (⋃ i ∈ 𝓑, Metric.ball (cen i) (rad i)) :=
-            mul_le_mul_right hmono _
-      _ ≤ (((defaultA 4 : ℕ) : ℝ≥0) : ℝ≥0∞) ^ 2 * ∫⁻ z, u z ∂volume := hengine
-      _ = (((defaultA 4 : ℕ) : ℝ≥0) : ℝ≥0∞) ^ 2
-              * ((∫⁻ z in S ∩ B4, w z ^ q ∂volume)
-                  + (∫⁻ z in B16, b z ^ (q + ε) ∂volume)) := by rw [hu_int]
-      _ = (((defaultA 4 : ℕ) : ℝ≥0) : ℝ≥0∞) ^ 2
-              * (∫⁻ z in S ∩ B4, w z ^ q ∂volume)
-            + (((defaultA 4 : ℕ) : ℝ≥0) : ℝ≥0∞) ^ 2
-              * (∫⁻ z in B16, b z ^ (q + ε) ∂volume) := by rw [mul_add]
-      _ = (((defaultA 4 : ℕ) : ℝ≥0) : ℝ≥0∞) ^ 2
-              * (∫⁻ z in {z | ENNReal.ofReal (1 * lam) < w z} ∩ Metric.ball x₀ (4 * R₀),
-                    w z ^ q)
-            + (((defaultA 4 : ℕ) : ℝ≥0) : ℝ≥0∞) ^ 2
-              * (∫⁻ z in Metric.ball x₀ (16 * R₀), b z ^ (q + ε)) := by
-            rw [hS_def, hB4_def, hB16_def]
+  obtain ⟨β, hβpos, hβlt1, lam0, hlam0, C, goodLambda⟩ :
+      ∃ β : ℝ, 0 < β ∧ β < 1 ∧ ∃ lam0 : ℝ, 0 ≤ lam0 ∧ ∃ C : ℝ≥0∞,
+        ∀ lam : ℝ, lam0 ≤ lam →
+          (∫⁻ z in {z | ENNReal.ofReal lam < w z} ∩ Metric.ball x₀ (4 * R₀),
+                w z ^ q)
+            ≤ C * ENNReal.ofReal (lam ^ (q - 1))
+                * (∫⁻ z in {z | ENNReal.ofReal (β * lam) < w z}
+                      ∩ Metric.ball x₀ (16 * R₀), w z)
+              + C * (∫⁻ z in {z | ENNReal.ofReal (β * lam) < b z}
+                      ∩ Metric.ball x₀ (16 * R₀), b z ^ q) := by
+    sorry
   -- ===========================================================================
   -- G2 (layer-cake + ε-absorption) — the SECOND hard node.
   --
@@ -4614,11 +4689,11 @@ theorem gehring_selfImprovement {q A : ℝ} (hq : 1 < q) (hA : 0 ≤ A) :
             ≤ K * (∫⁻ z in Metric.ball x₀ (16 * R₀), w z ^ q)
               + K * (∫⁻ z in Metric.ball x₀ (16 * R₀), b z ^ (q + ε)) := by
       -- G2 — the layer-cake + ε-absorption reconstruction, consuming the
-      -- MASTER-BALL `goodLambda` (whose two balls now match).
+      -- corrected Giaquinta–Modica `goodLambda` (right `w`-mass at exponent `1`,
+      -- factor `λ^{q-1}`, super-level `bᵠ`-forcing) of the G1 node above.
       --
       -- `goodLambda` is the only nontrivial input; we record its consumption
-      -- explicitly so the dependency is real (the reconstruction substitutes it
-      -- at `lam = t / c` inside the layer-cake `t`-integral).
+      -- explicitly so the dependency is real.
       have hgoodLambda := goodLambda
       -- =====================================================================
       -- RIGOROUS REDUCTION (fully discharged below): truncation + monotone
@@ -4680,41 +4755,35 @@ theorem gehring_selfImprovement {q A : ℝ} (hq : 1 < q) (hA : 0 ≤ A) :
       -- =====================================================================
       -- RESIDUAL — the per-`N` bounded absorbed bound, UNIFORM in `N`.
       --
-      -- This is the genuine Giaquinta–Modica iteration core: apply the
-      -- `ℝ`-layer-cake `lintegral_comp_eq_lintegral_meas_lt_mul` to the bounded
-      -- real representative `(min (w z) N).toReal` with weight
-      -- `g(t) = (q+ε)·t^{q+ε-1}` (so `∫₀^{w_N} g = w_N^{q+ε}` by `integral_rpow`),
-      --   `∫_{4B₀} w_N^{q+ε} = (q+ε)∫₀^∞ t^{q+ε-1} · vol({t < w_N} ∩ 4B₀) dt`;
-      -- substitute `goodLambda` at `lam = t/c` inside the `t`-integral (legal
-      -- since `{t < w_N} ⊆ {t < w}` and `c·(t/c) = t`), and Tonelli-reconstruct
-      -- (`lintegral_lintegral_swap`) the first good-λ term over the SAME master
-      -- ball `4B₀`.  The forcing `b`-term reconstructs to a finite multiple of
-      -- `∫_{16B₀} b^{q+ε}`, enlarged from `4B₀` to `16B₀` by `lintegral_mono_set`.
+      -- This is the genuine Giaquinta–Modica iteration core.  Feeding the
+      -- corrected `goodLambda` into the `ℝ`-layer-cake — multiply by `λ^{ε-1}`
+      -- and integrate `λ ∈ (λ₀,∞)`, then Tonelli — reconstructs the bound
+      --   `∫_{{w>λ₀}∩4B₀} w^{q+ε} ≤ λ₀^ε·G(λ₀) + K(ε)·∫_{16B₀} w^{q+ε}
+      --                               + C·β^{-ε}·∫_{16B₀} b^{q+ε}`,
+      -- where the right `w`-mass at EXPONENT `1` and the `λ^{q-1}` factor produce
+      -- the FINITE absorbed coefficient
+      --   `K(ε) = C·ε / ((q+ε−1)·β^{q+ε−1})`,
+      -- with `C` the FIXED G1 covering constant.  Crucially `K(ε) → 0` as
+      -- `ε → 0` (numerator `ε → 0`, denominator `→ (q−1)·β^{q−1} > 0`): the
+      -- ε-prefactor from `∂_λ(λ^ε)` survives because the inner radial integral
+      -- over `λ^{q+ε−2}` is bounded (`q+ε−2 > −1`).  So for `ε ≤ ε₀` (chosen with
+      -- `K(ε₀) ≤ 1/2`) the absorption SUCCEEDS — the covering constant does NOT
+      -- need to shrink; the exponent-`1` structure of the corrected good-λ is what
+      -- makes a fixed `C` absorbable.  (This corrects the earlier diagnosis: the
+      -- obstruction was never the size of `C`, but the exponent on the right
+      -- `w`-mass — `q` in the trivial form, which cancels the ε-prefactor and
+      -- pins `coeff ≥ C`; `1` in the corrected form, which lets it vanish.)
       --
-      -- *** GENUINE CONSTANT CONSTRAINT (reported, not a missing-lemma gap). ***
-      -- The absorbed coefficient produced by this reconstruction is, exactly,
-      --   `(q + ε) · c^q · C / ε`,
-      -- where `c = 1` and `C = (defaultA 4 : ℝ≥0∞)^2 = (2^4)^2 = 256` are the
-      -- threshold/output constants FIXED by the G1 good-λ node above.  With
-      -- `q > 1`, `0 < ε ≤ ε₀ = 1` this coefficient is `≥ 256 · q / 1 > 256 ≫ 1`.
-      -- The target `hbound` has NO `w^{q+ε}` term on its right-hand side, so the
-      -- reconstructed `(coeff)·∫_{4B₀} w^{q+ε}` MUST be moved to the left, which
-      -- requires `coeff < 1`.  Since `coeff ≥ 256 > 1` for the fixed G1 constant,
-      -- the absorption — and hence `hboundN` with a finite `K` independent of `N`
-      -- — CANNOT be established at this level: the bound `(min w N)^{q+ε} ≤
-      -- N^ε·w^q` gives only the `N`-DEPENDENT coefficient `K = N^ε`, which does
-      -- not survive the `⨆ N`.
-      --
-      -- The obstruction is NOT the layer-cake/Tonelli machinery (all assembled
-      -- above and standard) nor the ball geometry (the two balls now match): it
-      -- is that the G1 good-λ node delivers the maximal-function/covering
-      -- constant `C = 256`, INDEPENDENT of `ε`, whereas Gehring's lemma requires
-      -- the good-λ constant to encode the reverse-Hölder excess (a constant `→ 0`
-      -- as the CZ thresholds spread, making `coeff < 1` for small `ε`).  Closing
-      -- this requires REVISITING the G1 node (outside this edit's single target)
-      -- to produce an ε-compatible small good-λ constant; with the current fixed
-      -- `C = 256` the absorption is mathematically blocked.  Isolated faithfully
-      -- here as the precise per-`N` residual.
+      -- The one genuine remaining ingredient is the GIAQUINTA ITERATION LEMMA
+      -- (not in Mathlib).  Because the reconstructed `w^{q+ε}`-mass lives over the
+      -- enlargement `16B₀` while the left side is over `4B₀`, the absorption is
+      -- run over a finite chain of concentric radii `4R₀ ≤ t < s ≤ 16R₀`: the
+      -- good-λ holds for every such pair (every ball satisfies `hRH`), giving
+      -- `φ_N(t) ≤ K(ε)·φ_N(s) + A(s−t)^{-α}·∫_{16B₀} wᵠ + B·∫_{16B₀} b^{q+ε}`
+      -- for the truncated masses `φ_N(t) = ∫_{ball x₀ t} (min w N)^{q+ε}` (each
+      -- finite, so the iteration lemma applies), whose conclusion at `t = 4R₀`
+      -- is the `N`-uniform bound below.  This iteration lemma together with the
+      -- per-pair layer-cake reconstruction is the residual analytic content.
       obtain ⟨K, hKfin, hboundN⟩ :
           ∃ K : ℝ≥0∞, K ≠ ⊤ ∧ ∀ N : ℕ,
             ∫⁻ z in Metric.ball x₀ (4 * R₀), (min (w z) (N : ℝ≥0∞)) ^ (q + ε)

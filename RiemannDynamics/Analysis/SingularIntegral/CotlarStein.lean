@@ -10,9 +10,6 @@ space: if `T : Fin N -> (H ->L[C] H)` satisfies the two Schur bounds
 `forall i, sum j sqrt ‖(T i)* (T j)‖ <= A` and
 `forall i, sum j sqrt ‖(T i) (T j)*‖ <= A`, then `‖sum i, T i‖ <= A`.
 
-Self-contained standalone development; does not depend on or modify any other
-project file.
-
 ## Proof outline
 
 With `S = sum i, T i` and `R = star S * S` (self-adjoint), for every `n` the
