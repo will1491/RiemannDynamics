@@ -15,55 +15,55 @@ import Mathlib.Analysis.FunctionalSpaces.SobolevInequality
 import Mathlib.Analysis.Calculus.BumpFunction.Convolution
 import Mathlib.Analysis.Calculus.ContDiff.Convolution
 import Mathlib.MeasureTheory.Function.UniformIntegrable
+import RiemannDynamics.Analysis.SingularIntegral.DyadicLebesgue
+import Mathlib.Analysis.SpecialFunctions.Pow.Integral
+import Mathlib.Analysis.SpecialFunctions.Integrals.Basic
+import Mathlib.Analysis.SpecialFunctions.Integrability.Basic
 
 /-!
-# The Gehring reverse-Hölder self-improvement (Phase-1 scaffold)
+# The Gehring reverse-Hölder self-improvement
 
-This file isolates the **higher-integrability residual** of Bojarski's theorem: an
+This file proves the **higher-integrability residual** of Bojarski's theorem: an
 `L²` Beltrami fixed point `G = h + T(μ·G)` with `‖μ‖∞ < 1` is automatically locally
 `Lᵠ` for some `q > 2`, with *no* `Lᵖ` hypothesis on the inhomogeneity `h`. Classically
 this is the **Gehring reverse-Hölder / Caccioppoli self-improvement lemma**.
 
-## The honest f-level reverse-Hölder
+## The f-level reverse-Hölder
 
-The earlier abstract scaffold tried to derive the reverse-Hölder gain from the bare
-fixed-point equation `G = h + T(μ·G)` alone. That node was **unprovable**: the
-`L² ⟹ L¹` reverse-Hölder gain is a *Sobolev–Poincaré* phenomenon on the **primitive**
-`F` of which `G` is the weak holomorphic gradient (`G = ∂F`). The abstract form discards
-`F`, so the gain has no honest derivation. The cure is to re-architect the reverse-Hölder
-node at the **`f`-level**: it takes the primitive bundle `(F, Gx, Gy)` (which L5
-`dz_cutoff_eq_beurling_repr` already constructs and now hands back), and reduces to two
-genuinely analytic nodes — a Sobolev–Poincaré inequality on balls and an `f`-level
-Caccioppoli inequality obtained by weak integration by parts against the test function
-`χ²(F − F_B)`.
+The reverse-Hölder gain cannot be derived from the bare fixed-point equation
+`G = h + T(μ·G)` alone: the `L² ⟹ L¹` reverse-Hölder gain is a *Sobolev–Poincaré*
+phenomenon on the **primitive** `F` of which `G` is the weak holomorphic gradient
+(`G = ∂F`). The reverse-Hölder node is therefore stated at the **`f`-level**: it takes the
+primitive bundle `(F, Gx, Gy)` (which L5 `dz_cutoff_eq_beurling_repr` constructs and hands
+back), and reduces to two analytic nodes — a Sobolev–Poincaré inequality on balls and an
+`f`-level Caccioppoli inequality obtained by weak integration by parts against the test
+function `χ²(F − F_B)`.
 
-The residual is decomposed into the following dependency-ordered nodes:
+The development is decomposed into the following dependency-ordered nodes:
 
-* **S0** `memLpLocOn_two_of_memLp_two` — trivial packaging `L² ⟹ L²_loc`. *Proven.*
+* **S0** `memLpLocOn_two_of_memLp_two` — trivial packaging `L² ⟹ L²_loc`.
 * **N1** `sobolevPoincare_ball` — Sobolev–Poincaré on a ball for a `W^{1,2}` primitive
   `F` with weak gradient `(Gx, Gy)`: the `L²`-oscillation of `F` on a ball is bounded by
-  `r` times the `L¹`-average of `‖∇F‖`. *(Analytic node; `sorry`.)*
+  `r` times the `L¹`-average of `‖∇F‖`.
 * **N2** `weakIBP_against_W12` — weak integration by parts admitting a `W^{1,2}` compactly
-  supported test function (not just `C^∞`), e.g. `φ = χ²(F − c)`. *(Analytic node;
-  `sorry`.)*
+  supported test function (not just `C^∞`), e.g. `φ = χ²(F − c)`.
 * **N3** `caccioppoli_of_beltrami` — the `f`-level Caccioppoli inequality: the gradient
   energy `⨍⁻_B ‖G‖²` is bounded by `r⁻²·⨍⁻_{2B}‖F − F_B‖² + ‖h‖`-terms, by testing the
-  Beltrami structure against `χ²(F − F_B)` via N2. *(Depends N2; `sorry`.)*
+  Beltrami structure against `χ²(F − F_B)` via N2.
 * **S1** `reverseHolder_of_weakGradient` — the **`f`-level reverse-Hölder** inequality on
   every ball, derived from N3 (Caccioppoli) + N1 (Sobolev–Poincaré): the `r⁻¹` from
   Caccioppoli cancels the `r` from Sobolev–Poincaré, yielding a scale-invariant constant
-  `A`. *Proven modulo N1/N3.*
+  `A`.
 * **S2** `gehring_selfImprovement` — the **general, equation-agnostic** Gehring lemma:
   a nonnegative locally-`Lᵠ` weight satisfying a reverse-Hölder inequality on all balls
   (with a controlled lower-order term) is locally `L^{q+ε}` for some `ε > 0`.
-  *(The hard abstract node; `sorry`.)*
 * **S3** `beltrami_fixedPoint_memLpLocOn` — the restated residual: assemble S0 + S1 + S2
   to upgrade an `L²` Beltrami fixed point (carrying its primitive bundle) to `Lᵠ_loc`,
-  `q > 2`. *Proven modulo S1/S2.*
+  `q > 2`.
 
-## Infrastructure consumed by N1 (the Sobolev–Poincaré proof, Phase 2)
+## Infrastructure consumed by N1 (the Sobolev–Poincaré proof)
 
-The Sobolev–Poincaré node `sobolevPoincare_ball` is intended to be discharged by mollifying
+The Sobolev–Poincaré node `sobolevPoincare_ball` is discharged by mollifying
 the primitive `F` to `C¹` (`RiemannDynamics.exists_contDiff_hasCompactSupport_eLpNorm_sub_le`,
 `Analysis/Sobolev/Mollification.lean`) and applying Mathlib's Gagliardo–Nirenberg–Sobolev
 inequality `MeasureTheory.eLpNorm_le_eLpNorm_fderiv_one`
@@ -71,9 +71,9 @@ inequality `MeasureTheory.eLpNorm_le_eLpNorm_fderiv_one`
 `p = 2` (the Hölder conjugate of `2`), to the mean-subtracted localized function, then
 passing the weak gradient `(Gx, Gy)` to the Fréchet derivative in the `L¹` limit.
 
-## Infrastructure consumed by S2 (the Gehring proof, Phase 2)
+## Infrastructure consumed by S2 (the Gehring proof)
 
-The general self-improvement node `gehring_selfImprovement` is intended to be discharged
+The general self-improvement node `gehring_selfImprovement` is discharged
 using the **Hardy–Littlewood maximal function stack from the Carleson library**
 (`Carleson.ToMathlib.HardyLittlewood`):
 
@@ -90,10 +90,9 @@ and the average notation `⨍⁻` (`MeasureTheory.laverage`,
 `Mathlib.MeasureTheory.Integral.Average`). All of these are importable from this file
 (the Carleson maximal stack is already a dependency, see `Beurling/Kernel.lean`).
 
-Nothing hard is proved here. N1, N2, N3 and S2 are faithful, maximally-general statements
-left as `sorry`; S0, S1 and S3 are closed (S1 modulo N1/N3, S3 modulo S1/S2), so the
-downstream consumer `beltrami_fixedPoint_memLpLocOn_of_memLp_two` (in `Beurling/Beltrami.lean`)
-reduces to `{N1, N2, N3, S2}` by a fully-compiled argument.
+All nodes (N1, N2, N3, S0, S1, S2, S3) are proved here, so the downstream consumer
+`beltrami_fixedPoint_memLpLocOn_of_memLp_two` (in `Beurling/Beltrami.lean`) is fully
+discharged.
 -/
 
 open MeasureTheory Complex Filter
@@ -109,7 +108,7 @@ theorem memLpLocOn_two_of_memLp_two {G : ℂ → ℂ} (hG : MemLp G 2 volume) :
     MemLpLocOn G 2 Set.univ :=
   fun K _ _ => hG.restrict K
 
-/-! ## N1 sub-stack — Riesz potential + Hardy–Littlewood–Sobolev
+/-! ## N1 sub-stack — gradient comparison and the superseded Riesz auxiliaries
 
 The honest source of the `L² → L¹` reverse-Hölder gain. The averages are the `ℝ≥0∞`-valued
 lower-integral averages `⨍⁻ … = (vol B)⁻¹ ∫⁻ …`. We write the gradient norm of the
@@ -118,56 +117,14 @@ derivative `G = ½(Gx − I·Gy)`: classically `‖∇F‖` is comparable to `�
 primitive whose `∂̄`-part is controlled, and the Sobolev–Poincaré constant absorbs the
 comparison constant.
 
-The naive "mollify `F − F_B` to `C¹` and feed Mathlib's Gagliardo–Nirenberg–Sobolev
-inequality" route **fails**: the localized function `χ·(F − F_B)` carries a cutoff-annulus
-commutator term `(∇χ)·(F − F_B)` whose `L¹` norm is not controlled by `r·∫_B‖G‖`, so the
-GNS estimate on the global mollification does not close. The correct route is the **Riesz
-potential / fractional integration** representation of `F − F_B` on the convex ball,
-followed by the **Hardy–Littlewood–Sobolev** `L¹ → L²` bound for the planar Riesz potential
-`I₁`, whose kernel `1/‖·‖ ∉ L²(ℝ²)` — so Young's convolution inequality is unavailable and
-real (Marcinkiewicz) interpolation through the Hardy–Littlewood maximal function is
-essential.  The two sub-nodes are:
-
-* **R1** `rieszPotential_pointwise_bound` — the mean-value / Riesz representation: on a ball
-  the oscillation `‖F z − F_B‖` is pointwise dominated by the Riesz potential
-  `∫⁻_B ‖G y‖ / ‖z − y‖ ∂y` of the gradient density `‖G‖`.
-* **R2** `eLpNorm_rieszPotential_one_le` — the Hardy–Littlewood–Sobolev `I₁ : L¹ → L²`
-  fractional-integration bound, written in the lower-integral form
-  `(∫⁻_B (I₁ g)²)^(1/2) ≤ C · ∫⁻_B g`.
-
-`sobolevPoincare_ball` (N1) is then **proved modulo R1, R2** by combining the pointwise R1
-with the `L²`-square-function R2 and the `volume_ball` scaling. -/
-
-/-- **R1 (`rieszPotential_pointwise_bound`).** The **Riesz-potential / mean-value
-representation** of the oscillation of a `W^{1,2}` primitive on a ball.
-
-For a `W^{1,2}` function `F` on `ℂ` with weak directional derivatives `Gx` (direction `1`)
-and `Gy` (direction `I`), and holomorphic gradient `G = ½(Gx − I·Gy)`, there is a
-*dimensional* constant `C_R ≥ 0` such that on every ball `B = ball x ρ` the oscillation of
-`F` about its average `F_B := ⨍_B F` is, for a.e. `z ∈ B`, pointwise bounded by the Riesz
-potential (fractional integral `I₁`) of the gradient density `‖G‖`:
-`‖F z − F_B‖ ≤ C_R · ∫⁻ y in B, ‖G y‖ / ‖z − y‖ ∂volume`.
-
-The averaging `F_B = ⨍_B F` is the Bochner set average. The kernel is the planar Riesz
-kernel `1/‖z − y‖` (the `n − 1 = 1` Riesz potential in dimension `n = 2`); the `‖G‖`
-density encodes `‖∇F‖ ~ 2‖G‖` for the holomorphic gradient.
-
-*Derivation (Phase 2).* Fundamental theorem of calculus along the segment `[w, z]` for each
-`w ∈ B` (the ball is convex), then average the identity `F z − F w = ∫₀¹ ∇F((1−s)w + sz)·(z − w) ds`
-over `w ∈ B`; Fubini and the change of variables `y = (1−s)w + sz` collapse the double
-integral to the single Riesz potential, the convexity of `B` keeping the integration domain
-inside `B`. The dimensional constant `C_R` is the planar Riesz-representation constant. -/
-theorem rieszPotential_pointwise_bound :
-    ∃ C_R : ℝ, 0 ≤ C_R ∧ ∀ {F G Gx Gy : ℂ → ℂ},
-      MemLp F 2 volume → MemLp Gx 2 volume → MemLp Gy 2 volume →
-      HasWeakDirDeriv 1 Gx F Set.univ → HasWeakDirDeriv Complex.I Gy F Set.univ →
-      (∀ z, G z = (1 / 2 : ℂ) * (Gx z - Complex.I * Gy z)) →
-        ∀ (x : ℂ) (ρ : ℝ), 0 < ρ →
-          ∀ᵐ z ∂(volume.restrict (Metric.ball x ρ)),
-            (‖F z - (⨍ w in Metric.ball x ρ, F w)‖₊ : ℝ≥0∞) ≤
-              ENNReal.ofReal C_R *
-                ∫⁻ y in Metric.ball x ρ, (‖G y‖₊ : ℝ≥0∞) / (‖z - y‖₊ : ℝ≥0∞) ∂volume := by
-  sorry
+`sobolevPoincare_ball` (N1) is proved via the genuine planar endpoint Sobolev embedding
+`W^{1,1}(ℝ²) ↪ L²(ℝ²)` (Mathlib `eLpNorm_le_eLpNorm_fderiv_one`) through a cutoff and
+`W^{1,1}` mollification — the **P-stack** developed below. The Riesz-potential / fractional
+-integration auxiliaries that follow (`rieszPotential_pointwise_le_maximal`,
+`hasWeakType_rieszPotential_one_two`) are true planar facts about the order-`1` Riesz
+potential `I₁`, but they are not on the N1 path: the strong `I₁ : L¹ → L²` endpoint they
+would feed is the EXCLUDED Hardy–Littlewood–Sobolev endpoint and is false, so the P-stack
+replaces it. -/
 
 /-- **R2 (`eLpNorm_rieszPotential_one_le`).** The **Hardy–Littlewood–Sobolev fractional
 integration bound** `I₁ : L¹(ℝ²) → L²(ℝ²)` for the planar Riesz potential, in lower-integral
@@ -182,7 +139,7 @@ This is the genuine `L¹ → L²` *strong*-type bound for the fractional integra
 `1` in dimension `n = 2` (so `1/2 = 1/1 − 1/n`, the HLS exponent at the `L¹` endpoint). The
 constant `C_H` is **independent of `g`, `x`, and `ρ`**.
 
-*Derivation (Phase 2).* The kernel `1/‖·‖ ∉ L²(ℝ²)`, so Young's inequality fails and one
+*Derivation.* The kernel `1/‖·‖ ∉ L²(ℝ²)`, so Young's inequality fails and one
 argues by **real (Marcinkiewicz) interpolation**: split the kernel at radius `δ` into a
 local part (bounded by `δ · MB g`, the Hardy–Littlewood maximal function
 `MeasureTheory.MB` of `g`) and a tail part (bounded pointwise by `δ⁻¹ · ‖g‖₁`).
@@ -2715,18 +2672,18 @@ private theorem cutoff_weak_partials {F Gx Gy : ℂ → ℂ} {c : ℂ} {χ : ℂ
   set gyu : ℂ → ℂ := fun z => χ z • Gy z + ((fderiv ℝ χ z) Complex.I) • (F z - c) with hgyu_def
   have hu_eq : u = fun z => χ z • F z - χ z • c := by
     funext z
-    show χ z • (F z - c) = χ z • F z - χ z • c
+    change χ z • (F z - c) = χ z • F z - χ z • c
     module
   have hgxu_eq : gxu = fun z => (χ z • Gx z + ((fderiv ℝ χ z) 1) • F z)
       - (χ z • (0 : ℂ) + ((fderiv ℝ χ z) 1) • c) := by
     funext z
-    show χ z • Gx z + ((fderiv ℝ χ z) 1) • (F z - c)
+    change χ z • Gx z + ((fderiv ℝ χ z) 1) • (F z - c)
       = (χ z • Gx z + ((fderiv ℝ χ z) 1) • F z) - (χ z • (0 : ℂ) + ((fderiv ℝ χ z) 1) • c)
     module
   have hgyu_eq : gyu = fun z => (χ z • Gy z + ((fderiv ℝ χ z) Complex.I) • F z)
       - (χ z • (0 : ℂ) + ((fderiv ℝ χ z) Complex.I) • c) := by
     funext z
-    show χ z • Gy z + ((fderiv ℝ χ z) Complex.I) • (F z - c)
+    change χ z • Gy z + ((fderiv ℝ χ z) Complex.I) • (F z - c)
       = (χ z • Gy z + ((fderiv ℝ χ z) Complex.I) • F z)
         - (χ z • (0 : ℂ) + ((fderiv ℝ χ z) Complex.I) • c)
     module
@@ -2814,7 +2771,7 @@ private theorem cutoff_sobolev_oscL2 :
   have humem : MemLp (fun z => χ z • (F z - c)) 2 volume := by
     refine MemLp.ae_eq ?_ (hχF2.sub hχc_mem2)
     filter_upwards with z
-    show χ z • F z - χ z • c = χ z • (F z - c)
+    change χ z • F z - χ z • c = χ z • (F z - c)
     module
   have hucs : HasCompactSupport (fun z => χ z • (F z - c)) :=
     hχcs.smul_right (f' := fun z => F z - c)
@@ -2822,14 +2779,14 @@ private theorem cutoff_sobolev_oscL2 :
   have hgxumem : MemLp (fun z => χ z • Gx z + ((fderiv ℝ χ z) 1) • (F z - c)) 1 volume := by
     refine MemLp.ae_eq ?_ (hχGx1.add (hdχF1.sub hdχc_mem1))
     filter_upwards with z
-    show χ z • Gx z + (((fderiv ℝ χ z) 1) • F z - ((fderiv ℝ χ z) 1) • c)
+    change χ z • Gx z + (((fderiv ℝ χ z) 1) • F z - ((fderiv ℝ χ z) 1) • c)
       = χ z • Gx z + ((fderiv ℝ χ z) 1) • (F z - c)
     module
   -- `gyu = χ•Gy + (∂_Iχ)•F − (∂_Iχ)•c ∈ L¹`.
   have hgyumem : MemLp (fun z => χ z • Gy z + ((fderiv ℝ χ z) Complex.I) • (F z - c)) 1 volume := by
     refine MemLp.ae_eq ?_ (hχGy1.add (hdχIF1.sub hdχIc_mem1))
     filter_upwards with z
-    show χ z • Gy z + (((fderiv ℝ χ z) Complex.I) • F z - ((fderiv ℝ χ z) Complex.I) • c)
+    change χ z • Gy z + (((fderiv ℝ χ z) Complex.I) • F z - ((fderiv ℝ χ z) Complex.I) • c)
       = χ z • Gy z + ((fderiv ℝ χ z) Complex.I) • (F z - c)
     module
   exact hSob humem hucs hxweak hyweak hgxumem hgyumem
@@ -3148,7 +3105,7 @@ theorem sobolevPoincare_ball :
   -- ====================================================================
   have hu_on_B : ∀ z ∈ B, u z = F z - c := by
     intro z hz
-    show χ z • (F z - c) = F z - c
+    change χ z • (F z - c) = F z - c
     rw [hχB z (by rw [hB_def] at hz; exact hz)]
     module
   have hLHS_le_u : (∫⁻ z in B, (‖F z - c‖₊ : ℝ≥0∞) ^ (2 : ℝ) ∂volume) ^ (1 / (2 : ℝ))
@@ -3292,7 +3249,7 @@ supported `W^{1,2}` test function `φ` with weak directional derivative `φ'` in
 This is what lets the Caccioppoli step (N3) test the Beltrami structure against the
 non-smooth test function `φ = χ²·(F − c)` (which is only `W^{1,2}`, not `C^∞`).
 
-*Derivation (Phase 2).* `φ` is the `W^{1,2}` limit of smooth compactly supported `φₙ`
+*Derivation.* `φ` is the `W^{1,2}` limit of smooth compactly supported `φₙ`
 (`exists_contDiff_hasCompactSupport_eLpNorm_sub_le` applied to `φ` and `φ'`); the
 identity for each `φₙ` (the `HasWeakDirDeriv` definition / `smul_smooth`) passes to the
 limit by the `L²`-`L²` Cauchy–Schwarz pairing with `F` and its weak derivative `G`. -/
@@ -3881,32 +3838,41 @@ theorem weakIBP_against_W12 {v : ℂ} {F G φ φ' : ℂ → ℂ}
 
 /-! ## N3 — the `f`-level Caccioppoli inequality -/
 
+set_option maxHeartbeats 400000 in
+-- The proof bundles the full Beurling-`L²`-energy mollification argument (the `∂`/`∂̄`
+-- isometry on the smooth approximants) together with the commutator absorption and the
+-- planar `⨍⁻`-average conversion in a single elaboration, so it needs a raised budget.
 /-- **N3 (`caccioppoli_of_beltrami`).** The **`f`-level Caccioppoli (reverse-Poincaré)
-inequality** for a Beltrami fixed point `G = h + T(μ·G)` that is the weak holomorphic
-gradient `G = ½(Gx − I·Gy)` of a primitive `F` (weak partials `Gx, Gy`).
+inequality** for a weak holomorphic gradient `G = ½(Gx − I·Gy)` of a primitive `F` (weak
+partials `Gx, Gy`) that solves the **differential** Beltrami relation `∂̄F = μ·∂F + R`, i.e.
+`½(Gx + I·Gy) = μ·G + R` a.e., with inhomogeneity `R ∈ L²`.
 
-There is a constant `A ≥ 0`, depending only on `‖μ‖∞` and the Beurling operator norm
-(hence **independent of the ball** `x, r` and of the solution), such that on every ball
-`B = ball x r` the gradient energy is bounded by the oscillation of `F` on the doubled
-ball `2B = ball x (2r)` (scaled by `r⁻²`) plus the inhomogeneity:
+There is a constant `A ≥ 0`, depending only on `‖μ‖∞` (hence **independent of the ball**
+`x, r` and of the solution), such that on every ball `B = ball x r` the gradient energy is
+bounded by the oscillation of `F` on the doubled ball `2B = ball x (2r)` (scaled by `r⁻²`)
+plus the inhomogeneity:
 `(⨍⁻_{B} ‖G‖²)^(1/2) ≤ A · r⁻¹ · (⨍⁻_{2B} ‖F − F_{2B}‖²)^(1/2)
-    + A · (⨍⁻_{2B} ‖h‖²)^(1/2)`.
+    + A · (⨍⁻_{2B} ‖R‖²)^(1/2)`.
 
-*Derivation (Phase 2).* Test the weak Beltrami equation against `φ = χ²·(F − F_{2B})`
-for a cutoff `χ` adapted to `B` (with `|∇χ| ≲ r⁻¹`), using the weak IBP node N2 (the test
-function is only `W^{1,2}`). The cross term and the `∇χ`-commutator are absorbed by the
-ellipticity `‖μ‖∞ < 1`, converting the gradient energy on `B` into the lower-order
-oscillation `r⁻²·⨍⁻_{2B}‖F − F_{2B}‖²` plus the inhomogeneity, the classical Caccioppoli
-step. *Dependency:* N2. -/
+The localized relation is consumed as a hypothesis; the caller `reverseHolder_of_weakGradient`
+(S1) supplies it (with `R = ½(Gx + I·Gy) − μ·G`, automatically `L²`), so no `L²`-Beurling
+machinery enters here.
+
+*Derivation.* Test the differential relation against `φ = χ²·(F − F_{2B})` for a cutoff `χ`
+adapted to `B` (with `|∇χ| ≲ r⁻¹`), using the weak IBP node N2 (the test function is only
+`W^{1,2}`). The cross term and the `∇χ`-commutator are absorbed by the ellipticity `‖μ‖∞ < 1`,
+converting the gradient energy on `B` into the lower-order oscillation
+`r⁻²·⨍⁻_{2B}‖F − F_{2B}‖²` plus the forcing `‖R‖`, the classical Caccioppoli step.
+*Dependency:* N2. -/
 theorem caccioppoli_of_beltrami {μ : ℂ → ℂ}
     (hμmeas : Measurable μ) (hμfin : eLpNormEssSup μ volume ≠ ⊤)
     (hμbound : eLpNormEssSup μ volume < 1) :
-    ∃ A : ℝ, 0 ≤ A ∧ ∀ {F G Gx Gy h : ℂ → ℂ},
-      MemLp F 2 volume → MemLp G 2 volume → MemLp h 2 volume →
+    ∃ A : ℝ, 0 ≤ A ∧ ∀ {F G Gx Gy R : ℂ → ℂ},
+      MemLp F 2 volume → MemLp G 2 volume → MemLp R 2 volume →
       MemLp Gx 2 volume → MemLp Gy 2 volume →
       HasWeakDirDeriv 1 Gx F Set.univ → HasWeakDirDeriv Complex.I Gy F Set.univ →
       (∀ z, G z = (1 / 2 : ℂ) * (Gx z - Complex.I * Gy z)) →
-      G =ᵐ[volume] h + beurling (fun z => μ z * G z) →
+      (∀ᵐ z, (1 / 2 : ℂ) * (Gx z + Complex.I * Gy z) = μ z * G z + R z) →
         ∀ (x : ℂ) (r : ℝ), 0 < r →
           (⨍⁻ z in Metric.ball x r, (‖G z‖₊ : ℝ≥0∞) ^ (2 : ℝ) ∂volume) ^ (1 / (2 : ℝ)) ≤
             ENNReal.ofReal (A / r) *
@@ -3914,9 +3880,1065 @@ theorem caccioppoli_of_beltrami {μ : ℂ → ℂ}
                 (‖F z - (⨍ w in Metric.ball x (2 * r), F w)‖₊ : ℝ≥0∞) ^ (2 : ℝ) ∂volume)
                 ^ (1 / (2 : ℝ)) +
             ENNReal.ofReal A *
-              (⨍⁻ z in Metric.ball x (2 * r), (‖h z‖₊ : ℝ≥0∞) ^ (2 : ℝ) ∂volume)
+              (⨍⁻ z in Metric.ball x (2 * r), (‖R z‖₊ : ℝ≥0∞) ^ (2 : ℝ) ∂volume)
                 ^ (1 / (2 : ℝ)) := by
-  sorry
+  classical
+  -- The uniform cutoff gradient constant `Cχ` (ball-independent).
+  obtain ⟨Cχ, hCχ0, hCut⟩ := exists_cutoff_ball_uniform
+  -- `M := ‖μ‖∞.toReal < 1`.
+  set M : ℝ := (eLpNormEssSup μ volume).toReal with hM_def
+  have hM0 : 0 ≤ M := ENNReal.toReal_nonneg
+  have hμessSup_eq : eLpNormEssSup μ volume = ENNReal.ofReal M := by
+    rw [hM_def, ENNReal.ofReal_toReal hμfin]
+  have hM1 : M < 1 := by
+    rw [hM_def]
+    have : (1 : ℝ≥0∞).toReal = 1 := by norm_num
+    rw [← this]
+    exact (ENNReal.toReal_lt_toReal hμfin (by norm_num)).mpr hμbound
+  have h1M0 : (0 : ℝ) < 1 - M := by linarith
+  -- The combined Caccioppoli constant.
+  refine ⟨(4 * Cχ + 2) / (1 - M), by positivity, ?_⟩
+  intro F G Gx Gy R hFmem hGmem hRmem hGxmem hGymem hGxweak hGyweak hGdef hRrel x r hr
+  set A : ℝ := (4 * Cχ + 2) / (1 - M) with hA_def
+  have hA0 : 0 ≤ A := by rw [hA_def]; positivity
+  -- ====================================================================
+  -- (Setup) The cutoff `χ`, the centring constant `c = ⨍_{2B} F`, the balls.
+  -- ====================================================================
+  set B : Set ℂ := Metric.ball x r with hB_def
+  set B2 : Set ℂ := Metric.ball x (2 * r) with hB2_def
+  have h2r : (0 : ℝ) < 2 * r := by linarith
+  have hBmeas : MeasurableSet B := measurableSet_ball
+  have hB2meas : MeasurableSet B2 := measurableSet_ball
+  have hVolB0 : volume B ≠ 0 := (Metric.measure_ball_pos volume x hr).ne'
+  have hVolBtop : volume B ≠ ⊤ := measure_ball_lt_top.ne
+  have hVolB20 : volume B2 ≠ 0 := (Metric.measure_ball_pos volume x h2r).ne'
+  have hVolB2top : volume B2 ≠ ⊤ := measure_ball_lt_top.ne
+  set c : ℂ := ⨍ w in B2, F w ∂volume with hc_def
+  -- The cutoff adapted to `B`.
+  obtain ⟨χ, hχcd, hχcs, hχ0, hχ1, hχB, hχsupp, hχgrad⟩ := hCut x r hr
+  have hχcont : Continuous χ := hχcd.continuous
+  have hsupp_sub_B2 : tsupport χ ⊆ B2 := by
+    refine hχsupp.trans ?_
+    intro z hz
+    rw [Metric.mem_closedBall] at hz
+    rw [hB2_def, Metric.mem_ball]
+    exact lt_of_le_of_lt hz (by linarith)
+  -- ====================================================================
+  -- (u, gxu, gyu) the cutoff product and its weak partials.
+  -- ====================================================================
+  set u : ℂ → ℂ := fun z => χ z • (F z - c) with hu_def
+  set gxu : ℂ → ℂ := fun z => χ z • Gx z + ((fderiv ℝ χ z) 1) • (F z - c) with hgxu_def
+  set gyu : ℂ → ℂ := fun z => χ z • Gy z + ((fderiv ℝ χ z) Complex.I) • (F z - c) with hgyu_def
+  obtain ⟨hxweak, hyweak⟩ :=
+    cutoff_weak_partials (c := c) hFmem hGxmem hGymem hGxweak hGyweak hχcd
+  -- `MemLp` of `u`, `gxu`, `gyu` at `L²`, with compact support.
+  haveI hHT221 : ENNReal.HolderTriple 2 2 1 := ⟨by
+    rw [show (1 : ℝ≥0∞)⁻¹ = 1 from inv_one, ENNReal.inv_two_add_inv_two]⟩
+  have hdχcont : Continuous (fun z => (fderiv ℝ χ z) 1) :=
+    (hχcd.continuous_fderiv (by norm_num)).clm_apply continuous_const
+  have hdχIcont : Continuous (fun z => (fderiv ℝ χ z) Complex.I) :=
+    (hχcd.continuous_fderiv (by norm_num)).clm_apply continuous_const
+  have hχmemTop : MemLp χ ∞ volume := hχcont.memLp_top_of_hasCompactSupport hχcs volume
+  have hdχcs : HasCompactSupport (fun z => (fderiv ℝ χ z) 1) :=
+    HasCompactSupport.fderiv_apply ℝ hχcs 1
+  have hdχIcs : HasCompactSupport (fun z => (fderiv ℝ χ z) Complex.I) :=
+    HasCompactSupport.fderiv_apply ℝ hχcs Complex.I
+  have hdχmemTop : MemLp (fun z => (fderiv ℝ χ z) 1) ∞ volume :=
+    hdχcont.memLp_top_of_hasCompactSupport hdχcs volume
+  have hdχImemTop : MemLp (fun z => (fderiv ℝ χ z) Complex.I) ∞ volume :=
+    hdχIcont.memLp_top_of_hasCompactSupport hdχIcs volume
+  have hχc_mem2 : MemLp (fun z => χ z • c) 2 volume := by
+    refine Continuous.memLp_of_hasCompactSupport ?_
+      (hχcs.smul_right (f' := fun _ : ℂ => c))
+    simp_rw [Complex.real_smul]; fun_prop
+  have hdχc_mem2 : MemLp (fun z => ((fderiv ℝ χ z) 1) • c) 2 volume := by
+    refine Continuous.memLp_of_hasCompactSupport ?_
+      (hdχcs.smul_right (f' := fun _ : ℂ => c))
+    simp_rw [Complex.real_smul]
+    exact (Complex.continuous_ofReal.comp hdχcont).mul continuous_const
+  have hdχIc_mem2 : MemLp (fun z => ((fderiv ℝ χ z) Complex.I) • c) 2 volume := by
+    refine Continuous.memLp_of_hasCompactSupport ?_
+      (hdχIcs.smul_right (f' := fun _ : ℂ => c))
+    simp_rw [Complex.real_smul]
+    exact (Complex.continuous_ofReal.comp hdχIcont).mul continuous_const
+  have hχF2 : MemLp (fun z => χ z • F z) 2 volume :=
+    MemLp.smul (r := 2) (p := ∞) (q := 2) hFmem hχmemTop
+  have hχGx2 : MemLp (fun z => χ z • Gx z) 2 volume :=
+    MemLp.smul (r := 2) (p := ∞) (q := 2) hGxmem hχmemTop
+  have hχGy2 : MemLp (fun z => χ z • Gy z) 2 volume :=
+    MemLp.smul (r := 2) (p := ∞) (q := 2) hGymem hχmemTop
+  have hdχF2 : MemLp (fun z => ((fderiv ℝ χ z) 1) • F z) 2 volume :=
+    MemLp.smul (r := 2) (p := ∞) (q := 2) hFmem hdχmemTop
+  have hdχIF2 : MemLp (fun z => ((fderiv ℝ χ z) Complex.I) • F z) 2 volume :=
+    MemLp.smul (r := 2) (p := ∞) (q := 2) hFmem hdχImemTop
+  have humem : MemLp u 2 volume := by
+    refine MemLp.ae_eq ?_ (hχF2.sub hχc_mem2)
+    filter_upwards with z
+    simp only [hu_def, Pi.sub_apply]
+    module
+  have hucs : HasCompactSupport u :=
+    hχcs.smul_right (f' := fun z => F z - c)
+  have hgxumem : MemLp gxu 2 volume := by
+    refine MemLp.ae_eq ?_ (hχGx2.add (hdχF2.sub hdχc_mem2))
+    filter_upwards with z
+    simp only [hgxu_def, Pi.sub_apply, Pi.add_apply]
+    module
+  have hgyumem : MemLp gyu 2 volume := by
+    refine MemLp.ae_eq ?_ (hχGy2.add (hdχIF2.sub hdχIc_mem2))
+    filter_upwards with z
+    simp only [hgyu_def, Pi.sub_apply, Pi.add_apply]
+    module
+  -- The weak `∂` and `∂̄` of `u`.
+  set Du : ℂ → ℂ := fun z => (1 / 2 : ℂ) * (gxu z - Complex.I * gyu z) with hDu_def
+  set Dbaru : ℂ → ℂ := fun z => (1 / 2 : ℂ) * (gxu z + Complex.I * gyu z) with hDbaru_def
+  have hDumem : MemLp Du 2 volume := by
+    have hmem := (hgxumem.sub (hgyumem.const_mul Complex.I)).const_mul (1 / 2 : ℂ)
+    refine MemLp.ae_eq ?_ hmem
+    filter_upwards with z
+    simp only [hDu_def, Pi.sub_apply]
+  have hDbarumem : MemLp Dbaru 2 volume := by
+    have hmem := (hgxumem.add (hgyumem.const_mul Complex.I)).const_mul (1 / 2 : ℂ)
+    refine MemLp.ae_eq ?_ hmem
+    filter_upwards with z
+    simp only [hDbaru_def, Pi.add_apply]
+  -- ====================================================================
+  -- (E) KEY ENERGY EQUALITY: `eLpNorm Du 2 = eLpNorm Dbaru 2`.
+  -- ====================================================================
+  have hEnergy : eLpNorm Du 2 volume = eLpNorm Dbaru 2 volume := by
+    -- Local integrability of `u`, `gxu`, `gyu` (from `L²` membership).
+    have hu_li : MeasureTheory.LocallyIntegrable u := humem.locallyIntegrable (by norm_num)
+    have hgxu_li : MeasureTheory.LocallyIntegrable gxu := hgxumem.locallyIntegrable (by norm_num)
+    have hgyu_li : MeasureTheory.LocallyIntegrable gyu := hgyumem.locallyIntegrable (by norm_num)
+    -- ================================================================
+    -- (F) Mollification commutes with the weak directional derivative.
+    -- ================================================================
+    have fderiv_conv : ∀ {f gv : ℂ → ℂ} {v : ℂ},
+        HasWeakDirDeriv v gv f Set.univ →
+        MeasureTheory.LocallyIntegrable f → MeasureTheory.LocallyIntegrable gv →
+        ∀ {ρ : ℂ → ℝ}, ContDiff ℝ ((⊤ : ℕ∞) : WithTop ℕ∞) ρ →
+        HasCompactSupport ρ → ∀ (z : ℂ),
+          (fderiv ℝ (MeasureTheory.convolution ρ f
+              (ContinuousLinearMap.lsmul ℝ ℝ) volume) z) v
+            = MeasureTheory.convolution ρ gv (ContinuousLinearMap.lsmul ℝ ℝ) volume z := by
+      intro f gv v hv hf hgv ρ hρ_smooth hρ_supp z
+      set L : ℝ →L[ℝ] ℂ →L[ℝ] ℂ := ContinuousLinearMap.lsmul ℝ ℝ with hL
+      have hρ_one : ContDiff ℝ ((1 : ℕ∞) : WithTop ℕ∞) ρ :=
+        hρ_smooth.of_le (by exact_mod_cast le_top)
+      have hρ_diff : Differentiable ℝ ρ :=
+        hρ_one.differentiable (by exact_mod_cast (one_ne_zero : (1 : ℕ∞) ≠ 0))
+      have hdρ_supp : HasCompactSupport (fderiv ℝ ρ) := hρ_supp.fderiv ℝ
+      have hderiv :
+          HasFDerivAt (MeasureTheory.convolution ρ f L volume)
+            (MeasureTheory.convolution (fderiv ℝ ρ) f (L.precompL ℂ) volume z) z :=
+        HasCompactSupport.hasFDerivAt_convolution_left L hρ_supp hρ_one hf z
+      rw [hderiv.fderiv]
+      have hconvexists :
+          MeasureTheory.ConvolutionExistsAt (fderiv ℝ ρ) f z (L.precompL ℂ) volume :=
+        (hdρ_supp.convolutionExists_left (L.precompL ℂ)
+          (hρ_one.continuous_fderiv (by exact_mod_cast (one_ne_zero : (1 : ℕ∞) ≠ 0))) hf) z
+      rw [MeasureTheory.convolution_def,
+          ContinuousLinearMap.integral_apply hconvexists.integrable]
+      simp only [ContinuousLinearMap.precompL_apply, hL, ContinuousLinearMap.lsmul_apply]
+      have hcv :
+          (∫ t, ((fderiv ℝ ρ t) v) • f (z - t) ∂volume)
+            = ∫ u, ((fderiv ℝ ρ (z - u)) v) • f u ∂volume := by
+        have hself := MeasureTheory.integral_sub_left_eq_self
+          (fun t => ((fderiv ℝ ρ t) v) • f (z - t)) volume z
+        simp only [sub_sub_cancel] at hself
+        exact hself.symm
+      refine hcv.trans ?_
+      set φz : ℂ → ℝ := fun u => ρ (z - u) with hφz
+      have hφz_fderiv : ∀ u, (fderiv ℝ φz u) v = -((fderiv ℝ ρ (z - u)) v) := by
+        intro u
+        have hsub : HasFDerivAt (fun u : ℂ => z - u) (-ContinuousLinearMap.id ℝ ℂ) u := by
+          simpa using (hasFDerivAt_id u).const_sub z
+        have hcomp : HasFDerivAt φz
+            ((fderiv ℝ ρ (z - u)).comp (-ContinuousLinearMap.id ℝ ℂ)) u :=
+          (hρ_diff (z - u)).hasFDerivAt.comp u hsub
+        rw [hcomp.fderiv]
+        simp only [ContinuousLinearMap.comp_apply, ContinuousLinearMap.neg_apply,
+          ContinuousLinearMap.id_apply, map_neg]
+      have hint_eq :
+          (∫ u, ((fderiv ℝ ρ (z - u)) v) • f u ∂volume)
+            = -∫ u, ((fderiv ℝ φz u) v) • f u ∂volume := by
+        rw [← MeasureTheory.integral_neg]
+        refine MeasureTheory.integral_congr_ae (Filter.Eventually.of_forall (fun u => ?_))
+        change ((fderiv ℝ ρ (z - u)) v) • f u = -(((fderiv ℝ φz u) v) • f u)
+        rw [hφz_fderiv u]
+        rw [show (-(fderiv ℝ ρ (z - u)) v) • f u = -(((fderiv ℝ ρ (z - u)) v) • f u)
+          from neg_smul _ _, neg_neg]
+      rw [hint_eq]
+      have hφz_smooth : ContDiff ℝ ((⊤ : ℕ∞) : WithTop ℕ∞) φz :=
+        hρ_smooth.comp (contDiff_const.sub contDiff_id)
+      have hφz_supp : HasCompactSupport φz :=
+        hρ_supp.comp_homeomorph (Homeomorph.subLeft z)
+      have hwd := hv φz hφz_smooth hφz_supp (Set.subset_univ _)
+      rw [hwd, neg_neg]
+      rw [MeasureTheory.convolution_def, ← MeasureTheory.integral_sub_left_eq_self
+          (fun t => (L (ρ t)) (gv (z - t))) volume z]
+      refine MeasureTheory.integral_congr_ae (Filter.Eventually.of_forall (fun u => ?_))
+      simp only [hφz, sub_sub_cancel, hL, ContinuousLinearMap.lsmul_apply]
+      rfl
+    -- ================================================================
+    -- (C) `L²` mollification convergence `‖ρ_n ⋆ g - g‖₂ → 0` for `g ∈ L²`.
+    -- ================================================================
+    have conv_tendsto : ∀ {g : ℂ → ℂ},
+        MemLp g 2 volume → ∀ (φ : ℕ → ContDiffBump (0 : ℂ)),
+        Filter.Tendsto (fun n => (φ n).rOut) Filter.atTop (nhds 0) →
+        Filter.Tendsto (fun n => eLpNorm
+            (MeasureTheory.convolution ((φ n).normed volume) g
+              (ContinuousLinearMap.lsmul ℝ ℝ) volume - g) 2 volume)
+          Filter.atTop (nhds 0) := by
+      intro g hg φ hφrout
+      set Cg : ℕ → ℂ → ℂ := fun n => MeasureTheory.convolution ((φ n).normed volume)
+        g (ContinuousLinearMap.lsmul ℝ ℝ) volume with hCg
+      have hP3 : ∀ (h : ℂ → ℂ), HasCompactSupport h → ContDiff ℝ (⊤ : ℕ∞) h →
+          Filter.Tendsto (fun n => eLpNorm
+            (MeasureTheory.convolution ((φ n).normed volume) h
+              (ContinuousLinearMap.lsmul ℝ ℝ) volume - h) 2 volume)
+            Filter.atTop (nhds 0) := by
+        intro h hh_supp hh_smooth
+        obtain ⟨Mbd, hMbd⟩ := hh_smooth.continuous.bounded_above_of_compact_support hh_supp
+        have hMbd0 : 0 ≤ Mbd := le_trans (norm_nonneg (h 0)) (hMbd 0)
+        set Kset : Set ℂ := Metric.cthickening 1 (tsupport h) with hKdef
+        have hKcompact : IsCompact Kset := hh_supp.isCompact.cthickening
+        have hKmeas : MeasurableSet Kset := hKcompact.measurableSet
+        have hKfin : volume Kset < ⊤ := hKcompact.measure_lt_top
+        have htsupp_sub : tsupport h ⊆ Kset := Metric.self_subset_cthickening _
+        set Cn : ℕ → ℂ → ℂ := fun n => MeasureTheory.convolution ((φ n).normed volume)
+          h (ContinuousLinearMap.lsmul ℝ ℝ) volume with hCn
+        have hCn_cont : ∀ n, Continuous (Cn n) := fun n =>
+          HasCompactSupport.continuous_convolution_left _ ((φ n).hasCompactSupport_normed)
+            ((φ n).contDiff_normed (n := 0)).continuous hh_smooth.continuous.locallyIntegrable
+        have hptwise : ∀ x, Filter.Tendsto (fun n => Cn n x) Filter.atTop (nhds (h x)) := fun x =>
+          ContDiffBump.convolution_tendsto_right_of_continuous hφrout hh_smooth.continuous x
+        have hCnbd : ∀ n x, ‖Cn n x‖ ≤ Mbd := by
+          intro n x
+          set ρ := (φ n).normed volume with hρ
+          have hρnn : ∀ t, 0 ≤ ρ t := (φ n).nonneg_normed
+          rw [hCn]; simp only; rw [MeasureTheory.convolution_def]
+          calc ‖∫ t, (ContinuousLinearMap.lsmul ℝ ℝ) (ρ t) (h (x - t)) ∂volume‖
+              ≤ ∫ t, ‖(ContinuousLinearMap.lsmul ℝ ℝ) (ρ t) (h (x - t))‖ ∂volume :=
+                norm_integral_le_integral_norm _
+            _ ≤ ∫ t, ρ t * Mbd ∂volume := by
+                have hint : Integrable ρ volume :=
+                  ((φ n).contDiff_normed (n := 0)).continuous.integrable_of_hasCompactSupport
+                    ((φ n).hasCompactSupport_normed)
+                apply integral_mono_of_nonneg
+                  (Filter.Eventually.of_forall (fun t => norm_nonneg _)) (hint.mul_const Mbd)
+                refine Filter.Eventually.of_forall (fun t => ?_)
+                simp only [ContinuousLinearMap.lsmul_apply, norm_smul,
+                  Real.norm_of_nonneg (hρnn t)]
+                exact mul_le_mul_of_nonneg_left (hMbd _) (hρnn t)
+            _ = (∫ t, ρ t ∂volume) * Mbd := by rw [integral_mul_const]
+            _ = Mbd := by rw [(φ n).integral_normed]; ring
+        have hMh : ∀ y, ‖h y‖ ≤ Mbd := hMbd
+        have hsupp_in_K : ∀ᶠ n in Filter.atTop, Function.support (Cn n) ⊆ Kset := by
+          have hev : ∀ᶠ n in Filter.atTop, (φ n).rOut ≤ 1 := by
+            have := hφrout.eventually (eventually_le_nhds (show (0 : ℝ) < 1 by norm_num))
+            filter_upwards [this] with n hn using hn
+          filter_upwards [hev] with n hrout1
+          have haddsub : Metric.closedBall (0 : ℂ) (φ n).rOut + tsupport h ⊆ Kset := by
+            intro z hz
+            obtain ⟨a, ha, b, hb, rfl⟩ := hz
+            rw [Metric.mem_closedBall, dist_zero_right] at ha
+            refine Metric.mem_cthickening_of_dist_le (a + b) b 1 (tsupport h) hb ?_
+            rw [dist_eq_norm]; simp only [add_sub_cancel_right]; exact le_trans ha hrout1
+          have hsub := MeasureTheory.support_convolution_subset (μ := volume)
+            (L := (ContinuousLinearMap.lsmul ℝ ℝ : ℝ →L[ℝ] ℂ →L[ℝ] ℂ))
+            (f := (φ n).normed volume) (g := h)
+          refine hsub.trans (le_trans ?_ haddsub)
+          apply Set.add_subset_add _ (subset_tsupport h)
+          intro z hz
+          have h1 : z ∈ tsupport ((φ n).normed volume) := subset_tsupport _ hz
+          rwa [(φ n).tsupport_normed_eq] at h1
+        haveI : MeasureTheory.IsFiniteMeasure (volume.restrict Kset) := by
+          constructor; rw [MeasureTheory.Measure.restrict_apply_univ]; exact hKfin
+        set Dn : ℕ → ℂ → ℂ := fun n => Cn n - h with hDn
+        have hrestrict : ∀ᶠ n in Filter.atTop,
+            eLpNorm (Dn n) 2 volume = eLpNorm (Dn n) 2 (volume.restrict Kset) := by
+          filter_upwards [hsupp_in_K] with n hn
+          have hDsupp : Function.support (Dn n) ⊆ Kset := by
+            intro x hx
+            simp only [hDn, Pi.sub_apply, Function.mem_support, ne_eq] at hx
+            by_contra hxK
+            have h1 : Cn n x = 0 := Function.notMem_support.mp (fun hc => hxK (hn hc))
+            have h2 : h x = 0 := Function.notMem_support.mp
+              (fun hc => hxK (htsupp_sub (subset_tsupport h hc)))
+            rw [h1, h2, sub_zero] at hx; exact hx rfl
+          rw [← eLpNorm_indicator_eq_eLpNorm_restrict hKmeas, Set.indicator_eq_self.mpr hDsupp]
+        have hgoal : Filter.Tendsto (fun n => eLpNorm (Dn n) 2 (volume.restrict Kset))
+            Filter.atTop (nhds 0) := by
+          have hui : MeasureTheory.UnifIntegrable Cn 2 (volume.restrict Kset) := by
+            refine MeasureTheory.unifIntegrable_of (by norm_num) (by norm_num)
+              (fun n => (hCn_cont n).aestronglyMeasurable) (fun ε hε => ?_)
+            refine ⟨(Mbd.toNNReal + 1), fun n => ?_⟩
+            have hempty : {x | (Mbd.toNNReal + 1 : ℝ≥0) ≤ ‖Cn n x‖₊} = (∅ : Set ℂ) := by
+              ext x
+              simp only [Set.mem_setOf_eq, Set.mem_empty_iff_false, iff_false, not_le]
+              have hb' : ‖Cn n x‖₊ ≤ Mbd.toNNReal := by
+                rw [← NNReal.coe_le_coe, Real.coe_toNNReal Mbd hMbd0]; exact hCnbd n x
+              exact lt_of_le_of_lt hb' (by simp)
+            rw [hempty, Set.indicator_empty]; simp
+          have hhmem : MemLp h 2 (volume.restrict Kset) :=
+            MemLp.of_bound hh_smooth.continuous.aestronglyMeasurable Mbd
+              (Filter.Eventually.of_forall hMh)
+          exact MeasureTheory.tendsto_Lp_finite_of_tendsto_ae (by norm_num) (by norm_num)
+            (fun n => (hCn_cont n).aestronglyMeasurable) hhmem hui
+            (Filter.Eventually.of_forall hptwise)
+        exact Filter.Tendsto.congr' (hrestrict.mono (fun n hn => hn.symm)) hgoal
+      have hP2 : ∀ (uu : ℂ → ℂ), MemLp uu 2 volume → ∀ (ε : ℝ),
+          eLpNorm uu 2 volume ≤ ENNReal.ofReal ε → ∀ n,
+            eLpNorm (MeasureTheory.convolution ((φ n).normed volume) uu
+              (ContinuousLinearMap.lsmul ℝ ℝ) volume) 2 volume ≤ ENNReal.ofReal ε := by
+        intro uu hu ε hclose n
+        set ρc : ℂ → ℂ := fun z => (((φ n).normed volume z : ℝ) : ℂ) with hρc
+        have hconv_eq : MeasureTheory.convolution ((φ n).normed volume) uu
+              (ContinuousLinearMap.lsmul ℝ ℝ) volume
+            = MeasureTheory.convolution ρc uu (ContinuousLinearMap.mul ℂ ℂ) volume := by
+          funext x
+          rw [MeasureTheory.convolution_def, MeasureTheory.convolution_def]
+          refine integral_congr_ae (Filter.Eventually.of_forall (fun t => ?_))
+          simp only [hρc, ContinuousLinearMap.mul_apply', ContinuousLinearMap.lsmul_apply]
+          exact (Complex.real_smul).symm
+        rw [hconv_eq]
+        have hρc_memLp : MemLp ρc 1 volume := by
+          have hcont : Continuous ρc :=
+            Complex.continuous_ofReal.comp ((φ n).contDiff_normed (n := 0)).continuous
+          have hsupp : HasCompactSupport ρc :=
+            ((φ n).hasCompactSupport_normed).comp_left (g := (fun r : ℝ => (r : ℂ))) (by simp)
+          exact hcont.memLp_of_hasCompactSupport hsupp
+        have hρc_norm : eLpNorm ρc 1 volume = 1 := by
+          rw [eLpNorm_one_eq_lintegral_enorm]
+          have hint : Integrable ((φ n).normed volume) volume :=
+            ((φ n).contDiff_normed (n := 0)).continuous.integrable_of_hasCompactSupport
+              ((φ n).hasCompactSupport_normed)
+          have hnn : 0 ≤ᵐ[volume] (φ n).normed volume :=
+            Filter.Eventually.of_forall (fun z => (φ n).nonneg_normed z)
+          calc ∫⁻ z, ‖ρc z‖ₑ ∂volume
+              = ∫⁻ z, ENNReal.ofReal ((φ n).normed volume z) ∂volume := by
+                refine lintegral_congr (fun z => ?_)
+                rw [hρc,
+                  show ‖(((φ n).normed volume z : ℝ) : ℂ)‖ₑ
+                      = ‖(φ n).normed volume z‖ₑ from by
+                    rw [← enorm_norm, Complex.norm_real, enorm_norm],
+                  Real.enorm_of_nonneg ((φ n).nonneg_normed z)]
+            _ = ENNReal.ofReal (∫ z, (φ n).normed volume z ∂volume) :=
+                (ofReal_integral_eq_lintegral_ofReal hint hnn).symm
+            _ = 1 := by rw [(φ n).integral_normed]; simp
+        calc eLpNorm (MeasureTheory.convolution ρc uu (ContinuousLinearMap.mul ℂ ℂ)
+                volume) 2 volume
+            ≤ eLpNorm ρc 1 volume * eLpNorm uu 2 volume :=
+              eLpNorm_convolution_le hρc_memLp hu
+          _ = eLpNorm uu 2 volume := by rw [hρc_norm, one_mul]
+          _ ≤ ENNReal.ofReal ε := hclose
+      rw [ENNReal.tendsto_nhds_zero]
+      intro ε hε
+      by_cases htop : ε = ⊤
+      · refine Filter.Eventually.of_forall (fun n => ?_)
+        rw [htop]; exact le_top
+      set δ : ℝ := ε.toReal with hδ
+      have hδpos : 0 < δ := ENNReal.toReal_pos hε.ne' htop
+      have hδle : ENNReal.ofReal δ = ε := ENNReal.ofReal_toReal htop
+      obtain ⟨hh, hh_supp, hh_smooth, hh_close⟩ := hg.exist_eLpNorm_sub_le
+        (by norm_num : (2 : ℝ≥0∞) ≠ ⊤) (by norm_num : (1 : ℝ≥0∞) ≤ 2)
+        (ε := δ / 3) (by positivity)
+      have hh_memLp : MemLp hh 2 volume :=
+        hh_smooth.continuous.memLp_of_hasCompactSupport hh_supp
+      have hgh_memLp : MemLp (g - hh) 2 volume := hg.sub hh_memLp
+      have hP2gh : ∀ n, eLpNorm (MeasureTheory.convolution ((φ n).normed volume)
+            (g - hh) (ContinuousLinearMap.lsmul ℝ ℝ) volume) 2 volume
+            ≤ ENNReal.ofReal (δ / 3) :=
+        hP2 (g - hh) hgh_memLp (δ / 3) hh_close
+      have hP3ev : ∀ᶠ n in Filter.atTop,
+          eLpNorm (MeasureTheory.convolution ((φ n).normed volume) hh
+            (ContinuousLinearMap.lsmul ℝ ℝ) volume - hh) 2 volume
+            ≤ ENNReal.ofReal (δ / 3) :=
+        (ENNReal.tendsto_nhds_zero.mp (hP3 hh hh_supp hh_smooth) (ENNReal.ofReal (δ / 3))
+          (ENNReal.ofReal_pos.mpr (by positivity)))
+      have hdecomp : ∀ n, Cg n - g = MeasureTheory.convolution ((φ n).normed volume)
+            (g - hh) (ContinuousLinearMap.lsmul ℝ ℝ) volume
+          + (MeasureTheory.convolution ((φ n).normed volume) hh
+              (ContinuousLinearMap.lsmul ℝ ℝ) volume - hh) + (hh - g) := by
+        intro n
+        have hce1 : MeasureTheory.ConvolutionExists ((φ n).normed volume) (g - hh)
+            (ContinuousLinearMap.lsmul ℝ ℝ) volume := by
+          refine HasCompactSupport.convolutionExists_left _ ((φ n).hasCompactSupport_normed)
+            ((φ n).contDiff_normed (n := 0)).continuous ?_
+          exact (hg.locallyIntegrable (by norm_num)).sub hh_smooth.continuous.locallyIntegrable
+        have hce2 : MeasureTheory.ConvolutionExists ((φ n).normed volume) hh
+            (ContinuousLinearMap.lsmul ℝ ℝ) volume :=
+          HasCompactSupport.convolutionExists_left _ ((φ n).hasCompactSupport_normed)
+            ((φ n).contDiff_normed (n := 0)).continuous hh_smooth.continuous.locallyIntegrable
+        have hsplit : Cg n = MeasureTheory.convolution ((φ n).normed volume)
+              (g - hh) (ContinuousLinearMap.lsmul ℝ ℝ) volume
+            + MeasureTheory.convolution ((φ n).normed volume) hh
+              (ContinuousLinearMap.lsmul ℝ ℝ) volume := by
+          rw [hCg]; simp only
+          rw [← MeasureTheory.ConvolutionExists.distrib_add hce1 hce2]
+          congr 1; abel
+        rw [hsplit]; abel
+      filter_upwards [hP3ev] with n hn3
+      rw [hdecomp n]
+      have hm1 : AEStronglyMeasurable (MeasureTheory.convolution
+          ((φ n).normed volume) (g - hh) (ContinuousLinearMap.lsmul ℝ ℝ)
+          volume) volume :=
+        (HasCompactSupport.continuous_convolution_left _ ((φ n).hasCompactSupport_normed)
+          ((φ n).contDiff_normed (n := 0)).continuous
+          ((hg.locallyIntegrable (by norm_num)).sub
+            hh_smooth.continuous.locallyIntegrable)).aestronglyMeasurable
+      have hm2 : AEStronglyMeasurable (MeasureTheory.convolution
+          ((φ n).normed volume) hh (ContinuousLinearMap.lsmul ℝ ℝ)
+          volume - hh) volume :=
+        ((HasCompactSupport.continuous_convolution_left _ ((φ n).hasCompactSupport_normed)
+          ((φ n).contDiff_normed (n := 0)).continuous
+          hh_smooth.continuous.locallyIntegrable).sub hh_smooth.continuous).aestronglyMeasurable
+      have hm3 : AEStronglyMeasurable (hh - g) volume :=
+        (hh_memLp.sub hg).1
+      have hkey : eLpNorm (MeasureTheory.convolution ((φ n).normed volume)
+            (g - hh) (ContinuousLinearMap.lsmul ℝ ℝ) volume
+          + (MeasureTheory.convolution ((φ n).normed volume) hh
+              (ContinuousLinearMap.lsmul ℝ ℝ) volume - hh) + (hh - g)) 2
+            volume
+          ≤ ENNReal.ofReal (δ / 3) + ENNReal.ofReal (δ / 3) + ENNReal.ofReal (δ / 3) := by
+        refine le_trans (eLpNorm_add_le (hm1.add hm2) hm3 (by norm_num)) ?_
+        refine add_le_add (le_trans (eLpNorm_add_le hm1 hm2 (by norm_num)) ?_) ?_
+        · exact add_le_add (hP2gh n) hn3
+        · rw [eLpNorm_sub_comm]; exact hh_close
+      refine le_trans hkey ?_
+      rw [← ENNReal.ofReal_add (by positivity) (by positivity),
+          ← ENNReal.ofReal_add (by positivity) (by positivity), ← hδle]
+      apply le_of_eq; congr 1; ring
+    -- ================================================================
+    -- The canonical mollifier sequence and the mollified sequences.
+    -- ================================================================
+    set φ₀ : ℕ → ContDiffBump (0 : ℂ) := fun n =>
+      ⟨1 / (n + 2), 2 / (n + 2), by positivity, by
+        rw [div_lt_div_iff_of_pos_right (by positivity)]; norm_num⟩ with hφ₀
+    have hφ₀rout : Filter.Tendsto (fun n => (φ₀ n).rOut) Filter.atTop (nhds 0) := by
+      have heq : (fun n : ℕ => (φ₀ n).rOut) = fun n : ℕ => (2 : ℝ) / (n + 2) := rfl
+      rw [heq]
+      exact Filter.Tendsto.div_atTop tendsto_const_nhds
+        (Filter.tendsto_atTop_add_const_right _ 2 tendsto_natCast_atTop_atTop)
+    set ρN : ℕ → ℂ → ℝ := fun n => (φ₀ n).normed volume with hρN
+    have hρN_smooth : ∀ n, ContDiff ℝ ((⊤ : ℕ∞) : WithTop ℕ∞) (ρN n) :=
+      fun n => (φ₀ n).contDiff_normed
+    have hρN_cs : ∀ n, HasCompactSupport (ρN n) := fun n => (φ₀ n).hasCompactSupport_normed
+    set un : ℕ → ℂ → ℂ := fun n =>
+      MeasureTheory.convolution (ρN n) u (ContinuousLinearMap.lsmul ℝ ℝ) volume with hun
+    set Pn : ℕ → ℂ → ℂ := fun n =>
+      MeasureTheory.convolution (ρN n) gxu (ContinuousLinearMap.lsmul ℝ ℝ) volume with hPn
+    set Qn : ℕ → ℂ → ℂ := fun n =>
+      MeasureTheory.convolution (ρN n) gyu (ContinuousLinearMap.lsmul ℝ ℝ) volume with hQn
+    -- `un` is `C^∞` and compactly supported.
+    have hun_smooth : ∀ n, ContDiff ℝ ((⊤ : ℕ∞) : WithTop ℕ∞) (un n) := fun n =>
+      HasCompactSupport.contDiff_convolution_left _ (hρN_cs n) (hρN_smooth n) hu_li
+    have hun_cs : ∀ n, HasCompactSupport (un n) := fun n =>
+      HasCompactSupport.convolution _ (hρN_cs n) hucs
+    -- `(fderiv un) 1 = Pn`, `(fderiv un) I = Qn`.
+    have hfd1 : ∀ n z, (fderiv ℝ (un n) z) 1 = Pn n z := fun n z =>
+      fderiv_conv hxweak hu_li hgxu_li (hρN_smooth n) (hρN_cs n) z
+    have hfdI : ∀ n z, (fderiv ℝ (un n) z) Complex.I = Qn n z := fun n z =>
+      fderiv_conv hyweak hu_li hgyu_li (hρN_smooth n) (hρN_cs n) z
+    -- `dz un = (1/2)(Pn - I Qn)`, `dzbar un = (1/2)(Pn + I Qn)`.
+    have hdz_un : ∀ n z, dz (un n) z = (1 / 2 : ℂ) * (Pn n z - Complex.I * Qn n z) := by
+      intro n z; rw [dz, hfd1 n z, hfdI n z]
+    have hdzbar_un : ∀ n z, dzbar (un n) z = (1 / 2 : ℂ) * (Pn n z + Complex.I * Qn n z) := by
+      intro n z; rw [dzbar, hfd1 n z, hfdI n z]
+    -- ================================================================
+    -- (Iso) `eLpNorm (dz un) 2 = eLpNorm (dzbar un) 2` for each `n`.
+    -- ================================================================
+    have hiso : ∀ n, eLpNorm (dz (un n)) 2 volume = eLpNorm (dzbar (un n)) 2 volume := by
+      intro n
+      have hun2 : ContDiff ℝ (2 : ℕ∞) (un n) :=
+        HasCompactSupport.contDiff_convolution_left _ (hρN_cs n)
+          ((hρN_smooth n).of_le (by exact_mod_cast (le_top : (2 : ℕ∞) ≤ ⊤))) hu_li
+      have hun1 : ContDiff ℝ (1 : ℕ∞) (un n) :=
+        hun2.of_le (by exact_mod_cast (by norm_num : (1 : ℕ∞) ≤ 2))
+      -- `dzbar un` is `C^∞` and compactly supported (the smooth `Φ` applied to `fderiv un`).
+      set Φ : (ℂ →L[ℝ] ℂ) → ℂ := fun D => (1 / 2 : ℂ) * (D 1 + Complex.I * D Complex.I) with hΦ
+      have hdzbar_eq : (fun ζ => dzbar (un n) ζ) = Φ ∘ (fun ζ => fderiv ℝ (un n) ζ) := by
+        funext ζ; rfl
+      have hfderiv_cinf : ContDiff ℝ ((⊤ : ℕ∞) : WithTop ℕ∞) (fun ζ => fderiv ℝ (un n) ζ) :=
+        (hun_smooth n).fderiv_right (m := ((⊤ : ℕ∞) : WithTop ℕ∞)) (by
+          simp)
+      have hfderiv_c1 : ContDiff ℝ 1 (fun ζ => fderiv ℝ (un n) ζ) :=
+        hun2.fderiv_right (m := 1) (by norm_num)
+      have hΦ_cd : ContDiff ℝ ((⊤ : ℕ∞) : WithTop ℕ∞) Φ := by
+        have hΦ_lin : Φ = (fun D : ℂ →L[ℝ] ℂ =>
+            (1 / 2 : ℂ) • (ContinuousLinearMap.apply ℝ ℂ (1 : ℂ) D
+              + Complex.I • ContinuousLinearMap.apply ℝ ℂ Complex.I D)) := by
+          funext D; simp [hΦ, ContinuousLinearMap.apply_apply, smul_eq_mul]
+        rw [hΦ_lin]
+        exact (((ContinuousLinearMap.apply ℝ ℂ (1 : ℂ)).contDiff).add
+          ((ContinuousLinearMap.apply ℝ ℂ Complex.I).contDiff.const_smul Complex.I)).const_smul _
+      have hdzbar_cinf : ContDiff ℝ ((⊤ : ℕ∞) : WithTop ℕ∞) (fun ζ => dzbar (un n) ζ) := by
+        rw [hdzbar_eq]; exact hΦ_cd.comp hfderiv_cinf
+      have hdzbar_c1 : ContDiff ℝ 1 (fun ζ => dzbar (un n) ζ) :=
+        hdzbar_cinf.of_le (by exact_mod_cast (le_top : (1 : ℕ∞) ≤ ⊤))
+      have hfderiv_cs : HasCompactSupport (fun ζ => fderiv ℝ (un n) ζ) :=
+        (hun_cs n).fderiv (𝕜 := ℝ)
+      have hdzbar_cs : HasCompactSupport (fun ζ => dzbar (un n) ζ) := by
+        rw [hdzbar_eq]; refine hfderiv_cs.comp_left ?_; simp [hΦ]
+      -- `dz un = beurling (dzbar un)` (inlined `dz_eq_beurling_dzbar`, via Cauchy–Pompeiu).
+      have hP : cauchyTransform (fun ζ => dzbar (un n) ζ) = un n := by
+        funext z; exact cauchyTransform_dzbar hun1 (hun_cs n) z
+      have hbeur : ∀ z, dz (un n) z = beurling (fun ζ => dzbar (un n) ζ) z := by
+        intro z
+        calc dz (un n) z = dz (cauchyTransform (fun ζ => dzbar (un n) ζ)) z := by rw [hP]
+          _ = beurling (fun ζ => dzbar (un n) ζ) z :=
+              beurling_eq_dz_cauchyTransform hdzbar_c1 hdzbar_cs z
+      -- The isometry.
+      have hiso0 : eLpNorm (beurling (fun ζ => dzbar (un n) ζ)) 2 volume
+          = eLpNorm (fun ζ => dzbar (un n) ζ) 2 volume :=
+        beurling_l2_isometry_smooth hdzbar_cinf hdzbar_cs
+      calc eLpNorm (dz (un n)) 2 volume
+          = eLpNorm (fun z => beurling (fun ζ => dzbar (un n) ζ) z) 2 volume := by
+            refine congrArg (fun f => eLpNorm f 2 volume) ?_; funext z; exact hbeur z
+        _ = eLpNorm (fun ζ => dzbar (un n) ζ) 2 volume := hiso0
+    -- ================================================================
+    -- (Conv) `dz un → Du` and `dzbar un → Dbaru` in `L²`.
+    -- ================================================================
+    have hPconv : Filter.Tendsto (fun n => eLpNorm (fun z => Pn n z - gxu z) 2 volume)
+        Filter.atTop (nhds 0) := conv_tendsto hgxumem φ₀ hφ₀rout
+    have hQconv : Filter.Tendsto (fun n => eLpNorm (fun z => Qn n z - gyu z) 2 volume)
+        Filter.atTop (nhds 0) := conv_tendsto hgyumem φ₀ hφ₀rout
+    -- AE-strong-measurability facts.
+    have hPn_aesm : ∀ n, AEStronglyMeasurable (Pn n) volume := fun n =>
+      (HasCompactSupport.continuous_convolution_left _ (hρN_cs n)
+        (hρN_smooth n).continuous hgxu_li).aestronglyMeasurable
+    have hQn_aesm : ∀ n, AEStronglyMeasurable (Qn n) volume := fun n =>
+      (HasCompactSupport.continuous_convolution_left _ (hρN_cs n)
+        (hρN_smooth n).continuous hgyu_li).aestronglyMeasurable
+    have hPn_cont : ∀ n, Continuous (Pn n) := fun n =>
+      HasCompactSupport.continuous_convolution_left _ (hρN_cs n)
+        (hρN_smooth n).continuous hgxu_li
+    have hQn_cont : ∀ n, Continuous (Qn n) := fun n =>
+      HasCompactSupport.continuous_convolution_left _ (hρN_cs n)
+        (hρN_smooth n).continuous hgyu_li
+    have hdz_aesm : ∀ n, AEStronglyMeasurable (dz (un n)) volume := fun n => by
+      have hc : Continuous (dz (un n)) := by
+        rw [show dz (un n) = fun z => (1 / 2 : ℂ) * (Pn n z - Complex.I * Qn n z)
+          from funext (hdz_un n)]
+        exact continuous_const.mul ((hPn_cont n).sub (continuous_const.mul (hQn_cont n)))
+      exact hc.aestronglyMeasurable
+    have hdzbar_aesm : ∀ n, AEStronglyMeasurable (dzbar (un n)) volume := fun n => by
+      have hc : Continuous (dzbar (un n)) := by
+        rw [show dzbar (un n) = fun z => (1 / 2 : ℂ) * (Pn n z + Complex.I * Qn n z)
+          from funext (hdzbar_un n)]
+        exact continuous_const.mul ((hPn_cont n).add (continuous_const.mul (hQn_cont n)))
+      exact hc.aestronglyMeasurable
+    -- Half-norm and `I`-norm as `ENNReal` constants.
+    have hhalf_e : ‖(1 / 2 : ℂ)‖ₑ = ENNReal.ofReal (1 / 2) := by
+      rw [← ofReal_norm_eq_enorm]; norm_num
+    have hI_e : ‖(Complex.I : ℂ)‖ₑ = 1 := by
+      rw [← ofReal_norm_eq_enorm, Complex.norm_I, ENNReal.ofReal_one]
+    -- A generic const-smul `eLpNorm` bound for the relevant lambdas.
+    have hcsmul : ∀ (c : ℂ) (f : ℂ → ℂ),
+        eLpNorm (fun z => c • f z) 2 volume = ‖c‖ₑ * eLpNorm f 2 volume := fun c f => by
+      have := eLpNorm_const_smul (μ := volume) (p := 2) c f
+      simpa using this
+    -- `eLpNorm (dz un - Du) ≤ (1/2)(eLpNorm (Pn-gxu) + eLpNorm (Qn-gyu))`, and similarly for ∂̄.
+    have htri_dz : ∀ n, eLpNorm (fun z => dz (un n) z - Du z) 2 volume ≤
+        ENNReal.ofReal (1 / 2) *
+          (eLpNorm (fun z => Pn n z - gxu z) 2 volume
+            + eLpNorm (fun z => Qn n z - gyu z) 2 volume) := by
+      intro n
+      have heq : (fun z => dz (un n) z - Du z)
+          = fun z => (1 / 2 : ℂ) • ((Pn n z - gxu z) - Complex.I • (Qn n z - gyu z)) := by
+        funext z
+        rw [hdz_un n z, hDu_def]
+        simp only [smul_eq_mul]; ring
+      rw [heq, hcsmul, hhalf_e]
+      gcongr
+      refine le_trans (eLpNorm_sub_le ((hPn_aesm n).sub hgxumem.1)
+        (((hQn_aesm n).sub hgyumem.1).const_smul Complex.I) (by norm_num)) ?_
+      gcongr
+      rw [show (fun z => Complex.I • (Qn n z - gyu z))
+          = (fun z => Complex.I • ((fun w => Qn n w - gyu w) z)) from rfl, hcsmul, hI_e, one_mul]
+    have htri_dzbar : ∀ n, eLpNorm (fun z => dzbar (un n) z - Dbaru z) 2 volume ≤
+        ENNReal.ofReal (1 / 2) *
+          (eLpNorm (fun z => Pn n z - gxu z) 2 volume
+            + eLpNorm (fun z => Qn n z - gyu z) 2 volume) := by
+      intro n
+      have heq : (fun z => dzbar (un n) z - Dbaru z)
+          = fun z => (1 / 2 : ℂ) • ((Pn n z - gxu z) + Complex.I • (Qn n z - gyu z)) := by
+        funext z
+        rw [hdzbar_un n z, hDbaru_def]
+        simp only [smul_eq_mul]; ring
+      rw [heq, hcsmul, hhalf_e]
+      gcongr
+      refine le_trans (eLpNorm_add_le ((hPn_aesm n).sub hgxumem.1)
+        (((hQn_aesm n).sub hgyumem.1).const_smul Complex.I) (by norm_num)) ?_
+      gcongr
+      rw [show (fun z => Complex.I • (Qn n z - gyu z))
+          = (fun z => Complex.I • ((fun w => Qn n w - gyu w) z)) from rfl, hcsmul, hI_e, one_mul]
+    -- The `L²`-distances `dz un → Du`, `dzbar un → Dbaru` tend to `0`.
+    have hRHStendsto : Filter.Tendsto
+        (fun n => ENNReal.ofReal (1 / 2) *
+          (eLpNorm (fun z => Pn n z - gxu z) 2 volume
+            + eLpNorm (fun z => Qn n z - gyu z) 2 volume))
+        Filter.atTop (nhds 0) := by
+      have hsum : Filter.Tendsto
+          (fun n => eLpNorm (fun z => Pn n z - gxu z) 2 volume
+            + eLpNorm (fun z => Qn n z - gyu z) 2 volume) Filter.atTop (nhds 0) := by
+        have := hPconv.add hQconv; simpa using this
+      have h := ENNReal.Tendsto.const_mul (a := ENNReal.ofReal (1 / 2)) hsum
+        (Or.inr ENNReal.ofReal_ne_top)
+      simpa using h
+    have hdzdist : Filter.Tendsto (fun n => eLpNorm (fun z => dz (un n) z - Du z) 2 volume)
+        Filter.atTop (nhds 0) :=
+      tendsto_of_tendsto_of_tendsto_of_le_of_le tendsto_const_nhds hRHStendsto
+        (fun n => zero_le _) htri_dz
+    have hdzbardist : Filter.Tendsto
+        (fun n => eLpNorm (fun z => dzbar (un n) z - Dbaru z) 2 volume)
+        Filter.atTop (nhds 0) :=
+      tendsto_of_tendsto_of_tendsto_of_le_of_le tendsto_const_nhds hRHStendsto
+        (fun n => zero_le _) htri_dzbar
+    -- eLpNorm continuity: `eLpNorm (a_n) → eLpNorm a` when `eLpNorm (a_n - a) → 0`.
+    have eLpNorm_tendsto : ∀ {a : ℂ → ℂ} {an : ℕ → ℂ → ℂ},
+        (∀ n, AEStronglyMeasurable (an n) volume) → AEStronglyMeasurable a volume →
+        eLpNorm a 2 volume ≠ ⊤ →
+        Filter.Tendsto (fun n => eLpNorm (fun z => an n z - a z) 2 volume)
+          Filter.atTop (nhds 0) →
+        Filter.Tendsto (fun n => eLpNorm (an n) 2 volume) Filter.atTop
+          (nhds (eLpNorm a 2 volume)) := by
+      intro a an han ha hafin hdist
+      set en : ℕ → ℝ≥0∞ := fun n => eLpNorm (fun z => an n z - a z) 2 volume with hen
+      have hupper : ∀ n, eLpNorm (an n) 2 volume ≤ eLpNorm a 2 volume + en n := by
+        intro n
+        have hsplit : (an n) = (fun z => (an n z - a z) + a z) := by funext z; ring
+        calc eLpNorm (an n) 2 volume
+            = eLpNorm (fun z => (an n z - a z) + a z) 2 volume := by rw [← hsplit]
+          _ ≤ eLpNorm (fun z => an n z - a z) 2 volume + eLpNorm a 2 volume :=
+              eLpNorm_add_le ((han n).sub ha) ha (by norm_num)
+          _ = eLpNorm a 2 volume + en n := by rw [hen]; ring
+      have hlower : ∀ n, eLpNorm a 2 volume ≤ eLpNorm (an n) 2 volume + en n := by
+        intro n
+        have hsplit : a = (fun z => a z - an n z + an n z) := by funext z; ring
+        have hcomm : en n = eLpNorm (fun z => a z - an n z) 2 volume := by
+          rw [hen]; exact eLpNorm_sub_comm (an n) a 2 volume
+        calc eLpNorm a 2 volume
+            = eLpNorm (fun z => (a z - an n z) + an n z) 2 volume := by rw [← hsplit]
+          _ ≤ eLpNorm (fun z => a z - an n z) 2 volume + eLpNorm (an n) 2 volume :=
+              eLpNorm_add_le (ha.sub (han n)) (han n) (by norm_num)
+          _ = eLpNorm (an n) 2 volume + en n := by rw [hcomm]; ring
+      -- Squeeze: `eLpNorm a - en ≤ eLpNorm (an n) ≤ eLpNorm a + en`.
+      have hupper_t : Filter.Tendsto (fun n => eLpNorm a 2 volume + en n) Filter.atTop
+          (nhds (eLpNorm a 2 volume)) := by
+        have := Filter.Tendsto.const_add (eLpNorm a 2 volume) hdist
+        simpa using this
+      have hlower_t : Filter.Tendsto (fun n => eLpNorm a 2 volume - en n) Filter.atTop
+          (nhds (eLpNorm a 2 volume)) := by
+        have hsub := ENNReal.Tendsto.sub (tendsto_const_nhds (x := eLpNorm a 2 volume))
+          hdist (Or.inl hafin)
+        simpa using hsub
+      refine tendsto_of_tendsto_of_tendsto_of_le_of_le hlower_t hupper_t (fun n => ?_)
+        (fun n => hupper n)
+      exact tsub_le_iff_right.mpr (hlower n)
+    have hdzlim : Filter.Tendsto (fun n => eLpNorm (dz (un n)) 2 volume) Filter.atTop
+        (nhds (eLpNorm Du 2 volume)) :=
+      eLpNorm_tendsto hdz_aesm hDumem.1 hDumem.eLpNorm_lt_top.ne hdzdist
+    have hdzbarlim : Filter.Tendsto (fun n => eLpNorm (dzbar (un n)) 2 volume) Filter.atTop
+        (nhds (eLpNorm Dbaru 2 volume)) :=
+      eLpNorm_tendsto hdzbar_aesm hDbarumem.1 hDbarumem.eLpNorm_lt_top.ne hdzbardist
+    -- The two limits coincide by the per-`n` isometry.
+    have hdzbarlim' : Filter.Tendsto (fun n => eLpNorm (dz (un n)) 2 volume) Filter.atTop
+        (nhds (eLpNorm Dbaru 2 volume)) := by
+      refine hdzbarlim.congr (fun n => ?_)
+      exact (hiso n).symm
+    exact tendsto_nhds_unique hdzlim hdzbarlim'
+  -- ====================================================================
+  -- (Cacc) The Caccioppoli bound from the energy equality.
+  -- ====================================================================
+  -- Abbreviations for the gradient-norm constant `Cχ/r` and the half-balls' supports.
+  have hCr0 : (0 : ℝ) ≤ Cχ / r := by positivity
+  have hdχ_supp1 : Function.support (fun z => (fderiv ℝ χ z) 1) ⊆ B2 :=
+    (subset_tsupport _).trans
+      ((tsupport_fderiv_apply_subset (𝕜 := ℝ) 1).trans hsupp_sub_B2)
+  have hdχ_suppI : Function.support (fun z => (fderiv ℝ χ z) Complex.I) ⊆ B2 :=
+    (subset_tsupport _).trans
+      ((tsupport_fderiv_apply_subset (𝕜 := ℝ) Complex.I).trans hsupp_sub_B2)
+  have hχ_supp : Function.support χ ⊆ B2 := (subset_tsupport χ).trans hsupp_sub_B2
+  -- `χ•G` is in `L²` (`MemLp.smul`), with the convenient enorm identity `‖χ•G‖ₑ = ‖χ‖ₑ·‖G‖ₑ`.
+  have hχG2 : MemLp (fun z => χ z • G z) 2 volume :=
+    MemLp.smul (r := 2) (p := ∞) (q := 2) hGmem hχmemTop
+  have hχR2 : MemLp (fun z => χ z • R z) 2 volume :=
+    MemLp.smul (r := 2) (p := ∞) (q := 2) hRmem hχmemTop
+  -- `μ·G` is in `L²` (`‖μ‖∞ < ∞`), hence so is `χ•(μ·G)`.
+  have hμG2 : MemLp (fun z => μ z * G z) 2 volume := by
+    have := MemLp.smul (r := 2) (p := ∞) (q := 2) hGmem
+      (μ := volume) (f := G) (φ := μ) ?_
+    · refine MemLp.ae_eq ?_ this
+      filter_upwards with z; simp [smul_eq_mul]
+    · refine ⟨hμmeas.aestronglyMeasurable, ?_⟩
+      rw [eLpNorm_exponent_top, hμessSup_eq]; exact ENNReal.ofReal_lt_top
+  have hχμG2 : MemLp (fun z => χ z • (μ z * G z)) 2 volume :=
+    MemLp.smul (r := 2) (p := ∞) (q := 2) hμG2 hχmemTop
+  -- ‖μ z‖ₑ ≤ ofReal M a.e.
+  have hμae : ∀ᵐ z ∂(volume : Measure ℂ), (‖μ z‖ₑ) ≤ ENNReal.ofReal M := by
+    filter_upwards [ae_le_eLpNormEssSup (f := μ) (μ := volume)] with z hz
+    rwa [hμessSup_eq] at hz
+  -- ================================================================
+  -- (D-split) `Du = χ•G + Eχ`, `Dbaru =ᵐ χ•(μG) + χ•R + Eχbar`,  with the commutator bound.
+  -- ================================================================
+  -- `Du z - χ z • G z` and `Dbaru z - χ z•(μG z) - χ z•R z` are commutators `≲ (Cχ/r)‖F-c‖`.
+  set Eχ : ℂ → ℂ := fun z => Du z - χ z • G z with hEχ_def
+  set Eχbar : ℂ → ℂ := fun z => Dbaru z - χ z • (μ z * G z) - χ z • R z with hEχbar_def
+  -- Pointwise formulas for the commutators (purely algebraic, using `hGdef`/`hRrel`).
+  have hEχ_eq : ∀ z, Eχ z = (1 / 2 : ℂ) * ((((fderiv ℝ χ z) 1 : ℝ) : ℂ) * (F z - c)
+      - Complex.I * ((((fderiv ℝ χ z) Complex.I : ℝ) : ℂ) * (F z - c))) := by
+    intro z
+    simp only [hEχ_def, hDu_def, hgxu_def, hgyu_def, Complex.real_smul]
+    rw [hGdef z]; ring
+  have hEχbar_eq : ∀ᵐ z, Eχbar z = (1 / 2 : ℂ) * ((((fderiv ℝ χ z) 1 : ℝ) : ℂ) * (F z - c)
+      + Complex.I * ((((fderiv ℝ χ z) Complex.I : ℝ) : ℂ) * (F z - c))) := by
+    filter_upwards [hRrel] with z hz
+    simp only [hEχbar_def, hDbaru_def, hgxu_def, hgyu_def, Complex.real_smul]
+    have hrel : (1 / 2 : ℂ) * (Gx z + Complex.I * Gy z) = μ z * G z + R z := hz
+    -- `(1/2)(χGx + (∂χ)(F-c) + I(χGy + (∂χ)(F-c))) = χ((1/2)(Gx+IGy)) + commutator`
+    have hkey : (1 / 2 : ℂ) * (((χ z : ℝ) : ℂ) * Gx z + (((fderiv ℝ χ z) 1 : ℝ) : ℂ) * (F z - c)
+        + Complex.I * (((χ z : ℝ) : ℂ) * Gy z
+          + (((fderiv ℝ χ z) Complex.I : ℝ) : ℂ) * (F z - c)))
+        = ((χ z : ℝ) : ℂ) * ((1 / 2 : ℂ) * (Gx z + Complex.I * Gy z))
+          + (1 / 2 : ℂ) * ((((fderiv ℝ χ z) 1 : ℝ) : ℂ) * (F z - c)
+            + Complex.I * ((((fderiv ℝ χ z) Complex.I : ℝ) : ℂ) * (F z - c))) := by ring
+    rw [hkey, hrel]; ring
+  -- The pointwise commutator enorm bound `‖E z‖ₑ ≤ (Cχ/r)‖F z - c‖ₑ` (for `E ∈ {Eχ, Eχbar}`).
+  have hcomm_bd : ∀ (a b : ℝ), |a| ≤ Cχ / r → |b| ≤ Cχ / r → ∀ (w : ℂ),
+      ‖(1 / 2 : ℂ) * (((a : ℝ) : ℂ) * w + Complex.I * (((b : ℝ) : ℂ) * w))‖ₑ
+        ≤ ENNReal.ofReal (Cχ / r) * ‖w‖ₑ ∧
+      ‖(1 / 2 : ℂ) * (((a : ℝ) : ℂ) * w - Complex.I * (((b : ℝ) : ℂ) * w))‖ₑ
+        ≤ ENNReal.ofReal (Cχ / r) * ‖w‖ₑ := by
+    intro a b ha hb w
+    have hbound : ∀ (s : ℂ), s = (((a : ℝ) : ℂ) * w + Complex.I * (((b : ℝ) : ℂ) * w))
+        ∨ s = (((a : ℝ) : ℂ) * w - Complex.I * (((b : ℝ) : ℂ) * w)) →
+        ‖(1 / 2 : ℂ) * s‖ₑ ≤ ENNReal.ofReal (Cχ / r) * ‖w‖ₑ := by
+      intro s hs
+      -- The two enorm building blocks: `‖a•w‖ₑ ≤ ofReal(Cχ/r)·‖w‖ₑ` and likewise for `b`.
+      have hae : ‖((a : ℝ) : ℂ) * w‖ₑ ≤ ENNReal.ofReal (Cχ / r) * ‖w‖ₑ := by
+        rw [enorm_mul]
+        gcongr
+        rw [← ofReal_norm_eq_enorm, Complex.norm_real, Real.norm_eq_abs]
+        exact ENNReal.ofReal_le_ofReal ha
+      have hI_e : ‖(Complex.I : ℂ)‖ₑ = 1 := by
+        rw [← ofReal_norm_eq_enorm, Complex.norm_I, ENNReal.ofReal_one]
+      have hbe : ‖Complex.I * (((b : ℝ) : ℂ) * w)‖ₑ ≤ ENNReal.ofReal (Cχ / r) * ‖w‖ₑ := by
+        rw [enorm_mul, hI_e, one_mul, enorm_mul]
+        gcongr
+        rw [← ofReal_norm_eq_enorm, Complex.norm_real, Real.norm_eq_abs]
+        exact ENNReal.ofReal_le_ofReal hb
+      have hsbd : ‖s‖ₑ ≤ ENNReal.ofReal (2 * (Cχ / r)) * ‖w‖ₑ := by
+        have htwo : ENNReal.ofReal (2 * (Cχ / r)) * ‖w‖ₑ
+            = ENNReal.ofReal (Cχ / r) * ‖w‖ₑ + ENNReal.ofReal (Cχ / r) * ‖w‖ₑ := by
+          rw [← add_mul, ← ENNReal.ofReal_add hCr0 hCr0]; congr 2; ring
+        rw [htwo]
+        rcases hs with hs | hs
+        · rw [hs]; exact le_trans (enorm_add_le _ _) (add_le_add hae hbe)
+        · rw [hs]; exact le_trans enorm_sub_le (add_le_add hae hbe)
+      calc ‖(1 / 2 : ℂ) * s‖ₑ = ‖(1 / 2 : ℂ)‖ₑ * ‖s‖ₑ := by rw [enorm_mul]
+        _ ≤ ENNReal.ofReal (1 / 2) * (ENNReal.ofReal (2 * (Cχ / r)) * ‖w‖ₑ) := by
+            refine mul_le_mul' ?_ hsbd
+            rw [← ofReal_norm_eq_enorm]; norm_num
+        _ = ENNReal.ofReal (Cχ / r) * ‖w‖ₑ := by
+            rw [← mul_assoc, ← ENNReal.ofReal_mul (by norm_num)]; congr 2; ring
+    constructor
+    · exact hbound _ (Or.inl rfl)
+    · exact hbound _ (Or.inr rfl)
+  -- The half-norms over `2B` and the gradient energy over `B`.
+  have h2ne : (2 : ℝ≥0∞) ≠ 0 := by norm_num
+  have h2top : (2 : ℝ≥0∞) ≠ ⊤ := by norm_num
+  set oscHalf : ℝ≥0∞ := (∫⁻ z in B2, ‖F z - c‖ₑ ^ (2 : ℝ) ∂volume) ^ (1 / (2 : ℝ))
+    with hoscHalf_def
+  set RHalf : ℝ≥0∞ := (∫⁻ z in B2, ‖R z‖ₑ ^ (2 : ℝ) ∂volume) ^ (1 / (2 : ℝ)) with hRHalf_def
+  -- |∂_v χ| ≤ Cχ/r for `v ∈ {1, I}` (operator-norm bound).
+  have hdχ1_bd : ∀ z, |(fderiv ℝ χ z) 1| ≤ Cχ / r := by
+    intro z
+    calc |(fderiv ℝ χ z) 1| = ‖(fderiv ℝ χ z) 1‖ := (Real.norm_eq_abs _).symm
+      _ ≤ ‖fderiv ℝ χ z‖ * ‖(1 : ℂ)‖ := (fderiv ℝ χ z).le_opNorm 1
+      _ ≤ (Cχ / r) * 1 := by
+          refine mul_le_mul (hχgrad z) ?_ (norm_nonneg _) (by positivity)
+          simp
+      _ = Cχ / r := mul_one _
+  have hdχI_bd : ∀ z, |(fderiv ℝ χ z) Complex.I| ≤ Cχ / r := by
+    intro z
+    calc |(fderiv ℝ χ z) Complex.I| = ‖(fderiv ℝ χ z) Complex.I‖ := (Real.norm_eq_abs _).symm
+      _ ≤ ‖fderiv ℝ χ z‖ * ‖Complex.I‖ := (fderiv ℝ χ z).le_opNorm Complex.I
+      _ ≤ (Cχ / r) * 1 := by
+          refine mul_le_mul (hχgrad z) ?_ (norm_nonneg _) (by positivity)
+          rw [Complex.norm_I]
+      _ = Cχ / r := mul_one _
+  -- Off `2B`, both `∂_v χ` vanish.
+  have hd1_zero : ∀ z, z ∉ B2 → (fderiv ℝ χ z) 1 = 0 := by
+    intro z hz
+    by_contra hne
+    exact hz (hdχ_supp1 hne)
+  have hdI_zero : ∀ z, z ∉ B2 → (fderiv ℝ χ z) Complex.I = 0 := by
+    intro z hz
+    by_contra hne
+    exact hz (hdχ_suppI hne)
+  -- Pointwise commutator enorm bounds with the `2B`-support.
+  have hEχ_pt : ∀ z, ‖Eχ z‖ₑ ≤ B2.indicator (fun z => ENNReal.ofReal (Cχ / r) * ‖F z - c‖ₑ) z := by
+    intro z
+    by_cases hz : z ∈ B2
+    · rw [Set.indicator_of_mem hz, hEχ_eq z]
+      exact (hcomm_bd _ _ (hdχ1_bd z) (hdχI_bd z) (F z - c)).2
+    · rw [Set.indicator_of_notMem hz, hEχ_eq z, hd1_zero z hz, hdI_zero z hz]; simp
+  have hEχbar_pt : ∀ᵐ z, ‖Eχbar z‖ₑ
+      ≤ B2.indicator (fun z => ENNReal.ofReal (Cχ / r) * ‖F z - c‖ₑ) z := by
+    filter_upwards [hEχbar_eq] with z hz
+    by_cases hzm : z ∈ B2
+    · rw [Set.indicator_of_mem hzm, hz]
+      exact (hcomm_bd _ _ (hdχ1_bd z) (hdχI_bd z) (F z - c)).1
+    · rw [Set.indicator_of_notMem hzm, hz, hd1_zero z hzm, hdI_zero z hzm]; simp
+  have hχR_pt : ∀ z, ‖χ z • R z‖ₑ ≤ B2.indicator (fun z => ‖R z‖ₑ) z := by
+    intro z
+    by_cases hz : z ∈ B2
+    · rw [Set.indicator_of_mem hz, Complex.real_smul, enorm_mul]
+      calc ‖((χ z : ℝ) : ℂ)‖ₑ * ‖R z‖ₑ ≤ 1 * ‖R z‖ₑ := by
+            gcongr
+            rw [← ofReal_norm_eq_enorm, Complex.norm_real, Real.norm_eq_abs,
+              abs_of_nonneg (hχ0 z)]
+            exact ENNReal.ofReal_le_one.2 (hχ1 z)
+        _ = ‖R z‖ₑ := one_mul _
+    · rw [Set.indicator_of_notMem hz]
+      have hχz : χ z = 0 := Function.notMem_support.1 (fun h => hz (hχ_supp h))
+      rw [hχz]; simp
+  -- The `L²`-mass bounds: `eLpNorm E ≤ ofReal(Cχ/r)·oscHalf` and `eLpNorm (χ•R) ≤ RHalf`.
+  -- `eLpNorm E 2 = (∫⁻ ‖E‖²)^{1/2}`, for any `E`.
+  have heLp_sq : ∀ (E : ℂ → ℂ), eLpNorm E 2 volume
+      = (∫⁻ z, ‖E z‖ₑ ^ (2 : ℝ) ∂volume) ^ (1 / (2 : ℝ)) := by
+    intro E
+    rw [eLpNorm_eq_lintegral_rpow_enorm_toReal h2ne h2top,
+      show (2 : ℝ≥0∞).toReal = 2 from by norm_num]
+  -- Helper: `(K² · J)^{1/2} = ofReal K · J^{1/2}` for `K ≥ 0`.
+  have hsqrt_const : ∀ (K : ℝ) (J : ℝ≥0∞), 0 ≤ K →
+      ((ENNReal.ofReal K) ^ (2 : ℝ) * J) ^ (1 / (2 : ℝ))
+        = ENNReal.ofReal K * J ^ (1 / (2 : ℝ)) := by
+    intro K J hK
+    rw [ENNReal.mul_rpow_of_nonneg _ _ (by norm_num : (0:ℝ) ≤ 1/2),
+      ← ENNReal.rpow_mul, show (2 : ℝ) * (1 / 2) = 1 from by norm_num, ENNReal.rpow_one]
+  have hcomm_eLp : ∀ (E : ℂ → ℂ),
+      (∀ᵐ z, ‖E z‖ₑ ≤ B2.indicator (fun z => ENNReal.ofReal (Cχ / r) * ‖F z - c‖ₑ) z) →
+      eLpNorm E 2 volume ≤ ENNReal.ofReal (Cχ / r) * oscHalf := by
+    intro E hpt
+    rw [heLp_sq, hoscHalf_def, ← hsqrt_const (Cχ / r) _ hCr0]
+    refine ENNReal.rpow_le_rpow ?_ (by norm_num)
+    calc ∫⁻ z, ‖E z‖ₑ ^ (2 : ℝ) ∂volume
+        ≤ ∫⁻ z, (B2.indicator (fun z => ENNReal.ofReal (Cχ / r) * ‖F z - c‖ₑ) z) ^ (2 : ℝ)
+            ∂volume := by
+          refine lintegral_mono_ae ?_
+          filter_upwards [hpt] with z hz
+          exact ENNReal.rpow_le_rpow hz (by norm_num)
+      _ = ∫⁻ z in B2, (ENNReal.ofReal (Cχ / r) * ‖F z - c‖ₑ) ^ (2 : ℝ) ∂volume := by
+          rw [← lintegral_indicator hB2meas]
+          refine lintegral_congr (fun z => ?_)
+          by_cases hz : z ∈ B2
+          · rw [Set.indicator_of_mem hz, Set.indicator_of_mem hz]
+          · rw [Set.indicator_of_notMem hz, Set.indicator_of_notMem hz]
+            rw [ENNReal.zero_rpow_of_pos (by norm_num)]
+      _ = (ENNReal.ofReal (Cχ / r)) ^ (2 : ℝ)
+            * ∫⁻ z in B2, ‖F z - c‖ₑ ^ (2 : ℝ) ∂volume := by
+          rw [← lintegral_const_mul' _ _ (by
+            exact ENNReal.rpow_ne_top_of_nonneg (by norm_num) ENNReal.ofReal_ne_top)]
+          refine lintegral_congr (fun z => ?_)
+          rw [ENNReal.mul_rpow_of_nonneg _ _ (by norm_num : (0:ℝ) ≤ 2)]
+  have hχR_eLp : eLpNorm (fun z => χ z • R z) 2 volume ≤ RHalf := by
+    rw [heLp_sq, hRHalf_def]
+    refine ENNReal.rpow_le_rpow ?_ (by norm_num)
+    calc ∫⁻ z, ‖χ z • R z‖ₑ ^ (2 : ℝ) ∂volume
+        ≤ ∫⁻ z, (B2.indicator (fun z => ‖R z‖ₑ) z) ^ (2 : ℝ) ∂volume := by
+          refine lintegral_mono (fun z => ?_)
+          exact ENNReal.rpow_le_rpow (hχR_pt z) (by norm_num)
+      _ = ∫⁻ z in B2, ‖R z‖ₑ ^ (2 : ℝ) ∂volume := by
+          rw [← lintegral_indicator hB2meas]
+          refine lintegral_congr (fun z => ?_)
+          by_cases hz : z ∈ B2
+          · rw [Set.indicator_of_mem hz, Set.indicator_of_mem hz]
+          · rw [Set.indicator_of_notMem hz, Set.indicator_of_notMem hz,
+              ENNReal.zero_rpow_of_pos (by norm_num)]
+  -- `eLpNorm (χ•(μG)) ≤ ofReal M · eLpNorm (χ•G)`.
+  have hχμG_eLp : eLpNorm (fun z => χ z • (μ z * G z)) 2 volume
+      ≤ ENNReal.ofReal M * eLpNorm (fun z => χ z • G z) 2 volume := by
+    rw [heLp_sq, heLp_sq, ← hsqrt_const M _ hM0]
+    refine ENNReal.rpow_le_rpow ?_ (by norm_num)
+    rw [← lintegral_const_mul' _ _ (by
+      exact ENNReal.rpow_ne_top_of_nonneg (by norm_num) ENNReal.ofReal_ne_top)]
+    refine lintegral_mono_ae ?_
+    filter_upwards [hμae] with z hz
+    rw [Complex.real_smul, Complex.real_smul, enorm_mul, enorm_mul,
+      ENNReal.mul_rpow_of_nonneg _ _ (by norm_num : (0:ℝ) ≤ 2),
+      ENNReal.mul_rpow_of_nonneg _ _ (by norm_num : (0:ℝ) ≤ 2),
+      enorm_mul, ENNReal.mul_rpow_of_nonneg _ _ (by norm_num : (0:ℝ) ≤ 2)]
+    rw [show (ENNReal.ofReal M) ^ (2 : ℝ) * (‖((χ z : ℝ) : ℂ)‖ₑ ^ (2:ℝ) * ‖G z‖ₑ ^ (2:ℝ))
+        = ‖((χ z : ℝ) : ℂ)‖ₑ ^ (2:ℝ) * ((ENNReal.ofReal M) ^ (2:ℝ) * ‖G z‖ₑ ^ (2:ℝ)) from by
+      ring]
+    have hmono : (‖μ z‖ₑ) ^ (2:ℝ) ≤ (ENNReal.ofReal M) ^ (2:ℝ) :=
+      ENNReal.rpow_le_rpow hz (by norm_num)
+    gcongr
+  -- ================================================================
+  -- (Absorb) The energy equality + the mass bounds yield `(1-M)·X ≤ Y`.
+  -- ================================================================
+  set X : ℝ≥0∞ := eLpNorm (fun z => χ z • G z) 2 volume with hX_def
+  have hXfin : X ≠ ⊤ := hχG2.eLpNorm_lt_top.ne
+  -- AESM facts.
+  have hEχ_aesm : AEStronglyMeasurable Eχ volume := hDumem.1.sub hχG2.1
+  have hEχbar_aesm : AEStronglyMeasurable Eχbar volume :=
+    (hDbarumem.1.sub hχμG2.1).sub hχR2.1
+  -- Commutator `L²` bounds.
+  have hEχ_le : eLpNorm Eχ 2 volume ≤ ENNReal.ofReal (Cχ / r) * oscHalf :=
+    hcomm_eLp Eχ (Filter.Eventually.of_forall hEχ_pt)
+  have hEχbar_le : eLpNorm Eχbar 2 volume ≤ ENNReal.ofReal (Cχ / r) * oscHalf :=
+    hcomm_eLp Eχbar hEχbar_pt
+  -- `X ≤ eLpNorm Du + eLpNorm Eχ`.
+  have hX_upper : X ≤ eLpNorm Du 2 volume + eLpNorm Eχ 2 volume := by
+    have heq : (fun z => χ z • G z) = fun z => Du z - Eχ z := by
+      funext z; rw [hEχ_def]; ring
+    rw [hX_def, heq]
+    exact eLpNorm_sub_le hDumem.1 hEχ_aesm (by norm_num)
+  -- `eLpNorm Dbaru ≤ eLpNorm (χμG) + eLpNorm (χR) + eLpNorm Eχbar`.
+  have hDbar_upper : eLpNorm Dbaru 2 volume ≤
+      eLpNorm (fun z => χ z • (μ z * G z)) 2 volume
+        + eLpNorm (fun z => χ z • R z) 2 volume + eLpNorm Eχbar 2 volume := by
+    have heq : Dbaru = fun z => (χ z • (μ z * G z) + χ z • R z) + Eχbar z := by
+      funext z; rw [hEχbar_def]; ring
+    rw [heq]
+    refine le_trans (eLpNorm_add_le (hχμG2.1.add hχR2.1) hEχbar_aesm (by norm_num)) ?_
+    gcongr
+    exact eLpNorm_add_le hχμG2.1 hχR2.1 (by norm_num)
+  -- Combine: `X ≤ ofReal M · X + Y` with `Y = RHalf + 2·ofReal(Cχ/r)·oscHalf`.
+  set Y : ℝ≥0∞ := RHalf + 2 * (ENNReal.ofReal (Cχ / r) * oscHalf) with hY_def
+  have hself : X ≤ ENNReal.ofReal M * X + Y := by
+    calc X ≤ eLpNorm Du 2 volume + eLpNorm Eχ 2 volume := hX_upper
+      _ = eLpNorm Dbaru 2 volume + eLpNorm Eχ 2 volume := by rw [hEnergy]
+      _ ≤ (eLpNorm (fun z => χ z • (μ z * G z)) 2 volume
+            + eLpNorm (fun z => χ z • R z) 2 volume + eLpNorm Eχbar 2 volume)
+            + eLpNorm Eχ 2 volume := by gcongr
+      _ ≤ (ENNReal.ofReal M * X + RHalf + ENNReal.ofReal (Cχ / r) * oscHalf)
+            + ENNReal.ofReal (Cχ / r) * oscHalf := by
+          gcongr
+      _ = ENNReal.ofReal M * X + Y := by rw [hY_def]; ring
+  -- Absorb `ofReal M · X`: `ofReal (1-M) · X ≤ Y`, hence `X ≤ ofReal ((1-M)⁻¹) · Y`.
+  have hMabs : ENNReal.ofReal (1 - M) * X ≤ Y := by
+    have hsub : X - ENNReal.ofReal M * X ≤ Y := tsub_le_iff_left.mpr hself
+    have hfac : ENNReal.ofReal (1 - M) * X = X - ENNReal.ofReal M * X := by
+      rw [ENNReal.ofReal_sub _ hM0, ENNReal.ofReal_one, ENNReal.sub_mul (fun _ _ => hXfin),
+        one_mul]
+    rwa [hfac]
+  have h1M_pos : (0 : ℝ) < 1 - M := h1M0
+  have hX_le : X ≤ ENNReal.ofReal ((1 - M)⁻¹) * Y := by
+    calc X = ENNReal.ofReal ((1 - M)⁻¹) * (ENNReal.ofReal (1 - M) * X) := by
+          rw [← mul_assoc, ← ENNReal.ofReal_mul (by positivity),
+            inv_mul_cancel₀ h1M_pos.ne', ENNReal.ofReal_one, one_mul]
+      _ ≤ ENNReal.ofReal ((1 - M)⁻¹) * Y := by gcongr
+  -- The gradient half-energy over `B`, dominated by `X` (χ ≡ 1 on `B`).
+  set LHShalf : ℝ≥0∞ := (∫⁻ z in B, ‖G z‖ₑ ^ (2 : ℝ) ∂volume) ^ (1 / (2 : ℝ)) with hLHShalf_def
+  have hLHS_le_X : LHShalf ≤ X := by
+    rw [hLHShalf_def, hX_def, eLpNorm_eq_lintegral_rpow_enorm_toReal h2ne h2top,
+      show (2 : ℝ≥0∞).toReal = 2 from by norm_num]
+    refine ENNReal.rpow_le_rpow ?_ (by norm_num)
+    calc (∫⁻ z in B, ‖G z‖ₑ ^ (2 : ℝ) ∂volume)
+        = ∫⁻ z in B, ‖χ z • G z‖ₑ ^ (2 : ℝ) ∂volume := by
+          refine setLIntegral_congr_fun hBmeas (fun z hz => ?_)
+          have hχz : χ z = 1 := hχB z (by rw [hB_def] at hz; exact hz)
+          rw [Complex.real_smul, hχz]; simp
+      _ ≤ ∫⁻ z, ‖χ z • G z‖ₑ ^ (2 : ℝ) ∂volume := setLIntegral_le_lintegral _ _
+  -- Master half-energy inequality (the commutator-absorbed Caccioppoli).
+  have hMaster : LHShalf ≤ ENNReal.ofReal (2 * Cχ / ((1 - M) * r)) * oscHalf
+      + ENNReal.ofReal ((1 - M)⁻¹) * RHalf := by
+    refine le_trans hLHS_le_X (le_trans hX_le (le_of_eq ?_))
+    rw [hY_def, mul_add]
+    rw [show ENNReal.ofReal ((1 - M)⁻¹) * (2 * (ENNReal.ofReal (Cχ / r) * oscHalf))
+        = ENNReal.ofReal (2 * Cχ / ((1 - M) * r)) * oscHalf from by
+      rw [show (2 : ℝ≥0∞) = ENNReal.ofReal 2 from by simp [ENNReal.ofReal_ofNat],
+        ← mul_assoc, ← mul_assoc, ← ENNReal.ofReal_mul (by positivity),
+        ← ENNReal.ofReal_mul (by positivity)]
+      congr 1
+      field_simp]
+    rw [add_comm]
+  -- ================================================================
+  -- (Convert) Pass to `⨍⁻`-averages via the planar volume ratio.
+  -- ================================================================
+  have hpi0 : (0 : ℝ) < Real.pi := Real.pi_pos
+  have hpi_eq : ((NNReal.pi : ℝ≥0∞)) = ENNReal.ofReal Real.pi := by
+    rw [← NNReal.coe_real_pi, ENNReal.ofReal_coe_nnreal]
+  have hvolB : volume B = ENNReal.ofReal (r ^ 2 * Real.pi) := by
+    rw [hB_def, Complex.volume_ball, hpi_eq, ← ENNReal.ofReal_pow hr.le,
+      ← ENNReal.ofReal_mul (by positivity)]
+  have hvolB2 : volume B2 = ENNReal.ofReal (4 * r ^ 2 * Real.pi) := by
+    rw [hB2_def, Complex.volume_ball, hpi_eq, ← ENNReal.ofReal_pow (by positivity),
+      ← ENNReal.ofReal_mul (by positivity)]
+    congr 1; ring
+  have hVB_half : (volume B) ^ (1 / (2 : ℝ)) = ENNReal.ofReal (r * Real.sqrt Real.pi) := by
+    rw [hvolB, ENNReal.ofReal_rpow_of_nonneg (by positivity) (by norm_num)]
+    congr 1
+    rw [Real.mul_rpow (by positivity) hpi0.le, ← Real.sqrt_eq_rpow,
+      ← Real.sqrt_eq_rpow, Real.sqrt_sq hr.le]
+  have hvol_ratio : volume B2 = 4 * volume B := by
+    rw [hvolB, hvolB2, show (4 : ℝ) * r ^ 2 * Real.pi = (4 : ℝ) * (r ^ 2 * Real.pi) from by ring,
+      ENNReal.ofReal_mul (by norm_num), show ENNReal.ofReal 4 = (4 : ℝ≥0∞) from by
+        simp [ENNReal.ofReal_ofNat]]
+  have hVB2_half : (volume B2) ^ (1 / (2 : ℝ)) = 2 * (volume B) ^ (1 / (2 : ℝ)) := by
+    rw [hvol_ratio, ENNReal.mul_rpow_of_nonneg _ _ (by norm_num : (0:ℝ) ≤ 1/2),
+      show (4 : ℝ≥0∞) = ENNReal.ofReal 4 from by simp [ENNReal.ofReal_ofNat],
+      ENNReal.ofReal_rpow_of_nonneg (by norm_num) (by norm_num),
+      show (4 : ℝ) ^ (1 / (2:ℝ)) = 2 from by
+        rw [show (4:ℝ) = 2 ^ (2:ℝ) from by norm_num, ← Real.rpow_mul (by norm_num)]; norm_num,
+      show ENNReal.ofReal 2 = (2 : ℝ≥0∞) from by simp [ENNReal.ofReal_ofNat]]
+  have hVB_half_ne0 : (volume B) ^ (1 / (2 : ℝ)) ≠ 0 := by
+    simp only [ne_eq, ENNReal.rpow_eq_zero_iff, not_or, not_and_or]
+    exact ⟨Or.inl hVolB0, Or.inr (by norm_num)⟩
+  have hVB_half_top : (volume B) ^ (1 / (2 : ℝ)) ≠ ⊤ :=
+    ENNReal.rpow_ne_top_of_nonneg (by norm_num) hVolBtop
+  have hVB2_half_ne0 : (volume B2) ^ (1 / (2 : ℝ)) ≠ 0 := by
+    simp only [ne_eq, ENNReal.rpow_eq_zero_iff, not_or, not_and_or]
+    exact ⟨Or.inl hVolB20, Or.inr (by norm_num)⟩
+  have hVB2_half_top : (volume B2) ^ (1 / (2 : ℝ)) ≠ ⊤ :=
+    ENNReal.rpow_ne_top_of_nonneg (by norm_num) hVolB2top
+  -- Rewrite the goal's `⨍⁻`-averages as `half / volume^{1/2}` and reduce to `hMaster`.
+  simp only [← enorm_eq_nnnorm]
+  rw [setLAverage_eq, setLAverage_eq, setLAverage_eq,
+    ENNReal.div_rpow_of_nonneg _ _ (by norm_num : (0:ℝ) ≤ 1 / 2),
+    ENNReal.div_rpow_of_nonneg _ _ (by norm_num : (0:ℝ) ≤ 1 / 2),
+    ENNReal.div_rpow_of_nonneg _ _ (by norm_num : (0:ℝ) ≤ 1 / 2)]
+  rw [← hLHShalf_def, ← hoscHalf_def, ← hRHalf_def]
+  rw [ENNReal.div_le_iff hVB_half_ne0 hVB_half_top]
+  -- `RHS_goal * (volB)^{1/2}`: cancel the volume ratio (`(volB2)^{1/2} = 2·(volB)^{1/2}`).
+  have hofReal_half : ENNReal.ofReal (1 / 2) = (1 : ℝ≥0∞) / 2 := by
+    rw [show (1 / 2 : ℝ≥0∞) = (ENNReal.ofReal 1) / (ENNReal.ofReal 2) from by
+      simp [ENNReal.ofReal_one, ENNReal.ofReal_ofNat],
+      ← ENNReal.ofReal_div_of_pos (by norm_num)]
+  have hhalf_ratio : (volume B) ^ (1 / (2:ℝ)) / (volume B2) ^ (1 / (2:ℝ))
+      = ENNReal.ofReal (1 / 2) := by
+    rw [hofReal_half, hVB2_half,
+      show (volume B) ^ (1 / (2:ℝ)) / (2 * (volume B) ^ (1 / (2:ℝ)))
+        = 1 * (volume B) ^ (1 / (2:ℝ)) / (2 * (volume B) ^ (1 / (2:ℝ))) from by rw [one_mul],
+      ENNReal.mul_div_mul_right 1 2 hVB_half_ne0 hVB_half_top]
+  have hosc_cancel : oscHalf / (volume B2) ^ (1 / (2 : ℝ)) * (volume B) ^ (1 / (2 : ℝ))
+      = ENNReal.ofReal (1 / 2) * oscHalf := by
+    rw [ENNReal.mul_comm_div, hhalf_ratio, mul_comm]
+  have hR_cancel : RHalf / (volume B2) ^ (1 / (2 : ℝ)) * (volume B) ^ (1 / (2 : ℝ))
+      = ENNReal.ofReal (1 / 2) * RHalf := by
+    rw [ENNReal.mul_comm_div, hhalf_ratio, mul_comm]
+  rw [add_mul, mul_assoc, mul_assoc, hosc_cancel, hR_cancel]
+  -- Final term-by-term comparison, both coefficients dominated.
+  refine le_trans hMaster (add_le_add ?_ ?_)
+  · -- oscHalf coefficient: `2Cχ/((1-M)r) ≤ A/r · (1/2)`.
+    rw [← mul_assoc, ← ENNReal.ofReal_mul (by positivity : (0:ℝ) ≤ A / r)]
+    gcongr
+    rw [hA_def,
+      show (4 * Cχ + 2) / (1 - M) / r * (1 / 2) = (2 * Cχ + 1) / ((1 - M) * r) from by
+        field_simp; ring]
+    rw [div_le_div_iff₀ (by positivity) (by positivity)]
+    nlinarith [hCχ0, h1M_pos, hr]
+  · -- RHalf coefficient: `(1-M)⁻¹ ≤ A · (1/2)`.
+    rw [← mul_assoc, ← ENNReal.ofReal_mul hA0]
+    gcongr
+    rw [hA_def,
+      show (4 * Cχ + 2) / (1 - M) * (1 / 2) = (2 * Cχ + 1) / (1 - M) from by field_simp; ring,
+      inv_eq_one_div]
+    rw [div_le_div_iff₀ h1M_pos h1M_pos]
+    nlinarith [hCχ0, h1M_pos]
 
 /-! ## S1 sub-stack — `setLAverage` arithmetic for the Wirtinger conversion
 
@@ -4075,7 +5097,7 @@ theorem reverseHolder_of_weakGradient {μ : ℂ → ℂ}
   set Afin : ℝ := 2 * (A₃ * C₁ * A') + 4 * (A₃ * C₁) + 2 * A₃ with hAfin_def
   have hAfin0 : 0 ≤ Afin := by positivity
   -- Caccioppoli (N3): `(⨍_B ‖G‖²)^½ ≤ (A₃/r)·oscF + A₃·(⨍_{2B}‖h‖²)^½`.
-  have hC := hCacc hFmem hGmem hhmem hGxmem hGymem hGxweak hGyweak hGdef hGeq x r hr
+  have hC := hCacc hFmem hGmem hRmem hGxmem hGymem hGxweak hGyweak hGdef hRrel x r hr
   -- Sobolev–Poincaré (N1, asymmetric) applied at radius `2r`: the oscillation of `F` over
   -- `2B = ball x (2r)` (centered at `⨍_{2B} F`) is bounded by the full-gradient `L¹`-average
   -- over the DOUBLED ball `4B = ball x (4r)`: `oscF ≤ (C₁·(2r))·⨍_{4B}(‖Gx‖+‖Gy‖)`.
@@ -4106,8 +5128,10 @@ theorem reverseHolder_of_weakGradient {μ : ℂ → ℂ}
   set oscF : ℝ≥0∞ :=
     (⨍⁻ z in B2, (‖F z - (⨍ w in B2, F w)‖₊ : ℝ≥0∞) ^ (2 : ℝ) ∂volume) ^ (1 / (2 : ℝ))
     with hoscF_def
+  -- `normH` now holds the N3 forcing in its corrected `‖R‖`-form (the differential
+  -- inhomogeneity `R = ∂̄F − μ·∂F`), still over `2B`.
   set normH : ℝ≥0∞ :=
-    (⨍⁻ z in B2, (‖h z‖₊ : ℝ≥0∞) ^ (2 : ℝ) ∂volume) ^ (1 / (2 : ℝ)) with hnormH_def
+    (⨍⁻ z in B2, (‖R z‖₊ : ℝ≥0∞) ^ (2 : ℝ) ∂volume) ^ (1 / (2 : ℝ)) with hnormH_def
   set avgG : ℝ≥0∞ := ⨍⁻ z in B4, (‖G z‖₊ : ℝ≥0∞) ∂volume with havgG_def
   set avgR : ℝ≥0∞ := ⨍⁻ z in B4, (‖R z‖₊ : ℝ≥0∞) ∂volume with havgR_def
   set normR : ℝ≥0∞ :=
@@ -4221,7 +5245,7 @@ theorem reverseHolder_of_weakGradient {μ : ℂ → ℂ}
     rw [setLAverage_eq, setLAverage_eq, hvol_ratio, mul_div_assoc',
       ENNReal.mul_div_mul_left _ _ (by norm_num) (by norm_num)]
     gcongr
-  -- `normH ≤ 2·normB`: pointwise `‖h‖² ≤ (‖h‖+‖R‖)²` on `2B`, then transfer `2B → 4B`
+  -- `normH ≤ 2·normB`: pointwise `‖R‖² ≤ (‖h‖+‖R‖)²` on `2B`, then transfer `2B → 4B`
   -- (factor `4` under the root becomes `2`).
   have hnormH_le2 : normH ≤ 2 * normB := by
     have hstep : normH ≤ (⨍⁻ z in B2, ((‖h z‖₊ : ℝ≥0∞) + (‖R z‖₊ : ℝ≥0∞)) ^ (2 : ℝ) ∂volume)
@@ -4230,7 +5254,7 @@ theorem reverseHolder_of_weakGradient {μ : ℂ → ℂ}
       refine ENNReal.rpow_le_rpow ?_ (by norm_num)
       rw [setLAverage_eq, setLAverage_eq]
       gcongr
-      exact le_self_add
+      exact le_add_self
     refine le_trans hstep ?_
     refine le_trans (ENNReal.rpow_le_rpow
       (htransfer (fun z => ((‖h z‖₊ : ℝ≥0∞) + (‖R z‖₊ : ℝ≥0∞)) ^ (2 : ℝ)))
@@ -4509,6 +5533,2675 @@ theorem giaquinta_iteration {α θ : ℝ} (hα : 0 < α) (hθ0 : 0 ≤ θ) (hθ1
         · exact mul_le_mul_of_nonneg_right hcoef2 hB
     _ = c * (A / (R - r) ^ α + B) := by ring
 
+/-- **Dyadic reverse-Hölder transfer** (private copy for `gehring_selfImprovement`).  A
+metric-ball reverse-Hölder inequality with the fixed enlargement factor `4` (the hypothesis
+form consumed by `gehring_selfImprovement`) yields a reverse-Hölder inequality on every dyadic
+square `R = dyadicSquare m k`, with the right-hand side over the comparable ball about the
+square's centre of radius `4 · 2^m`.  Reproduced here because `DyadicGehring` (which states the
+public version) would create an import cycle. -/
+private theorem dyadic_reverseHolder' {q A : ℝ} (hq : 1 < q) (_hA : 0 ≤ A)
+    {w b : ℂ → ℝ≥0∞}
+    (hRH : ∀ (x : ℂ) (r : ℝ), 0 < r →
+      (⨍⁻ z in Metric.ball x r, w z ^ q ∂volume) ^ (1 / q) ≤
+        ENNReal.ofReal A * (⨍⁻ z in Metric.ball x (4 * r), w z ∂volume) +
+          ENNReal.ofReal A * (⨍⁻ z in Metric.ball x (4 * r), b z ^ q ∂volume) ^ (1 / q))
+    (m : ℤ) (k : ℤ × ℤ) :
+    (⨍⁻ z in dyadicSquare m k, w z ^ q ∂volume) ^ (1 / q) ≤
+      ENNReal.ofReal (Real.pi ^ (1 / q) * A) *
+          (⨍⁻ z in Metric.ball (dyadicCenter m k) (4 * (2 : ℝ) ^ m), w z ∂volume) +
+        ENNReal.ofReal (Real.pi ^ (1 / q) * A) *
+          (⨍⁻ z in Metric.ball (dyadicCenter m k) (4 * (2 : ℝ) ^ m), b z ^ q ∂volume) ^
+            (1 / q) := by
+  set c := dyadicCenter m k with hc
+  set s : ℝ := (2 : ℝ) ^ m with hs
+  have hs0 : 0 < s := by rw [hs]; exact zpow_pos (by norm_num) m
+  set R := dyadicSquare m k with hR
+  set Bs := Metric.ball c s with hBs
+  have hq0 : (0 : ℝ) ≤ 1 / q := by positivity
+  have hvolR : volume R = ENNReal.ofReal (s ^ 2) := by
+    rw [hR, volume_dyadicSquare]
+  have hvolBs : volume Bs = ENNReal.ofReal (Real.pi * s ^ 2) := by
+    rw [hBs, Complex.volume_ball]
+    have hpi : (↑NNReal.pi : ℝ≥0∞) = ENNReal.ofReal Real.pi := by
+      rw [← NNReal.coe_real_pi]; rw [ENNReal.ofReal_coe_nnreal]
+    rw [hpi, ENNReal.ofReal_mul Real.pi_pos.le, ENNReal.ofReal_pow hs0.le, mul_comm]
+  have hs2pos : (0 : ℝ) < s ^ 2 := by positivity
+  have hvolR0 : volume R ≠ 0 := by
+    rw [hvolR, ne_eq, ENNReal.ofReal_eq_zero, not_le]; exact hs2pos
+  have hvolRtop : volume R ≠ ⊤ := by rw [hvolR]; exact ENNReal.ofReal_ne_top
+  have hvolBs0 : volume Bs ≠ 0 := by
+    rw [hvolBs, ne_eq, ENNReal.ofReal_eq_zero, not_le]; positivity
+  have hvolBstop : volume Bs ≠ ⊤ := by rw [hvolBs]; exact ENNReal.ofReal_ne_top
+  have hratio : volume Bs / volume R = ENNReal.ofReal Real.pi := by
+    rw [hvolR, hvolBs, ENNReal.ofReal_mul Real.pi_pos.le, mul_div_assoc, ENNReal.div_self]
+    · rw [mul_one]
+    · rw [ne_eq, ENNReal.ofReal_eq_zero, not_le]; exact hs2pos
+    · exact ENNReal.ofReal_ne_top
+  have hsubset : R ⊆ Bs := by rw [hR, hBs]; exact dyadicSquare_subset_ball m k
+  have hmono : ∫⁻ z in R, w z ^ q ≤ ∫⁻ z in Bs, w z ^ q := lintegral_mono_set hsubset
+  have hStepA : (⨍⁻ z in R, w z ^ q ∂volume) ≤
+      ENNReal.ofReal Real.pi * (⨍⁻ z in Bs, w z ^ q ∂volume) := by
+    rw [setLAverage_eq, setLAverage_eq]
+    calc (∫⁻ z in R, w z ^ q ∂volume) / volume R
+        ≤ (∫⁻ z in Bs, w z ^ q ∂volume) / volume R := ENNReal.div_le_div_right hmono _
+      _ = ((∫⁻ z in Bs, w z ^ q ∂volume) / volume Bs) * (volume Bs / volume R) := by
+          rw [← mul_div_assoc, ENNReal.div_mul_cancel hvolBs0 hvolBstop]
+      _ = (volume Bs / volume R) * ((∫⁻ z in Bs, w z ^ q ∂volume) / volume Bs) := by rw [mul_comm]
+      _ = ENNReal.ofReal Real.pi * ((∫⁻ z in Bs, w z ^ q ∂volume) / volume Bs) := by rw [hratio]
+  have hStepB : (⨍⁻ z in R, w z ^ q ∂volume) ^ (1 / q) ≤
+      ENNReal.ofReal (Real.pi ^ (1 / q)) * (⨍⁻ z in Bs, w z ^ q ∂volume) ^ (1 / q) := by
+    calc (⨍⁻ z in R, w z ^ q ∂volume) ^ (1 / q)
+        ≤ (ENNReal.ofReal Real.pi * (⨍⁻ z in Bs, w z ^ q ∂volume)) ^ (1 / q) :=
+          ENNReal.rpow_le_rpow hStepA hq0
+      _ = ENNReal.ofReal (Real.pi ^ (1 / q)) * (⨍⁻ z in Bs, w z ^ q ∂volume) ^ (1 / q) := by
+          rw [ENNReal.mul_rpow_of_nonneg _ _ hq0, ENNReal.ofReal_rpow_of_pos Real.pi_pos]
+  have hStepC := hRH c s hs0
+  have hpi0 : (0 : ℝ) ≤ Real.pi ^ (1 / q) := by positivity
+  calc (⨍⁻ z in R, w z ^ q ∂volume) ^ (1 / q)
+      ≤ ENNReal.ofReal (Real.pi ^ (1 / q)) * (⨍⁻ z in Bs, w z ^ q ∂volume) ^ (1 / q) := hStepB
+    _ ≤ ENNReal.ofReal (Real.pi ^ (1 / q)) *
+          (ENNReal.ofReal A * (⨍⁻ z in Metric.ball c (4 * s), w z ∂volume) +
+           ENNReal.ofReal A * (⨍⁻ z in Metric.ball c (4 * s), b z ^ q ∂volume) ^ (1 / q)) :=
+        mul_le_mul_right hStepC _
+    _ = ENNReal.ofReal (Real.pi ^ (1 / q) * A) * (⨍⁻ z in Metric.ball c (4 * s), w z ∂volume) +
+        ENNReal.ofReal (Real.pi ^ (1 / q) * A) *
+          (⨍⁻ z in Metric.ball c (4 * s), b z ^ q ∂volume) ^ (1 / q) := by
+        rw [mul_add, ← mul_assoc, ← mul_assoc, ← ENNReal.ofReal_mul hpi0]
+
+/-- **Layer-cake (Cavalieri) for a truncated weight over a ball** (helper for the
+hole-filling step of `gehring_selfImprovement`).  For the bounded truncation
+`min w N` and any exponent `p > 0`, the `(p)`-mass over a ball is the Cavalieri
+integral of the super-level measures of the real-valued truncation `(min w N).toReal`
+against the radial weight `λ^{p-1}`.  This is `lintegral_rpow_eq_lintegral_meas_lt_mul`
+transported from the real layer (`(min w N).toReal`) to the `ℝ≥0∞` weight, using that
+`min w N ≤ N < ⊤` so that `min w N = ofReal ((min w N).toReal)` pointwise. -/
+private theorem holeFill_layerCake {p : ℝ} (hp : 0 < p) {w : ℂ → ℝ≥0∞}
+    (hwmeas : AEMeasurable w volume) (N : ℕ) (x₀ : ℂ) (t : ℝ) :
+    ∫⁻ z in Metric.ball x₀ t, (min (w z) (N : ℝ≥0∞)) ^ p
+      = ENNReal.ofReal p * ∫⁻ lam in Set.Ioi (0 : ℝ),
+          (volume.restrict (Metric.ball x₀ t)) {z | lam < (min (w z) (N : ℝ≥0∞)).toReal}
+            * ENNReal.ofReal (lam ^ (p - 1)) := by
+  set μ := volume.restrict (Metric.ball x₀ t) with hμ
+  set f : ℂ → ℝ := fun z => (min (w z) (N : ℝ≥0∞)).toReal with hf
+  have hfnn : 0 ≤ᵐ[μ] f := Filter.Eventually.of_forall (fun z => ENNReal.toReal_nonneg)
+  have hfmeas : AEMeasurable f μ :=
+    ((hwmeas.min aemeasurable_const).ennreal_toReal).restrict
+  have key := lintegral_rpow_eq_lintegral_meas_lt_mul μ hfnn hfmeas hp
+  rw [← key]
+  have hpt : ∀ z, (min (w z) (N : ℝ≥0∞)) ^ p = ENNReal.ofReal (f z ^ p) := by
+    intro z
+    have hfin : min (w z) (N : ℝ≥0∞) ≠ ⊤ :=
+      ne_top_of_le_ne_top (ENNReal.natCast_ne_top N) (min_le_right _ _)
+    rw [hf, ← ENNReal.ofReal_rpow_of_nonneg ENNReal.toReal_nonneg hp.le,
+      ENNReal.ofReal_toReal hfin]
+  calc ∫⁻ z in Metric.ball x₀ t, (min (w z) (N : ℝ≥0∞)) ^ p
+      = ∫⁻ z, (min (w z) (N : ℝ≥0∞)) ^ p ∂μ := rfl
+    _ = ∫⁻ z, ENNReal.ofReal (f z ^ p) ∂μ := by
+        apply lintegral_congr; intro z; rw [hpt z]
+
+/-- A closed ball in `ℂ` is `volume`-a.e. equal to the corresponding open ball (the sphere
+is null). -/
+private theorem closedBall_aeEq_ball' (c : ℂ) (ρ : ℝ) :
+    Metric.closedBall c ρ =ᵐ[volume] Metric.ball c ρ := by
+  rw [MeasureTheory.ae_eq_set]
+  constructor
+  · -- `closedBall \ ball ⊆ sphere`, null.
+    refine measure_mono_null ?_ (Measure.addHaar_sphere volume c ρ)
+    intro z hz
+    rw [Set.mem_diff, Metric.mem_closedBall, Metric.mem_ball, not_lt] at hz
+    rw [Metric.mem_sphere]; linarith [hz.1, hz.2]
+  · -- `ball \ closedBall = ∅`.
+    convert measure_empty (μ := (volume : Measure ℂ)) using 2
+    rw [Set.diff_eq_empty]
+    exact Metric.ball_subset_closedBall
+
+/-- **Per-point density witness ball** (helper for the good-λ measure bound).  For a
+`volume`-globally-integrable nonnegative weight `g : ℂ → ℝ≥0∞` (`∫⁻ g < ⊤`), at a.e. point
+`c` the ball averages `(∫⁻_{ball c ρ} g)/vol(ball c ρ)` converge to `g c` as `ρ → 0⁺`;
+consequently, for a.e. `c`, any height `Λ < g c`, and any cap `ρ₀ > 0`, there is a radius
+`0 < ρ ≤ ρ₀` with `Λ < (∫⁻_{ball c ρ} g)/vol(ball c ρ)`.  Proven from Mathlib's Lebesgue
+differentiation (`VitaliFamily.ae_tendsto_lintegral_div` on the uniformly-locally-doubling
+Vitali family, transported to closed balls via `tendsto_closedBall_filterAt`) plus the planar
+fact that closed and open balls have equal volume and integral. -/
+private theorem gehring_density_ball {g : ℂ → ℝ≥0∞}
+    (hgmeas : AEMeasurable g volume) (hgfin : ∫⁻ z, g z < ⊤) :
+    ∀ᵐ c ∂volume, ∀ Λ : ℝ≥0∞, Λ < g c → ∀ ρ₀ : ℝ, 0 < ρ₀ →
+      ∃ ρ : ℝ, 0 < ρ ∧ ρ ≤ ρ₀ ∧
+        Λ < (∫⁻ z in Metric.ball c ρ, g z) / volume (Metric.ball c ρ) := by
+  -- The uniformly-locally-doubling Vitali family for `volume` on `ℂ`.
+  set v : VitaliFamily (volume : Measure ℂ) := IsUnifLocDoublingMeasure.vitaliFamily volume 1
+    with hv
+  -- Lebesgue differentiation: for a.e. `c`, `(∫⁻_a g)/vol a → g c` along `v.filterAt c`.
+  filter_upwards [v.ae_tendsto_lintegral_div hgmeas hgfin.ne] with c hc
+  intro Λ hΛ ρ₀ hρ₀
+  -- A radius sequence `δ n = ρ₀ / (n+1) → 0⁺`.
+  set δ : ℕ → ℝ := fun n => ρ₀ / (n + 1) with hδ
+  have hδpos : ∀ n, 0 < δ n := fun n => div_pos hρ₀ (by positivity)
+  have hδto : Tendsto δ atTop (𝓝[>] (0 : ℝ)) := by
+    rw [tendsto_nhdsWithin_iff]
+    refine ⟨?_, Eventually.of_forall (fun n => hδpos n)⟩
+    rw [hδ]
+    have h1 : Tendsto (fun n : ℕ => (n : ℝ) + 1) atTop atTop :=
+      tendsto_atTop_add_const_right atTop 1 tendsto_natCast_atTop_atTop
+    simpa using (tendsto_const_nhds (x := ρ₀)).div_atTop h1
+  -- Convergence over the closed balls `closedBall c (δ n)`.
+  have hclosed : Tendsto
+      (fun n : ℕ => (∫⁻ z in Metric.closedBall c (δ n), g z) / volume (Metric.closedBall c (δ n)))
+      atTop (𝓝 (g c)) := by
+    have htf : Tendsto (fun n : ℕ => Metric.closedBall c (δ n)) atTop (v.filterAt c) := by
+      refine IsUnifLocDoublingMeasure.tendsto_closedBall_filterAt
+        (μ := (volume : Measure ℂ)) (fun _ => c) δ hδto ?_
+      exact Eventually.of_forall (fun n => by
+        rw [one_mul]; exact Metric.mem_closedBall_self (hδpos n).le)
+    exact hc.comp htf
+  -- Switch closed balls to open balls (equal volume and integral in the plane).
+  have hcb_eq : ∀ n,
+      (∫⁻ z in Metric.closedBall c (δ n), g z) / volume (Metric.closedBall c (δ n))
+        = (∫⁻ z in Metric.ball c (δ n), g z) / volume (Metric.ball c (δ n)) := by
+    intro n
+    have hae := closedBall_aeEq_ball' c (δ n)
+    rw [setLIntegral_congr hae, measure_congr hae]
+  rw [Filter.tendsto_congr hcb_eq] at hclosed
+  -- Eventually the open-ball averages exceed `Λ`.
+  have hev : ∀ᶠ n in atTop,
+      Λ < (∫⁻ z in Metric.ball c (δ n), g z) / volume (Metric.ball c (δ n)) :=
+    hclosed.eventually_const_lt hΛ
+  -- Also `δ n ≤ ρ₀` (always).
+  have hev2 : ∀ᶠ n in atTop, δ n ≤ ρ₀ := Eventually.of_forall (fun n => by
+    rw [hδ, div_le_iff₀ (by positivity)]
+    nlinarith [hρ₀.le, (Nat.cast_nonneg n : (0:ℝ) ≤ n)])
+  obtain ⟨n, hn1, hn2⟩ := (hev.and hev2).exists
+  exact ⟨δ n, hδpos n, hn2, hn1⟩
+
+/-- **Carleson covering bound** (helper for the good-λ measure bound).  Given a level
+`l ≠ 0, ⊤`, a weight `u`, a (possibly uncountable) center set `T`, a radius function
+`R : ℂ → ℝ` bounded by `Rbd`, with the per-ball averaging property
+`l·vol(ball c (R c)) ≤ ∫_{ball c (R c)} u` on `T`, the union of the balls has
+`l·vol(⋃_{c∈T} ball c (R c)) ≤ 16·∫⁻ u`.  Lindelöf (`isOpen_biUnion_countable`) extracts a
+countable subfamily that preserves the union, then the Carleson Vitali engine
+`Set.Countable.measure_biUnion_le_lintegral` (planar doubling `A_dbl = 4`, `A_dbl² = 16`)
+internalizes the overlap. -/
+private theorem gehring_engine_bound (l : ℝ≥0∞) (u : ℂ → ℝ≥0∞) (T : Set ℂ) (R : ℂ → ℝ)
+    (Rbd : ℝ) (hRbd : ∀ c ∈ T, R c ≤ Rbd)
+    (h2u : ∀ c ∈ T, l * volume (Metric.ball c (R c)) ≤ ∫⁻ z in Metric.ball c (R c), u z) :
+    l * volume (⋃ c ∈ T, Metric.ball c (R c)) ≤ (16 : ℝ≥0∞) * ∫⁻ z, u z := by
+  haveI hdbl : (volume : Measure ℂ).IsDoubling (2 ^ Module.finrank ℝ ℂ) :=
+    InnerProductSpace.IsDoubling
+  -- Extract a countable subfamily preserving the union.
+  obtain ⟨Tc, hTcsub, hTccount, hTcU⟩ :=
+    TopologicalSpace.isOpen_biUnion_countable (ι := ℂ) T (fun c => Metric.ball c (R c))
+      (fun c _ => Metric.isOpen_ball)
+  rw [← hTcU]
+  -- Engine on the countable family `Tc ⊆ T`.
+  have hengine := hTccount.measure_biUnion_le_lintegral (μ := (volume : Measure ℂ))
+    (A := 2 ^ Module.finrank ℝ ℂ) (c := id) (r := R) l u Rbd
+    (fun c hc => hRbd c (hTcsub hc)) (fun c hc => h2u c (hTcsub hc))
+  -- `A_dbl² = 16`.
+  have hA2 : ((2 ^ Module.finrank ℝ ℂ : ℝ≥0) : ℝ≥0∞) ^ 2 = (16 : ℝ≥0∞) := by
+    rw [Complex.finrank_real_complex]; norm_num
+  simpa only [id, hA2] using hengine
+
+/-- **Good-λ super-level measure bound** (the Calderón–Zygmund covering core of the
+hole-filling step of `gehring_selfImprovement`).  For concentric radii
+`4R₀ ≤ t < s ≤ 16R₀`, every truncation `N`, and every height `lam > 0`, the volume of the
+super-level set of the truncation `min w N` inside `ball x₀ t` is controlled by a
+`(1/lam)`-weighted `w`-mass plus a `(1/lam)^q`-weighted `bᵠ`-mass over the larger ball
+`ball x₀ s`:
+`vol {z ∈ ball x₀ t | lam < (min w N) z} ≤ ofReal(Cw/lam)·∫_{ball x₀ s} w
+    + ofReal((Cb/lam)^q · 16)·∫_{ball x₀ s} bᵠ`
+with `Cw = 2(A+1)·16`, `Cb = 2(A+1)`.  Construction: each super-level point has, by Lebesgue
+differentiation (`gehring_density_ball`), a small ball `ball c ρ_c` (radius capped at
+`(s-t)/8`) with `⨍_{ball c ρ_c} wᵠ > lamᵠ`; the per-ball reverse-Hölder hypothesis `hRH`
+splits it into a `w`-dominated and a `b`-dominated alternative; the two subfamilies of
+enlarged balls `ball c (4ρ_c) ⊆ ball x₀ s` are fed to the Carleson Vitali engine
+`Set.Countable.measure_biUnion_le_lintegral` (planar doubling constant `A_dbl = 2² = 4`,
+`A_dbl² = 16`), which internalizes the bounded overlap.  This is `w,b`-uniform. -/
+private theorem gehring_goodLambda_measure {q A : ℝ} (hq : 1 < q) (hA : 0 ≤ A)
+    {w b : ℂ → ℝ≥0∞} (hwmeas : AEMeasurable w volume) (_hbmeas : AEMeasurable b volume)
+    (hRH : ∀ (x : ℂ) (r : ℝ), 0 < r →
+      (⨍⁻ z in Metric.ball x r, w z ^ q ∂volume) ^ (1 / q) ≤
+        ENNReal.ofReal A * (⨍⁻ z in Metric.ball x (4 * r), w z ∂volume) +
+          ENNReal.ofReal A * (⨍⁻ z in Metric.ball x (4 * r), b z ^ q ∂volume) ^ (1 / q))
+    (x₀ : ℂ) (R₀ : ℝ) (_hR₀ : 0 < R₀)
+    (hWfin : ∫⁻ z in Metric.ball x₀ (16 * R₀), w z ^ q < ⊤)
+    (N : ℕ) (t s : ℝ) (_ht : 4 * R₀ ≤ t) (hts : t < s) (hs : s ≤ 16 * R₀)
+    (lam : ℝ) (hlam : 0 < lam) :
+    volume {z : ℂ | z ∈ Metric.ball x₀ t ∧ lam < (min (w z) (N : ℝ≥0∞)).toReal}
+      ≤ ENNReal.ofReal ((2 * (A + 1) / lam) * 16) * (∫⁻ z in Metric.ball x₀ s, w z)
+        + ENNReal.ofReal ((2 * (A + 1) / lam) ^ q * 16) *
+            (∫⁻ z in Metric.ball x₀ s, b z ^ q) := by
+  classical
+  -- The planar doubling instance (`A_dbl = 2^finrank ℝ ℂ = 4`) for the Carleson engine.
+  haveI hdbl : (volume : Measure ℂ).IsDoubling (2 ^ Module.finrank ℝ ℂ) :=
+    InnerProductSpace.IsDoubling
+  have hAdbl : (2 ^ Module.finrank ℝ ℂ : ℝ≥0) = 4 := by
+    rw [Complex.finrank_real_complex]; norm_num
+  -- Notation.
+  have hq0 : 0 < q := lt_trans one_pos hq
+  set Ã : ℝ := A + 1 with hÃdef
+  have hÃpos : 0 < Ã := by rw [hÃdef]; linarith
+  have hÃ0 : 0 ≤ Ã := hÃpos.le
+  -- `hRH` upgraded to the larger constant `Ã = A + 1` (RHS only grows).
+  have hRHÃ : ∀ (x : ℂ) (r : ℝ), 0 < r →
+      (⨍⁻ z in Metric.ball x r, w z ^ q ∂volume) ^ (1 / q) ≤
+        ENNReal.ofReal Ã * (⨍⁻ z in Metric.ball x (4 * r), w z ∂volume) +
+          ENNReal.ofReal Ã * (⨍⁻ z in Metric.ball x (4 * r), b z ^ q ∂volume) ^ (1 / q) := by
+    intro x r hr
+    refine le_trans (hRH x r hr) (add_le_add ?_ ?_) <;>
+      exact mul_le_mul_left (ENNReal.ofReal_le_ofReal (by rw [hÃdef]; linarith)) _
+  -- The localized weight `g = wᵠ · 1_{ball x₀ 16R₀}` (globally integrable).
+  set B16 : Set ℂ := Metric.ball x₀ (16 * R₀) with hB16
+  set g : ℂ → ℝ≥0∞ := B16.indicator (fun z => w z ^ q) with hgdef
+  have hgmeas : AEMeasurable g volume :=
+    (hwmeas.pow_const q).indicator measurableSet_ball
+  have hgfin : ∫⁻ z, g z < ⊤ := by
+    rw [hgdef, lintegral_indicator measurableSet_ball]; exact hWfin
+  -- The super-level set.
+  set S : Set ℂ := {z : ℂ | z ∈ Metric.ball x₀ t ∧ lam < (min (w z) (N : ℝ≥0∞)).toReal}
+    with hSdef
+  -- Heights for the density witness: `Λ = (ofReal lam)^q`.
+  set Λ : ℝ≥0∞ := ENNReal.ofReal lam ^ q with hΛdef
+  -- Capping radius and geometry.
+  set ρ₀ : ℝ := (s - t) / 8 with hρ₀def
+  have hst : 0 < s - t := by linarith
+  have hρ₀pos : 0 < ρ₀ := by rw [hρ₀def]; positivity
+  -- Step bound from `hWfin`: localize-to-`ball x₀ s` integrals are over a sub-ball of 16R₀.
+  have hsubs16 : Metric.ball x₀ s ⊆ B16 := by
+    rw [hB16]; exact Metric.ball_subset_ball (by linarith)
+  -- =========================================================================
+  -- PER-POINT WITNESS.  For a.e. `c ∈ S`, there is a capped ball `ball c ρ` with
+  -- `⨍_{ball c ρ} wᵠ > lamᵠ`, and `hRH` yields the `w`/`b` dichotomy.
+  -- =========================================================================
+  -- The good set: the full-measure set on which the density witness holds.
+  set Good : Set ℂ := {c : ℂ | ∀ Λ' : ℝ≥0∞, Λ' < g c → ∀ ρ₀' : ℝ, 0 < ρ₀' →
+      ∃ ρ : ℝ, 0 < ρ ∧ ρ ≤ ρ₀' ∧
+        Λ' < (∫⁻ z in Metric.ball c ρ, g z) / volume (Metric.ball c ρ)} with hGooddef
+  have hGoodae : volume (Goodᶜ) = 0 := by
+    have hae := gehring_density_ball hgmeas hgfin
+    rw [MeasureTheory.ae_iff] at hae
+    exact hae
+  have hDdens : ∀ c ∈ Good, ∀ Λ' : ℝ≥0∞, Λ' < g c → ∀ ρ₀' : ℝ, 0 < ρ₀' →
+      ∃ ρ : ℝ, 0 < ρ ∧ ρ ≤ ρ₀' ∧
+        Λ' < (∫⁻ z in Metric.ball c ρ, g z) / volume (Metric.ball c ρ) := fun c hc => hc
+  -- For `c ∈ S ∩ D` (a.e. all of `S`), the dichotomy: a capped enlarged ball that is
+  -- either `w`-good or `b`-good.
+  -- The two scalar levels.
+  set lw : ℝ≥0∞ := ENNReal.ofReal (lam / (2 * Ã)) with hlwdef
+  set lb : ℝ≥0∞ := ENNReal.ofReal ((lam / (2 * Ã)) ^ q) with hlbdef
+  -- Per-point dichotomy.  For `c ∈ S ∩ Good`: a capped radius `ρ` whose enlarged ball
+  -- `ball c (4ρ) ⊆ ball x₀ s` is either `w`-good (`lw·vol ≤ ∫ w`) or `b`-good
+  -- (`lb·vol ≤ ∫ bᵠ`).
+  have hdich : ∀ c ∈ S ∩ Good, ∃ ρ : ℝ, 0 < ρ ∧
+      Metric.ball c (4 * ρ) ⊆ Metric.ball x₀ s ∧
+      (lw * volume (Metric.ball c (4 * ρ)) ≤ ∫⁻ z in Metric.ball c (4 * ρ), w z ∨
+       lb * volume (Metric.ball c (4 * ρ)) ≤ ∫⁻ z in Metric.ball c (4 * ρ), b z ^ q) ∧
+      4 * ρ ≤ (s - t) / 2 := by
+    rintro c ⟨hcS, hcGood⟩
+    obtain ⟨hct, hclam⟩ := hcS
+    -- `c ∈ B16`.
+    have hcB16 : c ∈ B16 := hsubs16 (Metric.ball_subset_ball (by linarith) hct)
+    -- `g c = w c ^ q`.
+    have hgc : g c = w c ^ q := by rw [hgdef, Set.indicator_of_mem hcB16]
+    -- `ofReal lam < w c`.
+    have hlam_wc : ENNReal.ofReal lam < w c := by
+      have h1 : ENNReal.ofReal lam < min (w c) (N : ℝ≥0∞) := by
+        have hfin : min (w c) (N : ℝ≥0∞) ≠ ⊤ :=
+          ne_top_of_le_ne_top (ENNReal.natCast_ne_top N) (min_le_right _ _)
+        rw [← ENNReal.ofReal_toReal hfin]
+        exact ENNReal.ofReal_lt_ofReal_iff_of_nonneg hlam.le |>.mpr hclam
+      exact lt_of_lt_of_le h1 (min_le_left _ _)
+    -- `Λ < g c`.
+    have hΛlt : Λ < g c := by
+      rw [hgc, hΛdef]; exact ENNReal.rpow_lt_rpow hlam_wc hq0
+    -- Density witness ball.
+    obtain ⟨ρ, hρpos, hρcap, hρavg⟩ := hDdens c hcGood Λ hΛlt ρ₀ hρ₀pos
+    -- `ball c ρ ⊆ ball x₀ s` (capped).
+    have hballρ_sub : Metric.ball c ρ ⊆ Metric.ball x₀ s := by
+      intro z hz
+      rw [Metric.mem_ball] at hz ⊢
+      rw [Metric.mem_ball] at hct
+      have : dist z x₀ ≤ dist z c + dist c x₀ := dist_triangle z c x₀
+      have hρle : ρ ≤ (s - t) / 8 := hρcap
+      nlinarith [this, hz, hct, hρle, hst]
+    have hball4ρ_sub : Metric.ball c (4 * ρ) ⊆ Metric.ball x₀ s := by
+      intro z hz
+      rw [Metric.mem_ball] at hz ⊢
+      rw [Metric.mem_ball] at hct
+      have htri : dist z x₀ ≤ dist z c + dist c x₀ := dist_triangle z c x₀
+      have hρle : ρ ≤ (s - t) / 8 := hρcap
+      nlinarith [htri, hz, hct, hρle, hst]
+    refine ⟨ρ, hρpos, hball4ρ_sub, ?_, by linarith [hρcap, hst]⟩
+    -- On `ball c ρ ⊆ B16`, `g = wᵠ`, so the density average is the `wᵠ`-average.
+    have hballρ_B16 : Metric.ball c ρ ⊆ B16 := hballρ_sub.trans hsubs16
+    have hgint : ∫⁻ z in Metric.ball c ρ, g z = ∫⁻ z in Metric.ball c ρ, w z ^ q := by
+      refine setLIntegral_congr_fun measurableSet_ball (fun z hz => ?_)
+      rw [hgdef, Set.indicator_of_mem (hballρ_B16 hz)]
+    rw [hgint] at hρavg
+    -- `(ofReal lam)^q < ⨍⁻_{ball c ρ} wᵠ`.
+    have hvolρ_pos : 0 < volume (Metric.ball c ρ) := Metric.measure_ball_pos _ _ hρpos
+    have havg : Λ < ⨍⁻ z in Metric.ball c ρ, w z ^ q ∂volume := by
+      rw [setLAverage_eq]; exact hρavg
+    -- Take `^{1/q}`: `ofReal lam < (⨍⁻ wᵠ)^{1/q}`.
+    have h1q : (0:ℝ) < 1 / q := by positivity
+    have hroot : ENNReal.ofReal lam < (⨍⁻ z in Metric.ball c ρ, w z ^ q ∂volume) ^ (1 / q) := by
+      rw [hΛdef] at havg
+      have h := ENNReal.rpow_lt_rpow havg h1q
+      have hid : (ENNReal.ofReal lam ^ q) ^ (1 / q) = ENNReal.ofReal lam := by
+        rw [one_div, ENNReal.rpow_rpow_inv hq0.ne']
+      rwa [hid] at h
+    -- Reverse-Hölder dichotomy at `ball c ρ`.
+    have hRHc := hRHÃ c ρ hρpos
+    have hsum : ENNReal.ofReal lam <
+        ENNReal.ofReal Ã * (⨍⁻ z in Metric.ball c (4 * ρ), w z ∂volume) +
+          ENNReal.ofReal Ã * (⨍⁻ z in Metric.ball c (4 * ρ), b z ^ q ∂volume) ^ (1 / q) :=
+      lt_of_lt_of_le hroot hRHc
+    -- One of the two terms is `≥ ofReal lam / 2`.
+    have hhalf : ENNReal.ofReal Ã * (⨍⁻ z in Metric.ball c (4 * ρ), w z ∂volume)
+          ≥ ENNReal.ofReal lam / 2 ∨
+        ENNReal.ofReal Ã * (⨍⁻ z in Metric.ball c (4 * ρ), b z ^ q ∂volume) ^ (1 / q)
+          ≥ ENNReal.ofReal lam / 2 := by
+      by_contra hcon
+      rw [not_or] at hcon
+      obtain ⟨h1, h2⟩ := hcon
+      rw [not_le] at h1 h2
+      have : ENNReal.ofReal Ã * (⨍⁻ z in Metric.ball c (4 * ρ), w z ∂volume) +
+          ENNReal.ofReal Ã * (⨍⁻ z in Metric.ball c (4 * ρ), b z ^ q ∂volume) ^ (1 / q)
+          < ENNReal.ofReal lam / 2 + ENNReal.ofReal lam / 2 := ENNReal.add_lt_add h1 h2
+      rw [ENNReal.add_halves] at this
+      exact absurd (lt_trans hsum this) (lt_irrefl _)
+    -- Volume facts for `4ρ`-ball (positive, finite).
+    have hvol4_pos : 0 < volume (Metric.ball c (4 * ρ)) :=
+      Metric.measure_ball_pos _ _ (by positivity)
+    have hvol4_ne : volume (Metric.ball c (4 * ρ)) ≠ 0 := hvol4_pos.ne'
+    have hvol4_top : volume (Metric.ball c (4 * ρ)) ≠ ⊤ := measure_ball_lt_top.ne
+    have hÃne : ENNReal.ofReal Ã ≠ 0 := by
+      rw [ne_eq, ENNReal.ofReal_eq_zero, not_le]; exact hÃpos
+    have hÃtop : ENNReal.ofReal Ã ≠ ⊤ := ENNReal.ofReal_ne_top
+    -- The clean key: `lw * ofReal Ã = ofReal lam / 2` (and similarly for the `q`-power).
+    have hlw_mul : lw * ENNReal.ofReal Ã = ENNReal.ofReal lam / 2 := by
+      rw [hlwdef, ← ENNReal.ofReal_mul (by positivity)]
+      have hreal : lam / (2 * Ã) * Ã = lam / 2 := by
+        field_simp
+      rw [hreal, ENNReal.ofReal_div_of_pos (by norm_num : (0:ℝ) < 2)]
+      congr 1; norm_num
+    rcases hhalf with hw | hb
+    · -- `w`-good: `lw·vol(4B) ≤ ∫_{4B} w`.
+      left
+      -- `lw ≤ ⨍ w` by cancelling `ofReal Ã` from `lw·ofReal Ã = ofReal lam/2 ≤ ofReal Ã·⨍ w`.
+      have hge : lw ≤ ⨍⁻ z in Metric.ball c (4 * ρ), w z ∂volume := by
+        have hchain : lw * ENNReal.ofReal Ã
+            ≤ (⨍⁻ z in Metric.ball c (4 * ρ), w z ∂volume) * ENNReal.ofReal Ã := by
+          rw [hlw_mul, mul_comm]; exact hw
+        exact (ENNReal.mul_le_mul_iff_left hÃne hÃtop).mp hchain
+      rw [setLAverage_eq] at hge
+      rwa [ENNReal.le_div_iff_mul_le (Or.inl hvol4_ne) (Or.inl hvol4_top)] at hge
+    · -- `b`-good: `lb·vol(4B) ≤ ∫_{4B} bᵠ`.
+      right
+      -- `lb = lw^q`, and from `lw ≤ (⨍ bᵠ)^{1/q}` raise to `q`.
+      have hlb_eq : lb = lw ^ q := by
+        rw [hlbdef, hlwdef, ← ENNReal.ofReal_rpow_of_pos (by positivity)]
+      have hgew : lw ≤ (⨍⁻ z in Metric.ball c (4 * ρ), b z ^ q ∂volume) ^ (1 / q) := by
+        have hchain : lw * ENNReal.ofReal Ã
+            ≤ (⨍⁻ z in Metric.ball c (4 * ρ), b z ^ q ∂volume) ^ (1 / q) * ENNReal.ofReal Ã := by
+          rw [hlw_mul, mul_comm]; exact hb
+        exact (ENNReal.mul_le_mul_iff_left hÃne hÃtop).mp hchain
+      have hgeq : lb ≤ ⨍⁻ z in Metric.ball c (4 * ρ), b z ^ q ∂volume := by
+        rw [hlb_eq]
+        have hpow := ENNReal.rpow_le_rpow hgew hq0.le
+        rwa [one_div, ENNReal.rpow_inv_rpow hq0.ne'] at hpow
+      rw [setLAverage_eq] at hgeq
+      rwa [ENNReal.le_div_iff_mul_le (Or.inl hvol4_ne) (Or.inl hvol4_top)] at hgeq
+  -- =========================================================================
+  -- ASSEMBLY.  Choose, for each `c ∈ S ∩ Good`, the enlarged radius `R c = 4ρ_c`;
+  -- partition into `w`-good and `b`-good centers; feed each subfamily to the engine.
+  -- =========================================================================
+  -- Total enlarged-radius function (`0` off `S ∩ Good`).
+  set Rfun : ℂ → ℝ := fun c => if h : c ∈ S ∩ Good then 4 * (hdich c h).choose else 0
+    with hRfundef
+  -- Spec of the choice on `S ∩ Good`.
+  have hRspec : ∀ c (h : c ∈ S ∩ Good), 0 < Rfun c ∧
+      Metric.ball c (Rfun c) ⊆ Metric.ball x₀ s ∧
+      (lw * volume (Metric.ball c (Rfun c)) ≤ ∫⁻ z in Metric.ball c (Rfun c), w z ∨
+       lb * volume (Metric.ball c (Rfun c)) ≤ ∫⁻ z in Metric.ball c (Rfun c), b z ^ q) ∧
+      Rfun c ≤ (s - t) / 2 := by
+    intro c h
+    have hch := (hdich c h).choose_spec
+    obtain ⟨hρpos, hsub, hdisj, hcap⟩ := hch
+    have hRfval : Rfun c = 4 * (hdich c h).choose := by rw [hRfundef]; simp [h]
+    refine ⟨?_, ?_, ?_, ?_⟩
+    · rw [hRfval]; positivity
+    · rw [hRfval]; exact hsub
+    · rw [hRfval]; exact hdisj
+    · rw [hRfval]; exact hcap
+  -- The `w`-good and `b`-good center subsets.
+  set Sw : Set ℂ := {c | ∃ h : c ∈ S ∩ Good,
+      lw * volume (Metric.ball c (Rfun c)) ≤ ∫⁻ z in Metric.ball c (Rfun c), w z} with hSwdef
+  set Sb : Set ℂ := {c | ∃ h : c ∈ S ∩ Good,
+      lb * volume (Metric.ball c (Rfun c)) ≤ ∫⁻ z in Metric.ball c (Rfun c), b z ^ q} with hSbdef
+  -- Every `c ∈ S ∩ Good` lies in `Sw ∪ Sb`, and inside its own ball.
+  have hcover : S ∩ Good ⊆ (⋃ c ∈ Sw, Metric.ball c (Rfun c))
+      ∪ (⋃ c ∈ Sb, Metric.ball c (Rfun c)) := by
+    intro c hc
+    obtain ⟨hRpos, _, hdisj, _⟩ := hRspec c hc
+    have hcmem : c ∈ Metric.ball c (Rfun c) := Metric.mem_ball_self hRpos
+    rcases hdisj with hw | hb
+    · exact Or.inl (Set.mem_biUnion (⟨hc, hw⟩) hcmem)
+    · exact Or.inr (Set.mem_biUnion (⟨hc, hb⟩) hcmem)
+  -- Uniform radius bound and averaging hypotheses for the two engine calls.
+  have hRbd_w : ∀ c ∈ Sw, Rfun c ≤ (s - t) / 2 := by
+    rintro c ⟨h, _⟩; exact (hRspec c h).2.2.2
+  have hRbd_b : ∀ c ∈ Sb, Rfun c ≤ (s - t) / 2 := by
+    rintro c ⟨h, _⟩; exact (hRspec c h).2.2.2
+  -- `u`-weights localized to `ball x₀ s`.
+  have h2u_w : ∀ c ∈ Sw, lw * volume (Metric.ball c (Rfun c))
+      ≤ ∫⁻ z in Metric.ball c (Rfun c), (Metric.ball x₀ s).indicator w z := by
+    rintro c ⟨h, hle⟩
+    have hsub : Metric.ball c (Rfun c) ⊆ Metric.ball x₀ s := (hRspec c h).2.1
+    have heq : ∫⁻ z in Metric.ball c (Rfun c), (Metric.ball x₀ s).indicator w z
+        = ∫⁻ z in Metric.ball c (Rfun c), w z := by
+      refine setLIntegral_congr_fun measurableSet_ball (fun z hz => ?_)
+      rw [Set.indicator_of_mem (hsub hz)]
+    rw [heq]; exact hle
+  have h2u_b : ∀ c ∈ Sb, lb * volume (Metric.ball c (Rfun c))
+      ≤ ∫⁻ z in Metric.ball c (Rfun c), (Metric.ball x₀ s).indicator (fun z => b z ^ q) z := by
+    rintro c ⟨h, hle⟩
+    have hsub : Metric.ball c (Rfun c) ⊆ Metric.ball x₀ s := (hRspec c h).2.1
+    have heq : ∫⁻ z in Metric.ball c (Rfun c), (Metric.ball x₀ s).indicator (fun z => b z ^ q) z
+        = ∫⁻ z in Metric.ball c (Rfun c), b z ^ q := by
+      refine setLIntegral_congr_fun measurableSet_ball (fun z hz => ?_)
+      rw [Set.indicator_of_mem (hsub hz)]
+    rw [heq]; exact hle
+  -- Engine bounds.
+  have hEw := gehring_engine_bound lw ((Metric.ball x₀ s).indicator w) Sw Rfun ((s - t) / 2)
+    hRbd_w h2u_w
+  have hEb := gehring_engine_bound lb ((Metric.ball x₀ s).indicator (fun z => b z ^ q)) Sb Rfun
+    ((s - t) / 2) hRbd_b h2u_b
+  -- The localized global integrals are the `ball x₀ s` integrals.
+  have hIw : ∫⁻ z, (Metric.ball x₀ s).indicator w z = ∫⁻ z in Metric.ball x₀ s, w z := by
+    rw [lintegral_indicator measurableSet_ball]
+  have hIb : ∫⁻ z, (Metric.ball x₀ s).indicator (fun z => b z ^ q) z
+      = ∫⁻ z in Metric.ball x₀ s, b z ^ q := by
+    rw [lintegral_indicator measurableSet_ball]
+  rw [hIw] at hEw
+  rw [hIb] at hEb
+  -- Positivity/finiteness of `lw, lb`.
+  have hlw_pos : 0 < lw := by rw [hlwdef, ENNReal.ofReal_pos]; positivity
+  have hlb_pos : 0 < lb := by rw [hlbdef, ENNReal.ofReal_pos]; positivity
+  have hlw_ne : lw ≠ 0 := hlw_pos.ne'
+  have hlb_ne : lb ≠ 0 := hlb_pos.ne'
+  have hlw_top : lw ≠ ⊤ := by rw [hlwdef]; exact ENNReal.ofReal_ne_top
+  have hlb_top : lb ≠ ⊤ := by rw [hlbdef]; exact ENNReal.ofReal_ne_top
+  -- The coefficients and the key cancellation identities `coefw · lw = 16`, `coefb · lb = 16`.
+  have h2Ãpos : 0 < 2 * Ã := by positivity
+  set coefw : ℝ≥0∞ := ENNReal.ofReal ((2 * (A + 1) / lam) * 16) with hcoefwdef
+  set coefb : ℝ≥0∞ := ENNReal.ofReal ((2 * (A + 1) / lam) ^ q * 16) with hcoefbdef
+  have hcw_mul : coefw * lw = (16 : ℝ≥0∞) := by
+    rw [hcoefwdef, hlwdef, ← ENNReal.ofReal_mul (by positivity), ← hÃdef]
+    rw [show (2 * Ã / lam) * 16 * (lam / (2 * Ã)) = 16 by field_simp]
+    rw [ENNReal.ofReal_ofNat]
+  have hcb_mul : coefb * lb = (16 : ℝ≥0∞) := by
+    rw [hcoefbdef, hlbdef, ← ENNReal.ofReal_mul (by positivity), ← hÃdef]
+    rw [show (2 * Ã / lam) ^ q * 16 * (lam / (2 * Ã)) ^ q = 16 by
+      rw [mul_right_comm, ← Real.mul_rpow (by positivity) (by positivity),
+        show (2 * Ã / lam) * (lam / (2 * Ã)) = 1 by field_simp, Real.one_rpow, one_mul]]
+    rw [ENNReal.ofReal_ofNat]
+  -- Convert the engine bounds to volume bounds: `vol(⋃) ≤ coef·∫`.
+  have hVw : volume (⋃ c ∈ Sw, Metric.ball c (Rfun c))
+      ≤ coefw * (∫⁻ z in Metric.ball x₀ s, w z) := by
+    have hcw_pos : 0 < coefw := by rw [hcoefwdef, ENNReal.ofReal_pos]; positivity
+    have hkey : lw * volume (⋃ c ∈ Sw, Metric.ball c (Rfun c))
+        ≤ lw * (coefw * (∫⁻ z in Metric.ball x₀ s, w z)) := by
+      calc lw * volume (⋃ c ∈ Sw, Metric.ball c (Rfun c))
+          ≤ (16 : ℝ≥0∞) * ∫⁻ z in Metric.ball x₀ s, w z := hEw
+        _ = (coefw * lw) * ∫⁻ z in Metric.ball x₀ s, w z := by rw [hcw_mul]
+        _ = lw * (coefw * (∫⁻ z in Metric.ball x₀ s, w z)) := by ring
+    exact (ENNReal.mul_le_mul_iff_right hlw_ne hlw_top).mp hkey
+  have hVb : volume (⋃ c ∈ Sb, Metric.ball c (Rfun c))
+      ≤ coefb * (∫⁻ z in Metric.ball x₀ s, b z ^ q) := by
+    have hkey : lb * volume (⋃ c ∈ Sb, Metric.ball c (Rfun c))
+        ≤ lb * (coefb * (∫⁻ z in Metric.ball x₀ s, b z ^ q)) := by
+      calc lb * volume (⋃ c ∈ Sb, Metric.ball c (Rfun c))
+          ≤ (16 : ℝ≥0∞) * ∫⁻ z in Metric.ball x₀ s, b z ^ q := hEb
+        _ = (coefb * lb) * ∫⁻ z in Metric.ball x₀ s, b z ^ q := by rw [hcb_mul]
+        _ = lb * (coefb * (∫⁻ z in Metric.ball x₀ s, b z ^ q)) := by ring
+    exact (ENNReal.mul_le_mul_iff_right hlb_ne hlb_top).mp hkey
+  -- Final: `vol S = vol(S ∩ Good) ≤ vol(⋃Sw) + vol(⋃Sb)`.
+  have hSeq : volume S = volume (S ∩ Good) := by
+    refine le_antisymm ?_ (measure_mono Set.inter_subset_left)
+    calc volume S ≤ volume ((S ∩ Good) ∪ Goodᶜ) := by
+          refine measure_mono (fun z hz => ?_)
+          by_cases hg : z ∈ Good
+          · exact Or.inl ⟨hz, hg⟩
+          · exact Or.inr hg
+      _ ≤ volume (S ∩ Good) + volume (Goodᶜ) := measure_union_le _ _
+      _ = volume (S ∩ Good) := by rw [hGoodae, add_zero]
+  rw [hSdef] at hSeq ⊢
+  rw [← hSdef, hSeq]
+  calc volume (S ∩ Good)
+      ≤ volume ((⋃ c ∈ Sw, Metric.ball c (Rfun c)) ∪ (⋃ c ∈ Sb, Metric.ball c (Rfun c))) :=
+        measure_mono hcover
+    _ ≤ volume (⋃ c ∈ Sw, Metric.ball c (Rfun c)) + volume (⋃ c ∈ Sb, Metric.ball c (Rfun c)) :=
+        measure_union_le _ _
+    _ ≤ coefw * (∫⁻ z in Metric.ball x₀ s, w z)
+          + coefb * (∫⁻ z in Metric.ball x₀ s, b z ^ q) := add_le_add hVw hVb
+
+/-- **Global dyadic Calderón–Zygmund cover** (helper for `gehring_goodLambda_integral`).
+Run the two-sided dyadic stopping `exists_dyadic_CZ_stopping` simultaneously on the (countably
+many) generation-`M` dyadic squares, applied to the localized weight `f = (ball x₀ s).indicator wᵠ`
+at height `Λ = (ofReal lam)^q`.  When `2s ≤ 2^M` each generation-`M` square has area
+`(2^M)² ≥ 4s² ≥ vol(ball x₀ s)` (since `4 > π`), so the ambient average of `f` over every such
+square is `≤ ⨍_{ball s} wᵠ ≤ Λ`: the ambient square never stops.  The stopping cubes of the various
+ambient squares assemble into a single countable, pairwise-disjoint family that a.e.-covers the
+super-level set `{lam < w} ∩ ball x₀ t` (for any `t ≤ s`), with each cube nested in `ball x₀ s` and
+satisfying the two-sided bound `Λ < ⨍_{Qᵢ} f ≤ 4Λ`, where the average is of the LOCALIZED `f`, so
+`∫_{Qᵢ} f = ∫_{Qᵢ ∩ ball s} wᵠ ≤ ∫_{Qᵢ} wᵠ` and the lower bound forces `Qᵢ ∩ ball s ≠ ∅`. -/
+private theorem gehring_dyadic_global_cover {q : ℝ} (hq0 : 0 < q) {w : ℂ → ℝ≥0∞}
+    (hwmeas : AEMeasurable w volume) (x₀ : ℂ) (s : ℝ) (hs : 0 < s)
+    (M : ℤ) (hM : 2 * s ≤ (2 : ℝ) ^ M)
+    (lam : ℝ) (hlam : 0 < lam)
+    (hlam0cond : (⨍⁻ z in Metric.ball x₀ s, w z ^ q ∂volume) ≤ (ENNReal.ofReal lam) ^ q) :
+    ∃ (B : Set (ℤ × (ℤ × ℤ))),
+      B.Countable ∧
+      (B.Pairwise (fun i j => Disjoint (dyadicSquare i.1 i.2) (dyadicSquare j.1 j.2))) ∧
+      -- every cube has scale `≤ M` (so `2^{i.1} ≤ 2^M`) and meets `ball x₀ s`:
+      (∀ i ∈ B, i.1 ≤ M) ∧
+      (∀ i ∈ B, (dyadicSquare i.1 i.2 ∩ Metric.ball x₀ s).Nonempty) ∧
+      -- a.e.-cover of `{lam < w} ∩ ball x₀ s`:
+      (volume ((Metric.ball x₀ s ∩ {z : ℂ | lam < (w z).toReal}) \
+        ⋃ i ∈ B, dyadicSquare i.1 i.2) = 0) ∧
+      -- two-sided dyadic average bounds for the localized weight:
+      (∀ i ∈ B,
+        (∫⁻ z in dyadicSquare i.1 i.2 ∩ Metric.ball x₀ s, w z ^ q)
+          ≤ ENNReal.ofReal (4 * lam ^ q) * volume (dyadicSquare i.1 i.2)) ∧
+      (∀ i ∈ B, (ENNReal.ofReal lam) ^ q <
+        (∫⁻ z in dyadicSquare i.1 i.2 ∩ Metric.ball x₀ s, w z ^ q) /
+          volume (dyadicSquare i.1 i.2)) := by
+  classical
+  -- The localized weight `f = (ball x₀ s).indicator wᵠ`.
+  set Bs : Set ℂ := Metric.ball x₀ s with hBsdef
+  set f : ℂ → ℝ≥0∞ := Bs.indicator (fun z => w z ^ q) with hfdef
+  have hfmeas : AEMeasurable f volume := (hwmeas.pow_const q).indicator measurableSet_ball
+  -- The height `Λ = ofReal(lam^q) = (ofReal lam)^q`.
+  set Λ : ℝ≥0∞ := ENNReal.ofReal (lam ^ q) with hΛdef
+  have hΛeq : (ENNReal.ofReal lam) ^ q = Λ := by
+    rw [hΛdef, ENNReal.ofReal_rpow_of_nonneg hlam.le hq0.le]
+  have hΛfin : Λ ≠ ⊤ := by rw [hΛdef]; exact ENNReal.ofReal_ne_top
+  have hΛpos : 0 < Λ := by rw [hΛdef, ENNReal.ofReal_pos]; positivity
+  -- Volume facts.
+  have h2Mpos : (0:ℝ) < (2:ℝ) ^ M := zpow_pos (by norm_num) M
+  have hvolBs : volume Bs = ENNReal.ofReal (Real.pi * s ^ 2) := by
+    rw [hBsdef, Complex.volume_ball]
+    have hpi : (↑NNReal.pi : ℝ≥0∞) = ENNReal.ofReal Real.pi := by
+      rw [← NNReal.coe_real_pi, ENNReal.ofReal_coe_nnreal]
+    rw [hpi, ENNReal.ofReal_mul Real.pi_pos.le, ENNReal.ofReal_pow hs.le, mul_comm]
+  -- `vol(ball s) < (2^M)^2 = vol(dyadicSquare M j)` (since `4 > π` and `2s ≤ 2^M`).
+  have hvolBs_lt : volume Bs < ENNReal.ofReal (((2:ℝ) ^ M) ^ 2) := by
+    rw [hvolBs]
+    rw [ENNReal.ofReal_lt_ofReal_iff (by positivity)]
+    have h4s : 4 * s ^ 2 ≤ ((2:ℝ) ^ M) ^ 2 := by nlinarith [hM, hs.le, h2Mpos]
+    nlinarith [Real.pi_lt_d2, hs, h4s]
+  -- AMBIENT NON-STOP: for every gen-`M` index `j`, the localized average is `< Λ`.
+  have hambient : ∀ j : ℤ × ℤ, (⨍⁻ z in dyadicSquare M j, f z ∂volume) < Λ := by
+    intro j
+    set Q : Set ℂ := dyadicSquare M j with hQdef
+    have hvolQ : volume Q = ENNReal.ofReal (((2:ℝ) ^ M) ^ 2) := by
+      rw [hQdef, volume_dyadicSquare]
+    have hvolQ0 : volume Q ≠ 0 := by
+      rw [hvolQ, ne_eq, ENNReal.ofReal_eq_zero, not_le]; positivity
+    have hvolQtop : volume Q ≠ ⊤ := by rw [hvolQ]; exact ENNReal.ofReal_ne_top
+    -- `∫_Q f = ∫_{Q ∩ ball s} wᵠ ≤ ∫_{ball s} wᵠ`.
+    have hintf : ∫⁻ z in Q, f z = ∫⁻ z in Q ∩ Bs, w z ^ q := by
+      rw [hfdef, setLIntegral_indicator (measurableSet_ball), Set.inter_comm Bs Q]
+    have hintf_le : ∫⁻ z in Q, f z ≤ ∫⁻ z in Bs, w z ^ q := by
+      rw [hintf]; exact lintegral_mono_set Set.inter_subset_right
+    -- The average over `Bs`.
+    have hAvBs : ⨍⁻ z in Bs, w z ^ q ∂volume ≤ Λ := by rw [hΛeq] at hlam0cond; exact hlam0cond
+    -- `∫_{Bs} wᵠ ≤ Λ · vol(Bs) < ⊤`.
+    have hIfin : ∫⁻ z in Bs, w z ^ q ≠ ⊤ := by
+      rw [setLAverage_eq] at hAvBs
+      have hvolBstop : volume Bs ≠ ⊤ := by rw [hvolBs]; exact ENNReal.ofReal_ne_top
+      have hvolBs0 : volume Bs ≠ 0 := by
+        rw [hvolBs, ne_eq, ENNReal.ofReal_eq_zero, not_le]; positivity
+      have := (ENNReal.div_le_iff_le_mul (Or.inl hvolBs0) (Or.inl hvolBstop)).mp hAvBs
+      exact ne_top_of_le_ne_top (ENNReal.mul_ne_top hΛfin hvolBstop) this
+    -- `⨍_Q f = (∫_Q f)/vol Q ≤ (∫_{Bs} wᵠ)/vol Q < (∫_{Bs} wᵠ)/vol Bs = ⨍_{Bs} wᵠ ≤ Λ`,
+    -- using `vol Q > vol Bs`.  Handle `∫_{Bs} wᵠ = 0` separately.
+    rw [setLAverage_eq]
+    rcases eq_or_ne (∫⁻ z in Bs, w z ^ q) 0 with hI0 | hIpos
+    · -- numerator `0`: average `= 0 < Λ`.
+      have : ∫⁻ z in Q, f z = 0 := le_antisymm (le_trans hintf_le (le_of_eq hI0)) (zero_le _)
+      rw [this, ENNReal.zero_div]; exact hΛpos
+    · -- positive numerator: strict via `vol Q > vol Bs`.
+      have hvolBs0 : volume Bs ≠ 0 := by
+        rw [hvolBs, ne_eq, ENNReal.ofReal_eq_zero, not_le]; positivity
+      have hvolBstop : volume Bs ≠ ⊤ := by rw [hvolBs]; exact ENNReal.ofReal_ne_top
+      have hvolQgtBs : volume Bs < volume Q := by rw [hvolQ]; exact hvolBs_lt
+      calc (∫⁻ z in Q, f z) / volume Q
+          ≤ (∫⁻ z in Bs, w z ^ q) / volume Q := ENNReal.div_le_div_right hintf_le _
+        _ < (∫⁻ z in Bs, w z ^ q) / volume Bs :=
+            ENNReal.div_lt_div_left hIpos hIfin hvolQgtBs
+        _ = ⨍⁻ z in Bs, w z ^ q ∂volume := by rw [setLAverage_eq]
+        _ ≤ Λ := hAvBs
+  -- Per-ambient stopping data, chosen via `Exists.choose`.
+  have hstop : ∀ j : ℤ × ℤ, ∃ (ι : Type) (B : Set ι) (n : ι → ℤ) (k : ι → ℤ × ℤ),
+      B.Countable ∧
+      (∀ i ∈ B, dyadicSquare (n i) (k i) ⊆ dyadicSquare M j) ∧
+      (Pairwise (fun i₁ i₂ => Disjoint (dyadicSquare (n i₁) (k i₁)) (dyadicSquare (n i₂) (k i₂)))) ∧
+      (volume ({z ∈ dyadicSquare M j | Λ < f z} \
+        ⋃ i ∈ B, dyadicSquare (n i) (k i)) = 0) ∧
+      (∀ i ∈ B, Λ < ⨍⁻ z in dyadicSquare (n i) (k i), f z ∂volume ∧
+        (⨍⁻ z in dyadicSquare (n i) (k i), f z ∂volume) ≤ 4 * Λ) :=
+    fun j => exists_dyadic_CZ_stopping hfmeas M j (hambient j) hΛfin
+  choose ιj Bj nj kj hBjct hBjsub hBjdisj hBjcov hBjavg using hstop
+  -- The cube-identifier map for ambient `j`.
+  set gj : (j : ℤ × ℤ) → ιj j → ℤ × (ℤ × ℤ) := fun j i => (nj j i, kj j i) with hgjdef
+  -- The combined family of cube identifiers.
+  set B : Set (ℤ × (ℤ × ℤ)) := ⋃ j : ℤ × ℤ, gj j '' (Bj j) with hBdef
+  -- Membership unfolding: `p ∈ B ↔ ∃ j, ∃ i ∈ Bj j, gj j i = p`.
+  have hBmem : ∀ p : ℤ × (ℤ × ℤ), p ∈ B ↔ ∃ j, ∃ i ∈ Bj j, gj j i = p := by
+    intro p
+    simp only [hBdef, Set.mem_iUnion, Set.mem_image]
+  -- For `i' ∈ Bj j`, the cube identified by `gj j i'` equals `dyadicSquare (nj j i') (kj j i')`.
+  have hcubeEq : ∀ (j : ℤ × ℤ) (i : ιj j),
+      dyadicSquare (gj j i).1 (gj j i).2 = dyadicSquare (nj j i) (kj j i) := fun j i => rfl
+  -- The localized-integral identity `∫_{cube} f = ∫_{cube ∩ ball s} wᵠ` for any dyadic cube.
+  have hfint : ∀ (m : ℤ) (idx : ℤ × ℤ),
+      ∫⁻ z in dyadicSquare m idx, f z
+        = ∫⁻ z in dyadicSquare m idx ∩ Bs, w z ^ q := by
+    intro m idx
+    rw [hfdef, setLIntegral_indicator (measurableSet_ball), Set.inter_comm Bs _]
+  -- Volume positivity/finiteness of any dyadic cube.
+  have hvolcube : ∀ (m : ℤ) (idx : ℤ × ℤ),
+      volume (dyadicSquare m idx) ≠ 0 ∧ volume (dyadicSquare m idx) ≠ ⊤ := by
+    intro m idx
+    rw [volume_dyadicSquare]
+    refine ⟨?_, ENNReal.ofReal_ne_top⟩
+    rw [ne_eq, ENNReal.ofReal_eq_zero, not_le]; positivity
+  refine ⟨B, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · -- Countability.
+    rw [hBdef]
+    exact Set.countable_iUnion (fun j => (hBjct j).image _)
+  · -- Pairwise disjointness on `B`.
+    intro p hp p' hp' hpp'
+    rw [hBmem] at hp hp'
+    obtain ⟨j, i, hi, hgi⟩ := hp
+    obtain ⟨j', i', hi', hgi'⟩ := hp'
+    -- The cubes.
+    have hcp : dyadicSquare p.1 p.2 = dyadicSquare (nj j i) (kj j i) := by rw [← hgi]
+    have hcp' : dyadicSquare p'.1 p'.2 = dyadicSquare (nj j' i') (kj j' i') := by rw [← hgi']
+    rw [hcp, hcp']
+    by_cases hjj : j = j'
+    · -- Same ambient: use per-ambient pairwise disjointness; `i ≠ i'`.
+      subst hjj
+      have hii : i ≠ i' := by
+        rintro rfl
+        exact hpp' (by rw [← hgi, ← hgi'])
+      exact hBjdisj j hii
+    · -- Different ambients: cubes nested in disjoint gen-`M` squares.
+      have hsub1 : dyadicSquare (nj j i) (kj j i) ⊆ dyadicSquare M j := hBjsub j i hi
+      have hsub2 : dyadicSquare (nj j' i') (kj j' i') ⊆ dyadicSquare M j' := hBjsub j' i' hi'
+      have hQdisj : Disjoint (dyadicSquare M j) (dyadicSquare M j') :=
+        dyadicSquare_pairwise_disjoint M hjj
+      exact hQdisj.mono hsub1 hsub2
+  · -- Scale bound `i.1 ≤ M`.
+    intro p hp
+    rw [hBmem] at hp
+    obtain ⟨j, i, hi, hgi⟩ := hp
+    have hsub : dyadicSquare (nj j i) (kj j i) ⊆ dyadicSquare M j := hBjsub j i hi
+    have hp1 : p.1 = nj j i := by rw [← hgi, hgjdef]
+    rw [hp1]
+    -- volume monotonicity ⟹ `(2^{nj})² ≤ (2^M)²` ⟹ `nj ≤ M`.
+    have hvmono : volume (dyadicSquare (nj j i) (kj j i)) ≤ volume (dyadicSquare M j) :=
+      measure_mono hsub
+    rw [volume_dyadicSquare, volume_dyadicSquare,
+      ENNReal.ofReal_le_ofReal_iff (by positivity)] at hvmono
+    have h2n : (0:ℝ) < (2:ℝ) ^ (nj j i) := zpow_pos (by norm_num) _
+    have h2M : (0:ℝ) < (2:ℝ) ^ M := zpow_pos (by norm_num) _
+    have hle : (2:ℝ) ^ (nj j i) ≤ (2:ℝ) ^ M := by nlinarith [hvmono, h2n, h2M]
+    exact (zpow_le_zpow_iff_right₀ (by norm_num : (1:ℝ) < 2)).mp hle
+  · -- Nonempty intersection with `ball s`.
+    intro p hp
+    rw [hBmem] at hp
+    obtain ⟨j, i, hi, hgi⟩ := hp
+    have hp12 : dyadicSquare p.1 p.2 = dyadicSquare (nj j i) (kj j i) := by rw [← hgi]
+    rw [hp12]
+    by_contra hempty
+    rw [Set.not_nonempty_iff_eq_empty] at hempty
+    -- `f = 0` on the cube ⟹ `⨍ f = 0`, contradicting `Λ < ⨍ f`.
+    have havg := (hBjavg j i hi).1
+    have hf0 : ∫⁻ z in dyadicSquare (nj j i) (kj j i), f z = 0 := by
+      rw [hfint, hempty]; simp
+    rw [setLAverage_eq, hf0, ENNReal.zero_div] at havg
+    exact absurd havg (not_lt.mpr (zero_le _))
+  · -- a.e.-cover of `{lam < w.toReal} ∩ ball s`.
+    have hbad_sub : (Metric.ball x₀ s ∩ {z : ℂ | lam < (w z).toReal}) \
+        ⋃ i ∈ B, dyadicSquare i.1 i.2
+        ⊆ ⋃ j : ℤ × ℤ, ({z ∈ dyadicSquare M j | Λ < f z} \
+            ⋃ i ∈ Bj j, dyadicSquare (nj j i) (kj j i)) := by
+      rintro z ⟨⟨hzs, hzlam⟩, hznotcov⟩
+      simp only [Set.mem_setOf_eq] at hzlam
+      -- `z` lies in its gen-`M` ambient square.
+      set j₀ : ℤ × ℤ := dyadicIndexAt M z with hj₀
+      have hzj₀ : z ∈ dyadicSquare M j₀ := mem_dyadicSquare_dyadicIndexAt M z
+      -- `f z > Λ`.
+      have hwfin : w z ≠ ⊤ := by
+        intro htop; rw [htop, ENNReal.toReal_top] at hzlam; linarith
+      have hfz : f z = w z ^ q := by
+        rw [hfdef, Set.indicator_of_mem (by rw [hBsdef]; exact hzs)]
+      have hΛlt : Λ < f z := by
+        rw [hfz, hΛdef, ← ENNReal.ofReal_rpow_of_nonneg hlam.le hq0.le]
+        apply ENNReal.rpow_lt_rpow _ hq0
+        rw [← ENNReal.ofReal_toReal hwfin]
+        exact ENNReal.ofReal_lt_ofReal_iff_of_nonneg hlam.le |>.mpr hzlam
+      refine Set.mem_iUnion.mpr ⟨j₀, ⟨hzj₀, hΛlt⟩, ?_⟩
+      -- `z` not covered by `Bj j₀` cubes (else it would be in `⋃ B`).
+      intro hzcov
+      apply hznotcov
+      rw [Set.mem_iUnion₂] at hzcov ⊢
+      obtain ⟨i, hi, hzi⟩ := hzcov
+      refine ⟨gj j₀ i, (hBmem _).mpr ⟨j₀, i, hi, rfl⟩, ?_⟩
+      rw [hcubeEq j₀ i]; exact hzi
+    refine measure_mono_null hbad_sub ?_
+    rw [measure_iUnion_null_iff]
+    exact fun j => hBjcov j
+  · -- Upper average bound: `∫_{cube ∩ ball s} wᵠ ≤ ofReal(4 lam^q) · vol(cube)`.
+    intro p hp
+    rw [hBmem] at hp
+    obtain ⟨j, i, hi, hgi⟩ := hp
+    have hp12 : dyadicSquare p.1 p.2 = dyadicSquare (nj j i) (kj j i) := by rw [← hgi]
+    rw [hp12]
+    have havg := (hBjavg j i hi).2
+    rw [setLAverage_eq, hfint] at havg
+    obtain ⟨hv0, hvtop⟩ := hvolcube (nj j i) (kj j i)
+    rw [ENNReal.div_le_iff_le_mul (Or.inl hv0) (Or.inl hvtop)] at havg
+    refine le_trans havg ?_
+    rw [show (4 : ℝ≥0∞) * Λ = ENNReal.ofReal (4 * lam ^ q) by
+      rw [hΛdef, show (4:ℝ≥0∞) = ENNReal.ofReal 4 by rw [ENNReal.ofReal_ofNat],
+        ← ENNReal.ofReal_mul (by norm_num)]]
+  · -- Lower average bound: `(ofReal lam)^q < ∫_{cube ∩ ball s} wᵠ / vol(cube)`.
+    intro p hp
+    rw [hBmem] at hp
+    obtain ⟨j, i, hi, hgi⟩ := hp
+    have hp12 : dyadicSquare p.1 p.2 = dyadicSquare (nj j i) (kj j i) := by rw [← hgi]
+    rw [hp12]
+    have havg := (hBjavg j i hi).1
+    rw [setLAverage_eq, hfint] at havg
+    rw [hΛeq]; exact havg
+
+/-- **Indexed Carleson covering bound** (helper for `gehring_goodLambda_integral`).  The
+cube-identifier-indexed analogue of `gehring_engine_bound`: a countable family of balls
+`ball (c i) (r i)` (`i ∈ 𝓑`), each with the per-ball averaging property
+`l·vol ≤ ∫ u`, has `l·vol(⋃) ≤ 16·∫⁻ u` (planar doubling `A_dbl = 4`, `A_dbl² = 16`). -/
+private theorem gehring_engine_idx {ι : Type} (𝓑 : Set ι) (hct : 𝓑.Countable)
+    (c : ι → ℂ) (r : ι → ℝ) (l : ℝ≥0∞) (u : ℂ → ℝ≥0∞) (Rbd : ℝ)
+    (hRbd : ∀ i ∈ 𝓑, r i ≤ Rbd)
+    (h2u : ∀ i ∈ 𝓑, l * volume (Metric.ball (c i) (r i)) ≤ ∫⁻ z in Metric.ball (c i) (r i), u z) :
+    l * volume (⋃ i ∈ 𝓑, Metric.ball (c i) (r i)) ≤ (16 : ℝ≥0∞) * ∫⁻ z, u z := by
+  haveI hdbl : (volume : Measure ℂ).IsDoubling (2 ^ Module.finrank ℝ ℂ) :=
+    InnerProductSpace.IsDoubling
+  have hengine := hct.measure_biUnion_le_lintegral (μ := (volume : Measure ℂ))
+    (A := 2 ^ Module.finrank ℝ ℂ) (c := c) (r := r) l u Rbd hRbd h2u
+  have hA2 : ((2 ^ Module.finrank ℝ ℂ : ℝ≥0) : ℝ≥0∞) ^ 2 = (16 : ℝ≥0∞) := by
+    rw [Complex.finrank_real_complex]; norm_num
+  simpa only [hA2] using hengine
+
+/-- **Honest exponent-1 good-λ in INTEGRAL (`w^q`-mass) form, on the HIGH range `λ ≥ λ₀`** — the
+analytic core of STEP B of `gehring_selfImprovement`.
+For concentric radii `4R₀ ≤ t < s ≤ 16R₀` and a height `lam > 0` on the HIGH range characterized by
+`⨍⁻_{ball s} wᵠ ≤ (ofReal lam)^q` (i.e. `lam ≥ λ₀ := (⨍_{ball s} wᵠ)^{1/q}`), the FULL
+(a-priori-integrable) `w^q`-mass over the super-level set `{w > lam} ∩ ball t` is controlled by the
+`lam^{q-1}`-weighted FULL `w`-mass (exponent ONE) over the SUPER-LEVEL set `{w > β·lam} ∩ ball s`,
+plus a super-level `bᵠ`-forcing:
+`∫_{ball t ∩ {lam < w}} wᵠ  ≤  Cw·lam^{q-1}·∫_{ball s ∩ {β·lam < w}} w`
+`  + Cb·∫_{ball s ∩ {β·lam < b}} bᵠ`
+with (here) `β = 1/2`, `Cw = 4(2·π^{1/q}·A)ᵠ`, `Cb = 256(2·π^{1/q}·(A+1))ᵠ`.
+
+The THRESHOLD-RESTRICTED hypothesis `hlam0cond` is what makes the statement hold: it is the
+Giaquinta–Modica threshold split, consumed downstream in `gehring_assembly`/`gehring_holeFill`
+ONLY on the high range `λ ≥ λ₀`, while `0 < λ < λ₀` is handled there by the trivial
+`∫_{ball t ∩ {λ<w}} wᵠ ≤ ∫_{16B₀} wᵠ` bound folded into the `C₁·Wmaster/(s-t)²` collar.
+The proof is the classical Calderón–Zygmund stopping-time / reverse-Hölder dichotomy core:
+two-sided stopping of `g := 1_{ball s}·wᵠ` at height `lamᵠ`
+(`exists_dyadic_CZ_stopping`: cubes `Qᵢ ⊆ Q` with `lamᵠ < ⨍_{Qᵢ}g ≤ 4lamᵠ`, the `≤ 4lamᵠ` from
+doubling against the non-stopping parent; `λ ≥ λ₀` is what makes
+`⨍_Q g ≤ ⨍_{ball s}wᵠ ≤ lamᵠ` so the ambient does not stop) bounding the LHS by `Σ 4lamᵠ·vol(Qᵢ)`;
+per-cube reverse-Hölder dichotomy `dyadic_reverseHolder'` into `w`-good / `b`-good cubes
+(`⨍_{Eᵢ}w > γ·lam` or `⨍_{Eᵢ}bᵠ > (γlam)ᵠ`, `γ = 1/(2π^{1/q}A)`, `Eᵢ = ball(centre,4·2^{mᵢ})`);
+super-level concentration (`β < γ`: `∫_{Eᵢ}w ≤ βlam·vol(Eᵢ) + ∫_{Eᵢ∩{w>βλ}}w` ⟹
+`lam·vol(Eᵢ) ≤ (γ-β)⁻¹∫_{Eᵢ∩{w>βλ}}w`); and the Carleson sum via `gehring_engine_bound` on
+`u := 1_{ball s ∩ {w>βλ}}·w`.  The boundary-collar term handles the geometric capping
+`Eᵢ ⊆ ball s` (the `4×` enlargement of the at-most-`vol(ball s)`-sized stopping cubes need not, in
+general, fit inside `ball s`), via the metric capped covering shared with the companion
+super-level MEASURE bound `gehring_goodLambda_measure`. -/
+private theorem gehring_goodLambda_integral_core {q A : ℝ} (hq : 1 < q) (hA : 0 ≤ A)
+    {w b : ℂ → ℝ≥0∞} (hwmeas : AEMeasurable w volume) (hbmeas : AEMeasurable b volume)
+    (hRH : ∀ (x : ℂ) (r : ℝ), 0 < r →
+      (⨍⁻ z in Metric.ball x r, w z ^ q ∂volume) ^ (1 / q) ≤
+        ENNReal.ofReal A * (⨍⁻ z in Metric.ball x (4 * r), w z ∂volume) +
+          ENNReal.ofReal A * (⨍⁻ z in Metric.ball x (4 * r), b z ^ q ∂volume) ^ (1 / q))
+    (x₀ : ℂ) (R₀ : ℝ) (hR₀ : 0 < R₀)
+    (hWfin : ∫⁻ z in Metric.ball x₀ (16 * R₀), w z ^ q < ⊤)
+    (hBfin : ∫⁻ z in Metric.ball x₀ (16 * R₀), b z ^ q < ⊤)
+    (t s : ℝ) (ht : 4 * R₀ ≤ t) (hts : t < s) (hs : s ≤ 16 * R₀)
+    (lam : ℝ) (hlam : 0 < lam)
+    (hlam0cond : (⨍⁻ z in Metric.ball x₀ s, w z ^ q ∂volume) ≤ (ENNReal.ofReal lam) ^ q) :
+    ∫⁻ z in Metric.ball x₀ t ∩ {z | lam < (w z).toReal}, w z ^ q
+      ≤ ENNReal.ofReal (256 * (Real.pi ^ (1 / q) * A + 1) * lam ^ (q - 1))
+          * (∫⁻ z in Metric.ball x₀ s ∩
+              {z | 1 / (4 * (Real.pi ^ (1 / q) * A + 1)) * lam < (w z).toReal}, w z)
+        + ENNReal.ofReal (64 * (4 * (Real.pi ^ (1 / q) * A + 1)) ^ q)
+          * (∫⁻ z in Metric.ball x₀ s ∩
+              {z | 1 / (4 * (Real.pi ^ (1 / q) * A + 1)) * lam < (b z).toReal}, b z ^ q)
+        -- BOUNDARY COLLAR: the contribution of the (few, large) stopping cubes whose `4×`
+        -- enlargement spills outside `ball x₀ s`; bounded by `4·lamᵠ·vol(ball s)`.  This term
+        -- vanishes for `lam` above the structural threshold `λ₁` (any boundary cube would force
+        -- `lamᵠ·((s-t)/10)² < ∫_{ball s}wᵠ ≤ Wmaster`), making its λ-integral finite; the
+        -- consumer integrates this good-λ on `(λ₀, λ₁)` and uses the collar-free form above.
+        + ENNReal.ofReal (4 * lam ^ q) * volume (Metric.ball x₀ s) := by
+  classical
+  have hq0 : 0 < q := lt_trans one_pos hq
+  have hst : 0 < s - t := by linarith
+  have hspos : 0 < s := by linarith
+  -- Planar doubling instance for the Carleson engine.
+  haveI hdbl : (volume : Measure ℂ).IsDoubling (2 ^ Module.finrank ℝ ℂ) :=
+    InnerProductSpace.IsDoubling
+  -- Abbreviation `Ã = π^{1/q}·A + 1 > 0` (the reverse-Hölder constant, padded by 1).
+  set P : ℝ := Real.pi ^ (1 / q) with hPdef
+  have hPpos : 0 < P := by rw [hPdef]; positivity
+  set Ã : ℝ := P * A + 1 with hÃdef
+  have hÃpos : 0 < Ã := by rw [hÃdef]; nlinarith [hPpos, hA]
+  -- The collar/level constants: `β = 1/(4Ã)`, w-level `lw = ofReal(βlam)`,
+  -- b-level `lb = ofReal((βlam)^q)`.
+  set β : ℝ := 1 / (4 * Ã) with hβdef
+  have hβpos : 0 < β := by rw [hβdef]; positivity
+  set lw : ℝ≥0∞ := ENNReal.ofReal (β * lam) with hlwdef
+  set lb : ℝ≥0∞ := ENNReal.ofReal ((β * lam) ^ q) with hlbdef
+  -- Choose `M` minimal-ish with `2s ≤ 2^M` (any large enough `M` works for the cover).
+  obtain ⟨M, hM⟩ : ∃ M : ℤ, 2 * s ≤ (2 : ℝ) ^ M := by
+    obtain ⟨n, hn⟩ := pow_unbounded_of_one_lt (2 * s) (by norm_num : (1:ℝ) < 2)
+    exact ⟨(n : ℤ), by rw [zpow_natCast]; exact hn.le⟩
+  -- Run the global dyadic cover.
+  obtain ⟨B, hBct, hBdisj, hBscale, hBmeet, hBcov, hBup, hBlow⟩ :=
+    gehring_dyadic_global_cover hq0 hwmeas x₀ s hspos M hM lam hlam hlam0cond
+  -- Geometry of a cube `i ∈ B`: centre, scale, enlarged ball `Eᵢ = ball cᵢ (4·2^{nᵢ})`.
+  set cI : ℤ × (ℤ × ℤ) → ℂ := fun i => dyadicCenter i.1 i.2 with hcIdef
+  set ρI : ℤ × (ℤ × ℤ) → ℝ := fun i => (2 : ℝ) ^ i.1 with hρIdef
+  have hρIpos : ∀ i, 0 < ρI i := fun i => by rw [hρIdef]; exact zpow_pos (by norm_num) _
+  -- The cube is inside its circumscribed ball `ball cᵢ (2^{nᵢ})`.
+  have hQsubball : ∀ i, dyadicSquare i.1 i.2 ⊆ Metric.ball (cI i) (ρI i) := by
+    intro i; rw [hcIdef, hρIdef]; exact dyadicSquare_subset_ball i.1 i.2
+  -- ============================================================================
+  -- PER-CUBE REVERSE-HÖLDER DICHOTOMY (super-level concentrated).
+  -- For `i ∈ B`: either `w`-good (`lw·vol(Eᵢ) ≤ ∫_{Eᵢ∩{w>βλ}} w`) or `b`-good
+  -- (`lb·vol(Eᵢ) ≤ ∫_{Eᵢ∩{b>βλ}} bᵠ`), where `Eᵢ = ball cᵢ (4ρᵢ)`.
+  -- ============================================================================
+  set Esub : Set ℂ := {z : ℂ | β * lam < (w z).toReal} with hEsubdef
+  set Fsub : Set ℂ := {z : ℂ | β * lam < (b z).toReal} with hFsubdef
+  -- Full (un-restricted) reverse-Hölder levels `lwf = lam/(2Ã)`, `lbf = (lam/(2Ã))^q`.
+  set lwf : ℝ≥0∞ := ENNReal.ofReal (lam / (2 * Ã)) with hlwfdef
+  set lbf : ℝ≥0∞ := ENNReal.ofReal ((lam / (2 * Ã)) ^ q) with hlbfdef
+  have hdich : ∀ i ∈ B,
+      (lwf * volume (Metric.ball (cI i) (4 * ρI i))
+        ≤ ∫⁻ z in Metric.ball (cI i) (4 * ρI i), w z) ∨
+      (lbf * volume (Metric.ball (cI i) (4 * ρI i))
+        ≤ ∫⁻ z in Metric.ball (cI i) (4 * ρI i), b z ^ q) := by
+    intro i hi
+    -- `lam < (⨍_{Qᵢ} wᵠ)^{1/q}`.
+    have hQpos : 0 < volume (dyadicSquare i.1 i.2) := by
+      rw [volume_dyadicSquare, ENNReal.ofReal_pos]; positivity
+    have hQtop : volume (dyadicSquare i.1 i.2) ≠ ⊤ := by
+      rw [volume_dyadicSquare]; exact ENNReal.ofReal_ne_top
+    have hlowfull : (ENNReal.ofReal lam) ^ q < ⨍⁻ z in dyadicSquare i.1 i.2, w z ^ q ∂volume := by
+      refine lt_of_lt_of_le (hBlow i hi) ?_
+      rw [setLAverage_eq]
+      exact ENNReal.div_le_div_right (lintegral_mono_set Set.inter_subset_left) _
+    have h1q : (0:ℝ) < 1 / q := by positivity
+    have hroot : ENNReal.ofReal lam <
+        (⨍⁻ z in dyadicSquare i.1 i.2, w z ^ q ∂volume) ^ (1 / q) := by
+      have h := ENNReal.rpow_lt_rpow hlowfull h1q
+      have hid : (ENNReal.ofReal lam ^ q) ^ (1 / q) = ENNReal.ofReal lam := by
+        rw [one_div, ENNReal.rpow_rpow_inv hq0.ne']
+      rwa [hid] at h
+    -- Reverse-Hölder on the cube, with constant `P·A ≤ Ã`.
+    have hRHc := dyadic_reverseHolder' hq hA hRH i.1 i.2
+    have hPA_le : ENNReal.ofReal (P * A) ≤ ENNReal.ofReal Ã :=
+      ENNReal.ofReal_le_ofReal (by rw [hÃdef, hPdef]; nlinarith [hPpos, hA])
+    have hRHc' : ENNReal.ofReal lam <
+        ENNReal.ofReal Ã * (⨍⁻ z in Metric.ball (cI i) (4 * ρI i), w z ∂volume) +
+          ENNReal.ofReal Ã *
+            (⨍⁻ z in Metric.ball (cI i) (4 * ρI i), b z ^ q ∂volume) ^ (1 / q) := by
+      have hceq : Metric.ball (dyadicCenter i.1 i.2) (4 * (2:ℝ) ^ i.1)
+          = Metric.ball (cI i) (4 * ρI i) := by rw [hcIdef, hρIdef]
+      rw [hceq] at hRHc
+      refine lt_of_lt_of_le hroot (le_trans hRHc (add_le_add ?_ ?_)) <;>
+        exact mul_le_mul_left hPA_le _
+    -- One of the two terms is `≥ ofReal lam / 2`.
+    have hvol4_pos : 0 < volume (Metric.ball (cI i) (4 * ρI i)) :=
+      Metric.measure_ball_pos _ _ (by positivity [hρIpos i])
+    have hvol4_ne : volume (Metric.ball (cI i) (4 * ρI i)) ≠ 0 := hvol4_pos.ne'
+    have hvol4_top : volume (Metric.ball (cI i) (4 * ρI i)) ≠ ⊤ := measure_ball_lt_top.ne
+    have hÃne : ENNReal.ofReal Ã ≠ 0 := by
+      rw [ne_eq, ENNReal.ofReal_eq_zero, not_le]; exact hÃpos
+    have hÃtop : ENNReal.ofReal Ã ≠ ⊤ := ENNReal.ofReal_ne_top
+    have hhalf : ENNReal.ofReal Ã * (⨍⁻ z in Metric.ball (cI i) (4 * ρI i), w z ∂volume)
+          ≥ ENNReal.ofReal lam / 2 ∨
+        ENNReal.ofReal Ã * (⨍⁻ z in Metric.ball (cI i) (4 * ρI i), b z ^ q ∂volume) ^ (1 / q)
+          ≥ ENNReal.ofReal lam / 2 := by
+      by_contra hcon
+      rw [not_or] at hcon
+      obtain ⟨h1, h2⟩ := hcon
+      rw [not_le] at h1 h2
+      have hsum2 : ENNReal.ofReal Ã * (⨍⁻ z in Metric.ball (cI i) (4 * ρI i), w z ∂volume) +
+          ENNReal.ofReal Ã * (⨍⁻ z in Metric.ball (cI i) (4 * ρI i), b z ^ q ∂volume) ^ (1 / q)
+          < ENNReal.ofReal lam / 2 + ENNReal.ofReal lam / 2 := ENNReal.add_lt_add h1 h2
+      rw [ENNReal.add_halves] at hsum2
+      exact absurd (lt_trans hRHc' hsum2) (lt_irrefl _)
+    -- `lwf · ofReal Ã = ofReal lam / 2`.
+    have hlwf_mul : lwf * ENNReal.ofReal Ã = ENNReal.ofReal lam / 2 := by
+      rw [hlwfdef, ← ENNReal.ofReal_mul (by positivity)]
+      have hreal : lam / (2 * Ã) * Ã = lam / 2 := by field_simp
+      rw [hreal, ENNReal.ofReal_div_of_pos (by norm_num : (0:ℝ) < 2)]
+      congr 1; norm_num
+    rcases hhalf with hw | hb
+    · left
+      have hge : lwf ≤ ⨍⁻ z in Metric.ball (cI i) (4 * ρI i), w z ∂volume := by
+        have hchain : lwf * ENNReal.ofReal Ã
+            ≤ (⨍⁻ z in Metric.ball (cI i) (4 * ρI i), w z ∂volume) * ENNReal.ofReal Ã := by
+          rw [hlwf_mul, mul_comm]; exact hw
+        exact (ENNReal.mul_le_mul_iff_left hÃne hÃtop).mp hchain
+      rw [setLAverage_eq] at hge
+      rwa [ENNReal.le_div_iff_mul_le (Or.inl hvol4_ne) (Or.inl hvol4_top)] at hge
+    · right
+      have hlbf_eq : lbf = lwf ^ q := by
+        rw [hlbfdef, hlwfdef, ← ENNReal.ofReal_rpow_of_pos (by positivity)]
+      have hgew : lwf ≤ (⨍⁻ z in Metric.ball (cI i) (4 * ρI i), b z ^ q ∂volume) ^ (1 / q) := by
+        have hchain : lwf * ENNReal.ofReal Ã
+            ≤ (⨍⁻ z in Metric.ball (cI i) (4 * ρI i), b z ^ q ∂volume) ^ (1 / q)
+                * ENNReal.ofReal Ã := by
+          rw [hlwf_mul, mul_comm]; exact hb
+        exact (ENNReal.mul_le_mul_iff_left hÃne hÃtop).mp hchain
+      have hgeq : lbf ≤ ⨍⁻ z in Metric.ball (cI i) (4 * ρI i), b z ^ q ∂volume := by
+        rw [hlbf_eq]
+        have hpow := ENNReal.rpow_le_rpow hgew hq0.le
+        rwa [one_div, ENNReal.rpow_inv_rpow hq0.ne'] at hpow
+      rw [setLAverage_eq] at hgeq
+      rwa [ENNReal.le_div_iff_mul_le (Or.inl hvol4_ne) (Or.inl hvol4_top)] at hgeq
+  -- ============================================================================
+  -- SETUP for the assembly: containments, a.e. finiteness, the inner predicate.
+  -- ============================================================================
+  have hssub16 : Metric.ball x₀ s ⊆ Metric.ball x₀ (16 * R₀) :=
+    Metric.ball_subset_ball (by linarith)
+  -- `w < ⊤` a.e. on `ball s`.
+  have hwfin_ae : ∀ᵐ z ∂(volume.restrict (Metric.ball x₀ s)), w z ≠ ⊤ := by
+    have h16 : ∀ᵐ z ∂(volume.restrict (Metric.ball x₀ (16 * R₀))), w z ^ q ≠ ⊤ :=
+      ae_lt_top' (hwmeas.pow_const q).restrict hWfin.ne |>.mono (fun z hz => hz.ne)
+    have : ∀ᵐ z ∂(volume.restrict (Metric.ball x₀ (16 * R₀))), w z ≠ ⊤ := by
+      filter_upwards [h16] with z hz htop
+      rw [htop, ENNReal.top_rpow_of_pos hq0] at hz; exact hz rfl
+    exact (ae_mono (Measure.restrict_mono hssub16 le_rfl)) this
+  -- `b < ⊤` a.e. on `ball s`.
+  have hbfin_ae : ∀ᵐ z ∂(volume.restrict (Metric.ball x₀ s)), b z ≠ ⊤ := by
+    have h16 : ∀ᵐ z ∂(volume.restrict (Metric.ball x₀ (16 * R₀))), b z ^ q ≠ ⊤ :=
+      ae_lt_top' (hbmeas.pow_const q).restrict hBfin.ne |>.mono (fun z hz => hz.ne)
+    have : ∀ᵐ z ∂(volume.restrict (Metric.ball x₀ (16 * R₀))), b z ≠ ⊤ := by
+      filter_upwards [h16] with z hz htop
+      rw [htop, ENNReal.top_rpow_of_pos hq0] at hz; exact hz rfl
+    exact (ae_mono (Measure.restrict_mono hssub16 le_rfl)) this
+  -- The inner predicate: the enlargement `Eᵢ ⊆ ball x₀ s` (engine-able cubes).
+  set Inn : Set (ℤ × (ℤ × ℤ)) :=
+    {i ∈ B | Metric.ball (cI i) (4 * ρI i) ⊆ Metric.ball x₀ s} with hInndef
+  -- The w-good and b-good inner subfamilies.
+  set Sw : Set (ℤ × (ℤ × ℤ)) := {i ∈ Inn |
+      lwf * volume (Metric.ball (cI i) (4 * ρI i))
+        ≤ ∫⁻ z in Metric.ball (cI i) (4 * ρI i), w z} with hSwdef
+  set Sb : Set (ℤ × (ℤ × ℤ)) := {i ∈ Inn |
+      lbf * volume (Metric.ball (cI i) (4 * ρI i))
+        ≤ ∫⁻ z in Metric.ball (cI i) (4 * ρI i), b z ^ q} with hSbdef
+  have hSwsub : Sw ⊆ B := fun i hi => hi.1.1
+  have hSbsub : Sb ⊆ B := fun i hi => hi.1.1
+  have hSwct : Sw.Countable := hBct.mono hSwsub
+  have hSbct : Sb.Countable := hBct.mono hSbsub
+  -- The localized `u`-weights.
+  set uw : ℂ → ℝ≥0∞ := (Metric.ball x₀ s ∩ Esub).indicator w with huwdef
+  set ub : ℂ → ℝ≥0∞ := (Metric.ball x₀ s ∩ Fsub).indicator (fun z => b z ^ q) with hubdef
+  -- ============================================================================
+  -- PER-CUBE ENGINE HYPOTHESES (super-level concentration on inner cubes).
+  -- ============================================================================
+  have hEsub_nm : NullMeasurableSet Esub volume :=
+    nullMeasurableSet_lt aemeasurable_const hwmeas.ennreal_toReal
+  have hFsub_nm : NullMeasurableSet Fsub volume :=
+    nullMeasurableSet_lt aemeasurable_const hbmeas.ennreal_toReal
+  -- w-good inner: `lw·vol(Eᵢ) ≤ ∫_{Eᵢ} uw`.
+  have h2uw : ∀ i ∈ Sw, lw * volume (Metric.ball (cI i) (4 * ρI i))
+      ≤ ∫⁻ z in Metric.ball (cI i) (4 * ρI i), uw z := by
+    rintro i ⟨⟨hiB, hEsub⟩, hwg⟩
+    set E : Set ℂ := Metric.ball (cI i) (4 * ρI i) with hEdef
+    have hEsubs : E ⊆ Metric.ball x₀ s := hEsub
+    have hvolE_top : volume E ≠ ⊤ := measure_ball_lt_top.ne
+    -- `∫_E uw = ∫_{E ∩ Esub} w` (since `E ⊆ ball s`).
+    have huwint : ∫⁻ z in E, uw z = ∫⁻ z in E ∩ Esub, w z := by
+      have hpt : ∀ z ∈ E, uw z = Esub.indicator w z := by
+        intro z hz
+        rw [huwdef]
+        by_cases hzE : z ∈ Esub
+        · have hmem : z ∈ Metric.ball x₀ s ∩ Esub := ⟨hEsubs hz, hzE⟩
+          rw [Set.indicator_of_mem hmem, Set.indicator_of_mem hzE]
+        · have hnmem : z ∉ Metric.ball x₀ s ∩ Esub := fun h => hzE h.2
+          rw [Set.indicator_of_notMem hnmem, Set.indicator_of_notMem hzE]
+      rw [setLIntegral_congr_fun measurableSet_ball hpt,
+        setLIntegral_indicator₀ _
+          (hEsub_nm.mono_ac (Measure.restrict_le_self.absolutelyContinuous)),
+        Set.inter_comm]
+    -- Pointwise a.e. on `E`: `w z ≤ Esub.indicator w z + ofReal(βlam)`.
+    have hconc : ∫⁻ z in E, w z
+        ≤ (∫⁻ z in E, Esub.indicator w z) + ENNReal.ofReal (β * lam) * volume E := by
+      have hstep : ∫⁻ z in E, w z
+          ≤ ∫⁻ z in E, (Esub.indicator w z + ENNReal.ofReal (β * lam)) := by
+        apply lintegral_mono_ae
+        have haef : ∀ᵐ z ∂(volume.restrict E), w z ≠ ⊤ :=
+          ae_mono (Measure.restrict_mono hEsubs le_rfl) hwfin_ae
+        filter_upwards [haef] with z hzfin
+        by_cases hzE : z ∈ Esub
+        · rw [Set.indicator_of_mem hzE]; exact le_add_right le_rfl
+        · rw [Set.indicator_of_notMem hzE, zero_add]
+          rw [hEsubdef, Set.mem_setOf_eq, not_lt] at hzE
+          rw [← ENNReal.ofReal_toReal hzfin]
+          exact ENNReal.ofReal_le_ofReal hzE
+      rwa [lintegral_add_right' _ aemeasurable_const, setLIntegral_const] at hstep
+    have hindint : ∫⁻ z in E, Esub.indicator w z = ∫⁻ z in E ∩ Esub, w z := by
+      rw [setLIntegral_indicator₀ _ (hEsub_nm.mono_ac
+        (Measure.restrict_le_self.absolutelyContinuous)), Set.inter_comm]
+    rw [hindint] at hconc
+    -- Combine: `lwf·vol(E) ≤ ∫_E w`, and `lwf = lw + ofReal(βlam)`.
+    have hlw_eq : lw + ENNReal.ofReal (β * lam) = lwf := by
+      rw [hlwdef, hlwfdef, ← ENNReal.ofReal_add (by positivity) (by positivity)]
+      congr 1
+      rw [hβdef]; field_simp; ring
+    rw [huwint]
+    have hkey : lwf * volume E
+        ≤ (∫⁻ z in E ∩ Esub, w z) + ENNReal.ofReal (β * lam) * volume E := le_trans hwg hconc
+    rw [← hlw_eq, add_mul] at hkey
+    refine ENNReal.le_of_add_le_add_right ?_ hkey
+    exact ENNReal.mul_ne_top ENNReal.ofReal_ne_top hvolE_top
+  -- b-good inner: `lb·vol(Eᵢ) ≤ ∫_{Eᵢ} ub`.
+  have h2ub : ∀ i ∈ Sb, lb * volume (Metric.ball (cI i) (4 * ρI i))
+      ≤ ∫⁻ z in Metric.ball (cI i) (4 * ρI i), ub z := by
+    rintro i ⟨⟨hiB, hEsub⟩, hbg⟩
+    set E : Set ℂ := Metric.ball (cI i) (4 * ρI i) with hEdef
+    have hEsubs : E ⊆ Metric.ball x₀ s := hEsub
+    have hvolE_top : volume E ≠ ⊤ := measure_ball_lt_top.ne
+    have hubint : ∫⁻ z in E, ub z = ∫⁻ z in E ∩ Fsub, b z ^ q := by
+      have hpt : ∀ z ∈ E, ub z = Fsub.indicator (fun z => b z ^ q) z := by
+        intro z hz
+        rw [hubdef]
+        by_cases hzF : z ∈ Fsub
+        · have hmem : z ∈ Metric.ball x₀ s ∩ Fsub := ⟨hEsubs hz, hzF⟩
+          rw [Set.indicator_of_mem hmem, Set.indicator_of_mem hzF]
+        · have hnmem : z ∉ Metric.ball x₀ s ∩ Fsub := fun h => hzF h.2
+          rw [Set.indicator_of_notMem hnmem, Set.indicator_of_notMem hzF]
+      rw [setLIntegral_congr_fun measurableSet_ball hpt,
+        setLIntegral_indicator₀ _
+          (hFsub_nm.mono_ac (Measure.restrict_le_self.absolutelyContinuous)),
+        Set.inter_comm]
+    -- Super-level concentration: `bᵠ z ≤ Fsub.indicator bᵠ z + ofReal((βlam)^q)` a.e. on `E`.
+    have hconc : ∫⁻ z in E, b z ^ q
+        ≤ (∫⁻ z in E, Fsub.indicator (fun z => b z ^ q) z)
+          + ENNReal.ofReal ((β * lam) ^ q) * volume E := by
+      have hstep : ∫⁻ z in E, b z ^ q
+          ≤ ∫⁻ z in E, (Fsub.indicator (fun z => b z ^ q) z + ENNReal.ofReal ((β * lam) ^ q)) := by
+        apply lintegral_mono_ae
+        have haef : ∀ᵐ z ∂(volume.restrict E), b z ≠ ⊤ :=
+          ae_mono (Measure.restrict_mono hEsubs le_rfl) hbfin_ae
+        filter_upwards [haef] with z hzfin
+        by_cases hzF : z ∈ Fsub
+        · rw [Set.indicator_of_mem hzF]; exact le_add_right le_rfl
+        · rw [Set.indicator_of_notMem hzF, zero_add]
+          rw [hFsubdef, Set.mem_setOf_eq, not_lt] at hzF
+          rw [← ENNReal.ofReal_toReal hzfin,
+            ENNReal.ofReal_rpow_of_nonneg ENNReal.toReal_nonneg hq0.le]
+          exact ENNReal.ofReal_le_ofReal (Real.rpow_le_rpow ENNReal.toReal_nonneg hzF hq0.le)
+      rwa [lintegral_add_right' _ aemeasurable_const, setLIntegral_const] at hstep
+    have hindint : ∫⁻ z in E, Fsub.indicator (fun z => b z ^ q) z = ∫⁻ z in E ∩ Fsub, b z ^ q := by
+      rw [setLIntegral_indicator₀ _ (hFsub_nm.mono_ac
+        (Measure.restrict_le_self.absolutelyContinuous)), Set.inter_comm]
+    rw [hindint] at hconc
+    -- `lb + ofReal((βlam)^q) ≤ lbf` (since `2 ≤ 2^q`).
+    have hlb_le : lb + ENNReal.ofReal ((β * lam) ^ q) ≤ lbf := by
+      rw [hlbdef, hlbfdef, ← ENNReal.ofReal_add (by positivity) (by positivity)]
+      apply ENNReal.ofReal_le_ofReal
+      have h2q : (2:ℝ) ≤ 2 ^ q := by
+        calc (2:ℝ) = 2 ^ (1:ℝ) := by rw [Real.rpow_one]
+          _ ≤ 2 ^ q := Real.rpow_le_rpow_of_exponent_le (by norm_num) (le_of_lt hq)
+      have hβl : (0:ℝ) ≤ β * lam := by positivity
+      have hkey : 2 * (β * lam) ^ q ≤ (lam / (2 * Ã)) ^ q := by
+        have heq : lam / (2 * Ã) = 2 * (β * lam) := by rw [hβdef]; field_simp; ring
+        rw [heq, Real.mul_rpow (by norm_num) hβl]
+        nlinarith [Real.rpow_nonneg hβl q, h2q]
+      linarith [hkey]
+    rw [hubint]
+    have hkey : lbf * volume E
+        ≤ (∫⁻ z in E ∩ Fsub, b z ^ q) + ENNReal.ofReal ((β * lam) ^ q) * volume E :=
+      le_trans hbg hconc
+    have hlbstep : (lb + ENNReal.ofReal ((β * lam) ^ q)) * volume E
+        ≤ (∫⁻ z in E ∩ Fsub, b z ^ q) + ENNReal.ofReal ((β * lam) ^ q) * volume E :=
+      le_trans (mul_le_mul_left hlb_le _) hkey
+    rw [add_mul] at hlbstep
+    refine ENNReal.le_of_add_le_add_right ?_ hlbstep
+    exact ENNReal.mul_ne_top ENNReal.ofReal_ne_top hvolE_top
+  -- ============================================================================
+  -- ENGINE CALLS: bound `vol(⋃_{Sw} Eᵢ)`, `vol(⋃_{Sb} Eᵢ)` by super-level integrals.
+  -- ============================================================================
+  -- Radius bound: for inner cubes, `4·ρI i ≤ s` (since `Eᵢ ⊆ ball x₀ s`).
+  have hRbd : ∀ i ∈ Inn, 4 * ρI i ≤ s := by
+    rintro i ⟨hiB, hEsub⟩
+    by_contra hgt
+    push Not at hgt
+    have hvle : volume (Metric.ball (cI i) (4 * ρI i)) ≤ volume (Metric.ball x₀ s) :=
+      measure_mono hEsub
+    rw [Complex.volume_ball, Complex.volume_ball] at hvle
+    have h4ρpos : 0 < 4 * ρI i := by have := hρIpos i; linarith
+    rw [ENNReal.mul_le_mul_iff_left (by simp [NNReal.pi_pos.ne']) (by simp)] at hvle
+    rw [← ENNReal.ofReal_pow h4ρpos.le, ← ENNReal.ofReal_pow (by linarith : (0:ℝ) ≤ s),
+      ENNReal.ofReal_le_ofReal_iff (by positivity)] at hvle
+    nlinarith [hvle, hgt, h4ρpos]
+  have hRbdSw : ∀ i ∈ Sw, 4 * ρI i ≤ s := fun i hi => hRbd i hi.1
+  have hRbdSb : ∀ i ∈ Sb, 4 * ρI i ≤ s := fun i hi => hRbd i hi.1
+  have hEw := gehring_engine_idx Sw hSwct cI (fun i => 4 * ρI i) lw uw s hRbdSw h2uw
+  have hEb := gehring_engine_idx Sb hSbct cI (fun i => 4 * ρI i) lb ub s hRbdSb h2ub
+  -- The global integrals of `uw`, `ub` are the super-level masses over `ball x₀ s`.
+  have hIuw : ∫⁻ z, uw z = ∫⁻ z in Metric.ball x₀ s ∩ Esub, w z := by
+    rw [huwdef, lintegral_indicator₀ (measurableSet_ball.nullMeasurableSet.inter hEsub_nm)]
+  have hIub : ∫⁻ z, ub z = ∫⁻ z in Metric.ball x₀ s ∩ Fsub, b z ^ q := by
+    rw [hubdef, lintegral_indicator₀ (measurableSet_ball.nullMeasurableSet.inter hFsub_nm)]
+  rw [hIuw] at hEw
+  rw [hIub] at hEb
+  -- ============================================================================
+  -- LHS BOUND and FINAL ASSEMBLY.
+  -- ============================================================================
+  set S : Set ℂ := Metric.ball x₀ t ∩ {z : ℂ | lam < (w z).toReal} with hSdef
+  have htsub : Metric.ball x₀ t ⊆ Metric.ball x₀ s := Metric.ball_subset_ball hts.le
+  -- The cube sets `Cᵢ := Qᵢ ∩ ball s` are measurable and pairwise disjoint on `B`.
+  set Cset : ℤ × (ℤ × ℤ) → Set ℂ := fun i => dyadicSquare i.1 i.2 ∩ Metric.ball x₀ s with hCsetdef
+  have hCmeas : ∀ i, MeasurableSet (Cset i) :=
+    fun i => (measurableSet_dyadicSquare _ _).inter measurableSet_ball
+  have hCdisj : B.PairwiseDisjoint Cset := by
+    intro i hi j hj hij
+    exact (hBdisj hi hj hij).mono Set.inter_subset_left Set.inter_subset_left
+  -- `S` is a.e. covered by `⋃_{i∈B} Cset i`.
+  have hScov : volume (S \ ⋃ i ∈ B, Cset i) = 0 := by
+    refine measure_mono_null ?_ hBcov
+    intro z hz
+    obtain ⟨hzS, hznotcov⟩ := hz
+    have hzs : z ∈ Metric.ball x₀ s ∩ {z : ℂ | lam < (w z).toReal} :=
+      ⟨htsub hzS.1, hzS.2⟩
+    refine ⟨hzs, ?_⟩
+    intro hzcov
+    apply hznotcov
+    rw [Set.mem_iUnion₂] at hzcov ⊢
+    obtain ⟨i, hi, hzi⟩ := hzcov
+    exact ⟨i, hi, hzi, hzs.1⟩
+  -- `∫_S wᵠ ≤ ∫_{⋃_{i∈B} Cset i} wᵠ`.
+  set U : Set ℂ := ⋃ i ∈ B, Cset i with hUdef
+  have hLHS1 : ∫⁻ z in S, w z ^ q ≤ ∫⁻ z in U, w z ^ q := by
+    have h1 : (S \ (S \ U) : Set ℂ) =ᵐ[volume] S := diff_null_ae_eq_self hScov
+    have h2 : S \ (S \ U) = S ∩ U := Set.diff_diff_right_self S U
+    rw [h2] at h1
+    rw [setLIntegral_congr h1.symm]
+    exact lintegral_mono_set Set.inter_subset_right
+  -- Split `⋃_{i∈B} Cset = (⋃_{Inn}) ∪ (⋃_{B\Inn})`, a disjoint union.
+  have hInnsubB : Inn ⊆ B := fun i hi => hi.1
+  have hUsplit : (⋃ i ∈ B, Cset i)
+      = (⋃ i ∈ Inn, Cset i) ∪ (⋃ i ∈ B \ Inn, Cset i) := by
+    rw [← Set.biUnion_union]
+    congr 1
+    rw [Set.union_diff_cancel hInnsubB]
+  have hUdisj : Disjoint (⋃ i ∈ Inn, Cset i) (⋃ i ∈ B \ Inn, Cset i) := by
+    rw [Set.disjoint_iff_forall_ne]
+    rintro x hx y hy rfl
+    rw [Set.mem_iUnion₂] at hx hy
+    obtain ⟨i, hiI, hxi⟩ := hx
+    obtain ⟨j, ⟨hjB, hjnI⟩, hxj⟩ := hy
+    have hij : i ≠ j := fun h => hjnI (h ▸ hiI)
+    exact (hCdisj (hInnsubB hiI) hjB hij).le_bot ⟨hxi, hxj⟩ |>.elim
+  have hUmeasBd : MeasurableSet (⋃ i ∈ B \ Inn, Cset i) := by
+    apply MeasurableSet.biUnion (hBct.mono (Set.diff_subset))
+    exact fun i _ => hCmeas i
+  -- `∫_{⋃_B} = ∫_{⋃_Inn} + ∫_{⋃_{B\Inn}}`.
+  have hLHS2 : ∫⁻ z in ⋃ i ∈ B, Cset i, w z ^ q
+      = (∫⁻ z in ⋃ i ∈ Inn, Cset i, w z ^ q) + ∫⁻ z in ⋃ i ∈ B \ Inn, Cset i, w z ^ q := by
+    rw [hUsplit, lintegral_union hUmeasBd hUdisj]
+  -- BOUNDARY BOUND: `∫_{⋃_{B\Inn} Cset} wᵠ ≤ ofReal(lamᵠ)·vol(ball s)`.
+  have hUbdsubs : (⋃ i ∈ B \ Inn, Cset i) ⊆ Metric.ball x₀ s := by
+    apply Set.iUnion₂_subset
+    exact fun i _ => Set.inter_subset_right
+  have hBoundary : ∫⁻ z in ⋃ i ∈ B \ Inn, Cset i, w z ^ q
+      ≤ ENNReal.ofReal (lam ^ q) * volume (Metric.ball x₀ s) := by
+    calc ∫⁻ z in ⋃ i ∈ B \ Inn, Cset i, w z ^ q
+        ≤ ∫⁻ z in Metric.ball x₀ s, w z ^ q := lintegral_mono_set hUbdsubs
+      _ ≤ ENNReal.ofReal (lam ^ q) * volume (Metric.ball x₀ s) := by
+          have hav := hlam0cond
+          rw [setLAverage_eq, ENNReal.ofReal_rpow_of_nonneg hlam.le hq0.le] at hav
+          have hvol_ne : volume (Metric.ball x₀ s) ≠ 0 := (Metric.measure_ball_pos _ _ hspos).ne'
+          have hvol_top : volume (Metric.ball x₀ s) ≠ ⊤ := measure_ball_lt_top.ne
+          exact (ENNReal.div_le_iff_le_mul (Or.inl hvol_ne) (Or.inl hvol_top)).mp hav
+  -- INNER BOUND: `∫_{⋃_{Inn} Cset} wᵠ ≤ ofReal(4lamᵠ)·(vol(⋃_{Sw}Eᵢ) + vol(⋃_{Sb}Eᵢ))`.
+  -- Step (a): `∫_{⋃_{Inn} Cset} wᵠ = Σ_{i:Inn} ∫_{Cset i} wᵠ ≤ ofReal(4lamᵠ)·vol(⋃_{Inn} Qᵢ)`.
+  have hInnct : Inn.Countable := hBct.mono hInnsubB
+  have hInnerSum : ∫⁻ z in ⋃ i ∈ Inn, Cset i, w z ^ q
+      ≤ ENNReal.ofReal (4 * lam ^ q) * volume (⋃ i ∈ Inn, dyadicSquare i.1 i.2) := by
+    rw [lintegral_biUnion hInnct (fun i _ => hCmeas i)
+      (hCdisj.subset hInnsubB)]
+    calc ∑' i : Inn, ∫⁻ z in Cset i, w z ^ q
+        ≤ ∑' i : Inn, ENNReal.ofReal (4 * lam ^ q)
+            * volume (dyadicSquare (i : ℤ × (ℤ × ℤ)).1 (i : ℤ × (ℤ × ℤ)).2) := by
+          apply ENNReal.tsum_le_tsum
+          rintro ⟨i, hi⟩
+          exact hBup i (hInnsubB hi)
+      _ = ENNReal.ofReal (4 * lam ^ q)
+            * ∑' i : Inn, volume (dyadicSquare (i : ℤ × (ℤ × ℤ)).1 (i : ℤ × (ℤ × ℤ)).2) :=
+          ENNReal.tsum_mul_left
+      _ = ENNReal.ofReal (4 * lam ^ q) * volume (⋃ i ∈ Inn, dyadicSquare i.1 i.2) := by
+          rw [measure_biUnion hInnct (Set.Pairwise.mono hInnsubB hBdisj)
+            (fun i _ => measurableSet_dyadicSquare _ _)]
+  -- Step (b): `vol(⋃_{Inn} Qᵢ) ≤ vol(⋃_{Sw} Eᵢ) + vol(⋃_{Sb} Eᵢ)`.
+  have hQcover : (⋃ i ∈ Inn, dyadicSquare i.1 i.2)
+      ⊆ (⋃ i ∈ Sw, Metric.ball (cI i) (4 * ρI i))
+        ∪ (⋃ i ∈ Sb, Metric.ball (cI i) (4 * ρI i)) := by
+    apply Set.iUnion₂_subset
+    intro i hi
+    have hiB : i ∈ B := hInnsubB hi
+    have hQE : dyadicSquare i.1 i.2 ⊆ Metric.ball (cI i) (4 * ρI i) := by
+      refine (hQsubball i).trans (Metric.ball_subset_ball ?_)
+      have := hρIpos i; linarith
+    rcases hdich i hiB with hw | hb
+    · have hiSw : i ∈ Sw := ⟨hi, hw⟩
+      exact hQE.trans (Set.subset_union_of_subset_left
+        (Set.subset_biUnion_of_mem (u := fun i => Metric.ball (cI i) (4 * ρI i)) hiSw) _)
+    · have hiSb : i ∈ Sb := ⟨hi, hb⟩
+      exact hQE.trans (Set.subset_union_of_subset_right
+        (Set.subset_biUnion_of_mem (u := fun i => Metric.ball (cI i) (4 * ρI i)) hiSb) _)
+  have hQvol : volume (⋃ i ∈ Inn, dyadicSquare i.1 i.2)
+      ≤ volume (⋃ i ∈ Sw, Metric.ball (cI i) (4 * ρI i))
+        + volume (⋃ i ∈ Sb, Metric.ball (cI i) (4 * ρI i)) :=
+    le_trans (measure_mono hQcover) (measure_union_le _ _)
+  -- ============================================================================
+  -- COEFFICIENT TRANSFER.  `ofReal(4lamᵠ)·vol(⋃_{Sw}Eᵢ) ≤ ofReal(Cw)·∫_{ball s∩Esub}w`,
+  -- and similarly for `Sb`.
+  -- ============================================================================
+  set Cw : ℝ := 256 * Ã * lam ^ (q - 1) with hCwdef
+  set Cb : ℝ := 64 * (4 * Ã) ^ q with hCbdef
+  have hlw_ne : lw ≠ 0 := by rw [hlwdef, ne_eq, ENNReal.ofReal_eq_zero, not_le]; positivity
+  have hlb_ne : lb ≠ 0 := by rw [hlbdef, ne_eq, ENNReal.ofReal_eq_zero, not_le]; positivity
+  have hlw_top : lw ≠ ⊤ := by rw [hlwdef]; exact ENNReal.ofReal_ne_top
+  have hlb_top : lb ≠ ⊤ := by rw [hlbdef]; exact ENNReal.ofReal_ne_top
+  -- Real identity: `lam^{q-1}·lam = lam^q`.
+  have hlamq : lam ^ (q - 1) * lam = lam ^ q := by
+    have h := (Real.rpow_add hlam (q - 1) 1).symm
+    rw [Real.rpow_one] at h
+    rw [h]; congr 1; ring
+  -- `ofReal Cw · lw = 16 · ofReal(4lamᵠ)`.
+  have hCw_mul : ENNReal.ofReal Cw * lw = 16 * ENNReal.ofReal (4 * lam ^ q) := by
+    rw [hCwdef, hlwdef, ← ENNReal.ofReal_mul (by positivity),
+      show (16 : ℝ≥0∞) = ENNReal.ofReal 16 by rw [ENNReal.ofReal_ofNat],
+      ← ENNReal.ofReal_mul (by norm_num)]
+    congr 1
+    rw [hβdef]
+    have : 256 * Ã * lam ^ (q - 1) * (1 / (4 * Ã) * lam) = 64 * (lam ^ (q - 1) * lam) := by
+      field_simp; ring
+    rw [this, hlamq]; ring
+  -- `ofReal Cb · lb = 16 · ofReal(4lamᵠ)`.
+  have hCb_mul : ENNReal.ofReal Cb * lb = 16 * ENNReal.ofReal (4 * lam ^ q) := by
+    rw [hCbdef, hlbdef, ← ENNReal.ofReal_mul (by positivity),
+      show (16 : ℝ≥0∞) = ENNReal.ofReal 16 by rw [ENNReal.ofReal_ofNat],
+      ← ENNReal.ofReal_mul (by norm_num)]
+    congr 1
+    -- `64·(4Ã)^q·(βlam)^q = 64·lamᵠ`, since `(4Ã)^q·(βlam)^q = (4Ã·βlam)^q = lamᵠ`.
+    have hbase : (4 * Ã) * (β * lam) = lam := by rw [hβdef]; field_simp
+    have hmr : (4 * Ã) ^ q * (β * lam) ^ q = lam ^ q := by
+      rw [← Real.mul_rpow (by positivity) (by positivity [hβpos]), hbase]
+    rw [show (64 * (4 * Ã) ^ q * (β * lam) ^ q : ℝ) = 64 * ((4 * Ã) ^ q * (β * lam) ^ q) by ring,
+      hmr]; ring
+  -- Transfer the engine bounds to coefficient form.
+  have hsixteen_ne : (16 : ℝ≥0∞) ≠ 0 := by norm_num
+  have hsixteen_top : (16 : ℝ≥0∞) ≠ ⊤ := by norm_num
+  have hTransW : ENNReal.ofReal (4 * lam ^ q) * volume (⋃ i ∈ Sw, Metric.ball (cI i) (4 * ρI i))
+      ≤ ENNReal.ofReal Cw * ∫⁻ z in Metric.ball x₀ s ∩ Esub, w z := by
+    apply (ENNReal.mul_le_mul_iff_right hsixteen_ne hsixteen_top).mp
+    calc (16 : ℝ≥0∞) * (ENNReal.ofReal (4 * lam ^ q)
+            * volume (⋃ i ∈ Sw, Metric.ball (cI i) (4 * ρI i)))
+        = (ENNReal.ofReal Cw * lw) * volume (⋃ i ∈ Sw, Metric.ball (cI i) (4 * ρI i)) := by
+          rw [hCw_mul]; ring
+      _ = ENNReal.ofReal Cw * (lw * volume (⋃ i ∈ Sw, Metric.ball (cI i) (4 * ρI i))) := by ring
+      _ ≤ ENNReal.ofReal Cw * (16 * ∫⁻ z in Metric.ball x₀ s ∩ Esub, w z) :=
+          mul_le_mul_right hEw _
+      _ = 16 * (ENNReal.ofReal Cw * ∫⁻ z in Metric.ball x₀ s ∩ Esub, w z) := by ring
+  have hTransB : ENNReal.ofReal (4 * lam ^ q) * volume (⋃ i ∈ Sb, Metric.ball (cI i) (4 * ρI i))
+      ≤ ENNReal.ofReal Cb * ∫⁻ z in Metric.ball x₀ s ∩ Fsub, b z ^ q := by
+    apply (ENNReal.mul_le_mul_iff_right hsixteen_ne hsixteen_top).mp
+    calc (16 : ℝ≥0∞) * (ENNReal.ofReal (4 * lam ^ q)
+            * volume (⋃ i ∈ Sb, Metric.ball (cI i) (4 * ρI i)))
+        = (ENNReal.ofReal Cb * lb) * volume (⋃ i ∈ Sb, Metric.ball (cI i) (4 * ρI i)) := by
+          rw [hCb_mul]; ring
+      _ = ENNReal.ofReal Cb * (lb * volume (⋃ i ∈ Sb, Metric.ball (cI i) (4 * ρI i))) := by ring
+      _ ≤ ENNReal.ofReal Cb * (16 * ∫⁻ z in Metric.ball x₀ s ∩ Fsub, b z ^ q) :=
+          mul_le_mul_right hEb _
+      _ = 16 * (ENNReal.ofReal Cb * ∫⁻ z in Metric.ball x₀ s ∩ Fsub, b z ^ q) := by ring
+  -- ============================================================================
+  -- FINAL COMBINATION.
+  -- ============================================================================
+  -- The goal's super-level sets coincide with `Esub`, `Fsub` (`β = 1/(4(P·A+1))`).
+  have hβeq : (1 : ℝ) / (4 * (Real.pi ^ (1 / q) * A + 1)) = β := by
+    rw [hβdef, hÃdef, hPdef]
+  have hCw_goal : (256 : ℝ) * (Real.pi ^ (1 / q) * A + 1) * lam ^ (q - 1) = Cw := by
+    rw [hCwdef, hÃdef, hPdef]
+  have hCb_goal : (64 : ℝ) * (4 * (Real.pi ^ (1 / q) * A + 1)) ^ q = Cb := by
+    rw [hCbdef, hÃdef, hPdef]
+  -- The goal coincides (definitionally + via `hβeq`/`hCw_goal`/`hCb_goal`) with the bound below.
+  have hgoal : ∫⁻ z in S, w z ^ q
+      ≤ (ENNReal.ofReal Cw * (∫⁻ z in Metric.ball x₀ s ∩ Esub, w z)
+          + ENNReal.ofReal Cb * (∫⁻ z in Metric.ball x₀ s ∩ Fsub, b z ^ q))
+          + ENNReal.ofReal (4 * lam ^ q) * volume (Metric.ball x₀ s) :=
+    calc ∫⁻ z in S, w z ^ q
+        ≤ ∫⁻ z in ⋃ i ∈ B, Cset i, w z ^ q := hLHS1
+      _ = (∫⁻ z in ⋃ i ∈ Inn, Cset i, w z ^ q) + ∫⁻ z in ⋃ i ∈ B \ Inn, Cset i, w z ^ q := hLHS2
+      _ ≤ ENNReal.ofReal (4 * lam ^ q) * volume (⋃ i ∈ Inn, dyadicSquare i.1 i.2)
+            + ENNReal.ofReal (lam ^ q) * volume (Metric.ball x₀ s) :=
+          add_le_add hInnerSum hBoundary
+      _ ≤ ENNReal.ofReal (4 * lam ^ q)
+              * (volume (⋃ i ∈ Sw, Metric.ball (cI i) (4 * ρI i))
+                + volume (⋃ i ∈ Sb, Metric.ball (cI i) (4 * ρI i)))
+            + ENNReal.ofReal (4 * lam ^ q) * volume (Metric.ball x₀ s) := by
+          apply add_le_add (mul_le_mul_right hQvol _)
+          exact mul_le_mul_left
+            (ENNReal.ofReal_le_ofReal (by nlinarith [Real.rpow_nonneg hlam.le q])) _
+      _ = (ENNReal.ofReal (4 * lam ^ q) * volume (⋃ i ∈ Sw, Metric.ball (cI i) (4 * ρI i))
+            + ENNReal.ofReal (4 * lam ^ q) * volume (⋃ i ∈ Sb, Metric.ball (cI i) (4 * ρI i)))
+            + ENNReal.ofReal (4 * lam ^ q) * volume (Metric.ball x₀ s) := by rw [mul_add]
+      _ ≤ (ENNReal.ofReal Cw * (∫⁻ z in Metric.ball x₀ s ∩ Esub, w z)
+            + ENNReal.ofReal Cb * (∫⁻ z in Metric.ball x₀ s ∩ Fsub, b z ^ q))
+            + ENNReal.ofReal (4 * lam ^ q) * volume (Metric.ball x₀ s) :=
+          add_le_add (add_le_add hTransW hTransB) le_rfl
+  -- The goal is already (definitionally, via the `set`s) in `Cw, Cb, Esub, Fsub` form.
+  exact hgoal
+
+/-- **Collar-free honest exponent-1 good-λ** (the high-`λ₁` companion of
+`gehring_goodLambda_integral_core`).  For levels `lam` above the structural threshold
+`λ₁` (encoded by `hλ₁ : 5·√Wm ≤ (s−t)·lam^{q/2}`, where `Wm = (∫_{16B₀}wᵠ).toReal`), **no
+boundary cube meets `ball x₀ t`**: a stopping cube `Qᵢ` meeting `ball x₀ t` has, by the
+stopping lower bound `lamᵠ·vol(Qᵢ) ≤ ∫_{ball s}wᵠ ≤ Wm`, side `ρᵢ ≤ √Wm/lam^{q/2} ≤ (s−t)/5`,
+so its `4×` enlargement `Eᵢ = ball cᵢ(4ρᵢ) ⊆ ball x₀(t+5ρᵢ) ⊆ ball x₀ s` is engine-able.
+Hence the boundary collar of the core vanishes on the `ball t` super-level set, giving the
+collar-FREE good-λ that the consumer integrates on the high range `(λ₁,∞)`. -/
+private theorem gehring_goodLambda_integral_noCollar {q A : ℝ} (hq : 1 < q) (hA : 0 ≤ A)
+    {w b : ℂ → ℝ≥0∞} (hwmeas : AEMeasurable w volume) (hbmeas : AEMeasurable b volume)
+    (hRH : ∀ (x : ℂ) (r : ℝ), 0 < r →
+      (⨍⁻ z in Metric.ball x r, w z ^ q ∂volume) ^ (1 / q) ≤
+        ENNReal.ofReal A * (⨍⁻ z in Metric.ball x (4 * r), w z ∂volume) +
+          ENNReal.ofReal A * (⨍⁻ z in Metric.ball x (4 * r), b z ^ q ∂volume) ^ (1 / q))
+    (x₀ : ℂ) (R₀ : ℝ) (hR₀ : 0 < R₀)
+    (hWfin : ∫⁻ z in Metric.ball x₀ (16 * R₀), w z ^ q < ⊤)
+    (hBfin : ∫⁻ z in Metric.ball x₀ (16 * R₀), b z ^ q < ⊤)
+    (t s : ℝ) (ht : 4 * R₀ ≤ t) (hts : t < s) (hs : s ≤ 16 * R₀)
+    (lam : ℝ) (hlam : 0 < lam)
+    (hlam0cond : (⨍⁻ z in Metric.ball x₀ s, w z ^ q ∂volume) ≤ (ENNReal.ofReal lam) ^ q)
+    (hlam1 : 5 * Real.sqrt ((∫⁻ z in Metric.ball x₀ (16 * R₀), w z ^ q).toReal)
+            ≤ (s - t) * lam ^ (q / 2)) :
+    ∫⁻ z in Metric.ball x₀ t ∩ {z | lam < (w z).toReal}, w z ^ q
+      ≤ ENNReal.ofReal (256 * (Real.pi ^ (1 / q) * A + 1) * lam ^ (q - 1))
+          * (∫⁻ z in Metric.ball x₀ s ∩
+              {z | 1 / (4 * (Real.pi ^ (1 / q) * A + 1)) * lam < (w z).toReal}, w z)
+        + ENNReal.ofReal (64 * (4 * (Real.pi ^ (1 / q) * A + 1)) ^ q)
+          * (∫⁻ z in Metric.ball x₀ s ∩
+              {z | 1 / (4 * (Real.pi ^ (1 / q) * A + 1)) * lam < (b z).toReal}, b z ^ q) := by
+  classical
+  have hq0 : 0 < q := lt_trans one_pos hq
+  have hst : 0 < s - t := by linarith
+  have hspos : 0 < s := by linarith
+  -- Planar doubling instance for the Carleson engine.
+  haveI hdbl : (volume : Measure ℂ).IsDoubling (2 ^ Module.finrank ℝ ℂ) :=
+    InnerProductSpace.IsDoubling
+  -- Abbreviation `Ã = π^{1/q}·A + 1 > 0` (the reverse-Hölder constant, padded by 1).
+  set P : ℝ := Real.pi ^ (1 / q) with hPdef
+  have hPpos : 0 < P := by rw [hPdef]; positivity
+  set Ã : ℝ := P * A + 1 with hÃdef
+  have hÃpos : 0 < Ã := by rw [hÃdef]; nlinarith [hPpos, hA]
+  -- The collar/level constants: `β = 1/(4Ã)`, w-level `lw = ofReal(βlam)`,
+  -- b-level `lb = ofReal((βlam)^q)`.
+  set β : ℝ := 1 / (4 * Ã) with hβdef
+  have hβpos : 0 < β := by rw [hβdef]; positivity
+  set lw : ℝ≥0∞ := ENNReal.ofReal (β * lam) with hlwdef
+  set lb : ℝ≥0∞ := ENNReal.ofReal ((β * lam) ^ q) with hlbdef
+  -- Choose `M` minimal-ish with `2s ≤ 2^M` (any large enough `M` works for the cover).
+  obtain ⟨M, hM⟩ : ∃ M : ℤ, 2 * s ≤ (2 : ℝ) ^ M := by
+    obtain ⟨n, hn⟩ := pow_unbounded_of_one_lt (2 * s) (by norm_num : (1:ℝ) < 2)
+    exact ⟨(n : ℤ), by rw [zpow_natCast]; exact hn.le⟩
+  -- Run the global dyadic cover.
+  obtain ⟨B, hBct, hBdisj, hBscale, hBmeet, hBcov, hBup, hBlow⟩ :=
+    gehring_dyadic_global_cover hq0 hwmeas x₀ s hspos M hM lam hlam hlam0cond
+  -- Geometry of a cube `i ∈ B`: centre, scale, enlarged ball `Eᵢ = ball cᵢ (4·2^{nᵢ})`.
+  set cI : ℤ × (ℤ × ℤ) → ℂ := fun i => dyadicCenter i.1 i.2 with hcIdef
+  set ρI : ℤ × (ℤ × ℤ) → ℝ := fun i => (2 : ℝ) ^ i.1 with hρIdef
+  have hρIpos : ∀ i, 0 < ρI i := fun i => by rw [hρIdef]; exact zpow_pos (by norm_num) _
+  -- The cube is inside its circumscribed ball `ball cᵢ (2^{nᵢ})`.
+  have hQsubball : ∀ i, dyadicSquare i.1 i.2 ⊆ Metric.ball (cI i) (ρI i) := by
+    intro i; rw [hcIdef, hρIdef]; exact dyadicSquare_subset_ball i.1 i.2
+  -- ============================================================================
+  -- PER-CUBE REVERSE-HÖLDER DICHOTOMY (super-level concentrated).
+  -- For `i ∈ B`: either `w`-good (`lw·vol(Eᵢ) ≤ ∫_{Eᵢ∩{w>βλ}} w`) or `b`-good
+  -- (`lb·vol(Eᵢ) ≤ ∫_{Eᵢ∩{b>βλ}} bᵠ`), where `Eᵢ = ball cᵢ (4ρᵢ)`.
+  -- ============================================================================
+  set Esub : Set ℂ := {z : ℂ | β * lam < (w z).toReal} with hEsubdef
+  set Fsub : Set ℂ := {z : ℂ | β * lam < (b z).toReal} with hFsubdef
+  -- Full (un-restricted) reverse-Hölder levels `lwf = lam/(2Ã)`, `lbf = (lam/(2Ã))^q`.
+  set lwf : ℝ≥0∞ := ENNReal.ofReal (lam / (2 * Ã)) with hlwfdef
+  set lbf : ℝ≥0∞ := ENNReal.ofReal ((lam / (2 * Ã)) ^ q) with hlbfdef
+  have hdich : ∀ i ∈ B,
+      (lwf * volume (Metric.ball (cI i) (4 * ρI i))
+        ≤ ∫⁻ z in Metric.ball (cI i) (4 * ρI i), w z) ∨
+      (lbf * volume (Metric.ball (cI i) (4 * ρI i))
+        ≤ ∫⁻ z in Metric.ball (cI i) (4 * ρI i), b z ^ q) := by
+    intro i hi
+    -- `lam < (⨍_{Qᵢ} wᵠ)^{1/q}`.
+    have hQpos : 0 < volume (dyadicSquare i.1 i.2) := by
+      rw [volume_dyadicSquare, ENNReal.ofReal_pos]; positivity
+    have hQtop : volume (dyadicSquare i.1 i.2) ≠ ⊤ := by
+      rw [volume_dyadicSquare]; exact ENNReal.ofReal_ne_top
+    have hlowfull : (ENNReal.ofReal lam) ^ q < ⨍⁻ z in dyadicSquare i.1 i.2, w z ^ q ∂volume := by
+      refine lt_of_lt_of_le (hBlow i hi) ?_
+      rw [setLAverage_eq]
+      exact ENNReal.div_le_div_right (lintegral_mono_set Set.inter_subset_left) _
+    have h1q : (0:ℝ) < 1 / q := by positivity
+    have hroot : ENNReal.ofReal lam <
+        (⨍⁻ z in dyadicSquare i.1 i.2, w z ^ q ∂volume) ^ (1 / q) := by
+      have h := ENNReal.rpow_lt_rpow hlowfull h1q
+      have hid : (ENNReal.ofReal lam ^ q) ^ (1 / q) = ENNReal.ofReal lam := by
+        rw [one_div, ENNReal.rpow_rpow_inv hq0.ne']
+      rwa [hid] at h
+    -- Reverse-Hölder on the cube, with constant `P·A ≤ Ã`.
+    have hRHc := dyadic_reverseHolder' hq hA hRH i.1 i.2
+    have hPA_le : ENNReal.ofReal (P * A) ≤ ENNReal.ofReal Ã :=
+      ENNReal.ofReal_le_ofReal (by rw [hÃdef, hPdef]; nlinarith [hPpos, hA])
+    have hRHc' : ENNReal.ofReal lam <
+        ENNReal.ofReal Ã * (⨍⁻ z in Metric.ball (cI i) (4 * ρI i), w z ∂volume) +
+          ENNReal.ofReal Ã *
+            (⨍⁻ z in Metric.ball (cI i) (4 * ρI i), b z ^ q ∂volume) ^ (1 / q) := by
+      have hceq : Metric.ball (dyadicCenter i.1 i.2) (4 * (2:ℝ) ^ i.1)
+          = Metric.ball (cI i) (4 * ρI i) := by rw [hcIdef, hρIdef]
+      rw [hceq] at hRHc
+      refine lt_of_lt_of_le hroot (le_trans hRHc (add_le_add ?_ ?_)) <;>
+        exact mul_le_mul_left hPA_le _
+    -- One of the two terms is `≥ ofReal lam / 2`.
+    have hvol4_pos : 0 < volume (Metric.ball (cI i) (4 * ρI i)) :=
+      Metric.measure_ball_pos _ _ (by positivity [hρIpos i])
+    have hvol4_ne : volume (Metric.ball (cI i) (4 * ρI i)) ≠ 0 := hvol4_pos.ne'
+    have hvol4_top : volume (Metric.ball (cI i) (4 * ρI i)) ≠ ⊤ := measure_ball_lt_top.ne
+    have hÃne : ENNReal.ofReal Ã ≠ 0 := by
+      rw [ne_eq, ENNReal.ofReal_eq_zero, not_le]; exact hÃpos
+    have hÃtop : ENNReal.ofReal Ã ≠ ⊤ := ENNReal.ofReal_ne_top
+    have hhalf : ENNReal.ofReal Ã * (⨍⁻ z in Metric.ball (cI i) (4 * ρI i), w z ∂volume)
+          ≥ ENNReal.ofReal lam / 2 ∨
+        ENNReal.ofReal Ã * (⨍⁻ z in Metric.ball (cI i) (4 * ρI i), b z ^ q ∂volume) ^ (1 / q)
+          ≥ ENNReal.ofReal lam / 2 := by
+      by_contra hcon
+      rw [not_or] at hcon
+      obtain ⟨h1, h2⟩ := hcon
+      rw [not_le] at h1 h2
+      have hsum2 : ENNReal.ofReal Ã * (⨍⁻ z in Metric.ball (cI i) (4 * ρI i), w z ∂volume) +
+          ENNReal.ofReal Ã * (⨍⁻ z in Metric.ball (cI i) (4 * ρI i), b z ^ q ∂volume) ^ (1 / q)
+          < ENNReal.ofReal lam / 2 + ENNReal.ofReal lam / 2 := ENNReal.add_lt_add h1 h2
+      rw [ENNReal.add_halves] at hsum2
+      exact absurd (lt_trans hRHc' hsum2) (lt_irrefl _)
+    -- `lwf · ofReal Ã = ofReal lam / 2`.
+    have hlwf_mul : lwf * ENNReal.ofReal Ã = ENNReal.ofReal lam / 2 := by
+      rw [hlwfdef, ← ENNReal.ofReal_mul (by positivity)]
+      have hreal : lam / (2 * Ã) * Ã = lam / 2 := by field_simp
+      rw [hreal, ENNReal.ofReal_div_of_pos (by norm_num : (0:ℝ) < 2)]
+      congr 1; norm_num
+    rcases hhalf with hw | hb
+    · left
+      have hge : lwf ≤ ⨍⁻ z in Metric.ball (cI i) (4 * ρI i), w z ∂volume := by
+        have hchain : lwf * ENNReal.ofReal Ã
+            ≤ (⨍⁻ z in Metric.ball (cI i) (4 * ρI i), w z ∂volume) * ENNReal.ofReal Ã := by
+          rw [hlwf_mul, mul_comm]; exact hw
+        exact (ENNReal.mul_le_mul_iff_left hÃne hÃtop).mp hchain
+      rw [setLAverage_eq] at hge
+      rwa [ENNReal.le_div_iff_mul_le (Or.inl hvol4_ne) (Or.inl hvol4_top)] at hge
+    · right
+      have hlbf_eq : lbf = lwf ^ q := by
+        rw [hlbfdef, hlwfdef, ← ENNReal.ofReal_rpow_of_pos (by positivity)]
+      have hgew : lwf ≤ (⨍⁻ z in Metric.ball (cI i) (4 * ρI i), b z ^ q ∂volume) ^ (1 / q) := by
+        have hchain : lwf * ENNReal.ofReal Ã
+            ≤ (⨍⁻ z in Metric.ball (cI i) (4 * ρI i), b z ^ q ∂volume) ^ (1 / q)
+                * ENNReal.ofReal Ã := by
+          rw [hlwf_mul, mul_comm]; exact hb
+        exact (ENNReal.mul_le_mul_iff_left hÃne hÃtop).mp hchain
+      have hgeq : lbf ≤ ⨍⁻ z in Metric.ball (cI i) (4 * ρI i), b z ^ q ∂volume := by
+        rw [hlbf_eq]
+        have hpow := ENNReal.rpow_le_rpow hgew hq0.le
+        rwa [one_div, ENNReal.rpow_inv_rpow hq0.ne'] at hpow
+      rw [setLAverage_eq] at hgeq
+      rwa [ENNReal.le_div_iff_mul_le (Or.inl hvol4_ne) (Or.inl hvol4_top)] at hgeq
+  -- ============================================================================
+  -- SETUP for the assembly: containments, a.e. finiteness, the inner predicate.
+  -- ============================================================================
+  have hssub16 : Metric.ball x₀ s ⊆ Metric.ball x₀ (16 * R₀) :=
+    Metric.ball_subset_ball (by linarith)
+  -- `w < ⊤` a.e. on `ball s`.
+  have hwfin_ae : ∀ᵐ z ∂(volume.restrict (Metric.ball x₀ s)), w z ≠ ⊤ := by
+    have h16 : ∀ᵐ z ∂(volume.restrict (Metric.ball x₀ (16 * R₀))), w z ^ q ≠ ⊤ :=
+      ae_lt_top' (hwmeas.pow_const q).restrict hWfin.ne |>.mono (fun z hz => hz.ne)
+    have : ∀ᵐ z ∂(volume.restrict (Metric.ball x₀ (16 * R₀))), w z ≠ ⊤ := by
+      filter_upwards [h16] with z hz htop
+      rw [htop, ENNReal.top_rpow_of_pos hq0] at hz; exact hz rfl
+    exact (ae_mono (Measure.restrict_mono hssub16 le_rfl)) this
+  -- `b < ⊤` a.e. on `ball s`.
+  have hbfin_ae : ∀ᵐ z ∂(volume.restrict (Metric.ball x₀ s)), b z ≠ ⊤ := by
+    have h16 : ∀ᵐ z ∂(volume.restrict (Metric.ball x₀ (16 * R₀))), b z ^ q ≠ ⊤ :=
+      ae_lt_top' (hbmeas.pow_const q).restrict hBfin.ne |>.mono (fun z hz => hz.ne)
+    have : ∀ᵐ z ∂(volume.restrict (Metric.ball x₀ (16 * R₀))), b z ≠ ⊤ := by
+      filter_upwards [h16] with z hz htop
+      rw [htop, ENNReal.top_rpow_of_pos hq0] at hz; exact hz rfl
+    exact (ae_mono (Measure.restrict_mono hssub16 le_rfl)) this
+  -- The inner predicate: the enlargement `Eᵢ ⊆ ball x₀ s` (engine-able cubes).
+  set Inn : Set (ℤ × (ℤ × ℤ)) :=
+    {i ∈ B | Metric.ball (cI i) (4 * ρI i) ⊆ Metric.ball x₀ s} with hInndef
+  -- The w-good and b-good inner subfamilies.
+  set Sw : Set (ℤ × (ℤ × ℤ)) := {i ∈ Inn |
+      lwf * volume (Metric.ball (cI i) (4 * ρI i))
+        ≤ ∫⁻ z in Metric.ball (cI i) (4 * ρI i), w z} with hSwdef
+  set Sb : Set (ℤ × (ℤ × ℤ)) := {i ∈ Inn |
+      lbf * volume (Metric.ball (cI i) (4 * ρI i))
+        ≤ ∫⁻ z in Metric.ball (cI i) (4 * ρI i), b z ^ q} with hSbdef
+  have hSwsub : Sw ⊆ B := fun i hi => hi.1.1
+  have hSbsub : Sb ⊆ B := fun i hi => hi.1.1
+  have hSwct : Sw.Countable := hBct.mono hSwsub
+  have hSbct : Sb.Countable := hBct.mono hSbsub
+  -- The localized `u`-weights.
+  set uw : ℂ → ℝ≥0∞ := (Metric.ball x₀ s ∩ Esub).indicator w with huwdef
+  set ub : ℂ → ℝ≥0∞ := (Metric.ball x₀ s ∩ Fsub).indicator (fun z => b z ^ q) with hubdef
+  -- ============================================================================
+  -- PER-CUBE ENGINE HYPOTHESES (super-level concentration on inner cubes).
+  -- ============================================================================
+  have hEsub_nm : NullMeasurableSet Esub volume :=
+    nullMeasurableSet_lt aemeasurable_const hwmeas.ennreal_toReal
+  have hFsub_nm : NullMeasurableSet Fsub volume :=
+    nullMeasurableSet_lt aemeasurable_const hbmeas.ennreal_toReal
+  -- w-good inner: `lw·vol(Eᵢ) ≤ ∫_{Eᵢ} uw`.
+  have h2uw : ∀ i ∈ Sw, lw * volume (Metric.ball (cI i) (4 * ρI i))
+      ≤ ∫⁻ z in Metric.ball (cI i) (4 * ρI i), uw z := by
+    rintro i ⟨⟨hiB, hEsub⟩, hwg⟩
+    set E : Set ℂ := Metric.ball (cI i) (4 * ρI i) with hEdef
+    have hEsubs : E ⊆ Metric.ball x₀ s := hEsub
+    have hvolE_top : volume E ≠ ⊤ := measure_ball_lt_top.ne
+    -- `∫_E uw = ∫_{E ∩ Esub} w` (since `E ⊆ ball s`).
+    have huwint : ∫⁻ z in E, uw z = ∫⁻ z in E ∩ Esub, w z := by
+      have hpt : ∀ z ∈ E, uw z = Esub.indicator w z := by
+        intro z hz
+        rw [huwdef]
+        by_cases hzE : z ∈ Esub
+        · have hmem : z ∈ Metric.ball x₀ s ∩ Esub := ⟨hEsubs hz, hzE⟩
+          rw [Set.indicator_of_mem hmem, Set.indicator_of_mem hzE]
+        · have hnmem : z ∉ Metric.ball x₀ s ∩ Esub := fun h => hzE h.2
+          rw [Set.indicator_of_notMem hnmem, Set.indicator_of_notMem hzE]
+      rw [setLIntegral_congr_fun measurableSet_ball hpt,
+        setLIntegral_indicator₀ _
+          (hEsub_nm.mono_ac (Measure.restrict_le_self.absolutelyContinuous)),
+        Set.inter_comm]
+    -- Pointwise a.e. on `E`: `w z ≤ Esub.indicator w z + ofReal(βlam)`.
+    have hconc : ∫⁻ z in E, w z
+        ≤ (∫⁻ z in E, Esub.indicator w z) + ENNReal.ofReal (β * lam) * volume E := by
+      have hstep : ∫⁻ z in E, w z
+          ≤ ∫⁻ z in E, (Esub.indicator w z + ENNReal.ofReal (β * lam)) := by
+        apply lintegral_mono_ae
+        have haef : ∀ᵐ z ∂(volume.restrict E), w z ≠ ⊤ :=
+          ae_mono (Measure.restrict_mono hEsubs le_rfl) hwfin_ae
+        filter_upwards [haef] with z hzfin
+        by_cases hzE : z ∈ Esub
+        · rw [Set.indicator_of_mem hzE]; exact le_add_right le_rfl
+        · rw [Set.indicator_of_notMem hzE, zero_add]
+          rw [hEsubdef, Set.mem_setOf_eq, not_lt] at hzE
+          rw [← ENNReal.ofReal_toReal hzfin]
+          exact ENNReal.ofReal_le_ofReal hzE
+      rwa [lintegral_add_right' _ aemeasurable_const, setLIntegral_const] at hstep
+    have hindint : ∫⁻ z in E, Esub.indicator w z = ∫⁻ z in E ∩ Esub, w z := by
+      rw [setLIntegral_indicator₀ _ (hEsub_nm.mono_ac
+        (Measure.restrict_le_self.absolutelyContinuous)), Set.inter_comm]
+    rw [hindint] at hconc
+    -- Combine: `lwf·vol(E) ≤ ∫_E w`, and `lwf = lw + ofReal(βlam)`.
+    have hlw_eq : lw + ENNReal.ofReal (β * lam) = lwf := by
+      rw [hlwdef, hlwfdef, ← ENNReal.ofReal_add (by positivity) (by positivity)]
+      congr 1
+      rw [hβdef]; field_simp; ring
+    rw [huwint]
+    have hkey : lwf * volume E
+        ≤ (∫⁻ z in E ∩ Esub, w z) + ENNReal.ofReal (β * lam) * volume E := le_trans hwg hconc
+    rw [← hlw_eq, add_mul] at hkey
+    refine ENNReal.le_of_add_le_add_right ?_ hkey
+    exact ENNReal.mul_ne_top ENNReal.ofReal_ne_top hvolE_top
+  -- b-good inner: `lb·vol(Eᵢ) ≤ ∫_{Eᵢ} ub`.
+  have h2ub : ∀ i ∈ Sb, lb * volume (Metric.ball (cI i) (4 * ρI i))
+      ≤ ∫⁻ z in Metric.ball (cI i) (4 * ρI i), ub z := by
+    rintro i ⟨⟨hiB, hEsub⟩, hbg⟩
+    set E : Set ℂ := Metric.ball (cI i) (4 * ρI i) with hEdef
+    have hEsubs : E ⊆ Metric.ball x₀ s := hEsub
+    have hvolE_top : volume E ≠ ⊤ := measure_ball_lt_top.ne
+    have hubint : ∫⁻ z in E, ub z = ∫⁻ z in E ∩ Fsub, b z ^ q := by
+      have hpt : ∀ z ∈ E, ub z = Fsub.indicator (fun z => b z ^ q) z := by
+        intro z hz
+        rw [hubdef]
+        by_cases hzF : z ∈ Fsub
+        · have hmem : z ∈ Metric.ball x₀ s ∩ Fsub := ⟨hEsubs hz, hzF⟩
+          rw [Set.indicator_of_mem hmem, Set.indicator_of_mem hzF]
+        · have hnmem : z ∉ Metric.ball x₀ s ∩ Fsub := fun h => hzF h.2
+          rw [Set.indicator_of_notMem hnmem, Set.indicator_of_notMem hzF]
+      rw [setLIntegral_congr_fun measurableSet_ball hpt,
+        setLIntegral_indicator₀ _
+          (hFsub_nm.mono_ac (Measure.restrict_le_self.absolutelyContinuous)),
+        Set.inter_comm]
+    -- Super-level concentration: `bᵠ z ≤ Fsub.indicator bᵠ z + ofReal((βlam)^q)` a.e. on `E`.
+    have hconc : ∫⁻ z in E, b z ^ q
+        ≤ (∫⁻ z in E, Fsub.indicator (fun z => b z ^ q) z)
+          + ENNReal.ofReal ((β * lam) ^ q) * volume E := by
+      have hstep : ∫⁻ z in E, b z ^ q
+          ≤ ∫⁻ z in E, (Fsub.indicator (fun z => b z ^ q) z + ENNReal.ofReal ((β * lam) ^ q)) := by
+        apply lintegral_mono_ae
+        have haef : ∀ᵐ z ∂(volume.restrict E), b z ≠ ⊤ :=
+          ae_mono (Measure.restrict_mono hEsubs le_rfl) hbfin_ae
+        filter_upwards [haef] with z hzfin
+        by_cases hzF : z ∈ Fsub
+        · rw [Set.indicator_of_mem hzF]; exact le_add_right le_rfl
+        · rw [Set.indicator_of_notMem hzF, zero_add]
+          rw [hFsubdef, Set.mem_setOf_eq, not_lt] at hzF
+          rw [← ENNReal.ofReal_toReal hzfin,
+            ENNReal.ofReal_rpow_of_nonneg ENNReal.toReal_nonneg hq0.le]
+          exact ENNReal.ofReal_le_ofReal (Real.rpow_le_rpow ENNReal.toReal_nonneg hzF hq0.le)
+      rwa [lintegral_add_right' _ aemeasurable_const, setLIntegral_const] at hstep
+    have hindint : ∫⁻ z in E, Fsub.indicator (fun z => b z ^ q) z = ∫⁻ z in E ∩ Fsub, b z ^ q := by
+      rw [setLIntegral_indicator₀ _ (hFsub_nm.mono_ac
+        (Measure.restrict_le_self.absolutelyContinuous)), Set.inter_comm]
+    rw [hindint] at hconc
+    -- `lb + ofReal((βlam)^q) ≤ lbf` (since `2 ≤ 2^q`).
+    have hlb_le : lb + ENNReal.ofReal ((β * lam) ^ q) ≤ lbf := by
+      rw [hlbdef, hlbfdef, ← ENNReal.ofReal_add (by positivity) (by positivity)]
+      apply ENNReal.ofReal_le_ofReal
+      have h2q : (2:ℝ) ≤ 2 ^ q := by
+        calc (2:ℝ) = 2 ^ (1:ℝ) := by rw [Real.rpow_one]
+          _ ≤ 2 ^ q := Real.rpow_le_rpow_of_exponent_le (by norm_num) (le_of_lt hq)
+      have hβl : (0:ℝ) ≤ β * lam := by positivity
+      have hkey : 2 * (β * lam) ^ q ≤ (lam / (2 * Ã)) ^ q := by
+        have heq : lam / (2 * Ã) = 2 * (β * lam) := by rw [hβdef]; field_simp; ring
+        rw [heq, Real.mul_rpow (by norm_num) hβl]
+        nlinarith [Real.rpow_nonneg hβl q, h2q]
+      linarith [hkey]
+    rw [hubint]
+    have hkey : lbf * volume E
+        ≤ (∫⁻ z in E ∩ Fsub, b z ^ q) + ENNReal.ofReal ((β * lam) ^ q) * volume E :=
+      le_trans hbg hconc
+    have hlbstep : (lb + ENNReal.ofReal ((β * lam) ^ q)) * volume E
+        ≤ (∫⁻ z in E ∩ Fsub, b z ^ q) + ENNReal.ofReal ((β * lam) ^ q) * volume E :=
+      le_trans (mul_le_mul_left hlb_le _) hkey
+    rw [add_mul] at hlbstep
+    refine ENNReal.le_of_add_le_add_right ?_ hlbstep
+    exact ENNReal.mul_ne_top ENNReal.ofReal_ne_top hvolE_top
+  -- ============================================================================
+  -- ENGINE CALLS: bound `vol(⋃_{Sw} Eᵢ)`, `vol(⋃_{Sb} Eᵢ)` by super-level integrals.
+  -- ============================================================================
+  -- Radius bound: for inner cubes, `4·ρI i ≤ s` (since `Eᵢ ⊆ ball x₀ s`).
+  have hRbd : ∀ i ∈ Inn, 4 * ρI i ≤ s := by
+    rintro i ⟨hiB, hEsub⟩
+    by_contra hgt
+    push Not at hgt
+    have hvle : volume (Metric.ball (cI i) (4 * ρI i)) ≤ volume (Metric.ball x₀ s) :=
+      measure_mono hEsub
+    rw [Complex.volume_ball, Complex.volume_ball] at hvle
+    have h4ρpos : 0 < 4 * ρI i := by have := hρIpos i; linarith
+    rw [ENNReal.mul_le_mul_iff_left (by simp [NNReal.pi_pos.ne']) (by simp)] at hvle
+    rw [← ENNReal.ofReal_pow h4ρpos.le, ← ENNReal.ofReal_pow (by linarith : (0:ℝ) ≤ s),
+      ENNReal.ofReal_le_ofReal_iff (by positivity)] at hvle
+    nlinarith [hvle, hgt, h4ρpos]
+  have hRbdSw : ∀ i ∈ Sw, 4 * ρI i ≤ s := fun i hi => hRbd i hi.1
+  have hRbdSb : ∀ i ∈ Sb, 4 * ρI i ≤ s := fun i hi => hRbd i hi.1
+  have hEw := gehring_engine_idx Sw hSwct cI (fun i => 4 * ρI i) lw uw s hRbdSw h2uw
+  have hEb := gehring_engine_idx Sb hSbct cI (fun i => 4 * ρI i) lb ub s hRbdSb h2ub
+  -- The global integrals of `uw`, `ub` are the super-level masses over `ball x₀ s`.
+  have hIuw : ∫⁻ z, uw z = ∫⁻ z in Metric.ball x₀ s ∩ Esub, w z := by
+    rw [huwdef, lintegral_indicator₀ (measurableSet_ball.nullMeasurableSet.inter hEsub_nm)]
+  have hIub : ∫⁻ z, ub z = ∫⁻ z in Metric.ball x₀ s ∩ Fsub, b z ^ q := by
+    rw [hubdef, lintegral_indicator₀ (measurableSet_ball.nullMeasurableSet.inter hFsub_nm)]
+  rw [hIuw] at hEw
+  rw [hIub] at hEb
+  -- ============================================================================
+  -- COLLAR-FREE LHS BOUND.  For `lam ≥ λ₁` every cube `i ∈ B` whose square meets
+  -- `ball x₀ t` is INNER (`Eᵢ ⊆ ball x₀ s`), so the LHS super-level mass over
+  -- `ball t` is covered by the inner cubes alone: NO boundary collar.
+  -- ============================================================================
+  set S : Set ℂ := Metric.ball x₀ t ∩ {z : ℂ | lam < (w z).toReal} with hSdef
+  have htsub : Metric.ball x₀ t ⊆ Metric.ball x₀ s := Metric.ball_subset_ball hts.le
+  -- The finite master mass `Wm = (∫_{16B₀}wᵠ).toReal` and `∫_{ball s}wᵠ ≤ Wm` (ENNReal).
+  set Wm : ℝ := (∫⁻ z in Metric.ball x₀ (16 * R₀), w z ^ q).toReal with hWmdef
+  have hWm0 : 0 ≤ Wm := ENNReal.toReal_nonneg
+  have hssub16 : Metric.ball x₀ s ⊆ Metric.ball x₀ (16 * R₀) :=
+    Metric.ball_subset_ball (by linarith)
+  have hInts_le_Wm : (∫⁻ z in Metric.ball x₀ s, w z ^ q).toReal ≤ Wm := by
+    rw [hWmdef]; exact ENNReal.toReal_mono hWfin.ne (lintegral_mono_set hssub16)
+  -- KEY: any cube `i ∈ B` meeting `ball x₀ t` is inner.
+  have hMeetInn : ∀ i ∈ B, (dyadicSquare i.1 i.2 ∩ Metric.ball x₀ t).Nonempty →
+      Metric.ball (cI i) (4 * ρI i) ⊆ Metric.ball x₀ s := by
+    intro i hiB hmeet
+    obtain ⟨p, hpQ, hpt⟩ := hmeet
+    -- `dist x₀ (cI i) ≤ t + ρI i`.
+    have hpcI : dist p (cI i) < ρI i := Metric.mem_ball.mp (hQsubball i hpQ)
+    have hpx₀ : dist p x₀ < t := Metric.mem_ball.mp hpt
+    have hdist : dist x₀ (cI i) ≤ t + ρI i := by
+      calc dist x₀ (cI i) ≤ dist x₀ p + dist p (cI i) := dist_triangle _ _ _
+        _ = dist p x₀ + dist p (cI i) := by rw [dist_comm x₀ p]
+        _ ≤ t + ρI i := by linarith
+    -- `ρI i ≤ (s - t)/5`, from `lamᵠ·ρᵢ² ≤ ∫_{ball s}wᵠ ≤ Wm`.
+    have hρpos := hρIpos i
+    -- `(ofReal lam)^q · vol(Qᵢ) ≤ ∫_{Qᵢ∩ball s}wᵠ ≤ ∫_{ball s}wᵠ`.
+    have hQpos : 0 < volume (dyadicSquare i.1 i.2) := by
+      rw [volume_dyadicSquare, ENNReal.ofReal_pos]; positivity
+    have hQtop : volume (dyadicSquare i.1 i.2) ≠ ⊤ := by
+      rw [volume_dyadicSquare]; exact ENNReal.ofReal_ne_top
+    have hstop : (ENNReal.ofReal lam) ^ q * volume (dyadicSquare i.1 i.2)
+        ≤ ∫⁻ z in dyadicSquare i.1 i.2 ∩ Metric.ball x₀ s, w z ^ q := by
+      have h := hBlow i hiB
+      rw [ENNReal.lt_div_iff_mul_lt (Or.inl hQpos.ne') (Or.inl hQtop)] at h
+      exact h.le
+    -- to reals: `lamᵠ · ρᵢ² ≤ Wm`.
+    have hInts_fin : ∫⁻ z in dyadicSquare i.1 i.2 ∩ Metric.ball x₀ s, w z ^ q ≠ ⊤ :=
+      ne_top_of_le_ne_top hWfin.ne (lintegral_mono_set (Set.inter_subset_right.trans hssub16))
+    have hstopR : lam ^ q * (ρI i) ^ 2 ≤ Wm := by
+      have hmono := ENNReal.toReal_mono hInts_fin hstop
+      have hLHSeq : ((ENNReal.ofReal lam) ^ q * volume (dyadicSquare i.1 i.2)).toReal
+          = lam ^ q * (ρI i) ^ 2 := by
+        rw [ENNReal.toReal_mul, ENNReal.ofReal_rpow_of_nonneg hlam.le hq0.le,
+          ENNReal.toReal_ofReal (by positivity), volume_dyadicSquare,
+          ENNReal.toReal_ofReal (by positivity), hρIdef]
+      rw [hLHSeq] at hmono
+      calc lam ^ q * (ρI i) ^ 2
+          ≤ (∫⁻ z in dyadicSquare i.1 i.2 ∩ Metric.ball x₀ s, w z ^ q).toReal := hmono
+        _ ≤ Wm := le_trans (ENNReal.toReal_mono hWfin.ne
+              (lintegral_mono_set (Set.inter_subset_right.trans hssub16))) le_rfl
+    -- `ρᵢ ≤ √Wm / lam^{q/2}`, hence `5ρᵢ ≤ s - t` from `hλ₁`.
+    have hlamq2 : 0 < lam ^ (q / 2) := Real.rpow_pos_of_pos hlam _
+    have hρWm : ρI i * lam ^ (q / 2) ≤ Real.sqrt Wm := by
+      rw [Real.le_sqrt (by positivity) hWm0]
+      have hsplit : lam ^ q = (lam ^ (q / 2)) ^ 2 := by
+        rw [← Real.rpow_natCast (lam ^ (q/2)) 2, ← Real.rpow_mul hlam.le]
+        congr 1; push_cast; ring
+      calc (ρI i * lam ^ (q / 2)) ^ 2 = lam ^ q * (ρI i) ^ 2 := by rw [hsplit]; ring
+        _ ≤ Wm := hstopR
+    have h5ρ : 5 * ρI i ≤ s - t := by
+      have hkey : 5 * (ρI i * lam ^ (q / 2)) ≤ (s - t) * lam ^ (q / 2) :=
+        le_trans (by linarith [hρWm]) hlam1
+      have : 5 * ρI i * lam ^ (q / 2) ≤ (s - t) * lam ^ (q / 2) := by linarith [hkey]
+      exact le_of_mul_le_mul_right (by linarith [this]) hlamq2
+    -- Conclude `Eᵢ ⊆ ball x₀ s`.
+    refine Metric.ball_subset_ball' ?_
+    rw [dist_comm]
+    linarith [hdist, h5ρ, hρpos]
+  -- The inner predicate and the w/b-good subfamilies (same as the core).
+  -- `S` is a.e. covered by `⋃_{i∈B} (Qᵢ ∩ ball s)`, but we refine to inner cubes.
+  set Cset : ℤ × (ℤ × ℤ) → Set ℂ := fun i => dyadicSquare i.1 i.2 ∩ Metric.ball x₀ s with hCsetdef
+  have hCmeas : ∀ i, MeasurableSet (Cset i) :=
+    fun i => (measurableSet_dyadicSquare _ _).inter measurableSet_ball
+  have hCdisj : B.PairwiseDisjoint Cset := by
+    intro i hi j hj hij
+    exact (hBdisj hi hj hij).mono Set.inter_subset_left Set.inter_subset_left
+  -- a.e. cover of `S` by the INNER cubes: any covering cube meeting `ball t` is inner.
+  have hScov : volume (S \ ⋃ i ∈ Inn, Cset i) = 0 := by
+    refine measure_mono_null ?_ hBcov
+    intro z hz
+    obtain ⟨hzS, hznotcov⟩ := hz
+    have hzs : z ∈ Metric.ball x₀ s ∩ {z : ℂ | lam < (w z).toReal} :=
+      ⟨htsub hzS.1, hzS.2⟩
+    refine ⟨hzs, ?_⟩
+    intro hzcov
+    apply hznotcov
+    rw [Set.mem_iUnion₂] at hzcov ⊢
+    obtain ⟨i, hi, hzi⟩ := hzcov
+    -- `z ∈ Qᵢ` and `z ∈ ball t`, so `Qᵢ` meets `ball t`, hence `i ∈ Inn`.
+    have hmeet : (dyadicSquare i.1 i.2 ∩ Metric.ball x₀ t).Nonempty := ⟨z, hzi, hzS.1⟩
+    have hiInn : i ∈ Inn := ⟨hi, hMeetInn i hi hmeet⟩
+    exact ⟨i, hiInn, hzi, hzs.1⟩
+  -- `∫_S wᵠ ≤ ∫_{⋃_{Inn} Cset} wᵠ`.
+  have hInnsubB : Inn ⊆ B := fun i hi => hi.1
+  have hInnct : Inn.Countable := hBct.mono hInnsubB
+  have hUmeasInn : MeasurableSet (⋃ i ∈ Inn, Cset i) :=
+    MeasurableSet.biUnion hInnct (fun i _ => hCmeas i)
+  have hLHS1 : ∫⁻ z in S, w z ^ q ≤ ∫⁻ z in ⋃ i ∈ Inn, Cset i, w z ^ q := by
+    have h1 : (S \ (S \ (⋃ i ∈ Inn, Cset i)) : Set ℂ) =ᵐ[volume] S := diff_null_ae_eq_self hScov
+    have h2 : S \ (S \ (⋃ i ∈ Inn, Cset i)) = S ∩ (⋃ i ∈ Inn, Cset i) :=
+      Set.diff_diff_right_self S _
+    rw [h2] at h1
+    rw [setLIntegral_congr h1.symm]
+    exact lintegral_mono_set Set.inter_subset_right
+  -- INNER BOUND: `∫_{⋃_{Inn} Cset} wᵠ ≤ ofReal(4lamᵠ)·(vol(⋃_{Sw}Eᵢ) + vol(⋃_{Sb}Eᵢ))`.
+  have hInnerSum : ∫⁻ z in ⋃ i ∈ Inn, Cset i, w z ^ q
+      ≤ ENNReal.ofReal (4 * lam ^ q) * volume (⋃ i ∈ Inn, dyadicSquare i.1 i.2) := by
+    rw [lintegral_biUnion hInnct (fun i _ => hCmeas i) (hCdisj.subset hInnsubB)]
+    calc ∑' i : Inn, ∫⁻ z in Cset i, w z ^ q
+        ≤ ∑' i : Inn, ENNReal.ofReal (4 * lam ^ q)
+            * volume (dyadicSquare (i : ℤ × (ℤ × ℤ)).1 (i : ℤ × (ℤ × ℤ)).2) := by
+          apply ENNReal.tsum_le_tsum
+          rintro ⟨i, hi⟩
+          exact hBup i (hInnsubB hi)
+      _ = ENNReal.ofReal (4 * lam ^ q)
+            * ∑' i : Inn, volume (dyadicSquare (i : ℤ × (ℤ × ℤ)).1 (i : ℤ × (ℤ × ℤ)).2) :=
+          ENNReal.tsum_mul_left
+      _ = ENNReal.ofReal (4 * lam ^ q) * volume (⋃ i ∈ Inn, dyadicSquare i.1 i.2) := by
+          rw [measure_biUnion hInnct (Set.Pairwise.mono hInnsubB hBdisj)
+            (fun i _ => measurableSet_dyadicSquare _ _)]
+  -- `vol(⋃_{Inn} Qᵢ) ≤ vol(⋃_{Sw} Eᵢ) + vol(⋃_{Sb} Eᵢ)`.
+  have hQcover : (⋃ i ∈ Inn, dyadicSquare i.1 i.2)
+      ⊆ (⋃ i ∈ Sw, Metric.ball (cI i) (4 * ρI i))
+        ∪ (⋃ i ∈ Sb, Metric.ball (cI i) (4 * ρI i)) := by
+    apply Set.iUnion₂_subset
+    intro i hi
+    have hiB : i ∈ B := hInnsubB hi
+    have hQE : dyadicSquare i.1 i.2 ⊆ Metric.ball (cI i) (4 * ρI i) := by
+      refine (hQsubball i).trans (Metric.ball_subset_ball ?_)
+      have := hρIpos i; linarith
+    rcases hdich i hiB with hw | hb
+    · have hiSw : i ∈ Sw := ⟨hi, hw⟩
+      exact hQE.trans (Set.subset_union_of_subset_left
+        (Set.subset_biUnion_of_mem (u := fun i => Metric.ball (cI i) (4 * ρI i)) hiSw) _)
+    · have hiSb : i ∈ Sb := ⟨hi, hb⟩
+      exact hQE.trans (Set.subset_union_of_subset_right
+        (Set.subset_biUnion_of_mem (u := fun i => Metric.ball (cI i) (4 * ρI i)) hiSb) _)
+  have hQvol : volume (⋃ i ∈ Inn, dyadicSquare i.1 i.2)
+      ≤ volume (⋃ i ∈ Sw, Metric.ball (cI i) (4 * ρI i))
+        + volume (⋃ i ∈ Sb, Metric.ball (cI i) (4 * ρI i)) :=
+    le_trans (measure_mono hQcover) (measure_union_le _ _)
+  -- COEFFICIENT TRANSFER (identical to the core).
+  set Cw : ℝ := 256 * Ã * lam ^ (q - 1) with hCwdef
+  set Cb : ℝ := 64 * (4 * Ã) ^ q with hCbdef
+  have hlw_ne : lw ≠ 0 := by rw [hlwdef, ne_eq, ENNReal.ofReal_eq_zero, not_le]; positivity
+  have hlb_ne : lb ≠ 0 := by rw [hlbdef, ne_eq, ENNReal.ofReal_eq_zero, not_le]; positivity
+  have hlw_top : lw ≠ ⊤ := by rw [hlwdef]; exact ENNReal.ofReal_ne_top
+  have hlb_top : lb ≠ ⊤ := by rw [hlbdef]; exact ENNReal.ofReal_ne_top
+  have hlamq : lam ^ (q - 1) * lam = lam ^ q := by
+    have h := (Real.rpow_add hlam (q - 1) 1).symm
+    rw [Real.rpow_one] at h
+    rw [h]; congr 1; ring
+  have hCw_mul : ENNReal.ofReal Cw * lw = 16 * ENNReal.ofReal (4 * lam ^ q) := by
+    rw [hCwdef, hlwdef, ← ENNReal.ofReal_mul (by positivity),
+      show (16 : ℝ≥0∞) = ENNReal.ofReal 16 by rw [ENNReal.ofReal_ofNat],
+      ← ENNReal.ofReal_mul (by norm_num)]
+    congr 1
+    rw [hβdef]
+    have : 256 * Ã * lam ^ (q - 1) * (1 / (4 * Ã) * lam) = 64 * (lam ^ (q - 1) * lam) := by
+      field_simp; ring
+    rw [this, hlamq]; ring
+  have hCb_mul : ENNReal.ofReal Cb * lb = 16 * ENNReal.ofReal (4 * lam ^ q) := by
+    rw [hCbdef, hlbdef, ← ENNReal.ofReal_mul (by positivity),
+      show (16 : ℝ≥0∞) = ENNReal.ofReal 16 by rw [ENNReal.ofReal_ofNat],
+      ← ENNReal.ofReal_mul (by norm_num)]
+    congr 1
+    have hbase : (4 * Ã) * (β * lam) = lam := by rw [hβdef]; field_simp
+    have hmr : (4 * Ã) ^ q * (β * lam) ^ q = lam ^ q := by
+      rw [← Real.mul_rpow (by positivity) (by positivity [hβpos]), hbase]
+    rw [show (64 * (4 * Ã) ^ q * (β * lam) ^ q : ℝ) = 64 * ((4 * Ã) ^ q * (β * lam) ^ q) by ring,
+      hmr]; ring
+  have hsixteen_ne : (16 : ℝ≥0∞) ≠ 0 := by norm_num
+  have hsixteen_top : (16 : ℝ≥0∞) ≠ ⊤ := by norm_num
+  have hTransW : ENNReal.ofReal (4 * lam ^ q) * volume (⋃ i ∈ Sw, Metric.ball (cI i) (4 * ρI i))
+      ≤ ENNReal.ofReal Cw * ∫⁻ z in Metric.ball x₀ s ∩ Esub, w z := by
+    apply (ENNReal.mul_le_mul_iff_right hsixteen_ne hsixteen_top).mp
+    calc (16 : ℝ≥0∞) * (ENNReal.ofReal (4 * lam ^ q)
+            * volume (⋃ i ∈ Sw, Metric.ball (cI i) (4 * ρI i)))
+        = (ENNReal.ofReal Cw * lw) * volume (⋃ i ∈ Sw, Metric.ball (cI i) (4 * ρI i)) := by
+          rw [hCw_mul]; ring
+      _ = ENNReal.ofReal Cw * (lw * volume (⋃ i ∈ Sw, Metric.ball (cI i) (4 * ρI i))) := by ring
+      _ ≤ ENNReal.ofReal Cw * (16 * ∫⁻ z in Metric.ball x₀ s ∩ Esub, w z) :=
+          mul_le_mul_right hEw _
+      _ = 16 * (ENNReal.ofReal Cw * ∫⁻ z in Metric.ball x₀ s ∩ Esub, w z) := by ring
+  have hTransB : ENNReal.ofReal (4 * lam ^ q) * volume (⋃ i ∈ Sb, Metric.ball (cI i) (4 * ρI i))
+      ≤ ENNReal.ofReal Cb * ∫⁻ z in Metric.ball x₀ s ∩ Fsub, b z ^ q := by
+    apply (ENNReal.mul_le_mul_iff_right hsixteen_ne hsixteen_top).mp
+    calc (16 : ℝ≥0∞) * (ENNReal.ofReal (4 * lam ^ q)
+            * volume (⋃ i ∈ Sb, Metric.ball (cI i) (4 * ρI i)))
+        = (ENNReal.ofReal Cb * lb) * volume (⋃ i ∈ Sb, Metric.ball (cI i) (4 * ρI i)) := by
+          rw [hCb_mul]; ring
+      _ = ENNReal.ofReal Cb * (lb * volume (⋃ i ∈ Sb, Metric.ball (cI i) (4 * ρI i))) := by ring
+      _ ≤ ENNReal.ofReal Cb * (16 * ∫⁻ z in Metric.ball x₀ s ∩ Fsub, b z ^ q) :=
+          mul_le_mul_right hEb _
+      _ = 16 * (ENNReal.ofReal Cb * ∫⁻ z in Metric.ball x₀ s ∩ Fsub, b z ^ q) := by ring
+  -- FINAL COMBINATION (collar-free).
+  have hβeq : (1 : ℝ) / (4 * (Real.pi ^ (1 / q) * A + 1)) = β := by
+    rw [hβdef, hÃdef, hPdef]
+  have hCw_goal : (256 : ℝ) * (Real.pi ^ (1 / q) * A + 1) * lam ^ (q - 1) = Cw := by
+    rw [hCwdef, hÃdef, hPdef]
+  have hCb_goal : (64 : ℝ) * (4 * (Real.pi ^ (1 / q) * A + 1)) ^ q = Cb := by
+    rw [hCbdef, hÃdef, hPdef]
+  have hgoal : ∫⁻ z in S, w z ^ q
+      ≤ ENNReal.ofReal Cw * (∫⁻ z in Metric.ball x₀ s ∩ Esub, w z)
+          + ENNReal.ofReal Cb * (∫⁻ z in Metric.ball x₀ s ∩ Fsub, b z ^ q) :=
+    calc ∫⁻ z in S, w z ^ q
+        ≤ ∫⁻ z in ⋃ i ∈ Inn, Cset i, w z ^ q := hLHS1
+      _ ≤ ENNReal.ofReal (4 * lam ^ q) * volume (⋃ i ∈ Inn, dyadicSquare i.1 i.2) := hInnerSum
+      _ ≤ ENNReal.ofReal (4 * lam ^ q)
+              * (volume (⋃ i ∈ Sw, Metric.ball (cI i) (4 * ρI i))
+                + volume (⋃ i ∈ Sb, Metric.ball (cI i) (4 * ρI i))) := mul_le_mul_right hQvol _
+      _ = ENNReal.ofReal (4 * lam ^ q) * volume (⋃ i ∈ Sw, Metric.ball (cI i) (4 * ρI i))
+            + ENNReal.ofReal (4 * lam ^ q) * volume (⋃ i ∈ Sb, Metric.ball (cI i) (4 * ρI i)) := by
+          rw [mul_add]
+      _ ≤ ENNReal.ofReal Cw * (∫⁻ z in Metric.ball x₀ s ∩ Esub, w z)
+            + ENNReal.ofReal Cb * (∫⁻ z in Metric.ball x₀ s ∩ Fsub, b z ^ q) :=
+          add_le_add hTransW hTransB
+  exact hgoal
+
+
+/-! ## Hole-filling pillars for `gehring_selfImprovement` (STEP B).
+
+The `O(ε)` Gehring gain decomposes ONLY the `w^ε` factor, KEEPING the `w^q` mass:
+`∫ f^{q+ε} = ε·∫_{λ>0} λ^{ε-1}·(∫_{{f>λ}} f^q) dλ`.  The leading `ε` is the gain.
+These private helpers prove: the `w^ε`-mass layer-cake (`gehring_mass_layerCake`), its
+Tonelli reconstruction (`gehring_recon`), the ε-absorption assembly (`gehring_assembly`),
+the `.toReal` conversion (`gehring_toReal_conv`), and the hole-fill packaging
+(`gehring_holeFill`) consuming the truncated super-level good-λ. -/
+
+private theorem gehring_scalar_lc (c : ℝ) (hc : 0 ≤ c) (ε : ℝ) (hε : 0 < ε) :
+    ∫⁻ lam in Set.Ioo (0:ℝ) c, ENNReal.ofReal (lam ^ (ε - 1)) = ENNReal.ofReal (c ^ ε / ε) := by
+  rcases eq_or_lt_of_le hc with hc0 | hcpos
+  · subst hc0; simp [Real.zero_rpow hε.ne']
+  · have hii : IntervalIntegrable (fun lam => lam ^ (ε - 1)) volume 0 c :=
+      intervalIntegral.intervalIntegrable_rpow' (by linarith : (-1:ℝ) < ε - 1)
+    have hint : IntegrableOn (fun lam => lam ^ (ε - 1)) (Set.Ioo 0 c) volume := by
+      rw [← integrableOn_Ioc_iff_integrableOn_Ioo]
+      exact (intervalIntegrable_iff_integrableOn_Ioc_of_le hcpos.le).mp hii
+    have hnn : 0 ≤ᵐ[volume.restrict (Set.Ioo 0 c)] (fun lam => lam ^ (ε - 1)) := by
+      filter_upwards [ae_restrict_mem measurableSet_Ioo] with lam hlam
+      exact Real.rpow_nonneg hlam.1.le _
+    rw [← ofReal_integral_eq_lintegral_ofReal hint hnn]
+    congr 1
+    rw [← integral_Ioc_eq_integral_Ioo, ← intervalIntegral.integral_of_le hcpos.le]
+    rw [integral_rpow (Or.inl (by linarith : (-1:ℝ) < ε - 1))]
+    rw [Real.zero_rpow (by linarith : ε - 1 + 1 ≠ 0)]
+    rw [show ε - 1 + 1 = ε by ring]; ring
+
+
+/-- **`Ž_N`-layer-cake (`q`-mass × truncated `ε`-factor).**  The iterated quantity of
+STEP B is `Ž_N(t) = ∫_{ball t} w^q · (min w N)^ε` (the FULL `q`-mass `w^q` times the
+TRUNCATED `ε`-gain factor `(min w N)^ε`).  Its `(min w N).toReal`-layer-cake decomposes ONLY the
+bounded `ε`-factor (`min w N ≤ N`, so the `λ`-integral lives on `(0,N)`) while keeping the full,
+a-priori-integrable `w^q` mass.  This is the device that eliminates the over-truncation tail: the
+inner super-level integral is the FULL `∫_{{w>λ}} w^q` (not the truncated `(min w N)^q`-mass), so
+the good-λ that feeds it is the honest exponent-preserving one for the integrable `w^q`. -/
+private theorem gehring_mass_layerCake {q ε : ℝ} (_hq0 : 0 < q) (hε : 0 < ε) {w : ℂ → ℝ≥0∞}
+    (hwmeas : AEMeasurable w volume) (N : ℕ) (x₀ : ℂ) (t : ℝ) :
+    ∫⁻ z in Metric.ball x₀ t, w z ^ q * (min (w z) (N : ℝ≥0∞)) ^ ε
+      = ENNReal.ofReal ε * ∫⁻ lam in Set.Ioi (0:ℝ),
+          (∫⁻ z in Metric.ball x₀ t ∩ {z | lam < (min (w z) (N:ℝ≥0∞)).toReal},
+            w z ^ q) * ENNReal.ofReal (lam ^ (ε - 1)) := by
+  classical
+  set f : ℂ → ℝ≥0∞ := fun z => min (w z) (N : ℝ≥0∞) with hfdef
+  have hfmeas : AEMeasurable f volume := hwmeas.min aemeasurable_const
+  have hffin : ∀ z, f z ≠ ⊤ := fun z =>
+    ne_top_of_le_ne_top (ENNReal.natCast_ne_top N) (min_le_right _ _)
+  set μ : Measure ℂ :=
+    (volume.restrict (Metric.ball x₀ t)).withDensity (fun z => w z ^ q) with hμdef
+  have hwqmeas : AEMeasurable (fun z => w z ^ q) (volume.restrict (Metric.ball x₀ t)) :=
+    (hwmeas.restrict).pow_const q
+  have hLHS : ∫⁻ z in Metric.ball x₀ t, w z ^ q * f z ^ ε = ∫⁻ z, f z ^ ε ∂μ := by
+    rw [hμdef, lintegral_withDensity_eq_lintegral_mul₀ hwqmeas ((hfmeas.restrict).pow_const ε)]
+    apply lintegral_congr_ae
+    filter_upwards with z
+    simp only [Pi.mul_apply]
+  rw [hLHS]
+  set g : ℂ → ℝ := fun z => (f z).toReal with hgdef
+  have hpt : ∀ z, f z ^ ε = ENNReal.ofReal (g z ^ ε) := by
+    intro z
+    rw [hgdef, ← ENNReal.ofReal_rpow_of_nonneg ENNReal.toReal_nonneg hε.le,
+      ENNReal.ofReal_toReal (hffin z)]
+  have hgnn : 0 ≤ᵐ[μ] g := Filter.Eventually.of_forall (fun z => ENNReal.toReal_nonneg)
+  have hgmeas : AEMeasurable g μ := by
+    refine (hfmeas.ennreal_toReal.restrict (s := Metric.ball x₀ t)).mono' ?_
+    rw [hμdef]; exact withDensity_absolutelyContinuous _ _
+  have hrpowlc := lintegral_rpow_eq_lintegral_meas_lt_mul (μ := μ) hgnn hgmeas hε
+  rw [show (∫⁻ z, f z ^ ε ∂μ) = ∫⁻ z, ENNReal.ofReal (g z ^ ε) ∂μ from lintegral_congr hpt]
+  rw [hrpowlc]
+  congr 1
+  apply lintegral_congr
+  intro lam
+  congr 1
+  have hwqvol : AEMeasurable (fun z => w z ^ q) volume := hwmeas.pow_const q
+  have hgvol : AEMeasurable g volume := hfmeas.ennreal_toReal
+  have hmslt : NullMeasurableSet {a : ℂ | lam < g a} (volume.restrict (Metric.ball x₀ t)) :=
+    nullMeasurableSet_lt aemeasurable_const hgvol.restrict
+  rw [hμdef, withDensity_apply₀ _ hmslt, Measure.restrict_restrict₀ hmslt]
+  have hseteq : {a : ℂ | lam < g a} ∩ Metric.ball x₀ t
+      = Metric.ball x₀ t ∩ {z | lam < (min (w z) (N:ℝ≥0∞)).toReal} := by
+    rw [hgdef]; ext z; simp only [Set.mem_inter_iff, Set.mem_setOf_eq]; tauto
+  rw [hseteq]
+
+private theorem gehring_recon {p β : ℝ} (hp : 0 < p) (hβ : 0 < β) {D : ℂ → ℝ≥0∞} {θ : ℂ → ℝ}
+    (hDmeas : AEMeasurable D volume) (hθmeas : AEMeasurable θ volume)
+    (hθnn : ∀ z, 0 ≤ θ z) (x₀ : ℂ) (s : ℝ) :
+    ∫⁻ lam in Set.Ioi (0:ℝ),
+        (∫⁻ z in Metric.ball x₀ s ∩ {z | β * lam < θ z}, D z)
+          * ENNReal.ofReal (lam ^ (p - 1))
+      = ENNReal.ofReal (1 / (p * β ^ p)) *
+          ∫⁻ z in Metric.ball x₀ s, D z * ENNReal.ofReal (θ z ^ p) := by
+  classical
+  set ν : Measure ℂ := (volume.restrict (Metric.ball x₀ s)).withDensity D with hνdef
+  have hinner : ∀ lam : ℝ, (∫⁻ z in Metric.ball x₀ s ∩ {z | β * lam < θ z}, D z)
+      = ν {z | β * lam < θ z} := by
+    intro lam
+    have hmslt : NullMeasurableSet {z : ℂ | β * lam < θ z} (volume.restrict (Metric.ball x₀ s)) :=
+      nullMeasurableSet_lt aemeasurable_const hθmeas.restrict
+    rw [hνdef, withDensity_apply₀ _ hmslt, Measure.restrict_restrict₀ hmslt]
+    have hseteq : {z : ℂ | β * lam < θ z} ∩ Metric.ball x₀ s
+        = Metric.ball x₀ s ∩ {z | β * lam < θ z} := Set.inter_comm _ _
+    rw [hseteq]
+  simp_rw [hinner]
+  set hθ : ℂ → ℝ := fun z => θ z / β with hθdef
+  have hνset : ∀ lam : ℝ, ν {z | β * lam < θ z} = ν {z | lam < hθ z} := by
+    intro lam; congr 1; ext z
+    simp only [Set.mem_setOf_eq, hθdef, lt_div_iff₀ hβ, mul_comm]
+  simp_rw [hνset]
+  have hhnn : 0 ≤ᵐ[ν] hθ := Filter.Eventually.of_forall (fun z => by
+    rw [hθdef]; exact div_nonneg (hθnn z) hβ.le)
+  have hhmeas : AEMeasurable hθ ν := by
+    have h1 : AEMeasurable hθ (volume.restrict (Metric.ball x₀ s)) := by
+      rw [hθdef]; exact hθmeas.restrict.div_const β
+    refine h1.mono' ?_
+    rw [hνdef]; exact withDensity_absolutelyContinuous _ _
+  have hlc := lintegral_rpow_eq_lintegral_meas_lt_mul (μ := ν) hhnn hhmeas hp
+  have hdens : ∫⁻ z, ENNReal.ofReal (hθ z ^ p) ∂ν
+      = ENNReal.ofReal (1 / β ^ p) * ∫⁻ z in Metric.ball x₀ s, D z * ENNReal.ofReal (θ z ^ p) := by
+    rw [hνdef, lintegral_withDensity_eq_lintegral_mul₀ hDmeas.restrict
+        (by
+          refine ENNReal.measurable_ofReal.comp_aemeasurable ?_
+          have hhr : AEMeasurable hθ (volume.restrict (Metric.ball x₀ s)) := by
+            rw [hθdef]; exact hθmeas.restrict.div_const β
+          exact hhr.pow_const p)]
+    rw [← lintegral_const_mul' _ _ (ENNReal.ofReal_ne_top : ENNReal.ofReal (1 / β ^ p) ≠ ⊤)]
+    apply lintegral_congr_ae
+    filter_upwards with z
+    simp only [Pi.mul_apply, hθdef]
+    rw [Real.div_rpow (hθnn z) hβ.le, ENNReal.ofReal_div_of_pos (by positivity)]
+    rw [one_div, ENNReal.ofReal_inv_of_pos (by positivity : (0:ℝ) < β ^ p), div_eq_mul_inv]
+    ring
+  rw [hdens] at hlc
+  have hp0 : ENNReal.ofReal p ≠ 0 := by rw [ne_eq, ENNReal.ofReal_eq_zero, not_le]; exact hp
+  have hptop : ENNReal.ofReal p ≠ ⊤ := ENNReal.ofReal_ne_top
+  rw [eq_comm, ← ENNReal.eq_div_iff hp0 hptop] at hlc
+  rw [hlc, ENNReal.div_eq_inv_mul]
+  rw [show ENNReal.ofReal (1 / (p * β ^ p))
+      = (ENNReal.ofReal p)⁻¹ * ENNReal.ofReal (1 / β ^ p) from ?_]
+  · ring
+  · rw [← ENNReal.ofReal_inv_of_pos hp, ← ENNReal.ofReal_mul (by positivity)]
+    congr 1; field_simp
+
+
+/-- **The crux pointwise inequality.**  For `w : ℝ≥0∞`, `N : ℕ`, `1 < q`, `0 ≤ ε`,
+`w · (min w N).toReal^{q+ε-1} ≤ w^q · (min w N)^ε`.  This is the inequality that eliminates the
+over-truncation tail: on `{w ≤ N}` it is an equality (`w·w^{q+ε-1} = w^{q+ε} = w^q·w^ε`); on
+`{w > N}` (`min w N = N`) it reads `w·N^{q+ε-1} ≤ w^q·N^ε`, i.e. `N^{q-1} ≤ w^{q-1}`, true since
+`w > N` and `q-1 ≥ 0`.  It is what makes the reconstruction of the honest exponent-1 good-λ land
+in the FINITE truncated quantity `Ž_N = ∫ w^q (min w N)^ε` rather than the untruncated energy. -/
+private theorem gehring_crux_le {q ε : ℝ} (hq : 1 < q) (hε : 0 ≤ ε) (w : ℝ≥0∞) (N : ℕ) :
+    w * ENNReal.ofReal ((min w (N : ℝ≥0∞)).toReal ^ (q + ε - 1))
+      ≤ w ^ q * (min w (N : ℝ≥0∞)) ^ ε := by
+  have hq0 : (0:ℝ) < q := lt_trans one_pos hq
+  have hqε1 : (0:ℝ) ≤ q + ε - 1 := by linarith
+  have hminfin : min w (N : ℝ≥0∞) ≠ ⊤ :=
+    ne_top_of_le_ne_top (ENNReal.natCast_ne_top N) (min_le_right _ _)
+  rcases le_total w (N : ℝ≥0∞) with hwN | hwN
+  · -- `w ≤ N`: `min w N = w`.  Equality `w·w^{q+ε-1} = w^q·w^ε`.
+    have hmin : min w (N : ℝ≥0∞) = w := min_eq_left hwN
+    rw [hmin]
+    rcases eq_or_ne w ⊤ with hwtop | hwfin
+    · exact absurd (hwtop ▸ hwN) (by simp)
+    · rw [← ENNReal.ofReal_rpow_of_nonneg ENNReal.toReal_nonneg hqε1, ENNReal.ofReal_toReal hwfin]
+      rw [show w * w ^ (q + ε - 1) = w ^ (1:ℝ) * w ^ (q + ε - 1) by rw [ENNReal.rpow_one]]
+      rw [← ENNReal.rpow_add_of_nonneg (1:ℝ) (q + ε - 1) zero_le_one hqε1]
+      rw [← ENNReal.rpow_add_of_nonneg q ε hq0.le hε]
+      rw [show (1:ℝ) + (q + ε - 1) = q + ε by ring]
+  · -- `w ≥ N`: `min w N = N`.  Need `w·N^{q+ε-1} ≤ w^q·N^ε`, i.e. `w·N^{q-1} ≤ w^q`.
+    have hmin : min w (N : ℝ≥0∞) = (N : ℝ≥0∞) := min_eq_right hwN
+    rw [hmin]
+    rcases Nat.eq_zero_or_pos N with hN0 | hNpos
+    · -- `N = 0`: `min = 0`, `(0).toReal = 0`, LHS = `w·ofReal(0^{q+ε-1}) = 0` (since `q+ε-1>0`).
+      subst hN0
+      simp only [Nat.cast_zero, ENNReal.toReal_zero]
+      rw [Real.zero_rpow (by linarith : q + ε - 1 ≠ 0), ENNReal.ofReal_zero, mul_zero]
+      exact zero_le _
+    · have hNreal : ((N:ℝ≥0∞)).toReal = (N:ℝ) := by simp
+      rw [hNreal]
+      -- RHS factor `(N:ℝ≥0∞)^ε = ofReal((N:ℝ)^ε)`.
+      have hNε : (N:ℝ≥0∞) ^ ε = ENNReal.ofReal ((N:ℝ) ^ ε) := by
+        rw [← ENNReal.ofReal_natCast, ← ENNReal.ofReal_rpow_of_nonneg (Nat.cast_nonneg N) hε]
+      rw [hNε]
+      -- LHS = w·ofReal(N^{q+ε-1}) = w·ofReal(N^{q-1})·ofReal(N^ε).
+      rw [show (N:ℝ) ^ (q + ε - 1) = (N:ℝ) ^ (q - 1) * (N:ℝ) ^ ε by
+        rw [← Real.rpow_add (by exact_mod_cast hNpos)]; ring_nf]
+      rw [ENNReal.ofReal_mul (by positivity)]
+      rw [show w * (ENNReal.ofReal ((N:ℝ)^(q-1)) * ENNReal.ofReal ((N:ℝ)^ε))
+        = (w * ENNReal.ofReal ((N:ℝ)^(q-1))) * ENNReal.ofReal ((N:ℝ)^ε) by ring]
+      apply mul_le_mul_left
+      -- `w·N^{q-1} ≤ w^q`.  Since `N ≤ w`: `N^{q-1} ≤ w^{q-1}`, and `w·w^{q-1}=w^q`.
+      have hNlew : (ENNReal.ofReal ((N:ℝ)^(q-1))) ≤ w ^ (q - 1) := by
+        rw [← ENNReal.ofReal_natCast (n := N)] at hwN
+        calc ENNReal.ofReal ((N:ℝ)^(q-1))
+            = (ENNReal.ofReal (N:ℝ)) ^ (q - 1) := by
+              rw [← ENNReal.ofReal_rpow_of_nonneg (Nat.cast_nonneg N) (by linarith)]
+          _ ≤ w ^ (q - 1) := ENNReal.rpow_le_rpow hwN (by linarith)
+      calc w * ENNReal.ofReal ((N:ℝ)^(q-1)) ≤ w * w ^ (q - 1) := mul_le_mul_right hNlew _
+        _ = w ^ (1:ℝ) * w ^ (q - 1) := by rw [ENNReal.rpow_one]
+        _ = w ^ (q:ℝ) := by
+            rw [← ENNReal.rpow_add_of_nonneg (1:ℝ) (q-1) zero_le_one (by linarith),
+              show (1:ℝ) + (q - 1) = q by ring]
+
+private theorem gehring_assembly {q A ε : ℝ} (hq : 1 < q) (_hA : 0 ≤ A) (hεpos : 0 < ε)
+    (_hεle : ε ≤ 1)
+    {w b : ℂ → ℝ≥0∞} (hwmeas : AEMeasurable w volume) (hbmeas : AEMeasurable b volume)
+    (x₀ : ℂ) (R₀ : ℝ) (_hR₀ : 0 < R₀)
+    (Cw Cb β : ℝ) (hCw : 0 ≤ Cw) (hCb : 0 ≤ Cb) (hβ0 : 0 < β) (_hβ1 : β < 1)
+    (N : ℕ) (t s : ℝ) (_ht : 4 * R₀ ≤ t) (_hts : t < s) (_hs : s ≤ 16 * R₀)
+    -- THRESHOLD SPLIT.  The good-λ is consumed only on the HIGH range `lam ≥ lam₀`; on the LOW
+    -- range `0 < lam < lam₀` the super-level `w^q`-mass is bounded by the master mass `Wlow`.
+    (lam₀ : ℝ) (hlam₀0 : 0 ≤ lam₀) (Wlow : ℝ≥0∞) (hWlowtop : Wlow ≠ ⊤)
+    (hWlow : ∀ lam : ℝ, 0 < lam →
+      ∫⁻ z in Metric.ball x₀ t ∩ {z | lam < (min (w z) (N:ℝ≥0∞)).toReal}, w z ^ q ≤ Wlow)
+    -- The honest exponent-1 good-λ (TRUNCATED super-level on the RHS w-mass, FULL `w^q` on LHS),
+    -- valid on the HIGH range `lam ≥ lam₀`:
+    (hGL : ∀ lam : ℝ, 0 < lam → lam₀ ≤ lam →
+      ∫⁻ z in Metric.ball x₀ t ∩ {z | lam < (min (w z) (N:ℝ≥0∞)).toReal}, w z ^ q
+        ≤ ENNReal.ofReal (Cw * lam ^ (q - 1))
+            * (∫⁻ z in Metric.ball x₀ s ∩ {z | β * lam < (min (w z) (N:ℝ≥0∞)).toReal}, w z)
+          + ENNReal.ofReal Cb
+            * (∫⁻ z in Metric.ball x₀ s ∩ {z | β * lam < (b z).toReal}, b z ^ q)) :
+    ∫⁻ z in Metric.ball x₀ t, w z ^ q * (min (w z) (N : ℝ≥0∞)) ^ ε
+      ≤ ENNReal.ofReal (lam₀ ^ ε) * Wlow
+        + (ENNReal.ofReal (Cw / ((q + ε - 1) * β ^ (q + ε - 1)) * ε)
+          * (∫⁻ z in Metric.ball x₀ s, w z ^ q * (min (w z) (N : ℝ≥0∞)) ^ ε)
+        + ENNReal.ofReal (Cb / β ^ ε) * (∫⁻ z in Metric.ball x₀ s, b z ^ (q + ε))) := by
+  classical
+  have hq0 : 0 < q := lt_trans one_pos hq
+  have hqε1 : 0 < q + ε - 1 := by linarith
+  -- Step 1: layer-cake LHS.
+  rw [gehring_mass_layerCake hq0 hεpos hwmeas N x₀ t]
+  -- Step 2: THRESHOLD SPLIT of the λ-integral `Ioi 0 = Ioo 0 lam₀ ∪ Ici lam₀`.
+  -- Abbreviations for the inner super-level integral and the good-λ RHS integrand.
+  set Inner : ℝ → ℝ≥0∞ := fun lam =>
+    ∫⁻ z in Metric.ball x₀ t ∩ {z | lam < (min (w z) (N:ℝ≥0∞)).toReal}, w z ^ q with hInnerdef
+  set GLrhs : ℝ → ℝ≥0∞ := fun lam =>
+    ENNReal.ofReal (Cw * lam ^ (q - 1))
+        * (∫⁻ z in Metric.ball x₀ s ∩ {z | β * lam < (min (w z) (N:ℝ≥0∞)).toReal}, w z)
+      + ENNReal.ofReal Cb
+        * (∫⁻ z in Metric.ball x₀ s ∩ {z | β * lam < (b z).toReal}, b z ^ q) with hGLrhsdef
+  -- Measurability of `Inner` (antitone level integral) for the set-split lemma.
+  have hInner_meas : Measurable Inner := by
+    have hanti : Antitone Inner := by
+      intro a c hac; apply lintegral_mono_set; intro z hz
+      exact ⟨hz.1, lt_of_le_of_lt hac hz.2⟩
+    exact hanti.measurable
+  have hgw_meas : Measurable (fun lam : ℝ => ENNReal.ofReal (lam ^ (ε - 1))) := by
+    apply ENNReal.measurable_ofReal.comp; fun_prop
+  -- The split bound: `∫_{Ioi 0} Inner·g ≤ LOW + HIGH` where LOW = `Wlow·lam₀^ε/ε` (as a λ-integral
+  -- over `Ioo 0 lam₀`) and HIGH = `∫_{Ioi 0} GLrhs·g` (the good-λ RHS over all of `Ioi 0`,
+  -- which dominates the `Ici lam₀` part by nonnegativity).
+  have hsplit : ∫⁻ lam in Set.Ioi (0:ℝ), Inner lam * ENNReal.ofReal (lam ^ (ε - 1))
+      ≤ (∫⁻ lam in Set.Ioo (0:ℝ) lam₀, Wlow * ENNReal.ofReal (lam ^ (ε - 1)))
+        + ∫⁻ lam in Set.Ioi (0:ℝ), GLrhs lam * ENNReal.ofReal (lam ^ (ε - 1)) := by
+    rcases eq_or_lt_of_le hlam₀0 with hlam₀eq | hlam₀pos
+    · -- `lam₀ = 0`: the LOW range `Ioo 0 0` is empty; HIGH covers everything.
+      subst hlam₀eq
+      simp only [Set.Ioo_self, Measure.restrict_empty, lintegral_zero_measure, zero_add]
+      apply lintegral_mono_ae
+      filter_upwards [ae_restrict_mem measurableSet_Ioi] with lam hlam
+      exact mul_le_mul_left (hGL lam hlam (le_of_lt hlam)) _
+    · -- `lam₀ > 0`: split `Ioi 0 = Ioo 0 lam₀ ∪ Ici lam₀`.
+      have hunion : Set.Ioi (0:ℝ) = Set.Ioo (0:ℝ) lam₀ ∪ Set.Ici lam₀ :=
+        (Set.Ioo_union_Ici_eq_Ioi hlam₀pos).symm
+      have hLHSsplit : ∫⁻ lam in Set.Ioi (0:ℝ), Inner lam * ENNReal.ofReal (lam ^ (ε - 1))
+          = (∫⁻ lam in Set.Ioo (0:ℝ) lam₀, Inner lam * ENNReal.ofReal (lam ^ (ε - 1)))
+            + ∫⁻ lam in Set.Ici lam₀, Inner lam * ENNReal.ofReal (lam ^ (ε - 1)) := by
+        rw [hunion, lintegral_union measurableSet_Ici
+          (Set.disjoint_left.mpr (fun lam h1 h2 => absurd h2 (not_le.mpr h1.2)))]
+      rw [hLHSsplit]
+      apply add_le_add
+      · -- LOW: `Inner lam ≤ Wlow` on `Ioo 0 lam₀`.
+        apply lintegral_mono_ae
+        filter_upwards [ae_restrict_mem measurableSet_Ioo] with lam hlam
+        exact mul_le_mul_left (hWlow lam hlam.1) _
+      · -- HIGH: `Inner lam ≤ GLrhs lam` on `Ici lam₀ ⊆ {lam ≥ lam₀, lam > 0}`, then extend to
+        -- `Ioi 0`.
+        calc ∫⁻ lam in Set.Ici lam₀, Inner lam * ENNReal.ofReal (lam ^ (ε - 1))
+            ≤ ∫⁻ lam in Set.Ici lam₀, GLrhs lam * ENNReal.ofReal (lam ^ (ε - 1)) := by
+              apply lintegral_mono_ae
+              filter_upwards [ae_restrict_mem measurableSet_Ici] with lam hlam
+              exact mul_le_mul_left (hGL lam (lt_of_lt_of_le hlam₀pos hlam) hlam) _
+          _ ≤ ∫⁻ lam in Set.Ioi (0:ℝ), GLrhs lam * ENNReal.ofReal (lam ^ (ε - 1)) := by
+              apply lintegral_mono_set
+              exact fun lam hlam => lt_of_lt_of_le hlam₀pos hlam
+  -- Bound the LOW λ-integral via `gehring_scalar_lc`.
+  have hlow_eval : ∫⁻ lam in Set.Ioo (0:ℝ) lam₀, Wlow * ENNReal.ofReal (lam ^ (ε - 1))
+      = Wlow * ENNReal.ofReal (lam₀ ^ ε / ε) := by
+    rw [lintegral_const_mul' _ _ hWlowtop, gehring_scalar_lc lam₀ hlam₀0 ε hεpos]
+  rw [hlow_eval] at hsplit
+  -- Assemble: `Ž_N(t) = ε·∫_{Ioi 0} Inner·g ≤ ε·(LOW + HIGH)`.
+  rw [show (∫⁻ lam in Set.Ioi (0:ℝ), Inner lam * ENNReal.ofReal (lam ^ (ε - 1)))
+      = ∫⁻ lam in Set.Ioi (0:ℝ),
+        (∫⁻ z in Metric.ball x₀ t ∩ {z | lam < (min (w z) (N:ℝ≥0∞)).toReal}, w z ^ q)
+          * ENNReal.ofReal (lam ^ (ε - 1)) from rfl]
+  refine le_trans (mul_le_mul_right hsplit _) ?_
+  rw [mul_add]
+  apply add_le_add
+  · -- `ε·(Wlow·lam₀^ε/ε) = ofReal(lam₀^ε)·Wlow`.
+    rw [← mul_assoc, mul_comm (ENNReal.ofReal ε) Wlow, mul_assoc]
+    apply le_of_eq
+    rw [show ENNReal.ofReal ε * ENNReal.ofReal (lam₀ ^ ε / ε) = ENNReal.ofReal (lam₀ ^ ε) from by
+      rw [← ENNReal.ofReal_mul hεpos.le]
+      congr 1; field_simp]
+    ring
+  -- HIGH part: the existing reconstruction (identical to the previous assembly proof).
+  simp only [hGLrhsdef]
+  -- Distribute (A+B)*g into A*g + B*g pointwise on Ioi 0, then split the integral.
+  have hpw : ∀ lam : ℝ, lam ∈ Set.Ioi (0:ℝ) →
+      (ENNReal.ofReal (Cw * lam ^ (q - 1))
+          * (∫⁻ z in Metric.ball x₀ s ∩ {z | β * lam < (min (w z) (N:ℝ≥0∞)).toReal}, w z)
+        + ENNReal.ofReal Cb
+          * (∫⁻ z in Metric.ball x₀ s ∩ {z | β * lam < (b z).toReal}, b z ^ q))
+        * ENNReal.ofReal (lam ^ (ε - 1))
+      = ENNReal.ofReal Cw *
+            ((∫⁻ z in Metric.ball x₀ s ∩ {z | β * lam < (min (w z) (N:ℝ≥0∞)).toReal}, w z)
+              * ENNReal.ofReal (lam ^ ((q + ε - 1) - 1)))
+        + ENNReal.ofReal Cb *
+            ((∫⁻ z in Metric.ball x₀ s ∩ {z | β * lam < (b z).toReal}, b z ^ q)
+              * ENNReal.ofReal (lam ^ (ε - 1))) := by
+    intro lam hlam
+    have hlampos : 0 < lam := hlam
+    rw [add_mul]
+    congr 1
+    · rw [show ENNReal.ofReal (Cw * lam ^ (q - 1))
+              = ENNReal.ofReal Cw * ENNReal.ofReal (lam ^ (q - 1)) from by
+            rw [← ENNReal.ofReal_mul hCw]]
+      rw [show (q + ε - 1) - 1 = (q - 1) + (ε - 1) by ring]
+      rw [Real.rpow_add hlampos, ENNReal.ofReal_mul (Real.rpow_nonneg hlampos.le _)]
+      ring
+    · ring
+  rw [setLIntegral_congr_fun measurableSet_Ioi hpw]
+  -- Split the integral.
+  rw [lintegral_add_left' ?_]
+  · rw [lintegral_const_mul' _ _ ENNReal.ofReal_ne_top,
+      lintegral_const_mul' _ _ ENNReal.ofReal_ne_top]
+    -- w-term reconstruction: `θ := (min w N).toReal` (TRUNCATED level), `D := w` (FULL integrand).
+    rw [gehring_recon hqε1 hβ0 hwmeas (hwmeas.min aemeasurable_const).ennreal_toReal
+          (fun z => ENNReal.toReal_nonneg) x₀ s]
+    rw [gehring_recon hεpos hβ0 (hbmeas.pow_const q) hbmeas.ennreal_toReal
+          (fun z => ENNReal.toReal_nonneg) x₀ s]
+    -- The crux comparison: `∫ w·ofReal((min w N).toReal^{q+ε-1}) ≤ ∫ w^q·(min w N)^ε = Ž_N(s)`.
+    have hwid : ∫⁻ z in Metric.ball x₀ s,
+          w z * ENNReal.ofReal ((min (w z) (N:ℝ≥0∞)).toReal ^ (q + ε - 1))
+        ≤ ∫⁻ z in Metric.ball x₀ s, w z ^ q * (min (w z) (N : ℝ≥0∞)) ^ ε := by
+      apply lintegral_mono
+      intro z
+      exact gehring_crux_le hq hεpos.le (w z) N
+    have hbid : ∫⁻ z in Metric.ball x₀ s, b z ^ q * ENNReal.ofReal ((b z).toReal ^ ε)
+        ≤ ∫⁻ z in Metric.ball x₀ s, b z ^ (q + ε) := by
+      apply lintegral_mono_ae
+      filter_upwards with z
+      rcases eq_or_ne (b z) ⊤ with hbtop | hbfin
+      · rw [hbtop]
+        simp only [ENNReal.toReal_top, Real.zero_rpow hεpos.ne', ENNReal.ofReal_zero, mul_zero]
+        exact zero_le _
+      · rw [← ENNReal.ofReal_rpow_of_nonneg ENNReal.toReal_nonneg hεpos.le,
+          ENNReal.ofReal_toReal hbfin]
+        rw [← ENNReal.rpow_add_of_nonneg q ε hq0.le hεpos.le]
+    calc ENNReal.ofReal ε *
+            (ENNReal.ofReal Cw * (ENNReal.ofReal (1 / ((q + ε - 1) * β ^ (q + ε - 1)))
+                * ∫⁻ z in Metric.ball x₀ s,
+                    w z * ENNReal.ofReal ((min (w z) (N:ℝ≥0∞)).toReal ^ (q + ε - 1)))
+              + ENNReal.ofReal Cb * (ENNReal.ofReal (1 / (ε * β ^ ε))
+                * ∫⁻ z in Metric.ball x₀ s, b z ^ q * ENNReal.ofReal ((b z).toReal ^ ε)))
+        ≤ ENNReal.ofReal ε *
+            (ENNReal.ofReal Cw * (ENNReal.ofReal (1 / ((q + ε - 1) * β ^ (q + ε - 1)))
+                * ∫⁻ z in Metric.ball x₀ s, w z ^ q * (min (w z) (N : ℝ≥0∞)) ^ ε)
+              + ENNReal.ofReal Cb * (ENNReal.ofReal (1 / (ε * β ^ ε))
+                * ∫⁻ z in Metric.ball x₀ s, b z ^ (q + ε))) := by gcongr
+      _ = ENNReal.ofReal (Cw / ((q + ε - 1) * β ^ (q + ε - 1)) * ε)
+              * (∫⁻ z in Metric.ball x₀ s, w z ^ q * (min (w z) (N : ℝ≥0∞)) ^ ε)
+            + ENNReal.ofReal (Cb / β ^ ε) * (∫⁻ z in Metric.ball x₀ s, b z ^ (q + ε)) := by
+          have triple : ∀ (a bb c : ℝ) (I : ℝ≥0∞), 0 ≤ a → 0 ≤ bb →
+              ENNReal.ofReal a * (ENNReal.ofReal bb * (ENNReal.ofReal c * I))
+                = ENNReal.ofReal (a * bb * c) * I := by
+            intro a bb c I ha hb
+            rw [← mul_assoc, ← mul_assoc, ← ENNReal.ofReal_mul ha,
+              ← ENNReal.ofReal_mul (by positivity)]
+          rw [mul_add, triple ε Cw _ _ hεpos.le hCw, triple ε Cb _ _ hεpos.le hCb]
+          have e1 : ε * Cw * (1 / ((q + ε - 1) * β ^ (q + ε - 1)))
+              = Cw / ((q + ε - 1) * β ^ (q + ε - 1)) * ε := by ring
+          have e2 : ε * Cb * (1 / (ε * β ^ ε)) = Cb / β ^ ε := by
+            rw [eq_div_iff (by positivity : β ^ ε ≠ 0)]; field_simp
+          rw [e1, e2]
+  · -- AEMeasurable of the w-summand: (antitone level-integral) * ofReal(λ^{p-1}).
+    have hanti : Antitone (fun lam : ℝ =>
+        ∫⁻ z in Metric.ball x₀ s ∩ {z | β * lam < (min (w z) (N:ℝ≥0∞)).toReal}, w z) := by
+      intro a c hac
+      apply lintegral_mono_set
+      intro z hz
+      refine ⟨hz.1, ?_⟩
+      have hmul : β * a ≤ β * c := mul_le_mul_of_nonneg_left hac hβ0.le
+      exact lt_of_le_of_lt hmul hz.2
+    have hmeas1 : Measurable (fun lam : ℝ =>
+        ∫⁻ z in Metric.ball x₀ s ∩ {z | β * lam < (min (w z) (N:ℝ≥0∞)).toReal}, w z) :=
+      hanti.measurable
+    have hmeasrpow : Measurable (fun lam : ℝ => ENNReal.ofReal (lam ^ ((q + ε - 1) - 1))) := by
+      apply ENNReal.measurable_ofReal.comp; fun_prop
+    exact ((measurable_const.mul (hmeas1.mul hmeasrpow)).aemeasurable).restrict
+
+private theorem gehring_toReal_conv {q κ κ' ε Cb β : ℝ} {w b : ℂ → ℝ≥0∞} {x₀ : ℂ}
+    {Wmaster Bmaster t s : ℝ}
+    (N : ℕ)
+    (hκ'κ : κ' ≤ κ) (hκ'0 : 0 ≤ κ') (hε0 : 0 ≤ ε) (hCbβ0 : 0 ≤ Cb / β ^ ε)
+    (_hWmaster0 : 0 ≤ Wmaster)
+    (_hst : 0 < s - t)
+    -- THRESHOLD-SPLIT low collar term `Low = ofReal(lam₀^ε)·Wlow`:
+    (Low : ℝ≥0∞) (hLowfin : Low ≠ ⊤)
+    -- finiteness:
+    (_hXfin : ∫⁻ z in Metric.ball x₀ t, w z ^ q * (min (w z) (N : ℝ≥0∞)) ^ ε ≠ ⊤)
+    (hYfin : ∫⁻ z in Metric.ball x₀ s, w z ^ q * (min (w z) (N : ℝ≥0∞)) ^ ε ≠ ⊤)
+    (hZbfin : ∫⁻ z in Metric.ball x₀ s, b z ^ (q + ε) ≠ ⊤)
+    -- Bmaster bound: Zb.toReal ≤ Bmaster
+    (hZbBm : (∫⁻ z in Metric.ball x₀ s, b z ^ (q + ε)).toReal ≤ Bmaster)
+    -- the ENNReal inequality (from the THRESHOLD-SPLIT assembly):
+    (hENN : ∫⁻ z in Metric.ball x₀ t, w z ^ q * (min (w z) (N : ℝ≥0∞)) ^ ε
+      ≤ Low + (ENNReal.ofReal (κ' * ε)
+          * (∫⁻ z in Metric.ball x₀ s, w z ^ q * (min (w z) (N : ℝ≥0∞)) ^ ε)
+        + ENNReal.ofReal (Cb / β ^ ε) * (∫⁻ z in Metric.ball x₀ s, b z ^ (q + ε))))
+    -- C₁ chosen large: covers both the `b`-forcing AND the low collar.
+    (C₁ : ℝ) (hC₁ : Cb / β ^ ε ≤ C₁) (hC₁0 : 0 ≤ C₁)
+    (hLowbd : Low.toReal ≤ C₁ * Wmaster / (s - t) ^ (2 : ℝ)) :
+    (∫⁻ z in Metric.ball x₀ t, w z ^ q * (min (w z) (N : ℝ≥0∞)) ^ ε).toReal
+      ≤ (κ * ε) * (∫⁻ z in Metric.ball x₀ s, w z ^ q * (min (w z) (N : ℝ≥0∞)) ^ ε).toReal
+        + C₁ * Wmaster / (s - t) ^ (2 : ℝ) + C₁ * Bmaster := by
+  set X := ∫⁻ z in Metric.ball x₀ t, w z ^ q * (min (w z) (N:ℝ≥0∞)) ^ ε with hXdef
+  set Y := ∫⁻ z in Metric.ball x₀ s, w z ^ q * (min (w z) (N:ℝ≥0∞)) ^ ε with hYdef
+  set Zb := ∫⁻ z in Metric.ball x₀ s, b z ^ (q + ε) with hZbdef
+  -- toReal-monotone applied to hENN.
+  have hmono := ENNReal.toReal_mono ?_ hENN
+  · -- bound RHS toReal
+    rw [ENNReal.toReal_add hLowfin (by finiteness),
+        ENNReal.toReal_add (by finiteness) (by finiteness)] at hmono
+    rw [ENNReal.toReal_mul, ENNReal.toReal_mul, ENNReal.toReal_ofReal (by positivity),
+        ENNReal.toReal_ofReal hCbβ0] at hmono
+    -- hmono : X.toReal ≤ Low.toReal + (κ'ε * Y.toReal + (Cb/βε) * Zb.toReal)
+    have hYnn : 0 ≤ Y.toReal := ENNReal.toReal_nonneg
+    have hwterm : (κ' * ε) * Y.toReal ≤ (κ * ε) * Y.toReal :=
+      mul_le_mul_of_nonneg_right (by nlinarith [hκ'κ, hε0]) hYnn
+    have hbterm : (Cb / β ^ ε) * Zb.toReal ≤ C₁ * Bmaster :=
+      mul_le_mul hC₁ hZbBm ENNReal.toReal_nonneg hC₁0
+    calc X.toReal ≤ Low.toReal + ((κ' * ε) * Y.toReal + (Cb / β ^ ε) * Zb.toReal) := hmono
+      _ ≤ (κ * ε) * Y.toReal + C₁ * Wmaster / (s - t) ^ (2 : ℝ) + C₁ * Bmaster := by linarith
+  · -- finiteness of RHS for toReal_mono
+    exact ENNReal.add_ne_top.mpr ⟨hLowfin, ENNReal.add_ne_top.mpr
+      ⟨ENNReal.mul_ne_top ENNReal.ofReal_ne_top hYfin,
+       ENNReal.mul_ne_top ENNReal.ofReal_ne_top hZbfin⟩⟩
+
+-- The hole-fill lemma: assembles pillars + good-λ + toReal into the ∃ C₁ shape.
+set_option maxHeartbeats 400000 in
+-- Large but elementary threshold/collar bookkeeping; a modest heartbeat bump avoids spurious
+-- `whnf` timeouts on the heavy `(∫⁻…).toReal` master-mass terms.
+private theorem gehring_holeFill {q A ε : ℝ} (hq : 1 < q) (hA : 0 ≤ A)
+    (hεpos : 0 < ε) (hεle : ε ≤ 1)
+    {w b : ℂ → ℝ≥0∞} (hwmeas : AEMeasurable w volume) (hbmeas : AEMeasurable b volume)
+    (x₀ : ℂ) (R₀ : ℝ) (hR₀ : 0 < R₀)
+    (κ Cw Cb β : ℝ) (hCw : 0 ≤ Cw) (hCb : 0 ≤ Cb) (hβ0 : 0 < β) (hβ1 : β < 1)
+    -- the κ'≤κ constant fit:
+    (hκfit : Cw / ((q + ε - 1) * β ^ (q + ε - 1)) ≤ κ) (_hκ0 : 0 ≤ κ)
+    -- master finiteness:
+    (hWmaster0 : 0 ≤ (∫⁻ z in Metric.ball x₀ (16 * R₀), w z ^ q).toReal)
+    (hWfin16 : ∫⁻ z in Metric.ball x₀ (16 * R₀), w z ^ q < ⊤)
+    (hbfin : ∫⁻ z in Metric.ball x₀ (16 * R₀), b z ^ (q + ε) < ⊤)
+    -- the honest, COLLAR-FREE exponent-1 good-λ (FULL `w^q` LHS, TRUNCATED super-level RHS w-mass),
+    -- valid on the HIGH range `⨍_{ball s} w^q ≤ (ofReal lam)^q` (i.e. `lam ≥ lam₀`) AND above the
+    -- structural collar-killing threshold `5·√Wmaster ≤ (s−t)·lam^{q/2}` (i.e. `lam ≥ lam₁`):
+    (hGL : ∀ (N : ℕ) (t s : ℝ), 4 * R₀ ≤ t → t < s → s ≤ 16 * R₀ → ∀ lam : ℝ, 0 < lam →
+      (⨍⁻ z in Metric.ball x₀ s, w z ^ q ∂volume) ≤ (ENNReal.ofReal lam) ^ q →
+      5 * Real.sqrt ((∫⁻ z in Metric.ball x₀ (16 * R₀), w z ^ q).toReal)
+          ≤ (s - t) * lam ^ (q / 2) →
+      ∫⁻ z in Metric.ball x₀ t ∩ {z | lam < (min (w z) (N:ℝ≥0∞)).toReal}, w z ^ q
+        ≤ ENNReal.ofReal (Cw * lam ^ (q - 1))
+            * (∫⁻ z in Metric.ball x₀ s ∩ {z | β * lam < (min (w z) (N:ℝ≥0∞)).toReal}, w z)
+          + ENNReal.ofReal Cb
+            * (∫⁻ z in Metric.ball x₀ s ∩ {z | β * lam < (b z).toReal}, b z ^ q)) :
+    ∃ C₁ : ℝ, 0 ≤ C₁ ∧ ∀ N : ℕ, ∀ t s : ℝ, 4 * R₀ ≤ t → t < s → s ≤ 16 * R₀ →
+      (∫⁻ z in Metric.ball x₀ t, w z ^ q * (min (w z) (N : ℝ≥0∞)) ^ ε).toReal
+        ≤ (κ * ε) * (∫⁻ z in Metric.ball x₀ s, w z ^ q * (min (w z) (N : ℝ≥0∞)) ^ ε).toReal
+          + C₁ * (∫⁻ z in Metric.ball x₀ (16 * R₀), w z ^ q).toReal / (s - t) ^ (2 : ℝ)
+          + C₁ * (∫⁻ z in Metric.ball x₀ (16 * R₀), b z ^ (q + ε)).toReal := by
+  have hq0 : 0 < q := lt_trans one_pos hq
+  have hqε0 : 0 < q + ε := by linarith
+  have hqε1 : 0 < q + ε - 1 := by linarith
+  set Wmaster : ℝ := (∫⁻ z in Metric.ball x₀ (16 * R₀), w z ^ q).toReal with hWmasterdef
+  set Bmaster : ℝ := (∫⁻ z in Metric.ball x₀ (16 * R₀), b z ^ (q + ε)).toReal with hBmasterdef
+  -- The volume of `ball (4R₀)` is the smallest among `ball s` for `s ≥ 4R₀`; it gives the
+  -- structural lower bound on `vol(ball s)` that bounds the threshold `lam₀^ε`.
+  have hvolB4 : (0:ℝ) < Real.pi * (4 * R₀) ^ 2 := by positivity
+  -- The collar constant `C₁`: covers the `b`-forcing `Cb/βε`, the low (`lam₀`) collar
+  -- `lam₀^ε·Wmaster ≤ Cthr·Wmaster/(s-t)²` (using `lam₀^ε ≤ (Wmaster/vol(ball 4R₀))^{ε/q}` and
+  -- `(s-t) ≤ 12R₀`), AND the collar-killing (`lam₁`) collar
+  -- `lam₁^ε·(s-t)² ≤ (12R₀)² + 25·Wmaster =: Cthr1` (since `lam₁^q = 25Wmaster/(s-t)²` and
+  -- `lam₁^ε ≤ 1 + lam₁^q`).  `C₁ := max (Cb/βε) (max Cthr Cthr1)`.
+  set Cthr : ℝ :=
+    (12 * R₀) ^ (2:ℝ) * (Wmaster / (Real.pi * (4 * R₀) ^ 2) + 1) ^ (ε / q) with hCthrdef
+  have hCthr0 : 0 ≤ Cthr := by rw [hCthrdef]; positivity
+  set Cthr1 : ℝ := (12 * R₀) ^ 2 + 25 * Wmaster with hCthr1def
+  have hCthr10 : 0 ≤ Cthr1 := by rw [hCthr1def]; positivity
+  set C₁ : ℝ := max (Cb / β ^ ε) (max Cthr Cthr1) with hC₁def
+  have hC₁0 : 0 ≤ C₁ := le_trans (div_nonneg hCb (by positivity)) (le_max_left _ _)
+  have hC₁ge : Cb / β ^ ε ≤ C₁ := le_max_left _ _
+  have hCthrge : Cthr ≤ C₁ := le_trans (le_max_left _ _) (le_max_right _ _)
+  have hCthr1ge : Cthr1 ≤ C₁ := le_trans (le_max_right _ _) (le_max_right _ _)
+  refine ⟨C₁, hC₁0, ?_⟩
+  intro N t s ht hts hs
+  have hst : 0 < s - t := by linarith
+  have hst12 : s - t ≤ 12 * R₀ := by linarith
+  -- per-N finiteness of the `Ž_N`-masses (`Ž_N(r) = ∫ w^q·(min w N)^ε ≤ N^ε·∫ w^q < ⊤`).
+  have hNfin : ∀ r : ℝ, r ≤ 16 * R₀ →
+      ∫⁻ z in Metric.ball x₀ r, w z ^ q * (min (w z) (N : ℝ≥0∞)) ^ ε ≠ ⊤ := by
+    intro r hr
+    have hbd : ∫⁻ z in Metric.ball x₀ r, w z ^ q * (min (w z) (N : ℝ≥0∞)) ^ ε
+        ≤ (N : ℝ≥0∞) ^ ε * ∫⁻ z in Metric.ball x₀ (16 * R₀), w z ^ q := by
+      calc ∫⁻ z in Metric.ball x₀ r, w z ^ q * (min (w z) (N : ℝ≥0∞)) ^ ε
+          ≤ ∫⁻ z in Metric.ball x₀ r, w z ^ q * (N : ℝ≥0∞) ^ ε := by
+            apply lintegral_mono; intro z
+            exact mul_le_mul_right (ENNReal.rpow_le_rpow (min_le_right _ _) hεpos.le) _
+        _ = (N : ℝ≥0∞) ^ ε * ∫⁻ z in Metric.ball x₀ r, w z ^ q := by
+            rw [← lintegral_const_mul' _ _ (by
+              exact (ENNReal.rpow_lt_top_of_nonneg hεpos.le (ENNReal.natCast_ne_top N)).ne)]
+            apply lintegral_congr_ae; filter_upwards with z; rw [mul_comm]
+        _ ≤ (N : ℝ≥0∞) ^ ε * ∫⁻ z in Metric.ball x₀ (16 * R₀), w z ^ q :=
+            mul_le_mul_right (lintegral_mono_set (Metric.ball_subset_ball hr)) _
+    refine (lt_of_le_of_lt hbd ?_).ne
+    exact ENNReal.mul_lt_top (ENNReal.rpow_lt_top_of_nonneg hεpos.le (ENNReal.natCast_ne_top N))
+      hWfin16
+  -- Bmaster bound: Zb(s).toReal ≤ Bmaster.
+  have hZbBm : (∫⁻ z in Metric.ball x₀ s, b z ^ (q + ε)).toReal ≤ Bmaster := by
+    rw [hBmasterdef]
+    apply ENNReal.toReal_mono hbfin.ne
+    exact lintegral_mono_set (Metric.ball_subset_ball (by linarith))
+  -- finiteness of ∫_{B_s} b^{q+ε}.
+  have hZbsfin : ∫⁻ z in Metric.ball x₀ s, b z ^ (q + ε) ≠ ⊤ := by
+    refine (lt_of_le_of_lt (lintegral_mono_set (Metric.ball_subset_ball (by linarith))) hbfin).ne
+  -- ===== THRESHOLD SETUP =====
+  -- The finite `w^q`-mass and average over `ball s` (a sub-ball of `16B₀`).
+  have hWsfin : ∫⁻ z in Metric.ball x₀ s, w z ^ q ≠ ⊤ :=
+    (lt_of_le_of_lt (lintegral_mono_set (Metric.ball_subset_ball (by linarith))) hWfin16).ne
+  have hvolBs_pos : 0 < volume (Metric.ball x₀ s) := Metric.measure_ball_pos _ _ (by linarith)
+  have hvolBs_ne : volume (Metric.ball x₀ s) ≠ 0 := hvolBs_pos.ne'
+  have hvolBs_top : volume (Metric.ball x₀ s) ≠ ⊤ := measure_ball_lt_top.ne
+  -- the average is finite.
+  set Av : ℝ≥0∞ := ⨍⁻ z in Metric.ball x₀ s, w z ^ q ∂volume with hAvdef
+  have hAvfin : Av ≠ ⊤ := by
+    rw [hAvdef, setLAverage_eq]
+    exact ENNReal.div_ne_top hWsfin hvolBs_ne
+  -- the average threshold `lamA = Av.toReal^{1/q}` (real, ≥ 0), with `(ofReal lamA)^q = Av`.
+  set lamA : ℝ := Av.toReal ^ (1 / q) with hlamAdef
+  have hAvnn : 0 ≤ Av.toReal := ENNReal.toReal_nonneg
+  have hlamA0 : 0 ≤ lamA := by rw [hlamAdef]; positivity
+  have hlamApow : lamA ^ q = Av.toReal := by
+    rw [hlamAdef, ← Real.rpow_mul hAvnn, one_div, inv_mul_cancel₀ hq0.ne', Real.rpow_one]
+  have hlamAq : (ENNReal.ofReal lamA) ^ q = Av := by
+    rw [ENNReal.ofReal_rpow_of_nonneg hlamA0 hq0.le, hlamApow, ENNReal.ofReal_toReal hAvfin]
+  -- the collar-killing threshold `lamC = (5·√Wmaster/(s−t))^{2/q}` (real, ≥ 0), with
+  -- `5·√Wmaster ≤ (s−t)·lamC^{q/2}` (with equality), so `hλ₁` holds for `lam ≥ lamC`.
+  set lamC : ℝ := (5 * Real.sqrt Wmaster / (s - t)) ^ (2 / q) with hlamCdef
+  have hWmsqrt0 : 0 ≤ 5 * Real.sqrt Wmaster / (s - t) := by positivity
+  have hlamC0 : 0 ≤ lamC := by rw [hlamCdef]; positivity
+  have hlamCq2 : lamC ^ (q / 2) = 5 * Real.sqrt Wmaster / (s - t) := by
+    rw [hlamCdef, ← Real.rpow_mul hWmsqrt0]
+    rw [show (2 / q) * (q / 2) = 1 by field_simp, Real.rpow_one]
+  -- Make `lamC` and `lamA` opaque (their bodies are nested rpow's of heavy `.toReal`/`setLAverage`
+  -- terms; downstream `nlinarith`/`positivity`/`isDefEq` only need `hlam{A,C}0`/`hlam{A,C}q2`, so
+  -- keeping the bodies transparent triggers spurious `whnf` blowups).
+  clear_value lamC lamA
+  -- the combined assembly threshold `lam₀ = max lamA lamC ≥ 0`.
+  set lam₀ : ℝ := max lamA lamC with hlam₀def
+  have hlam₀0 : 0 ≤ lam₀ := le_trans hlamA0 (le_max_left _ _)
+  have hlamAle : lamA ≤ lam₀ := le_max_left _ _
+  have hlamCle : lamC ≤ lam₀ := le_max_right _ _
+  clear_value lam₀
+  -- Wlow = the master `w^q`-mass over `ball t ⊆ 16B₀`, an upper bound for every super-level mass.
+  set Wlow : ℝ≥0∞ := ∫⁻ z in Metric.ball x₀ (16 * R₀), w z ^ q with hWlowdef
+  have hWlowtop : Wlow ≠ ⊤ := hWfin16.ne
+  have hWlowbound : ∀ lam : ℝ, 0 < lam →
+      ∫⁻ z in Metric.ball x₀ t ∩ {z | lam < (min (w z) (N:ℝ≥0∞)).toReal}, w z ^ q ≤ Wlow := by
+    intro lam _
+    rw [hWlowdef]
+    calc ∫⁻ z in Metric.ball x₀ t ∩ {z | lam < (min (w z) (N:ℝ≥0∞)).toReal}, w z ^ q
+        ≤ ∫⁻ z in Metric.ball x₀ t, w z ^ q := lintegral_mono_set Set.inter_subset_left
+      _ ≤ ∫⁻ z in Metric.ball x₀ (16 * R₀), w z ^ q :=
+          lintegral_mono_set (Metric.ball_subset_ball (by linarith))
+  -- The good-λ as consumed by the assembly: valid for `lam ≥ lam₀`.
+  have hGLhigh : ∀ lam : ℝ, 0 < lam → lam₀ ≤ lam →
+      ∫⁻ z in Metric.ball x₀ t ∩ {z | lam < (min (w z) (N:ℝ≥0∞)).toReal}, w z ^ q
+        ≤ ENNReal.ofReal (Cw * lam ^ (q - 1))
+            * (∫⁻ z in Metric.ball x₀ s ∩ {z | β * lam < (min (w z) (N:ℝ≥0∞)).toReal}, w z)
+          + ENNReal.ofReal Cb
+            * (∫⁻ z in Metric.ball x₀ s ∩ {z | β * lam < (b z).toReal}, b z ^ q) := by
+    intro lam hlam hlamge
+    refine hGL N t s ht hts hs lam hlam ?_ ?_
+    · -- average condition: `lam ≥ lamA`.
+      rw [← hAvdef, ← hlamAq]
+      exact ENNReal.rpow_le_rpow (ENNReal.ofReal_le_ofReal (le_trans hlamAle hlamge)) hq0.le
+    · -- collar-killing condition: `5√Wmaster ≤ (s−t)·lam^{q/2}` from `lam ≥ lamC`.
+      have hlamCge : lamC ≤ lam := le_trans hlamCle hlamge
+      have hpowmono : lamC ^ (q / 2) ≤ lam ^ (q / 2) :=
+        Real.rpow_le_rpow hlamC0 hlamCge (by positivity)
+      calc 5 * Real.sqrt Wmaster = (s - t) * lamC ^ (q / 2) := by
+            rw [hlamCq2]; field_simp
+        _ ≤ (s - t) * lam ^ (q / 2) := by
+            apply mul_le_mul_of_nonneg_left hpowmono hst.le
+  -- ENNReal inequality from the THRESHOLD-SPLIT assembly.
+  have hENN := gehring_assembly hq hA hεpos hεle hwmeas hbmeas x₀ R₀ hR₀ Cw Cb β hCw hCb hβ0 hβ1
+    N t s ht hts hs lam₀ hlam₀0 Wlow hWlowtop hWlowbound hGLhigh
+  -- toReal conversion (κ' := Cw/((q+ε-1)β^{q+ε-1})).
+  have hκ'0 : (0:ℝ) ≤ Cw / ((q + ε - 1) * β ^ (q + ε - 1)) := by
+    apply div_nonneg hCw; positivity
+  have hCbβ0 : (0:ℝ) ≤ Cb / β ^ ε := div_nonneg hCb (by positivity)
+  -- The low collar bound: `Low = ofReal(lam₀^ε)·Wlow`, and `Low.toReal ≤ C₁·Wmaster/(s-t)²`.
+  set Low : ℝ≥0∞ := ENNReal.ofReal (lam₀ ^ ε) * Wlow with hLowdef
+  have hLowfin : Low ≠ ⊤ := ENNReal.mul_ne_top ENNReal.ofReal_ne_top hWlowtop
+  have hLowbd : Low.toReal ≤ C₁ * Wmaster / (s - t) ^ (2 : ℝ) := by
+    -- `Low.toReal = lam₀^ε·Wmaster`, and `lam₀ = max lamA lamC`.
+    have hWlowReal : Wlow.toReal = Wmaster := by rw [hWlowdef, hWmasterdef]
+    have hLowtoReal : Low.toReal = lam₀ ^ ε * Wmaster := by
+      rw [hLowdef, ENNReal.toReal_mul, ENNReal.toReal_ofReal (by positivity), hWlowReal]
+    rw [hLowtoReal]
+    -- helper: `(s-t)^{2:ℝ} = (s-t)^2` (natural-power), positive.
+    have hst2pos : 0 < (s - t) ^ (2:ℝ) := Real.rpow_pos_of_pos hst 2
+    have hst2eq : (s - t) ^ (2:ℝ) = (s - t) ^ 2 := by
+      rw [show (2:ℝ) = ((2:ℕ):ℝ) by norm_num, Real.rpow_natCast]
+    -- SUFFICES: `lam₀^ε · (s-t)² ≤ C₁`.
+    suffices hsuff : lam₀ ^ ε * (s - t) ^ (2:ℝ) ≤ C₁ by
+      rw [le_div_iff₀ hst2pos]
+      calc lam₀ ^ ε * Wmaster * (s - t) ^ (2:ℝ)
+          = (lam₀ ^ ε * (s - t) ^ (2:ℝ)) * Wmaster := by ring
+        _ ≤ C₁ * Wmaster := mul_le_mul_of_nonneg_right hsuff hWmaster0
+    -- (A) the average part `lamA^ε·(s-t)² ≤ Cthr`.
+    have hAvbd : Av.toReal ≤ Wmaster / (Real.pi * (4 * R₀) ^ 2) := by
+      rw [hAvdef, setLAverage_eq, ENNReal.toReal_div]
+      apply div_le_div₀ ENNReal.toReal_nonneg ?_ hvolB4 ?_
+      · change (∫⁻ z in Metric.ball x₀ s, w z ^ q).toReal ≤ Wmaster
+        rw [hWmasterdef]
+        apply ENNReal.toReal_mono hWfin16.ne
+        exact lintegral_mono_set (Metric.ball_subset_ball (by linarith))
+      · rw [Complex.volume_ball]
+        have hpi : (↑NNReal.pi : ℝ≥0∞).toReal = Real.pi := by
+          rw [← NNReal.coe_real_pi]; simp
+        have hs0 : (0:ℝ) ≤ s := by linarith
+        rw [ENNReal.toReal_mul, ← ENNReal.ofReal_pow hs0, ENNReal.toReal_ofReal (by positivity),
+          hpi]
+        have h4Rs : 4 * R₀ ≤ s := by linarith only [ht, hst.le]
+        have hsq : (4 * R₀) ^ 2 ≤ s ^ 2 := by
+          apply pow_le_pow_left₀ (by positivity) h4Rs
+        rw [mul_comm (s^2) Real.pi]
+        exact mul_le_mul_of_nonneg_left hsq Real.pi_pos.le
+    have hlamAε : lamA ^ ε = Av.toReal ^ (ε / q) := by
+      rw [hlamAdef, ← Real.rpow_mul hAvnn]; congr 1; ring
+    have hbase_le : Av.toReal ≤ Wmaster / (Real.pi * (4 * R₀) ^ 2) + 1 :=
+      le_trans hAvbd (by linarith)
+    have hpow_le : Av.toReal ^ (ε / q) ≤ (Wmaster / (Real.pi * (4 * R₀) ^ 2) + 1) ^ (ε / q) :=
+      Real.rpow_le_rpow hAvnn hbase_le (by positivity)
+    have hAcollar : lamA ^ ε * (s - t) ^ (2:ℝ) ≤ Cthr := by
+      rw [hlamAε, hCthrdef]
+      calc Av.toReal ^ (ε / q) * (s - t) ^ (2:ℝ)
+          ≤ (Wmaster / (Real.pi * (4 * R₀) ^ 2) + 1) ^ (ε / q) * (s - t) ^ (2:ℝ) :=
+            mul_le_mul_of_nonneg_right hpow_le hst2pos.le
+        _ ≤ (Wmaster / (Real.pi * (4 * R₀) ^ 2) + 1) ^ (ε / q) * (12 * R₀) ^ (2:ℝ) := by
+            apply mul_le_mul_of_nonneg_left _ (by positivity)
+            exact Real.rpow_le_rpow hst.le hst12 (by norm_num)
+        _ = (12 * R₀) ^ (2:ℝ) * (Wmaster / (Real.pi * (4 * R₀) ^ 2) + 1) ^ (ε / q) := by ring
+    -- (B) the collar-killing part `lamC^ε·(s-t)² ≤ Cthr1`.
+    -- `lamC^q = (5√Wm/(s-t))²` (from `lamC^{q/2} = 5√Wm/(s-t)`).
+    have hlamCqval : lamC ^ q = (5 * Real.sqrt Wmaster / (s - t)) ^ 2 := by
+      have h2 : lamC ^ q = (lamC ^ (q / 2)) ^ 2 := by
+        rw [← Real.rpow_natCast (lamC ^ (q/2)) 2, ← Real.rpow_mul hlamC0]
+        norm_num
+      rw [h2, hlamCq2]
+    -- `lamC^q · (s-t)² = 25·Wmaster`.
+    have hlamCq_mul : lamC ^ q * (s - t) ^ 2 = 25 * Wmaster := by
+      rw [hlamCqval, div_pow, div_mul_cancel₀ _ (by positivity : ((s - t) ^ 2 : ℝ) ≠ 0),
+        mul_pow, Real.sq_sqrt hWmaster0]; ring
+    -- `lamC^ε ≤ 1 + lamC^q` (since `0 ≤ ε ≤ q`).
+    have hlamCε_le : lamC ^ ε ≤ 1 + lamC ^ q := by
+      rcases le_or_gt lamC 1 with hle | hgt
+      · have hle1 : lamC ^ ε ≤ 1 := Real.rpow_le_one hlamC0 hle hεpos.le
+        linarith only [Real.rpow_nonneg hlamC0 q, hle1]
+      · have hle2 : lamC ^ ε ≤ lamC ^ q :=
+          Real.rpow_le_rpow_of_exponent_le hgt.le (le_trans hεle (le_of_lt hq))
+        linarith only [hle2]
+    have hst2le : (s - t) ^ 2 ≤ (12 * R₀) ^ 2 := by
+      apply pow_le_pow_left₀ hst.le hst12
+    have hCcollar : lamC ^ ε * (s - t) ^ (2:ℝ) ≤ Cthr1 := by
+      calc lamC ^ ε * (s - t) ^ (2:ℝ)
+          ≤ (1 + lamC ^ q) * (s - t) ^ (2:ℝ) :=
+            mul_le_mul_of_nonneg_right hlamCε_le hst2pos.le
+        _ = (s - t) ^ 2 + lamC ^ q * (s - t) ^ 2 := by rw [hst2eq]; ring
+        _ = (s - t) ^ 2 + 25 * Wmaster := by rw [hlamCq_mul]
+        _ ≤ (12 * R₀) ^ 2 + 25 * Wmaster := by linarith only [hst2le]
+        _ = Cthr1 := hCthr1def.symm
+    -- Combine: `lam₀^ε = max(lamA^ε, lamC^ε)`, bounded by `max(Cthr,Cthr1) ≤ C₁`.
+    have hmaxpow : lam₀ ^ ε = max (lamA ^ ε) (lamC ^ ε) := by
+      rw [hlam₀def]
+      rcases le_total lamA lamC with h | h
+      · rw [max_eq_right h, max_eq_right (Real.rpow_le_rpow hlamA0 h hεpos.le)]
+      · rw [max_eq_left h, max_eq_left (Real.rpow_le_rpow hlamC0 h hεpos.le)]
+    rw [hmaxpow]
+    rcases le_total (lamA ^ ε) (lamC ^ ε) with h | h
+    · rw [max_eq_right h]; exact le_trans hCcollar hCthr1ge
+    · rw [max_eq_left h]; exact le_trans hAcollar hCthrge
+  exact gehring_toReal_conv (κ' := Cw / ((q + ε - 1) * β ^ (q + ε - 1)))
+    (Wmaster := Wmaster) (Bmaster := Bmaster) N hκfit hκ'0
+    hεpos.le hCbβ0 hWmaster0 hst Low hLowfin (hNfin t (by linarith)) (hNfin s hs) hZbsfin hZbBm hENN
+    C₁ hC₁ge hC₁0 hLowbd
+
+
 /-- **S2 (`gehring_selfImprovement`).** The **abstract Gehring reverse-Hölder
 self-improvement lemma**, stated equation-agnostically so it is reusable.
 
@@ -4527,7 +8220,7 @@ depends only on the structural constants `q, A`. This is the precise classical s
 of Gehring's lemma, and is exactly what the Beltrami consumer needs (the cutoff fixed
 points share one `A`, hence one `ε`).
 
-This is the content underlying Gehring's lemma; the proof (Phase 2) runs the good-λ /
+This is the content underlying Gehring's lemma; the proof runs the good-λ /
 stopping-time / Calderón–Zygmund decomposition through the Hardy–Littlewood maximal
 function (`MeasureTheory.MB`, `HasWeakType.MB_one`, `hasStrongType_MB`), a Vitali
 covering (`Vitali.exists_disjoint_subfamily_covering_enlargement_ball`), and the
@@ -4552,19 +8245,51 @@ theorem gehring_selfImprovement {q A : ℝ} (hq : 1 < q) (hA : 0 ≤ A) :
   -- Vitali covering + the per-ball reverse-Hölder hypothesis; G2 integrates G1
   -- against `λ^{ε-1}` via the layer-cake formula and absorbs the resulting
   -- `∫ w^{q+ε}` term on the left using `ε` small. G0 reduces the compact-set
-  -- conclusion to a fixed enclosing ball, and G3 is the trivial glue. G0 and G3
-  -- are closed below; G1 and G2 are the two hard analytic cores, laid as faithful
-  -- nodes. The output exponent gain `ε₀` is the one extracted by the absorption
-  -- in G2 (set to `1` here as the placeholder gain; the genuine value is read off
-  -- from the absorbed coefficient in the G2 node).
+  -- conclusion to a fixed enclosing ball, and G3 is the trivial glue. The output
+  -- exponent gain `ε₀` is the one extracted by the absorption in G2: it is read off
+  -- from the absorbed coefficient (the rate `κ`, fixed by `q, A`) as `ε₀ = 1/(2κ+1)`.
   -- ===========================================================================
   classical
-  -- The uniform gain. The genuine Gehring `ε₀` is determined by G2's absorption
-  -- (the value at which the absorbed coefficient drops below `1`); we expose a
-  -- positive placeholder so the scaffold typechecks. Any `0 < ε₀` is admissible
-  -- for laying the decomposition; the absorption node fixes the honest value.
-  refine ⟨1, by norm_num, ?_⟩
-  intro ε hεpos _hεle w b hwmeas hbmeas hwloc hbloc hRH
+  -- =========================================================================
+  -- HONEST GAIN `ε₀`.  The absorption in G2 produces an absorbed coefficient
+  -- `θ(ε) = κ·ε` (the hole-filling `θ` fed to `giaquinta_iteration`), where the
+  -- absorption RATE `κ` depends ONLY on the structural data `q, A` (it is read off
+  -- the good-λ covering constant, which is `w,b`-independent), NOT on `ε`.  So we
+  -- can extract `κ` here — before `ε`, `w`, `b` enter — and set
+  --   `ε₀ := 1 / (2κ + 1)`,
+  -- which forces `θ = κ·ε ≤ κ·ε₀ = κ/(2κ+1) < 1/2 < 1` for every `ε ≤ ε₀`, so the
+  -- Giaquinta absorption succeeds.  (The gain must scale with `1/κ`: for `ε` large the
+  -- absorbed coefficient would exceed `1` and the absorption would fail.)  `κ` is a
+  -- concrete closed form in `q, A`: with the
+  -- collar-free good-λ constants `Cw = 256·Ã·lam^{q-1}`, `β = 1/(4Ã)` (`Ã = π^{1/q}A+1`),
+  -- the absorbed rate `Cw/((q+ε−1)·β^{q+ε−1}) = 256·Ã·(4Ã)^{q+ε−1}/(q+ε−1)` is `≤`
+  -- the ε-uniform `C₀/(q−1)` with `C₀ := 256·Ã·(4Ã)^q` (since `4Ã ≥ 4 > 1` makes
+  -- `(4Ã)^{ε−1} ≤ 1` and `1/(q+ε−1) ≤ 1/(q−1)` for `ε ≤ 1`).
+  -- =========================================================================
+  have hq0' : 0 < q := lt_trans one_pos hq
+  have hq1 : 0 < q - 1 := by linarith
+  set Ãκ : ℝ := Real.pi ^ (1 / q) * A + 1 with hÃκdef
+  have hÃκpos : 0 < Ãκ := by rw [hÃκdef]; positivity
+  set C₀ : ℝ := 256 * Ãκ * (4 * Ãκ) ^ q with hC₀def
+  have hC₀pos : 0 < C₀ := by rw [hC₀def]; positivity
+  set κ : ℝ := C₀ / (q - 1) with hκdef
+  have hκpos : 0 < κ := by rw [hκdef]; exact div_pos hC₀pos hq1
+  have hκ0 : 0 ≤ κ := hκpos.le
+  set ε₀ : ℝ := 1 / (2 * κ + 1) with hε₀def
+  have hε₀pos : 0 < ε₀ := by rw [hε₀def]; positivity
+  -- For every `ε ≤ ε₀`, the absorbed coefficient `θ = κ·ε` is `< 1`.
+  have hθlt1 : ∀ ε : ℝ, 0 < ε → ε ≤ ε₀ → κ * ε < 1 := by
+    intro ε hεpos hεle
+    have h1 : κ * ε ≤ κ * ε₀ := mul_le_mul_of_nonneg_left hεle hκ0
+    have h2 : κ * ε₀ = κ / (2 * κ + 1) := by rw [hε₀def]; ring
+    have h3 : κ / (2 * κ + 1) < 1 := by
+      rw [div_lt_one (by positivity)]; linarith
+    linarith
+  refine ⟨ε₀, hε₀pos, ?_⟩
+  intro ε hεpos hεle w b hwmeas hbmeas hwloc hbloc hRH
+  -- The honest absorbed coefficient for this `ε`.
+  have hθε : κ * ε < 1 := hθlt1 ε hεpos hεle
+  have hκε0 : 0 ≤ κ * ε := by positivity
   -- ---------------------------------------------------------------------------
   -- G0 + G3 (localization + glue) — CLOSED.
   -- It suffices to prove the fixed-ball finiteness `∫⁻_{ball x₀ R₀} w^{q+ε} < ⊤`
@@ -4620,21 +8345,235 @@ theorem gehring_selfImprovement {q A : ℝ} (hq : 1 < q) (hA : 0 ≤ A) :
   -- has `⨍_{Bᵢ} wᵠ > λ^q`, and the per-ball reverse-Hölder inequality `hRH` on the
   -- enlargement `4Bᵢ ⊆ 16B₀` splits `Bᵢ` into `w`-dominated balls (`⨍_{4Bᵢ} w > cλ`,
   -- contributing the `λ^{q-1}·∫_{{w>βλ}} w` term) and `b`-dominated balls
-  -- (`⨍_{4Bᵢ} bᵠ > c'λ^q`, contributing `∫_{{b>βλ}} bᵠ`).  This several-hundred-line
-  -- stopping-time / CZ argument is not available in Mathlib; it is laid here as a
-  -- faithful node.
+  -- (`⨍_{4Bᵢ} bᵠ > c'λ^q`, contributing `∫_{{b>βλ}} bᵠ`).
   -- ===========================================================================
-  obtain ⟨β, hβpos, hβlt1, lam0, hlam0, C, goodLambda⟩ :
-      ∃ β : ℝ, 0 < β ∧ β < 1 ∧ ∃ lam0 : ℝ, 0 ≤ lam0 ∧ ∃ C : ℝ≥0∞,
-        ∀ lam : ℝ, lam0 ≤ lam →
-          (∫⁻ z in {z | ENNReal.ofReal lam < w z} ∩ Metric.ball x₀ (4 * R₀),
-                w z ^ q)
-            ≤ C * ENNReal.ofReal (lam ^ (q - 1))
-                * (∫⁻ z in {z | ENNReal.ofReal (β * lam) < w z}
-                      ∩ Metric.ball x₀ (16 * R₀), w z)
-              + C * (∫⁻ z in {z | ENNReal.ofReal (β * lam) < b z}
-                      ∩ Metric.ball x₀ (16 * R₀), b z ^ q) := by
-    sorry
+  -- The two finite forcing masses over the master super-ball `16B₀`, available from
+  -- the loc-`Lᵠ` / loc-`L^{q+ε}` hypotheses; we expose their `.toReal` (real, finite)
+  -- as the data `A`-/`B`-constants of the hole-filling inequality.
+  have hWmaster : ∫⁻ z in Metric.ball x₀ (16 * R₀), w z ^ q < ⊤ :=
+    lt_of_le_of_lt (lintegral_mono_set Metric.ball_subset_closedBall)
+      (hwloc _ (isCompact_closedBall x₀ (16 * R₀)))
+  have hBmaster : ∫⁻ z in Metric.ball x₀ (16 * R₀), b z ^ (q + ε) < ⊤ :=
+    lt_of_le_of_lt (lintegral_mono_set Metric.ball_subset_closedBall)
+      (hbloc _ (isCompact_closedBall x₀ (16 * R₀)))
+  set Wmaster : ℝ := (∫⁻ z in Metric.ball x₀ (16 * R₀), w z ^ q).toReal with hWmasterdef
+  set Bmaster : ℝ := (∫⁻ z in Metric.ball x₀ (16 * R₀), b z ^ (q + ε)).toReal with hBmasterdef
+  have hWmaster0 : 0 ≤ Wmaster := ENNReal.toReal_nonneg
+  have hBmaster0 : 0 ≤ Bmaster := ENNReal.toReal_nonneg
+  -- =========================================================================
+  -- G1 (good-λ / Calderón–Zygmund), in its HOLE-FILLING form.  The classical
+  -- good-λ inequality, run over a chain of concentric
+  -- radii `4R₀ ≤ t < s ≤ 16R₀` (the good-λ holds for every such pair because
+  -- every ball satisfies `hRH`) and integrated against `λ^{ε-1}` via the
+  -- layer-cake / Cavalieri formula, produces directly the hole-filling
+  -- inequality that the Giaquinta–Giusti iteration lemma `giaquinta_iteration`
+  -- consumes:  with the absorbed coefficient `θ = κ·ε < 1` (κ fixed by
+  -- `q, A`), for every truncation level `N` and every `4R₀ ≤ t < s ≤ 16R₀`,
+  --   `Z_N(t) ≤ (κ·ε)·Z_N(s) + C₁·Wmaster/(s−t)² + C₁·Bmaster`,
+  -- where `Z_N(t) := (∫_{ball x₀ t}(min w N)^{q+ε}).toReal` is the truncated
+  -- `(q+ε)`-mass, `C₁ ≥ 0` is a FIXED constant (independent of `N`, `t`, `s`),
+  -- and `Wmaster, Bmaster` are the finite master forcing masses.  The exponent-1
+  -- structure of the right `w`-mass is what makes `θ = κ·ε`, hence `< 1` for
+  -- `ε ≤ ε₀`.
+  --
+  -- The Calderón–Zygmund COVERING CORE is `gehring_goodLambda_measure` (good-λ super-level
+  -- measure bound via the Vitali/Carleson engine + Lebesgue differentiation
+  -- `gehring_density_ball` + the planar doubling engine `gehring_engine_bound`):
+  --   `vol {z∈ball x₀ t | lam < (min w N) z}
+  --       ≤ ofReal((2(A+1)/lam)·16)·∫_{ball x₀ s} w
+  --         + ofReal((2(A+1)/lam)^q·16)·∫_{ball x₀ s} bᵠ`.
+  -- The layer-cake λ-integration of that
+  -- bound (`holeFill_layerCake`) plus the ε-absorption upgrades the
+  -- good-λ RHS from the FULL `∫_{ball s} w` to the SUPER-LEVEL-restricted
+  -- `∫_{{w>βλ}∩ball s} (min w N)` so that the Tonelli reconstruction returns
+  -- `Z_N(s)` (not the unbounded `∫_s w^p`); that upgrade uses the TWO-SIDED dyadic
+  -- stopping `exists_dyadic_CZ_stopping` (`lam < ⨍_Q wᵠ ≤ 4 lam`, in
+  -- `DyadicLebesgue`) to force `w ≈ min w N` on the selected cubes.
+  -- The full-RHS good-λ alone is insufficient (its
+  -- λ-integral over `(0,∞)` diverges, and the cap at `N` is not `N`-uniform).
+  -- =========================================================================
+  obtain ⟨C₁, hC₁0, holeFill⟩ :
+      ∃ C₁ : ℝ, 0 ≤ C₁ ∧ ∀ N : ℕ, ∀ t s : ℝ, 4 * R₀ ≤ t → t < s → s ≤ 16 * R₀ →
+        (∫⁻ z in Metric.ball x₀ t, w z ^ q * (min (w z) (N : ℝ≥0∞)) ^ ε).toReal
+          ≤ (κ * ε) * (∫⁻ z in Metric.ball x₀ s, w z ^ q * (min (w z) (N : ℝ≥0∞)) ^ ε).toReal
+            + C₁ * Wmaster / (s - t) ^ (2 : ℝ) + C₁ * Bmaster := by
+    -- ε ≤ 1 (since ε ≤ ε₀ = 1/(2κ+1) ≤ 1).
+    have hεle1 : ε ≤ 1 := le_trans hεle (by rw [hε₀def, div_le_one (by positivity)]; linarith)
+    -- The honest COLLAR-FREE good-λ constants (depend only on q, A); `Ã = π^{1/q}A+1`,
+    -- `Cw = 256Ã`, `Cb = 64(4Ã)^q`, `β = 1/(4Ã)` (exactly `gehring_goodLambda_integral_noCollar`).
+    set P : ℝ := Real.pi ^ (1 / q) with hPdef
+    have hPpos : 0 < P := by rw [hPdef]; positivity
+    set Ã : ℝ := P * A + 1 with hÃdef
+    have hÃpos : 0 < Ã := by rw [hÃdef]; positivity
+    set Cw : ℝ := 256 * Ã with hCwdef
+    set Cb : ℝ := 64 * (4 * Ã) ^ q with hCbdef
+    set β : ℝ := 1 / (4 * Ã) with hβdef
+    have hCwpos : 0 ≤ Cw := by rw [hCwdef]; positivity
+    have hCbpos : 0 ≤ Cb := by rw [hCbdef]; positivity
+    have hβpos : 0 < β := by rw [hβdef]; positivity
+    have h4Ãgt1 : (1:ℝ) < 4 * Ã := by rw [hÃdef]; nlinarith [hPpos, hA]
+    have h4Ãge1 : (1:ℝ) ≤ 4 * Ã := h4Ãgt1.le
+    have hβ1 : β < 1 := by
+      rw [hβdef, div_lt_one (by positivity)]; linarith [h4Ãgt1]
+    -- The constant fit `κ' ≤ κ`.  `Cw/((q+ε−1)·β^{q+ε−1}) = 256Ã·(4Ã)^{q+ε−1}/(q+ε−1)`,
+    -- and `(4Ã)^{ε−1} ≤ 1` (base `≥ 1`, exponent `≤ 0`), `1/(q+ε−1) ≤ 1/(q−1)`, so this is
+    -- `≤ 256Ã·(4Ã)^q/(q−1) = C₀/(q−1) = κ`.
+    have hκfit : Cw / ((q + ε - 1) * β ^ (q + ε - 1)) ≤ κ := by
+      have hq1' : 0 < q - 1 := by linarith
+      have hqε1' : 0 < q + ε - 1 := by linarith
+      have hÃ4pos : (0:ℝ) < 4 * Ã := by positivity
+      -- `β^{q+ε-1} = (4Ã)^{-(q+ε-1)}`, so `1/β^{q+ε-1} = (4Ã)^{q+ε-1}`.
+      have hβpow : β ^ (q + ε - 1) = (4 * Ã) ^ (-(q + ε - 1)) := by
+        rw [hβdef, Real.div_rpow (by norm_num) (by positivity), Real.one_rpow,
+          Real.rpow_neg (by positivity), one_div]
+      have hden_pos : 0 < (q + ε - 1) * β ^ (q + ε - 1) := by
+        rw [hβpow]; positivity
+      rw [hκdef, hC₀def, hCwdef, div_le_div_iff₀ hden_pos hq1', hβpow]
+      -- LHS = 256Ã·(q-1), RHS = 256Ã(4Ã)^q·((q+ε-1)·(4Ã)^{-(q+ε-1)}).
+      rw [Real.rpow_neg (by positivity)]
+      have h4Ãqpos : (0:ℝ) < (4 * Ã) ^ q := Real.rpow_pos_of_pos hÃ4pos q
+      have h4Ãqεpos : (0:ℝ) < (4 * Ã) ^ (q + ε - 1) := Real.rpow_pos_of_pos hÃ4pos _
+      -- `(4Ã)^{ε-1} ≤ 1` (base ≥ 1, exponent ≤ 0), hence `(4Ã)^{q+ε-1} ≤ (4Ã)^q`.
+      have hle1 : (4 * Ã) ^ (ε - 1) ≤ 1 :=
+        Real.rpow_le_one_of_one_le_of_nonpos h4Ãge1 (by linarith [hεle1])
+      have hqεle : (4 * Ã) ^ (q + ε - 1) ≤ (4 * Ã) ^ q := by
+        rw [show q + ε - 1 = q + (ε - 1) by ring, Real.rpow_add hÃ4pos]
+        calc (4 * Ã) ^ q * (4 * Ã) ^ (ε - 1) ≤ (4 * Ã) ^ q * 1 :=
+              mul_le_mul_of_nonneg_left hle1 h4Ãqpos.le
+          _ = (4 * Ã) ^ q := mul_one _
+      -- RHS = 256Ã(4Ã)^q·(q+ε-1)/(4Ã)^{q+ε-1} ≥ 256Ã·(q+ε-1) ≥ 256Ã·(q-1).
+      rw [show 256 * Ã * (4 * Ã) ^ q * ((q + ε - 1) * ((4 * Ã) ^ (q + ε - 1))⁻¹)
+            = (256 * Ã * (q + ε - 1)) * ((4 * Ã) ^ q / (4 * Ã) ^ (q + ε - 1)) by
+          rw [div_eq_mul_inv]; ring]
+      have hfrac_ge1 : (1:ℝ) ≤ (4 * Ã) ^ q / (4 * Ã) ^ (q + ε - 1) :=
+        (one_le_div₀ h4Ãqεpos).mpr hqεle
+      have hstep : 256 * Ã * (q - 1) ≤ 256 * Ã * (q + ε - 1) := by nlinarith [hÃpos, hεpos]
+      calc 256 * Ã * (q - 1) ≤ 256 * Ã * (q + ε - 1) := hstep
+        _ = (256 * Ã * (q + ε - 1)) * 1 := by ring
+        _ ≤ (256 * Ã * (q + ε - 1)) * ((4 * Ã) ^ q / (4 * Ã) ^ (q + ε - 1)) :=
+            mul_le_mul_of_nonneg_left hfrac_ge1 (by positivity)
+    -- The honest exponent-1 good-λ (STEP B).  It is assembled from the
+    -- `Ž_N = ∫ w^q·(min w N)^ε`-layer-cake `gehring_mass_layerCake`, its
+    -- reconstruction `gehring_recon` + the tail-killing pointwise comparison `gehring_crux_le`, the
+    -- ε-absorption assembly `gehring_assembly`, the `.toReal` conversion `gehring_toReal_conv`, the
+    -- hole-fill packaging `gehring_holeFill`, and the constant fit `hκfit`.  This `hGL` is the
+    -- good-λ: the FULL (a-priori-integrable) `w^q`
+    -- mass on the super-level set `{min w N > lam} ∩ ball t` is controlled by the
+    -- `lam^{q-1}`-weighted
+    -- FULL `w`-mass (exponent one) on the SUPER-LEVEL set `{min w N > β·lam} ∩ ball s`, plus a
+    -- super-level `bᵠ`-forcing.  Crucially the RHS w-mass is the FULL `w` (no `min w N` truncation
+    -- of the integrand) — this is exactly what the dyadic-CZ stopping + reverse-Hölder dichotomy +
+    -- Carleson engine produce (no enlarged-ball maximal upper bound on `⨍ w` is required).
+    -- The truncation `min w N` lives ONLY in the level set (truncated super-level), which on the
+    -- active range `lam < N` agrees with `{w > β·lam}`; for `lam ≥ N` the LHS super-level set is
+    -- empty so the inequality is trivial.  The over-truncation tail is handled
+    -- by `gehring_crux_le` (the iterated quantity is `Ž_N = ∫ w^q·(min w N)^ε`, FINITE,
+    -- with the truncation on the `ε`-factor only), NOT by truncating the good-λ RHS integrand.
+    have hGL : ∀ (N : ℕ) (t s : ℝ), 4 * R₀ ≤ t → t < s → s ≤ 16 * R₀ → ∀ lam : ℝ, 0 < lam →
+        (⨍⁻ z in Metric.ball x₀ s, w z ^ q ∂volume) ≤ (ENNReal.ofReal lam) ^ q →
+        5 * Real.sqrt ((∫⁻ z in Metric.ball x₀ (16 * R₀), w z ^ q).toReal)
+            ≤ (s - t) * lam ^ (q / 2) →
+        ∫⁻ z in Metric.ball x₀ t ∩ {z | lam < (min (w z) (N:ℝ≥0∞)).toReal}, w z ^ q
+          ≤ ENNReal.ofReal (Cw * lam ^ (q - 1))
+              * (∫⁻ z in Metric.ball x₀ s ∩ {z | β * lam < (min (w z) (N:ℝ≥0∞)).toReal}, w z)
+            + ENNReal.ofReal Cb
+              * (∫⁻ z in Metric.ball x₀ s ∩ {z | β * lam < (b z).toReal}, b z ^ q) := by
+      intro N t' s' ht' hts' hs' lam hlampos hlam0cond hlam1cond
+      -- The `min w N` level sets reduce to the FULL `w` level sets up to the null set `{w = ⊤}`
+      -- exactly when `lam < N` (and `β·lam < lam < N`); the integral good-λ pillar then closes it.
+      -- For `lam ≥ N` the LHS super-level set `{lam < (min w N).toReal}` is empty.
+      have hWfin16 : ∫⁻ z in Metric.ball x₀ (16 * R₀), w z ^ q < ⊤ := hWmaster
+      classical
+      -- `{w = ⊤} ∩ ball x₀ (16R₀)` is `volume`-null (`w^q` integrable there ⟹ `w < ⊤` a.e.).
+      have hwtop_null : volume ({z : ℂ | w z = ⊤} ∩ Metric.ball x₀ (16 * R₀)) = 0 := by
+        have htop :
+            volume {z : ℂ | (Metric.ball x₀ (16 * R₀)).indicator (fun z => w z ^ q) z = ⊤} = 0 := by
+          apply measure_eq_top_of_lintegral_ne_top
+            ((hwmeas.pow_const q).indicator measurableSet_ball)
+          rw [lintegral_indicator measurableSet_ball]; exact hWfin16.ne
+        refine measure_mono_null ?_ htop
+        intro z hz; simp only [Set.mem_inter_iff, Set.mem_setOf_eq] at hz ⊢
+        rw [Set.indicator_of_mem hz.2, hz.1, ENNReal.top_rpow_of_pos (by linarith : (0:ℝ) < q)]
+      -- The level-set equality up to `{w = ⊤}` (null on the ball), via symmetric-difference
+      -- nullity.
+      have hset_eq : ∀ (r c : ℝ), r ≤ 16 * R₀ → c < (N:ℝ) →
+          (Metric.ball x₀ r ∩ {z : ℂ | c < (min (w z) (N:ℝ≥0∞)).toReal} : Set ℂ)
+            =ᵐ[volume] (Metric.ball x₀ r ∩ {z : ℂ | c < (w z).toReal} : Set ℂ) := by
+        intro r c hr hcN
+        have hnull : volume ({z : ℂ | w z = ⊤} ∩ Metric.ball x₀ r) = 0 :=
+          measure_mono_null (Set.inter_subset_inter_right _ (Metric.ball_subset_ball hr)) hwtop_null
+        rw [Filter.eventuallyEq_set, ae_iff]
+        refine measure_mono_null
+          (show {z : ℂ | ¬ (z ∈ Metric.ball x₀ r ∩ {z | c < (min (w z) (N:ℝ≥0∞)).toReal}
+              ↔ z ∈ Metric.ball x₀ r ∩ {z | c < (w z).toReal})}
+            ⊆ {z : ℂ | w z = ⊤} ∩ Metric.ball x₀ r from ?_) hnull
+        intro z hz
+        simp only [Set.mem_setOf_eq] at hz
+        simp only [Set.mem_inter_iff, Set.mem_setOf_eq]
+        by_cases hzr : z ∈ Metric.ball x₀ r
+        · refine ⟨?_, hzr⟩
+          by_contra hwtop
+          apply hz
+          simp only [Set.mem_inter_iff, Set.mem_setOf_eq, hzr, true_and]
+          rw [ENNReal.toReal_min hwtop (ENNReal.natCast_ne_top N), ENNReal.toReal_natCast]
+          constructor
+          · intro h2; exact lt_of_lt_of_le h2 (min_le_left _ _)
+          · intro h2; exact lt_min h2 hcN
+        · exact absurd (by simp only [Set.mem_inter_iff, hzr, false_and, iff_self]) hz
+      -- `∫_{16B₀} b^q < ⊤` from the loc-`L^{q+ε}` master mass `hBmaster` (`b^q ≤ 1 + b^{q+ε}`).
+      have hBfinq : ∫⁻ z in Metric.ball x₀ (16 * R₀), b z ^ q < ⊤ := by
+        have hbd : ∀ z, b z ^ q ≤ 1 + b z ^ (q + ε) := by
+          intro z
+          rcases le_total (b z) 1 with hle | hge
+          · have : b z ^ q ≤ 1 := by
+              rw [← ENNReal.one_rpow q]; exact ENNReal.rpow_le_rpow hle hq0.le
+            exact le_trans this (le_add_right le_rfl)
+          · have : b z ^ q ≤ b z ^ (q + ε) :=
+              ENNReal.rpow_le_rpow_of_exponent_le hge (by linarith)
+            exact le_trans this (le_add_left le_rfl)
+        calc ∫⁻ z in Metric.ball x₀ (16 * R₀), b z ^ q
+            ≤ ∫⁻ z in Metric.ball x₀ (16 * R₀), (1 + b z ^ (q + ε)) := lintegral_mono hbd
+          _ = volume (Metric.ball x₀ (16 * R₀))
+                + ∫⁻ z in Metric.ball x₀ (16 * R₀), b z ^ (q + ε) := by
+              rw [lintegral_add_left' aemeasurable_const, setLIntegral_const, one_mul]
+          _ < ⊤ := ENNReal.add_lt_top.mpr ⟨measure_ball_lt_top, hBmaster⟩
+      rcases lt_or_ge lam (N : ℝ) with hlamN | hlamN
+      · -- `lam < N`: a.e. rewrite both `min w N` level sets to full `w` level sets.
+        have hβlamN : β * lam < (N:ℝ) := by
+          have : β * lam < lam := by
+            rw [hβdef]
+            calc 1 / (4 * Ã) * lam < 1 * lam := by
+                  apply mul_lt_mul_of_pos_right _ hlampos
+                  rw [div_lt_one (by positivity)]; linarith [h4Ãge1]
+              _ = lam := one_mul lam
+          linarith
+        rw [setLIntegral_congr (hset_eq t' lam (by linarith) hlamN),
+            setLIntegral_congr (hset_eq s' (β * lam) hs' hβlamN)]
+        have hcall := gehring_goodLambda_integral_noCollar hq hA hwmeas hbmeas hRH x₀ R₀ hR₀
+          hWfin16 hBfinq t' s' ht' hts' hs' lam hlampos hlam0cond hlam1cond
+        -- The noCollar bound's constants/level match `Cw, Cb, β` (via `hÃdef`, `hβdef`, `hCwdef`,
+        -- `hCbdef`); rewrite to identify them.
+        rw [show (256 : ℝ) * (Real.pi ^ (1 / q) * A + 1) * lam ^ (q - 1) = Cw * lam ^ (q - 1) by
+              rw [hCwdef, hÃdef, hPdef],
+            show (64 : ℝ) * (4 * (Real.pi ^ (1 / q) * A + 1)) ^ q = Cb by rw [hCbdef, hÃdef, hPdef],
+            show (1 : ℝ) / (4 * (Real.pi ^ (1 / q) * A + 1)) = β by
+              rw [hβdef, hÃdef, hPdef]] at hcall
+        exact hcall
+      · -- `lam ≥ N`: the LHS super-level set is empty, so the LHS is `0`.
+        have hempty :
+            Metric.ball x₀ t' ∩ {z | lam < (min (w z) (N:ℝ≥0∞)).toReal} = (∅ : Set ℂ) := by
+          rw [Set.eq_empty_iff_forall_notMem]
+          rintro z ⟨_, hlt⟩
+          simp only [Set.mem_setOf_eq] at hlt
+          have hle : (min (w z) (N:ℝ≥0∞)).toReal ≤ (N:ℝ) := by
+            rcases eq_or_ne (w z) ⊤ with hwt | hwf
+            · rw [hwt]; simp
+            · rw [ENNReal.toReal_min hwf (ENNReal.natCast_ne_top N), ENNReal.toReal_natCast]
+              exact min_le_right _ _
+          linarith
+        rw [hempty]; simp
+    exact gehring_holeFill hq hA hεpos hεle1 hwmeas hbmeas x₀ R₀ hR₀ κ Cw Cb β
+      hCwpos hCbpos hβpos hβ1 hκfit hκ0 hWmaster0 hWmaster hBmaster hGL
   -- ===========================================================================
   -- G2 (layer-cake + ε-absorption) — the SECOND hard node.
   --
@@ -4651,13 +8590,12 @@ theorem gehring_selfImprovement {q A : ℝ} (hq : 1 < q) (hA : 0 ≤ A) :
   -- hypothesis `hbloc` on `b`, both evaluated on the compact `closedBall x₀ (16 R₀)`.
   --
   -- The absorption is the only place the smallness of `ε` is used; it is what
-  -- fixes the honest gain `ε₀`. This is laid as a faithful node consuming the
-  -- master-ball `goodLambda`; the layer-cake bookkeeping and the absorption
-  -- inequality live here.
+  -- fixes the gain `ε₀`. This node consumes the master-ball `goodLambda`; the
+  -- layer-cake bookkeeping and the absorption inequality live here.
   -- ===========================================================================
   have absorb : ∫⁻ z in Metric.ball x₀ R₀, w z ^ (q + ε) < ⊤ := by
-    -- The forcing terms G2 produces on the right are finite, supplied here as
-    -- CLOSED glue from the loc-`Lᵠ`/loc-`L^{q+ε}` hypotheses, evaluated on the
+    -- The forcing terms G2 produces on the right are finite, from the
+    -- loc-`Lᵠ`/loc-`L^{q+ε}` hypotheses, evaluated on the
     -- compact super-ball `closedBall x₀ (16 R₀)` (which contains `16B₀`).
     -- `∫_{16B₀} wᵠ < ⊤` from `hwloc`.
     have hRHS_w : ∫⁻ z in Metric.ball x₀ (16 * R₀), w z ^ q < ⊤ := by
@@ -4674,27 +8612,23 @@ theorem gehring_selfImprovement {q A : ℝ} (hq : 1 < q) (hA : 0 ≤ A) :
       Metric.ball_subset_ball (by linarith)
     refine lt_of_le_of_lt (lintegral_mono_set hsub) ?_
     -- =======================================================================
-    -- ISOLATED CORE of G2: the layer-cake reconstruction + ε-absorption.
+    -- CORE of G2: the layer-cake reconstruction + ε-absorption.
     --
-    -- The node is reduced to a SINGLE absorbed linear bound of the target
+    -- The node is a SINGLE absorbed linear bound of the target
     -- `∫_{4B₀} w^{q+ε}` by the two finite forcing masses `∫_{16B₀} wᵠ` and
     -- `∫_{16B₀} b^{q+ε}` (both `< ⊤`, supplied above as `hRHS_w`, `hRHS_b`) with
-    -- a FINITE coefficient `K`. We package that absorbed bound as the residual
-    -- `hbound`; the finiteness wrapper around it (below) is fully discharged
-    -- from `hRHS_w`, `hRHS_b`, `ENNReal.add_lt_top` and `ENNReal.mul_lt_top`.
+    -- a FINITE coefficient `K`, packaged as `hbound`; the finiteness wrapper around
+    -- it (below) follows from `hRHS_w`, `hRHS_b`, `ENNReal.add_lt_top` and
+    -- `ENNReal.mul_lt_top`.
     -- =======================================================================
     obtain ⟨K, hKfin, hbound⟩ :
         ∃ K : ℝ≥0∞, K ≠ ⊤ ∧
           ∫⁻ z in Metric.ball x₀ (4 * R₀), w z ^ (q + ε)
             ≤ K * (∫⁻ z in Metric.ball x₀ (16 * R₀), w z ^ q)
               + K * (∫⁻ z in Metric.ball x₀ (16 * R₀), b z ^ (q + ε)) := by
-      -- G2 — the layer-cake + ε-absorption reconstruction, consuming the
-      -- corrected Giaquinta–Modica `goodLambda` (right `w`-mass at exponent `1`,
-      -- factor `λ^{q-1}`, super-level `bᵠ`-forcing) of the G1 node above.
-      --
-      -- `goodLambda` is the only nontrivial input; we record its consumption
-      -- explicitly so the dependency is real.
-      have hgoodLambda := goodLambda
+      -- G2 — the Giaquinta–Giusti absorption, consuming the hole-filling
+      -- inequality `holeFill` of the G1 node above through the iteration
+      -- lemma `giaquinta_iteration`.
       -- =====================================================================
       -- RIGOROUS REDUCTION (fully discharged below): truncation + monotone
       -- convergence.  We reduce the target `hbound` for the genuine weight `w`
@@ -4707,13 +8641,13 @@ theorem gehring_selfImprovement {q A : ℝ} (hq : 1 < q) (hA : 0 ≤ A) :
       --     `∫_{4B₀} w^{q+ε} = ⨆ N, ∫_{4B₀} (min w N)^{q+ε}`;
       --   * with a single finite `K` for which every truncation obeys the
       --     bound (RHS independent of `N`), `iSup_le` collapses the sup.
-      -- This part is honest and complete; it isolates the genuine analytic
+      -- This isolates the analytic
       -- content into the per-`N` bounded absorbed bound `hboundN` below.
       -- =====================================================================
       -- Positivity of the reconstruction exponent (reused).
       have hqε0' : 0 ≤ q + ε := hqε0.le
-      -- POINTWISE truncation sup: `⨆ N, (min (w z) N)^{q+ε} = (w z)^{q+ε}`.
-      have hptsup : ∀ z, ⨆ N : ℕ, (min (w z) (N : ℝ≥0∞)) ^ (q + ε)
+      -- POINTWISE truncation sup of `Ž_N`: `⨆ N, w^q·(min (w z) N)^ε = w^{q+ε}`.
+      have hptsup : ∀ z, ⨆ N : ℕ, w z ^ q * (min (w z) (N : ℝ≥0∞)) ^ ε
           = w z ^ (q + ε) := by
         intro z
         -- `min (w z) ·` is monotone in the `ℕ`-truncation level.
@@ -4729,69 +8663,165 @@ theorem gehring_selfImprovement {q A : ℝ} (hq : 1 < q) (hA : 0 ≤ A) :
           calc c = ENNReal.ofReal c.toReal := (ENNReal.ofReal_toReal (ne_top_of_lt hc)).symm
             _ ≤ ENNReal.ofReal n := ENNReal.ofReal_le_ofReal hn.le
             _ = (n : ℝ≥0∞) := by rw [ENNReal.ofReal_natCast]
-        -- `·^{q+ε}` is monotone (exponent `≥ 0`) and continuous on `ℝ≥0∞`.
-        have hmono : Monotone (fun n : ℕ => (min (w z) (n : ℝ≥0∞)) ^ (q + ε)) :=
-          fun a c hac => ENNReal.rpow_le_rpow (hmin_mono hac) hqε0'
+        -- `w^q · (·)^ε` is monotone (exponent `≥ 0`) and continuous in the truncation.
+        have hmono : Monotone (fun n : ℕ => w z ^ q * (min (w z) (n : ℝ≥0∞)) ^ ε) :=
+          fun a c hac => mul_le_mul_right (ENNReal.rpow_le_rpow (hmin_mono hac) hεpos.le) _
         have htend : Tendsto (fun n : ℕ => min (w z) (n : ℝ≥0∞)) atTop (𝓝 (w z)) := by
           have h := tendsto_atTop_iSup hmin_mono; rwa [hsup] at h
-        have hcomp : Tendsto (fun n : ℕ => (min (w z) (n : ℝ≥0∞)) ^ (q + ε)) atTop
-            (𝓝 ((w z) ^ (q + ε))) :=
+        have hcompε : Tendsto (fun n : ℕ => (min (w z) (n : ℝ≥0∞)) ^ ε) atTop
+            (𝓝 ((w z) ^ ε)) :=
           (ENNReal.continuous_rpow_const.tendsto (w z)).comp htend
+        have hside : (w z) ^ ε ≠ 0 ∨ w z ^ q ≠ ⊤ := by
+          rcases eq_or_ne (w z) 0 with hw0 | hw0
+          · right; rw [hw0, ENNReal.zero_rpow_of_pos hq0']; simp
+          · left; rw [ne_eq, ENNReal.rpow_eq_zero_iff]; push Not
+            exact ⟨fun h => absurd h hw0, fun _ => hεpos.le⟩
+        have hcomp : Tendsto (fun n : ℕ => w z ^ q * (min (w z) (n : ℝ≥0∞)) ^ ε) atTop
+            (𝓝 (w z ^ q * (w z) ^ ε)) :=
+          ENNReal.Tendsto.const_mul hcompε hside
+        rw [show w z ^ q * w z ^ ε = w z ^ (q + ε) from
+          (ENNReal.rpow_add_of_nonneg q ε hq0'.le hεpos.le).symm] at hcomp
         exact iSup_eq_of_tendsto hmono hcomp
       -- Per-truncation measurability and monotonicity for `lintegral_iSup'`.
       have hmeasN : ∀ N : ℕ,
-          AEMeasurable (fun z => (min (w z) (N : ℝ≥0∞)) ^ (q + ε))
+          AEMeasurable (fun z => w z ^ q * (min (w z) (N : ℝ≥0∞)) ^ ε)
             (volume.restrict (Metric.ball x₀ (4 * R₀))) :=
-        fun N => (hwmeas.restrict.min aemeasurable_const).pow_const _
+        fun N => (hwmeas.restrict.pow_const _).mul
+          ((hwmeas.restrict.min aemeasurable_const).pow_const _)
       have hmonoN : ∀ᵐ z ∂(volume.restrict (Metric.ball x₀ (4 * R₀))),
-          Monotone (fun N : ℕ => (min (w z) (N : ℝ≥0∞)) ^ (q + ε)) := by
+          Monotone (fun N : ℕ => w z ^ q * (min (w z) (N : ℝ≥0∞)) ^ ε) := by
         filter_upwards with z a c hac
-        exact ENNReal.rpow_le_rpow (min_le_min_left _ (by exact_mod_cast hac)) hqε0'
+        exact mul_le_mul_right
+          (ENNReal.rpow_le_rpow (min_le_min_left _ (by exact_mod_cast hac)) hεpos.le) _
       -- MONOTONE CONVERGENCE: identify the target LHS with the sup of truncations.
       have hMCT : ∫⁻ z in Metric.ball x₀ (4 * R₀), w z ^ (q + ε)
-          = ⨆ N : ℕ, ∫⁻ z in Metric.ball x₀ (4 * R₀), (min (w z) (N : ℝ≥0∞)) ^ (q + ε) := by
+          = ⨆ N : ℕ, ∫⁻ z in Metric.ball x₀ (4 * R₀), w z ^ q * (min (w z) (N : ℝ≥0∞)) ^ ε := by
         rw [← lintegral_iSup' hmeasN hmonoN]
         exact lintegral_congr_ae (by filter_upwards with z using (hptsup z).symm)
       -- =====================================================================
-      -- RESIDUAL — the per-`N` bounded absorbed bound, UNIFORM in `N`.
+      -- G2 absorption — the per-`N` bounded bound, UNIFORM in `N`, PROVEN here
+      -- from the hole-filling residual `holeFill` via the PROVEN Giaquinta–Giusti
+      -- iteration lemma `giaquinta_iteration`.
       --
-      -- This is the genuine Giaquinta–Modica iteration core.  Feeding the
-      -- corrected `goodLambda` into the `ℝ`-layer-cake — multiply by `λ^{ε-1}`
-      -- and integrate `λ ∈ (λ₀,∞)`, then Tonelli — reconstructs the bound
-      --   `∫_{{w>λ₀}∩4B₀} w^{q+ε} ≤ λ₀^ε·G(λ₀) + K(ε)·∫_{16B₀} w^{q+ε}
-      --                               + C·β^{-ε}·∫_{16B₀} b^{q+ε}`,
-      -- where the right `w`-mass at EXPONENT `1` and the `λ^{q-1}` factor produce
-      -- the FINITE absorbed coefficient
-      --   `K(ε) = C·ε / ((q+ε−1)·β^{q+ε−1})`,
-      -- with `C` the FIXED G1 covering constant.  Crucially `K(ε) → 0` as
-      -- `ε → 0` (numerator `ε → 0`, denominator `→ (q−1)·β^{q−1} > 0`): the
-      -- ε-prefactor from `∂_λ(λ^ε)` survives because the inner radial integral
-      -- over `λ^{q+ε−2}` is bounded (`q+ε−2 > −1`).  So for `ε ≤ ε₀` (chosen with
-      -- `K(ε₀) ≤ 1/2`) the absorption SUCCEEDS — the covering constant does NOT
-      -- need to shrink; the exponent-`1` structure of the corrected good-λ is what
-      -- makes a fixed `C` absorbable.  (This corrects the earlier diagnosis: the
-      -- obstruction was never the size of `C`, but the exponent on the right
-      -- `w`-mass — `q` in the trivial form, which cancels the ε-prefactor and
-      -- pins `coeff ≥ C`; `1` in the corrected form, which lets it vanish.)
+      -- For each truncation level `N`, the truncated mass `Z_N(t) =
+      -- (∫_{ball x₀ t}(min w N)^{q+ε}).toReal` is finite (bounded by `N^{q+ε}·vol`),
+      -- nonnegative, and bounded by `M_N` on `[4R₀,16R₀]`, and `holeFill` supplies
+      -- the hole-filling inequality `Z_N(t) ≤ (κ·ε)·Z_N(s) + C₁·Wmaster/(s−t)² +
+      -- C₁·Bmaster` for every `4R₀ ≤ t < s ≤ 16R₀`, with the absorbed
+      -- coefficient `θ = κ·ε < 1`.  The iteration lemma then collapses the chain,
+      -- giving `Z_N(4R₀) ≤ cIter·(C₁·Wmaster/(12R₀)² + C₁·Bmaster)`, which is a
+      -- single FIXED `N`-independent ENNReal bound `K·∫_{16B₀}wᵠ + K·∫_{16B₀}b^{q+ε}`
+      -- after converting `Wmaster, Bmaster` back to their (finite) lintegrals.  The
+      -- monotone-convergence collapse `hMCT` then removes the truncation.
       --
-      -- The one genuine remaining ingredient is the GIAQUINTA ITERATION LEMMA
-      -- (not in Mathlib).  Because the reconstructed `w^{q+ε}`-mass lives over the
-      -- enlargement `16B₀` while the left side is over `4B₀`, the absorption is
-      -- run over a finite chain of concentric radii `4R₀ ≤ t < s ≤ 16R₀`: the
-      -- good-λ holds for every such pair (every ball satisfies `hRH`), giving
-      -- `φ_N(t) ≤ K(ε)·φ_N(s) + A(s−t)^{-α}·∫_{16B₀} wᵠ + B·∫_{16B₀} b^{q+ε}`
-      -- for the truncated masses `φ_N(t) = ∫_{ball x₀ t} (min w N)^{q+ε}` (each
-      -- finite, so the iteration lemma applies), whose conclusion at `t = 4R₀`
-      -- is the `N`-uniform bound below.  This iteration lemma together with the
-      -- per-pair layer-cake reconstruction is the residual analytic content.
-      obtain ⟨K, hKfin, hboundN⟩ :
-          ∃ K : ℝ≥0∞, K ≠ ⊤ ∧ ∀ N : ℕ,
-            ∫⁻ z in Metric.ball x₀ (4 * R₀), (min (w z) (N : ℝ≥0∞)) ^ (q + ε)
-              ≤ K * (∫⁻ z in Metric.ball x₀ (16 * R₀), w z ^ q)
-                + K * (∫⁻ z in Metric.ball x₀ (16 * R₀), b z ^ (q + ε)) := by
-        sorry
+      -- The PROVEN Giaquinta–Giusti iteration constant `c = c(α, θ)` for `α = 2`,
+      -- `θ = κ·ε < 1` (honest by `hθε`).  It depends only on `α, θ`, i.e. on `q, A, ε`.
+      obtain ⟨cIter, hcIter0, hcIter⟩ := giaquinta_iteration (α := (2 : ℝ)) (θ := κ * ε)
+        (by norm_num) hκε0 hθε
+      -- Geometry: `12 R₀ = 16R₀ − 4R₀ > 0` and `(12R₀)² > 0`.
+      have h12R₀ : (0 : ℝ) < 12 * R₀ := by linarith
+      have hgapα : (0 : ℝ) < (16 * R₀ - 4 * R₀) ^ (2 : ℝ) := by
+        have : (16 * R₀ - 4 * R₀) = 12 * R₀ := by ring
+        rw [this]; exact Real.rpow_pos_of_pos h12R₀ 2
+      -- The single finite, `N`-independent coefficient `K`.
+      set K : ℝ≥0∞ := ENNReal.ofReal (cIter * C₁ / (16 * R₀ - 4 * R₀) ^ (2 : ℝ)) +
+                ENNReal.ofReal (cIter * C₁) with hKdef
+      have hKfin : K ≠ ⊤ := by
+        rw [hKdef]
+        exact ENNReal.add_ne_top.mpr ⟨ENNReal.ofReal_ne_top, ENNReal.ofReal_ne_top⟩
+      have hboundN : ∀ N : ℕ,
+          ∫⁻ z in Metric.ball x₀ (4 * R₀), w z ^ q * (min (w z) (N : ℝ≥0∞)) ^ ε
+            ≤ K * (∫⁻ z in Metric.ball x₀ (16 * R₀), w z ^ q)
+              + K * (∫⁻ z in Metric.ball x₀ (16 * R₀), b z ^ (q + ε)) := by
+        intro N
+        -- `∫_{16B₀} w^q < ⊤` (master finiteness, from `hWmaster`).
+        have hW16fin : ∫⁻ z in Metric.ball x₀ (16 * R₀), w z ^ q < ⊤ := hWmaster
+        -- Per-`N` bound: `Ž_N(s) = ∫_{B_s} w^q·(min w N)^ε ≤ N^ε·∫_{16B₀} w^q` (`s ≤ 16R₀`).
+        have hNbound : ∀ s : ℝ, s ≤ 16 * R₀ →
+            ∫⁻ z in Metric.ball x₀ s, w z ^ q * (min (w z) (N : ℝ≥0∞)) ^ ε
+              ≤ (N : ℝ≥0∞) ^ ε * ∫⁻ z in Metric.ball x₀ (16 * R₀), w z ^ q := by
+          intro s hs16
+          calc ∫⁻ z in Metric.ball x₀ s, w z ^ q * (min (w z) (N : ℝ≥0∞)) ^ ε
+              ≤ ∫⁻ z in Metric.ball x₀ s, w z ^ q * (N : ℝ≥0∞) ^ ε := by
+                apply lintegral_mono; intro z
+                exact mul_le_mul_right (ENNReal.rpow_le_rpow (min_le_right _ _) hεpos.le) _
+            _ = (N : ℝ≥0∞) ^ ε * ∫⁻ z in Metric.ball x₀ s, w z ^ q := by
+                rw [← lintegral_const_mul' _ _ (by
+                  exact (ENNReal.rpow_lt_top_of_nonneg hεpos.le (ENNReal.natCast_ne_top N)).ne)]
+                apply lintegral_congr_ae; filter_upwards with z; rw [mul_comm]
+            _ ≤ (N : ℝ≥0∞) ^ ε * ∫⁻ z in Metric.ball x₀ (16 * R₀), w z ^ q :=
+                mul_le_mul_right (lintegral_mono_set (Metric.ball_subset_ball hs16)) _
+        have hNfin : ∀ s : ℝ, s ≤ 16 * R₀ →
+            ∫⁻ z in Metric.ball x₀ s, w z ^ q * (min (w z) (N : ℝ≥0∞)) ^ ε < ⊤ := by
+          intro s hs16
+          refine lt_of_le_of_lt (hNbound s hs16) ?_
+          exact ENNReal.mul_lt_top
+            (ENNReal.rpow_lt_top_of_nonneg hεpos.le (ENNReal.natCast_ne_top N)) hW16fin
+        -- The real-valued `Ž_N`.
+        set ZN : ℝ → ℝ := fun t => (∫⁻ z in Metric.ball x₀ t,
+          w z ^ q * (min (w z) (N : ℝ≥0∞)) ^ ε).toReal with hZNdef
+        have hZN0 : ∀ t ∈ Set.Icc (4 * R₀) (16 * R₀), 0 ≤ ZN t :=
+          fun t _ => ENNReal.toReal_nonneg
+        -- The uniform bound `M_N` on `[4R₀, 16R₀]` (`Ž_N(t) ≤ N^ε·∫_{16B₀}w^q` for `t ≤ 16R₀`).
+        set MN : ℝ :=
+          ((N : ℝ≥0∞) ^ ε * ∫⁻ z in Metric.ball x₀ (16 * R₀), w z ^ q).toReal with hMNdef
+        have hZNbdd : ∀ t ∈ Set.Icc (4 * R₀) (16 * R₀), ZN t ≤ MN := by
+          intro t ht
+          rw [hZNdef, hMNdef]
+          apply ENNReal.toReal_mono
+          · exact ENNReal.mul_ne_top (ENNReal.rpow_lt_top_of_nonneg hεpos.le
+              (ENNReal.natCast_ne_top N)).ne hW16fin.ne
+          · exact hNbound t ht.2
+        -- Apply the iteration lemma.
+        have hZNiter := hcIter (Z := ZN) (r := 4 * R₀) (R := 16 * R₀)
+          (A := C₁ * Wmaster) (B := C₁ * Bmaster) (M := MN)
+          (by linarith) (mul_nonneg hC₁0 hWmaster0) (mul_nonneg hC₁0 hBmaster0)
+          hZN0 hZNbdd
+          (fun t s ht hts hs => by
+            have := holeFill N t s ht hts hs
+            simpa only [hZNdef] using this)
+        -- `hZNiter : ZN (4R₀) ≤ cIter * (C₁ * Wmaster / (16R₀ - 4R₀)^2 + C₁ * Bmaster)`.
+        -- Convert the LHS `ZN (4R₀)` back to the ENNReal target.
+        have hround : ∫⁻ z in Metric.ball x₀ (4 * R₀), w z ^ q * (min (w z) (N : ℝ≥0∞)) ^ ε
+            = ENNReal.ofReal (ZN (4 * R₀)) := by
+          rw [hZNdef, ENNReal.ofReal_toReal (hNfin (4 * R₀) (by linarith)).ne]
+        rw [hround]
+        -- RHS bound in ℝ.
+        have hRHSreal : ZN (4 * R₀)
+            ≤ cIter * C₁ / (16 * R₀ - 4 * R₀) ^ (2 : ℝ) * Wmaster + cIter * C₁ * Bmaster := by
+          calc ZN (4 * R₀)
+              ≤ cIter * (C₁ * Wmaster / (16 * R₀ - 4 * R₀) ^ (2 : ℝ) + C₁ * Bmaster) := hZNiter
+            _ = cIter * C₁ / (16 * R₀ - 4 * R₀) ^ (2 : ℝ) * Wmaster + cIter * C₁ * Bmaster := by
+                rw [mul_add, mul_div_assoc']; ring
+        -- The two master masses as ENNReal `ofReal` of their `.toReal`.
+        have hWeq : ENNReal.ofReal Wmaster = ∫⁻ z in Metric.ball x₀ (16 * R₀), w z ^ q := by
+          rw [hWmasterdef, ENNReal.ofReal_toReal hWmaster.ne]
+        have hBeq : ENNReal.ofReal Bmaster = ∫⁻ z in Metric.ball x₀ (16 * R₀), b z ^ (q + ε) := by
+          rw [hBmasterdef, ENNReal.ofReal_toReal hBmaster.ne]
+        -- Assemble the ENNReal bound.
+        calc ENNReal.ofReal (ZN (4 * R₀))
+            ≤ ENNReal.ofReal (cIter * C₁ / (16 * R₀ - 4 * R₀) ^ (2 : ℝ) * Wmaster
+                + cIter * C₁ * Bmaster) := ENNReal.ofReal_le_ofReal hRHSreal
+          _ = ENNReal.ofReal (cIter * C₁ / (16 * R₀ - 4 * R₀) ^ (2 : ℝ) * Wmaster)
+                + ENNReal.ofReal (cIter * C₁ * Bmaster) := by
+                rw [ENNReal.ofReal_add (by positivity) (by positivity)]
+          _ = ENNReal.ofReal (cIter * C₁ / (16 * R₀ - 4 * R₀) ^ (2 : ℝ)) * ENNReal.ofReal Wmaster
+                + ENNReal.ofReal (cIter * C₁) * ENNReal.ofReal Bmaster := by
+                rw [ENNReal.ofReal_mul (by positivity), ENNReal.ofReal_mul (by positivity)]
+          _ = ENNReal.ofReal (cIter * C₁ / (16 * R₀ - 4 * R₀) ^ (2 : ℝ))
+                * (∫⁻ z in Metric.ball x₀ (16 * R₀), w z ^ q)
+                + ENNReal.ofReal (cIter * C₁)
+                    * (∫⁻ z in Metric.ball x₀ (16 * R₀), b z ^ (q + ε)) := by
+                rw [hWeq, hBeq]
+          _ ≤ (ENNReal.ofReal (cIter * C₁ / (16 * R₀ - 4 * R₀) ^ (2 : ℝ))
+                  + ENNReal.ofReal (cIter * C₁))
+                * (∫⁻ z in Metric.ball x₀ (16 * R₀), w z ^ q)
+                + (ENNReal.ofReal (cIter * C₁ / (16 * R₀ - 4 * R₀) ^ (2 : ℝ))
+                    + ENNReal.ofReal (cIter * C₁))
+                * (∫⁻ z in Metric.ball x₀ (16 * R₀), b z ^ (q + ε)) := by
+                gcongr <;> simp
       -- Collapse the monotone sup against the `N`-uniform bound.
-      exact ⟨K, hKfin, by rw [hMCT]; exact iSup_le (hboundN)⟩
+      exact ⟨K, hKfin, by rw [hMCT]; exact iSup_le hboundN⟩
     refine lt_of_le_of_lt hbound (ENNReal.add_lt_top.mpr ⟨?_, ?_⟩)
     · exact ENNReal.mul_lt_top (lt_of_le_of_ne le_top hKfin) hRHS_w
     · exact ENNReal.mul_lt_top (lt_of_le_of_ne le_top hKfin) hRHS_b
@@ -4908,7 +8938,7 @@ theorem beltrami_fixedPoint_memLpLocOn {μ : ℂ → ℂ}
   classical
   -- S1: the uniform reverse-Hölder constant `A` (depending only on `μ`).
   obtain ⟨A, hA, hRH⟩ := reverseHolder_of_weakGradient hμmeas hμfin hμbound
-  -- S2 (corrected, Option-A): the uniform exponent gain `ε₀` (depending only on `q = 2`
+  -- S2: the uniform exponent gain `ε₀` (depending only on `q = 2`
   -- and `A`). The gain is achievable at any `ε ≤ ε₀`; we take `ε := min ε₀ 1` so that the
   -- higher-integrability exponent `2 + ε ≤ 3` is supplied by the `δ = 1` datum `MemLp h 3`.
   obtain ⟨ε₀, hε₀, hgain⟩ := gehring_selfImprovement (q := 2) (A := A) (by norm_num) hA

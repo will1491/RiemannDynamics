@@ -77,6 +77,9 @@ import RiemannDynamics.Analysis.SingularIntegral.Beurling.L2Core
 import RiemannDynamics.Analysis.SingularIntegral.Beurling.LpLow
 import RiemannDynamics.Analysis.SingularIntegral.Beurling.LpHighOpNorm
 import RiemannDynamics.Analysis.SingularIntegral.GehringHigherIntegrability
+import RiemannDynamics.Analysis.SingularIntegral.DyadicCubes
+import RiemannDynamics.Analysis.SingularIntegral.DyadicLebesgue
+import RiemannDynamics.Analysis.SingularIntegral.DyadicGehring
 import RiemannDynamics.Analysis.SingularIntegral.Beurling.Beltrami
 
 import RiemannDynamics.QC.BeltramiCoeff

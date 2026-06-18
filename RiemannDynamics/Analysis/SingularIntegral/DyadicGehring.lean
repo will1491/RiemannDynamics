@@ -1,27 +1,24 @@
 import RiemannDynamics.Analysis.SingularIntegral.DyadicLebesgue
+import RiemannDynamics.Analysis.SingularIntegral.GehringHigherIntegrability
 import Mathlib.MeasureTheory.Integral.Layercake
 
 /-!
-# Dyadic assembly of the Gehring self-improvement
+# Dyadic form of the Gehring self-improvement
 
-This file assembles the proven dyadic Calderón–Zygmund machinery
-(`exists_dyadic_CZ_stopping`, `dyadic_ae_tendsto_average`) into the higher-integrability
-core of Gehring's lemma, working entirely on dyadic squares so that the layer-cake
-absorption happens on a *single* fixed square (no maximal function, no cross-ball mismatch).
+This file records the dyadic-square form of the higher-integrability conclusion of Gehring's
+lemma. The metric-ball self-improvement `gehring_selfImprovement` is the canonical statement;
+here it is specialized to the dyadic squares.
 
-## Pipeline
+## Contents
 
 * `dyadic_reverseHolder` — transfers a metric-ball reverse-Hölder hypothesis (the form
   consumed by `gehring_selfImprovement`) to the dyadic squares, using the centre/ball
   comparability `dyadicSquare_subset_ball` and a fixed planar volume ratio.
-* `dyadic_higher_integrability` — the dyadic Gehring self-improvement core: under the
-  ball reverse-Hölder hypothesis, the weight `w` is locally `L^{q+ε}` on every dyadic
-  square, with a single gain `ε` depending only on `q` and `A`.  Its proof runs the
-  Calderón–Zygmund stopping decomposition on a fixed square, the resulting same-square
-  good-λ inequality, and the layer-cake absorption.
-
-The endpoint `gehring_selfImprovement` then covers any ball by finitely many dyadic squares
-of comparable size and sums.
+* `dyadic_higher_integrability` — the dyadic-square form of the self-improvement: under the
+  ball reverse-Hölder hypothesis, the weight `w` is locally `L^{q+ε}` on every dyadic square,
+  with a single gain `ε` depending only on `q` and `A`. It is a corollary of
+  `gehring_selfImprovement`: each dyadic square sits inside the compact ball
+  `closedBall (centre) (2^m)`, on which the self-improvement bounds the `w^{q+ε}`-mass.
 -/
 
 open MeasureTheory Filter Set
@@ -111,15 +108,16 @@ theorem dyadic_reverseHolder {q A : ℝ} (hq : 1 < q) (_hA : 0 ≤ A)
           (⨍⁻ z in Metric.ball c (4 * s), b z ^ q ∂volume) ^ (1 / q) := by
         rw [mul_add, ← mul_assoc, ← mul_assoc, ← ENNReal.ofReal_mul hpi0]
 
-/-- **Dyadic Gehring higher-integrability core.**  Fix `q > 1` and a reverse-Hölder constant
-`A ≥ 0`.  There is a single exponent gain `ε > 0` — depending only on `q` and `A` — such that
-every nonnegative weight `w` (with lower-order term `b`) that is locally `Lᵠ` (`b` locally
-`L^{q+ε}`) and satisfies the metric-ball reverse-Hölder inequality with enlargement `4` is
-`L^{q+ε}` on every dyadic square: `∫⁻_{dyadicSquare m k} w^{q+ε} < ⊤`.
+/-- **Dyadic form of the Gehring higher-integrability.**  Fix `q > 1` and a reverse-Hölder
+constant `A ≥ 0`.  There is a single exponent gain `ε > 0` — depending only on `q` and `A` —
+such that every nonnegative weight `w` (with lower-order term `b`) that is locally `Lᵠ` (`b`
+locally `L^{q+ε}`) and satisfies the metric-ball reverse-Hölder inequality with enlargement
+`4` is `L^{q+ε}` on every dyadic square: `∫⁻_{dyadicSquare m k} w^{q+ε} < ⊤`.
 
-This is the dyadic Calderón–Zygmund self-improvement: on the fixed square the stopping
-decomposition `exists_dyadic_CZ_stopping` produces the same-square good-λ inequality, whose
-layer-cake reconstruction absorbs (with `ε` small) on that one square. -/
+This is the dyadic-square specialization of the metric-ball self-improvement
+`gehring_selfImprovement`: each dyadic square `dyadicSquare m k` is contained in the compact
+ball `closedBall (dyadicCenter m k) (2^m)`, on which the self-improvement already bounds the
+`w^{q+ε}`-mass. -/
 theorem dyadic_higher_integrability {q A : ℝ} (hq : 1 < q) (hA : 0 ≤ A) :
     ∃ ε₀ : ℝ, 0 < ε₀ ∧ ∀ {ε : ℝ}, 0 < ε → ε ≤ ε₀ →
       ∀ {w b : ℂ → ℝ≥0∞}, AEMeasurable w volume → AEMeasurable b volume →
@@ -130,6 +128,16 @@ theorem dyadic_higher_integrability {q A : ℝ} (hq : 1 < q) (hA : 0 ≤ A) :
             ENNReal.ofReal A * (⨍⁻ z in Metric.ball x (4 * r), w z ∂volume) +
               ENNReal.ofReal A * (⨍⁻ z in Metric.ball x (4 * r), b z ^ q ∂volume) ^ (1 / q)) →
         ∀ (m : ℤ) (k : ℤ × ℤ), ∫⁻ z in dyadicSquare m k, w z ^ (q + ε) < ⊤ := by
-  sorry
+  -- A corollary of the metric-ball Gehring self-improvement `gehring_selfImprovement`:
+  -- every dyadic square sits inside the compact ball `closedBall (centre) (2^m)`, and the
+  -- self-improvement bounds the `w^{q+ε}`-mass over every compact set.
+  obtain ⟨ε₀, hε₀pos, H⟩ := gehring_selfImprovement hq hA
+  refine ⟨ε₀, hε₀pos, ?_⟩
+  intro ε hε hεle w b hw hb hwloc hbloc hRH m k
+  have hKcompact : IsCompact (Metric.closedBall (dyadicCenter m k) ((2 : ℝ) ^ m)) :=
+    isCompact_closedBall _ _
+  have hfin := H hε hεle hw hb hwloc hbloc hRH _ hKcompact
+  refine lt_of_le_of_lt (lintegral_mono_set ?_) hfin
+  exact (dyadicSquare_subset_ball m k).trans Metric.ball_subset_closedBall
 
 end RiemannDynamics
