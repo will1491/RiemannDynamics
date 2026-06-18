@@ -49,7 +49,11 @@ theorem:
 
 The development is organized across the `Beurling/` directory, in dependency
 order: `Kernel` (this file) → `DirichletIsometry` → `Convolution` → `L2Core`
-→ `LpLow` → `LpHighOpNorm`.
+→ `LpLow` → `LpHighOpNorm` → `Beltrami`. The first six files build the `Lᵖ`
+theory of `T`; `Beltrami` is the downstream consumer, assembling (together with
+`Analysis/SingularIntegral/GehringHigherIntegrability.lean`) the Bojarski
+higher-integrability endpoint `dz_memLpLocOn_of_beltrami` — `∂f ∈ Lᵖ_loc` for
+some `p > 2` for a `W^{1,2}_loc` solution of `∂̄f = μ ∂f`.
 
 ## This file: `Kernel`
 
