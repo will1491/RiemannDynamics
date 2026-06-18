@@ -1,5 +1,5 @@
 import RiemannDynamics.Analysis.SingularIntegral.DyadicLebesgue
-import RiemannDynamics.Analysis.SingularIntegral.GehringHigherIntegrability
+import RiemannDynamics.Analysis.SingularIntegral.GehringHigherIntegrability.SelfImprovement
 import Mathlib.MeasureTheory.Integral.Layercake
 
 /-!

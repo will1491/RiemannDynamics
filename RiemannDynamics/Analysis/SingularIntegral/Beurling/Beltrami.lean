@@ -7,7 +7,7 @@ import RiemannDynamics.Analysis.SingularIntegral.Cauchy
 import RiemannDynamics.Analysis.SingularIntegral.Beurling.Kernel
 import RiemannDynamics.Analysis.SingularIntegral.Beurling.Convolution
 import RiemannDynamics.Analysis.SingularIntegral.Beurling.LpHighOpNorm
-import RiemannDynamics.Analysis.SingularIntegral.GehringHigherIntegrability
+import RiemannDynamics.Analysis.SingularIntegral.GehringHigherIntegrability.Residual
 import RiemannDynamics.Analysis.Sobolev.Wirtinger
 import RiemannDynamics.Analysis.Sobolev.WeakDeriv
 import RiemannDynamics.QC.LengthArea
