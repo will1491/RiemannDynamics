@@ -6,6 +6,7 @@ Authors: Will (Ziang) Li
 import RiemannDynamics.QC.Equivalence
 import RiemannDynamics.Analysis.SingularIntegral.Beurling.LpHighOpNorm
 import RiemannDynamics.Analysis.SingularIntegral.Beurling.Beltrami
+import RiemannDynamics.Analysis.Sobolev.Morrey
 
 /-!
 # The inverse of an analytic-quasiconformal map is analytic-quasiconformal
@@ -59,7 +60,7 @@ The predicate used for "`∂f` is locally `Lᵖ`" is the repo's existing
 -/
 
 open MeasureTheory Complex
-open scoped ENNReal
+open scoped ENNReal ComplexConjugate
 
 namespace RiemannDynamics
 
@@ -208,6 +209,97 @@ theorem IsQCAnalytic.dz_higher_integrability {f : ℂ → ℂ} {b : BeltramiCoef
   exact (hlocp K hKuniv hKcompact).ae_eq
     (Filter.EventuallyEq.symm (ae_restrict_of_ae hbridge))
 
+/-- **Super-critical weak gradient.** An `IsQCAnalytic` map has a weak gradient `(gx, gy)`
+whose components are locally `Lᵖ` for some `p > 2`. This packages the higher integrability
+`IsQCAnalytic.dz_higher_integrability` (`∂f ∈ Lᵖ_loc`) with the Beltrami relation
+`∂̄f = b.μ · ∂f` and the dilatation bound `‖b.μ‖∞ < 1` (so `∂̄f ∈ Lᵖ_loc` too), via the
+partial decomposition `gx = ∂f + ∂̄f`, `gy = i(∂f − ∂̄f)`. *Dependency:*
+`dz_higher_integrability`, `dz_aeeq_weakDz`. -/
+theorem IsQCAnalytic.exists_weakGradient_memLpLocOn_gt_two {f : ℂ → ℂ} {b : BeltramiCoeff}
+    (hf : IsQCAnalytic f b) :
+    ∃ (p : ℝ) (gx gy : ℂ → ℂ), 2 < p ∧ HasWeakGradient gx gy f Set.univ ∧
+      MemLpLocOn gx (ENNReal.ofReal p) Set.univ ∧
+      MemLpLocOn gy (ENNReal.ofReal p) Set.univ := by
+  -- The canonical weak gradient `(gx, gy)` of `MemW12loc f`, with loc-`L²` partials.
+  obtain ⟨hfLp, gx, gy, ⟨hgx, hgy⟩, hmgx, hmgy⟩ := hf.2.1
+  have hgxLp : MemLpLocOn gx 2 Set.univ := hmgx
+  have hgyLp : MemLpLocOn gy 2 Set.univ := hmgy
+  -- Higher integrability of `∂f`: `∂f ∈ Lᵖ_loc` for some `p > 2`.
+  obtain ⟨p, hp2, hdzp⟩ := hf.dz_higher_integrability
+  -- The strong⇄weak Wirtinger bridges identify `dz`/`dzbar f` with the weak partials.
+  have hbridge_dz := hf.dz_aeeq_weakDz hgx hgy hgxLp hgyLp
+  -- The `∂̄`-bridge `dzbar f =ᵐ ½(gx + i gy)`, derived inline from the two partial
+  -- bridges exactly as in `dz_higher_integrability`.
+  have hbridge_dzbar : (fun z => dzbar f z) =ᵐ[volume]
+      (fun z => (1 / 2 : ℂ) * (gx z + Complex.I * gy z)) := by
+    have haex : ∀ᵐ z, (fderiv ℝ f z) (1 : ℂ) = gx z :=
+      fderiv_ae_eq_weakDirDeriv hgx (by
+        rw [locallyIntegrableOn_univ, locallyIntegrable_iff]
+        intro k hk
+        haveI : IsFiniteMeasure (volume.restrict k) :=
+          ⟨by rw [Measure.restrict_apply_univ]; exact hk.measure_lt_top⟩
+        exact memLp_one_iff_integrable.mp ((hgxLp k (Set.subset_univ _) hk).mono_exponent
+          (by norm_num)))
+        (IsQCAnalytic.ae_differentiableAt hf) (Or.inl rfl)
+        (hf.1.1.continuous.locallyIntegrable)
+    have haey : ∀ᵐ z, (fderiv ℝ f z) Complex.I = gy z :=
+      fderiv_ae_eq_weakDirDeriv hgy (by
+        rw [locallyIntegrableOn_univ, locallyIntegrable_iff]
+        intro k hk
+        haveI : IsFiniteMeasure (volume.restrict k) :=
+          ⟨by rw [Measure.restrict_apply_univ]; exact hk.measure_lt_top⟩
+        exact memLp_one_iff_integrable.mp ((hgyLp k (Set.subset_univ _) hk).mono_exponent
+          (by norm_num)))
+        (IsQCAnalytic.ae_differentiableAt hf) (Or.inr rfl)
+        (hf.1.1.continuous.locallyIntegrable)
+    filter_upwards [haex, haey] with z hzx hzy
+    simp only [dzbar, hzx, hzy]
+  -- `∂̄f =ᵐ b.μ · ∂f`, so `∂̄f ∈ Lᵖ_loc` too (a.e.-bounded multiple of an `Lᵖ_loc`
+  -- function, with `‖b.μ‖∞ < 1 ≤ 1` a.e.).
+  have hμle : ∀ᵐ z, ‖b.μ z‖ ≤ 1 := by
+    filter_upwards [ae_le_eLpNormEssSup (f := b.μ) (μ := volume)] with z hz
+    have h1 : ENNReal.ofReal ‖b.μ z‖ ≤ 1 := by
+      rw [ofReal_norm_eq_enorm]; exact le_trans hz b.bound.le
+    exact ENNReal.ofReal_le_one.mp h1
+  have hdzbarp : MemLpLocOn (fun z => dzbar f z) (ENNReal.ofReal p) Set.univ := by
+    intro K hKuniv hKcompact
+    have hdzK : MemLp (fun z => dz f z) (ENNReal.ofReal p) (volume.restrict K) :=
+      hdzp K hKuniv hKcompact
+    have hmeasK : AEStronglyMeasurable (fun z => b.μ z * dz f z) (volume.restrict K) :=
+      (b.measurable.aestronglyMeasurable).mul hdzK.1
+    have hboundK : MemLp (fun z => b.μ z * dz f z) (ENNReal.ofReal p) (volume.restrict K) := by
+      refine hdzK.of_le hmeasK ?_
+      filter_upwards [ae_restrict_of_ae hμle] with z hz
+      rw [norm_mul]
+      calc ‖b.μ z‖ * ‖dz f z‖ ≤ 1 * ‖dz f z‖ :=
+            mul_le_mul_of_nonneg_right hz (norm_nonneg _)
+        _ = ‖dz f z‖ := one_mul _
+    -- Transfer to `dzbar f` via `dzbar f =ᵐ b.μ · dz f`.
+    refine hboundK.ae_eq ?_
+    filter_upwards [ae_restrict_of_ae hf.2.2] with z hz
+    simp only [hz]
+  -- The weak partials decompose: `gx =ᵐ ∂f + ∂̄f`, `gy =ᵐ i(∂f − ∂̄f)`.
+  have hgx_eq : gx =ᵐ[volume] (fun z => dz f z + dzbar f z) := by
+    filter_upwards [hbridge_dz, hbridge_dzbar] with z hdz hdzbar
+    rw [hdz, hdzbar]; ring
+  have hgy_eq : gy =ᵐ[volume] (fun z => Complex.I * (dz f z - dzbar f z)) := by
+    filter_upwards [hbridge_dz, hbridge_dzbar] with z hdz hdzbar
+    rw [hdz, hdzbar]
+    have hI : Complex.I ^ 2 = -1 := Complex.I_sq
+    linear_combination (gy z) * hI
+  -- `gx, gy ∈ Lᵖ_loc` by closure of `Lᵖ_loc` under sums/scalars, transferred a.e.
+  refine ⟨p, gx, gy, hp2, ⟨hgx, hgy⟩, ?_, ?_⟩
+  · intro K hKuniv hKcompact
+    have hsum : MemLp (fun z => dz f z + dzbar f z) (ENNReal.ofReal p) (volume.restrict K) :=
+      (hdzp K hKuniv hKcompact).add (hdzbarp K hKuniv hKcompact)
+    exact hsum.ae_eq (Filter.EventuallyEq.symm (ae_restrict_of_ae hgx_eq))
+  · intro K hKuniv hKcompact
+    have hsub : MemLp (fun z => dz f z - dzbar f z) (ENNReal.ofReal p) (volume.restrict K) :=
+      (hdzp K hKuniv hKcompact).sub (hdzbarp K hKuniv hKcompact)
+    have hscal : MemLp (fun z => Complex.I * (dz f z - dzbar f z)) (ENNReal.ofReal p)
+        (volume.restrict K) := hsub.const_mul Complex.I
+    exact hscal.ae_eq (Filter.EventuallyEq.symm (ae_restrict_of_ae hgy_eq))
+
 /-- **Planar Lusin-(N) for the singular set.** For an `IsQCAnalytic` map `f`, the
 image under `f` of the set where `f` fails to be (real-)differentiable is
 Lebesgue-null.
@@ -216,12 +308,17 @@ This is the genuine analytic core of the image-side exceptional sweep. A planar
 `W^{1,p}_loc` homeomorphism with `p > 2` (`dz_higher_integrability` gives the higher
 integrability `∂f ∈ L^p_loc`, and the dilatation bound `‖b.μ‖∞ < 1` carries `∂̄f`
 along) is Hölder-continuous and satisfies the Lusin-(N) property, so it maps the
-(null) non-differentiability set to a null set. *Dependency:*
-`dz_higher_integrability`. -/
+(null) non-differentiability set to a null set. The Lusin-(N) input is the general
+Sobolev fact `lusinN_image_null_of_weakGradient` (`Analysis/Sobolev/Morrey.lean`).
+*Dependency:* `exists_weakGradient_memLpLocOn_gt_two`, `lusinN_image_null_of_weakGradient`,
+`ae_differentiableAt`. -/
 theorem IsQCAnalytic.image_singular_set_null {f : ℂ → ℂ} {b : BeltramiCoeff}
     (hf : IsQCAnalytic f b) :
     volume (f '' {z : ℂ | ¬ DifferentiableAt ℝ f z}) = 0 := by
-  sorry
+  obtain ⟨p, gx, gy, hp2, hgrad, hgxp, hgyp⟩ := hf.exists_weakGradient_memLpLocOn_gt_two
+  have hNnull : volume {z : ℂ | ¬ DifferentiableAt ℝ f z} = 0 :=
+    MeasureTheory.ae_iff.mp (IsQCAnalytic.ae_differentiableAt hf)
+  exact lusinN_image_null_of_weakGradient hp2 hf.1.1.continuous hgrad hgxp hgyp hNnull
 
 /-- **Planar Lusin-(N) for the degeneracy set.** For an `IsQCAnalytic` map `f`, the
 image under `f` of the set where `f` fails to be differentiable with positive
@@ -358,7 +455,156 @@ theorem IsQCAnalytic.inverse_beltrami {f : ℂ → ℂ} {b : BeltramiCoeff}
     ∃ b' : BeltramiCoeff,
       ∀ᵐ w, dzbar (⇑(hf.1.1.homeomorph f).symm) w
         = b'.μ w * dz (⇑(hf.1.1.homeomorph f).symm) w := by
-  sorry
+  classical
+  -- The inverse homeomorphism `g = f⁻¹`.
+  set g : ℂ → ℂ := ⇑(hf.1.1.homeomorph f).symm with hg
+  -- The forward map of the homeomorphism is `f`; the two inverse relations.
+  have hfwd : ∀ z, (hf.1.1.homeomorph f) z = f z := fun z =>
+    IsHomeomorph.homeomorph_apply f hf.1.1 z
+  have hfg : ∀ w, f (g w) = w := fun w => by
+    rw [hg, ← hfwd ((hf.1.1.homeomorph f).symm w)]
+    exact (hf.1.1.homeomorph f).apply_symm_apply w
+  have hgf : ∀ z, g (f z) = z := fun z => by
+    rw [hg, ← hfwd z]
+    exact (hf.1.1.homeomorph f).symm_apply_apply z
+  -- **`f` maps null sets to null sets** (planar Lusin-(N) for arbitrary null sets,
+  -- from the super-critical weak gradient of `f`).
+  obtain ⟨p, gx, gy, hp2, hgrad, hgxp, hgyp⟩ := hf.exists_weakGradient_memLpLocOn_gt_two
+  have hfNull : ∀ S : Set ℂ, volume S = 0 → volume (f '' S) = 0 := fun S hS =>
+    lusinN_image_null_of_weakGradient hp2 hf.1.1.continuous hgrad hgxp hgyp hS
+  -- **Pullback of a.e. properties through `g`.** If `P` holds a.e. (in `z`), then
+  -- `P (g w)` holds for a.e. `w`: the bad set `{w | ¬ P (g w)}` equals `f '' {z | ¬ P z}`,
+  -- which is null because `f` maps the (null) bad source-set to a null set.
+  have pullback : ∀ P : ℂ → Prop, (∀ᵐ z, P z) → ∀ᵐ w, P (g w) := by
+    intro P hP
+    have hbadnull : volume {z : ℂ | ¬ P z} = 0 := ae_iff.mp hP
+    have himgnull : volume (f '' {z : ℂ | ¬ P z}) = 0 := hfNull _ hbadnull
+    rw [ae_iff]
+    refine measure_mono_null ?_ himgnull
+    intro w hw
+    -- `¬ P (g w)` means `g w ∈ {z | ¬ P z}`, and `f (g w) = w`, so `w ∈ f '' {z | ¬ P z}`.
+    exact ⟨g w, hw, hfg w⟩
+  -- A.e. data for `w`: `g` differentiable, `f` differentiable at `g w` with positive
+  -- Jacobian, the Beltrami equation at `g w`, and the dilatation bound at `g w`.
+  have hgdiff : ∀ᵐ w, DifferentiableAt ℝ g w := hf.inverse_differentiableAt_ae
+  have hfdiff : ∀ᵐ w, DifferentiableAt ℝ f (g w) :=
+    pullback _ (IsQCAnalytic.ae_differentiableAt hf)
+  have hdetpos : ∀ᵐ w, 0 < (fderiv ℝ f (g w)).det := pullback _ hf.1.2
+  have hbelw : ∀ᵐ w, dzbar f (g w) = b.μ (g w) * dz f (g w) := pullback _ hf.2.2
+  -- The dilatation bound `‖b.μ‖ ≤ b.normInf` pulled back to `w` (a.e.).
+  have hμbnd : ∀ᵐ z, ‖b.μ z‖ ≤ b.normInf := by
+    filter_upwards [ae_le_eLpNormEssSup (f := b.μ) (μ := volume)] with z hz
+    -- `‖b.μ z‖₊ ≤ eLpNormEssSup b.μ`, and `eLpNormEssSup b.μ = b.normInf` (it is `< 1 < ⊤`).
+    have hfin : eLpNormEssSup b.μ volume ≠ ⊤ := ne_top_of_lt b.bound
+    have : ENNReal.ofReal ‖b.μ z‖ ≤ eLpNormEssSup b.μ volume := by
+      rw [ofReal_norm_eq_enorm]; exact hz
+    have h2 : ‖b.μ z‖ ≤ (eLpNormEssSup b.μ volume).toReal := by
+      rw [← ENNReal.toReal_ofReal (norm_nonneg _)]
+      exact ENNReal.toReal_mono hfin this
+    simpa [BeltramiCoeff.normInf] using h2
+  have hμbndw : ∀ᵐ w, ‖b.μ (g w)‖ ≤ b.normInf := pullback _ hμbnd
+  -- **The reflected Beltrami coefficient.** Clamp the raw quotient `∂̄g / ∂g` to keep its
+  -- modulus at most `c = b.normInf < 1` *everywhere*, so the essential-sup bound is free.
+  set c : ℝ := b.normInf with hc
+  have hc0 : 0 ≤ c := b.normInf_nonneg
+  have hc1 : c < 1 := b.normInf_lt_one
+  set raw : ℂ → ℂ := fun w => dzbar g w / dz g w with hraw
+  set μ' : ℂ → ℂ := fun w => if ‖raw w‖ ≤ c then raw w else 0 with hμ'
+  -- Measurability of `μ'` (built from `fderiv ℝ g`, hence measurable).
+  have hdzg_meas : Measurable (fun w : ℂ => dz g w) := by
+    have h1 : Measurable (fun w : ℂ => (fderiv ℝ g w) 1) := measurable_fderiv_apply_const ℝ g 1
+    have h2 : Measurable (fun w : ℂ => (fderiv ℝ g w) Complex.I) :=
+      measurable_fderiv_apply_const ℝ g Complex.I
+    simpa only [dz] using (measurable_const.mul (h1.sub (measurable_const.mul h2)))
+  have hdzbarg_meas : Measurable (fun w : ℂ => dzbar g w) := by
+    have h1 : Measurable (fun w : ℂ => (fderiv ℝ g w) 1) := measurable_fderiv_apply_const ℝ g 1
+    have h2 : Measurable (fun w : ℂ => (fderiv ℝ g w) Complex.I) :=
+      measurable_fderiv_apply_const ℝ g Complex.I
+    simpa only [dzbar] using (measurable_const.mul (h1.add (measurable_const.mul h2)))
+  have hraw_meas : Measurable raw := hdzbarg_meas.div hdzg_meas
+  have hμ'_meas : Measurable μ' :=
+    Measurable.ite (measurableSet_le hraw_meas.norm measurable_const) hraw_meas measurable_const
+  -- `‖μ' w‖ ≤ c` everywhere, so `eLpNormEssSup μ' < 1`.
+  have hμ'_le : ∀ w, ‖μ' w‖ ≤ c := by
+    intro w
+    rw [hμ']
+    by_cases h : ‖raw w‖ ≤ c
+    · simp [h]
+    · simp [h, hc0]
+  have hμ'_bound : eLpNormEssSup μ' volume < 1 := by
+    refine lt_of_le_of_lt (eLpNormEssSup_le_of_ae_bound (Filter.Eventually.of_forall hμ'_le)) ?_
+    rw [show (1 : ℝ≥0∞) = ENNReal.ofReal 1 by simp]
+    exact (ENNReal.ofReal_lt_ofReal_iff_of_nonneg hc0).mpr hc1
+  refine ⟨⟨μ', hμ'_meas, hμ'_bound⟩, ?_⟩
+  -- **The Beltrami equation for `g`** at a.e. `w`.
+  filter_upwards [hgdiff, hfdiff, hdetpos, hbelw, hμbndw]
+    with w hwg hwf hwdet hwbel hwbnd
+  -- Set `z := g w`; the chain rule for `g ∘ f = id` at `z`.
+  set z : ℂ := g w with hz
+  -- `f z = w` and the identity `(fun y => g (f y)) = (fun y => y)`.
+  have hfz : f z = w := hfg w
+  have hcompid : (fun y => g (f y)) = (fun y : ℂ => y) := funext hgf
+  -- `g` is differentiable at `f z = w`.
+  have hwg' : DifferentiableAt ℝ g (f z) := by rw [hfz]; exact hwg
+  -- Wirtinger derivatives of the identity.
+  have hdzid : dz (fun y : ℂ => y) z = 1 := by simp only [dz, fderiv_id']; simp; ring
+  have hdzbarid : dzbar (fun y : ℂ => y) z = 0 := by simp only [dzbar, fderiv_id']; simp
+  -- Abbreviations for the four Wirtinger values.
+  set P : ℂ := dz g w with hP
+  set Q : ℂ := dzbar g w with hQ
+  set pp : ℂ := dz f z with hpp
+  set qq : ℂ := dzbar f z with hqq
+  -- The two chain-rule equations, with `f z = w` and `g ∘ f = id` substituted.
+  have heq1 : P * pp + Q * conj qq = 1 := by
+    have hcr : dz (fun y => g (f y)) z = dz g (f z) * dz f z + dzbar g (f z) * conj (dzbar f z) :=
+      dz_comp hwf hwg'
+    rw [hcompid, hdzid, hfz] at hcr
+    exact hcr.symm
+  have heq2 : P * qq + Q * conj pp = 0 := by
+    have hcr : dzbar (fun y => g (f y)) z
+        = dz g (f z) * dzbar f z + dzbar g (f z) * conj (dz f z) := dzbar_comp hwf hwg'
+    rw [hcompid, hdzbarid, hfz] at hcr
+    exact hcr.symm
+  -- `pp = dz f z ≠ 0` from the positive Jacobian: `det = ‖pp‖² − ‖qq‖² > 0`, so `‖pp‖ > 0`.
+  have hppne : pp ≠ 0 := by
+    have hdet : (fderiv ℝ f z).det = ‖pp‖ ^ 2 - ‖qq‖ ^ 2 := det_fderiv_eq_wirtinger f z
+    rw [hdet] at hwdet
+    intro h0
+    rw [h0, norm_zero] at hwdet
+    nlinarith [sq_nonneg ‖qq‖, hwdet]
+  -- The Beltrami relation at `z`: `qq = b.μ z · pp`.
+  have hbelz : qq = b.μ z * pp := hwbel
+  -- **Algebraic inversion.** From `heq2` and `pp ≠ 0`: `Q = (b'.μ) · P` with
+  -- `‖Q‖ = ‖b.μ z‖ · ‖P‖`, and `P ≠ 0`.
+  have hQrel : Q * conj pp = -(P * (b.μ z * pp)) := by
+    rw [hbelz] at heq2; linear_combination heq2
+  have hnorm : ‖Q‖ * ‖pp‖ = ‖b.μ z‖ * ‖P‖ * ‖pp‖ := by
+    have := congrArg norm hQrel
+    simp only [norm_mul, norm_neg, norm_conj] at this
+    linarith [this]
+  have hppn : ‖pp‖ ≠ 0 := norm_ne_zero_iff.mpr hppne
+  have hQnorm : ‖Q‖ = ‖b.μ z‖ * ‖P‖ := mul_right_cancel₀ hppn hnorm
+  have hPne : P ≠ 0 := by
+    intro hP0
+    rw [hP0] at heq1 heq2
+    simp only [zero_mul, zero_add] at heq1 heq2
+    have hcp : conj pp ≠ 0 := by simpa using hppne
+    have hQ0 : Q = 0 := by
+      rcases mul_eq_zero.mp heq2 with h | h
+      · exact h
+      · exact absurd h hcp
+    rw [hQ0] at heq1; simp at heq1
+  -- The clamp condition holds: `‖raw w‖ = ‖Q/P‖ = ‖Q‖/‖P‖ = ‖b.μ z‖ ≤ c`.
+  have hPnn : ‖P‖ ≠ 0 := norm_ne_zero_iff.mpr hPne
+  have hraww : ‖raw w‖ ≤ c := by
+    have hrawval : raw w = Q / P := by rw [hraw, hP, hQ]
+    rw [hrawval, norm_div, hQnorm, mul_div_assoc, div_self hPnn, mul_one]
+    exact hwbnd
+  -- Conclude `∂̄g w = μ' w · ∂g w`: the clamp returns the raw quotient, and `P ≠ 0`.
+  change Q = μ' w * P
+  have hμ'w : μ' w = Q / P := by
+    rw [hμ']; simp only [hraww, if_true]; rw [hraw, hP, hQ]
+  rw [hμ'w, div_mul_cancel₀ Q hPne]
 
 /-- **The inverse lies in `W^{1,2}_loc`.** The inverse homeomorphism `g = f⁻¹` of an
 `IsQCAnalytic` map is itself `W^{1,2}_loc`.

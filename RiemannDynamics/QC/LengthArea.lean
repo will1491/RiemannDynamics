@@ -3417,7 +3417,8 @@ crux is a planar Lusin-(N) property: the image `f '' N` of the degeneracy null s
 theorem IsQCAnalytic.image_chainRule_exceptional_modulus_zero {f : ℂ → ℂ}
     {b : BeltramiCoeff} (hf : IsQCAnalytic f b) (Γ : Set (ℝ → ℂ))
     (hcont : ∀ γ ∈ Γ, Continuous γ)
-    (hac : ∀ γ ∈ Γ, AbsolutelyContinuousOnInterval γ 0 1) :
+    (hac : ∀ γ ∈ Γ, AbsolutelyContinuousOnInterval γ 0 1)
+    (hlusin : volume (f '' {z : ℂ | ¬ (DifferentiableAt ℝ f z ∧ 0 < (fderiv ℝ f z).det)}) = 0) :
     curveModulus ((fun γ : ℝ → ℂ => f ∘ γ) ''
       {γ ∈ Γ | ¬ ((∀ a c : ℝ, Set.uIcc a c ⊆ Set.Icc (0 : ℝ) 1 →
           AbsolutelyContinuousOnInterval (f ∘ γ) a c) ∧
@@ -3440,6 +3441,7 @@ theorem IsQCAnalytic.image_modulus_zero {f : ℂ → ℂ} {b : BeltramiCoeff}
     (hf : IsQCAnalytic f b) {Γ' : Set (ℝ → ℂ)}
     (hcont : ∀ γ ∈ Γ', Continuous γ)
     (hac : ∀ γ ∈ Γ', AbsolutelyContinuousOnInterval γ 0 1)
+    (hlusin : volume (f '' {z : ℂ | ¬ (DifferentiableAt ℝ f z ∧ 0 < (fderiv ℝ f z).det)}) = 0)
     (h0 : curveModulus Γ' = 0) :
     curveModulus ((fun γ : ℝ → ℂ => f ∘ γ) '' Γ') = 0 := by
   classical
@@ -3665,7 +3667,7 @@ theorem IsQCAnalytic.image_modulus_zero {f : ℂ → ℂ} {b : BeltramiCoeff}
   -- ============================================================
   -- The bad image has zero modulus by the chain-rule exceptional sweep.
   have hbadimg : curveModulus ((fun γ : ℝ → ℂ => f ∘ γ) '' Γ'bad) = 0 :=
-    IsQCAnalytic.image_chainRule_exceptional_modulus_zero hf Γ' hcont hac
+    IsQCAnalytic.image_chainRule_exceptional_modulus_zero hf Γ' hcont hac hlusin
   -- The good image has zero modulus: collapse the energy bound using `h0`.
   have hgoodimg : curveModulus ((fun γ : ℝ → ℂ => f ∘ γ) '' Γ'good) = 0 := by
     refine le_antisymm ?_ (zero_le _)

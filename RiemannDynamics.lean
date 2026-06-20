@@ -63,6 +63,7 @@ import RiemannDynamics.Analysis.Sobolev.WeakDeriv
 import RiemannDynamics.Analysis.Sobolev.Mollification
 import RiemannDynamics.Analysis.Sobolev.AbsolutelyContinuousLines
 import RiemannDynamics.Analysis.Sobolev.SobolevToACL
+import RiemannDynamics.Analysis.Sobolev.Morrey
 
 import RiemannDynamics.Analysis.SingularIntegral.Cauchy
 import RiemannDynamics.Analysis.SingularIntegral.CalderonZygmund
@@ -97,3 +98,5 @@ import RiemannDynamics.QC.Geometric
 import RiemannDynamics.QC.LengthArea
 import RiemannDynamics.QC.Equivalence
 import RiemannDynamics.QC.InverseQC
+import RiemannDynamics.QC.GeometricToAnalytic
+import RiemannDynamics.QC.QCEquivalence

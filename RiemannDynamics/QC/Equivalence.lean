@@ -53,7 +53,8 @@ absolutely continuous and `f` good along `γ`. The genuine bound `M(f(Q)) ≤ K 
 (`isQCGeometric_of_isQCAnalytic`) follows from this together with the nullity of the
 complementary image curves (image-side Fuglede); see the note there. -/
 theorem isQCGeometric_of_isQCAnalytic_pushforward {f : ℂ → ℂ} {K : ℝ} (hK : 1 ≤ K)
-    {b : BeltramiCoeff} (hb : b.normInf ≤ (K - 1) / (K + 1)) (hf : IsQCAnalytic f b) :
+    {b : BeltramiCoeff} (hb : b.normInf ≤ (K - 1) / (K + 1)) (hf : IsQCAnalytic f b)
+    (hlusin : volume (f '' {z : ℂ | ¬ (DifferentiableAt ℝ f z ∧ 0 < (fderiv ℝ f z).det)}) = 0) :
     OrientationPreservingHomeo f ∧ ∀ Q : Quadrilateral,
       curveModulus ((fun γ : ℝ → ℂ => f ∘ γ) '' Q.curveFamily)
         ≤ ENNReal.ofReal K * Q.modulus := by
@@ -175,7 +176,7 @@ theorem isQCGeometric_of_isQCAnalytic_pushforward {f : ℂ → ℂ} {K : ℝ} (h
       (fun γ hγ => hγ.2.1)
   have hbadimg0 : curveModulus ((fun γ : ℝ → ℂ => f ∘ γ) '' Γbad) = 0 :=
     IsQCAnalytic.image_modulus_zero hf (Γ' := Γbad)
-      (fun γ hγ => hγ.1.1) (fun γ hγ => hγ.1.2.1) hbad0
+      (fun γ hγ => hγ.1.1) (fun γ hγ => hγ.1.2.1) hlusin hbad0
   -- ============================================================
   -- KEY: for every density `ρ` admissible for `Γ`,
   --   curveModulus ((f∘·)''Γgood) ≤ ofReal K * ∫⁻ ρ².
@@ -383,8 +384,9 @@ family**. The latter nullity is the image-side Fuglede fact: it follows from
 is the same wall isolated by `IsQCAnalytic.image_chainRule_exceptional_modulus_zero`
 in `QC/LengthArea.lean`, whose crux is planar Lusin-(N) `volume (f '' {¬diff}) = 0`.
 Assembling the two pieces via `curveModulus_union_zero` gives the genuine bound. -/
-theorem isQCGeometric_of_isQCAnalytic {f : ℂ → ℂ} {K : ℝ} (hK : 1 ≤ K)
-    {b : BeltramiCoeff} (hb : b.normInf ≤ (K - 1) / (K + 1)) (hf : IsQCAnalytic f b) :
+theorem isQCGeometric_of_isQCAnalytic_of_lusinN {f : ℂ → ℂ} {K : ℝ} (hK : 1 ≤ K)
+    {b : BeltramiCoeff} (hb : b.normInf ≤ (K - 1) / (K + 1)) (hf : IsQCAnalytic f b)
+    (hlusin : volume (f '' {z : ℂ | ¬ (DifferentiableAt ℝ f z ∧ 0 < (fderiv ℝ f z).det)}) = 0) :
     IsQCGeometric f K := by
   refine ⟨hK, SensePreserving.of_orientationPreservingHomeo hf.1, fun Q => ?_⟩
   sorry
@@ -398,14 +400,10 @@ theorem isQCAnalytic_of_isQCGeometric {f : ℂ → ℂ} {K : ℝ} (hK : 1 ≤ K)
     ∃ b : BeltramiCoeff, b.normInf ≤ (K - 1) / (K + 1) ∧ IsQCAnalytic f b := by
   sorry
 
-/-- **Equivalence of the analytic and geometric quasiconformal definitions.** For
-`1 ≤ K`, a map admits an analytic-quasiconformal structure with Beltrami norm at
-most `(K − 1)/(K + 1)` if and only if it is `K`-quasiconformal in the geometric
-(modulus) sense. -/
-theorem qc_analytic_iff_geometric {f : ℂ → ℂ} {K : ℝ} (hK : 1 ≤ K) :
-    (∃ b : BeltramiCoeff, b.normInf ≤ (K - 1) / (K + 1) ∧ IsQCAnalytic f b) ↔
-      IsQCGeometric f K :=
-  ⟨fun ⟨_, hb, hf⟩ => isQCGeometric_of_isQCAnalytic hK hb hf,
-    isQCAnalytic_of_isQCGeometric hK⟩
+/-! The clean, hypothesis-free analytic ⇒ geometric endpoint `isQCGeometric_of_isQCAnalytic`
+and the equivalence `qc_analytic_iff_geometric` are proved downstream in `QC/QCEquivalence.lean`,
+where the planar Lusin-(N) fact `IsQCAnalytic.image_lusinN` (from the higher-integrability
+machinery, which sits below this file) is available to discharge the `hlusin` hypothesis of
+`isQCGeometric_of_isQCAnalytic_of_lusinN`. -/
 
 end RiemannDynamics
