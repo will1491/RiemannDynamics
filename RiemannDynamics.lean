@@ -58,7 +58,9 @@ import RiemannDynamics.Dynamics.FatouComponents.Def
 import RiemannDynamics.Dynamics.FatouComponents.GrandOrbit
 import RiemannDynamics.Dynamics.FatouComponents.Periodic
 
+import RiemannDynamics.Analysis.Sobolev.Stepanov
 import RiemannDynamics.Analysis.Sobolev.Wirtinger
+import RiemannDynamics.Analysis.Sobolev.Coarea
 import RiemannDynamics.Analysis.Sobolev.WeakDeriv
 import RiemannDynamics.Analysis.Sobolev.AbsolutelyContinuousLines
 import RiemannDynamics.Analysis.Sobolev.SobolevToACL
@@ -98,8 +100,10 @@ import RiemannDynamics.QC.BanachZaretsky
 import RiemannDynamics.QC.BanachIndicatrix
 import RiemannDynamics.QC.LengthArea
 import RiemannDynamics.QC.LengthAreaInverse
+import RiemannDynamics.QC.ReverseLengthAreaForward
 import RiemannDynamics.QC.ReverseLengthArea
 import RiemannDynamics.QC.InverseQC
 import RiemannDynamics.QC.MultiplicityAreaFormula
+import RiemannDynamics.QC.GeometricDifferentiable
 import RiemannDynamics.QC.GeometricToAnalytic
 import RiemannDynamics.QC.Equivalence

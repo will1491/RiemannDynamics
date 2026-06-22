@@ -140,8 +140,8 @@ is (totally, real-)differentiable at almost every point. The map is absolutely c
 lines with `L²_loc` partials (`exists_acl_weakGradient`); the Stepanov theorem upgrades this
 to total differentiability a.e. (Rademacher is inapplicable — the map need not be Lipschitz). -/
 theorem IsQCGeometric.ae_differentiableAt {f : ℂ → ℂ} {K : ℝ} (hf : IsQCGeometric f K) :
-    ∀ᵐ z : ℂ, DifferentiableAt ℝ f z := by
-  sorry
+    ∀ᵐ z : ℂ, DifferentiableAt ℝ f z :=
+  hf.reverseLengthArea_data.1
 
 /-- **Dilatation bound (geometric ⇒ Beltrami).** A geometric `K`-quasiconformal map satisfies
 a Beltrami equation `∂̄f = b.μ · ∂f` almost everywhere with a coefficient of essential norm at
@@ -153,6 +153,90 @@ theorem IsQCGeometric.exists_beltrami {f : ℂ → ℂ} {K : ℝ} (hK : 1 ≤ K)
     (hf : IsQCGeometric f K) :
     ∃ b : BeltramiCoeff, b.normInf ≤ (K - 1) / (K + 1) ∧
       ∀ᵐ z : ℂ, dzbar f z = b.μ z * dz f z := by
-  sorry
+  classical
+  -- STEP 0 — the infinitesimal data from the reverse length–area residual.
+  obtain ⟨hdiff, hdetpos, hdil, -, -⟩ := hf.reverseLengthArea_data
+  -- STEP 1 — scalar bookkeeping.
+  have hK1 : (0 : ℝ) < K + 1 := by linarith
+  set c : ℝ := (K - 1) / (K + 1) with hc
+  have hc0 : 0 ≤ c := by
+    rw [hc]; apply div_nonneg <;> linarith
+  have hc1 : c < 1 := by
+    rw [hc, div_lt_one hK1]; linarith
+  -- STEP 2 — the clamped Beltrami coefficient.
+  set raw : ℂ → ℂ := fun w => dzbar f w / dz f w with hraw
+  set μ' : ℂ → ℂ := fun w => if ‖raw w‖ ≤ c then raw w else 0 with hμ'
+  -- STEP 3 — measurability.
+  have hdzf_meas : Measurable (fun w : ℂ => dz f w) := by
+    have h1 : Measurable (fun w : ℂ => (fderiv ℝ f w) 1) := measurable_fderiv_apply_const ℝ f 1
+    have h2 : Measurable (fun w : ℂ => (fderiv ℝ f w) Complex.I) :=
+      measurable_fderiv_apply_const ℝ f Complex.I
+    simpa only [dz] using (measurable_const.mul (h1.sub (measurable_const.mul h2)))
+  have hdzbarf_meas : Measurable (fun w : ℂ => dzbar f w) := by
+    have h1 : Measurable (fun w : ℂ => (fderiv ℝ f w) 1) := measurable_fderiv_apply_const ℝ f 1
+    have h2 : Measurable (fun w : ℂ => (fderiv ℝ f w) Complex.I) :=
+      measurable_fderiv_apply_const ℝ f Complex.I
+    simpa only [dzbar] using (measurable_const.mul (h1.add (measurable_const.mul h2)))
+  have hraw_meas : Measurable raw := hdzbarf_meas.div hdzf_meas
+  have hμ'_meas : Measurable μ' :=
+    Measurable.ite (measurableSet_le hraw_meas.norm measurable_const) hraw_meas measurable_const
+  -- STEP 4 — pointwise bound `‖μ' w‖ ≤ c`.
+  have hμ'_le : ∀ w, ‖μ' w‖ ≤ c := by
+    intro w
+    rw [hμ']
+    by_cases h : ‖raw w‖ ≤ c
+    · simp [h]
+    · simp [h, hc0]
+  -- STEP 5 — essential-sup bound.
+  have hμ'_bound : eLpNormEssSup μ' volume < 1 := by
+    refine lt_of_le_of_lt (eLpNormEssSup_le_of_ae_bound (Filter.Eventually.of_forall hμ'_le)) ?_
+    rw [show (1 : ℝ≥0∞) = ENNReal.ofReal 1 by simp]
+    exact (ENNReal.ofReal_lt_ofReal_iff_of_nonneg hc0).mpr hc1
+  -- STEP 6 — assemble the coefficient.
+  refine ⟨⟨μ', hμ'_meas, hμ'_bound⟩, ?_, ?_⟩
+  · -- STEP 7 — `b.normInf ≤ c`.
+    have hbnd : eLpNormEssSup μ' volume ≤ ENNReal.ofReal c :=
+      eLpNormEssSup_le_of_ae_bound (Filter.Eventually.of_forall hμ'_le)
+    have h1 : (eLpNormEssSup μ' volume).toReal ≤ (ENNReal.ofReal c).toReal :=
+      ENNReal.toReal_mono ENNReal.ofReal_ne_top hbnd
+    rw [ENNReal.toReal_ofReal hc0] at h1
+    simpa only [BeltramiCoeff.normInf] using h1
+  · -- STEP 8 — the Beltrami relation at a.e. `z`.
+    filter_upwards [hdiff, hdetpos, hdil] with z _ hdz hdl
+    -- Abbreviations for the two Wirtinger values and their norms.
+    set p : ℝ := ‖dz f z‖ with hpdef
+    set q : ℝ := ‖dzbar f z‖ with hqdef
+    have hp0 : 0 ≤ p := norm_nonneg _
+    have hq0 : 0 ≤ q := norm_nonneg _
+    -- The two Wirtinger identities.
+    have hdet : (fderiv ℝ f z).det = p ^ 2 - q ^ 2 := det_fderiv_eq_wirtinger f z
+    have hop : ‖fderiv ℝ f z‖ = p + q := opNorm_fderiv_eq_wirtinger f z
+    -- From the positive Jacobian: `p² − q² > 0`, hence `q < p` and `0 < p`.
+    rw [hdet] at hdz
+    have hqltp : q < p := by nlinarith [hp0, hq0]
+    have hppos : 0 < p := lt_of_le_of_lt hq0 hqltp
+    have hpqpos : 0 < p + q := by linarith
+    -- `dz f z ≠ 0` since `‖dz f z‖ = p > 0`.
+    have hdzne : dz f z ≠ 0 := by
+      rw [← norm_pos_iff]; exact hppos
+    -- REVERSE DILATATION ALGEBRA: from `‖Df‖² ≤ K · det`, i.e. `(p+q)² ≤ K·(p²−q²)`,
+    -- derive `q ≤ c · p`.
+    rw [hop, hdet] at hdl
+    have hqcp : q ≤ c * p := by
+      -- `(p+q)² ≤ K(p−q)(p+q)` and `p+q>0` give `p+q ≤ K(p−q)`, hence `(K+1)q ≤ (K−1)p`.
+      have hstep : (K + 1) * q ≤ (K - 1) * p := by nlinarith [hpqpos, hdl]
+      rw [hc]
+      rw [div_mul_eq_mul_div, le_div_iff₀ hK1]
+      nlinarith [hstep]
+    -- Hence `‖raw z‖ = q / p ≤ c`, so the clamp returns the raw quotient.
+    have hraww : ‖raw z‖ ≤ c := by
+      have hrawval : raw z = dzbar f z / dz f z := by rw [hraw]
+      rw [hrawval, norm_div, ← hpdef, ← hqdef, div_le_iff₀ hppos]
+      exact hqcp
+    -- Conclude `dzbar f z = μ' z · dz f z`.
+    change dzbar f z = μ' z * dz f z
+    have hμ'z : μ' z = dzbar f z / dz f z := by
+      rw [hμ']; simp only [hraww, if_true]; rw [hraw]
+    rw [hμ'z, div_mul_cancel₀ (dzbar f z) hdzne]
 
 end RiemannDynamics

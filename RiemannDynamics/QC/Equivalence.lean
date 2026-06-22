@@ -5,6 +5,7 @@ Authors: Will (Ziang) Li
 -/
 import RiemannDynamics.QC.InverseQC
 import RiemannDynamics.QC.LengthArea
+import RiemannDynamics.QC.GeometricToAnalytic
 
 /-!
 # The analytic ⇔ geometric quasiconformal equivalence (clean endpoints)
@@ -939,7 +940,44 @@ most `(K − 1)/(K + 1)`. The proof assembles the Gehring–Lehto stages of
 theorem isQCAnalytic_of_isQCGeometric {f : ℂ → ℂ} {K : ℝ} (hK : 1 ≤ K)
     (hf : IsQCGeometric f K) :
     ∃ b : BeltramiCoeff, b.normInf ≤ (K - 1) / (K + 1) ∧ IsQCAnalytic f b := by
-  sorry
+  classical
+  -- The Beltrami coefficient and the Beltrami equation (third `IsQCAnalytic` conjunct).
+  obtain ⟨b, hbnd, hbel⟩ := IsQCGeometric.exists_beltrami hK hf
+  -- `f` is an orientation-preserving homeomorphism.
+  have hhomeo : IsHomeomorph f := hf.2.1.isHomeomorph
+  have hfcont : Continuous f := hhomeo.continuous
+  have hdetpos : ∀ᵐ z : ℂ, 0 < (fderiv ℝ f z).det :=
+    (IsQCGeometric.reverseLengthArea_data hf).2.1
+  -- The ACL + `L²_loc` data for the weak gradient.
+  obtain ⟨gx, gy, haclx, hacly, hgxL2, hgyL2⟩ := IsQCGeometric.exists_acl_weakGradient hf
+  -- Local integrability of an `L²_loc` function (loc-`L²` ⟹ loc-`L¹`).
+  have hLIofL2 : ∀ {h : ℂ → ℂ}, MemLpLocOn h (2 : ℝ≥0∞) Set.univ → LocallyIntegrable h := by
+    intro h hh
+    rw [MeasureTheory.locallyIntegrable_iff]
+    intro Kc hKc
+    have hmem : MemLp h (2 : ℝ≥0∞) (volume.restrict Kc) := hh Kc (Set.subset_univ _) hKc
+    have : IsFiniteMeasure (volume.restrict Kc) := by
+      constructor; rw [Measure.restrict_apply_univ]; exact hKc.measure_lt_top
+    exact (hmem.mono_exponent (by norm_num)).integrable (le_refl 1)
+  have hgxLI : LocallyIntegrable gx := hLIofL2 hgxL2
+  have hgyLI : LocallyIntegrable gy := hLIofL2 hgyL2
+  have hfLI : LocallyIntegrable f := hfcont.locallyIntegrable
+  -- `f ∈ L²_loc` (it is continuous, hence locally bounded, hence locally `L²` on compacts).
+  have hfL2 : MemLpLocOn f (2 : ℝ≥0∞) Set.univ := by
+    intro Kc _ hKc
+    have hfin : IsFiniteMeasure (volume.restrict Kc) := by
+      constructor; rw [Measure.restrict_apply_univ]; exact hKc.measure_lt_top
+    obtain ⟨C, hC⟩ := hKc.exists_bound_of_continuousOn hfcont.continuousOn
+    have hmeas : AEStronglyMeasurable f (volume.restrict Kc) :=
+      hfcont.aestronglyMeasurable
+    have hbound : ∀ᵐ x ∂(volume.restrict Kc), ‖f x‖ ≤ C := by
+      rw [ae_restrict_iff' hKc.measurableSet]
+      exact Filter.Eventually.of_forall hC
+    exact (memLp_top_of_bound hmeas C hbound).mono_exponent le_top
+  -- `MemW12loc f = MemWklocP f 1 2 univ`, assembled from ACL + `L²_loc`.
+  have hW12 : MemW12loc f :=
+    memWklocP_one_of_acl hfL2 hgxL2 hgyL2 hfLI hgxLI hgyLI haclx hacly
+  exact ⟨b, hbnd, ⟨hhomeo, hdetpos⟩, hW12, hbel⟩
 
 /-- **Equivalence of the analytic and geometric quasiconformal definitions.** For `1 ≤ K`, a
 map admits an analytic-quasiconformal structure with Beltrami norm at most `(K − 1)/(K + 1)`
