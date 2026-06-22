@@ -1291,6 +1291,8 @@ sub-interval: the φ-primitive `P x := ∫₀ˣ φ` is absolutely continuous (Ma
 bound makes each partial AC-sum of `h` dominated by the corresponding partial sum of `P`. -/
 
 set_option maxHeartbeats 400000 in
+-- The increment-domination AC proof is assembled inline as nested `have`s (each partial AC-sum
+-- of `h` dominated by the φ-primitive's), so its elaboration needs the raised heartbeat budget.
 /-- **AC by increment domination.** A function `h : ℝ → ℝ` whose increments over `[x, y] ⊆ [a, c]`
 are bounded by `∫ₓʸ φ` for a nonnegative interval-integrable `φ` is absolutely continuous on
 `[a, c]`. (The domination is required only for `a ≤ x ≤ y ≤ c`.) -/
@@ -1435,7 +1437,8 @@ private theorem ae_slice_hasDerivAt_of_G {G : ℂ → ℂ} (P : ℂ →L[ℝ] �
 
 /-- **a.e.-slice interval integrability of a complex map** from joint local integrability (Fubini).
 For a locally integrable `H : ℂ → ℂ`, for almost every `y` the slice `x ↦ H ⟨x, y⟩` is interval
-integrable on every interval. (Self-contained `ℂ`-coordinate copy of the project's Fubini helper.) -/
+integrable on every interval. (Self-contained `ℂ`-coordinate copy of the project's Fubini
+helper.) -/
 private theorem ae_slice_intervalIntegrable_complex {H : ℂ → ℂ}
     (hH : LocallyIntegrable H volume) :
     ∀ᵐ y : ℝ, ∀ a b : ℝ, IntervalIntegrable (fun x => H (Complex.mk x y)) volume a b := by
@@ -1515,10 +1518,12 @@ total variation on each interval is bounded by the interval integral of the slic
 
 This is the per-slice Federer area formula with multiplicity (`≤` direction) for the `y`-fibered map
 `Φ⟨x,y⟩ = P(G⟨x,y⟩) + i·y` (whose `det DΦ = ∂ₓ(P∘G)`): the forward Banach indicatrix bound
-(`eVariationOn_le_lintegral_indicatrix`) couples the slice variation to the `Φ`-fibre count, the area
+(`eVariationOn_le_lintegral_indicatrix`) couples the slice variation to the `Φ`-fibre count,
+the area
 formula (`addHaar_image_le_lintegral_abs_det_fderiv` on injective approximating pieces, with the
 `{det = 0}`-image null by `addHaar_image_eq_zero_of_det_fderivWithin_eq_zero` — the genuine consumer
-of the Lusin-(N) hypothesis `hΦN`) bounds the integrated fibre count by `∫⁻ |det DΦ| = ∫⁻ ‖∂ₓ(P∘G)‖`,
+of the Lusin-(N) hypothesis `hΦN`) bounds the integrated fibre count by
+`∫⁻ |det DΦ| = ∫⁻ ‖∂ₓ(P∘G)‖`,
 and Fubini + the variation lower bound `lintegral_nnnorm_deriv_le_eVariationOn` force the per-slice
 inequality. Mathlib has only the **injective** change of variables, so the multiplicity upper bound
 is built here (via `MAF.multiplicityAreaFormula_general`).
@@ -1528,7 +1533,8 @@ with the coordinate swap); this lemma is now PROVEN.
 **Soundness / shear exclusion.** False for the area-preserving singular shear `Φ p = p + s(p.re)·I`
 (`G = id`, `P = imCLM`): `det DΦ = ∂ₓ(im id) = 0` a.e. so the right side vanishes, while the slice
 `x ↦ y + s x` is singular with positive variation. The `{det = 0}`-image-null step (the Lusin-(N)
-consumer) is exactly what fails: that shear does not satisfy `hΦN` (it is not `inverse_fiber_lusinN`,
+consumer) is exactly what fails: that shear does not satisfy `hΦN`
+(it is not `inverse_fiber_lusinN`,
 lacking `f`'s super-critical gradient). -/
 theorem multiplicityAreaFormula_noSingularPart {G : ℂ → ℂ} (P : ℂ →L[ℝ] ℝ)
     (hGcont : Continuous G)
@@ -1623,7 +1629,8 @@ private theorem ae_slice_AC_of_maf {slice : ℝ → ℝ → ℝ}
 
 /-- **Horizontal per-slice AC of a continuous map (general core).** For a continuous `G : ℂ → ℂ`
 that is differentiable a.e., whose first-direction partial `w ↦ (DG w) 1` is `L²_loc⊆L¹_loc`, and
-whose `P`-component fibered map `Φ p = P(G p)•1 + p.im•I` is Lusin-(N), almost every horizontal slice
+whose `P`-component fibered map `Φ p = P(G p)•1 + p.im•I` is Lusin-(N), almost every
+horizontal slice
 `x ↦ P(G⟨x,y⟩)` is absolutely continuous on every interval. Assembled from the per-slice MAF
 (`multiplicityAreaFormula_noSingularPart`), the a.e. slice derivative (`ae_slice_hasDerivAt_of_G`),
 and the slice-derivative interval-integrability (`ae_slice_intervalIntegrable_complex`), packaged by
@@ -1698,13 +1705,14 @@ private theorem ae_slice_AC_horizontal_of_data {G : ℂ → ℂ} (P : ℂ →L[�
 
 /-- **The coordinate swap `⟨x,y⟩ ↦ ⟨y,x⟩` as a continuous linear map.** Used to reduce the vertical
 slices of the inverse to the horizontal slices of `g ∘ cswap`. -/
-noncomputable def cswapCLM : ℂ →L[ℝ] ℂ := Complex.imCLM.smulRight (1 : ℂ) + Complex.reCLM.smulRight Complex.I
+noncomputable def cswapCLM : ℂ →L[ℝ] ℂ :=
+  Complex.imCLM.smulRight (1 : ℂ) + Complex.reCLM.smulRight Complex.I
 
 @[simp] theorem cswapCLM_apply (z : ℂ) : cswapCLM z = Complex.mk z.im z.re := by
   have : cswapCLM z = (z.im : ℂ) * 1 + (z.re : ℂ) * Complex.I := by
     simp only [cswapCLM, ContinuousLinearMap.add_apply, ContinuousLinearMap.smulRight_apply,
       Complex.reCLM_apply, Complex.imCLM_apply]
-    congr 1 <;> exact Complex.real_smul
+    congr 1
   rw [this]; apply Complex.ext <;> simp
 
 /-- The coordinate swap is volume-preserving (conjugate of `Prod.swap` by `ℂ ≃ ℝ × ℝ`). -/

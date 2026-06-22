@@ -40,7 +40,7 @@ theorem fiber_det (α : ℂ →L[ℝ] ℝ) :
     (LinearMap.det_toMatrix Complex.basisOneI _).symm]
   rw [Matrix.det_fin_two]
   simp only [LinearMap.toMatrix_apply, Complex.coe_basisOneI, Complex.coe_basisOneI_repr,
-    Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.head_cons, ContinuousLinearMap.coe_coe]
+    Matrix.cons_val_zero, Matrix.cons_val_one]
   have h1 : D 1 = (α 1 : ℂ) := by
     simp only [hD, ContinuousLinearMap.add_apply,
       ContinuousLinearMap.smulRight_apply, Complex.imCLM_apply, Complex.one_im, zero_smul, add_zero]
@@ -54,7 +54,8 @@ theorem fiber_det (α : ℂ →L[ℝ] ℝ) :
   rw [h1, h2]
   simp
 
-/-- **`HasFDerivAt` of the `y`-fibered map.** At a point `p` where `G` is differentiable, the fibered
+/-- **`HasFDerivAt` of the `y`-fibered map.** At a point `p` where `G` is differentiable,
+the fibered
 map `Φ q = P(G q) • 1 + q.im • I` has derivative `(P ∘ DG p).smulRight 1 + imCLM.smulRight I`. -/
 theorem fiber_hasFDerivAt {G : ℂ → ℂ} (P : ℂ →L[ℝ] ℝ) (p : ℂ) (hG : DifferentiableAt ℝ G p) :
     HasFDerivAt (fun q : ℂ => (P (G q) : ℝ) • (1 : ℂ) + (q.im : ℝ) • Complex.I)
@@ -706,7 +707,7 @@ theorem nnnorm_real_eq_ofReal_abs (r : ℝ) : ((‖r‖₊ : NNReal) : ENNReal) 
   rw [← Real.norm_eq_abs, ofReal_norm_eq_enorm]; rfl
 
 /-- **Step 1.** The box `det`-integral equals the iterated slice-derivative-norm integral. -/
-theorem box_det_eq_rhs (hGcont : Continuous G) (hGdiff : ∀ᵐ w : ℂ, DifferentiableAt ℝ G w)
+theorem box_det_eq_rhs (_hGcont : Continuous G) (hGdiff : ∀ᵐ w : ℂ, DifferentiableAt ℝ G w)
     (a c : ℝ) {Y : Set ℝ} (hY : MeasurableSet Y) :
     ∫⁻ z in Box a c Y, ENNReal.ofReal |(fderiv ℝ (Φ G P) z).det|
       = ∫⁻ y in Y, ∫⁻ x in Set.Icc a c, ‖deriv (slice G P y) x‖₊ := by
@@ -1207,7 +1208,7 @@ theorem multiplicityAreaFormula_general {G : ℂ → ℂ} (P : ℂ →L[ℝ] ℝ
     (hGcont : Continuous G) (hGdiff : ∀ᵐ w : ℂ, DifferentiableAt ℝ G w)
     (hΦN : ∀ S : Set ℂ, volume S = 0 →
       volume ((fun p : ℂ => (P (G p) : ℝ) • (1 : ℂ) + (p.im : ℝ) • Complex.I) '' S) = 0)
-    (hVar : ∀ᵐ y : ℝ, ∀ a c : ℝ, a ≤ c → ∫⁻ x in Set.Icc a c,
+    (_hVar : ∀ᵐ y : ℝ, ∀ a c : ℝ, a ≤ c → ∫⁻ x in Set.Icc a c,
         ‖deriv (fun s : ℝ => P (G (Complex.mk s y))) x‖₊
       ≤ eVariationOn (fun s : ℝ => P (G (Complex.mk s y))) (Set.Icc a c)) :
     ∀ᵐ y : ℝ, ∀ a c : ℝ,

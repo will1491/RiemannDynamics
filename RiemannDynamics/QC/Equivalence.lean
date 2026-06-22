@@ -805,7 +805,8 @@ theorem isQCGeometric_of_isQCAnalytic {f : ℂ → ℂ} {K : ℝ} (hK : 1 ≤ K)
       ∀ᵐ t : ℝ ∂(volume.restrict (Set.Icc (0 : ℝ) 1)), deriv γ t ≠ 0 →
         HasDerivAt (f ∘ γ) ((fderiv ℝ f (γ t)) (deriv γ t)) t) with hΓfbadprop
   have hgood_sub :
-      Δ \ Δexc ⊆ (fun γ : ℝ → ℂ => f ∘ γ) '' (Q.curveFamily \ {γ ∈ Q.curveFamily | Γfbadprop γ}) := by
+      Δ \ Δexc ⊆
+        (fun γ : ℝ → ℂ => f ∘ γ) '' (Q.curveFamily \ {γ ∈ Q.curveFamily | Γfbadprop γ}) := by
     rintro δ ⟨hδΔ, hδnotexc⟩
     -- `δ` is neither `g`-exceptional nor image-stationary.
     have hδnotbad : δ ∉ Δbad := fun h => hδnotexc (Or.inl h)

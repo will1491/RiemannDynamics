@@ -77,7 +77,7 @@ Minkowski-`?` map the differential is *not* a.e. positive-determinant, so this
 hypothesis genuinely excludes it). The proof is the singular-value algebra:
 `‖Df‖ = ‖∂f‖ + ‖∂̄f‖`, `det (Df) = ‖∂f‖² − ‖∂̄f‖² = (‖∂f‖ + ‖∂̄f‖)(‖∂f‖ − ‖∂̄f‖)`, so
 `‖Df‖²/det = (‖∂f‖ + ‖∂̄f‖)/(‖∂f‖ − ‖∂̄f‖) ≤ (1 + c)/(1 − c)`. -/
-theorem fderiv_normSq_le_K_mul_det (f : ℂ → ℂ) (z : ℂ) {c : ℝ} (hc0 : 0 ≤ c) (hc1 : c < 1)
+theorem fderiv_normSq_le_K_mul_det (f : ℂ → ℂ) (z : ℂ) {c : ℝ} (_hc0 : 0 ≤ c) (hc1 : c < 1)
     (hdet : 0 < (fderiv ℝ f z).det)
     (hbel : ‖dzbar f z‖ ≤ c * ‖dz f z‖) :
     ‖fderiv ℝ f z‖ ^ 2 ≤ ((1 + c) / (1 - c)) * (fderiv ℝ f z).det := by
@@ -102,7 +102,7 @@ theorem fderiv_normSq_le_K_mul_det (f : ℂ → ℂ) (z : ℂ) {c : ℝ} (hc0 : 
   rw [div_mul_eq_mul_div, le_div_iff₀ hden]
   have hbel' : q ≤ c * p := hbel
   have hsum_pos : 0 < p + q := by linarith
-  nlinarith [hsum_pos, hbel', mul_nonneg hc0 hpnn]
+  nlinarith [hsum_pos, hbel']
 
 /-- **Inverse-side dilatation inequality.** Let `g` be a map whose differential at
 `w` is the inverse of `Df (g w)` (the easy inverse-function-theorem situation), with
@@ -116,7 +116,7 @@ is `L²`-controlled by the Jacobian of `g`; combined with condition N⁺ (which 
 preserved because a real-linear map and its inverse have reciprocal singular values,
 so `‖A⁻¹‖² / det (A⁻¹) = ‖A‖² / det (A)` is invariant. -/
 theorem inverse_fderiv_normSq_le_K_mul_det {f g : ℂ → ℂ} {w : ℂ} {c : ℝ}
-    (hc0 : 0 ≤ c) (hc1 : c < 1)
+    (_hc0 : 0 ≤ c) (hc1 : c < 1)
     (hdet : 0 < (fderiv ℝ f (g w)).det)
     (hbel : ‖dzbar f (g w)‖ ≤ c * ‖dz f (g w)‖)
     (hgderiv : fderiv ℝ g w = ContinuousLinearMap.inverse (fderiv ℝ f (g w))) :

@@ -280,7 +280,7 @@ theorem stieltjesMeasure_eq_volume_image_of_isOpen {f : ℝ → ℝ} (hf : Monot
   have hPD : 𝒞.PairwiseDisjoint id := by
     rintro s ⟨x, hxU, rfl⟩ t ⟨y, hyU, rfl⟩ hst
     -- distinct components are disjoint.
-    simp only [id, hC]
+    simp only [hC]
     by_contra hnd
     rw [Set.not_disjoint_iff] at hnd
     obtain ⟨z, hzx, hzy⟩ := hnd
