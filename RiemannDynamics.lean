@@ -99,5 +99,6 @@ import RiemannDynamics.QC.BanachZaretsky
 import RiemannDynamics.QC.LengthArea
 import RiemannDynamics.QC.Equivalence
 import RiemannDynamics.QC.InverseQC
+import RiemannDynamics.QC.MultiplicityAreaFormula
 import RiemannDynamics.QC.GeometricToAnalytic
 import RiemannDynamics.QC.QCEquivalence

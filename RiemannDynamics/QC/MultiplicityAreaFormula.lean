@@ -1213,7 +1213,7 @@ theorem core_attempt {G : ℂ → ℂ} (P : ℂ →L[ℝ] ℝ)
 end Core
 
 
-/-! ## The CORE 2-D multiplicity area formula (the single architected residual) -/
+/-! ## The CORE 2-D multiplicity area formula (now PROVEN) -/
 
 /-- **CORE — the planar multiplicity / co-area inequality (`≤`).** For a continuous,
 a.e.-differentiable, Lusin-(N) map `G` and a selector `P`, with the `y`-fibered map

@@ -15,12 +15,12 @@ This file states the Milestone 9.2 headline theorems in their clean, hypothesis-
 
 The analytic ⇒ geometric direction is necessarily proved **here**, downstream of
 `QC/InverseQC.lean`, rather than in `QC/Equivalence.lean`: its image-side modulus argument
-needs the planar Lusin-(N) fact `IsQCAnalytic.image_lusinN`, which in turn rests on the
-higher-integrability machinery (`Beltrami.lean`, importing `QC/LengthArea.lean`) and therefore
-sits strictly below the `Equivalence` file. The upstream files expose the result with the
-Lusin-(N) fact threaded as an explicit hypothesis
-(`isQCGeometric_of_isQCAnalytic_of_lusinN`); here that hypothesis is discharged by
-`image_lusinN`.
+needs both the inverse-is-quasiconformal fact `IsQCAnalytic.inverse_isQCAnalytic` and the
+planar Lusin-(N) fact `IsQCAnalytic.image_lusinN` (which rests on the higher-integrability
+machinery in `Beltrami.lean`, importing `QC/LengthArea.lean`) — both of which sit strictly
+below the `Equivalence` file. The original upstream scaffold, which threaded the Lusin-(N)
+fact as an explicit hypothesis, has been removed in favour of this self-contained downstream
+proof.
 -/
 
 open MeasureTheory Complex Set
@@ -28,10 +28,9 @@ open scoped ENNReal NNReal Topology
 
 namespace RiemannDynamics
 
-/-- The planar Lusin-(N) fact in the shape required by
-`isQCGeometric_of_isQCAnalytic_pushforward` / `inverse_image_chainRule_exceptional_modulus_zero`
-(the degeneracy set `{¬(diff ∧ 0<det)}`), obtained from `IsQCAnalytic.image_lusinN`
-(stated on `{¬diff ∨ ¬0<det}`) by De Morgan. -/
+/-- The planar Lusin-(N) fact in the shape required by the downstream
+`isQCGeometric_of_isQCAnalytic` proof (the degeneracy set `{¬(diff ∧ 0<det)}`), obtained from
+`IsQCAnalytic.image_lusinN` (stated on `{¬diff ∨ ¬0<det}`) by De Morgan. -/
 private theorem lusinN_degeneracy {f : ℂ → ℂ} {b : BeltramiCoeff} (hf : IsQCAnalytic f b) :
     volume (f '' {z : ℂ | ¬ (DifferentiableAt ℝ f z ∧ 0 < (fderiv ℝ f z).det)}) = 0 := by
   have hset : {z : ℂ | ¬ (DifferentiableAt ℝ f z ∧ 0 < (fderiv ℝ f z).det)}
@@ -456,11 +455,9 @@ of continuous, absolutely continuous curves, the image under `f` of the chain-ru
 subfamily `{γ ∈ Γ | P_f(γ)}` (those `γ` for which `f ∘ γ` is absolutely continuous with the
 a.e. chain rule and positive Jacobian) has modulus at most `K · curveModulus Γ`.
 
-This is the *clean* (length–area energy-transfer) half of
-`isQCGeometric_of_isQCAnalytic_pushforward`: it bounds only the good-image part, and so does
-**not** route through the image-side exceptional sweep (`image_modulus_zero` /
-`image_chainRule_exceptional_modulus_zero`), the upstream sorry. The argument is the
-dilatation-controlled change of variables: from the a.e. bound
+This is the *clean* (length–area energy-transfer) bound on the chain-rule-good image part; it
+is consumed by the main `isQCGeometric_of_isQCAnalytic` proof for the good source curves. The
+argument is the dilatation-controlled change of variables: from the a.e. bound
 `‖(Df)⁻¹‖² · det (Df) ≤ K`, the transferred density `σ(w) = ρ(g w)·‖(Df(g w))⁻¹‖`
 (`g = f⁻¹`) is admissible for the good image with energy at most `K · ∫ ρ²`. -/
 private theorem pushforwardGood_modulus_le {f : ℂ → ℂ} {K : ℝ} (hK : 1 ≤ K)
@@ -712,24 +709,23 @@ through the predicate "`δ` is `g`-chain-rule-good":
 * the **good** curves `δ` have `g ∘ δ` absolutely continuous, so `γ := g ∘ δ ∈ Q.curveFamily`
   (it joins the back-image sides and stays in the back-image region, via `g (f p) = p`) and
   `δ = f ∘ γ` (via `f (g w) = w`); hence the good part embeds in the pushforward
-  `(f ∘ ·) '' Q.curveFamily`, whose modulus is at most `K · M(Q)` by the length–area transfer
-  `isQCGeometric_of_isQCAnalytic_pushforward` (its Lusin-(N) hypothesis discharged by
-  `image_lusinN`);
+  `(f ∘ ·) '' Q.curveFamily`, whose good part has modulus at most `K · M(Q)` by the
+  length–area energy transfer `pushforwardGood_modulus_le`;
 * the **complementary** curves form the `g`-chain-rule exceptional subfamily of
   `Q.imageCurveFamily f`, of zero modulus by `IsQCAnalytic.chainRule_exceptional_modulus_zero`
   applied to the (analytic-quasiconformal) inverse `g` — this is the new inverse-is-QC ingredient
   that the upstream layer could not reach.
 
 Removing the zero-modulus piece (`curveModulus_sdiff_modulus_zero`) and bounding the good part
-by the pushforward estimate gives `M(f(Q)) ≤ K · M(Q)`. This bypasses the upstream
-`isQCGeometric_of_isQCAnalytic_of_lusinN` (mis-layered above `InverseQC`).
+by the energy transfer `pushforwardGood_modulus_le` gives `M(f(Q)) ≤ K · M(Q)`.
 
-The clean length–area energy transfer for the chain-rule-good source curves is isolated as the
-axiom-clean `pushforwardGood_modulus_le`; the *full* pushforward bound used here additionally
-needs the image-side nullity of the f-bad source images (`image_modulus_zero` /
-`image_chainRule_exceptional_modulus_zero`), a length–area inequality that inverse-is-QC alone
-does **not** supply — see the obstruction note on
-`IsQCAnalytic.inverse_image_chainRule_exceptional_modulus_zero`. -/
+The one delicate sub-case — image curves stationary along the degeneracy image `f '' Nf` while
+their `g`-preimages move through `Nf` — is handled by
+`isQCGeometric_imageStationary_residual_modulus_zero`, whose Fuglede node closes via
+`fugledeUpperGradient` applied to the analytic-quasiconformal inverse `g`
+(`IsQCAnalytic.inverse_isQCAnalytic`): for `g`-good curves the upper-gradient bound forces
+`g ∘ δ` to be stationary wherever `δ` is, so those curves carry no modulus. This is the
+inverse-is-QC ingredient that the original upstream layer could not reach. -/
 theorem isQCGeometric_of_isQCAnalytic {f : ℂ → ℂ} {K : ℝ} (hK : 1 ≤ K)
     {b : BeltramiCoeff} (hb : b.normInf ≤ (K - 1) / (K + 1)) (hf : IsQCAnalytic f b) :
     IsQCGeometric f K := by

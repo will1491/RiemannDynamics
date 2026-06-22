@@ -17,11 +17,12 @@ import RiemannDynamics.Analysis.Sobolev.Morrey
 This file lays out a **Phase-1 scaffold**: a dependency-ordered chain of theorem
 *signatures*, each `:= by sorry`, for the fact that the homeomorphic inverse of an
 `IsQCAnalytic` map is again `IsQCAnalytic` (with the "reflected" Beltrami
-coefficient). This is the *inverse-is-QC* root that unlocks two of the milestone
-9.2 walls: `IsQCAnalytic.image_modulus_zero`'s residual
-`image_chainRule_exceptional_modulus_zero` (planar Lusin-(N)) and the genuine
-`isQCGeometric_of_isQCAnalytic` modulus bound, both of which follow by applying the
-*source-side* length–area machinery to the inverse map `g = f⁻¹`.
+coefficient). This is the *inverse-is-QC* root that unlocks the genuine
+`isQCGeometric_of_isQCAnalytic` modulus bound, which follows by applying the
+*source-side* length–area machinery to the inverse map `g = f⁻¹`. (The former
+image-side exceptional-sweep walls, which routed planar Lusin-(N) through a separate
+chain, have since been removed and superseded by the downstream rebuild in
+`QC/QCEquivalence.lean`.)
 
 Nothing here is proved; the file states maximally-general, mathematically-faithful
 signatures that compile, so the proofs can be slotted in later. The two existing
@@ -52,10 +53,10 @@ this scaffold is standalone.
    `volume (f '' {z | f not differentiable-with-positive-Jacobian at z}) = 0`,
    the crux of the image-side exceptional sweep (follows from (7) by running the
    source-side change of variables for `g`).
-9. `IsQCAnalytic.inverse_image_chainRule_exceptional_modulus_zero` — ties (7)/(8)
-   to the exact shape of the existing wall
-   `IsQCAnalytic.image_chainRule_exceptional_modulus_zero` (stated standalone here;
-   the wall sorry in `QC/LengthArea.lean` is left untouched).
+
+The former item (9), an image-side exceptional-sweep restatement tying (7)/(8) to a
+standalone wall, has since been removed; the genuine modulus bound is now rebuilt
+downstream in `QC/QCEquivalence.lean`.
 
 The predicate used for "`∂f` is locally `Lᵖ`" is the repo's existing
 `MemLpLocOn (fun z => dz f z) (ENNReal.ofReal p) Set.univ` (from
@@ -326,7 +327,8 @@ theorem IsQCAnalytic.image_singular_set_null {f : ℂ → ℂ} {b : BeltramiCoef
 /-- **Planar Lusin-(N) for the degeneracy set.** For an `IsQCAnalytic` map `f`, the
 image under `f` of the set where `f` fails to be differentiable with positive
 Jacobian is Lebesgue-null. This is the crux of the image-side exceptional sweep
-`IsQCAnalytic.image_chainRule_exceptional_modulus_zero`.
+(the former wall, now removed and superseded by the downstream rebuild in
+`QC/QCEquivalence.lean`).
 
 *Proof sketch.* Split the degeneracy set as `{¬ differentiable} ∪
 {differentiable ∧ Jacobian ≤ 0}`. The first piece's image is null by
@@ -1039,10 +1041,11 @@ method (`QC/BanachZaretsky.lean`); the same research-scale ingredient powers the
 
 /-! ## Step 3 / (b'): assembling per-slice absolute continuity
 
-With the fibered Lusin-(N) (Steps 1–2) in hand, the only genuinely-missing ingredient is the
+With the fibered Lusin-(N) (Steps 1–2) in hand, the
 **continuous-monotone Jordan decomposition with Lusin-(N) pieces** of each slice component — the
-classical reverse length–area / Federer area-formula upper bound, isolated below as the single
-`sorry` `inverse_slice_monotoneDecompN`. Everything surrounding it — the slice derivative (Fubini),
+classical reverse length–area / Federer area-formula upper bound — is established below as
+`inverse_slice_monotoneDecompN` (now PROVEN, from the per-slice MAF via
+`inverse_slice_componentAC`). Everything surrounding it — the slice derivative (Fubini),
 the interval-integrability of the derivative (the `L²_loc ⊆ L¹_loc` energy bound), and the
 Banach–Zaretsky bridge from the decomposition to absolute continuity — is fully proven. -/
 
@@ -1501,7 +1504,7 @@ selector `Φ⟨x,y⟩ = P(g⟨x,y⟩) + i·y` (whose `det DΦ = ∂ₓ(P∘g)` a
 `inverse_fiber_lusinN`), the integrated total variation of the real-slice
 `x ↦ P(g⟨x,y⟩)` over `y ∈ [c', d']` is bounded by the box integral of `‖∂ₓ(P∘g)‖`. -/
 
-/-- **MULTIPLICITY AREA FORMULA (the single architected sorry — general, both axes).** For a
+/-- **MULTIPLICITY AREA FORMULA (general, both axes) — now PROVEN.** For a
 *continuous* map `G : ℂ → ℂ` whose `P`-component fibered map `Φ p := P(G p) • 1 + p.im • I` carries
 null sets to null sets (Lusin condition (N) — supplied for the inverse `g = f⁻¹` by
 `inverse_fiber_lusinN`), almost every horizontal slice `x ↦ P(G⟨x,y⟩)` has **no singular part**: its
@@ -1516,9 +1519,10 @@ formula (`addHaar_image_le_lintegral_abs_det_fderiv` on injective approximating 
 `{det = 0}`-image null by `addHaar_image_eq_zero_of_det_fderivWithin_eq_zero` — the genuine consumer
 of the Lusin-(N) hypothesis `hΦN`) bounds the integrated fibre count by `∫⁻ |det DΦ| = ∫⁻ ‖∂ₓ(P∘G)‖`,
 and Fubini + the variation lower bound `lintegral_nnnorm_deriv_le_eVariationOn` force the per-slice
-inequality. Mathlib has only the **injective** change of variables, not the multiplicity upper bound.
+inequality. Mathlib has only the **injective** change of variables, so the multiplicity upper bound
+is built here (via `MAF.multiplicityAreaFormula_general`).
 **Both** the horizontal and the vertical inverse slices are instances (the latter by composing `G`
-with the coordinate swap), so this single lemma is the sole remaining node of M9.2.
+with the coordinate swap); this lemma is now PROVEN.
 
 **Soundness / shear exclusion.** False for the area-preserving singular shear `Φ p = p + s(p.re)·I`
 (`G = id`, `P = imCLM`): `det DΦ = ∂ₓ(im id) = 0` a.e. so the right side vanishes, while the slice
@@ -1903,7 +1907,7 @@ theorem IsQCAnalytic.inverse_slice_componentAC {f : ℂ → ℂ} {b : BeltramiCo
     · simpa only [← hre_eq, hg] using hxre a c
     · simpa only [← him_eq, hg] using hxim a c
 
-/-- **MULTIPLICITY AREA FORMULA (architected sorry — the single genuine GMT residual).**
+/-- **MULTIPLICITY AREA FORMULA — slice monotone-(N) decomposition of the inverse (now PROVEN).**
 
 For an `IsQCAnalytic` map `f` with inverse homeomorphism `g = f⁻¹`, almost every slice component of
 `g` admits a **continuous-monotone Jordan decomposition into pieces satisfying Lusin's condition
@@ -1918,9 +1922,10 @@ function (`eVariationOn_le_lintegral_indicatrix`), which the area formula bounds
 of `|det DΦ| = |∂ₓ(Re g)|`; combined with the lower bound `Var ≥ ∫|deriv|` this forces equality
 (no singular part), i.e. the monotone Jordan pieces satisfy condition (N). Mathlib has only the
 **injective** change-of-variables `lintegral_image_eq_lintegral_abs_det_fderiv_mul`, *not* the
-multiplicity (non-injective) upper bound, and lacks the variation lower bound `Var ≥ ∫|deriv|`; this
-is the sole remaining node of M9.2. The fibered Lusin-(N) maps that supply the condition-(N) data
-are fully proven above (`IsQCAnalytic.inverse_fiber_lusinN`, Steps 1–2), genuinely consuming `f`'s
+multiplicity (non-injective) upper bound, nor the variation lower bound `Var ≥ ∫|deriv|`; both are
+supplied in-repo (`MultiplicityAreaFormula.lean`), so this lemma is now PROVEN. The fibered
+Lusin-(N) maps that supply the condition-(N) data are fully proven above
+(`IsQCAnalytic.inverse_fiber_lusinN`, Steps 1–2), genuinely consuming `f`'s
 super-critical weak gradient via Morrey.
 
 **Soundness / shear exclusion.** This statement is *false* for the area-preserving singular shear
@@ -1954,13 +1959,15 @@ theorem IsQCAnalytic.inverse_slice_monotoneDecompN {f : ℂ → ℂ} {b : Beltra
       monotoneDecompN_of_continuous_ac hx.2.1 hx.2.2⟩
 
 /-- **The genuine slice-absolute-continuity residual (horizontal): almost every horizontal slice of
-the quasiconformal inverse is absolutely continuous.** This is the irreducible reverse length–area /
-Marcus–Mizel content (the "no singular part" claim) the area-preserving singular shear violates: its
+the quasiconformal inverse is absolutely continuous.** This is the reverse length–area /
+Marcus–Mizel "no singular part" content (now PROVEN) that the area-preserving singular shear
+violates: its
 horizontal slices `y + s ·` are singular, not AC. It is sound and load-bearing on the forward
 structure — the shear is *not* the inverse of an `IsQCAnalytic` map because `f`'s genuine
-`W^{1,2}_loc` structure (`hf.2.1`) excludes it. Closing it requires the Federer co-area / Stepanov /
-Marcus–Mizel area-coupling that is absent from Mathlib (no approximate differentiability, no co-area
-formula, no planar Morrey/Hölder-(N)). The downstream weak gradient and AC walls reduce to this via
+`W^{1,2}_loc` structure (`hf.2.1`) excludes it. The required Federer co-area / multiplicity
+area-coupling (absent from Mathlib's injective-only change of variables) is supplied in-repo
+(`MultiplicityAreaFormula.lean`, `inverse_slice_monotoneDecompN`), so this is now PROVEN via the
+Banach–Zaretsky bridge. The downstream weak gradient and AC walls reduce to this via
 the *fully proven* `hasWeakGradient_of_aeSliceAC` (`QC/ReverseLengthArea.lean`).
 
 *Reference:* Lehto–Virtanen; Väisälä §31.2; Marcus–Mizel, ARMA 45 (1972); Hencl–Koskela, App. A. -/
@@ -1976,7 +1983,7 @@ theorem IsQCAnalytic.inverse_slice_absolutelyContinuous_core_x {f : ℂ → ℂ}
 
 /-- **The genuine slice-absolute-continuity residual (vertical): almost every vertical slice of the
 quasiconformal inverse is absolutely continuous.** Vertical analogue of
-`inverse_slice_absolutelyContinuous_core_x`; same irreducible reverse length–area content, isolated
+`inverse_slice_absolutelyContinuous_core_x`; same reverse length–area content (now PROVEN), obtained
 by symmetry. -/
 theorem IsQCAnalytic.inverse_slice_absolutelyContinuous_core_y {f : ℂ → ℂ} {b : BeltramiCoeff}
     (hf : IsQCAnalytic f b) :
@@ -1995,7 +2002,7 @@ with inverse homeomorphism `g = f⁻¹`, the a.e.-defined **pointwise** partials
 `g`; equivalently, the distributional gradient of `g` has *no singular part*
 (`g ∈ W^{1,1}_loc` with these partials).
 
-## Why this is the tight, TRUE, irreducible residual
+## The reverse length–area weak gradient (now PROVEN)
 
 This is the **reverse length–area theorem** (Lehto–Virtanen / Väisälä §31.2; Marcus–Mizel,
 ARMA 45 (1972)) specialised to the inverse map. Its mathematical content is **exactly** the
@@ -2003,10 +2010,10 @@ ARMA 45 (1972)) specialised to the inverse map. Its mathematical content is **ex
 instance of the **same** statement as the Dir B keystone
 `IsQCGeometric.exists_acl_weakGradient` (`QC/GeometricToAnalytic.lean`): closing it in general
 closes Dir B too. The proof requires the genuine, irreducibly two-dimensional area-coupling of
-the forward map (`hf.2.1 : MemW12loc f`, the modulus/length–area structure) — this is the
-Federer co-area / Stepanov / Marcus–Mizel input that is **absent from Mathlib** (approximate
-differentiability and the planar Hölder-(N)/Morrey route are not available), so it is isolated
-here as the single tightest correct `sorry`.
+the forward map (`hf.2.1 : MemW12loc f`, the modulus/length–area structure) — the required
+Federer co-area / multiplicity input (absent from Mathlib's injective-only change of variables)
+is supplied in-repo (`MultiplicityAreaFormula.lean`), so it is fully PROVEN here, reduced to the
+slice-AC cores below.
 
 ## Soundness (sanity-checked against the standard counterexamples)
 
@@ -2033,8 +2040,9 @@ here as the single tightest correct `sorry`.
 By the *fully proven* reduction `hasWeakGradient_of_aeSliceAC` (`QC/ReverseLengthArea.lean`, the
 converse Sobolev embedding *ACL ⇒ W^{1,1}_loc*), this weak-gradient statement follows from the
 single fact that **almost every horizontal and vertical slice of `g` is absolutely continuous**,
-isolated below as `inverse_slice_absolutelyContinuous_core_x` / `..._y`. Those two are the genuine
-irreducible Marcus–Mizel / Stepanov residual (the reverse length–area content Mathlib lacks); the
+established below as `inverse_slice_absolutelyContinuous_core_x` / `..._y` (now PROVEN). Those two
+carry the genuine Marcus–Mizel reverse length–area content (built in-repo, beyond Mathlib's
+injective change of variables); the
 local integrability of the pointwise partials and a.e. differentiability are already proven
 (`inverse_partial_memLpLocOn`, `inverse_differentiableAt_ae`). -/
 theorem IsQCAnalytic.inverse_reverseLengthArea_weakGradient {f : ℂ → ℂ} {b : BeltramiCoeff}
@@ -2064,8 +2072,8 @@ theorem IsQCAnalytic.inverse_reverseLengthArea_weakGradient {f : ℂ → ℂ} {b
   -- Assemble via the fully-proven converse Sobolev embedding `ACL ⇒ W^{1,1}_loc`.
   exact hasWeakGradient_of_aeSliceAC hgcont hgdiff (hLIofL2 1) (hLIofL2 Complex.I) hacx hacy
 
-/-- **The genuine analytic wall (horizontal): absolute continuity of the inverse's horizontal
-slices.** For an `IsQCAnalytic` map `f` with inverse `g = f⁻¹`, for almost every `y` the
+/-- **Absolute continuity of the inverse's horizontal slices (now PROVEN).**
+For an `IsQCAnalytic` map `f` with inverse `g = f⁻¹`, for almost every `y` the
 horizontal slice `x ↦ g ⟨x, y⟩` is absolutely continuous on every interval.
 
 This is the EXACT "no singular part" content the area-preserving singular shear violates (its
@@ -2099,8 +2107,8 @@ theorem IsQCAnalytic.inverse_ae_slice_absolutelyContinuous_x {f : ℂ → ℂ} {
   -- Converse Sobolev embedding `W^{1,1}_loc ⇒ ACL` (horizontal slices).
   exact slice_isAbsolutelyContinuous_x_of_conditionNPlus hgcont hgxLI hweakx
 
-/-- **The genuine analytic wall (vertical): absolute continuity of the inverse's vertical
-slices.** The vertical analogue of `inverse_ae_slice_absolutelyContinuous_x`: for almost every
+/-- **Absolute continuity of the inverse's vertical slices (now PROVEN).**
+The vertical analogue of `inverse_ae_slice_absolutelyContinuous_x`: for almost every
 `x` the vertical slice `y ↦ g ⟨x, y⟩` is absolutely continuous on every interval. Same reverse
 length–area content; isolated by symmetry (the `I`-directional weak gradient and the `L²_loc`
 membership of the `I`-partial, fed to `slice_isAbsolutelyContinuous_y_of_conditionNPlus`). -/
@@ -2355,34 +2363,5 @@ theorem IsQCAnalytic.inverse_isQCAnalytic {f : ℂ → ℂ} {b : BeltramiCoeff}
     ∃ b' : BeltramiCoeff, IsQCAnalytic (⇑(hf.1.1.homeomorph f).symm) b' := by
   obtain ⟨b', hbel⟩ := hf.inverse_beltrami
   exact ⟨b', hf.inverse_orientationPreservingHomeo, hf.inverse_memW12loc, hbel⟩
-
-/-- **Image-side exceptional sweep, via inverse-is-QC** (standalone restatement of
-the existing wall `IsQCAnalytic.image_chainRule_exceptional_modulus_zero`). For an
-`IsQCAnalytic` map `f` and a family `Γ` of continuous, absolutely continuous curves,
-the image under `f` of the chain-rule exceptional subfamily has zero modulus.
-
-This is stated here with the **same shape** as the `QC/LengthArea.lean` wall, to
-record that the inverse-is-QC root (`inverse_isQCAnalytic`) plus planar Lusin-(N)
-(`image_lusinN`) supplies its missing ingredient. The original wall sorry in
-`QC/LengthArea.lean` is deliberately left untouched; this scaffold is standalone.
-
-*Proof sketch.* The exceptional curves' images form, via the inverse `g = f⁻¹`, a
-source-side exceptional family for `g`; apply `g`'s own
-`IsQCAnalytic.chainRule_exceptional_modulus_zero` (from `inverse_isQCAnalytic`)
-together with `image_lusinN` to conclude the image modulus vanishes. *Dependency:*
-`inverse_isQCAnalytic`, `image_lusinN`,
-`IsQCAnalytic.chainRule_exceptional_modulus_zero`. -/
-theorem IsQCAnalytic.inverse_image_chainRule_exceptional_modulus_zero {f : ℂ → ℂ}
-    {b : BeltramiCoeff} (hf : IsQCAnalytic f b) (Γ : Set (ℝ → ℂ))
-    (hcont : ∀ γ ∈ Γ, Continuous γ)
-    (hac : ∀ γ ∈ Γ, AbsolutelyContinuousOnInterval γ 0 1) :
-    curveModulus ((fun γ : ℝ → ℂ => f ∘ γ) ''
-      {γ ∈ Γ | ¬ ((∀ a c : ℝ, Set.uIcc a c ⊆ Set.Icc (0 : ℝ) 1 →
-          AbsolutelyContinuousOnInterval (f ∘ γ) a c) ∧
-        (∀ᵐ t : ℝ ∂(volume.restrict (Set.Icc (0 : ℝ) 1)),
-            deriv γ t ≠ 0 → 0 < (fderiv ℝ f (γ t)).det) ∧
-        ∀ᵐ t : ℝ ∂(volume.restrict (Set.Icc (0 : ℝ) 1)), deriv γ t ≠ 0 →
-          HasDerivAt (f ∘ γ) ((fderiv ℝ f (γ t)) (deriv γ t)) t)}) = 0 := by
-  sorry
 
 end RiemannDynamics
