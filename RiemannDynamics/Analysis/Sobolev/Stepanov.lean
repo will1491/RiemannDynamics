@@ -53,7 +53,7 @@ theorem hasFDerivAt_of_squeeze {g f h : E → ℝ} {x₀ : E} {Lg Lh : E →L[�
   have hmin : IsLocalMin (fun x => h x - g x) x₀ := by
     have hval : h x₀ - g x₀ = 0 := by rw [hgx, hhx]; ring
     filter_upwards [hgf, hfh] with x hx1 hx2
-    show h x₀ - g x₀ ≤ h x - g x
+    change h x₀ - g x₀ ≤ h x - g x
     rw [hval]
     exact sub_nonneg.2 (hx1.trans hx2)
   -- Fermat: the derivative of `h - g` at `x₀` is zero, hence `Lh = Lg`.

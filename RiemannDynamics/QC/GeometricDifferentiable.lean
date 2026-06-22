@@ -7,7 +7,7 @@ import RiemannDynamics.QC.Geometric
 import RiemannDynamics.QC.SensePreserving
 import RiemannDynamics.QC.ReverseLengthAreaForward
 import RiemannDynamics.Analysis.Sobolev.Stepanov
-import RiemannDynamics.Analysis.Sobolev.Coarea
+import RiemannDynamics.Analysis.Sobolev.Coarea.Assembly
 import Mathlib.MeasureTheory.Covering.Besicovitch
 import Mathlib.MeasureTheory.Measure.Decomposition.Lebesgue
 

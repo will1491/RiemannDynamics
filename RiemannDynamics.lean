@@ -60,7 +60,9 @@ import RiemannDynamics.Dynamics.FatouComponents.Periodic
 
 import RiemannDynamics.Analysis.Sobolev.Stepanov
 import RiemannDynamics.Analysis.Sobolev.Wirtinger
-import RiemannDynamics.Analysis.Sobolev.Coarea
+import RiemannDynamics.Analysis.Sobolev.Coarea.Foundations
+import RiemannDynamics.Analysis.Sobolev.Coarea.PerPiece
+import RiemannDynamics.Analysis.Sobolev.Coarea.Assembly
 import RiemannDynamics.Analysis.Sobolev.WeakDeriv
 import RiemannDynamics.Analysis.Sobolev.AbsolutelyContinuousLines
 import RiemannDynamics.Analysis.Sobolev.SobolevToACL
