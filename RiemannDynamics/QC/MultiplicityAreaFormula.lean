@@ -1,8 +1,8 @@
 /-
 # The planar multiplicity area formula (Federer `≤`), for `y`-fibered selectors
 
-This file proves the **per-slice multiplicity area formula with no singular part**, the single
-genuine GMT residual of Milestone 9.2, in a fully *general* form (over an arbitrary continuous,
+This file proves the **per-slice multiplicity area formula with no singular part**, a genuine
+geometric-measure-theory result, in a fully *general* form (over an arbitrary continuous,
 a.e.-differentiable, Lusin-(N) map `G : ℂ → ℂ` and selector `P : ℂ →L[ℝ] ℝ`):
 
 `∀ᵐ y, ∀ a c, eVariationOn (x ↦ P (G⟨x,y⟩)) [a,c] ≤ ∫⁻_{x∈[a,c]} ‖∂ₓ(P∘G)‖`.
@@ -11,7 +11,7 @@ It is assembled from several axiom-clean pieces proven here — the determinant 
 `y`-fibered map `Φ p = P(G p)•1 + p.im•I` (`det DΦ = ∂ₓ(P∘G)`), the injective decomposition of
 `{det ≠ 0}` (from Mathlib's `ApproximatesLinearOn` machinery), the slice-variation measurability,
 the forward Banach indicatrix bound, the variation lower bound, the squeeze, and the endpoint limit
-from rational to real intervals — on top of the single architected CORE residual
+from rational to real intervals — on top of the single core lemma
 `core_integrated_indicatrix_le` (the 2-D Federer multiplicity / co-area inequality
 `∫⁻_y ∫⁻_t N(slice y) ≤ ∫⁻_box |det DΦ|`).
 -/

@@ -1403,8 +1403,7 @@ genuinely unbounded trace on `[0,1]` there is no such ball, and the construction
 breaks. In every intended application the curve family consists of **continuous**
 curves on `[0,1]` (e.g. `Quadrilateral.curveFamily`), for which `γ '' [0,1]` is
 compact, hence bounded, so this subfamily is *empty* and the modulus is trivially
-`0`. The honest fix is to carry a continuity/boundedness hypothesis on `Γ` into the
-statement; isolated here so the architect can decide where to add it. -/
+`0`. The statement therefore carries a continuity/boundedness hypothesis `hcont` on `Γ`. -/
 theorem curveModulus_lineIntegral_top_unbounded_zero {f : ℂ → ℂ} {b : BeltramiCoeff}
     (_hf : IsQCAnalytic f b) (Γ : Set (ℝ → ℂ)) (hcont : ∀ γ ∈ Γ, Continuous γ) :
     curveModulus {γ ∈ Γ |

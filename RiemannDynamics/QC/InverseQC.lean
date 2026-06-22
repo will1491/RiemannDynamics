@@ -13,20 +13,12 @@ import RiemannDynamics.Analysis.Sobolev.Morrey.LusinN
 /-!
 # The inverse of an analytic-quasiconformal map is analytic-quasiconformal
 
-This file lays out a **Phase-1 scaffold**: a dependency-ordered chain of theorem
-*signatures*, each `:= by sorry`, for the fact that the homeomorphic inverse of an
+This file proves, in a dependency-ordered chain, that the homeomorphic inverse of an
 `IsQCAnalytic` map is again `IsQCAnalytic` (with the "reflected" Beltrami
 coefficient). This is the *inverse-is-QC* root that unlocks the genuine
 `isQCGeometric_of_isQCAnalytic` modulus bound, which follows by applying the
-*source-side* length–area machinery to the inverse map `g = f⁻¹`. (The former
-image-side exceptional-sweep walls, which routed planar Lusin-(N) through a separate
-chain, have since been removed and superseded by the downstream rebuild in
-`QC/Equivalence.lean`.)
-
-Nothing here is proved; the file states maximally-general, mathematically-faithful
-signatures that compile, so the proofs can be slotted in later. The two existing
-wall sorries in `QC/LengthArea.lean` and `QC/Equivalence.lean` are **not** touched —
-this scaffold is standalone.
+*source-side* length–area machinery to the inverse map `g = f⁻¹`. The signatures are
+maximally general and mathematically faithful.
 
 ## The chain
 
@@ -53,9 +45,7 @@ this scaffold is standalone.
    the crux of the image-side exceptional sweep (follows from (7) by running the
    source-side change of variables for `g`).
 
-The former item (9), an image-side exceptional-sweep restatement tying (7)/(8) to a
-standalone wall, has since been removed; the genuine modulus bound is now rebuilt
-downstream in `QC/Equivalence.lean`.
+The genuine modulus bound is assembled downstream in `QC/Equivalence.lean`.
 
 The predicate used for "`∂f` is locally `Lᵖ`" is the repo's existing
 `MemLpLocOn (fun z => dz f z) (ENNReal.ofReal p) Set.univ` (from
