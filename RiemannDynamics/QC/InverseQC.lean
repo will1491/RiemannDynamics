@@ -8,7 +8,7 @@ import RiemannDynamics.QC.ReverseLengthArea
 import RiemannDynamics.QC.MultiplicityAreaFormula
 import RiemannDynamics.Analysis.SingularIntegral.Beurling.LpHighOpNorm
 import RiemannDynamics.Analysis.SingularIntegral.Beurling.Beltrami
-import RiemannDynamics.Analysis.Sobolev.Morrey
+import RiemannDynamics.Analysis.Sobolev.Morrey.LusinN
 
 /-!
 # The inverse of an analytic-quasiconformal map is analytic-quasiconformal
@@ -312,7 +312,7 @@ This is the genuine analytic core of the image-side exceptional sweep. A planar
 integrability `∂f ∈ L^p_loc`, and the dilatation bound `‖b.μ‖∞ < 1` carries `∂̄f`
 along) is Hölder-continuous and satisfies the Lusin-(N) property, so it maps the
 (null) non-differentiability set to a null set. The Lusin-(N) input is the general
-Sobolev fact `lusinN_image_null_of_weakGradient` (`Analysis/Sobolev/Morrey.lean`).
+Sobolev fact `lusinN_image_null_of_weakGradient` (`Analysis/Sobolev/Morrey/LusinN.lean`).
 *Dependency:* `exists_weakGradient_memLpLocOn_gt_two`, `lusinN_image_null_of_weakGradient`,
 `ae_differentiableAt`. -/
 theorem IsQCAnalytic.image_singular_set_null {f : ℂ → ℂ} {b : BeltramiCoeff}
