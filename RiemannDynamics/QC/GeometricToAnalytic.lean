@@ -6,6 +6,7 @@ Authors: Will (Ziang) Li
 import RiemannDynamics.QC.Geometric
 import RiemannDynamics.QC.Analytic
 import RiemannDynamics.QC.SensePreserving
+import RiemannDynamics.QC.LengthAreaInverse
 import RiemannDynamics.Analysis.Sobolev.AbsolutelyContinuousLines
 
 /-!
@@ -40,15 +41,99 @@ open scoped ENNReal NNReal
 
 namespace RiemannDynamics
 
+/-- **Reverse length–area / Gehring–Lehto infinitesimal data (the single genuine GMT
+residual of Direction B).**
+
+For a geometric `K`-quasiconformal map `f` the modulus bound
+`M(f(Q)) ≤ K · M(Q)` on every quadrilateral forces, classically, the entire *infinitesimal*
+structure of `f` at once:
+
+* `f` is (totally, real-)differentiable at almost every point;
+* its Jacobian is positive almost everywhere;
+* the pointwise dilatation bound `‖Df w‖² ≤ K · det (Df w)` holds almost everywhere;
+* the pointwise partials `w ↦ (Df w) 1`, `w ↦ (Df w) I` are the **weak (distributional)**
+  derivatives of `f` (equivalently, the distributional gradient of `f` has *no singular
+  part*, i.e. `f ∈ W^{1,1}_loc` with these partials).
+
+This is the classical **reverse length–area theorem** (Lehto–Virtanen, *Quasiconformal
+Mappings in the Plane*; Väisälä §31.2; Marcus–Mizel, ARMA 45 (1972)). In the standard proof
+one first runs the length–area inequality: for an axis rectangle `R = (a,b)×(s,t)` the
+horizontal-segment family has modulus `(t−s)/(b−a)` from below
+(`lengthArea_modulus_lower_bound`), and combined with the geometric upper bound
+`M(f(R)) ≤ K·M(R)` and a Cauchy–Schwarz / Fubini estimate gives the energy inequality
+`∫_{y∈[s,t]} ℓ_f(y)² dy ≤ K · area(f(R))`, where `ℓ_f(y)` is the length (total variation) of
+the image slice `x ↦ f⟨x,y⟩`. Hence a.e. slice is BV with `L²_loc` `x`-partial, and
+symmetrically for `y`. The genuinely two-dimensional **"no singular part" step** (a.e. slice
+is *absolutely continuous*, not merely BV) is the Banach–Zaretsky / Federer area-formula core:
+the swept image area `area(f(·))` is countably additive and absolutely continuous, which
+forces equality in the length–area estimate and rules out a slice singular part. From the
+slice-AC and the energy bound the a.e. differentiability and the pointwise dilatation bound
+follow by the Gehring–Lehto / Stepanov refinement.
+
+## Why this is the tight, irreducible residual
+
+The conclusion bundles *all four* infinitesimal facts because for a **purely geometric** map
+they are not separately available: a.e. differentiability is a *conclusion* of the
+geometric ⇒ analytic direction (the orientation hypothesis `SensePreserving` is purely
+topological and carries no differentiability — see the `IsQCGeometric` docstring), so it
+cannot be assumed in order to *define* the partials, and the pointwise dilatation bound is a
+downstream Gehring–Lehto consequence of the very slice-AC it would help establish. The four
+facts emerge **together** from the length–area / no-singular-part analysis; isolating any one
+of them separately would require the others as hypotheses, so a single bundled residual is the
+honest granularity. Its mathematical content is **exactly** the same "no singular part" claim
+that the analytic side isolates as `IsQCAnalytic.inverse_reverseLengthArea_weakGradient`
+(`QC/InverseQC.lean`), specialised to the inverse map: closing either in full closes both.
+
+## Status: Mathlib/repo-absent
+
+The "no singular part" core requires the Federer co-area / multiplicity area formula in its
+*non-injective* (`≤`) direction together with the variation lower bound `Var ≥ ∫|deriv|`, plus
+approximate differentiability and the planar Lusin-(N) bridge — none of which are in Mathlib
+(`QC/MultiplicityAreaFormula.lean` proves the fibered Banach-indicatrix bound but the area
+*equality* coupling is absent). It is the sole remaining node of this stage.
+
+## Soundness (shear sanity check)
+
+The conclusion is **false** for the area-preserving singular shear
+`g⟨x,y⟩ = x + i·(y + s x)` (`s` continuous strictly increasing singular, e.g. Minkowski `?`):
+`g` is an injective continuous a.e.-differentiable measure-preserving map with `Dg = id`
+a.e. — so it satisfies the first three facts pointwise — **yet** its imaginary slice
+`x ↦ y + s x` is singular (not AC), so its true distributional `x`-derivative of `.im` is the
+singular measure `ds`, not the a.e.-pointwise `0`; the weak-gradient fact fails. The shear is
+*not* geometrically `K`-quasiconformal (its quadrilateral moduli are not boundedly distorted —
+the singular shear blows up the modulus of thin vertical quadrilaterals), so the hypothesis
+`hf : IsQCGeometric f K` is load-bearing and the statement is sound. -/
+theorem IsQCGeometric.reverseLengthArea_data {f : ℂ → ℂ} {K : ℝ} (hf : IsQCGeometric f K) :
+    (∀ᵐ w : ℂ, DifferentiableAt ℝ f w) ∧
+    (∀ᵐ w : ℂ, 0 < (fderiv ℝ f w).det) ∧
+    (∀ᵐ w : ℂ, ‖fderiv ℝ f w‖ ^ 2 ≤ K * (fderiv ℝ f w).det) ∧
+    HasWeakDirDeriv 1 (fun w => (fderiv ℝ f w) 1) f Set.univ ∧
+    HasWeakDirDeriv Complex.I (fun w => (fderiv ℝ f w) Complex.I) f Set.univ := by
+  sorry
+
 /-- **Reverse length–area (geometric ⇒ ACL).** A geometric `K`-quasiconformal map is
 absolutely continuous on almost every horizontal and vertical line, with `x`- and
 `y`-partials that are locally `L²`. This is the converse of the length–area inequality: the
 modulus bound `M(f(Q)) ≤ K · M(Q)` on rectangles forces, by a Fubini/length–area argument,
-absolute continuity of the line slices together with the square-integrable energy bound. -/
+absolute continuity of the line slices together with the square-integrable energy bound.
+
+The genuine reverse-length-area / "no singular part" content is isolated in the single residual
+`IsQCGeometric.reverseLengthArea_data`; here it is packaged into the `ACL` + `L²_loc` shape by
+the fully proven keystone `acl_weakGradient_of_qcInverse` (`QC/LengthAreaInverse.lean`), whose
+energy half (`memLpLocOn_inverse_partial_of_dilatation`) derives the square-integrable bound on
+the partials directly from the pointwise dilatation bound `‖Df‖² ≤ K · det (Df)`. -/
 theorem IsQCGeometric.exists_acl_weakGradient {f : ℂ → ℂ} {K : ℝ} (hf : IsQCGeometric f K) :
     ∃ gx gy : ℂ → ℂ, ACLHorizontal f gx ∧ ACLVertical f gy ∧
       MemLpLocOn gx (2 : ℝ≥0∞) Set.univ ∧ MemLpLocOn gy (2 : ℝ≥0∞) Set.univ := by
-  sorry
+  -- `f` is a homeomorphism and `K` is positive.
+  have hKpos : (0 : ℝ) < K := lt_of_lt_of_le one_pos hf.1
+  have hhomeo : IsHomeomorph f := hf.2.1.isHomeomorph
+  -- The single genuine reverse-length-area / Gehring–Lehto residual supplies the infinitesimal
+  -- data (a.e. differentiability, positive Jacobian, pointwise dilatation bound, weak gradient).
+  obtain ⟨hdiff, hdetpos, hdil, hweakx, hweaky⟩ := hf.reverseLengthArea_data
+  -- The fully proven keystone packages this into the ACL + `L²_loc` conclusion, deriving the
+  -- square-integrable energy bound on the partials from the pointwise dilatation bound.
+  exact acl_weakGradient_of_qcInverse hKpos hhomeo hdiff hdetpos hdil hweakx hweaky
 
 /-- **Stepanov / Gehring–Lehto a.e. differentiability.** A geometric `K`-quasiconformal map
 is (totally, real-)differentiable at almost every point. The map is absolutely continuous on

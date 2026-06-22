@@ -95,6 +95,7 @@ import RiemannDynamics.QC.Analytic
 import RiemannDynamics.QC.SensePreserving
 import RiemannDynamics.QC.Modulus
 import RiemannDynamics.QC.Geometric
+import RiemannDynamics.QC.BanachZaretsky
 import RiemannDynamics.QC.LengthArea
 import RiemannDynamics.QC.Equivalence
 import RiemannDynamics.QC.InverseQC
