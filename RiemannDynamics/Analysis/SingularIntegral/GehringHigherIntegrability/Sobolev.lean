@@ -4,7 +4,6 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Will (Ziang) Li
 -/
 import RiemannDynamics.Analysis.Sobolev.WeakDeriv
-import RiemannDynamics.Analysis.Sobolev.Mollification
 import RiemannDynamics.Analysis.SingularIntegral.CalderonZygmund
 import RiemannDynamics.Analysis.SingularIntegral.Beurling.Kernel
 import RiemannDynamics.Analysis.SingularIntegral.Beurling.Convolution
@@ -32,7 +31,7 @@ this is the **Gehring reverse-Hölder / Caccioppoli self-improvement lemma**.
 imports it (transitively) — so it carries this development overview alongside its own content
 (the endpoint Sobolev embedding and cutoffs; see "This file" below). There is no aggregator
 module: downstream consumers import the specific node they need
-(`DyadicGehring` → `SelfImprovement`, `Beurling/Beltrami` → `Residual`).
+(e.g. `Beurling/Beltrami` → `Residual` → `SelfImprovement`).
 
 ## The f-level reverse-Hölder
 
@@ -87,8 +86,8 @@ The nodes are split across the `GehringHigherIntegrability/` directory, in depen
 ## Infrastructure consumed by N1 (the Sobolev–Poincaré proof)
 
 The Sobolev–Poincaré node `sobolevPoincare_ball` is discharged by mollifying
-the primitive `F` to `C¹` (`RiemannDynamics.exists_contDiff_hasCompactSupport_eLpNorm_sub_le`,
-`Analysis/Sobolev/Mollification.lean`) and applying Mathlib's Gagliardo–Nirenberg–Sobolev
+the primitive `F` to `C¹` (Mathlib's `MeasureTheory.MemLp.exist_eLpNorm_sub_le`)
+and applying Mathlib's Gagliardo–Nirenberg–Sobolev
 inequality `MeasureTheory.eLpNorm_le_eLpNorm_fderiv_one`
 (`Mathlib/Analysis/FunctionalSpaces/SobolevInequality.lean`) at `n = finrank ℝ ℂ = 2`,
 `p = 2` (the Hölder conjugate of `2`), to the mean-subtracted localized function, then

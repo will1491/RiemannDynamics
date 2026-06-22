@@ -60,7 +60,6 @@ import RiemannDynamics.Dynamics.FatouComponents.Periodic
 
 import RiemannDynamics.Analysis.Sobolev.Wirtinger
 import RiemannDynamics.Analysis.Sobolev.WeakDeriv
-import RiemannDynamics.Analysis.Sobolev.Mollification
 import RiemannDynamics.Analysis.Sobolev.AbsolutelyContinuousLines
 import RiemannDynamics.Analysis.Sobolev.SobolevToACL
 import RiemannDynamics.Analysis.Sobolev.Morrey
@@ -87,7 +86,6 @@ import RiemannDynamics.Analysis.SingularIntegral.GehringHigherIntegrability.Self
 import RiemannDynamics.Analysis.SingularIntegral.GehringHigherIntegrability.Residual
 import RiemannDynamics.Analysis.SingularIntegral.DyadicCubes
 import RiemannDynamics.Analysis.SingularIntegral.DyadicLebesgue
-import RiemannDynamics.Analysis.SingularIntegral.DyadicGehring
 import RiemannDynamics.Analysis.SingularIntegral.Beurling.Beltrami
 
 import RiemannDynamics.QC.BeltramiCoeff
@@ -96,9 +94,11 @@ import RiemannDynamics.QC.SensePreserving
 import RiemannDynamics.QC.Modulus
 import RiemannDynamics.QC.Geometric
 import RiemannDynamics.QC.BanachZaretsky
+import RiemannDynamics.QC.BanachIndicatrix
 import RiemannDynamics.QC.LengthArea
-import RiemannDynamics.QC.Equivalence
+import RiemannDynamics.QC.LengthAreaInverse
+import RiemannDynamics.QC.ReverseLengthArea
 import RiemannDynamics.QC.InverseQC
 import RiemannDynamics.QC.MultiplicityAreaFormula
 import RiemannDynamics.QC.GeometricToAnalytic
-import RiemannDynamics.QC.QCEquivalence
+import RiemannDynamics.QC.Equivalence

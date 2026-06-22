@@ -3,7 +3,6 @@ Copyright (c) 2026 Will (Ziang) Li. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Will (Ziang) Li
 -/
-import RiemannDynamics.QC.Equivalence
 import RiemannDynamics.QC.LengthAreaInverse
 import RiemannDynamics.QC.ReverseLengthArea
 import RiemannDynamics.QC.MultiplicityAreaFormula
@@ -22,7 +21,7 @@ coefficient). This is the *inverse-is-QC* root that unlocks the genuine
 *source-side* length–area machinery to the inverse map `g = f⁻¹`. (The former
 image-side exceptional-sweep walls, which routed planar Lusin-(N) through a separate
 chain, have since been removed and superseded by the downstream rebuild in
-`QC/QCEquivalence.lean`.)
+`QC/Equivalence.lean`.)
 
 Nothing here is proved; the file states maximally-general, mathematically-faithful
 signatures that compile, so the proofs can be slotted in later. The two existing
@@ -56,7 +55,7 @@ this scaffold is standalone.
 
 The former item (9), an image-side exceptional-sweep restatement tying (7)/(8) to a
 standalone wall, has since been removed; the genuine modulus bound is now rebuilt
-downstream in `QC/QCEquivalence.lean`.
+downstream in `QC/Equivalence.lean`.
 
 The predicate used for "`∂f` is locally `Lᵖ`" is the repo's existing
 `MemLpLocOn (fun z => dz f z) (ENNReal.ofReal p) Set.univ` (from
@@ -328,7 +327,7 @@ theorem IsQCAnalytic.image_singular_set_null {f : ℂ → ℂ} {b : BeltramiCoef
 image under `f` of the set where `f` fails to be differentiable with positive
 Jacobian is Lebesgue-null. This is the crux of the image-side exceptional sweep
 (the former wall, now removed and superseded by the downstream rebuild in
-`QC/QCEquivalence.lean`).
+`QC/Equivalence.lean`).
 
 *Proof sketch.* Split the degeneracy set as `{¬ differentiable} ∪
 {differentiable ∧ Jacobian ≤ 0}`. The first piece's image is null by
@@ -1022,11 +1021,13 @@ private theorem ae_slice_re_null_of_null {T : Set ℂ} (hT : volume T = 0) :
 /-! ## Absolute continuity on lines of the quasiconformal inverse
 
 The map `g = f⁻¹` is absolutely continuous on almost every horizontal and vertical line, with
-line derivatives the a.e.-defined pointwise partials `(Dg w) 1`, `(Dg w) I` (`inverse_acl`).
+line derivatives the a.e.-defined pointwise partials `(Dg w) 1`, `(Dg w) I`.
 The line derivatives are the genuine pointwise partials (they a.e. exist and equal
-`(Df (g w))⁻¹` by `inverse_differentiableAt_ae`), proven below via Fubini; only the *absolute
-continuity* — the "no singular part" claim — is the genuine analytic content, isolated as the
-two walls `inverse_ae_slice_absolutelyContinuous_x` / `..._y`.
+`(Df (g w))⁻¹` by `inverse_differentiableAt_ae`), recovered via Fubini; only the *absolute
+continuity* — the "no singular part" claim — is the genuine analytic content, isolated as
+`inverse_slice_absolutelyContinuous_core_x` / `..._y` (proven via the planar multiplicity area
+formula `multiplicityAreaFormula_noSingularPart`) and packaged by
+`inverse_reverseLengthArea_weakGradient`.
 
 **This is the Lehto–Virtanen / Väisälä §31.2 reverse length–area theorem for the inverse —
 genuinely not derivable from the pointwise a.e. data.** The hypothesis `IsQCAnalytic f b` is
@@ -1088,8 +1089,8 @@ decomposition is the primitive split `h = (h 0 + ∫₀ˣ (h')⁺) − (∫₀ˣ
 of the a.e. derivative `h' = deriv h`: each piece is a primitive of a nonnegative
 interval-integrable function, hence continuous, monotone, and Lusin-(N) by `luzinN_of_primitive`.
 
-This is the exact reverse of `absolutelyContinuousOnInterval_of_monotoneN`: there condition (N) of
-the pieces yields AC; here AC of the (continuous) function yields condition (N) of the canonical
+This is the converse Banach–Zaretsky direction: where condition (N) of the monotone pieces
+yields AC, here AC of the (continuous) function yields condition (N) of the canonical
 primitive pieces. It is the brick that turns the per-slice absolute continuity produced by the
 reverse length–area squeeze into the `MonotoneDecompN` shape the keystone consumes. -/
 theorem monotoneDecompN_of_continuous_ac {h : ℝ → ℝ} (_hcont : Continuous h)
@@ -2026,8 +2027,8 @@ slice-AC cores below.
   of an `IsQCAnalytic` map (`f`'s genuine `W^{1,2}_loc` structure is what excludes it). The
   hypothesis `hf` is therefore load-bearing and the statement is sound.
 * **Pointwise data alone is insufficient** (the FALSE routes the project audited away): this is
-  *not* derivable from condition N⁺ + injectivity + `L²_loc` pointwise partials (`PlanarCoarea`
-  docstring), nor from `∫Var ≤ area`, nor from per-line N⁺; all of those are satisfied by the
+  *not* derivable from condition N⁺ + injectivity + `L²_loc` pointwise partials, nor from
+  `∫Var ≤ area`, nor from per-line N⁺; all of those are satisfied by the
   shear. The honest extra ingredient is precisely the *weak*-derivative identity, supplied by
   the forward Sobolev/modulus structure.
 
@@ -2071,136 +2072,6 @@ theorem IsQCAnalytic.inverse_reverseLengthArea_weakGradient {f : ℂ → ℂ} {b
   have hacy := hf.inverse_slice_absolutelyContinuous_core_y
   -- Assemble via the fully-proven converse Sobolev embedding `ACL ⇒ W^{1,1}_loc`.
   exact hasWeakGradient_of_aeSliceAC hgcont hgdiff (hLIofL2 1) (hLIofL2 Complex.I) hacx hacy
-
-/-- **Absolute continuity of the inverse's horizontal slices (now PROVEN).**
-For an `IsQCAnalytic` map `f` with inverse `g = f⁻¹`, for almost every `y` the
-horizontal slice `x ↦ g ⟨x, y⟩` is absolutely continuous on every interval.
-
-This is the EXACT "no singular part" content the area-preserving singular shear violates (its
-horizontal slices `y + s ·` are singular, not AC). It is the converse Sobolev embedding
-`W^{1,1}_loc ⇒ ACL` (`slice_isAbsolutelyContinuous_x_of_conditionNPlus`,
-`QC/ConditionNToACL.lean`) fed by the reverse length–area / Stepanov weak gradient of the
-inverse (`inverse_reverseLengthArea_weakGradient`) and the `L²_loc ⊆ L¹_loc` membership of the
-pointwise partial (`inverse_partial_memLpLocOn`, the inverse-side change-of-variables energy
-bound). Genuinely not derivable from the inverse's pointwise a.e. data (condition N⁺ + pointwise
-dilatation), which the shear satisfies; the genuine content lives in
-`inverse_reverseLengthArea_weakGradient`. -/
-theorem IsQCAnalytic.inverse_ae_slice_absolutelyContinuous_x {f : ℂ → ℂ} {b : BeltramiCoeff}
-    (hf : IsQCAnalytic f b) :
-    ∀ᵐ y : ℝ, ∀ a c : ℝ,
-      AbsolutelyContinuousOnInterval (fun x : ℝ => (⇑(hf.1.1.homeomorph f).symm) ⟨x, y⟩) a c := by
-  -- The inverse homeomorphism `g = f⁻¹` is continuous.
-  set g : ℂ → ℂ := ⇑(hf.1.1.homeomorph f).symm with hg
-  have hgcont : Continuous g := (hf.1.1.homeomorph f).continuous_symm
-  -- The weak `x`-derivative of `g` is its pointwise partial (reverse length–area / Stepanov).
-  have hweakx : HasWeakDirDeriv 1 (fun w => (fderiv ℝ g w) 1) g Set.univ :=
-    hf.inverse_reverseLengthArea_weakGradient.1
-  -- The pointwise partial is `L²_loc`, hence `L¹_loc` (locally integrable).
-  have hgxLI : LocallyIntegrable (fun w => (fderiv ℝ g w) (1 : ℂ)) := by
-    rw [MeasureTheory.locallyIntegrable_iff]
-    intro Kc hKc
-    have hmem : MemLp (fun w => (fderiv ℝ g w) (1 : ℂ)) (2 : ℝ≥0∞) (volume.restrict Kc) :=
-      hf.inverse_partial_memLpLocOn 1 Kc (Set.subset_univ _) hKc
-    have : IsFiniteMeasure (volume.restrict Kc) := by
-      constructor; rw [Measure.restrict_apply_univ]; exact hKc.measure_lt_top
-    exact (hmem.mono_exponent (by norm_num)).integrable (le_refl 1)
-  -- Converse Sobolev embedding `W^{1,1}_loc ⇒ ACL` (horizontal slices).
-  exact slice_isAbsolutelyContinuous_x_of_conditionNPlus hgcont hgxLI hweakx
-
-/-- **Absolute continuity of the inverse's vertical slices (now PROVEN).**
-The vertical analogue of `inverse_ae_slice_absolutelyContinuous_x`: for almost every
-`x` the vertical slice `y ↦ g ⟨x, y⟩` is absolutely continuous on every interval. Same reverse
-length–area content; isolated by symmetry (the `I`-directional weak gradient and the `L²_loc`
-membership of the `I`-partial, fed to `slice_isAbsolutelyContinuous_y_of_conditionNPlus`). -/
-theorem IsQCAnalytic.inverse_ae_slice_absolutelyContinuous_y {f : ℂ → ℂ} {b : BeltramiCoeff}
-    (hf : IsQCAnalytic f b) :
-    ∀ᵐ x : ℝ, ∀ a c : ℝ,
-      AbsolutelyContinuousOnInterval (fun y : ℝ => (⇑(hf.1.1.homeomorph f).symm) ⟨x, y⟩) a c := by
-  set g : ℂ → ℂ := ⇑(hf.1.1.homeomorph f).symm with hg
-  have hgcont : Continuous g := (hf.1.1.homeomorph f).continuous_symm
-  -- The weak `I`-derivative of `g` is its pointwise partial (reverse length–area / Stepanov).
-  have hweaky : HasWeakDirDeriv Complex.I (fun w => (fderiv ℝ g w) Complex.I) g Set.univ :=
-    hf.inverse_reverseLengthArea_weakGradient.2
-  -- The pointwise partial is `L²_loc`, hence `L¹_loc` (locally integrable).
-  have hgyLI : LocallyIntegrable (fun w => (fderiv ℝ g w) Complex.I) := by
-    rw [MeasureTheory.locallyIntegrable_iff]
-    intro Kc hKc
-    have hmem : MemLp (fun w => (fderiv ℝ g w) Complex.I) (2 : ℝ≥0∞) (volume.restrict Kc) :=
-      hf.inverse_partial_memLpLocOn Complex.I Kc (Set.subset_univ _) hKc
-    have : IsFiniteMeasure (volume.restrict Kc) := by
-      constructor; rw [Measure.restrict_apply_univ]; exact hKc.measure_lt_top
-    exact (hmem.mono_exponent (by norm_num)).integrable (le_refl 1)
-  -- Converse Sobolev embedding `W^{1,1}_loc ⇒ ACL` (vertical slices).
-  exact slice_isAbsolutelyContinuous_y_of_conditionNPlus hgcont hgyLI hweaky
-
-theorem IsQCAnalytic.inverse_acl {f : ℂ → ℂ} {b : BeltramiCoeff}
-    (hf : IsQCAnalytic f b) :
-    ACLHorizontal (⇑(hf.1.1.homeomorph f).symm)
-        (fun w => (fderiv ℝ (⇑(hf.1.1.homeomorph f).symm) w) 1) ∧
-      ACLVertical (⇑(hf.1.1.homeomorph f).symm)
-        (fun w => (fderiv ℝ (⇑(hf.1.1.homeomorph f).symm) w) Complex.I) := by
-  set g : ℂ → ℂ := ⇑(hf.1.1.homeomorph f).symm with hg
-  -- `g` is differentiable almost everywhere (easy inverse function theorem).
-  have hgdiff : ∀ᵐ w, DifferentiableAt ℝ g w := IsQCAnalytic.inverse_differentiableAt_ae hf
-  -- The pointwise partials are `(Dg w) 1` / `(Dg w) I` by definition (a.e. trivially).
-  -- The genuine analytic walls: per-slice absolute continuity.
-  have hacx := hf.inverse_ae_slice_absolutelyContinuous_x
-  have hacy := hf.inverse_ae_slice_absolutelyContinuous_y
-  -- ===== The derivative halves, from a.e. differentiability via Fubini. =====
-  -- (Mirrors the private `ae_slice_hasDerivAt_x` / `..._y` of `QC/ConditionNToACL.lean`.)
-  have hmpsymm : MeasurePreserving Complex.measurableEquivRealProd.symm
-      (volume : Measure (ℝ × ℝ)) (volume : Measure ℂ) :=
-    Complex.volume_preserving_equiv_real_prod.symm Complex.measurableEquivRealProd
-  -- Horizontal slice derivative.
-  have hderivx : ∀ᵐ y : ℝ, ∀ᵐ x : ℝ,
-      HasDerivAt (fun t : ℝ => g ⟨t, y⟩) ((fderiv ℝ g ⟨x, y⟩) 1) x := by
-    have hprod : ∀ᵐ p : ℝ × ℝ, DifferentiableAt ℝ g ⟨p.2, p.1⟩ := by
-      have hpb : ∀ᵐ p : ℝ × ℝ, DifferentiableAt ℝ g ⟨p.1, p.2⟩ := by
-        have := hmpsymm.quasiMeasurePreserving.ae hgdiff
-        filter_upwards [this] with p hp
-        simpa [Complex.measurableEquivRealProd_symm_apply] using hp
-      have := (Measure.measurePreserving_swap (μ := (volume : Measure ℝ))
-        (ν := (volume : Measure ℝ))).quasiMeasurePreserving.ae hpb
-      simpa [Prod.swap] using this
-    have hline : ∀ᵐ y : ℝ, ∀ᵐ x : ℝ, DifferentiableAt ℝ g ⟨x, y⟩ :=
-      MeasureTheory.Measure.ae_ae_of_ae_prod hprod
-    filter_upwards [hline] with y hy
-    filter_upwards [hy] with x hx
-    have haff : HasDerivAt (fun t : ℝ => (⟨t, y⟩ : ℂ)) (1 : ℂ) x := by
-      have he : (fun t : ℝ => (⟨t, y⟩ : ℂ)) = fun t : ℝ => (t : ℂ) + (y : ℂ) * Complex.I := by
-        funext t; apply Complex.ext <;> simp
-      rw [he]
-      simpa using (Complex.ofRealCLM.hasDerivAt (x := x)).add_const ((y : ℂ) * Complex.I)
-    have := hx.hasFDerivAt.comp_hasDerivAt x haff
-    simpa using this
-  -- Vertical slice derivative.
-  have hderivy : ∀ᵐ x : ℝ, ∀ᵐ y : ℝ,
-      HasDerivAt (fun t : ℝ => g ⟨x, t⟩) ((fderiv ℝ g ⟨x, y⟩) Complex.I) y := by
-    have hprod : ∀ᵐ p : ℝ × ℝ, DifferentiableAt ℝ g ⟨p.1, p.2⟩ := by
-      have := hmpsymm.quasiMeasurePreserving.ae hgdiff
-      filter_upwards [this] with p hp
-      simpa [Complex.measurableEquivRealProd_symm_apply] using hp
-    have hline : ∀ᵐ x : ℝ, ∀ᵐ y : ℝ, DifferentiableAt ℝ g ⟨x, y⟩ :=
-      MeasureTheory.Measure.ae_ae_of_ae_prod hprod
-    filter_upwards [hline] with x hx
-    filter_upwards [hx] with y hy
-    have haff : HasDerivAt (fun t : ℝ => (⟨x, t⟩ : ℂ)) Complex.I y := by
-      have he : (fun t : ℝ => (⟨x, t⟩ : ℂ)) = fun t : ℝ => (x : ℂ) + (t : ℂ) * Complex.I := by
-        funext t; apply Complex.ext <;> simp
-      rw [he]
-      simpa using ((Complex.ofRealCLM.hasDerivAt (x := y)).mul_const Complex.I).const_add (x : ℂ)
-    have := hy.hasFDerivAt.comp_hasDerivAt y haff
-    simpa using this
-  -- ===== Assemble the two `ACL*` conjunctions per a.e. line. =====
-  refine ⟨?_, ?_⟩
-  · -- ACLHorizontal: combine the AC wall with the slice derivative.
-    unfold ACLHorizontal
-    filter_upwards [hacx, hderivx] with y hyac hyderiv
-    exact ⟨hyac, hyderiv⟩
-  · -- ACLVertical: combine the AC wall with the slice derivative.
-    unfold ACLVertical
-    filter_upwards [hacy, hderivy] with x hxac hxderiv
-    exact ⟨hxac, hxderiv⟩
 
 /-- **The inverse's pointwise partials are its weak partials** (the "no singular part" content
 of the inverse-is-QC keystone). For an `IsQCAnalytic` map `f` with inverse homeomorphism

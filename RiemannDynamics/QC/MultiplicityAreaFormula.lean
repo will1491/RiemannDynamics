@@ -782,55 +782,6 @@ theorem box_det_eq_rhs (hGcont : Continuous G) (hGdiff : ∀ᵐ w : ℂ, Differe
 noncomputable def countOn (g : ℝ → ℝ) (W : Set ℝ) (t : ℝ) : ℝ≥0∞ :=
   (Set.encard {x ∈ W | g x = t} : ℝ≥0∞)
 
-/-- **Injective count bound.** If `g` is injective on `W`, the integrated fibre count over `W` is
-bounded by the measure of the image. -/
-theorem lintegral_countOn_le_of_injOn {g : ℝ → ℝ} {W : Set ℝ} (hinj : Set.InjOn g W) :
-    ∫⁻ t, countOn g W t ≤ volume (g '' W) := by
-  have hbd : ∀ t, countOn g W t ≤ (g '' W).indicator (fun _ => (1 : ℝ≥0∞)) t := by
-    intro t
-    unfold countOn
-    by_cases ht : t ∈ g '' W
-    · rw [Set.indicator_of_mem ht]
-      have hsub : Set.encard {x ∈ W | g x = t} ≤ 1 := by
-        rw [Set.encard_le_one_iff]
-        intro p q hp hq
-        simp only [Set.mem_setOf_eq] at hp hq
-        exact hinj hp.1 hq.1 (hp.2.trans hq.2.symm)
-      calc (Set.encard {x ∈ W | g x = t} : ℝ≥0∞) ≤ ((1 : ℕ∞) : ℝ≥0∞) := by exact_mod_cast hsub
-        _ = 1 := by simp
-    · rw [Set.indicator_of_notMem ht]
-      have hempty : {x ∈ W | g x = t} = ∅ := by
-        ext x
-        simp only [Set.mem_setOf_eq, Set.mem_empty_iff_false, iff_false, not_and]
-        exact fun hx hgx => ht ⟨x, hx, hgx⟩
-      rw [hempty]; simp
-  calc ∫⁻ t, countOn g W t
-      ≤ ∫⁻ t, (g '' W).indicator (fun _ => (1 : ℝ≥0∞)) t := lintegral_mono hbd
-    _ ≤ 1 * volume (g '' W) := lintegral_indicator_const_le _ _
-    _ = volume (g '' W) := one_mul _
-
-/-- **Null image ⟹ count-integral vanishes.** If `g '' W` is null, the integrated fibre count over
-`W` is `0` (its integrand is supported on the null image). -/
-theorem lintegral_countOn_eq_zero_of_image_null {g : ℝ → ℝ} {W : Set ℝ}
-    (hnull : volume (g '' W) = 0) : ∫⁻ t, countOn g W t = 0 := by
-  obtain ⟨M, hMsup, hMmeas, hMnull⟩ := exists_measurable_superset_of_null hnull
-  have hbd : ∀ t, countOn g W t ≤ M.indicator (fun _ => (⊤ : ℝ≥0∞)) t := by
-    intro t
-    by_cases ht : t ∈ M
-    · rw [Set.indicator_of_mem ht]; exact le_top
-    · rw [Set.indicator_of_notMem ht]
-      unfold countOn
-      have hempty : {x ∈ W | g x = t} = ∅ := by
-        ext x
-        simp only [Set.mem_setOf_eq, Set.mem_empty_iff_false, iff_false, not_and]
-        exact fun hx hgx => ht (hMsup ⟨x, hx, hgx⟩)
-      rw [hempty]; simp
-  refine le_antisymm ?_ (zero_le _)
-  calc ∫⁻ t, countOn g W t
-      ≤ ∫⁻ t, M.indicator (fun _ => (⊤ : ℝ≥0∞)) t := lintegral_mono hbd
-    _ = (⊤ : ℝ≥0∞) * volume M := lintegral_indicator_const hMmeas _
-    _ = 0 := by rw [hMnull, mul_zero]
-
 /-- **`indicatrix = countOn`** on `Icc a c`. -/
 theorem indicatrix_eq_countOn (f : ℝ → ℝ) (a c t : ℝ) :
     RiemannDynamics.indicatrix f a c t = countOn f (Set.Icc a c) t := rfl

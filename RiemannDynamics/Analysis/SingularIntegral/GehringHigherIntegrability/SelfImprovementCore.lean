@@ -229,8 +229,8 @@ theorem giaquinta_iteration {α θ : ℝ} (hα : 0 < α) (hθ0 : 0 ≤ θ) (hθ1
 metric-ball reverse-Hölder inequality with the fixed enlargement factor `4` (the hypothesis
 form consumed by `gehring_selfImprovement`) yields a reverse-Hölder inequality on every dyadic
 square `R = dyadicSquare m k`, with the right-hand side over the comparable ball about the
-square's centre of radius `4 · 2^m`.  Reproduced here because `DyadicGehring` (which states the
-public version) would create an import cycle. -/
+square's centre of radius `4 · 2^m`.  Kept as a module-local copy; the standalone public
+version was a superseded duplicate and has been removed. -/
 theorem dyadic_reverseHolder' {q A : ℝ} (hq : 1 < q) (_hA : 0 ≤ A)
     {w b : ℂ → ℝ≥0∞}
     (hRH : ∀ (x : ℂ) (r : ℝ), 0 < r →

@@ -29,7 +29,7 @@ This is what lets the Caccioppoli step (N3) test the Beltrami structure against 
 non-smooth test function `φ = χ²·(F − c)` (which is only `W^{1,2}`, not `C^∞`).
 
 *Derivation.* `φ` is the `W^{1,2}` limit of smooth compactly supported `φₙ`
-(`exists_contDiff_hasCompactSupport_eLpNorm_sub_le` applied to `φ` and `φ'`); the
+(Mathlib's `MeasureTheory.MemLp.exist_eLpNorm_sub_le` applied to `φ` and `φ'`); the
 identity for each `φₙ` (the `HasWeakDirDeriv` definition / `smul_smooth`) passes to the
 limit by the `L²`-`L²` Cauchy–Schwarz pairing with `F` and its weak derivative `G`. -/
 theorem weakIBP_against_W12 {v : ℂ} {F G φ φ' : ℂ → ℂ}

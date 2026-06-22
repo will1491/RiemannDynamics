@@ -4,14 +4,13 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Will (Ziang) Li
 -/
 import RiemannDynamics.QC.LengthArea
-import RiemannDynamics.QC.ConditionNToACL
 import RiemannDynamics.Analysis.Sobolev.SobolevToACL
 
 /-!
 # Length–area / Lusin-N⁺ for the quasiconformal inverse
 
 This file builds the classical **length–area** development needed to close the
-keystone `IsQCAnalytic.inverse_acl_weakGradient` (`QC/InverseQC.lean`): the inverse
+keystone `IsQCAnalytic.inverse_memW12loc` (`QC/InverseQC.lean`): the inverse
 homeomorphism `g = f⁻¹` of an analytic-quasiconformal map is absolutely continuous
 on almost every line with `L²_loc` partials (Väisälä §31.2 / Lehto–Virtanen).
 
@@ -737,7 +736,7 @@ almost every horizontal and vertical line, with `L²_loc` partials.
 
 This assembles `memLpLocOn_inverse_partial_of_dilatation` (the `L²_loc` energy bound)
 and `acl_weakGradient_of_conditionNPlus` (the Sobolev ⇒ ACL extraction) into the exact
-shape consumed by `IsQCAnalytic.inverse_acl_weakGradient`. The witnesses for the
+shape consumed by `IsQCAnalytic.inverse_memW12loc`. The witnesses for the
 line-partials are the pointwise differential evaluations `gx w = (Dg w) 1`,
 `gy w = (Dg w) I`.
 
