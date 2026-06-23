@@ -1554,8 +1554,11 @@ domination `|slice y x₂ − slice y x₁| ≤ ∫_{x₁}^{x₂} ‖slice'‖`,
 /-- **The MAF assembly (general).** Given a family of slices `slice : ℝ → ℝ → ℝ`, each continuous,
 with a.e.(`y`) a.e.(`x`) derivative `deriv (slice y) x`, the slice-derivative norm
 a.e.(`y`)-interval-integrable, and the per-slice MAF no-singular-part bound, almost every slice is
-absolutely continuous on every interval. This packages the increment domination plus PIECE 2. -/
-private theorem ae_slice_AC_of_maf {slice : ℝ → ℝ → ℝ}
+absolutely continuous on every interval. This packages the increment domination plus PIECE 2.
+
+This is the Banach–Zaretsky upgrade BV ⟹ AC, used by both the inverse
+(`ae_slice_AC_horizontal_of_data`) and the forward reverse length–area development. -/
+theorem ae_slice_AC_of_maf {slice : ℝ → ℝ → ℝ}
     (_hcont : ∀ y : ℝ, Continuous (slice y))
     (hderiv : ∀ᵐ y : ℝ, ∀ᵐ x : ℝ, HasDerivAt (slice y) (deriv (slice y) x) x)
     (hint : ∀ᵐ y : ℝ, ∀ u v : ℝ,

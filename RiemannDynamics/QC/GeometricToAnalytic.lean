@@ -7,7 +7,10 @@ import RiemannDynamics.QC.Geometric
 import RiemannDynamics.QC.Analytic
 import RiemannDynamics.QC.SensePreserving
 import RiemannDynamics.QC.LengthAreaInverse
+import RiemannDynamics.QC.ReverseLengthArea
+import RiemannDynamics.QC.ReverseLengthAreaEnergy
 import RiemannDynamics.Analysis.Sobolev.AbsolutelyContinuousLines
+import RiemannDynamics.Analysis.Sobolev.Stepanov
 
 /-!
 # Geometric ⇒ analytic: the Gehring–Lehto stages
@@ -109,7 +112,41 @@ theorem IsQCGeometric.reverseLengthArea_data {f : ℂ → ℂ} {K : ℝ} (hf : I
     (∀ᵐ w : ℂ, ‖fderiv ℝ f w‖ ^ 2 ≤ K * (fderiv ℝ f w).det) ∧
     HasWeakDirDeriv 1 (fun w => (fderiv ℝ f w) 1) f Set.univ ∧
     HasWeakDirDeriv Complex.I (fun w => (fderiv ℝ f w) Complex.I) f Set.univ := by
-  sorry
+  classical
+  have hfcont : Continuous f := hf.2.1.isHomeomorph.continuous
+  -- (1) Almost-everywhere total differentiability via Stepanov, from the finite metric upper
+  -- derivative (`ae_finite_metric_derivative`).
+  have hdiff : ∀ᵐ w : ℂ, DifferentiableAt ℝ f w :=
+    RiemannDynamics.Stepanov.ae_differentiableAt_of_ae_limsup_slope_lt_top
+      hf.ae_finite_metric_derivative
+  -- The pointwise dilatation bound together with nondegeneracy of the Jacobian.
+  have hdil := hf.ae_dilatation_bound
+  -- (3) The dilatation conjunct.
+  have hdil3 : ∀ᵐ w : ℂ, ‖fderiv ℝ f w‖ ^ 2 ≤ K * (fderiv ℝ f w).det := by
+    filter_upwards [hdil] with w hw using hw.1
+  -- (2) Positivity of the Jacobian from sense-preservation and nondegeneracy.
+  have hdetpos : ∀ᵐ w : ℂ, 0 < (fderiv ℝ f w).det := by
+    refine hf.2.1.ae_det_pos ?_
+    filter_upwards [hdiff, hdil] with w hd hw using ⟨hd, hw.2⟩
+  -- The forward ACL data and the `L²_loc` line partials.
+  obtain ⟨hacx, hacy⟩ := hf.ae_slice_absolutelyContinuous
+  obtain ⟨hL2x, hL2y⟩ := hf.memLpLocOn_partials
+  -- `L²_loc ⟹ L¹_loc` on compacts supplies the local integrability the weak-gradient bridge needs.
+  have hLIofL2 : ∀ {h : ℂ → ℂ}, MemLpLocOn h (2 : ℝ≥0∞) Set.univ → LocallyIntegrable h := by
+    intro h hh
+    rw [MeasureTheory.locallyIntegrable_iff]
+    intro Kc hKc
+    have hmem : MemLp h (2 : ℝ≥0∞) (volume.restrict Kc) := hh Kc (Set.subset_univ _) hKc
+    have : IsFiniteMeasure (volume.restrict Kc) := by
+      constructor; rw [Measure.restrict_apply_univ]; exact hKc.measure_lt_top
+    exact (hmem.mono_exponent (by norm_num)).integrable (le_refl 1)
+  have hgxLI : LocallyIntegrable (fun w => (fderiv ℝ f w) 1) := hLIofL2 hL2x
+  have hgyLI : LocallyIntegrable (fun w => (fderiv ℝ f w) Complex.I) := hLIofL2 hL2y
+  -- (4),(5) The two weak directional derivatives, via the proven slice-AC ⟹ weak-gradient bridge.
+  have hwg : HasWeakGradient (fun w => (fderiv ℝ f w) 1)
+      (fun w => (fderiv ℝ f w) Complex.I) f Set.univ :=
+    hasWeakGradient_of_aeSliceAC hfcont hdiff hgxLI hgyLI hacx hacy
+  exact ⟨hdiff, hdetpos, hdil3, hwg.1, hwg.2⟩
 
 /-- **Reverse length–area (geometric ⇒ ACL).** A geometric `K`-quasiconformal map is
 absolutely continuous on almost every horizontal and vertical line, with `x`- and

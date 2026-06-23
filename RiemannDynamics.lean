@@ -104,6 +104,7 @@ import RiemannDynamics.QC.LengthArea
 import RiemannDynamics.QC.LengthAreaInverse
 import RiemannDynamics.QC.ReverseLengthAreaForward
 import RiemannDynamics.QC.ReverseLengthArea
+import RiemannDynamics.QC.ReverseLengthAreaEnergy
 import RiemannDynamics.QC.InverseQC
 import RiemannDynamics.QC.MultiplicityAreaFormula
 import RiemannDynamics.QC.GeometricDifferentiable

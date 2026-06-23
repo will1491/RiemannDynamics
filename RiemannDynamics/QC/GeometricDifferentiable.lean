@@ -894,7 +894,7 @@ its Lebesgue/interior points, while the measure-zero boundary set is irrelevant 
 theorem cross_bound_of_rhoPotential {ρ σ : ℂ → ℝ≥0∞}
     {u : ℂ → ℝ} {K : ℝ≥0} (hσm : Measurable σ) (hLip : LipschitzWith K u)
     (heik : ∀ᵐ z, σ z * (‖fderiv ℝ u z‖₊ : ℝ≥0∞) ≤ ρ z * σ z)
-    (hlevel : ∀ c ∈ Set.Ioo (0 : ℝ) 1,
+    (hlevel : ∀ᵐ c ∂(volume.restrict (Set.Ioo (0 : ℝ) 1)),
       1 ≤ ∫⁻ z in u ⁻¹' {c}, σ z ∂(MeasureTheory.Measure.hausdorffMeasure 1 : Measure ℂ)) :
     1 ≤ ∫⁻ z, ρ z * σ z := by
   classical
@@ -907,22 +907,29 @@ theorem cross_bound_of_rhoPotential {ρ σ : ℂ → ℝ≥0∞}
   have hlevel_int :
       (1 : ℝ≥0∞) ≤ ∫⁻ c, (∫⁻ z in u ⁻¹' {c}, σ z
         ∂(MeasureTheory.Measure.hausdorffMeasure 1 : Measure ℂ)) := by
-    -- Lower-bound the integrand *pointwise* by the indicator of `(0, 1)` (no measurability of the
-    -- inner integral needed), then evaluate the indicator integral.
-    have hpt : ∀ c : ℝ, (Set.Ioo (0:ℝ) 1).indicator (fun _ => (1 : ℝ≥0∞)) c
+    -- Lower-bound the integrand *a.e.* by the indicator of `(0, 1)`, then evaluate the indicator
+    -- integral. The level bound `1 ≤ (∫_{u=c} σ)` holds for a.e. `c ∈ (0,1)` (by `hlevel`); off
+    -- `(0,1)` the indicator vanishes so the bound is trivial.
+    -- Turn the restricted-a.e. level bound into a global a.e. implication on `c ∈ (0,1)`.
+    have hlevel' : ∀ᵐ c ∂(volume : Measure ℝ), c ∈ Set.Ioo (0 : ℝ) 1 →
+        1 ≤ ∫⁻ z in u ⁻¹' {c}, σ z
+            ∂(MeasureTheory.Measure.hausdorffMeasure 1 : Measure ℂ) :=
+      (ae_restrict_iff' measurableSet_Ioo).1 hlevel
+    have hpt : ∀ᵐ c ∂(volume : Measure ℝ),
+        (Set.Ioo (0:ℝ) 1).indicator (fun _ => (1 : ℝ≥0∞)) c
         ≤ ∫⁻ z in u ⁻¹' {c}, σ z
             ∂(MeasureTheory.Measure.hausdorffMeasure 1 : Measure ℂ) := by
-      intro c
-      by_cases hc : c ∈ Set.Ioo (0:ℝ) 1
-      · rw [Set.indicator_of_mem hc]; exact hlevel c hc
-      · rw [Set.indicator_of_notMem hc]; exact zero_le _
+      filter_upwards [hlevel'] with c hc
+      by_cases hcmem : c ∈ Set.Ioo (0:ℝ) 1
+      · rw [Set.indicator_of_mem hcmem]; exact hc hcmem
+      · rw [Set.indicator_of_notMem hcmem]; exact zero_le _
     calc (1 : ℝ≥0∞)
         = ∫⁻ c, (Set.Ioo (0:ℝ) 1).indicator (fun _ => (1 : ℝ≥0∞)) c := by
           rw [lintegral_indicator measurableSet_Ioo, setLIntegral_const, Real.volume_Ioo]
           norm_num
       _ ≤ ∫⁻ c, (∫⁻ z in u ⁻¹' {c}, σ z
             ∂(MeasureTheory.Measure.hausdorffMeasure 1 : Measure ℂ)) :=
-          lintegral_mono hpt
+          lintegral_mono_ae hpt
   -- Chain: 1 ≤ ∫⁻ c (level) ≤ ∫⁻ σ‖∇u‖ ≤ ∫⁻ ρσ.
   exact hlevel_int.trans (hcoarea.trans hgrad_le)
 
@@ -1156,12 +1163,1053 @@ theorem norm_fderiv_cappedRhoPotential_le {Kqc : ℝ} (hf : IsHomeomorph f)
         ≤ ((ρ z).toNNReal : ℝ≥0∞) := by exact_mod_cast hnn
       _ = ρ z := ENNReal.coe_toNNReal htop
 
+/-! ### Point-set topology of the plane-separation core (fully proven, Brouwer-free)
+
+The lemmas in this section establish the abstract level-continuum existence statement
+`rect_level_continuum` via the genuinely two-dimensional boundary-bumping crux `rectLevel_no_split`
+(the corrected, **true** `hsep`-form — see its docstring for the FALSE earlier version it replaces).
+**The entire section is proven and axiom-clean**: the rectangle geometry
+(`rectLevel_isCompact_rect`, `rectLevel_isConnected_rect`), the **Šura–Bura quasi-component
+separation** (`rectLevel_exists_isClopen_separating`) and component-extraction
+(`rectLevel_split_of_no_continuum`), the continuous-argument confinement lemmas
+(`confined_{cos,sin}_{pos,neg}_branch`) and the winding contradiction
+(`square_crossing_contradiction`), assembled in `rectLevel_no_split` by the gap-threading route.
+The sole non-elementary input is the continuous logarithm of a nonvanishing map on the contractible
+rectangle (`continuous_log_lift_param_of_continuous_ne_zero`), which is strictly weaker than
+Brouwer and already proven axiom-clean in the repository. -/
+
+/-- The closed coordinate rectangle `[a,b] × [s,t]` in `ℂ` (used only in this section). -/
+private def rectLevelRect (a b s t : ℝ) : Set ℂ :=
+  {z : ℂ | (a ≤ z.re ∧ z.re ≤ b) ∧ (s ≤ z.im ∧ z.im ≤ t)}
+
+private theorem rectLevel_continuous_mk_left (s : ℝ) :
+    Continuous (fun x : ℝ => Complex.mk x s) := by
+  have : (fun x : ℝ => Complex.mk x s) = (fun x : ℝ => (x : ℂ) + s * Complex.I) := by
+    funext x; apply Complex.ext <;> simp
+  rw [this]; fun_prop
+
+/-- A single clopen neighbourhood of `x` disjoint from a closed `Q`, given that the connected
+component of `x` is disjoint from `Q`. (Compact Hausdorff quasi-component step.) -/
+private theorem rectLevel_exists_clopen_nbhd_disjoint {K : Type*} [TopologicalSpace K] [T2Space K]
+    [CompactSpace K] {Q : Set K} (hQc : IsClosed Q) {x : K}
+    (hxQ : Disjoint (connectedComponent x) Q) :
+    ∃ C : Set K, IsClopen C ∧ x ∈ C ∧ Disjoint C Q := by
+  rw [connectedComponent_eq_iInter_isClopen x] at hxQ
+  have hQcompact : IsCompact Q := hQc.isCompact
+  rw [disjoint_iff_inter_eq_empty] at hxQ
+  have hempty : (Q ∩ ⋂ s : { s : Set K // IsClopen s ∧ x ∈ s }, (s : Set K)) = ∅ := by
+    rw [inter_comm]; exact hxQ
+  by_contra hcon
+  push Not at hcon
+  have hne : (Q ∩ ⋂ s : { s : Set K // IsClopen s ∧ x ∈ s }, (s : Set K)).Nonempty := by
+    apply hQcompact.inter_iInter_nonempty
+    · intro i; exact i.2.1.1
+    · intro u
+      set C : Set K := ⋂ i ∈ u, (i : Set K) with hC
+      have hCclopen : IsClopen C := by rw [hC]; exact isClopen_biInter_finset (fun i _ => i.2.1)
+      have hxC : x ∈ C := by rw [hC]; exact mem_biInter (fun i _ => i.2.2)
+      have := hcon C hCclopen hxC
+      rw [not_disjoint_iff] at this
+      obtain ⟨z, hzC, hzQ⟩ := this
+      exact ⟨z, hzQ, hzC⟩
+  rw [hempty] at hne
+  exact absurd hne (by simp)
+
+/-- **Šura–Bura separation.** In a compact Hausdorff space, if `P` and `Q` are closed and no
+preconnected subset meets both, then a clopen set contains `P` and is disjoint from `Q`.
+
+This is the genuinely-missing-from-Mathlib continuum-theory primitive; it is **proven** here
+(axiom-clean) from `connectedComponent_eq_iInter_isClopen` plus compactness. -/
+private theorem rectLevel_exists_isClopen_separating {K : Type*} [TopologicalSpace K] [T2Space K]
+    [CompactSpace K] {P Q : Set K} (hPc : IsClosed P) (hQc : IsClosed Q)
+    (hsep : ∀ S : Set K, IsPreconnected S → (S ∩ P).Nonempty → (S ∩ Q).Nonempty → False) :
+    ∃ U : Set K, IsClopen U ∧ P ⊆ U ∧ Disjoint U Q := by
+  have hcomp : ∀ x ∈ P, Disjoint (connectedComponent x) Q := by
+    intro x hxP
+    rw [disjoint_iff_inter_eq_empty]
+    by_contra hne
+    rw [← Ne, ← nonempty_iff_ne_empty] at hne
+    exact hsep (connectedComponent x) isConnected_connectedComponent.isPreconnected
+      ⟨x, mem_connectedComponent, hxP⟩ hne
+  choose! C hCclopen hxC hCQ using fun x (hx : x ∈ P) =>
+    rectLevel_exists_clopen_nbhd_disjoint hQc (hcomp x hx)
+  have hPcompact : IsCompact P := hPc.isCompact
+  obtain ⟨u, husub, hufin, hucover⟩ := hPcompact.elim_finite_subcover_image
+    (b := P) (c := C) (fun x hx => (hCclopen x hx).isOpen)
+    (fun x hx => mem_biUnion hx (hxC x hx))
+  refine ⟨⋃ x ∈ u, C x, ?_, hucover, ?_⟩
+  · exact Set.Finite.isClopen_biUnion hufin (fun x hx => hCclopen x (husub hx))
+  · rw [Set.disjoint_left]
+    rintro z hz hzQ
+    rw [mem_iUnion₂] at hz
+    obtain ⟨x, hxu, hzCx⟩ := hz
+    exact (hCQ x (husub hxu)).le_bot ⟨hzCx, hzQ⟩
+
+private theorem rectLevel_rect_eq_reProdIm (a b s t : ℝ) :
+    rectLevelRect a b s t = Set.Icc a b ×ℂ Set.Icc s t := by
+  ext z; simp only [rectLevelRect, mem_setOf_eq, Complex.mem_reProdIm, Set.mem_Icc]
+
+private theorem rectLevel_isCompact_rect (a b s t : ℝ) : IsCompact (rectLevelRect a b s t) := by
+  rw [rectLevel_rect_eq_reProdIm]; exact (isCompact_Icc).reProdIm (isCompact_Icc)
+
+private theorem rectLevel_isClosed_rect (a b s t : ℝ) : IsClosed (rectLevelRect a b s t) :=
+  (rectLevel_isCompact_rect a b s t).isClosed
+
+private theorem rectLevel_isConnected_rect {a b s t : ℝ} (hab : a ≤ b) (hst : s ≤ t) :
+    IsConnected (rectLevelRect a b s t) := by
+  have hpre : rectLevelRect a b s t = Complex.equivRealProdCLM.toHomeomorph ⁻¹'
+      (Set.Icc a b ×ˢ Set.Icc s t) := by
+    ext z
+    constructor
+    · intro h
+      simp only [Set.mem_preimage, Set.mem_prod, Set.mem_Icc,
+        ContinuousLinearEquiv.coe_toHomeomorph, Complex.equivRealProdCLM_apply]
+      exact ⟨⟨h.1.1, h.1.2⟩, ⟨h.2.1, h.2.2⟩⟩
+    · intro h
+      simp only [Set.mem_preimage, Set.mem_prod, Set.mem_Icc,
+        ContinuousLinearEquiv.coe_toHomeomorph, Complex.equivRealProdCLM_apply] at h
+      exact ⟨⟨h.1.1, h.1.2⟩, ⟨h.2.1, h.2.2⟩⟩
+  rw [hpre, Homeomorph.isConnected_preimage]
+  exact (isConnected_Icc hab).prod (isConnected_Icc hst)
+
+/-- On the horizontal segment at height `lvl`, the continuous `v` takes every value between its
+endpoint values; in particular it attains `c ∈ (0,1)` when the endpoints are `0`, `1` (1-D IVT). -/
+private theorem rectLevel_exists_mem_level_on_edge {a b lvl : ℝ} (hab : a ≤ b) {v : ℂ → ℝ}
+    (hvcont : Continuous v) (hv0 : v (Complex.mk a lvl) = 0) (hv1 : v (Complex.mk b lvl) = 1)
+    {c : ℝ} (hc : c ∈ Set.Ioo (0 : ℝ) 1) :
+    ∃ x ∈ Set.Icc a b, v (Complex.mk x lvl) = c := by
+  have hcont : ContinuousOn (fun x : ℝ => v (Complex.mk x lvl)) (Set.Icc a b) :=
+    (hvcont.comp (rectLevel_continuous_mk_left lvl)).continuousOn
+  have hsub : Set.Icc (v (Complex.mk a lvl)) (v (Complex.mk b lvl)) ⊆
+      (fun x : ℝ => v (Complex.mk x lvl)) '' Set.Icc a b := intermediate_value_Icc hab hcont
+  have hcmem : c ∈ Set.Icc (v (Complex.mk a lvl)) (v (Complex.mk b lvl)) := by
+    rw [hv0, hv1]; exact ⟨le_of_lt hc.1, le_of_lt hc.2⟩
+  obtain ⟨x, hx, hvx⟩ := hsub hcmem
+  exact ⟨x, hx, hvx⟩
+
+/-- If a compact `K ⊆ ℂ` has nonempty closed subsets `Bot, Top` not joined by any preconnected
+subset of `K`, then `K` splits into two disjoint compacta `K₁ ⊇ Bot`, `K₂ ⊇ Top` with union `K`.
+(Šura–Bura in the subtype, pushed to ambient `ℂ`.) -/
+private theorem rectLevel_split_of_no_continuum {K Bot Top : Set ℂ} (hK : IsCompact K)
+    (hBot : Bot ⊆ K) (hTop : Top ⊆ K) (hBotcl : IsClosed Bot) (hTopcl : IsClosed Top)
+    (hsep : ∀ S : Set ℂ, IsPreconnected S → S ⊆ K →
+      (S ∩ Bot).Nonempty → (S ∩ Top).Nonempty → False) :
+    ∃ K₁ K₂ : Set ℂ, IsCompact K₁ ∧ IsCompact K₂ ∧ Disjoint K₁ K₂ ∧
+      K₁ ∪ K₂ = K ∧ Bot ⊆ K₁ ∧ Top ⊆ K₂ := by
+  haveI : CompactSpace K := isCompact_iff_compactSpace.mp hK
+  set P : Set K := Subtype.val ⁻¹' Bot with hP
+  set Q : Set K := Subtype.val ⁻¹' Top with hQ
+  have hPc : IsClosed P := hBotcl.preimage continuous_subtype_val
+  have hQc : IsClosed Q := hTopcl.preimage continuous_subtype_val
+  have hsep' : ∀ S : Set K, IsPreconnected S → (S ∩ P).Nonempty → (S ∩ Q).Nonempty → False := by
+    intro S hScon hSP hSQ
+    refine hsep (Subtype.val '' S) (hScon.image _ continuous_subtype_val.continuousOn)
+      (Subtype.coe_image_subset _ _) ?_ ?_
+    · obtain ⟨z, hzS, hzP⟩ := hSP
+      exact ⟨z.1, ⟨z, hzS, rfl⟩, hzP⟩
+    · obtain ⟨z, hzS, hzQ⟩ := hSQ
+      exact ⟨z.1, ⟨z, hzS, rfl⟩, hzQ⟩
+  obtain ⟨U, hUclopen, hPU, hUQ⟩ := rectLevel_exists_isClopen_separating hPc hQc hsep'
+  refine ⟨Subtype.val '' U, Subtype.val '' Uᶜ, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · exact (hUclopen.1.isCompact).image continuous_subtype_val
+  · exact (hUclopen.compl.1.isCompact).image continuous_subtype_val
+  · rw [Set.disjoint_left]
+    rintro z ⟨x, hxU, rfl⟩ ⟨y, hyU, hxy⟩
+    have : y = x := Subtype.val_injective hxy
+    rw [this] at hyU; exact hyU hxU
+  · rw [← Set.image_union, Set.union_compl_self, Set.image_univ, Subtype.range_coe]
+  · intro z hz
+    have hzK : z ∈ K := hBot hz
+    refine ⟨⟨z, hzK⟩, hPU ?_, rfl⟩; simpa [hP] using hz
+  · intro z hz
+    have hzK : z ∈ K := hTop hz
+    refine ⟨⟨z, hzK⟩, ?_, rfl⟩
+    have hzQ : (⟨z, hzK⟩ : K) ∈ Q := by simpa [hQ] using hz
+    rw [Set.mem_compl_iff]
+    intro hzU; exact (Set.disjoint_left.mp hUQ hzU) hzQ
+
+/-! ### Continuous-argument confinement and the square-crossing winding contradiction
+
+The lemmas below provide the genuinely two-dimensional ingredient of the boundary-bumping crux,
+**Brouwer-free**: a single-valued continuous argument `θ` on the rectangle whose cosine/sine are
+sign-constrained on the four edges (`Im φ > 0` on the bottom, `Re φ > 0` on the right, `Im φ < 0`
+on the top, `Re φ < 0` on the left) is impossible, because the four half-plane confinements force a
+net winding of `±2π` while single-valuedness forces winding `0`. The only non-elementary input is
+the **continuous logarithm** of a nonvanishing map on the (simply connected) rectangle, which is the
+already-proven, axiom-clean `continuous_log_lift_param_of_continuous_ne_zero`; the confinement
+lemmas themselves are pure 1-D intermediate-value arguments. -/
+
+/-- A continuous real function on `[p, q]` whose cosine is everywhere positive cannot move by `π`
+or more between the endpoints (its image stays in a single `cos`-positive open branch). -/
+private theorem confined_cos_pos {p q : ℝ} (hpq : p ≤ q) {f : ℝ → ℝ}
+    (hf : ContinuousOn f (Set.Icc p q))
+    (hcos : ∀ u ∈ Set.Icc p q, 0 < Real.cos (f u)) :
+    |f q - f p| < π := by
+  by_contra hcon
+  rw [not_lt] at hcon  -- π ≤ |f q - f p|
+  set lo := min (f p) (f q) with hlo
+  set hi := max (f p) (f q) with hhi
+  have hlen : π ≤ hi - lo := by
+    rw [hlo, hhi]
+    rcases le_total (f p) (f q) with h | h
+    · rw [max_eq_right h, min_eq_left h]
+      rw [abs_of_nonneg (by linarith : (0:ℝ) ≤ f q - f p)] at hcon; linarith
+    · rw [max_eq_left h, min_eq_right h]
+      rw [abs_of_nonpos (by linarith : f q - f p ≤ 0)] at hcon; linarith
+  set k : ℤ := ⌈ lo / π - 1/2 ⌉ with hk
+  set c : ℝ := (2 * (k:ℝ) + 1) * π / 2 with hc
+  have hpi : 0 < π := Real.pi_pos
+  have hc_ge_lo : lo ≤ c := by
+    have h1 : lo / π - 1/2 ≤ (k:ℝ) := Int.le_ceil _
+    have : lo / π ≤ (k:ℝ) + 1/2 := by linarith
+    have h2 : lo ≤ ((k:ℝ) + 1/2) * π := by
+      rw [div_le_iff₀ hpi] at this; linarith
+    rw [hc]; nlinarith
+  have hc_le_hi : c ≤ hi := by
+    have h1 : (k:ℝ) < lo / π - 1/2 + 1 := Int.ceil_lt_add_one _
+    have h2 : (k:ℝ) + 1/2 < lo / π + 1 := by linarith
+    have h3 : ((k:ℝ) + 1/2) * π < (lo / π + 1) * π :=
+      mul_lt_mul_of_pos_right h2 hpi
+    have h4 : (lo / π + 1) * π = lo + π := by field_simp
+    have hclt : c < lo + π := by rw [hc]; nlinarith [h3, h4]
+    linarith [hlen]
+  have hcos_c : Real.cos c = 0 := by
+    rw [Real.cos_eq_zero_iff]; exact ⟨k, by rw [hc]⟩
+  have hc_mem : c ∈ Set.uIcc (f p) (f q) := by
+    rw [Set.mem_uIcc]
+    rcases le_total (f p) (f q) with h | h
+    · left; refine ⟨?_, ?_⟩
+      · have : lo = f p := min_eq_left h; rw [← this]; exact hc_ge_lo
+      · have : hi = f q := max_eq_right h; rw [← this]; exact hc_le_hi
+    · right; refine ⟨?_, ?_⟩
+      · have : lo = f q := min_eq_right h; rw [← this]; exact hc_ge_lo
+      · have : hi = f p := max_eq_left h; rw [← this]; exact hc_le_hi
+  have huIcc : Set.uIcc p q = Set.Icc p q := Set.uIcc_of_le hpq
+  have hf' : ContinuousOn f (Set.uIcc p q) := by rw [huIcc]; exact hf
+  obtain ⟨u, hu_mem, hu_eq⟩ := intermediate_value_uIcc hf' hc_mem
+  rw [huIcc] at hu_mem
+  have : 0 < Real.cos c := hu_eq ▸ hcos u hu_mem
+  rw [hcos_c] at this
+  exact lt_irrefl 0 this
+
+/-- `sin > 0` confinement (bottom edge): obtained from `confined_cos_pos` by a `π/2` phase shift. -/
+private theorem confined_sin_pos {p q : ℝ} (hpq : p ≤ q) {f : ℝ → ℝ}
+    (hf : ContinuousOn f (Set.Icc p q))
+    (hsin : ∀ u ∈ Set.Icc p q, 0 < Real.sin (f u)) :
+    |f q - f p| < π := by
+  have key := confined_cos_pos hpq (f := fun u => f u - π/2)
+    ((hf.sub continuousOn_const)) ?_
+  · have : (f q - π/2) - (f p - π/2) = f q - f p := by ring
+    rwa [this] at key
+  · intro u hu
+    have : Real.cos (f u - π/2) = Real.sin (f u) := by
+      rw [show f u - π/2 = -(π/2 - f u) by ring, Real.cos_neg, Real.cos_pi_div_two_sub]
+    rw [this]; exact hsin u hu
+
+/-- `sin < 0` confinement (top edge). -/
+private theorem confined_sin_neg {p q : ℝ} (hpq : p ≤ q) {f : ℝ → ℝ}
+    (hf : ContinuousOn f (Set.Icc p q))
+    (hsin : ∀ u ∈ Set.Icc p q, Real.sin (f u) < 0) :
+    |f q - f p| < π := by
+  have key := confined_cos_pos hpq (f := fun u => f u + π/2)
+    ((hf.add continuousOn_const)) ?_
+  · have : (f q + π/2) - (f p + π/2) = f q - f p := by ring
+    rwa [this] at key
+  · intro u hu
+    have : Real.cos (f u + π/2) = -Real.sin (f u) := Real.cos_add_pi_div_two (f u)
+    rw [this]; linarith [hsin u hu]
+
+/-- `cos < 0` confinement (left edge). -/
+private theorem confined_cos_neg {p q : ℝ} (hpq : p ≤ q) {f : ℝ → ℝ}
+    (hf : ContinuousOn f (Set.Icc p q))
+    (hcos : ∀ u ∈ Set.Icc p q, Real.cos (f u) < 0) :
+    |f q - f p| < π := by
+  have key := confined_cos_pos hpq (f := fun u => f u + π)
+    ((hf.add continuousOn_const)) ?_
+  · have : (f q + π) - (f p + π) = f q - f p := by ring
+    rwa [this] at key
+  · intro u hu
+    have : Real.cos (f u + π) = -Real.cos (f u) := Real.cos_add_pi (f u)
+    rw [this]; linarith [hcos u hu]
+
+/-- Branch characterization of `cos x > 0`: `x` lies in a unique open interval
+`(2πk - π/2, 2πk + π/2)`. -/
+private theorem cos_pos_branch {x : ℝ} (hx : 0 < Real.cos x) :
+    ∃ k : ℤ, x ∈ Set.Ioo (2 * π * k - π/2) (2 * π * k + π/2) := by
+  have hpi : 0 < π := Real.pi_pos
+  set n : ℤ := ⌊ x/π + 1/2 ⌋ with hn
+  have hfloor_le : (n:ℝ) ≤ x/π + 1/2 := Int.floor_le _
+  have hlt_floor : x/π + 1/2 < n + 1 := Int.lt_floor_add_one _
+  have hdiv : x / π * π = x := div_mul_cancel₀ x (ne_of_gt hpi)
+  have hxlo : (n:ℝ) * π - π/2 ≤ x := by
+    have := mul_le_mul_of_nonneg_right hfloor_le (le_of_lt hpi)
+    rw [add_mul, hdiv] at this; nlinarith [this]
+  have hxhi : x < (n:ℝ) * π + π/2 := by
+    have := mul_lt_mul_of_pos_right hlt_floor hpi
+    rw [add_mul, hdiv] at this; nlinarith [this]
+  have hcosfac : Real.cos x = (-1)^n * Real.cos (x - n * π) := by
+    have : x = (x - n*π) + n*π := by ring
+    rw [this, Real.cos_add_int_mul_pi]; ring_nf
+  have hxlo' : (n:ℝ) * π - π/2 < x := by
+    rcases lt_or_eq_of_le hxlo with h | h
+    · exact h
+    · exfalso
+      have hcosx0 : Real.cos x = 0 := by
+        rw [← h, Real.cos_eq_zero_iff]; exact ⟨n - 1, by push_cast; ring⟩
+      rw [hcosx0] at hx; exact lt_irrefl 0 hx
+  have hcos_t : 0 < Real.cos (x - n*π) := by
+    apply Real.cos_pos_of_mem_Ioo
+    rw [Set.mem_Ioo]
+    refine ⟨?_, ?_⟩
+    · nlinarith [hxlo']
+    · nlinarith [hxhi]
+  have hsign : (0:ℝ) < (-1:ℝ)^n := by
+    rcases lt_trichotomy ((-1:ℝ)^n) 0 with h | h | h
+    · exfalso; nlinarith [hcosfac, hx, hcos_t, mul_neg_of_neg_of_pos h hcos_t]
+    · exfalso; rw [hcosfac, h, zero_mul] at hx; exact lt_irrefl 0 hx
+    · exact h
+  have hneven : Even n := by
+    rcases Int.even_or_odd n with he | ho
+    · exact he
+    · exfalso; rw [ho.neg_one_zpow] at hsign; norm_num at hsign
+  obtain ⟨k, hk⟩ := hneven
+  have hnk : (n:ℝ) = 2 * k := by rw [hk]; push_cast; ring
+  refine ⟨k, ?_, ?_⟩
+  · rw [hnk] at hxlo'; nlinarith [hxlo']
+  · rw [hnk] at hxhi; nlinarith [hxhi]
+
+/-- A continuous `f` on `[p, q]` with `cos∘f > 0` everywhere lies in a single open
+`cos`-positive branch `(2πk - π/2, 2πk + π/2)`. -/
+private theorem confined_cos_pos_branch {p q : ℝ} (hpq : p ≤ q) {f : ℝ → ℝ}
+    (hf : ContinuousOn f (Set.Icc p q))
+    (hcos : ∀ u ∈ Set.Icc p q, 0 < Real.cos (f u)) :
+    ∃ k : ℤ, ∀ u ∈ Set.Icc p q, f u ∈ Set.Ioo (2 * π * k - π/2) (2 * π * k + π/2) := by
+  have hpi : 0 < π := Real.pi_pos
+  have hp_mem : p ∈ Set.Icc p q := Set.left_mem_Icc.mpr hpq
+  obtain ⟨k, hk⟩ := cos_pos_branch (hcos p hp_mem)
+  refine ⟨k, fun u hu => ?_⟩
+  obtain ⟨k', hk'⟩ := cos_pos_branch (hcos u hu)
+  have hpu : p ≤ u := hu.1
+  have hsub : Set.Icc p u ⊆ Set.Icc p q := Set.Icc_subset_Icc le_rfl hu.2
+  have hbnd : |f u - f p| < π :=
+    confined_cos_pos hpu (hf.mono hsub) (fun w hw => hcos w (hsub hw))
+  rw [abs_lt] at hbnd
+  have hkeq : k' = k := by
+    by_contra hne
+    rcases lt_or_gt_of_ne hne with hlt | hgt
+    · have hk'le : (k':ℝ) ≤ (k:ℝ) - 1 := by
+        have : k' ≤ k - 1 := by omega
+        exact_mod_cast this
+      have h1 : f u < 2 * π * k' + π/2 := hk'.2
+      have h2 : 2 * π * k - π/2 < f p := hk.1
+      nlinarith [hbnd.1, h1, h2, hk'le, hpi]
+    · have hkle : (k:ℝ) ≤ (k':ℝ) - 1 := by
+        have : k ≤ k' - 1 := by omega
+        exact_mod_cast this
+      have h1 : 2 * π * k' - π/2 < f u := hk'.1
+      have h2 : f p < 2 * π * k + π/2 := hk.2
+      nlinarith [hbnd.2, h1, h2, hkle, hpi]
+  rw [← hkeq]; exact hk'
+
+/-- Branch confinement `sin > 0`: branch `(2πk, 2πk + π)`. -/
+private theorem confined_sin_pos_branch {p q : ℝ} (hpq : p ≤ q) {f : ℝ → ℝ}
+    (hf : ContinuousOn f (Set.Icc p q))
+    (hsin : ∀ u ∈ Set.Icc p q, 0 < Real.sin (f u)) :
+    ∃ k : ℤ, ∀ u ∈ Set.Icc p q, f u ∈ Set.Ioo (2 * π * k) (2 * π * k + π) := by
+  obtain ⟨k, hk⟩ := confined_cos_pos_branch hpq (f := fun u => f u - π/2)
+    (hf.sub continuousOn_const)
+    (fun u hu => by
+      have : Real.cos (f u - π/2) = Real.sin (f u) := by
+        rw [show f u - π/2 = -(π/2 - f u) by ring, Real.cos_neg, Real.cos_pi_div_two_sub]
+      rw [this]; exact hsin u hu)
+  refine ⟨k, fun u hu => ?_⟩
+  have := hk u hu
+  rw [Set.mem_Ioo] at this ⊢
+  constructor <;> [nlinarith [this.1]; nlinarith [this.2]]
+
+/-- Branch confinement `sin < 0`: branch `(2πk - π, 2πk)`. -/
+private theorem confined_sin_neg_branch {p q : ℝ} (hpq : p ≤ q) {f : ℝ → ℝ}
+    (hf : ContinuousOn f (Set.Icc p q))
+    (hsin : ∀ u ∈ Set.Icc p q, Real.sin (f u) < 0) :
+    ∃ k : ℤ, ∀ u ∈ Set.Icc p q, f u ∈ Set.Ioo (2 * π * k - π) (2 * π * k) := by
+  obtain ⟨k, hk⟩ := confined_cos_pos_branch hpq (f := fun u => f u + π/2)
+    (hf.add continuousOn_const)
+    (fun u hu => by
+      have : Real.cos (f u + π/2) = -Real.sin (f u) := Real.cos_add_pi_div_two (f u)
+      rw [this]; linarith [hsin u hu])
+  refine ⟨k, fun u hu => ?_⟩
+  have := hk u hu
+  rw [Set.mem_Ioo] at this ⊢
+  constructor <;> [nlinarith [this.1]; nlinarith [this.2]]
+
+/-- Branch confinement `cos < 0`: branch `(2πk + π/2, 2πk + 3π/2)`. -/
+private theorem confined_cos_neg_branch {p q : ℝ} (hpq : p ≤ q) {f : ℝ → ℝ}
+    (hf : ContinuousOn f (Set.Icc p q))
+    (hcos : ∀ u ∈ Set.Icc p q, Real.cos (f u) < 0) :
+    ∃ k : ℤ, ∀ u ∈ Set.Icc p q, f u ∈ Set.Ioo (2 * π * k + π/2) (2 * π * k + 3*π/2) := by
+  obtain ⟨k, hk⟩ := confined_cos_pos_branch hpq (f := fun u => f u - π)
+    (hf.sub continuousOn_const)
+    (fun u hu => by
+      have : Real.cos (f u - π) = -Real.cos (f u) := by
+        rw [show f u - π = -(π - f u) by ring, Real.cos_neg, Real.cos_pi_sub]
+      rw [this]; linarith [hcos u hu])
+  refine ⟨k, fun u hu => ?_⟩
+  have := hk u hu
+  rw [Set.mem_Ioo] at this ⊢
+  constructor <;> [nlinarith [this.1]; nlinarith [this.2]]
+
+/-- **Square-crossing winding contradiction.** A single-valued continuous argument `θ` on the
+rectangle `[a,b] × [s,t]` (`a ≤ b`, `s ≤ t`) whose `sin/cos` are sign-constrained on the four
+edges — `sin (θ · s) > 0` on the bottom, `cos (θ b ·) > 0` on the right, `sin (θ · t) < 0` on the
+top, `cos (θ a ·) < 0` on the left — is impossible: the four half-plane confinements force a winding
+of `2π`, contradicting single-valuedness. (No Brouwer; pure 1-D intermediate-value argument.) -/
+private theorem square_crossing_contradiction {a b s t : ℝ} (hab : a ≤ b) (hst : s ≤ t)
+    (θ : ℝ → ℝ → ℝ)
+    (hbot : ContinuousOn (fun x => θ x s) (Set.Icc a b))
+    (hrgt : ContinuousOn (fun y => θ b y) (Set.Icc s t))
+    (htop : ContinuousOn (fun x => θ x t) (Set.Icc a b))
+    (hlft : ContinuousOn (fun y => θ a y) (Set.Icc s t))
+    (Hbot : ∀ x ∈ Set.Icc a b, 0 < Real.sin (θ x s))
+    (Hrgt : ∀ y ∈ Set.Icc s t, 0 < Real.cos (θ b y))
+    (Htop : ∀ x ∈ Set.Icc a b, Real.sin (θ x t) < 0)
+    (Hlft : ∀ y ∈ Set.Icc s t, Real.cos (θ a y) < 0) :
+    False := by
+  have hpi : 0 < π := Real.pi_pos
+  set A := θ a s with hA
+  set B := θ b s with hB
+  set C := θ b t with hC
+  set D := θ a t with hD
+  have ha_mem_ab : a ∈ Set.Icc a b := Set.left_mem_Icc.mpr hab
+  have hb_mem_ab : b ∈ Set.Icc a b := Set.right_mem_Icc.mpr hab
+  have hs_mem_st : s ∈ Set.Icc s t := Set.left_mem_Icc.mpr hst
+  have ht_mem_st : t ∈ Set.Icc s t := Set.right_mem_Icc.mpr hst
+  obtain ⟨kb, hkb⟩ := confined_sin_pos_branch hab hbot Hbot
+  obtain ⟨kr, hkr⟩ := confined_cos_pos_branch hst hrgt Hrgt
+  obtain ⟨kt, hkt⟩ := confined_sin_neg_branch hab htop Htop
+  obtain ⟨kl, hkl⟩ := confined_cos_neg_branch hst hlft Hlft
+  have hA_bot : A ∈ Set.Ioo (2*π*kb) (2*π*kb + π) := hkb a ha_mem_ab
+  have hA_lft : A ∈ Set.Ioo (2*π*kl + π/2) (2*π*kl + 3*π/2) := hkl s hs_mem_st
+  have hB_bot : B ∈ Set.Ioo (2*π*kb) (2*π*kb + π) := hkb b hb_mem_ab
+  have hB_rgt : B ∈ Set.Ioo (2*π*kr - π/2) (2*π*kr + π/2) := hkr s hs_mem_st
+  have hC_rgt : C ∈ Set.Ioo (2*π*kr - π/2) (2*π*kr + π/2) := hkr t ht_mem_st
+  have hC_top : C ∈ Set.Ioo (2*π*kt - π) (2*π*kt) := hkt b hb_mem_ab
+  have hD_top : D ∈ Set.Ioo (2*π*kt - π) (2*π*kt) := hkt a ha_mem_ab
+  have hD_lft : D ∈ Set.Ioo (2*π*kl + π/2) (2*π*kl + 3*π/2) := hkl t ht_mem_st
+  rw [Set.mem_Ioo] at hA_bot hA_lft hB_bot hB_rgt hC_rgt hC_top hD_top hD_lft
+  have int_le : ∀ i j : ℤ, (i:ℝ) < (j:ℝ) + 1 → i ≤ j := by
+    intro i j h
+    have : i < j + 1 := by exact_mod_cast h
+    omega
+  have e_kb_le_kr : kb ≤ kr := by
+    apply int_le; nlinarith [hB_bot.1, hB_rgt.2, hpi]
+  have e_kr_le_kb : kr ≤ kb := by
+    apply int_le; nlinarith [hB_rgt.1, hB_bot.2, hpi]
+  have hkr' : (kr:ℝ) = (kb:ℝ) := by
+    have : kr = kb := le_antisymm e_kr_le_kb e_kb_le_kr; exact_mod_cast this
+  have e_kb_le_kt : kb ≤ kt := by
+    apply int_le; nlinarith [hC_rgt.1, hC_top.2, hpi, hkr']
+  have e_kt_le_kb : kt ≤ kb := by
+    apply int_le; nlinarith [hC_top.1, hC_rgt.2, hpi, hkr']
+  have hkt' : (kt:ℝ) = (kb:ℝ) := by
+    have : kt = kb := le_antisymm e_kt_le_kb e_kb_le_kt; exact_mod_cast this
+  have e_kl_le : kl ≤ kb - 1 := by
+    apply int_le
+    have hlt : (kl:ℝ) < kb := by nlinarith [hD_lft.1, hD_top.2, hpi, hkt']
+    push_cast; linarith
+  have e_kl_ge : kb - 1 ≤ kl := by
+    apply int_le
+    have hlt : (kb:ℝ) < kl + 2 := by nlinarith [hD_top.1, hD_lft.2, hpi, hkt']
+    push_cast; linarith
+  have hkl' : (kl:ℝ) = (kb:ℝ) - 1 := by
+    have : kl = kb - 1 := le_antisymm e_kl_le e_kl_ge; rw [this]; push_cast; ring
+  have hAlo : 2*π*(kb:ℝ) < A := hA_bot.1
+  have hAhi : A < 2*π*(kl:ℝ) + 3*π/2 := hA_lft.2
+  nlinarith [hAlo, hAhi, hpi, hkl']
+
+/-- **The boundary-bumping crux (the genuinely two-dimensional plane-separation core).**
+
+With `Rect = [a,b]×[s,t]`, continuous `v` with `v = 0` on the left edge `{re = a}` and `v = 1` on
+the right edge `{re = b}`, and `c ∈ (0,1)`, the level set `K = Rect ∩ {v = c}` **cannot** have its
+bottom points `{im = s} ∩ K` topologically separated from its top points `{im = t} ∩ K`: there is
+*always* a preconnected subset of `K` meeting both the bottom and the top edge. Equivalently
+(contrapositive, the form proven here): if **no** preconnected `S ⊆ K` meets both the bottom edge
+`{im = s}` and the top edge `{im = t}`, that is a contradiction.
+
+## History — a previously FALSE statement, now corrected
+
+The earlier formalization of this crux took the much weaker hypotheses *"`K` splits as disjoint
+compacta `K₁ ⊔ K₂` with `K₁` meeting the bottom edge and `K₂` meeting the top edge"* and concluded
+`False`. **That statement is FALSE**: take `Rect = [0,3]×[0,1]` and `v` depending only on `re` with
+`v(0) = 0`, `v` rising to `c = ½` at `re = 1`, bulging `> ½` on `(1,2)`, returning to `½` at
+`re = 2`, then rising to `v(3) = 1`. Its level set `K = ({re = 1} ∪ {re = 2}) × [0,1]` is **two
+disjoint full-height segments**; `K₁ = {re = 1} × [0,1]`, `K₂ = {re = 2} × [0,1]` are disjoint
+compacta with `K₁ ∋ (1,0)` (bottom) and `K₂ ∋ (2,1)` (top), satisfying *every* hypothesis of the
+old statement, yet the conclusion `False` is unwarranted — both segments individually join bottom to
+top, so there is no contradiction. The old weak hypotheses dropped the load-bearing separation
+structure (*no preconnected subset of `K` joins bottom to top*) and were satisfiable, making the
+lemma a latent false `sorry`. It is restated here with the correct, **true** hypothesis `hsep`.
+
+## Proof (Brouwer-free, axiom-clean)
+
+This is the classical Steinhaus-chessboard / Šura–Bura plane-separation core. It is proven here
+**without** any Brouwer / Jordan / topological-degree input, by the *gap-threading winding* route:
+
+1. **Šura–Bura split** (`rectLevel_split_of_no_continuum`): the contradiction hypothesis `hsep`
+   gives a clopen-in-`K` decomposition `K = K₁ ⊔ K₂` with `Bot ⊆ K₁`, `Top ⊆ K₂`.
+2. **Urysohn separator** (`exists_continuous_zero_one_of_isClosed`, `ℂ` normal): the disjoint
+   closed sets `P = K₁ ∪ (full bottom edge)` and `Q = K₂ ∪ (full top edge)` (disjointness uses the
+   split inclusions and `s < t`) carry a continuous `η : ℂ → ℝ` with `η = +1` on `P`, `η = −1`
+   on `Q`.
+3. **Nonvanishing field**: `φ z = (v z − c) + i·η z` is nonvanishing on `Rect` (if `v z = c` then
+   `z ∈ K = K₁ ∪ K₂`, where `η = ±1 ≠ 0`), with the four-edge sign pattern `Re φ < 0` (left,
+   `v = 0`), `Re φ > 0` (right, `v = 1`), `Im φ > 0` (bottom, `η = +1`), `Im φ < 0` (top, `η = −1`).
+4. **Continuous logarithm**: since `Rect` is contractible, `φ` admits a global continuous log
+   (`continuous_log_lift_param_of_continuous_ne_zero`, the repository's axiom-clean
+   covering-space lift), so `θ := Im(L)` is a single-valued continuous argument of `φ`.
+5. **Winding contradiction** (`square_crossing_contradiction`): the four-edge sign pattern confines
+   `θ` to consecutive half-plane branches whose corner-matching forces a net winding of `2π`,
+   contradicting that `θ` is single-valued. Each confinement is a pure 1-D intermediate-value
+   argument (`confined_{cos,sin}_{pos,neg}_branch`).
+
+The only non-elementary ingredient is the continuous logarithm of step 4, which is strictly weaker
+than Brouwer (it is the *absence* of a degree obstruction on the contractible square) and is already
+proven axiom-clean in the repository. -/
+private theorem rectLevel_no_split {a b s t : ℝ} (hab : a ≤ b) (hst : s ≤ t)
+    {v : ℂ → ℝ} (hvcont : Continuous v)
+    (hv0 : ∀ z : ℂ, z.re = a → s ≤ z.im → z.im ≤ t → v z = 0)
+    (hv1 : ∀ z : ℂ, z.re = b → s ≤ z.im → z.im ≤ t → v z = 1)
+    {c : ℝ} (hc : c ∈ Set.Ioo (0 : ℝ) 1)
+    (hsep : ∀ S : Set ℂ, IsPreconnected S → S ⊆ rectLevelRect a b s t ∩ v ⁻¹' {c} →
+      (∃ p ∈ S, p.im = s) → (∃ q ∈ S, q.im = t) → False) :
+    False := by
+  have hpi : 0 < π := Real.pi_pos
+  set R : Set ℂ := rectLevelRect a b s t with hR
+  set K : Set ℂ := R ∩ v ⁻¹' {c} with hKdef
+  -- The full bottom/top edges of the rectangle (closed segments at heights `s`, `t`).
+  set botEdge : Set ℂ := {z : ℂ | (a ≤ z.re ∧ z.re ≤ b) ∧ z.im = s} with hbotEdge
+  set topEdge : Set ℂ := {z : ℂ | (a ≤ z.re ∧ z.re ≤ b) ∧ z.im = t} with htopEdge
+  -- Membership helpers in `mk` coordinates.
+  have hmk_re : ∀ x y : ℝ, (Complex.mk x y).re = x := fun _ _ => rfl
+  have hmk_im : ∀ x y : ℝ, (Complex.mk x y).im = y := fun _ _ => rfl
+  -- `v` restricted to a horizontal segment.
+  -- Degenerate case `s = t`: the rectangle is a single segment; 1-D IVT finds a level point and
+  -- a one-point preconnected `S` violates `hsep`.
+  rcases eq_or_lt_of_le hst with hst_eq | hst_lt
+  · obtain ⟨x, hx_mem, hvx⟩ := rectLevel_exists_mem_level_on_edge hab hvcont
+      (hv0 (Complex.mk a s) rfl (le_refl s) hst) (hv1 (Complex.mk b s) rfl (le_refl s) hst) hc
+    refine hsep {Complex.mk x s} isPreconnected_singleton ?_ ⟨_, rfl, rfl⟩
+      ⟨_, rfl, hst_eq⟩
+    rintro z hz; rw [Set.mem_singleton_iff] at hz; subst hz
+    refine ⟨⟨⟨hx_mem.1, hx_mem.2⟩, le_refl s, hst⟩, ?_⟩
+    rw [Set.mem_preimage, Set.mem_singleton_iff]; exact hvx
+  -- Main case `s < t`. Set up the bottom/top level point sets.
+  set Bot : Set ℂ := {z ∈ K | z.im = s} with hBotdef
+  set Top : Set ℂ := {z ∈ K | z.im = t} with hTopdef
+  have hRcompact : IsCompact R := rectLevel_isCompact_rect a b s t
+  have hvc_closed : IsClosed (v ⁻¹' {c}) := (isClosed_singleton).preimage hvcont
+  have hKcompact : IsCompact K := hRcompact.inter_right hvc_closed
+  have hKclosed : IsClosed K := hKcompact.isClosed
+  have hBot_sub : Bot ⊆ K := fun z hz => hz.1
+  have hTop_sub : Top ⊆ K := fun z hz => hz.1
+  have hBot_closed : IsClosed Bot := by
+    have : Bot = K ∩ {z : ℂ | z.im = s} :=
+      Set.ext fun z => ⟨fun h => ⟨h.1, h.2⟩, fun h => ⟨h.1, h.2⟩⟩
+    rw [this]; exact hKclosed.inter (isClosed_eq Complex.continuous_im continuous_const)
+  have hTop_closed : IsClosed Top := by
+    have : Top = K ∩ {z : ℂ | z.im = t} :=
+      Set.ext fun z => ⟨fun h => ⟨h.1, h.2⟩, fun h => ⟨h.1, h.2⟩⟩
+    rw [this]; exact hKclosed.inter (isClosed_eq Complex.continuous_im continuous_const)
+  -- Šura–Bura split: `K = K₁ ⊔ K₂` with `Bot ⊆ K₁`, `Top ⊆ K₂`.
+  have hsep_split : ∀ S : Set ℂ, IsPreconnected S → S ⊆ K →
+      (S ∩ Bot).Nonempty → (S ∩ Top).Nonempty → False := by
+    intro S hScon hSK hSB hST
+    refine hsep S hScon hSK ?_ ?_
+    · obtain ⟨p, hpS, hpBot⟩ := hSB; exact ⟨p, hpS, hpBot.2⟩
+    · obtain ⟨q, hqS, hqTop⟩ := hST; exact ⟨q, hqS, hqTop.2⟩
+  obtain ⟨K₁, K₂, hK₁cpt, hK₂cpt, hK₁₂disj, hK₁₂union, hBotK₁, hTopK₂⟩ :=
+    rectLevel_split_of_no_continuum hKcompact hBot_sub hTop_sub hBot_closed hTop_closed hsep_split
+  have hK₁closed : IsClosed K₁ := hK₁cpt.isClosed
+  have hK₂closed : IsClosed K₂ := hK₂cpt.isClosed
+  -- Edge closedness.
+  have hbotEdge_closed : IsClosed botEdge := by
+    have : botEdge = {z : ℂ | a ≤ z.re} ∩ {z : ℂ | z.re ≤ b} ∩ {z : ℂ | z.im = s} := by
+      ext z; simp only [hbotEdge, Set.mem_setOf_eq, Set.mem_inter_iff, and_assoc]
+    rw [this]
+    exact ((isClosed_le continuous_const Complex.continuous_re).inter
+      (isClosed_le Complex.continuous_re continuous_const)).inter
+      (isClosed_eq Complex.continuous_im continuous_const)
+  have htopEdge_closed : IsClosed topEdge := by
+    have : topEdge = {z : ℂ | a ≤ z.re} ∩ {z : ℂ | z.re ≤ b} ∩ {z : ℂ | z.im = t} := by
+      ext z; simp only [htopEdge, Set.mem_setOf_eq, Set.mem_inter_iff, and_assoc]
+    rw [this]
+    exact ((isClosed_le continuous_const Complex.continuous_re).inter
+      (isClosed_le Complex.continuous_re continuous_const)).inter
+      (isClosed_eq Complex.continuous_im continuous_const)
+  -- The two Urysohn sets `P = K₁ ∪ botEdge`, `Q = K₂ ∪ topEdge`.
+  set P : Set ℂ := K₁ ∪ botEdge with hPdef
+  set Q : Set ℂ := K₂ ∪ topEdge with hQdef
+  have hP_closed : IsClosed P := hK₁closed.union hbotEdge_closed
+  have hQ_closed : IsClosed Q := hK₂closed.union htopEdge_closed
+  -- `K ⊆ K₁ ∪ K₂` (from the union equality) and the edge ⊆ K facts via level membership.
+  have hbotEdge_K : ∀ z ∈ botEdge, z ∈ K → z ∈ K₁ := by
+    intro z hz hzK; exact hBotK₁ ⟨hzK, hz.2⟩
+  have htopEdge_K : ∀ z ∈ topEdge, z ∈ K → z ∈ K₂ := by
+    intro z hz hzK; exact hTopK₂ ⟨hzK, hz.2⟩
+  -- `P` and `Q` are disjoint.
+  have hPQ_disj : Disjoint P Q := by
+    rw [Set.disjoint_left]
+    rintro z hzP hzQ
+    rcases hzP with hzK₁ | hzbot <;> rcases hzQ with hzK₂ | hztop
+    · exact (Set.disjoint_left.mp hK₁₂disj hzK₁) hzK₂
+    · -- z ∈ K₁ and z ∈ topEdge: z.im = t and z ∈ K₁ ⊆ K, so z ∈ Top ⊆ K₂; contradiction.
+      have hzK : z ∈ K := hK₁₂union ▸ Set.mem_union_left _ hzK₁
+      exact (Set.disjoint_left.mp hK₁₂disj hzK₁) (htopEdge_K z hztop hzK)
+    · -- z ∈ botEdge and z ∈ K₂: z.im = s and z ∈ K₂ ⊆ K, so z ∈ Bot ⊆ K₁; contradiction.
+      have hzK : z ∈ K := hK₁₂union ▸ Set.mem_union_right _ hzK₂
+      exact (Set.disjoint_left.mp hK₁₂disj (hbotEdge_K z hzbot hzK)) hzK₂
+    · -- z ∈ botEdge ∩ topEdge: z.im = s and z.im = t with s < t.
+      rw [hbotEdge, Set.mem_setOf_eq] at hzbot
+      rw [htopEdge, Set.mem_setOf_eq] at hztop
+      exact absurd (hzbot.2.symm.trans hztop.2) (ne_of_lt hst_lt)
+  -- Urysohn function: `g = 0` on `P`, `g = 1` on `Q`, `g ∈ [0,1]`.
+  obtain ⟨g, hgP, hgQ, hg01⟩ := exists_continuous_zero_one_of_isClosed hP_closed hQ_closed hPQ_disj
+  -- `η = 1 - 2 g`: `η = 1` on `P`, `η = -1` on `Q`.
+  set η : ℂ → ℝ := fun z => 1 - 2 * g z with hηdef
+  have hη_cont : Continuous η := by fun_prop
+  have hηP : ∀ z ∈ P, η z = 1 := by
+    intro z hz
+    have : g z = 0 := by have := hgP hz; simpa using this
+    simp only [hηdef]; rw [this]; ring
+  have hηQ : ∀ z ∈ Q, η z = -1 := by
+    intro z hz
+    have : g z = 1 := by have := hgQ hz; simpa using this
+    simp only [hηdef]; rw [this]; ring
+  -- The nonvanishing map `φ z = (v z - c) + i η z`.
+  set φ : ℂ → ℂ := fun z => Complex.mk (v z - c) (η z) with hφdef
+  have hφ_cont : Continuous φ := by
+    have : φ = fun z => ((v z - c : ℝ) : ℂ) + (η z : ℝ) * Complex.I := by
+      funext z; apply Complex.ext <;> simp [hφdef]
+    rw [this]; fun_prop
+  -- `φ z ≠ 0` for `z ∈ R`.
+  have hφ_ne : ∀ z ∈ R, φ z ≠ 0 := by
+    intro z hzR hφ0
+    have hre0 : (φ z).re = 0 := by rw [hφ0]; rfl
+    have him0 : (φ z).im = 0 := by rw [hφ0]; rfl
+    have hvz : v z = c := by
+      have : v z - c = 0 := by simpa [hφdef, hmk_re] using hre0
+      linarith
+    have hzK : z ∈ K := ⟨hzR, by rw [Set.mem_preimage, Set.mem_singleton_iff]; exact hvz⟩
+    have hηz0 : η z = 0 := by simpa [hφdef, hmk_im] using him0
+    rcases (hK₁₂union ▸ hzK : z ∈ K₁ ∪ K₂) with hzK₁ | hzK₂
+    · have : η z = 1 := hηP z (Set.mem_union_left _ hzK₁)
+      rw [hηz0] at this; norm_num at this
+    · have : η z = -1 := hηQ z (Set.mem_union_left _ hzK₂)
+      rw [hηz0] at this; norm_num at this
+  -- The parametrized nonvanishing map and its continuous logarithm.
+  set u : ℝ → ℝ → ℂ := fun x y => φ (Complex.mk x y) with hudef
+  have hmk2_cont : Continuous (fun p : ℝ × ℝ => Complex.mk p.1 p.2) := by
+    have : (fun p : ℝ × ℝ => Complex.mk p.1 p.2)
+        = fun p : ℝ × ℝ => ((p.1 : ℝ) : ℂ) + (p.2 : ℝ) * Complex.I := by
+      funext p; apply Complex.ext <;> simp
+    rw [this]; fun_prop
+  have hu_cont : ContinuousOn (Function.uncurry u) (Set.Icc a b ×ˢ Set.Icc s t) := by
+    have : Function.uncurry u = fun p : ℝ × ℝ => φ (Complex.mk p.1 p.2) := by
+      funext p; simp [Function.uncurry, hudef]
+    rw [this]; exact (hφ_cont.comp hmk2_cont).continuousOn
+  -- A point of the box lies in `R`.
+  have hmk_mem_R : ∀ x ∈ Set.Icc a b, ∀ y ∈ Set.Icc s t, Complex.mk x y ∈ R := by
+    intro x hx y hy
+    refine ⟨⟨?_, ?_⟩, ?_, ?_⟩
+    · rw [hmk_re]; exact hx.1
+    · rw [hmk_re]; exact hx.2
+    · rw [hmk_im]; exact hy.1
+    · rw [hmk_im]; exact hy.2
+  have hu_ne : ∀ x ∈ Set.Icc a b, ∀ y ∈ Set.Icc s t, u x y ≠ 0 := by
+    intro x hx y hy; exact hφ_ne _ (hmk_mem_R x hx y hy)
+  obtain ⟨L, hL_cont, hL_exp⟩ :=
+    continuous_log_lift_param_of_continuous_ne_zero hab hst u hu_cont hu_ne
+  -- The single-valued argument `θ x y = (L x y).im`.
+  set θ : ℝ → ℝ → ℝ := fun x y => (L x y).im with hθdef
+  -- Sign of `Re/Im (φ (mk x y)) = exp((L x y).re) · cos/sin (θ x y)`.
+  have hsign : ∀ x ∈ Set.Icc a b, ∀ y ∈ Set.Icc s t,
+      (v (Complex.mk x y) - c = Real.exp ((L x y).re) * Real.cos (θ x y)) ∧
+      (η (Complex.mk x y) = Real.exp ((L x y).re) * Real.sin (θ x y)) := by
+    intro x hx y hy
+    have hexp : Complex.exp (L x y) = u x y := hL_exp x hx y hy
+    have hre : (u x y).re = Real.exp ((L x y).re) * Real.cos (θ x y) := by
+      rw [← hexp, Complex.exp_re]
+    have him : (u x y).im = Real.exp ((L x y).re) * Real.sin (θ x y) := by
+      rw [← hexp, Complex.exp_im]
+    refine ⟨?_, ?_⟩
+    · have : (u x y).re = v (Complex.mk x y) - c := by simp [hudef, hφdef, hmk_re]
+      rw [this] at hre; exact hre
+    · have : (u x y).im = η (Complex.mk x y) := by simp [hudef, hφdef, hmk_im]
+      rw [this] at him; exact him
+  -- Continuity of `θ` along the four edges.
+  have hLuncurry : Continuous (Function.uncurry L) := hL_cont
+  have hθ_cont_uncurry : Continuous (Function.uncurry θ) := by
+    have : Function.uncurry θ = fun p : ℝ × ℝ => (Function.uncurry L p).im := by
+      funext p; simp [hθdef, Function.uncurry]
+    rw [this]; exact Complex.continuous_im.comp hLuncurry
+  have hbot_cont : ContinuousOn (fun x => θ x s) (Set.Icc a b) := by
+    have : (fun x => θ x s) = (Function.uncurry θ) ∘ (fun x : ℝ => (x, s)) := by
+      funext x; simp [Function.uncurry]
+    rw [this]; exact (hθ_cont_uncurry.comp (by fun_prop)).continuousOn
+  have hrgt_cont : ContinuousOn (fun y => θ b y) (Set.Icc s t) := by
+    have : (fun y => θ b y) = (Function.uncurry θ) ∘ (fun y : ℝ => (b, y)) := by
+      funext y; simp [Function.uncurry]
+    rw [this]; exact (hθ_cont_uncurry.comp (by fun_prop)).continuousOn
+  have htop_cont : ContinuousOn (fun x => θ x t) (Set.Icc a b) := by
+    have : (fun x => θ x t) = (Function.uncurry θ) ∘ (fun x : ℝ => (x, t)) := by
+      funext x; simp [Function.uncurry]
+    rw [this]; exact (hθ_cont_uncurry.comp (by fun_prop)).continuousOn
+  have hlft_cont : ContinuousOn (fun y => θ a y) (Set.Icc s t) := by
+    have : (fun y => θ a y) = (Function.uncurry θ) ∘ (fun y : ℝ => (a, y)) := by
+      funext y; simp [Function.uncurry]
+    rw [this]; exact (hθ_cont_uncurry.comp (by fun_prop)).continuousOn
+  -- The four edge sign conditions.
+  have ha_mem : a ∈ Set.Icc a b := Set.left_mem_Icc.mpr hab
+  have hb_mem : b ∈ Set.Icc a b := Set.right_mem_Icc.mpr hab
+  have hs_mem : s ∈ Set.Icc s t := Set.left_mem_Icc.mpr hst
+  have ht_mem : t ∈ Set.Icc s t := Set.right_mem_Icc.mpr hst
+  -- Bottom edge: `η = 1 > 0` ⟹ `exp · sin > 0` ⟹ `sin > 0`.
+  have Hbot : ∀ x ∈ Set.Icc a b, 0 < Real.sin (θ x s) := by
+    intro x hx
+    have hηeq : η (Complex.mk x s) = 1 := by
+      refine hηP _ (Set.mem_union_right _ ?_)
+      refine ⟨⟨?_, ?_⟩, ?_⟩
+      · rw [hmk_re]; exact hx.1
+      · rw [hmk_re]; exact hx.2
+      · rw [hmk_im]
+    have := (hsign x hx s hs_mem).2
+    rw [hηeq] at this
+    have hexp_pos := Real.exp_pos ((L x s).re)
+    nlinarith [this, hexp_pos, Real.exp_pos ((L x s).re)]
+  -- Top edge: `η = -1 < 0` ⟹ `sin < 0`.
+  have Htop : ∀ x ∈ Set.Icc a b, Real.sin (θ x t) < 0 := by
+    intro x hx
+    have hηeq : η (Complex.mk x t) = -1 := by
+      refine hηQ _ (Set.mem_union_right _ ?_)
+      refine ⟨⟨?_, ?_⟩, ?_⟩
+      · rw [hmk_re]; exact hx.1
+      · rw [hmk_re]; exact hx.2
+      · rw [hmk_im]
+    have := (hsign x hx t ht_mem).2
+    rw [hηeq] at this
+    have hexp_pos := Real.exp_pos ((L x t).re)
+    nlinarith [this, hexp_pos]
+  -- Right edge: `v = 1` ⟹ `v - c = 1 - c > 0` ⟹ `cos > 0`.
+  have Hrgt : ∀ y ∈ Set.Icc s t, 0 < Real.cos (θ b y) := by
+    intro y hy
+    have hv1' : v (Complex.mk b y) = 1 := by
+      refine hv1 _ ?_ ?_ ?_
+      · rw [hmk_re]
+      · rw [hmk_im]; exact hy.1
+      · rw [hmk_im]; exact hy.2
+    have hpos : 0 < v (Complex.mk b y) - c := by rw [hv1']; linarith [hc.2]
+    have := (hsign b hb_mem y hy).1
+    rw [this] at hpos
+    have hexp_pos := Real.exp_pos ((L b y).re)
+    nlinarith [hpos, hexp_pos]
+  -- Left edge: `v = 0` ⟹ `v - c = -c < 0` ⟹ `cos < 0`.
+  have Hlft : ∀ y ∈ Set.Icc s t, Real.cos (θ a y) < 0 := by
+    intro y hy
+    have hv0' : v (Complex.mk a y) = 0 := by
+      refine hv0 _ ?_ ?_ ?_
+      · rw [hmk_re]
+      · rw [hmk_im]; exact hy.1
+      · rw [hmk_im]; exact hy.2
+    have hneg : v (Complex.mk a y) - c < 0 := by rw [hv0']; linarith [hc.1]
+    have := (hsign a ha_mem y hy).1
+    rw [this] at hneg
+    have hexp_pos := Real.exp_pos ((L a y).re)
+    nlinarith [hneg, hexp_pos]
+  -- Conclude via the winding contradiction.
+  exact square_crossing_contradiction hab hst θ hbot_cont hrgt_cont htop_cont hlft_cont
+    Hbot Hrgt Htop Hlft
+
+/-- **Abstract plane-separation residual on a coordinate rectangle in `ℂ`.**
+
+This is the genuinely two-dimensional topological core of `plane_separation_level_continuum`,
+stripped of all quasiconformal / quadrilateral / homeomorphism machinery: a *pure point-set
+topology* statement about a continuous real function `v` on the closed coordinate rectangle
+`[a,b] × [s,t] ⊆ ℂ`. If `v = 0` on the **left** edge `{re = a}` and `v = 1` on the **right** edge
+`{re = b}`, then for any intermediate level `c ∈ (0,1)` the level set `{v = c}` inside the rectangle
+contains a **compact connected** subset `Γ` joining the **bottom** edge `{im = s}` to the **top**
+edge `{im = t}`.
+
+## Status
+
+**Fully proven, axiom-clean.** The compact/connected rectangle geometry is proven, and the reduction
+is direct. By contradiction, if **no** preconnected `S ⊆ K = Rect ∩ {v = c}` joins the bottom edge
+`{im = s}` to the top edge `{im = t}`, that is exactly the `hsep` hypothesis of the boundary-bumping
+crux `rectLevel_no_split` (proven Brouwer-free via the gap-threading winding argument), yielding
+`False`. So such a joining preconnected `S` exists, and `Γ` is extracted as the connected component
+(`connectedComponentIn K zB`) of one of its bottom points `zB`. -/
+theorem rect_level_continuum {a b s t : ℝ} (hab : a < b) (hst : s < t)
+    {v : ℂ → ℝ} (hvcont : Continuous v)
+    (hv0 : ∀ z : ℂ, z.re = a → s ≤ z.im → z.im ≤ t → v z = 0)
+    (hv1 : ∀ z : ℂ, z.re = b → s ≤ z.im → z.im ≤ t → v z = 1)
+    {c : ℝ} (hc : c ∈ Set.Ioo (0 : ℝ) 1) :
+    ∃ Γ : Set ℂ,
+      Γ ⊆ {z : ℂ | (a ≤ z.re ∧ z.re ≤ b) ∧ (s ≤ z.im ∧ z.im ≤ t)} ∩ v ⁻¹' {c} ∧
+      IsCompact Γ ∧ IsConnected Γ ∧
+      (∃ p ∈ Γ, p.im = s) ∧ (∃ q ∈ Γ, q.im = t) := by
+  set R : Set ℂ := rectLevelRect a b s t with hR
+  set K : Set ℂ := R ∩ v ⁻¹' {c} with hKdef
+  have hRcompact : IsCompact R := rectLevel_isCompact_rect a b s t
+  have hvc_closed : IsClosed (v ⁻¹' {c}) := (isClosed_singleton).preimage hvcont
+  have hKcompact : IsCompact K := hRcompact.inter_right hvc_closed
+  have hRset : R = {z : ℂ | (a ≤ z.re ∧ z.re ≤ b) ∧ (s ≤ z.im ∧ z.im ≤ t)} := rfl
+  set Bot : Set ℂ := {z ∈ K | z.im = s} with hBotdef
+  set Top : Set ℂ := {z ∈ K | z.im = t} with hTopdef
+  -- Main claim: some preconnected `S ⊆ K` meets both `Bot` and `Top` (else `rectLevel_no_split`).
+  have hexists : ∃ S : Set ℂ, IsPreconnected S ∧ S ⊆ K ∧
+      (S ∩ Bot).Nonempty ∧ (S ∩ Top).Nonempty := by
+    by_contra hno
+    push Not at hno
+    -- Repackage the negation as the `hsep` hypothesis of `rectLevel_no_split`: no preconnected
+    -- `S ⊆ K = Rect ∩ {v = c}` meets both the bottom edge `{im = s}` and the top edge `{im = t}`.
+    refine rectLevel_no_split (a := a) (b := b) (s := s) (t := t) (c := c)
+      (le_of_lt hab) (le_of_lt hst) hvcont hv0 hv1 hc ?_
+    intro S hScon hSsub hSB hST
+    have hSK : S ⊆ K := by rw [hKdef, hR]; exact hSsub
+    -- `S` meets `Bot` (its bottom point lies in `K`, hence in `Bot`) and `Top` similarly.
+    have hSBot : (S ∩ Bot).Nonempty := by
+      obtain ⟨p, hpS, hpim⟩ := hSB
+      exact ⟨p, hpS, hSK hpS, hpim⟩
+    have hSTop : (S ∩ Top).Nonempty := by
+      obtain ⟨q, hqS, hqim⟩ := hST
+      exact ⟨q, hqS, hSK hqS, hqim⟩
+    exact hSTop.ne_empty (hno S hScon hSK hSBot)
+  -- Extract the joining preconnected set and pass to a connected component.
+  obtain ⟨S, hScon, hSsub, ⟨zB, hzBS, hzBBot⟩, ⟨zT, hzTS, hzTTop⟩⟩ := hexists
+  have hzBK : zB ∈ K := hSsub hzBS
+  refine ⟨connectedComponentIn K zB, ?_, ?_, ?_, ?_, ?_⟩
+  · calc connectedComponentIn K zB ⊆ K := connectedComponentIn_subset K zB
+      _ = {z : ℂ | (a ≤ z.re ∧ z.re ≤ b) ∧ (s ≤ z.im ∧ z.im ≤ t)} ∩ v ⁻¹' {c} := by
+            rw [hKdef, ← hRset]
+  · haveI : CompactSpace K := isCompact_iff_compactSpace.mp hKcompact
+    rw [connectedComponentIn_eq_image hzBK]
+    exact (isClosed_connectedComponent.isCompact).image continuous_subtype_val
+  · rw [isConnected_connectedComponentIn_iff]; exact hzBK
+  · have hSΓ : S ⊆ connectedComponentIn K zB := hScon.subset_connectedComponentIn hzBS hSsub
+    exact ⟨zB, hSΓ hzBS, hzBBot.2⟩
+  · have hSΓ : S ⊆ connectedComponentIn K zB := hScon.subset_connectedComponentIn hzBS hSsub
+    exact ⟨zT, hSΓ hzTS, hzTTop.2⟩
+
+/-- **(A) — Plane separation: a level set separating two opposite sides of the image square
+contains a connected continuum joining the other two sides.**
+
+Let `f` be a homeomorphism and `u` continuous with `u = 0` on the `f`-image of the rectangle's
+**left** edge (`{re = a}`) and `u = 1` on the `f`-image of its **right** edge (`{re = b}`). For any
+intermediate level `c ∈ (0, 1)`, the level set `u⁻¹'{c}` *inside the image rectangle*
+`R = f '' [a,b]×[s,t]` contains a **compact connected** subset `Γ` that meets both the image
+**bottom** edge `f '' (Qsw.leftSide)` (`{im = s}`) and the image **top** edge `f '' (Qsw.rightSide)`
+(`{im = t}`).
+
+## Reduction to the abstract residual
+
+**Proven** by pulling back through the homeomorphism `f`: the composite `v = u ∘ f` is continuous
+and (by `axisRectQuadrilateral_leftSide` / `_rightSide`) vanishes on the source rectangle's left
+edge `{re = a}` and equals `1` on its right edge `{re = b}`. The abstract plane-separation residual
+`rect_level_continuum` supplies a compact connected source continuum `Γ₀ ⊆ {v = c}` joining the
+source bottom `{im = s}` to the source top `{im = t}`; its `f`-image `Γ := f '' Γ₀` is the required
+image continuum (continuous image of a compact connected set is compact connected;
+`u (f z) = v z = c`; the edge-endpoints map into `f '' Qsw.leftSide` / `f '' Qsw.rightSide` by the
+swapped-side characterizations). The sole remaining 2-D ingredient is isolated in
+`rect_level_continuum`. -/
+theorem plane_separation_level_continuum {f : ℂ → ℂ} {a b s t : ℝ} (hab : a < b) (hst : s < t)
+    (hf : IsHomeomorph f) {u : ℂ → ℝ} (hucont : Continuous u)
+    (hu0 : ∀ z ∈ f '' (axisRectQuadrilateral a b s t hab hst).leftSide, u z = 0)
+    (hu1 : ∀ z ∈ f '' (axisRectQuadrilateral a b s t hab hst).rightSide, u z = 1)
+    {c : ℝ} (hc : c ∈ Set.Ioo (0 : ℝ) 1) :
+    ∃ Γ : Set ℂ,
+      Γ ⊆ u ⁻¹' {c} ∩ f '' (axisRectQuadrilateral a b s t hab hst).image ∧
+      IsCompact Γ ∧ IsConnected Γ ∧
+      (∃ p ∈ Γ, p ∈ f '' (axisRectQuadrilateralSwap a b s t hab hst).leftSide) ∧
+      (∃ q ∈ Γ, q ∈ f '' (axisRectQuadrilateralSwap a b s t hab hst).rightSide) := by
+  have hfc : Continuous f := hf.continuous
+  -- Pull back the potential through `f`: `v = u ∘ f`, continuous, with the source boundary values.
+  set v : ℂ → ℝ := u ∘ f with hvdef
+  have hvcont : Continuous v := hucont.comp hfc
+  -- `v = 0` on the source left edge `{re = a}` (since `f` maps it into `f '' leftSide`).
+  have hv0 : ∀ z : ℂ, z.re = a → s ≤ z.im → z.im ≤ t → v z = 0 := by
+    intro z hre him0 him1
+    refine hu0 (f z) ⟨z, ?_, rfl⟩
+    rw [axisRectQuadrilateral_leftSide hab hst]
+    exact ⟨hre, him0, him1⟩
+  -- `v = 1` on the source right edge `{re = b}`.
+  have hv1 : ∀ z : ℂ, z.re = b → s ≤ z.im → z.im ≤ t → v z = 1 := by
+    intro z hre him0 him1
+    refine hu1 (f z) ⟨z, ?_, rfl⟩
+    rw [axisRectQuadrilateral_rightSide hab hst]
+    exact ⟨hre, him0, him1⟩
+  -- Apply the abstract plane-separation residual to obtain a SOURCE continuum `Γ₀`.
+  obtain ⟨Γ₀, hΓ₀sub, hΓ₀cpt, hΓ₀conn, ⟨p₀, hp₀Γ, hp₀im⟩, ⟨q₀, hq₀Γ, hq₀im⟩⟩ :=
+    rect_level_continuum hab hst hvcont hv0 hv1 hc
+  -- Push `Γ₀` through `f` to get the IMAGE continuum `Γ = f '' Γ₀`.
+  refine ⟨f '' Γ₀, ?_, hΓ₀cpt.image hfc, hΓ₀conn.image f hfc.continuousOn, ?_, ?_⟩
+  · -- `Γ = f '' Γ₀ ⊆ u⁻¹'{c} ∩ f '' Qst.image`.
+    rintro w ⟨z, hzΓ, rfl⟩
+    obtain ⟨⟨hre0, hre1⟩, him0, him1⟩ := (hΓ₀sub hzΓ).1
+    refine ⟨?_, ⟨z, ?_, rfl⟩⟩
+    · -- `u (f z) = v z = c`.
+      have : v z = c := (hΓ₀sub hzΓ).2
+      simpa [hvdef] using this
+    · -- `z ∈ Qst.image = {re ∈ [a,b], im ∈ [s,t]}`.
+      rw [axisRectQuadrilateral_image hab hst]
+      exact ⟨⟨hre0, hre1⟩, him0, him1⟩
+  · -- The bottom endpoint `f p₀ ∈ f '' Qsw.leftSide`.
+    refine ⟨f p₀, ⟨p₀, hp₀Γ, rfl⟩, ⟨p₀, ?_, rfl⟩⟩
+    rw [axisRectQuadrilateralSwap_leftSide hab hst]
+    obtain ⟨⟨hre0, hre1⟩, _⟩ := (hΓ₀sub hp₀Γ).1
+    exact ⟨hp₀im, hre0, hre1⟩
+  · -- The top endpoint `f q₀ ∈ f '' Qsw.rightSide`.
+    refine ⟨f q₀, ⟨q₀, hq₀Γ, rfl⟩, ⟨q₀, ?_, rfl⟩⟩
+    rw [axisRectQuadrilateralSwap_rightSide hab hst]
+    obtain ⟨⟨hre0, hre1⟩, _⟩ := (hΓ₀sub hq₀Γ).1
+    exact ⟨hq₀im, hre0, hre1⟩
+
+/-- **(B) — A rectifiable continuum is arcwise connected by a simple absolutely continuous arc.**
+
+A **compact connected** set `Γ ⊆ ℂ` of **finite** `μH[1]`-length (a *rectifiable continuum*) is a
+Peano continuum, hence arcwise connected; any two of its points `p, q` are joined by a **simple**
+(injective) Lipschitz — and therefore absolutely continuous — arc `δ : [0,1] → ℂ` lying entirely in
+`Γ`, with `δ 0 = p`, `δ 1 = q`.
+
+## Truth and the missing classical ingredient
+
+**TRUE** — this is the **Eilenberg–Harrold / Wazewski** theorem (a continuum of finite linear
+measure is a Peano continuum, so **Hahn–Mazurkiewicz** gives arcwise connectedness; loops are
+removed to get a simple arc, and arc-length parametrization makes it Lipschitz hence absolutely
+continuous). Mathlib v4.29 has **no** rectifiable-set theory, no Hahn–Mazurkiewicz, no
+Peano-continuum / arcwise-connectedness theory, and no arc-length parametrization producing an
+injective Lipschitz curve (confirmed by exhaustive search — Mathlib's only `connected ⇒ path`
+bridges, e.g. `IsOpen.isConnected_iff_isPathConnected`, require the set to be **open**, whereas `Γ`
+is compact). Isolated here as the single rectifiable-continuum `sorry`. -/
+theorem rectifiable_continuum_simple_arc {Γ : Set ℂ}
+    (hΓcpt : IsCompact Γ) (hΓconn : IsConnected Γ)
+    (hΓfin : (MeasureTheory.Measure.hausdorffMeasure 1 : Measure ℂ) Γ ≠ ∞)
+    {p q : ℂ} (hpΓ : p ∈ Γ) (hqΓ : q ∈ Γ) :
+    ∃ δ : ℝ → ℂ, δ 0 = p ∧ δ 1 = q ∧ Continuous δ ∧
+      (∃ K : ℝ≥0, LipschitzOnWith K δ (Set.uIcc 0 1)) ∧
+      Set.InjOn δ (Set.Icc (0 : ℝ) 1) ∧ ∀ τ ∈ Set.Icc (0 : ℝ) 1, δ τ ∈ Γ := by
+  sorry
+
+/-- **R3c-fin — finite-length crossing arc on a level set (the minimal a.e. JCT-escape residual).**
+
+This is the single minimal topological residual on the co-area route. Given a continuous `u` with
+the bottom/top boundary values, a level `c ∈ (0, 1)` whose level set *inside the compact image*
+`u ⁻¹' {c} ∩ f '' Q.image` carries **finite** `μH[1]`-length (`hfinlen`) — supplied a.e. by the
+Eilenberg co-area inequality (`Coarea.coarea_set_sharp`) for the Lipschitz `u` — admits a simple
+(injective) absolutely-continuous bottom→top crossing arc lying on the level set.
+
+## Why this is strictly weaker than the bare-`hexists` JCT node (the escape hatch)
+
+The earlier monolithic node had to produce a *rectifiable* arc out of `Continuous u` alone, where a
+generic continuous potential can have a level set with **no** rectifiable arc at all. Here the
+co-area inequality has already certified that the relevant level set is **`1`-rectifiable** (finite
+`μH[1]`), so the rectifiability/absolute-continuity half is *handed to us by the hypothesis* — what
+remains is purely the **plane-separation + finite-`H¹`-continuum-is-arcwise-connected** core:
+
+* the level set `{u = c}` separates the image bottom (`u = 0`) from the image top (`u = 1`) — the
+  2-D Poincaré–Miranda / Jordan plane-separation step; and
+* a separating continuum of **finite** `μH[1]`-length is a Peano continuum, hence arcwise connected
+  (Hahn–Mazurkiewicz), giving the simple bottom→top arc, automatically rectifiable.
+
+Both halves remain **Mathlib-absent** (no Jordan / Poincaré–Miranda / Brouwer / topological-degree;
+no rectifiable-continuum / Hahn–Mazurkiewicz; confirmed by exhaustive search). But this residual is
+genuinely smaller than the bare JCT node: it consumes the co-area-supplied finiteness rather than
+re-deriving rectifiability from scratch, and it is the precise a.e. node the friend's
+`quasidisk_level_crosscut_exists` isolates. Isolated as a single `sorry`; everything around it —
+the co-area finiteness derivation and the `imageCurveFamily` packaging — is proven. -/
+theorem finiteLength_level_set_crossing_arc {Kqc : ℝ} (hf : IsHomeomorph f)
+    (hfqc : IsQCGeometric f Kqc)
+    {u : ℂ → ℝ} (hucont : Continuous u)
+    (hu0 : ∀ z ∈ f '' (axisRectQuadrilateral a b s t hab hst).leftSide, u z = 0)
+    (hu1 : ∀ z ∈ f '' (axisRectQuadrilateral a b s t hab hst).rightSide, u z = 1)
+    {c : ℝ} (hc : c ∈ Set.Ioo (0 : ℝ) 1)
+    (hfinlen : (MeasureTheory.Measure.hausdorffMeasure 1 : Measure ℂ)
+        (u ⁻¹' {c} ∩ f '' (axisRectQuadrilateralSwap a b s t hab hst).image) ≠ ∞) :
+    ∃ δ ∈ (axisRectQuadrilateralSwap a b s t hab hst).imageCurveFamily f,
+      Set.InjOn δ (Set.Icc (0 : ℝ) 1) ∧ ∀ τ ∈ Set.Icc (0 : ℝ) 1, u (δ τ) = c := by
+  classical
+  set Qsw := axisRectQuadrilateralSwap a b s t hab hst with hQsw
+  set Qst := axisRectQuadrilateral a b s t hab hst with hQst
+  have hfc : Continuous f := hf.continuous
+  -- The image rectangle `R = f '' [a,b]×[s,t]`; both quadrilaterals share the same image region.
+  set R : Set ℂ := f '' Qst.image with hRdef
+  have hRsw : f '' Qsw.image = R := by
+    rw [hRdef, hQsw, hQst, axisRectQuadrilateralSwap_image]
+  -- `R` is compact (continuous image of the compact unit square).
+  have hsqcpt : IsCompact (unitSquare : Set (ℝ × ℝ)) := isCompact_Icc.prod isCompact_Icc
+  have hRcpt : IsCompact R := (hsqcpt.image Qst.continuous_toFun).image hfc
+  -- The level set inside `R`; it is closed (level set of a continuous `u` inside compact `R`).
+  set L : Set ℂ := u ⁻¹' {c} ∩ R with hLdef
+  have hLcpt : IsCompact L := by
+    refine hRcpt.inter_left ?_
+    exact (isClosed_singleton.preimage hucont)
+  -- The two image edges the arc must join: the swapped left side (image *bottom*, `{im = s}`) and
+  -- the swapped right side (image *top*, `{im = t}`).
+  set Bot : Set ℂ := f '' Qsw.leftSide with hBotdef
+  set Top : Set ℂ := f '' Qsw.rightSide with hTopdef
+  -- Finite `μH[1]` of the level set inside `R` (the co-area-supplied hypothesis, rewritten on `R`).
+  have hLfin : (MeasureTheory.Measure.hausdorffMeasure 1 : Measure ℂ) L ≠ ∞ := by
+    have : L = u ⁻¹' {c} ∩ f '' Qsw.image := by rw [hLdef, ← hRsw]
+    rw [this]; exact hfinlen
+  -- ### (A) Plane separation: a connected separating continuum `Γ ⊆ L` joining bottom to top.
+  --
+  -- This is the 2-D Jordan / Poincaré–Miranda plane-separation step. Pulling back through the
+  -- homeomorphism `f`, the unit square carries a continuous `v = u ∘ f` with `v = 0` on its left
+  -- edge and `v = 1` on its right edge; the level set `{v = c}` separates the `{v < c}` side
+  -- (containing the left edge) from the `{v > c}` side (containing the right edge), so it has a
+  -- connected component meeting both the bottom and top edges (the classical fact that a closed set
+  -- separating two opposite sides of a square contains a subcontinuum joining the other two). The
+  -- `f`-image of that component is a compact connected `Γ ⊆ u⁻¹'{c} ∩ R` joining `Bot` to `Top`.
+  -- Mathlib has no Poincaré–Miranda / Brouwer / topological-degree, so this is isolated here.
+  obtain ⟨Γ, hΓsub, hΓcpt, hΓconn, ⟨p, hpΓ, hpBot⟩, ⟨q, hqΓ, hqTop⟩⟩ :
+      ∃ Γ : Set ℂ, Γ ⊆ L ∧ IsCompact Γ ∧ IsConnected Γ ∧
+        (∃ p ∈ Γ, p ∈ Bot) ∧ (∃ q ∈ Γ, q ∈ Top) :=
+    plane_separation_level_continuum hab hst hf hucont hu0 hu1 hc
+  -- `Γ` inherits the finite-length bound from `L ⊇ Γ` (monotonicity of `μH[1]`).
+  have hΓfin : (MeasureTheory.Measure.hausdorffMeasure 1 : Measure ℂ) Γ ≠ ∞ :=
+    ne_top_of_le_ne_top hLfin (measure_mono hΓsub)
+  -- ### (B) Rectifiable continuum ⇒ simple AC arc joining `p` and `q` inside `Γ`.
+  --
+  -- A compact connected set of finite `μH[1]` (a "rectifiable continuum") is a Peano continuum,
+  -- hence arcwise connected (Hahn–Mazurkiewicz / Eilenberg–Harrold), and any two of its points are
+  -- joined by a *simple* (injective) Lipschitz — hence absolutely continuous — arc lying in it.
+  -- Mathlib has no rectifiable-continuum / arc-length-parametrization theory, so this is isolated.
+  obtain ⟨δ, hδ0, hδ1, hδcont, hδLip, hδInj, hδmem⟩ :
+      ∃ δ : ℝ → ℂ, δ 0 = p ∧ δ 1 = q ∧ Continuous δ ∧
+        (∃ K : ℝ≥0, LipschitzOnWith K δ (Set.uIcc 0 1)) ∧
+        Set.InjOn δ (Set.Icc (0 : ℝ) 1) ∧ ∀ τ ∈ Set.Icc (0 : ℝ) 1, δ τ ∈ Γ :=
+    rectifiable_continuum_simple_arc hΓcpt hΓconn hΓfin hpΓ hqΓ
+  -- ### Assembly: package `δ` as a swapped image crossing family member with the level value.
+  obtain ⟨K, hδLip'⟩ := hδLip
+  have hδac : AbsolutelyContinuousOnInterval δ 0 1 :=
+    hδLip'.absolutelyContinuousOnInterval
+  refine ⟨δ, ⟨hδcont, hδac, ?_, ?_, ?_⟩, hδInj, ?_⟩
+  · -- `δ 0 = p ∈ Bot = f '' Qsw.leftSide`.
+    rw [hδ0]; exact hpBot
+  · -- `δ 1 = q ∈ Top = f '' Qsw.rightSide`.
+    rw [hδ1]; exact hqTop
+  · -- `δ τ ∈ Γ ⊆ L ⊆ R = f '' Qsw.image`.
+    intro τ hτ
+    have : δ τ ∈ R := (hΓsub (hδmem τ hτ)).2
+    rwa [← hRsw] at this
+  · -- `u (δ τ) = c`, since `δ τ ∈ Γ ⊆ L ⊆ u⁻¹'{c}`.
+    intro τ hτ
+    have : δ τ ∈ u ⁻¹' {c} := (hΓsub (hδmem τ hτ)).1
+    simpa using this
+
 /-- **R3c — a level set of the potential contains a separating member of the swapped family.**
 
 For a continuous `u` that is `0` on the image left side and `1` on the image right side of the
-swapped rectangle (the bottom/top edges of `Q`), every intermediate level `c ∈ (0, 1)` contains a
-separating arc: there is `δ ∈ (axisRectQuadrilateralSwap …).imageCurveFamily f`, **injective on
-`[0,1]`**, whose trace lies entirely in the level set `u⁻¹'{c}`.
+swapped rectangle (the bottom/top edges of `Q`), **almost every** intermediate level `c ∈ (0, 1)`
+contains a separating arc: there is `δ ∈ (axisRectQuadrilateralSwap …).imageCurveFamily f`,
+**injective on `[0,1]`**, whose trace lies entirely in the level set `u⁻¹'{c}`.
 
 ## Truth under the QC hypothesis
 
@@ -1208,36 +2256,56 @@ Net: this is one of the irreducible Mathlib-absent extremal-length / quasidisk n
 as the single `sorry` inside `hexists`, with the membership packaging proven axiom-clean. -/
 theorem level_set_contains_separating_member {Kqc : ℝ} (hf : IsHomeomorph f)
     (hfqc : IsQCGeometric f Kqc)
-    {u : ℂ → ℝ} (hucont : Continuous u)
+    {u : ℂ → ℝ} {Ku : ℝ≥0} (hLip : LipschitzWith Ku u)
     (hu0 : ∀ z ∈ f '' (axisRectQuadrilateral a b s t hab hst).leftSide, u z = 0)
     (hu1 : ∀ z ∈ f '' (axisRectQuadrilateral a b s t hab hst).rightSide, u z = 1) :
-    ∀ c ∈ Set.Ioo (0 : ℝ) 1, ∃ δ ∈ (axisRectQuadrilateralSwap a b s t hab hst).imageCurveFamily f,
+    ∀ᵐ c ∂(volume.restrict (Set.Ioo (0 : ℝ) 1)),
+      ∃ δ ∈ (axisRectQuadrilateralSwap a b s t hab hst).imageCurveFamily f,
       Set.InjOn δ (Set.Icc (0 : ℝ) 1) ∧ ∀ τ ∈ Set.Icc (0 : ℝ) 1, u (δ τ) = c := by
-  intro c hc
+  classical
+  have hucont : Continuous u := hLip.continuous
   set Q := axisRectQuadrilateralSwap a b s t hab hst with hQdef
-  -- ### The irreducible plane-topology residual (isolated, Mathlib-absent).
+  -- ### STEP A — co-area finiteness: a.e. `c` has a FINITE-LENGTH level set inside the image.
   --
-  -- A continuous, absolutely continuous, **injective** arc `δ : ℝ → ℂ` that
-  --   • starts on the image *bottom* edge `f '' Q.leftSide` (`δ 0`),
-  --   • ends on the image *top* edge `f '' Q.rightSide` (`δ 1`),
-  --   • stays inside the image rectangle `f '' Q.image`, and
-  --   • lies entirely on the level set `u ⁻¹' {c}` (`u (δ τ) = c` for `τ ∈ [0,1]`).
-  --
-  -- This is the **Jordan cross-cut** of the conjugate quadrilateral: under the QC hypothesis the
-  -- image is a quasidisk whose level set `{u = c}` (`c ∈ (0,1)`) separates the two image sides
-  -- (`u = 0` on the bottom, `u = 1` on the top), hence contains a simple bottom→top cross-cut,
-  -- which is *rectifiable* (a quasicircle subarc), hence absolutely continuous. See the verdict
-  -- below: this cannot be derived from `Continuous u` alone — its truth uses the QC quasicircle
-  -- structure of the geodesic potential — and even the QC version needs the Jordan curve theorem
-  -- / Poincaré–Miranda separation and Hahn–Mazurkiewicz arcwise-connectedness, all Mathlib-absent.
-  have hexists : ∃ δ : ℝ → ℂ, Continuous δ ∧ AbsolutelyContinuousOnInterval δ 0 1 ∧
-      δ 0 ∈ f '' Q.leftSide ∧ δ 1 ∈ f '' Q.rightSide ∧
-      (∀ τ ∈ Set.Icc (0 : ℝ) 1, δ τ ∈ f '' Q.image) ∧
-      Set.InjOn δ (Set.Icc (0 : ℝ) 1) ∧ (∀ τ ∈ Set.Icc (0 : ℝ) 1, u (δ τ) = c) := by
-    sorry
-  -- Everything below is the genuinely-provable packaging: unfold `imageCurveFamily` membership.
-  obtain ⟨δ, hδcont, hδac, hδ0, hδ1, hδimg, hδinj, hδlevel⟩ := hexists
-  exact ⟨δ, ⟨hδcont, hδac, hδ0, hδ1, hδimg⟩, hδinj, hδlevel⟩
+  -- The image `R = f '' Q.image` is compact (continuous image of the unit square), hence measurable
+  -- with finite area, and on it `‖∇u‖ ≤ Ku` (Lipschitz). The Eilenberg co-area inequality
+  -- `Coarea.coarea_set_sharp` bounds `∫⁻ c, μH[1] (u⁻¹{c} ∩ R) ≤ ∫⁻_R ‖∇u‖ ≤ Ku · vol R < ∞`,
+  -- so by `ae_lt_top` *almost every* level `c` has `μH[1] (u⁻¹{c} ∩ R) < ∞` — i.e. a 1-rectifiable
+  -- (finite-length) level set. This is the genuine co-area content, fully proven here.
+  set R : Set ℂ := f '' Q.image with hRdef
+  have hfc : Continuous f := hf.continuous
+  have hsqcpt : IsCompact (unitSquare : Set (ℝ × ℝ)) := isCompact_Icc.prod isCompact_Icc
+  have hRcpt : IsCompact R := (hsqcpt.image Q.continuous_toFun).image hfc
+  have hRmeas : MeasurableSet R := hRcpt.measurableSet
+  -- Slice-length function and its co-area finiteness bound.
+  set gR : ℝ → ℝ≥0∞ :=
+    fun c => (MeasureTheory.Measure.hausdorffMeasure 1 : Measure ℂ) (u ⁻¹' {c} ∩ R) with hgRdef
+  have hcoarea : ∫⁻ c, gR c ≤ ∫⁻ z in R, (‖fderiv ℝ u z‖₊ : ℝ≥0∞) ∂volume :=
+    RiemannDynamics.Coarea.coarea_set_sharp hLip hRmeas
+  -- The gradient norm is bounded by `Ku` everywhere (Lipschitz), so the RHS is `≤ Ku · vol R < ∞`.
+  have hgrad_bd : ∀ z, (‖fderiv ℝ u z‖₊ : ℝ≥0∞) ≤ (Ku : ℝ≥0∞) := by
+    intro z
+    have : ‖fderiv ℝ u z‖ ≤ (Ku : ℝ) := norm_fderiv_le_of_lipschitz ℝ hLip
+    exact_mod_cast this
+  have hgrad_int_fin : ∫⁻ z in R, (‖fderiv ℝ u z‖₊ : ℝ≥0∞) ∂volume ≠ ∞ := by
+    have hle : ∫⁻ z in R, (‖fderiv ℝ u z‖₊ : ℝ≥0∞) ∂volume
+        ≤ ∫⁻ _ in R, (Ku : ℝ≥0∞) ∂volume := lintegral_mono fun z => hgrad_bd z
+    have hconst : ∫⁻ _ in R, (Ku : ℝ≥0∞) ∂volume = (Ku : ℝ≥0∞) * volume R := by
+      rw [setLIntegral_const]
+    refine ne_of_lt (lt_of_le_of_lt hle ?_)
+    rw [hconst]
+    exact ENNReal.mul_lt_top ENNReal.coe_lt_top hRcpt.measure_lt_top
+  have hcoarea_fin : ∫⁻ c, gR c ≠ ∞ := ne_top_of_le_ne_top hgrad_int_fin hcoarea
+  -- Slice-length is measurable (compact `R`), legitimizing `ae_lt_top`.
+  have hgR_meas : Measurable gR :=
+    RiemannDynamics.Coarea.measurable_slice_hausdorff_one hucont hRcpt
+  have hfin_ae : ∀ᵐ c ∂(volume : Measure ℝ), gR c ≠ ∞ :=
+    (ae_lt_top hgR_meas hcoarea_fin).mono (fun c hc => ne_of_lt hc)
+  -- ### STEP B — restrict to `(0,1)` and feed the finite-length residual.
+  rw [ae_restrict_iff' measurableSet_Ioo]
+  filter_upwards [hfin_ae] with c hcfin hc
+  -- `c ∈ (0,1)` with a finite-length level set: the minimal a.e. JCT-escape residual applies.
+  exact finiteLength_level_set_crossing_arc hab hst hf hfqc hucont hu0 hu1 hc hcfin
 
 open scoped Pointwise in
 /-- **1-rectifiable area inequality: line integral ≤ trace Hausdorff integral.**
@@ -1678,15 +2746,16 @@ theorem level_set_sigma_ge_one {Kqc : ℝ} (hf : IsHomeomorph f)
     (hfqc : IsQCGeometric f Kqc)
     (hσ : IsAdmissibleDensity σ
       ((axisRectQuadrilateralSwap a b s t hab hst).imageCurveFamily f))
-    {u : ℂ → ℝ} (hucont : Continuous u)
+    {u : ℂ → ℝ} {Ku : ℝ≥0} (hLip : LipschitzWith Ku u)
     (hu0 : ∀ z ∈ f '' (axisRectQuadrilateral a b s t hab hst).leftSide, u z = 0)
     (hu1 : ∀ z ∈ f '' (axisRectQuadrilateral a b s t hab hst).rightSide, u z = 1) :
-    ∀ c ∈ Set.Ioo (0 : ℝ) 1,
+    ∀ᵐ c ∂(volume.restrict (Set.Ioo (0 : ℝ) 1)),
       1 ≤ ∫⁻ z in u ⁻¹' {c}, σ z
         ∂(MeasureTheory.Measure.hausdorffMeasure 1 : Measure ℂ) := by
-  intro c hc
-  obtain ⟨δ, hδfam, hδinj, hδtrace⟩ :=
-    level_set_contains_separating_member hab hst hf hfqc hucont hu0 hu1 c hc
+  -- The a.e. separating-arc data (R3c, now an a.e. statement).
+  have hsep := level_set_contains_separating_member hab hst hf hfqc hLip hu0 hu1
+  filter_upwards [hsep] with c hc
+  obtain ⟨δ, hδfam, hδinj, hδtrace⟩ := hc
   obtain ⟨hδcont, hδac, _, _, _⟩ := id hδfam
   -- Admissibility: the separating arc has `σ`-line integral `≥ 1`.
   have hadm : (1 : ℝ≥0∞) ≤ arcLengthLineIntegral σ δ := hσ.2 δ hδfam
@@ -1818,7 +2887,7 @@ theorem exists_rhoPotential_data {f : ℂ → ℂ} {Kqc : ℝ} (hf : IsHomeomorp
     (hσsupp : ∀ z ∉ closure (f '' (axisRectQuadrilateral a b s t hab hst).image), σ z = 0) :
     ∃ (u : ℂ → ℝ) (K : ℝ≥0), LipschitzWith K u ∧
       (∀ᵐ z, σ z * (‖fderiv ℝ u z‖₊ : ℝ≥0∞) ≤ ρ z * σ z) ∧
-      (∀ c ∈ Set.Ioo (0 : ℝ) 1,
+      (∀ᵐ c ∂(volume.restrict (Set.Ioo (0 : ℝ) 1)),
         1 ≤ ∫⁻ z in u ⁻¹' {c}, σ z
           ∂(MeasureTheory.Measure.hausdorffMeasure 1 : Measure ℂ)) := by
   classical
@@ -1849,7 +2918,6 @@ theorem exists_rhoPotential_data {f : ℂ → ℂ} {Kqc : ℝ} (hf : IsHomeomorp
         _ = ρ z * σ z := mul_comm _ _
     · rw [hσsupp z hmem]; simp
   · -- Level separation via R3-sep, using the boundary values of `u = v` on the image sides.
-    have hucont : Continuous u := hLip.continuous
     have hu0 : ∀ z ∈ f '' Q.leftSide, u z = 0 := by
       intro z hz
       rw [← hEqOn (hleft_sub hz)]
@@ -1858,7 +2926,7 @@ theorem exists_rhoPotential_data {f : ℂ → ℂ} {Kqc : ℝ} (hf : IsHomeomorp
       intro z hz
       rw [← hEqOn (hright_sub hz)]
       exact cappedRhoPotential_eq_one_of_mem_rightSide hz hρ (hfin z (hright_sub hz))
-    exact level_set_sigma_ge_one hab hst hf hfqc hσ hucont hu0 hu1
+    exact level_set_sigma_ge_one hab hst hf hfqc hσ hLip hu0 hu1
 
 theorem imageConjugate_lengthArea_pairwise {f : ℂ → ℂ} {Kqc : ℝ} (hf : IsHomeomorph f)
     (hfqc : IsQCGeometric f Kqc)
@@ -3154,6 +4222,519 @@ theorem image_ringModulus_ge (x : ℂ) {h R : ℝ} (hh : 0 < h) (hR : h < R) :
       ≤ curveModulus (annulusSeparatingFamily x h R) :=
   annulus_separatingModulus_ge x hh hR
 
+/-! ## STEP 3c — the QC-distortion / quasidisk foundational development
+
+This section OPENS the foundational build that closes the three entangled nodes
+`two_point_distortion` (inside `ringModulus_diam_le`), `exists_lipschitzOnWith_cappedRhoPotential`
+(R1b) and `cappedRhoPotential_local_increment` (Core A) — all of which bottom out at the
+QC-distortion / quasidisk regularity of the image inner set `E = f '' (inner square)` for an
+`IsQCGeometric f K` map.
+
+### The genuinely missing primitive (precisely diagnosed)
+
+For the image inner set `E`, an **upper bound on the level-set length**
+`μH[1] ({w | dist(w, E) = c}) ≤ C(K)·(c + r₀)` (with `r₀ ~ diam E`) — the **isoperimetric / Steiner
+content of a quasidisk** — closes all three nodes:
+
+* with it, the co-area foliation (template: `annulus_separatingModulus_ge`) gives the
+  modulus ⇒ diameter `log(D/d)` lower bound, closing `two_point_distortion` (Mori);
+* the quasidisk regularity it expresses (quasiconvexity + Ahlfors-regular quasicircle boundary)
+  also gives R1b (geodesic potential Lipschitz/quasiconvex) and Core A (boundary null = quasicircle
+  measure zero).
+
+### The development tree (dependency order, with reachability tags)
+
+The bottom-up tree is:
+
+1. `coarea_distFunction_level_length_integral_le` (**PROVEN, axiom-clean** — the foundational leaf):
+   the **integrated** co-area level-length bound for the distance function: for any `E ⊆ ℂ` and
+   `c₀ ≤ c₁`, `∫_{[c₀,c₁]} μH[1] ({w | dist(w,E)=c}) dc ≤ vol ({w | c₀ ≤ dist(w,E) ≤ c₁})`. This
+   is the honest, Mathlib-reachable content of the keystone, supplied directly by the proven planar
+   co-area `Coarea.coarea_set_sharp` with `u = infDist · E` (`1`-Lipschitz, so `‖∇u‖ ≤ 1`), so the
+   gradient side collapses to the area of the level band. (The keystone's *pointwise-in-`c`* form is
+   strictly stronger; this integrated form is what co-area alone yields, and it is the genuine first
+   leaf the whole development rests on.)
+
+2. `volume_distFunction_band_le_of_isQCDistortion` (`:= by sorry`, **needs the QC area-distortion
+   estimate** — net-new): the area of the level band `{c₀ ≤ dist(·,E) ≤ c₁}` of the image inner set
+   `E = f '' (inner square)` is `≤ C(K)·(c₁ − c₀)·(c₁ + r₀)` (an annular-area distortion bound:
+   under a `K`-QC map the `c`-neighbourhood of a quasidisk has controlled area growth). Feeds the
+   keystone. Reachable in principle from `hf.2.2` + the proven ring modulus, but genuinely
+   two-dimensional (the QC Ahlfors-regularity input), hence Phase-1 `sorry`.
+
+3. `image_inner_level_length_le` (**PROVEN from (2)**, the KEYSTONE level-length bound): the
+   **a.e.-in-`c`** upper bound `∀ᵐ c ≥ 0, μH[1] ({w | dist(w,E)=c}) ≤ C(K)·(c + diam E)` for
+   `E = f''(inner square)`. Now DERIVED (modulo (2)) from the integrated leaf (1) + the band-area
+   bound (2) by the Lebesgue-differentiation engine `distortion_band_diff_core` (axiom-clean): the
+   leaf gives `∫_{[a,b]} μH[1](level) ≤ vol(band[a,b])` and (2) bounds the band area by
+   `(2K+2)·(b−a)·(b+diam E)`, so the integrated band bound holds with `C = 2K+2`, `D = diam E`;
+   differentiating yields the a.e. pointwise bound (level-length globally measurable via
+   `measurable_distFunction_level_length`, also axiom-clean). The statement was changed from the
+   former `∀ c` to `∀ᵐ c`: a.e. is the honest reachable form (the keystone equals `vol({dist<c})'`
+   a.e., a derivative, hence a.e.-defined) and is exactly what the co-area modulus foliation in
+   `two_point_distortion`/R1b consumes (the foliation integrates `∫ dc / μH[1](level c)`). This is
+   the single keystone consumed by all three targets; its only residual is now (2).
+
+4. `image_inner_quasiconvex` (`:= by sorry`, **quasidisk quasiconvexity**): `E = f''(inner square)`
+   is `C(K)`-quasiconvex (any two points joined by a curve of length `≤ C(K)·dist`). Feeds R1b
+   (Lipschitz geodesic ρ-potential) and Core A (segment-in-image). Net-new quasidisk theory.
+
+5. `image_inner_boundary_null` (`:= by sorry`, **null quasicircle boundary**):
+   `vol (frontier E) = 0` for `E = f''(inner square)`. Feeds Core A (a.e. interiority of the closed
+   image). Follows from the keystone (3) (a quasicircle has σ-finite `μH[1]`, hence planar measure
+   zero) but isolated.
+
+### Which target each new lemma feeds
+
+* `two_point_distortion` (Mori, inside `ringModulus_diam_le`) ⟸ `image_inner_level_length_le`
+  (3, PROVEN from (2)) ⟸ (2) ⟸ (1, PROVEN). The chain above (2) is now closed; (2) is the sole
+  residual feeding Mori through this route.
+* `exists_lipschitzOnWith_cappedRhoPotential` (R1b) ⟸ `image_inner_quasiconvex` (4) +
+  `image_inner_level_length_le` (3).
+* `cappedRhoPotential_local_increment` (Core A) ⟸ `image_inner_quasiconvex` (4) +
+  `image_inner_boundary_null` (5).
+
+### Honest total-depth estimate
+
+The foundational leaf (1) is **banked**, and the keystone (3) is now **PROVEN from (2)** (the
+analytic Lebesgue-differentiation node is fully discharged, axiom-clean). The remaining residuals
+are: (2) the QC annular-area distortion bound — the **single genuinely-2D analytic node** under (3)
+(its `(c₁−c₀)`-linear width factor is a co-dimension-1 / perimeter estimate: it encodes the
+Ahlfors-regularity of the quasicircle and is NOT derivable from the co-dimension-0 roundness
+`diam² ≲ area` alone; it is the honest Mathlib-absent quasidisk-perimeter input), (4) quasiconvexity
+and (5) boundary-nullity (2 quasidisk-structure nodes). Net `~3` genuinely-2D residuals above the
+proven leaf+keystone — the irreducible quasidisk core, each isolated against a concrete proven
+foundation. -/
+
+open scoped Pointwise in
+/-- **Foundational leaf (PROVEN, axiom-clean): the integrated co-area level-length bound for the
+distance function.**
+
+For any set `E ⊆ ℂ` and reals `c₀ ≤ c₁`, the integral over the band `[c₀, c₁]` of the
+`μH[1]`-length of the level set `{w | dist(w, E) = c}` is bounded by the planar area of the level
+band `{w | c₀ ≤ dist(w, E) ≤ c₁}`:
+
+`∫_{[c₀,c₁]} μH[1] ({w | dist(w,E)=c}) dc ≤ vol ({w | c₀ ≤ dist(w,E) ≤ c₁})`.
+
+This is the genuinely **Mathlib-reachable** first leaf of the QC-distortion / quasidisk development:
+the (integrated) isoperimetric/Steiner content of the level-set length. It is supplied directly by
+the proven planar co-area inequality `Coarea.coarea_set_sharp` with `u = infDist · E`, which is
+`1`-Lipschitz (`Metric.lipschitz_infDist_pt`), so its Fréchet derivative has norm `≤ 1` everywhere
+(`norm_fderiv_le_of_lipschitz`) and the gradient side of the co-area inequality collapses to the
+area of the band. On the band `[c₀, c₁]` every level set `u ⁻¹' {c}` lies inside the band `A`
+(`u w = c ∈ [c₀,c₁]`), so intersecting with `A` is harmless, giving the stated `≤`.
+
+The keystone QC level-length bound `image_inner_level_length_le` is the *pointwise-in-`c`* upper
+bound `μH[1] (level c) ≤ C(K)·(c + r₀)`; this integrated form is what co-area alone yields and is
+the honest reachable foundation the whole development rests on. -/
+theorem coarea_distFunction_level_length_integral_le (E : Set ℂ) {c₀ c₁ : ℝ} :
+    ∫⁻ c in Set.Icc c₀ c₁,
+        (MeasureTheory.Measure.hausdorffMeasure 1 : Measure ℂ)
+          ((fun z => Metric.infDist z E) ⁻¹' {c})
+      ≤ volume {w : ℂ | c₀ ≤ Metric.infDist w E ∧ Metric.infDist w E ≤ c₁} := by
+  classical
+  set u : ℂ → ℝ := fun z => Metric.infDist z E with hu_def
+  -- `u = infDist · E` is `1`-Lipschitz; this is the whole content of the gradient bound below.
+  have hLip : LipschitzWith 1 u := Metric.lipschitz_infDist_pt E
+  set A : Set ℂ := {w : ℂ | c₀ ≤ u w ∧ u w ≤ c₁} with hA_def
+  have hAmeas : MeasurableSet A := by
+    apply MeasurableSet.inter
+    · exact measurableSet_le measurable_const (Metric.continuous_infDist_pt E).measurable
+    · exact measurableSet_le (Metric.continuous_infDist_pt E).measurable measurable_const
+  -- The proven planar co-area inequality on the band `A`.
+  have hcoarea : ∫⁻ c, (MeasureTheory.Measure.hausdorffMeasure 1 : Measure ℂ) (u ⁻¹' {c} ∩ A)
+      ≤ ∫⁻ z in A, (‖fderiv ℝ u z‖₊ : ℝ≥0∞) ∂volume :=
+    RiemannDynamics.Coarea.coarea_set_sharp hLip hAmeas
+  -- `‖∇u‖ ≤ 1` everywhere, so the gradient side collapses to `vol A`.
+  have hgrad : ∫⁻ z in A, (‖fderiv ℝ u z‖₊ : ℝ≥0∞) ∂volume ≤ volume A := by
+    calc ∫⁻ z in A, (‖fderiv ℝ u z‖₊ : ℝ≥0∞) ∂volume
+        ≤ ∫⁻ _ in A, (1 : ℝ≥0∞) ∂volume := by
+          apply lintegral_mono
+          intro z
+          have hb : ‖fderiv ℝ u z‖ ≤ ((1 : ℝ≥0) : ℝ) := norm_fderiv_le_of_lipschitz ℝ hLip
+          rw [NNReal.coe_one] at hb
+          calc (‖fderiv ℝ u z‖₊ : ℝ≥0∞) ≤ ((1 : ℝ≥0) : ℝ≥0∞) := by exact_mod_cast hb
+            _ = 1 := by simp
+      _ = volume A := by rw [setLIntegral_const, one_mul]
+  -- On `c ∈ [c₀,c₁]`, the level set `u⁻¹{c}` lies inside `A`, so `u⁻¹{c} ∩ A = u⁻¹{c}`.
+  have hLHS : ∫⁻ c in Set.Icc c₀ c₁,
+        (MeasureTheory.Measure.hausdorffMeasure 1 : Measure ℂ) (u ⁻¹' {c})
+      ≤ ∫⁻ c, (MeasureTheory.Measure.hausdorffMeasure 1 : Measure ℂ) (u ⁻¹' {c} ∩ A) := by
+    rw [← lintegral_indicator measurableSet_Icc]
+    apply lintegral_mono
+    intro c
+    change (Set.Icc c₀ c₁).indicator
+        (fun c => (MeasureTheory.Measure.hausdorffMeasure 1 : Measure ℂ) (u ⁻¹' {c})) c
+      ≤ (MeasureTheory.Measure.hausdorffMeasure 1 : Measure ℂ) (u ⁻¹' {c} ∩ A)
+    by_cases hc' : c ∈ Set.Icc c₀ c₁
+    · rw [Set.indicator_of_mem hc']
+      have hsub : u ⁻¹' {c} ⊆ A := by
+        intro z hz
+        simp only [Set.mem_preimage, Set.mem_singleton_iff] at hz
+        rw [hA_def, Set.mem_setOf_eq, hz]
+        exact ⟨hc'.1, hc'.2⟩
+      rw [Set.inter_eq_left.mpr hsub]
+    · rw [Set.indicator_of_notMem hc']; exact zero_le _
+  exact le_trans hLHS (le_trans hcoarea hgrad)
+
+/-- **(2) QC annular-area distortion bound for the image inner set (`:= by sorry`, Phase-1).**
+
+For an `IsQCGeometric f K` map and the image inner set `E = f '' (qcInnerSquare x r)`, the planar
+area of the level band `{w | c₀ ≤ dist(w, E) ≤ c₁}` is controlled by
+`C(K)·(c₁ − c₀)·(c₁ + r₀)`, where `r₀` is a fixed multiple of `diam E`. This is the
+**QC Ahlfors / annular-area distortion** estimate: the `c`-neighbourhood of a `K`-quasidisk has
+controlled area growth. It is the **single genuinely-2D residual** feeding the now-PROVEN keystone
+`image_inner_level_length_le` (3) (the analytic Lebesgue-differentiation step above (2) is fully
+discharged by `distortion_band_diff_core`). The `(c₁−c₀)`-LINEAR width factor makes this a
+*co-dimension-1 / perimeter* estimate — it encodes the Ahlfors-regularity of the quasicircle
+boundary and is **NOT** derivable from the co-dimension-0 roundness `diam² ≲ area`
+(`qc_image_ball_diam_sq_le_volume`) alone: roundness controls AREA, not the band's co-dimension-1
+thinness. The honest missing classical input is the quasidisk Steiner/Minkowski-content bound (the
+length of the level curve `∂{dist<c}` is `≲ diam E + c`), which is Mathlib-absent. Isolated as a
+Phase-1 `sorry`; it is the irreducible quasidisk-perimeter node, and closing it closes (3)→Mori.
+
+## Circularity verdict (does (2) need Mori / two-point distortion?)
+
+**The genuine foundation of (2) is the Grötzsch/Teichmüller extremal-length ring inequality
+(symmetrization) — the SAME node that `ringModulus_diam_le` / `two_point_distortion` need.** Two
+independent audits (a GMT/QC analysis and the parity audit in `ringModulus_diam_le`/
+`qc_quasiround_data`) agree:
+
+* The *image-side* covering routes for (2) (cover the `c`-band by `f`-image balls / Whitney squares
+  and count them) are genuinely **CIRCULAR**: the cover count `N ≲ diam E/(c₁−c₀)` IS the
+  Ahlfors-1-regularity / Minkowski-content of `∂E` that (2) asserts. Roundness controls each ball's
+  *area* (co-dim 0) but the *count* is the co-dim-1 perimeter — exactly (2).
+* A *source-side* route (count a Vitali packing on the Euclidean square boundary `∂S`, where the
+  count is the trivial perimeter, then transfer per-ball areas by roundness) avoids the circular
+  image-side count, BUT to calibrate each source ball's radius to the image band scale it needs a
+  *one-scale ring inversion* `(Inversion-lite)`: "a ring of bounded modulus separating continua at
+  diameter-ratio `ρ` has `ρ ≤ Φ(modulus)`." That inversion converts a modulus bound into a
+  diameter-ratio bound — the **direction-reversing** step. The repo's ring theory proves only the
+  *modulus VALUE of the round annulus* (`annulus_crossingModulus_eq`, `image_ringModulus_ge`,
+  axiom-clean) — NOT the **extremality/monotonicity for arbitrary separating continua**, which is
+  the Grötzsch/Teichmüller *symmetrization*. So `(Inversion-lite)` is NOT a free corollary of the
+  ring-modulus VALUES + the quadrilateral hypothesis `hf.2.2`; it bottoms out at the same
+  symmetrization bundled into the `two_point_distortion` (b)-node.
+
+**Verdict: in the repository as currently wired, (2) cannot be built from the proven tools (ring-
+modulus VALUES + roundness + `hf.2.2`) without first proving the Grötzsch extremal-length
+EXTREMALITY (symmetrization).** (2) is *strictly cheaper* than full Mori only in degree (it needs
+the *one-scale* germ of symmetrization, whereas Mori needs its iterated, all-point-pairs closure) —
+but the repo has NEITHER, so for the formalization the routes are **co-blocked on symmetrization**.
+The "level-length (3) ⇒ Mori" route is therefore NOT a free bootstrap from the ring modulus: the
+genuine foundation is the **Teichmüller symmetrization / Grötzsch ring extremality**, not the
+distance-function level-length. (The level-length route legitimately *organizes* the descent to
+Mori, but does not avoid the symmetrization input.) -/
+theorem volume_distFunction_band_le_of_isQCDistortion {f : ℂ → ℂ} {K : ℝ}
+    (hf : IsQCGeometric f K) (x : ℂ) {r : ℝ} (hr : 0 < r) {c₀ c₁ : ℝ} (hc₀ : 0 ≤ c₀)
+    (hc : c₀ ≤ c₁) :
+    volume {w : ℂ | c₀ ≤ Metric.infDist w (f '' qcInnerSquare x r) ∧
+        Metric.infDist w (f '' qcInnerSquare x r) ≤ c₁}
+      ≤ ENNReal.ofReal ((2 * K + 2) * (c₁ - c₀) *
+          (c₁ + Metric.diam (f '' qcInnerSquare x r))) := by
+  sorry
+
+/-- **Differentiation core (PROVEN, axiom-clean).**
+
+If a nonnegative measurable `g : ℝ → ℝ≥0∞` satisfies the *integrated band bound*
+`∫_{[a,b]} g ≤ C·(b−a)·(b+D)` for all `0 ≤ a ≤ b` (with `C, D ≥ 0`), then for almost every `c ≥ 0`
+the *pointwise* bound `g c ≤ C·(c+D)` holds. This is the Lebesgue-differentiation step that converts
+the integrated level-length bound (proven co-area leaf composed with the band-area bound) into the
+pointwise keystone. Proof: `H := 𝟙_{[0,∞)}·g.toReal` is locally integrable (the band bound makes
+every `∫_{[0,N]} g` finite); the Lebesgue differentiation theorem gives
+`d/dx ∫₀ˣ H = H c = g c` a.e.; and the right difference quotient
+`(∫₀ˣ H − ∫₀ᶜ H)/(x−c) = (∫⁻_{(c,x]} g).toReal/(x−c) ≤ C·(x+D)` tends to `C·(c+D)`. -/
+private theorem distortion_band_diff_core (g : ℝ → ℝ≥0∞) (hg : Measurable g) {C D : ℝ}
+    (hC : 0 ≤ C) (hD : 0 ≤ D)
+    (hbound : ∀ a b : ℝ, 0 ≤ a → a ≤ b →
+      ∫⁻ t in Set.Icc a b, g t ≤ ENNReal.ofReal (C * (b - a) * (b + D))) :
+    ∀ᵐ c, 0 ≤ c → g c ≤ ENNReal.ofReal (C * (c + D)) := by
+  set G : ℝ → ℝ := fun t => (g t).toReal with hG
+  have hGmeas : Measurable G := hg.ennreal_toReal
+  set H : ℝ → ℝ := (Set.Ici (0:ℝ)).indicator G with hH
+  have hfin : ∀ a b : ℝ, 0 ≤ a → a ≤ b → ∫⁻ t in Set.Icc a b, g t ≠ ⊤ := fun a b ha hab =>
+    (lt_of_le_of_lt (hbound a b ha hab) ENNReal.ofReal_lt_top).ne
+  have hGint : ∀ a b : ℝ, 0 ≤ a → a ≤ b → IntegrableOn G (Set.Icc a b) volume := by
+    intro a b ha hab
+    rw [IntegrableOn, hG, integrable_toReal_iff hg.aemeasurable
+        ((ae_lt_top hg (hfin a b ha hab)).mono (fun x hx => hx.ne))]
+    exact hfin a b ha hab
+  have hgfin_ae : ∀ᵐ t, 0 ≤ t → g t ≠ ⊤ := by
+    rw [ae_iff]
+    have hset : {t : ℝ | ¬ (0 ≤ t → g t ≠ ⊤)} = {t : ℝ | 0 ≤ t ∧ g t = ⊤} := by
+      ext t; simp only [Set.mem_setOf_eq, Classical.not_imp, not_ne_iff]
+    rw [hset]
+    refine measure_mono_null
+      (show {t : ℝ | 0 ≤ t ∧ g t = ⊤} ⊆ ⋃ n : ℕ, (Set.Icc (0:ℝ) n ∩ {t | g t = ⊤}) from ?_) ?_
+    · rintro t ⟨ht0, httop⟩
+      obtain ⟨n, hn⟩ := exists_nat_ge t
+      exact Set.mem_iUnion.2 ⟨n, ⟨ht0, hn⟩, httop⟩
+    rw [measure_iUnion_null_iff]
+    intro n
+    have htop := ae_lt_top hg (hfin 0 n le_rfl (Nat.cast_nonneg n))
+    rw [Set.inter_comm]
+    have heq : volume.restrict (Set.Icc (0:ℝ) n) {t | g t = ⊤} = 0 := by
+      have hae : ∀ᵐ t ∂(volume.restrict (Set.Icc (0:ℝ) n)), g t ≠ ⊤ :=
+        htop.mono (fun x hx => hx.ne)
+      rw [ae_iff] at hae; simpa using hae
+    rwa [Measure.restrict_apply' measurableSet_Icc] at heq
+  have hHloc : LocallyIntegrable H volume := by
+    rw [locallyIntegrable_iff]
+    intro Kc hKc
+    obtain ⟨a, b, hsub⟩ : ∃ a b : ℝ, Kc ⊆ Set.Icc a b := by
+      obtain ⟨ρ, hρ⟩ := hKc.isBounded.subset_closedBall 0
+      refine ⟨-ρ, ρ, fun y hy => ?_⟩
+      have := hρ hy; rw [Real.closedBall_eq_Icc] at this; simpa using this
+    refine IntegrableOn.mono_set ?_ hsub
+    rw [hH, integrableOn_indicator_iff measurableSet_Ici]
+    by_cases hab : a ≤ b
+    · by_cases hb0 : 0 ≤ b
+      · refine IntegrableOn.mono_set (hGint (max 0 a) b (le_max_left _ _) (max_le hb0 hab)) ?_
+        intro t ht
+        rw [Set.mem_inter_iff, Set.mem_Ici, Set.mem_Icc] at ht
+        exact Set.mem_Icc.2 ⟨max_le ht.1 ht.2.1, ht.2.2⟩
+      · push_neg at hb0
+        have hempty : Set.Ici (0:ℝ) ∩ Set.Icc a b = ∅ := by
+          ext t; simp only [Set.mem_inter_iff, Set.mem_Ici, Set.mem_Icc, Set.mem_empty_iff_false,
+            iff_false, not_and]
+          intro ht0 htab htab2; linarith
+        rw [hempty]; exact integrableOn_empty
+    · push_neg at hab
+      have hempty : Set.Ici (0:ℝ) ∩ Set.Icc a b = ∅ := by
+        rw [Set.Icc_eq_empty (by linarith), Set.inter_empty]
+      rw [hempty]; exact integrableOn_empty
+  have hLDT := LocallyIntegrable.ae_hasDerivAt_integral hHloc
+  filter_upwards [hLDT, hgfin_ae] with c hc hcfin hc0
+  have hcfin' : g c ≠ ⊤ := hcfin hc0
+  have hderiv : HasDerivAt (fun x => ∫ (t : ℝ) in (0:ℝ)..x, H t) (H c) c := hc 0
+  have hHc : H c = (g c).toReal := by rw [hH, Set.indicator_of_mem (Set.mem_Ici.2 hc0)]
+  have hbd : H c ≤ C * (c + D) := by
+    have hdwithin : HasDerivWithinAt (fun x => ∫ (t : ℝ) in (0:ℝ)..x, H t) (H c)
+        (Set.Ioi c) c := hderiv.hasDerivWithinAt
+    rw [hasDerivWithinAt_iff_tendsto_slope] at hdwithin
+    have hIoi_diff : Set.Ioi c \ {c} = Set.Ioi c := by rw [Set.diff_singleton_eq_self]; simp
+    rw [hIoi_diff] at hdwithin
+    have hslope : ∀ x ∈ Set.Ioi c,
+        slope (fun x => ∫ (t : ℝ) in (0:ℝ)..x, H t) c x ≤ C * (x + D) := by
+      intro x hx
+      have hcx : c < x := hx
+      have hcxle : c ≤ x := le_of_lt hcx
+      rw [slope_def_field]
+      have hsub : (∫ (t : ℝ) in (0:ℝ)..x, H t) - (∫ (t : ℝ) in (0:ℝ)..c, H t)
+          = ∫ (t : ℝ) in c..x, H t := by
+        rw [intervalIntegral.integral_interval_sub_left]
+        · exact (hHloc.integrableOn_isCompact isCompact_uIcc).intervalIntegrable
+        · exact (hHloc.integrableOn_isCompact isCompact_uIcc).intervalIntegrable
+      rw [hsub, intervalIntegral.integral_of_le hcxle]
+      have hHGeq : ∫ (t : ℝ) in Set.Ioc c x, H t = ∫ (t : ℝ) in Set.Ioc c x, G t := by
+        apply setIntegral_congr_fun measurableSet_Ioc
+        intro t ht
+        rw [hH, Set.indicator_of_mem (Set.mem_Ici.2 (le_trans hc0 ht.1.le))]
+      rw [hHGeq]
+      have hIocfin : ∫⁻ t in Set.Ioc c x, g t ≠ ⊤ :=
+        ((lintegral_mono_set Set.Ioc_subset_Icc_self).trans_lt
+          (lt_top_iff_ne_top.2 (hfin c x hc0 hcxle))).ne
+      rw [hG, integral_toReal hg.aemeasurable (ae_lt_top hg hIocfin)]
+      have hle : (∫⁻ t in Set.Ioc c x, g t).toReal ≤ C * (x - c) * (x + D) := by
+        have h1 : ∫⁻ t in Set.Ioc c x, g t ≤ ENNReal.ofReal (C * (x - c) * (x + D)) :=
+          (lintegral_mono_set Set.Ioc_subset_Icc_self).trans (hbound c x hc0 hcxle)
+        calc (∫⁻ t in Set.Ioc c x, g t).toReal
+            ≤ (ENNReal.ofReal (C * (x - c) * (x + D))).toReal := ENNReal.toReal_mono (by simp) h1
+          _ = C * (x - c) * (x + D) := ENNReal.toReal_ofReal
+                (by have h2 : 0 ≤ x - c := by linarith
+                    have h3 : 0 ≤ x + D := by linarith
+                    positivity)
+      rw [div_le_iff₀ (by linarith)]
+      calc (∫⁻ t in Set.Ioc c x, g t).toReal ≤ C * (x - c) * (x + D) := hle
+        _ = C * (x + D) * (x - c) := by ring
+    have htend2 : Tendsto (fun x => C * (x + D)) (𝓝[Set.Ioi c] c) (𝓝 (C * (c + D))) := by
+      apply Tendsto.mono_left _ nhdsWithin_le_nhds
+      exact (continuous_const.mul (continuous_id.add continuous_const)).tendsto c
+    have hNe : (𝓝[Set.Ioi c] c).NeBot := nhdsWithin_Ioi_neBot (le_refl c)
+    refine le_of_tendsto_of_tendsto hdwithin htend2 ?_
+    filter_upwards [self_mem_nhdsWithin] with x hx using hslope x hx
+  rw [← ENNReal.ofReal_toReal hcfin', ← hHc]
+  exact ENNReal.ofReal_le_ofReal hbd
+
+/-- **Global measurability of the distance-function level-length** (PROVEN). For a *compact*
+`E ⊆ ℂ`, the map `c ↦ μH[1] ({w | infDist w E = c})` is measurable. Each level set is bounded
+(`{infDist · E = c} ⊆ cthickening c E`), so it equals its intersection with the compact thickening
+`cthickening N E` once `N ≥ c`; the slice-measurability `measurable_slice_hausdorff_one` (compact
+window) then gives measurability of each `c ↦ μH[1] (· ∩ cthickening N E)`, and the full level-length
+is their countable supremum. -/
+private theorem measurable_distFunction_level_length {E : Set ℂ} (hE : IsCompact E)
+    (hEne : E.Nonempty) :
+    Measurable (fun c => (MeasureTheory.Measure.hausdorffMeasure 1 : Measure ℂ)
+      ((fun w => Metric.infDist w E) ⁻¹' {c})) := by
+  set u : ℂ → ℝ := fun w => Metric.infDist w E with hu
+  have hucont : Continuous u := Metric.continuous_infDist_pt E
+  -- the full level-length is the countable sup of compact-window slice-lengths
+  have hkey : ∀ c : ℝ, (μH[1] : Measure ℂ) (u ⁻¹' {c})
+      = ⨆ n : ℕ, (μH[1] : Measure ℂ) (u ⁻¹' {c} ∩ Metric.cthickening (n : ℝ) E) := by
+    intro c
+    refine le_antisymm ?_ ?_
+    · -- pick N ≥ c with N ≥ 0; on that window the intersection is the whole level set
+      obtain ⟨N, hN⟩ := exists_nat_ge c
+      have hsub : u ⁻¹' {c} ⊆ Metric.cthickening (N : ℝ) E := by
+        intro w hw
+        simp only [Set.mem_preimage, Set.mem_singleton_iff, hu] at hw
+        rw [Metric.mem_cthickening_iff]
+        have hle : Metric.infEDist w E ≤ ENNReal.ofReal c := by
+          rw [← hw]
+          rw [Metric.infDist, ENNReal.ofReal_toReal (Metric.infEDist_ne_top hEne)]
+        exact le_trans hle (ENNReal.ofReal_le_ofReal hN)
+      calc (μH[1] : Measure ℂ) (u ⁻¹' {c})
+          = (μH[1] : Measure ℂ) (u ⁻¹' {c} ∩ Metric.cthickening (N : ℝ) E) := by
+            rw [Set.inter_eq_left.2 hsub]
+        _ ≤ ⨆ n : ℕ, (μH[1] : Measure ℂ) (u ⁻¹' {c} ∩ Metric.cthickening (n : ℝ) E) :=
+            le_iSup (fun n : ℕ => (μH[1] : Measure ℂ)
+              (u ⁻¹' {c} ∩ Metric.cthickening (n : ℝ) E)) N
+    · exact iSup_le fun n => measure_mono Set.inter_subset_left
+  rw [funext hkey]
+  apply Measurable.iSup
+  intro n
+  exact RiemannDynamics.Coarea.measurable_slice_hausdorff_one hucont (hE.cthickening)
+
+/-- **(3) KEYSTONE — the a.e. QC level-length bound (PROVEN from (2), axiom-pending on (2)).**
+
+For an `IsQCGeometric f K` map and the image inner set `E = f '' (qcInnerSquare x r)`, the
+`μH[1]`-length of the distance-function level set is bounded for **almost every** `c ≥ 0`:
+`μH[1] ({w | infDist w E = c}) ≤ (2K+2)·(c + diam E)`. This is the **isoperimetric / Steiner
+content** of a quasidisk — the keystone consumed by all three target nodes.
+
+It is now derived (modulo (2)) from the proven integrated leaf
+`coarea_distFunction_level_length_integral_le` together with the band-area bound
+`volume_distFunction_band_le_of_isQCDistortion` (2) by the Lebesgue-differentiation engine
+`distortion_band_diff_core`: the leaf gives `∫_{[a,b]} μH[1](level) ≤ vol(band[a,b])` and (2) bounds
+the band area by `(2K+2)·(b−a)·(b+diam E)`, so the integrated band bound holds with `C = 2K+2`,
+`D = diam E`; differentiating yields the a.e. pointwise bound. The `∀ᵐ c` form (rather than the
+former `∀ c`) is exactly what the co-area modulus foliation in `two_point_distortion`/R1b consumes
+(the foliation integrates `∫ dc / μH[1](level c)`, an a.e. statement). The level-length is globally
+measurable by `measurable_distFunction_level_length` (`E` compact). -/
+theorem image_inner_level_length_le {f : ℂ → ℂ} {K : ℝ}
+    (hf : IsQCGeometric f K) (x : ℂ) {r : ℝ} (hr : 0 < r) :
+    ∀ᵐ c : ℝ, 0 ≤ c →
+      (MeasureTheory.Measure.hausdorffMeasure 1 : Measure ℂ)
+        ((fun w => Metric.infDist w (f '' qcInnerSquare x r)) ⁻¹' {c})
+      ≤ ENNReal.ofReal ((2 * K + 2) * (c + Metric.diam (f '' qcInnerSquare x r))) := by
+  set E : Set ℂ := f '' qcInnerSquare x r with hE
+  have hfc : Continuous f := hf.2.1.isHomeomorph.continuous
+  -- `E` is compact and nonempty.
+  have hEcompact : IsCompact E := by
+    rw [hE]
+    refine IsCompact.image ?_ hfc
+    -- inner square compact (closed + bounded), same proof shape as `isCompact_qcOuterSquare`.
+    apply Metric.isCompact_of_isClosed_isBounded
+    · simp only [qcInnerSquare, axisRect, Set.setOf_and]
+      exact ((isClosed_le continuous_const Complex.continuous_re).inter
+          (isClosed_le Complex.continuous_re continuous_const)).inter
+        ((isClosed_le continuous_const Complex.continuous_im).inter
+          (isClosed_le Complex.continuous_im continuous_const))
+    · refine (Metric.isBounded_closedBall (x := x) (r := 2 * r)).subset (fun z hz => ?_)
+      simp only [qcInnerSquare, axisRect, Set.mem_setOf_eq] at hz
+      obtain ⟨⟨hre0, hre1⟩, him0, him1⟩ := hz
+      have hs2 : (0:ℝ) < Real.sqrt 2 := Real.sqrt_pos.2 (by norm_num)
+      have h1 : r / Real.sqrt 2 ≤ r := by
+        rw [div_le_iff₀ hs2]; nlinarith [Real.sq_sqrt (by norm_num : (0:ℝ) ≤ 2),
+          Real.sqrt_nonneg 2, hr.le]
+      rw [Metric.mem_closedBall, Complex.dist_eq]
+      refine le_trans (Complex.norm_le_abs_re_add_abs_im _) ?_
+      simp only [Complex.sub_re, Complex.sub_im]
+      have hre : |z.re - x.re| ≤ r := abs_le.2 ⟨by linarith, by linarith⟩
+      have him : |z.im - x.im| ≤ r := abs_le.2 ⟨by linarith, by linarith⟩
+      linarith
+  have hEne : E.Nonempty := by
+    rw [hE]
+    refine Set.Nonempty.image _ ?_
+    refine ⟨x, ?_⟩
+    simp only [qcInnerSquare, axisRect, Set.mem_setOf_eq]
+    have hs2 : (0:ℝ) < Real.sqrt 2 := Real.sqrt_pos.2 (by norm_num)
+    have hpos : 0 < r / Real.sqrt 2 := by positivity
+    exact ⟨⟨by linarith, by linarith⟩, by linarith, by linarith⟩
+  -- nonnegativity of the constant
+  have hK1 : (1:ℝ) ≤ K := hf.1
+  have hC0 : (0:ℝ) ≤ 2 * K + 2 := by linarith
+  have hD0 : (0:ℝ) ≤ Metric.diam E := Metric.diam_nonneg
+  -- the integrated band bound: leaf ∘ (2).
+  set g : ℝ → ℝ≥0∞ := fun c => (μH[1] : Measure ℂ) ((fun w => Metric.infDist w E) ⁻¹' {c}) with hg
+  have hgmeas : Measurable g := measurable_distFunction_level_length hEcompact hEne
+  have hband : ∀ a b : ℝ, 0 ≤ a → a ≤ b →
+      ∫⁻ t in Set.Icc a b, g t
+        ≤ ENNReal.ofReal ((2 * K + 2) * (b - a) * (b + Metric.diam E)) := by
+    intro a b ha hab
+    calc ∫⁻ t in Set.Icc a b, g t
+        ≤ volume {w : ℂ | a ≤ Metric.infDist w E ∧ Metric.infDist w E ≤ b} :=
+          coarea_distFunction_level_length_integral_le E
+      _ ≤ ENNReal.ofReal ((2 * K + 2) * (b - a) * (b + Metric.diam E)) := by
+          rw [hE]
+          exact volume_distFunction_band_le_of_isQCDistortion hf x hr ha hab
+  exact distortion_band_diff_core g hgmeas hC0 hD0 hband
+
+/-- **(4) Quasidisk quasiconvexity of the image inner set (`:= by sorry`, Phase-1).**
+
+For an `IsQCGeometric f K` map, the image inner set `E = f '' (qcInnerSquare x r)` is
+`C(K)`-quasiconvex: any two of its points are joined by an absolutely continuous curve inside `E`
+whose length is at most `C(K)` times their distance. This is the net-new quasidisk-structure input
+feeding R1b (Lipschitz geodesic ρ-potential) and Core A (segment-in-image). Phase-1 `sorry`. -/
+theorem image_inner_quasiconvex {f : ℂ → ℂ} {K : ℝ}
+    (hf : IsQCGeometric f K) (x : ℂ) {r : ℝ} (hr : 0 < r) :
+    ∃ C : ℝ, 0 ≤ C ∧ ∀ p ∈ f '' qcInnerSquare x r, ∀ q ∈ f '' qcInnerSquare x r,
+      ∃ γ : ℝ → ℂ, Continuous γ ∧ AbsolutelyContinuousOnInterval γ 0 1 ∧
+        γ 0 = p ∧ γ 1 = q ∧ (∀ t ∈ Set.Icc (0:ℝ) 1, γ t ∈ f '' qcInnerSquare x r) ∧
+        (∫⁻ t in Set.Icc (0:ℝ) 1, (‖deriv γ t‖₊ : ℝ≥0∞)) ≤ ENNReal.ofReal (C * dist p q) := by
+  sorry
+
+/-- **(5) Null quasicircle boundary of the image inner set (`:= by sorry`, Phase-1).**
+
+For an `IsQCGeometric f K` map, the topological boundary of the image inner set
+`E = f '' (qcInnerSquare x r)` is planar-null: `vol (frontier E) = 0`. **TRUE**, but it is a genuine
+WALL, NOT a corollary of the keystone (3).
+
+## The originally-claimed route is FALSE-premised (corrected)
+
+The prior docstring asserted "the boundary is a quasicircle, which has σ-finite `μH[1]`-length
+(from the keystone at `c = 0`), hence planar measure zero." **Both halves of that are wrong.**
+
+* `frontier E ⊆ {w | infDist w E = 0} = E` (E is compact, hence closed); that `c = 0` leaf is *all
+  of* `E`, with `μH[1] E = ∞` (a 2-D region). So the keystone applied at `c = 0` would be FALSE,
+  and the a.e. quantifier in (3) CORRECTLY excludes `c = 0`. The frontier is approached only from
+  *outside* by the positive-`c` outer parallel sets `{infDist = c}` (`c ↓ 0`); it is never one of
+  them, and there is no measure-monotone inclusion of `frontier E` into any set (3) or the
+  integrated leaf (1) bounds.
+* More fundamentally, a `K`-quasicircle (`K > 1`) generically has `μH[1] = +∞`: by
+  **Smirnov–Astala** its Hausdorff dimension lies in `(1, 1 + k²]` with `k = (K−1)/(K+1) > 0`,
+  so it has positive dimension excess and `μH[1](frontier E) = ∞`. The "σ-finite `μH[1]` ⟹
+  planar null" route therefore rests on a false premise: the level-length keystone is a
+  *co-dimension-1 (length)* statement and cannot bound `μH[1]` of the single exceptional `c = 0`
+  leaf (the leaf every co-area formula discards).
+
+## The genuine missing input (Astala area / dimension distortion — a WALL here)
+
+`vol (frontier E) = 0` is true for the correct reason `dim_H(frontier E) < 2` (**Astala**: the
+image of a line under a `K`-QC map has dimension `≤ 2K/(K+1) < 2`), whence
+`μH[2](frontier E) = 0` and `vol = 0`. This needs an **area/dimension-distortion** input ("a
+`K`-QC map cannot inflate a 1-dim set to dimension 2"), equivalently **Gehring higher
+integrability** of the Jacobian — the *analytic* (`W^{1,2}_loc`) layer. It is NOT among the
+geometric tools available here:
+
+* the keystone (3) and integrated leaf (1) are co-dim-1 and lose the `c = 0` leaf;
+* roundness `qc_image_ball_diam_sq_le_volume` is co-dim-0 (it gives `diam² ≲ area`, an area
+  *lower* bound) and provably cannot yield a co-dim-1 / dimension-`< 2` bound (covering
+  `frontier E` by `N ~ L/ρ` source balls gives `Σ diam² ≤ C·vol(f''(ρ-collar))`, i.e. only
+  `μH[2](frontier E) ≤ C·vol(frontier E)`, tautological);
+* a general homeomorphism satisfying all these can still carry the 1-D `frontier S` to a
+  positive-area (Osgood-type) set — only the QC dimension-distortion forbids it: precisely Astala.
+
+Net: in the purely geometric setting `vol (frontier E) = 0` is a genuine wall whose minimal honest
+input is planar area/dimension distortion (Astala / Gehring higher integrability), to be supplied
+by the geometric⇒analytic equivalence layer (out of scope / an upstream dependency here), NOT by
+the distance-function level-length. Feeds Core A (a.e. interiority of the closed image).
+Phase-1 `sorry`. -/
+theorem image_inner_boundary_null {f : ℂ → ℂ} {K : ℝ}
+    (hf : IsQCGeometric f K) (x : ℂ) {r : ℝ} (hr : 0 < r) :
+    volume (frontier (f '' qcInnerSquare x r)) = 0 := by
+  sorry
+
 /-- **Teichmüller diameter estimate (deep) — the two-point distortion.**
 
 A lower bound `c ≤ curveModulus` on the separating ring of `f''(annulus)` forces the image of the
@@ -3209,27 +4790,62 @@ theorem ringModulus_diam_le {f : ℂ → ℂ} {K : ℝ} (hf : IsQCGeometric f K)
   -- from the outer-square complement is the round annulus of FIXED ratio `R/h = r/(r/√2) = √2`.
   --
   -- The proof of this residual is the classical **Mori two-point distortion / Teichmüller ring
-  -- modulus** estimate. The two genuinely two-dimensional, Mathlib- and repository-absent
-  -- ingredients it bundles are:
+  -- modulus** estimate. It bundles two a-priori two-dimensional ingredients, of which only the
+  -- SECOND is genuinely irreducible (an adversarial GMT/QC audit, recorded below, shows the first
+  -- is in principle assemblable from the repository's existing reciprocity machinery):
   --   (a) the `K`-quasiconformal TRANSPORT of the *separating*-ring modulus to the image ring
   --       `M(f''separating) ≥ M(separating)/K`. The geometric clause `hf.2.2` only upper-bounds
-  --       *quadrilateral* CROSSING image moduli, so a ring/separating-family transport is net-new
-  --       (the proven source separating bound `image_ringModulus_ge = log(R/h)/(2π)` supplies the
-  --       *source* value, but not its `f`-transport);
+  --       *quadrilateral* CROSSING image moduli (the proven source bound
+  --       `image_ringModulus_ge = log(R/h)/(2π)` supplies the *source* value, not its
+  --       `f`-transport). **This is BYPASSABLE, not deep.** Cut the round source annulus along a
+  --       radius into a genuine (curvilinear) quadrilateral `Q_cut` — conformally a straight
+  --       rectangle via `w = log(z − x)`, so all moduli transfer by `curveModulus_conformal_
+  --       invariant`. `Q_cut`'s crossing family is the RADIAL (annulus crossing) family and its
+  --       swapped/separating family is the ANGULAR winding family. Applying `hf.2.2` to `Q_cut`'s
+  --       SWAP gives an image-crossing modulus UPPER bound `M(f''radial) ≤ K·(2π/log√2)`, and the
+  --       image reciprocity `M(f''radial)·M(f''angular) ≥ 1` (the exact analogue of the proven
+  --       `conjugateImageModulus_reciprocity`, here on `Q_cut` instead of `axisRectQuadrilateral`)
+  --       inverts this to the needed image-separating LOWER bound
+  --       `M(f''angular) ≥ log(√2)/(2πK)`. The only real work is re-establishing reciprocity for
+  --       the curvilinear `Q_cut` (a `Quadrilateral` instance + conformal-invariance bridge);
+  --       no new deep ingredient. Hence (a) is intentionally NOT split out — building that
+  --       scaffolding would not reduce the irreducible node (b) below, and (b) consumes (a)'s
+  --       output regardless.
   --   (b) the **Teichmüller modulus⇒diameter inversion**: a separating ring of bounded modulus
   --       must be geometrically thin, i.e. its bounded complementary continuum (`f''inner`, of
   --       diameter ≥ `d`) and the outer-square image are separated by a ratio `D/d ≤ C(K)`; this
   --       is the Grötzsch/Teichmüller extremal (symmetrization) property, not reducible to the
-  --       round-annulus energy computations already proved.
+  --       round-annulus energy computations already proved. **THIS IS THE SINGLE IRREDUCIBLE
+  --       NODE.** It is the unique direction-reversing step: it converts a modulus LOWER bound
+  --       into a diameter UPPER bound. By the parity audit below, no finite combination of the
+  --       repository's tools produces it.
   --
-  -- Both ingredients are absent from Mathlib and this repository; the upstream development
-  -- (`annularLogDensity_energy`, `annulus_crossingModulus_eq`, `annulus_separatingModulus_ge` /
-  -- `image_ringModulus_ge`) supplies the source round-annulus moduli these consume but neither
-  -- the QC ring transport nor the extremal inversion. The constant `2K+2` is uniform in `x, r`
-  -- (scale/translation invariance of QC distortion). This is the minimal honest residual: it
+  -- WHY (b) is irreducible (inequality-direction parity, verified against the full repo toolkit).
+  -- Every tool that relates an `f`-image to `d` outputs the WRONG direction for a diameter upper
+  -- bound: Rengel `rengel_area_lower_bound` gives `d²·M ≤ area` (area LOWER bound, and needs
+  -- CONNECTING curves — the separating LOOPS are ineligible, `δ 0 = δ 1`); `square_imageCurve
+  -- Family_modulus_ge` gives `M ≥ 1/K` (modulus LOWER); `hf.2.2`/`axisRect_imageModulus_le` give
+  -- `M ≤ K·M` (modulus UPPER); the annulus moduli are fixed source constants with no `f`. A
+  -- diameter UPPER bound is a metric-UPPER fact about two image points; it lies outside the
+  -- monotone/multiplicative closure of {area-lower, modulus-lower, modulus-upper}. The repo has
+  -- NO distance/diameter upper-bound primitive for `f`-images in the pure GEOMETRIC setting (the
+  -- `dist(f∘γ x)(f∘γ y) ≤ ∫‖fderiv f‖·‖γ'‖` bounds in LengthArea.lean are ANALYTIC-side, requiring
+  -- differentiability data absent from `IsQCGeometric`). The missing direction is supplied ONLY by
+  -- the Teichmüller inversion `mod(sep) ≥ (1/2π)·log(D/d) ⟹ D/d ≤ exp(2π·mod)`.
+  --
+  -- CONSTANT CONSTRAINT (sharp, recorded so the route is fixed). The target constant `2K+2` is
+  -- LINEAR in `K`. It is true and loose for THIS frame: at `f = id` (`K = 1`) one has `d = 2h =
+  -- r√2` and `diam(O) = 2√2·r = (2·1+2)/2·d`, a factor-2 slack. But the crude ring inversion
+  -- `D/d ≤ exp(2π·mod_upper)` yields a constant EXPONENTIAL in `K`, which does NOT prove
+  -- `≤ (2K+2)·d`. So the discharging proof must exploit the FIXED-ratio √2 geometry directly
+  -- (inner = sides at separation `d`, outer = √2·inner) to land at a linear constant, not the
+  -- generic exponential Teichmüller bound. `2K+2` is uniform in `x, r` (scale/translation
+  -- invariance of QC distortion).
+  --
+  -- Net: this is the minimal honest residual. The FIXED ratio √2 fixes the modulus to a `K`-
+  -- constant but does NOT avoid the symmetrization — it only constrains the final constant. It
   -- cannot be narrowed to a sub-inequality expressible through the repository's Rengel/axis-
-  -- rectangle moduli, all of which output the wrong inequality direction (area/modulus LOWER
-  -- bounds, no diameter UPPER bound) — see the enumeration in `qc_quasiround_data`'s body.
+  -- rectangle moduli (all wrong direction) — see also the enumeration in `qc_quasiround_data`.
   -- ===========================================================================================
   have two_point_distortion :
       ∀ a ∈ qcOuterSquare x r, ∀ b ∈ qcOuterSquare x r,

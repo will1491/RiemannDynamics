@@ -187,8 +187,8 @@ theorem hasWeakGradient_of_aeSliceAC {g : ℂ → ℂ}
 /-! ## Componentwise absolute continuity (proven, self-contained) -/
 
 /-- A complex function whose real and imaginary parts are absolutely continuous on an interval is
-itself absolutely continuous there. (Self-contained copy of the project's `private` lemma.) -/
-private theorem absolutelyContinuousOnInterval_of_re_im {F : ℝ → ℂ} {a b : ℝ}
+itself absolutely continuous there. -/
+theorem absolutelyContinuousOnInterval_of_re_im {F : ℝ → ℂ} {a b : ℝ}
     (hre : AbsolutelyContinuousOnInterval (fun x => (F x).re) a b)
     (him : AbsolutelyContinuousOnInterval (fun x => (F x).im) a b) :
     AbsolutelyContinuousOnInterval F a b := by
