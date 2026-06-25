@@ -114,7 +114,6 @@ import RiemannDynamics.QC.ReverseLengthAreaForward
 import RiemannDynamics.QC.ReverseLengthArea
 import RiemannDynamics.QC.ModulusSymmetrization
 import RiemannDynamics.QC.ReverseLengthAreaEnergy
-import RiemannDynamics.QC.QCLusinN
 import RiemannDynamics.QC.InverseQC
 import RiemannDynamics.QC.MultiplicityAreaFormula
 import RiemannDynamics.QC.GeometricDifferentiable
