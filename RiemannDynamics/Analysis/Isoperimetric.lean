@@ -12,9 +12,8 @@ import Mathlib.Analysis.Fourier.AddCircle
 # A non-sharp planar isoperimetric inequality (the projection route)
 
 This file proves an elementary, **non-sharp** planar isoperimetric-type inequality via the
-coordinate-projection route, designed to be the analytic core that the Grötzsch/Teichmüller
-symmetrization residual `grotzsch_modulus_diam_bound` reduces to (through the in-repo co-area
-length–area bridge `curveModulus_ge_coarea_invLength`).
+coordinate-projection route, the analytic core feeding the Grötzsch/Teichmüller symmetrization
+diameter bound through the co-area length–area bridge.
 
 ## The projection inequality
 
@@ -32,8 +31,8 @@ Lebesgue measure (`hausdorffMeasure_real`). Combining:
 * `volume_le_hausdorff_one_sq` : **`volume S ≤ (μH[1] S) ^ 2`** — the headline non-sharp planar
   isoperimetric inequality.
 
-The constant is `1` (not the sharp `1 / (4π)`), which is all the downstream diameter bound needs:
-it only needs a *finite* constant feeding `D / d ≤ exp(2π (M + C₀))`.
+The constant is `1` (not the sharp `1 / (4π)`); the diameter bound it feeds requires only a
+*finite* constant, so the non-sharp value suffices.
 
 ## Extreme verification
 
@@ -48,13 +47,13 @@ it only needs a *finite* constant feeding `D / d ≤ exp(2π (M + C₀))`.
 
 ## The level-set / enclosed-area form
 
-The inequality that the Pólya–Szegő / co-area route consumes relates the **length of a level curve**
+The inequality used by the Pólya–Szegő / co-area route relates the **length of a level curve**
 to the **area it encloses**. The projection inequality supplies exactly this once one knows the
 boundary curve projects onto (at least) the same coordinate spans as the enclosed region — the
-elementary topological "the boundary spans the diameter" fact. That bridge is isolated as the
-hypothesis `hspanx`/`hspany` of `enclosedArea_le_perimeter_sq`, which is TRUE for any region whose
-boundary is the level set and verified at the round disk (where the circle's projections are exactly
-`[-r, r]`, the same as the disk's, giving the sharp-up-to-constant `π r² ≤ (2π r)²`).
+elementary topological "the boundary spans the diameter" fact. That fact appears as the hypothesis
+`hspanx`/`hspany` of `enclosedArea_le_perimeter_sq`, which is TRUE for any region whose boundary is
+the level set and verified at the round disk (where the circle's projections are exactly `[-r, r]`,
+the same as the disk's, giving the sharp-up-to-constant `π r² ≤ (2π r)²`).
 -/
 
 open MeasureTheory Set
@@ -130,8 +129,8 @@ theorem proj_im_hausdorff_le (S : Set ℂ) :
 Proof: the projection inequality `volume S ≤ volume (re '' S) * volume (im '' S)` combined with the
 two projection bounds `volume (re '' S) ≤ μH[1] S` and `volume (im '' S) ≤ μH[1] S`.
 
-The constant is the non-sharp `1` (the sharp planar value being `1 / (4π)`); this is all the
-downstream Grötzsch/Teichmüller diameter bound requires, since it only needs *some* finite constant.
+The constant is the non-sharp `1` (the sharp planar value being `1 / (4π)`); the
+Grötzsch/Teichmüller diameter bound it feeds requires only *some* finite constant.
 
 Verification at extremes: for a filled region (positive area, `μH[1] = ∞`) the right side is `∞`
 (vacuous, correctly); for a `1`-dimensional curve `S` (e.g. a circle, `volume S = 0`) the left side
@@ -148,11 +147,11 @@ theorem volume_le_hausdorff_one_sq (S : Set ℂ) :
 
 /-! ### The enclosed-area / perimeter form
 
-The form consumed by the Pólya–Szegő / co-area route relates the **area enclosed by a curve** to
+The form used by the Pólya–Szegő / co-area route relates the **area enclosed by a curve** to
 the **length of that curve**, rather than the (infinite) `1`-Hausdorff measure of the filled region.
 The projection inequality supplies it once the boundary curve projects onto (at least) the same
 coordinate spans as the enclosed region — the elementary "the boundary spans the region's width"
-fact. We isolate that as the two projection-containment hypotheses `hspanx`, `hspany`, each of which
+fact. This appears as the two projection-containment hypotheses `hspanx`, `hspany`, each of which
 is unconditionally TRUE for any bounded region whose topological boundary is the curve `L` (the
 extreme-value theorem forces the boundary to attain the region's extremal `re`/`im` values, hence to
 project onto the closure of the region's projection). -/
@@ -163,9 +162,9 @@ projections — `re '' Ω ⊆ re '' L` and `im '' Ω ⊆ im '' L` (the boundary 
 each coordinate) — then the enclosed area is bounded by the squared perimeter:
 `volume Ω ≤ (μH[1] L) ^ 2`.
 
-This is the genuine isoperimetric inequality in the form the co-area length–area bridge
-`curveModulus_ge_coarea_invLength` consumes: the level set `L = u⁻¹{c}` of the potential `u` is the
-curve, `Ω = {u > c}` the enclosed region, and the bound caps `vol Ω` by the level-set length.
+This is the genuine isoperimetric inequality in the form used by the co-area length–area bridge:
+the level set `L = u⁻¹{c}` of the potential `u` is the curve, `Ω = {u > c}` the enclosed region,
+and the bound caps `vol Ω` by the level-set length.
 
 Verification at the round disk `Ω = ball 0 r`, `L = sphere 0 r`: `re '' Ω = Ioo (-r) r ⊆
 re '' L = Icc (-r) r` (the circle attains `±r`), likewise `im`; the bound reads

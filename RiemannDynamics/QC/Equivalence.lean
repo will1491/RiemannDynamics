@@ -10,7 +10,7 @@ import RiemannDynamics.QC.GeometricToAnalytic
 /-!
 # The analytic ⇔ geometric quasiconformal equivalence (clean endpoints)
 
-This file states the Milestone 9.2 headline theorems in their clean, hypothesis-free form:
+This file states the headline equivalence theorems in their clean, hypothesis-free form:
 
 * `isQCGeometric_of_isQCAnalytic` — analytic ⇒ geometric;
 * `qc_analytic_iff_geometric` — the full equivalence.
@@ -20,9 +20,8 @@ The analytic ⇒ geometric direction is necessarily proved **here**, downstream 
 needs both the inverse-is-quasiconformal fact `IsQCAnalytic.inverse_isQCAnalytic` and the
 planar Lusin-(N) fact `IsQCAnalytic.image_lusinN` (which rests on the higher-integrability
 machinery in `Beltrami.lean`, importing `QC/LengthArea.lean`) — both of which sit strictly
-below the `Equivalence` file. The original upstream scaffold, which threaded the Lusin-(N)
-fact as an explicit hypothesis, has been removed in favour of this self-contained downstream
-proof.
+below the `Equivalence` file. The proof is self-contained downstream, taking the Lusin-(N)
+fact from `IsQCAnalytic.image_lusinN` rather than as an explicit hypothesis.
 -/
 
 open MeasureTheory Complex Set
@@ -123,7 +122,7 @@ private theorem norm_deriv_le_of_dist_le_intervalIntegral {h : ℝ → ℂ} {ρ 
   · rw [deriv_zero_of_not_differentiableAt hd]
     simpa using hρnn t
 
-/-- **The image-stationary Fuglede node (the single genuine residual).**  For an
+/-- **The image-stationary Fuglede node.**  For an
 `IsQCAnalytic` map `f` with inverse `g = f⁻¹` and the (Lebesgue-null) image
 `M = f '' Nf` of the `f`-degeneracy set, the family of absolutely continuous image curves
 `δ` for which the **image-stationary contact**
@@ -247,15 +246,15 @@ private theorem imageStationary_fugledeNode_modulus_zero {f : ℂ → ℂ} {b : 
   rw [hSnull] at hδpos
   exact absurd hδpos (not_lt.mpr (zero_le _))
 
-/-- **The image-stationary residual is modulus-null.**  For an `IsQCAnalytic` map `f` with
+/-- **The image-stationary family is modulus-null.**  For an `IsQCAnalytic` map `f` with
 inverse homeomorphism `g = f⁻¹` and the `f`-degeneracy set
 `Nf = {z | ¬(DifferentiableAt ℝ f z ∧ 0 < det (fderiv ℝ f z))}` (Lebesgue-null), the family
 of absolutely continuous **image** curves `δ` (joining the image sides of some quadrilateral,
 hence in `Δ`) whose source preimage `γ := g ∘ δ` meets `Nf` with **positive `γ`-arc length**
 has zero modulus.
 
-This is the single genuine residual of the analytic ⇒ geometric direction — the
-*image-stationary* phenomenon.  The contact set `C = {t | γ t ∈ Nf ∧ deriv γ t ≠ 0}` (of
+This is the *image-stationary* phenomenon.  The contact set
+`C = {t | γ t ∈ Nf ∧ deriv γ t ≠ 0}` (of
 positive measure, by membership in the family) splits along whether `δ` itself moves:
 
 * **`C₁ = {t ∈ C | deriv δ t ≠ 0}`** — there `δ t = f (γ t) ∈ f '' Nf` and `δ` *moves*, so
@@ -787,8 +786,8 @@ theorem isQCGeometric_of_isQCAnalytic {f : ℂ → ℂ} {K : ℝ} (hK : 1 ≤ K)
   -- family of the (analytic-quasiconformal) inverse `g`, swept over the AC family `Δ`.
   have hbad0 : curveModulus Δbad = 0 :=
     IsQCAnalytic.chainRule_exceptional_modulus_zero hg_qc Δ hΔcont hΔac
-  -- (ii)  The image-stationary subfamily has zero modulus — the single genuine residual,
-  -- isolated as `isQCGeometric_imageStationary_residual_modulus_zero`.
+  -- (ii)  The image-stationary subfamily has zero modulus, by
+  -- `isQCGeometric_imageStationary_residual_modulus_zero`.
   have hmeet0 : curveModulus Δmeet = 0 :=
     isQCGeometric_imageStationary_residual_modulus_zero hf Δ hΔcont hΔac
   -- Hence the combined exceptional image family has zero modulus.
@@ -936,7 +935,7 @@ geometric (modulus) sense is absolutely continuous on lines, hence lies in
 `W^{1,2}_loc`, and satisfies the Beltrami equation with a coefficient of norm at
 most `(K − 1)/(K + 1)`. The proof assembles the Gehring–Lehto stages of
 `QC/GeometricToAnalytic.lean` (`exists_acl_weakGradient`, `ae_differentiableAt`,
-`exists_beltrami`); these remain the open research-scale residual of Milestone 9.2. -/
+`exists_beltrami`); these remain the open research-scale residual. -/
 theorem isQCAnalytic_of_isQCGeometric {f : ℂ → ℂ} {K : ℝ} (hK : 1 ≤ K)
     (hf : IsQCGeometric f K) :
     ∃ b : BeltramiCoeff, b.normInf ≤ (K - 1) / (K + 1) ∧ IsQCAnalytic f b := by

@@ -810,11 +810,10 @@ theorem curveModulus_lineIntegral_not_tendsto_zero {G : ℕ → ℂ → ℝ≥0�
 /-- **Countable subadditivity for null families.** A countable union of
 zero-modulus curve families is again a zero-modulus family. (This is the standard
 countable subadditivity of the conformal modulus, specialised to the case where
-every piece is null. The binary case `curveModulus_union_zero` is proved above by
-the `ρ + σ` density and finite Minkowski; the countable case replaces the finite
-sum by `∑'ₖ εₖ⁻¹-weighted` densities `ρₖ` with `∑ₖ (root energy of ρₖ) ≤ ε`, using
-the countable Minkowski inequality for `∫⁻ (∑ₖ ρₖ)²` — the only missing analytic
-input, hence isolated here as a helper.) -/
+every piece is null. The binary case `curveModulus_union_zero` uses the `ρ + σ`
+density and finite Minkowski; the countable case replaces the finite sum by
+`∑'ₖ εₖ⁻¹-weighted` densities `ρₖ` with `∑ₖ (root energy of ρₖ) ≤ ε`, using the
+countable Minkowski inequality for `∫⁻ (∑ₖ ρₖ)²`.) -/
 theorem curveModulus_iUnion_zero {Γ : ℕ → Set (ℝ → ℂ)}
     (h : ∀ n, curveModulus (Γ n) = 0) :
     curveModulus (⋃ n, Γ n) = 0 := by
@@ -825,9 +824,9 @@ theorem curveModulus_iUnion_zero {Γ : ℕ → Set (ℝ → ℂ)}
     rw [← ENNReal.rpow_natCast (x ^ ((1 : ℝ) / 2)) 2, ← ENNReal.rpow_mul]
     norm_num
   -- ===================================================================
-  -- Countable Minkowski for `L²` of `ℝ≥0∞`-valued functions: the only
-  -- analytic input.  Built from the binary case `lintegral_Lp_add_le`
-  -- by a `Finset` induction and monotone convergence (`tsum = ⨆ sums`).
+  -- Countable Minkowski for `L²` of `ℝ≥0∞`-valued functions.  Built from
+  -- the binary case `lintegral_Lp_add_le` by a `Finset` induction and
+  -- monotone convergence (`tsum = ⨆ sums`).
   -- ===================================================================
   -- Abbreviation for the "root energy" of a density.
   set rootE : (ℂ → ℝ≥0∞) → ℝ≥0∞ := fun ρ => (∫⁻ z, (ρ z) ^ 2) ^ ((1 : ℝ) / 2) with hrootE
@@ -1379,8 +1378,7 @@ the weak partials — the converse-of-ACL bridge `fderiv_ae_eq_weakDirDeriv`),
 giving the pointwise a.e. bound `‖fderiv ℝ f z‖ ≤ ‖gx z‖ + ‖gy z‖`, with (b) the
 `L²_loc` membership of `gx, gy` from `hf.2.1`, which makes `‖gx‖ + ‖gy‖`
 square-integrable on the compact closed ball `closedBall 0 R ⊇ ball 0 R`. The
-single genuinely-missing analytic input is the strong⇄weak a.e. bridge, isolated
-as `fderiv_ae_eq_weakDirDeriv`. -/
+strong⇄weak a.e. bridge is `fderiv_ae_eq_weakDirDeriv`. -/
 theorem IsQCAnalytic.lintegralSq_fderiv_ball_ne_top {f : ℂ → ℂ} {b : BeltramiCoeff}
     (hf : IsQCAnalytic f b) (R : ℝ) :
     (∫⁻ z in Metric.ball (0 : ℂ) R, (‖fderiv ℝ f z‖₊ : ℝ≥0∞) ^ 2) ≠ ∞ := by
@@ -1501,7 +1499,7 @@ of a family `Γ` along which the gradient line integral `∫₀¹ G(γ t)‖γ' 
 infinite *and whose trace `γ '' [0,1]` is contained in no ball* form a zero-modulus
 family.
 
-This is the one piece of the localization argument that the *current* statement of
+This is the one piece of the localization argument that
 `curveModulus_lineIntegral_top_zero` cannot supply on its own, because `Γ` is an
 **arbitrary** `Set (ℝ → ℂ)`. The localized truncation `G·𝟙_{ball 0 n}` is
 admissible only for curves whose trace lies in a fixed ball; for a curve with
@@ -1571,7 +1569,7 @@ on every ball.  The proof localizes:
 The exceptional family is the union of these two parts, so `curveModulus_mono`
 plus `curveModulus_union_zero` finish.  The two genuine analytic inputs are the
 ball-energy bound (the strong-`fderiv` ⇄ weak-gradient a.e. bridge) and countable
-subadditivity, both isolated as the named helpers above. -/
+subadditivity. -/
 theorem curveModulus_lineIntegral_top_zero {f : ℂ → ℂ} {b : BeltramiCoeff}
     (hf : IsQCAnalytic f b) (Γ : Set (ℝ → ℂ)) (hcont : ∀ γ ∈ Γ, Continuous γ) :
     curveModulus {γ ∈ Γ |
@@ -1813,7 +1811,7 @@ private theorem intervalIntegrable_deriv_of_complex_ac {γ : ℝ → ℂ}
   rw [hrecomb]
   exact hre_intℂ.add (him_intℂ.mul_const Complex.I)
 
-/-- **(Smooth upper-gradient bound — provable glue.)** For a `C¹` function `g : ℂ → ℂ`
+/-- **(Smooth upper-gradient bound.)** For a `C¹` function `g : ℂ → ℂ`
 and an absolutely continuous curve `γ`, the distance `g` moves across `uIoc x y` is
 bounded by the arc-length integral of `‖fderiv ℝ g‖` along the curve.
 
@@ -2646,8 +2644,7 @@ theorem fderiv_mollified_lineIntegral_le {f : ℂ → ℂ} {b : BeltramiCoeff}
   -- `g t := ‖fderiv (fn n) (γ t)‖ * ‖deriv γ t‖` and `h t := fdNormMulDeriv f γ t`.
   -- `deriv γ` is measurable; `‖deriv γ ·‖` measurable.
   have hderiv_meas : Measurable (fun t => ‖deriv γ t‖) := (measurable_deriv γ).norm
-  -- The `fderiv f` piece is integrable on `uIcc x y ⊇ uIoc x y`. (Inlined here, since
-  -- `integrableOn_fderiv_norm_mul_deriv_uIcc` is defined later in the file.)
+  -- The `fderiv f` piece is integrable on `uIcc x y ⊇ uIoc x y`.
   have hh_int_uIcc : IntegrableOn (fdNormMulDeriv f γ) (Set.uIcc x y) := by
     have hmeas : Measurable (fdNormMulDeriv f γ) := by
       have h1 : Measurable (fun t => ‖fderiv ℝ f (γ t)‖) :=
@@ -2780,12 +2777,12 @@ there is a `C¹` function `g` that (i) approximates `f` at the two endpoints `γ
 `γ y` to within `ε`, and (ii) whose arc-length density integral along `γ` over
 `uIoc x y` is within `ε` of the target `∫ fdNormMulDeriv f γ`.
 
-Fully proven from the mollification glue and the single isolated residual
-`fderiv_mollified_lineIntegral_le`: take `g = f_n = ρ_n ⋆ f` (`ρ_n` a normed
-`ContDiffBump` with `rOut → 0`); `f_n` is `C¹` (`HasCompactSupport.contDiff_convolution_left`),
-part (i) is the pointwise convergence `f_n (z) → f (z)`
-(`ContDiffBump.convolution_tendsto_right_of_continuous`, `f` continuous), and part (ii)
-is exactly the isolated residual. -/
+The proof uses the mollification glue and `fderiv_mollified_lineIntegral_le`:
+take `g = f_n = ρ_n ⋆ f` (`ρ_n` a normed `ContDiffBump` with `rOut → 0`); `f_n`
+is `C¹` (`HasCompactSupport.contDiff_convolution_left`), part (i) is the pointwise
+convergence `f_n (z) → f (z)`
+(`ContDiffBump.convolution_tendsto_right_of_continuous`, `f` continuous), and part
+(ii) is `fderiv_mollified_lineIntegral_le`. -/
 theorem exists_contDiff_approx_along_curve {f : ℂ → ℂ} {b : BeltramiCoeff}
     (hf : IsQCAnalytic f b) {γ : ℝ → ℂ} (hγcont : Continuous γ)
     (hγac : AbsolutelyContinuousOnInterval γ 0 1)
@@ -2812,8 +2809,7 @@ theorem exists_contDiff_approx_along_curve {f : ℂ → ℂ} {b : BeltramiCoeff}
   have hfn_tendsto : ∀ z : ℂ, Filter.Tendsto (fun n => fn n z) Filter.atTop (nhds (f z)) :=
     fun z => ContDiffBump.convolution_tendsto_right_of_continuous hφrout hfcont z
   -- Pick `N` large enough that `f_N` is within `ε` of `f` at both endpoints, AND the
-  -- density-integral bound (the trace residual) holds within `ε`.  The density bound is
-  -- the genuine Fuglede core, isolated below.
+  -- density-integral bound holds within `ε`.  The density bound is the Fuglede core.
   have hfn_density : ∀ᶠ n in Filter.atTop,
       (∫ t in Set.uIoc x y, ‖fderiv ℝ (fn n) (γ t)‖ * ‖deriv γ t‖) ≤
         (∫ t in Set.uIoc x y, fdNormMulDeriv f γ t) + ε :=
@@ -2837,16 +2833,16 @@ continuous curve `γ` whose gradient line integral over `[0,1]` is finite, the d
 moved by `f ∘ γ` across a subinterval `uIoc x y ⊆ [0,1]` is bounded by the arc-length
 integral of `‖fderiv ℝ f‖` over that subinterval.
 
-The proof is the elementary `ε`-limit glue over the smooth approximant residual
-`exists_contDiff_approx_along_curve`: applying the proven smooth upper-gradient bound
+The proof is the elementary `ε`-limit glue over the smooth approximant
+`exists_contDiff_approx_along_curve`: applying the smooth upper-gradient bound
 `dist_comp_le_setIntegral_of_contDiff` to the `C¹` approximant `g` and inserting it via
 the triangle inequality
 `dist (f (γ x)) (f (γ y)) ≤ dist (f (γ x)) (g (γ x)) + dist (g (γ x)) (g (γ y))
   + dist (g (γ y)) (f (γ y))`
 bounds the LHS by `∫ fdNormMulDeriv f γ + 3ε` for every `ε > 0`; letting `ε → 0`
-closes the inequality. All the mollification setup, smooth chain-rule/FTC bound, and
-ℂ-valued density integrability are discharged in the helpers above; only the
-trace-convergence core remains, isolated in `exists_contDiff_approx_along_curve`. -/
+closes the inequality. The mollification setup, smooth chain-rule/FTC bound, and
+ℂ-valued density integrability are supplied by the helpers above; the
+trace-convergence core is `exists_contDiff_approx_along_curve`. -/
 theorem fugledeUpperGradient {f : ℂ → ℂ} {b : BeltramiCoeff}
     (hf : IsQCAnalytic f b) {γ : ℝ → ℂ} (hγcont : Continuous γ)
     (hγac : AbsolutelyContinuousOnInterval γ 0 1)
@@ -2881,8 +2877,7 @@ The distance moved by `f ∘ γ` across a subinterval `uIoc x y ⊆ [0,1]` is bo
 the arc-length integral of `‖fderiv ℝ f‖` over that subinterval. The `[0,1]` guard
 `hxy : uIcc x y ⊆ Icc 0 1` is essential and consumable: `hfin` only controls the
 gradient line integral over `[0,1]`, and the downstream length–area assembly only
-ever integrates along `[0,1]`. A thin wrapper over the isolated residual
-`fugledeUpperGradient`. -/
+ever integrates along `[0,1]`. A thin wrapper over `fugledeUpperGradient`. -/
 theorem dist_le_setIntegral_fderiv_norm_mul_deriv {f : ℂ → ℂ} {b : BeltramiCoeff}
     (hf : IsQCAnalytic f b) {γ : ℝ → ℂ} (hγcont : Continuous γ)
     (hγac : AbsolutelyContinuousOnInterval γ 0 1)
@@ -2891,7 +2886,7 @@ theorem dist_le_setIntegral_fderiv_norm_mul_deriv {f : ℂ → ℂ} {b : Beltram
     dist ((f ∘ γ) x) ((f ∘ γ) y) ≤ ∫ t in Set.uIoc x y, fdNormMulDeriv f γ t :=
   fugledeUpperGradient hf hγcont hγac hfin x y hxy hgood
 
-/-- **(Interval integrability of the density, helper 2 of 2.)** The real
+/-- **(Interval integrability of the density.)** The real
 arc-length integrand `g t := ‖fderiv ℝ f (γ t)‖ · ‖deriv γ t‖` is integrable on
 every compact interval `uIcc a c ⊆ [0,1]`.
 
@@ -2936,11 +2931,11 @@ interval, given that the gradient line integral
 `∫₀¹ ‖fderiv ℝ f (γ t)‖ ‖γ' t‖ dt` is finite and the curve `γ` is itself
 absolutely continuous.
 
-The genuine analytic core is fully reduced to two precise named helpers:
+The genuine analytic core rests on two ingredients:
 `dist_le_setIntegral_fderiv_norm_mul_deriv` (the upper-gradient inequality along
 the curve — the mollification / `L¹`-trace step) and
 `integrableOn_fderiv_norm_mul_deriv_uIcc` (interval integrability of the density).
-Granting those, this proof is the elementary `ε`-`δ` glue: it mirrors Mathlib's
+On top of those, this proof is the elementary `ε`-`δ` glue: it mirrors Mathlib's
 `IntervalIntegrable.absolutelyContinuousOnInterval_intervalIntegral`, bounding the
 distance-sum over a disjoint interval family by the set-integral of the density
 over their union and using that the integral over a small-measure set is small
@@ -3147,20 +3142,19 @@ strength the length–area transfer consumes (its integrand
 points contribute `0`). With the global `∀ᵐ t : ℝ` the clauses would be
 genuinely unprovable, the parametrisation outside `[0,1]` being arbitrary.
 
-**What is proven here vs isolated.** Clause 2 (the guarded determinant
-positivity) is discharged in full: from `hmeet`, the contact set
-`{t ∈ [0,1] | γ t ∈ N ∧ deriv γ t ≠ 0}` carries an `∞`-valued integrand, so it
-must be Lebesgue-null (else the integral is `∞ ≥ 1`), giving `γ t ∉ N`, i.e.
-`0 < det`, for a.e. such `t`. The two remaining clauses are the genuine
-Fuglede/chain-rule content and are isolated as named helper hypotheses:
+**The three clauses.** Clause 2 (the guarded determinant positivity): from
+`hmeet`, the contact set `{t ∈ [0,1] | γ t ∈ N ∧ deriv γ t ≠ 0}` carries an
+`∞`-valued integrand, so it must be Lebesgue-null (else the integral is `∞ ≥ 1`),
+giving `γ t ∉ N`, i.e. `0 < det`, for a.e. such `t`. The two remaining clauses are
+the genuine Fuglede/chain-rule content:
   * `clause 3` (the chain rule `HasDerivAt (f∘γ) ((Df)(γ t)·γ' t) t`) needs
     `DifferentiableAt ℝ γ t` (via `HasFDerivAt.comp_hasDerivAt`, since
     `deriv γ t` is the junk derivative unless `γ` is differentiable). The curve
     family carries no rectifiability/AC of `γ`, so this is *not* dischargeable
-    from `hfin`/`hmeet` alone — see `chainRule_hasDerivAt_of_finite`.
-  * `clause 1` (absolute continuity of `f∘γ`) is the genuine length–area
-    estimate `‖f(γ t)−f(γ s)‖ ≤ ∫ₛᵗ ‖Df(γ)‖‖γ'‖`. Our ACL theory is for
-    coordinate lines, not general curves, so this is isolated as
+    from `hfin`/`hmeet` alone — it is `chainRule_hasDerivAt_of_finite`.
+  * `clause 1` (absolute continuity of `f∘γ`) is the length–area estimate
+    `‖f(γ t)−f(γ s)‖ ≤ ∫ₛᵗ ‖Df(γ)‖‖γ'‖`. The ACL theory is for coordinate
+    lines, not general curves, so this is
     `absolutelyContinuous_comp_of_finite_lineIntegral`. -/
 theorem chainRule_good_of_finite {f : ℂ → ℂ} {b : BeltramiCoeff}
     (hf : IsQCAnalytic f b) {γ : ℝ → ℂ} (hγcont : Continuous γ)
@@ -3251,7 +3245,7 @@ theorem chainRule_good_of_finite {f : ℂ → ℂ} {b : BeltramiCoeff}
     simp only [hN, Set.mem_setOf_eq, not_and, not_lt]
     exact fun _ => not_lt.mp hdet
   -- ===================================================================
-  -- CLAUSES 1 and 3 (isolated): the genuine Fuglede / chain-rule content.
+  -- CLAUSES 1 and 3: the genuine Fuglede / chain-rule content.
   -- ===================================================================
   refine ⟨absolutelyContinuous_comp_of_finite_lineIntegral hf hγcont hγac hfin hgood,
     hclause2, ?_⟩

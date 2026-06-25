@@ -291,7 +291,7 @@ theorem lintegral_sq_deriv_even_split {uStar : ℝ → ℝ} (heven : ∀ x, uSta
 
 variable {ι : Type*}
 
-/-- **The Pólya–Szegő inequality (co-area / level-integral form), PROVEN.** Given the level-integral
+/-- **The Pólya–Szegő inequality (co-area / level-integral form).** Given the level-integral
 representations of the two Dirichlet energies and the per-level rearrangement data (balanced
 two-point ⋆-fibre, ≥2-point `u`-fibre, matching co-weights at a.e. level), the rearranged energy is
 no larger.
@@ -320,7 +320,7 @@ theorem polyaSzego_levelEnergy [DecidableEq ι]
     levelEnergy_star_le hab hcpos hcaL hcaR hcard hF hspd hB
   exact ENNReal.ofReal_le_ofReal hle
 
-/-- **The 1-D gradient Pólya–Szegő inequality (gradient form), PROVEN.** Let `u, uStar : ℝ → ℝ` be
+/-- **The 1-D gradient Pólya–Szegő inequality (gradient form).** Let `u, uStar : ℝ → ℝ` be
 functions whose Dirichlet energies `∫⁻ (deriv ·)²` admit the co-area level-integral representations
 of the rearrangement (`hErep`, `hEstarRep`), with the per-level data of the symmetric decreasing
 rearrangement (`hpt`: balanced two-point ⋆-fibre, ≥2-point `u`-fibre, matching co-weights at a.e.
