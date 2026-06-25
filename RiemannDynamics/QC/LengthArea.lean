@@ -975,6 +975,112 @@ theorem curveModulus_iUnion_zero {Γ : ℕ → Set (ℝ → ℂ)}
     _ = rootE rhoSum := rfl
     _ ≤ (ε : ℝ≥0∞) := hrootbound
 
+/-- **Countable subadditivity of the conformal modulus.** The modulus of a
+countable union of curve families is at most the sum of their moduli:
+`curveModulus (⋃ n, Γ n) ≤ ∑' n, curveModulus (Γ n)`. This is the general form of
+`curveModulus_iUnion_zero` (the special case where every piece has modulus zero).
+
+The proof uses the **ℓ²-combination** of near-optimal densities: extract for each
+`n` a density `ρₙ` admissible for `Γ n` with energy `∫ρₙ² ≤ curveModulus (Γ n) +
+ε/2ⁿ⁺¹`, and set `ρ = (∑' n, ρₙ²)^{1/2}`. Since `ρ ≥ ρₙ` pointwise, `ρ` is
+admissible for the union; and `∫ρ² = ∑' n, ∫ρₙ²` by Tonelli, bounding the union
+modulus by `∑' n, curveModulus (Γ n) + ε`. This is the standard fact that the
+conformal modulus is an outer measure on curve families (Väisälä, *Lectures*,
+Theorem 6.2), and the keystone reassembly brick for upgrading quadrilateral
+distortion to general curve-family distortion. -/
+theorem curveModulus_iUnion_le_tsum {Γ : ℕ → Set (ℝ → ℂ)} :
+    curveModulus (⋃ n, Γ n) ≤ ∑' n, curveModulus (Γ n) := by
+  classical
+  -- The square-root exponent inverts squaring on `ℝ≥0∞`.
+  have hsqrt_sq : ∀ x : ℝ≥0∞, (x ^ ((1 : ℝ) / 2)) ^ 2 = x := by
+    intro x
+    rw [← ENNReal.rpow_natCast (x ^ ((1 : ℝ) / 2)) 2, ← ENNReal.rpow_mul]
+    norm_num
+  -- It suffices to prove the `+ ε` bound for every positive `ε`.
+  refine ENNReal.le_of_forall_pos_le_add (fun ε hεpos hsum_lt => ?_)
+  -- Each piece has finite modulus (the sum is finite).
+  have hsum_ne : (∑' n, curveModulus (Γ n)) ≠ ⊤ := hsum_lt.ne
+  have hfin : ∀ n, curveModulus (Γ n) < ⊤ := ENNReal.lt_top_of_tsum_ne_top hsum_ne
+  -- The geometric weights `η n = ε / 2^{n+1}`, with `∑' η = ε`.
+  set η : ℕ → ℝ≥0∞ := fun n => (ε : ℝ≥0∞) / 2 ^ (n + 1) with hη
+  have hηpos : ∀ n, 0 < η n := by
+    intro n
+    rw [hη]
+    exact ENNReal.div_pos (by exact_mod_cast hεpos.ne') (by simp)
+  have hηsum : ∑' n, η n = (ε : ℝ≥0∞) := by
+    have hgeom : ∑' n : ℕ, ((2 : ℝ≥0∞) ^ (n + 1))⁻¹ = 1 := by
+      have hrw : (fun n : ℕ => ((2 : ℝ≥0∞) ^ (n + 1))⁻¹)
+          = fun n : ℕ => ((2 : ℝ≥0∞)⁻¹) ^ (n + 1) := by
+        funext n; rw [ENNReal.inv_pow]
+      rw [hrw, ENNReal.tsum_geometric_add_one]
+      rw [ENNReal.one_sub_inv_two, inv_inv]
+      rw [ENNReal.inv_mul_cancel (by norm_num) (by norm_num)]
+    calc ∑' n, η n
+        = ∑' n : ℕ, ((2 : ℝ≥0∞) ^ (n + 1))⁻¹ * (ε : ℝ≥0∞) := by
+          refine tsum_congr (fun n => ?_)
+          change (ε : ℝ≥0∞) / 2 ^ (n + 1) = _
+          rw [ENNReal.div_eq_inv_mul, mul_comm]
+      _ = (∑' n : ℕ, ((2 : ℝ≥0∞) ^ (n + 1))⁻¹) * (ε : ℝ≥0∞) := by rw [ENNReal.tsum_mul_right]
+      _ = (ε : ℝ≥0∞) := by rw [hgeom, one_mul]
+  -- For each `n`, extract `ρₙ` admissible for `Γ n` with energy `∫ρₙ² ≤ curveModulus (Γ n) + η n`.
+  have extract : ∀ n, ∃ ρ : ℂ → ℝ≥0∞, IsAdmissibleDensity ρ (Γ n) ∧
+      (∫⁻ z, (ρ z) ^ 2) ≤ curveModulus (Γ n) + η n := by
+    intro n
+    have hlt : curveModulus (Γ n) < curveModulus (Γ n) + η n := by
+      refine ENNReal.lt_add_right (hfin n).ne (hηpos n).ne'
+    rw [curveModulus, iInf_lt_iff] at hlt
+    obtain ⟨ρ, hlt2⟩ := hlt
+    rw [iInf_lt_iff] at hlt2
+    obtain ⟨hρadm, hρenergy⟩ := hlt2
+    exact ⟨ρ, hρadm, hρenergy.le⟩
+  choose ρ hρadm hρenergy using extract
+  have hρmeas : ∀ n, Measurable (ρ n) := fun n => (hρadm n).1
+  -- The ℓ²-combined density `rho = (∑' n, ρₙ²)^{1/2}`.
+  set rho : ℂ → ℝ≥0∞ := fun z => (∑' n, (ρ n z) ^ 2) ^ ((1 : ℝ) / 2) with hrho
+  -- Measurability of `rho`.
+  have htsum_meas : Measurable (fun z => ∑' n, (ρ n z) ^ 2) :=
+    Measurable.ennreal_tsum (fun n => (hρmeas n).pow_const 2)
+  have hrho_meas : Measurable rho := htsum_meas.pow_const ((1 : ℝ) / 2)
+  -- Key pointwise fact: `(rho z)² = ∑' n, (ρₙ z)²`.
+  have hrho_sq : ∀ z, (rho z) ^ 2 = ∑' n, (ρ n z) ^ 2 := by
+    intro z; rw [hrho]; exact hsqrt_sq _
+  -- Domination: `ρₙ z ≤ rho z` for all `n, z`.
+  have hdom : ∀ n z, ρ n z ≤ rho z := by
+    intro n z
+    have hsq : (ρ n z) ^ 2 ≤ (rho z) ^ 2 := by
+      rw [hrho_sq z]; exact ENNReal.le_tsum n
+    have h1 := ENNReal.rpow_le_rpow hsq (by norm_num : (0:ℝ) ≤ (1:ℝ)/2)
+    rw [← ENNReal.rpow_natCast (ρ n z) 2, ← ENNReal.rpow_natCast (rho z) 2,
+      ← ENNReal.rpow_mul, ← ENNReal.rpow_mul] at h1
+    norm_num at h1
+    exact h1
+  -- `rho` is admissible for the union (it dominates each `ρₙ`).
+  have hrho_adm : IsAdmissibleDensity rho (⋃ n, Γ n) := by
+    refine ⟨hrho_meas, fun γ hγ => ?_⟩
+    rw [Set.mem_iUnion] at hγ
+    obtain ⟨n, hγn⟩ := hγ
+    refine le_trans ((hρadm n).2 γ hγn) ?_
+    unfold arcLengthLineIntegral
+    refine lintegral_mono fun t => ?_
+    gcongr
+    exact hdom n (γ t)
+  -- Energy of `rho`: `∫rho² = ∑' n, ∫ρₙ²` by Tonelli.
+  have henergy_eq : (∫⁻ z, (rho z) ^ 2) = ∑' n, ∫⁻ z, (ρ n z) ^ 2 := by
+    have : (∫⁻ z, (rho z) ^ 2) = ∫⁻ z, ∑' n, (ρ n z) ^ 2 := by
+      refine lintegral_congr (fun z => ?_); exact hrho_sq z
+    rw [this]
+    exact MeasureTheory.lintegral_tsum (fun n => ((hρmeas n).pow_const 2).aemeasurable)
+  -- Energy bound: `∫rho² ≤ (∑' curveModulus) + ε`.
+  have henergy_bound : (∫⁻ z, (rho z) ^ 2) ≤ (∑' n, curveModulus (Γ n)) + (ε : ℝ≥0∞) := by
+    rw [henergy_eq]
+    calc ∑' n, ∫⁻ z, (ρ n z) ^ 2
+        ≤ ∑' n, (curveModulus (Γ n) + η n) := ENNReal.tsum_le_tsum hρenergy
+      _ = (∑' n, curveModulus (Γ n)) + ∑' n, η n := ENNReal.tsum_add
+      _ = (∑' n, curveModulus (Γ n)) + (ε : ℝ≥0∞) := by rw [hηsum]
+  -- Finish: `curveModulus (⋃ Γ) ≤ ∫rho² ≤ (∑' curveModulus) + ε`.
+  refine le_trans ?_ henergy_bound
+  exact iInf₂_le rho hrho_adm
+
 set_option maxHeartbeats 400000 in
 -- The proof inlines a horizontal core (Fubini transfer to `ℝ × ℝ`, per-line FTC and
 -- difference-quotient uniqueness) and the `v = I` reduction through the coordinate

@@ -114,13 +114,22 @@ theorem IsQCGeometric.reverseLengthArea_data {f : ℂ → ℂ} {K : ℝ} (hf : I
     HasWeakDirDeriv Complex.I (fun w => (fderiv ℝ f w) Complex.I) f Set.univ := by
   classical
   have hfcont : Continuous f := hf.2.1.isHomeomorph.continuous
-  -- (1) Almost-everywhere total differentiability via Stepanov, from the finite metric upper
-  -- derivative (`ae_finite_metric_derivative`).
-  have hdiff : ∀ᵐ w : ℂ, DifferentiableAt ℝ f w :=
-    RiemannDynamics.Stepanov.ae_differentiableAt_of_ae_limsup_slope_lt_top
-      hf.ae_finite_metric_derivative
-  -- The pointwise dilatation bound together with nondegeneracy of the Jacobian.
-  have hdil := hf.ae_dilatation_bound
+  have hKpos : (0 : ℝ) < K := lt_of_lt_of_le one_pos hf.1
+  have hhomeo : IsHomeomorph f := hf.2.1.isHomeomorph
+  -- (1) Almost-everywhere total differentiability via the **proven Grötzsch-free Gehring–Lehto
+  -- theorem**: the forward reverse length–area residual `exists_acl_memLp_sliceGradient` gives an
+  -- `L²_loc` ACL gradient (`f ∈ W^{1,2}_loc`), and `ae_differentiableAt_of_W12loc_homeomorph`
+  -- upgrades a `W^{1,2}_loc` homeomorphism to a.e. differentiability — with no quasiconformal
+  -- roundness and no `grotzsch_symmetrization_kernel`.
+  have hdiff : ∀ᵐ w : ℂ, DifferentiableAt ℝ f w := hf.ae_differentiableAt_gehringLehto
+  -- (2),(3) The pointwise dilatation bound and nondegeneracy of the Jacobian, derived **directly**
+  -- from the Grötzsch-free `infinitesimal_dilatation` filtered with the a.e.-differentiability `hdiff`
+  -- (rather than via `ae_dilatation_bound`, which routes through the roundness `ae_differentiableAt'`).
+  have hdil : ∀ᵐ w : ℂ,
+      ‖fderiv ℝ f w‖ ^ 2 ≤ K * (fderiv ℝ f w).det ∧ (fderiv ℝ f w).det ≠ 0 := by
+    filter_upwards [hdiff, hf.infinitesimal_dilatation] with w hd himp
+    obtain ⟨hdet, hb⟩ := himp hd
+    exact ⟨hb, hdet⟩
   -- (3) The dilatation conjunct.
   have hdil3 : ∀ᵐ w : ℂ, ‖fderiv ℝ f w‖ ^ 2 ≤ K * (fderiv ℝ f w).det := by
     filter_upwards [hdil] with w hw using hw.1
@@ -128,9 +137,26 @@ theorem IsQCGeometric.reverseLengthArea_data {f : ℂ → ℂ} {K : ℝ} (hf : I
   have hdetpos : ∀ᵐ w : ℂ, 0 < (fderiv ℝ f w).det := by
     refine hf.2.1.ae_det_pos ?_
     filter_upwards [hdiff, hdil] with w hd hw using ⟨hd, hw.2⟩
-  -- The forward ACL data and the `L²_loc` line partials.
-  obtain ⟨hacx, hacy⟩ := hf.ae_slice_absolutelyContinuous
-  obtain ⟨hL2x, hL2y⟩ := hf.memLpLocOn_partials
+  -- The forward slice-AC data, taken **Grötzsch-free** from the new energy residual
+  -- `exists_acl_memLp_sliceGradient` (its `ACLHorizontal`/`ACLVertical` conjuncts bundle slice
+  -- absolute continuity). NOTE: we do *not* use `ae_slice_absolutelyContinuous` here — that route
+  -- factors through `ae_slice_boundedVariation`/`ae_slice_noSingularPart`, which still call the
+  -- roundness `ae_differentiableAt'`/`qc_differenceQuotient_setLIntegral_sq_le`, reintroducing
+  -- `grotzsch_symmetrization_kernel`.
+  obtain ⟨gx', gy', hAClx, hACly, _, _⟩ := hf.exists_acl_memLp_sliceGradient
+  have hacx : ∀ᵐ y : ℝ, ∀ a b : ℝ,
+      AbsolutelyContinuousOnInterval (fun x : ℝ => f ⟨x, y⟩) a b := by
+    filter_upwards [hAClx] with y hy using hy.1
+  have hacy : ∀ᵐ x : ℝ, ∀ a b : ℝ,
+      AbsolutelyContinuousOnInterval (fun y : ℝ => f ⟨x, y⟩) a b := by
+    filter_upwards [hACly] with x hx using hx.1
+  -- (4),(5) The `L²_loc` `fderiv`-partials, derived **Grötzsch-free** from the pointwise dilatation
+  -- bound via `memLpLocOn_inverse_partial_of_dilatation` applied to `f` itself, replacing the
+  -- roundness route `memLpLocOn_partials`.
+  have hL2x : MemLpLocOn (fun w => (fderiv ℝ f w) 1) (2 : ℝ≥0∞) Set.univ :=
+    memLpLocOn_inverse_partial_of_dilatation hKpos hhomeo hdiff hdetpos hdil3 1
+  have hL2y : MemLpLocOn (fun w => (fderiv ℝ f w) Complex.I) (2 : ℝ≥0∞) Set.univ :=
+    memLpLocOn_inverse_partial_of_dilatation hKpos hhomeo hdiff hdetpos hdil3 Complex.I
   -- `L²_loc ⟹ L¹_loc` on compacts supplies the local integrability the weak-gradient bridge needs.
   have hLIofL2 : ∀ {h : ℂ → ℂ}, MemLpLocOn h (2 : ℝ≥0∞) Set.univ → LocallyIntegrable h := by
     intro h hh
