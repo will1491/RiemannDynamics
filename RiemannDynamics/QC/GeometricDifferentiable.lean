@@ -1080,7 +1080,7 @@ continuous on `[0, 1]` (hence differentiable a.e.) and `t ↦ c t + d` maps `Ioo
 (with `c > 0`), then `δ` is differentiable at `c t + d` for a.e. `t ∈ Ioo p q`. -/
 theorem ae_diff_comp_affine {δ : ℝ → ℂ} (hδac : AbsolutelyContinuousOnInterval δ 0 1)
     {c d : ℝ} (hc : 0 < c) (p q : ℝ)
-    (hmaps : ∀ t ∈ Set.Ioo p q, c * t + d ∈ Set.Ioo (0:ℝ) 1) :
+    (hmaps : ∀ t ∈ Set.Ioo p q, c * t + d ∈ Set.Ioo (0 : ℝ) 1) :
     ∀ᵐ t ∂(volume.restrict (Set.Ioo p q)), DifferentiableAt ℝ δ (c * t + d) := by
   have hcne : c ≠ 0 := ne_of_gt hc
   have hδdiff : ∀ᵐ s : ℝ, s ∈ Set.uIcc (0:ℝ) 1 → DifferentiableAt ℝ δ s :=
@@ -1102,7 +1102,7 @@ theorem ae_diff_comp_affine {δ : ℝ → ℂ} (hδac : AbsolutelyContinuousOnIn
 theorem arcLength_comp_affine_Ioo (ρ : ℂ → ℝ≥0∞) (hρ : Measurable ρ) {δ : ℝ → ℂ}
     (hδac : AbsolutelyContinuousOnInterval δ 0 1) (hδcont : Continuous δ)
     {c d : ℝ} (hc : 0 < c) (p q : ℝ)
-    (hmaps : ∀ t ∈ Set.Ioo p q, c * t + d ∈ Set.Ioo (0:ℝ) 1) :
+    (hmaps : ∀ t ∈ Set.Ioo p q, c * t + d ∈ Set.Ioo (0 : ℝ) 1) :
     ∫⁻ t in Set.Ioo p q, ρ (δ (c * t + d)) * (‖deriv (fun t => δ (c * t + d)) t‖₊ : ℝ≥0∞)
       = ∫⁻ s in Set.Ioo (c * p + d) (c * q + d), ρ (δ s) * (‖deriv δ s‖₊ : ℝ≥0∞) := by
   have hchain : (fun t => ρ (δ (c * t + d)) * (‖deriv (fun t => δ (c * t + d)) t‖₊ : ℝ≥0∞))
@@ -1142,8 +1142,8 @@ theorem arcLength_comp_affine_Ioo (ρ : ℂ → ℝ≥0∞) (hρ : Measurable ρ
 Lipschitz, so it sends a disjoint family in `[p, q]` to a disjoint family in `[c p + d, c q + d]`
 with lengths scaled by `c`. -/
 theorem ac_comp_affine {δ : ℝ → ℂ} {c d : ℝ} (hc : 0 < c) {p q : ℝ}
-    (hδ : AbsolutelyContinuousOnInterval δ (c*p+d) (c*q+d)) :
-    AbsolutelyContinuousOnInterval (fun t => δ (c*t+d)) p q := by
+    (hδ : AbsolutelyContinuousOnInterval δ (c * p + d) (c * q + d)) :
+    AbsolutelyContinuousOnInterval (fun t => δ (c * t + d)) p q := by
   rw [absolutelyContinuousOnInterval_iff] at hδ ⊢
   intro ε hε
   obtain ⟨D, hD, hD'⟩ := hδ ε hε
@@ -1160,9 +1160,9 @@ theorem ac_comp_affine {δ : ℝ → ℂ} {c d : ℝ} (hc : 0 < c) {p q : ℝ}
         rw [Set.mem_uIcc] at hx ⊢
         rcases hx with hx | hx
         · refine Or.inl ⟨?_, ?_⟩ <;>
-            (simp only [haff]; first | nlinarith [hx.1] | nlinarith [hx.2])
+            (simp only [haff]; nlinarith [hx.1])
         · refine Or.inr ⟨?_, ?_⟩ <;>
-            (simp only [haff]; first | nlinarith [hx.1] | nlinarith [hx.2])
+            (simp only [haff]; nlinarith [hx.1])
       exact ⟨hmaps _ h.1, hmaps _ h.2⟩
     · exact pairwiseDisjoint_uIoc_comp_monotone hmono hE.2
   have hlenscale : ∑ i ∈ Finset.range E.1, dist (IL i).1 (IL i).2
@@ -1274,8 +1274,8 @@ theorem glueCurve_eqOn_right {δ δp : ℝ → ℂ} (hmatch : δ 1 = δp 0) :
   · rw [if_neg (by linarith)]; ring_nf
 
 theorem glueCurve_mem {δ δp : ℝ → ℂ} {S : Set ℂ}
-    (hδ : ∀ t ∈ Set.Icc (0:ℝ) 1, δ t ∈ S) (hδp : ∀ t ∈ Set.Icc (0:ℝ) 1, δp t ∈ S) :
-    ∀ t ∈ Set.Icc (0:ℝ) 1, glueCurve δ δp t ∈ S := by
+    (hδ : ∀ t ∈ Set.Icc (0 : ℝ) 1, δ t ∈ S) (hδp : ∀ t ∈ Set.Icc (0 : ℝ) 1, δp t ∈ S) :
+    ∀ t ∈ Set.Icc (0 : ℝ) 1, glueCurve δ δp t ∈ S := by
   intro t ht
   rw [Set.mem_Icc] at ht
   simp only [glueCurve]
@@ -1395,7 +1395,7 @@ theorem reversePath_continuous {δ : ℝ → ℂ} (hδ : Continuous δ) : Contin
   hδ.comp (by fun_prop)
 
 theorem reversePath_mem {δ : ℝ → ℂ} {S : Set ℂ}
-    (hδ : ∀ t ∈ Set.Icc (0:ℝ) 1, δ t ∈ S) : ∀ t ∈ Set.Icc (0:ℝ) 1, reversePath δ t ∈ S := by
+    (hδ : ∀ t ∈ Set.Icc (0 : ℝ) 1, δ t ∈ S) : ∀ t ∈ Set.Icc (0 : ℝ) 1, reversePath δ t ∈ S := by
   intro t ht; rw [Set.mem_Icc] at ht
   exact hδ _ (Set.mem_Icc.mpr ⟨by linarith [ht.2], by linarith [ht.1]⟩)
 
@@ -1499,7 +1499,7 @@ theorem arcLengthLineIntegral_reversePath (ρ : ℂ → ℝ≥0∞) (hρ : Measu
       simpa using (hasDerivAt_const t (1:ℝ)).sub (hasDerivAt_id t)
     have hHD : HasDerivAt (reversePath δ) (-1 • deriv δ (1 - t)) t := by
       simpa [reversePath, Function.comp] using (hdiff.hasDerivAt.scomp t haff)
-    show ρ (δ (1 - t)) * (‖deriv (reversePath δ) t‖₊ : ℝ≥0∞)
+    change ρ (δ (1 - t)) * (‖deriv (reversePath δ) t‖₊ : ℝ≥0∞)
         = ρ (δ (1 - t)) * (‖deriv δ (1 - t)‖₊ : ℝ≥0∞)
     rw [hHD.deriv]
     congr 2
@@ -2368,10 +2368,12 @@ private theorem lipschitzWith_clamp01 : LipschitzWith 1 clamp01 := by
   simp only [sub_self, abs_zero]
   exact max_le (abs_nonneg _) hmin
 
-/-- **Arc-length Lipschitz reparametrization (the proven half of `rectifiable_continuum_simple_arc`).**
+/-- **Arc-length Lipschitz reparametrization** (the proven half of
+`rectifiable_continuum_simple_arc`).
 
 Given a continuous curve `γ` that is *injective* on `[0,1]` and of *finite total variation*
-`eVariationOn γ [0,1] ≠ ∞`, there is a curve `δ` parametrized on `[0,1]` with the **same endpoints**,
+`eVariationOn γ [0,1] ≠ ∞`, there is a curve `δ` parametrized on `[0,1]` with the **same
+endpoints**,
 **globally Lipschitz** (hence continuous), **injective** on `[0,1]`, with trace inside `γ '' [0,1]`.
 
 Reparametrize by cumulative arc length: `S t = variationOnFromTo γ [0,1] 0 t` is continuous
@@ -2601,12 +2603,12 @@ theorem constantSpeedReparam_of_finiteVariation {γ : ℝ → ℂ}
   have hcl1 : L * clamp01 1 = L := by
     rw [show clamp01 1 = 1 from clamp01_eq_self (by constructor <;> norm_num), mul_one]
   have hδ0 : δ 0 = γ 0 := by
-    show γ (T (L * clamp01 0)) = γ 0
+    change γ (T (L * clamp01 0)) = γ 0
     refine hγeq_of_Seq _ (hTmem 0) 0 h0s ?_
     rw [hcl0] at *
     rw [hT0eq, hS0]
   have hδ1 : δ 1 = γ 1 := by
-    show γ (T (L * clamp01 1)) = γ 1
+    change γ (T (L * clamp01 1)) = γ 1
     refine hγeq_of_Seq _ (hTmem 1) 1 h1s ?_
     rw [hcl1] at *
     rw [hTLeq, hS1]
@@ -2669,7 +2671,7 @@ theorem constantSpeedReparam_of_finiteVariation {γ : ℝ → ℂ}
       exact max_le_max le_rfl (min_le_min le_rfl hττ')
     have hvle : L * clamp01 τ ≤ L * clamp01 τ' := by nlinarith [hLnn]
     by_contra hlt
-    push_neg at hlt
+    push Not at hlt
     have hmono := hSmono (hTmem τ') (hTmem τ) hlt.le
     rw [hSv, hSv'] at hmono
     -- `L * clamp01 τ' ≤ L * clamp01 τ` and `L * clamp01 τ ≤ L * clamp01 τ'` ⟹ equal ⟹ `T` equal
@@ -2717,7 +2719,8 @@ theorem constantSpeedReparam_of_finiteVariation {γ : ℝ → ℂ}
       apply eVariationOn.congr
       intro τ hτ; exact hδφ τ hτ.1
     rw [hcongr, eVariationOn.comp_inter_Icc_eq_of_monotoneOn δ₀ φ hφmono hx hy, hφimage]
-    -- `δ₀` unit speed on `Icc 0 L`: `eVariationOn δ₀ (Icc 0 L ∩ Icc (φ x)(φ y)) = ofReal(φ y - φ x)`
+    -- `δ₀` unit speed on `Icc 0 L`:
+    -- `eVariationOn δ₀ (Icc 0 L ∩ Icc (φ x)(φ y)) = ofReal(φ y - φ x)`
     have hφx : φ x ∈ Icc (0 : ℝ) L := by rw [← hφimage]; exact ⟨x, hx, rfl⟩
     have hφy : φ y ∈ Icc (0 : ℝ) L := by rw [← hφimage]; exact ⟨y, hy, rfl⟩
     have := hunit hφx hφy
@@ -2876,7 +2879,8 @@ provides a pair `a, b ∈ Γ` with `2r < dist a b ≤ dist a z + dist z b`, so o
 theorem exists_far_point_of_lt_ediam {Γ : Set ℂ} {z : ℂ} {r : ℝ}
     (hdiam : ENNReal.ofReal (2 * r) < Metric.ediam Γ) :
     ∃ w ∈ Γ, r ≤ dist z w := by
-  -- The strict bound `ofReal (2r) < ediam Γ` yields a pair `a, b ∈ Γ` with `ofReal (2r) < edist a b`.
+  -- The strict bound `ofReal (2r) < ediam Γ` yields a pair `a, b ∈ Γ`
+  -- with `ofReal (2r) < edist a b`.
   obtain ⟨a, ha, b, hb, hab⟩ : ∃ a ∈ Γ, ∃ b ∈ Γ, ENNReal.ofReal (2 * r) < edist a b := by
     by_contra hcon
     push Not at hcon
@@ -3560,7 +3564,7 @@ theorem exists_nodup_isChain_of_reflTransGen {α : Type*} [DecidableEq α]
 `a` reaches `b` under `ReflTransGen r`, then there is a `Nodup`-free (hence length `≤ C.card`)
 `r`-chain from `a` to `b` all of whose vertices lie in `C`. -/
 theorem exists_nodup_isChain_subset_card {α : Type*} [DecidableEq α]
-    {r : α → α → Prop} {C : Finset α} {a b : α} (ha : a ∈ C) (hb : b ∈ C)
+    {r : α → α → Prop} {C : Finset α} {a b : α} (ha : a ∈ C) (_hb : b ∈ C)
     (hr : ∀ x y, r x y → y ∈ C)
     (h : Relation.ReflTransGen r a b) :
     ∃ l : List α, ∃ (hl : l ≠ []), l.head hl = a ∧ l.getLast hl = b ∧
@@ -4262,8 +4266,8 @@ theorem geodesicMinimizer_of_connected_finite_hausdorff {Γ : Set ℂ}
 /-- **The Eilenberg–Harrold / Hahn–Mazurkiewicz topological core (now reduced to the geodesic
 existence residual `geodesicMinimizer_of_connected_finite_hausdorff`).**
 
-A **compact connected** set `Γ ⊆ ℂ` of **finite** `μH[1]`-length is arcwise connected by a **simple**
-(injective on `[0,1]`) arc of **finite total variation** lying entirely in `Γ`.
+A **compact connected** set `Γ ⊆ ℂ` of **finite** `μH[1]`-length is arcwise connected by a
+**simple** (injective on `[0,1]`) arc of **finite total variation** lying entirely in `Γ`.
 
 The proof is now **honest analytic content** modulo the single geodesic-existence residual: take a
 length-minimizing path `γ` (from `geodesicMinimizer_of_connected_finite_hausdorff`), pass to its
@@ -4404,7 +4408,7 @@ theorem simpleRectifiableArc_of_compact_connected_finite_hausdorff {Γ : Set ℂ
           have h1 : m * τ ≤ m * c := mul_le_mul_of_nonneg_left h hmpos.le
           rw [hcm] at h1; linarith
       · apply hδmem; constructor
-        · push_neg at h
+        · push Not at h
           have : 0 ≤ m * τ := by positivity
           linarith
         · -- `m * τ + (t - s) ≤ 1`: since `τ ≤ 1`, `m*τ ≤ m`, so `m*τ + (t-s) ≤ m + (t-s) = 1`.
@@ -6230,12 +6234,13 @@ def annulusSeparatingFamily (x : ℂ) (h R : ℝ) : Set (ℝ → ℂ) :=
 `annulusSeparatingFamily` (nonzero winding clause), making the family non-vacuous. -/
 theorem pathWindingNumber_concentricLoop_eq_one (x : ℂ) {r : ℝ} (hr : 0 < r) :
     Complex.pathWindingNumber
-        (fun t : ℝ => x + (r : ℂ) * Complex.exp (((-π + 2 * π * t : ℝ)) * Complex.I)) 0 1 x = 1 := by
+        (fun t : ℝ => x + (r : ℂ) * Complex.exp (((-π + 2 * π * t : ℝ)) * Complex.I))
+        0 1 x = 1 := by
   set γ : ℝ → ℂ := fun t => x + (r : ℂ) * Complex.exp (((-π + 2 * π * t : ℝ)) * Complex.I) with hγ
   -- the exponential factor and its unit norm
   have henorm : ∀ θ : ℝ, ‖Complex.exp ((θ : ℝ) * Complex.I)‖ = 1 := by
     intro θ
-    rw [show ((θ : ℝ) : ℂ) * Complex.I = (θ : ℂ) * Complex.I by push_cast; ring]
+    rw [show ((θ : ℝ) : ℂ) * Complex.I = (θ : ℂ) * Complex.I by ring]
     simp [Complex.norm_exp]
   -- the explicit derivative of the loop
   have hderiv : ∀ t, deriv γ t = (r : ℂ) * ((2 * π : ℝ) * Complex.I)
@@ -6350,7 +6355,7 @@ theorem annulus_separatingModulus_ge (x : ℂ) {h R : ℝ} (hh : 0 < h) (hR : h 
       rw [Complex.polarCoord_symm_apply, Complex.exp_mul_I]; push_cast; ring
     have henorm : ∀ θ : ℝ, ‖Complex.exp ((θ : ℝ) * Complex.I)‖ = 1 := by
       intro θ
-      rw [show ((θ : ℝ) : ℂ) * Complex.I = (θ : ℂ) * Complex.I by push_cast; ring]
+      rw [show ((θ : ℝ) : ℂ) * Complex.I = (θ : ℂ) * Complex.I by ring]
       simp [Complex.norm_exp]
     set G : ℝ → ℝ≥0∞ := fun θ => ρ (x + (r:ℂ) * Complex.exp ((θ : ℝ) * Complex.I)) with hG
     have hintegrand : ∀ θ : ℝ,
@@ -6365,7 +6370,8 @@ theorem annulus_separatingModulus_ge (x : ℂ) {h R : ℝ} (hh : 0 < h) (hR : h 
       have : Measurable (fun θ : ℝ => ((θ : ℝ) : ℂ) * Complex.I) := by
         exact (Complex.measurable_ofReal.comp measurable_id).mul_const Complex.I
       exact (Complex.measurable_exp.comp this)
-    -- ===== hone : 1 ≤ ∫_{Ioo(-π) π} G θ · ofReal r dθ (admissibility of the loop at radius r) =====
+    -- ===== hone : 1 ≤ ∫_{Ioo(-π) π} G θ · ofReal r dθ =====
+    -- (admissibility of the loop at radius r)
     have hone : (1:ℝ≥0∞) ≤ ∫⁻ θ in Ioo (-π) π, G θ * ENNReal.ofReal r := by
       -- the concentric loop `γ t = x + r·exp(i(-π + 2π t))`, t ∈ [0,1]
       set γ : ℝ → ℂ := fun t => x + (r:ℂ) * Complex.exp (((-π + 2*π*t : ℝ)) * Complex.I) with hγ
@@ -6421,7 +6427,7 @@ theorem annulus_separatingModulus_ge (x : ℂ) {h R : ℝ} (hh : 0 < h) (hR : h 
             show (((π:ℝ) : ℂ)) * Complex.I = ((π:ℝ):ℂ) * Complex.I from rfl]
           rw [Complex.exp_neg]
           rw [show Complex.exp (((π:ℝ):ℂ) * Complex.I) = -1 by
-            rw [show ((π:ℝ):ℂ) = (π:ℂ) by push_cast; ring, Complex.exp_pi_mul_I]]
+            rw [show ((π:ℝ):ℂ) = (π:ℂ) by ring, Complex.exp_pi_mul_I]]
           norm_num
         · intro t _
           exact ⟨by rw [hγnorm]; exact hrh, by rw [hγnorm]; exact hrR⟩
@@ -6449,7 +6455,8 @@ theorem annulus_separatingModulus_ge (x : ℂ) {h R : ℝ} (hh : 0 < h) (hR : h 
             (Complex.exp (((-π + 2*π*t : ℝ)) * Complex.I) * (((2*π : ℝ)) * Complex.I)) t := by
           exact (Complex.hasDerivAt_exp _).comp t hbase
         have hd : HasDerivAt γ
-            ((r:ℂ) * (Complex.exp (((-π + 2*π*t : ℝ)) * Complex.I) * (((2*π : ℝ)) * Complex.I))) t := by
+            ((r:ℂ) * (Complex.exp (((-π + 2*π*t : ℝ)) * Complex.I) * (((2*π : ℝ)) * Complex.I)))
+            t := by
           simpa [hγ] using (hexp.const_mul (r:ℂ)).const_add x
         rw [hd.deriv]; ring
       have hnormderiv : ∀ t, (‖deriv γ t‖₊ : ℝ≥0∞) = ENNReal.ofReal (2 * π * r) := by
@@ -6501,7 +6508,8 @@ theorem annulus_separatingModulus_ge (x : ℂ) {h R : ℝ} (hh : 0 < h) (hR : h 
               = ∫⁻ u in Icc (-π) π, ρ (x + (r:ℂ) * Complex.exp ((u:ℝ) * Complex.I)) from rfl, key,
           abs_of_pos (by positivity : (0:ℝ) < 2*π),
           ← lintegral_const_mul' _ _ ENNReal.ofReal_ne_top]
-      -- combine: 1 ≤ arcLength = ofReal(2πr)·∫ρ(γ) = ofReal r · (ofReal(2π)·∫ρ(γ)) = ofReal r · ∫_Icc G
+      -- combine: 1 ≤ arcLength = ofReal(2πr)·∫ρ(γ)
+      --              = ofReal r · (ofReal(2π)·∫ρ(γ)) = ofReal r · ∫_Icc G
       have hGle : ∫⁻ θ in Ioo (-π) π, G θ * ENNReal.ofReal r
           = ENNReal.ofReal r * ∫⁻ θ in Icc (-π) π, G θ := by
         rw [show (∫⁻ θ in Ioo (-π) π, G θ * ENNReal.ofReal r)
@@ -6738,8 +6746,6 @@ proven leaf+keystone — the irreducible quasidisk core, each isolated against a
 foundation. -/
 
 open scoped Pointwise in
-
-
 /-- **Differentiation core (PROVEN, axiom-clean).**
 
 If a nonnegative measurable `g : ℝ → ℝ≥0∞` satisfies the *integrated band bound*
@@ -6799,13 +6805,13 @@ private theorem distortion_band_diff_core (g : ℝ → ℝ≥0∞) (hg : Measura
         intro t ht
         rw [Set.mem_inter_iff, Set.mem_Ici, Set.mem_Icc] at ht
         exact Set.mem_Icc.2 ⟨max_le ht.1 ht.2.1, ht.2.2⟩
-      · push_neg at hb0
+      · push Not at hb0
         have hempty : Set.Ici (0:ℝ) ∩ Set.Icc a b = ∅ := by
           ext t; simp only [Set.mem_inter_iff, Set.mem_Ici, Set.mem_Icc, Set.mem_empty_iff_false,
             iff_false, not_and]
           intro ht0 htab htab2; linarith
         rw [hempty]; exact integrableOn_empty
-    · push_neg at hab
+    · push Not at hab
       have hempty : Set.Ici (0:ℝ) ∩ Set.Icc a b = ∅ := by
         rw [Set.Icc_eq_empty (by linarith), Set.inter_empty]
       rw [hempty]; exact integrableOn_empty
@@ -6866,8 +6872,8 @@ private theorem distortion_band_diff_core (g : ℝ → ℝ≥0∞) (hg : Measura
 `E ⊆ ℂ`, the map `c ↦ μH[1] ({w | infDist w E = c})` is measurable. Each level set is bounded
 (`{infDist · E = c} ⊆ cthickening c E`), so it equals its intersection with the compact thickening
 `cthickening N E` once `N ≥ c`; the slice-measurability `measurable_slice_hausdorff_one` (compact
-window) then gives measurability of each `c ↦ μH[1] (· ∩ cthickening N E)`, and the full level-length
-is their countable supremum. -/
+window) then gives measurability of each `c ↦ μH[1] (· ∩ cthickening N E)`, and the full
+level-length is their countable supremum. -/
 private theorem measurable_distFunction_level_length {E : Set ℂ} (hE : IsCompact E)
     (hEne : E.Nonempty) :
     Measurable (fun c => (MeasureTheory.Measure.hausdorffMeasure 1 : Measure ℂ)
@@ -6954,11 +6960,13 @@ The separation data is supplied by the caller `qc_quasiround_distortion_bound` (
 
 ## Constant remark (the value `2K+2` is NOT load-bearing)
 
-The constant is *recorded* as `2K+2` here only because that is how the scaffolding was first phrased;
-no downstream consumer depends on its value. `qc_quasiround_data` states its constant existentially
-(`∃ C', 0 ≤ C' ∧ …`), and every consumer (`qc_image_outerSquare_diam_sq_le_innerSquare_volume`,
-`IsQCGeometric.ae_differentiableAt'`, the `ReverseLengthAreaEnergy` roundness uses) reads the constant
-only existentially. Hence the eventual discharging proof is FREE to land an EXPONENTIAL constant
+The constant is *recorded* as `2K+2` here only because that is how the scaffolding was first
+phrased; no downstream consumer depends on its value. `qc_quasiround_data` states its constant
+existentially (`∃ C', 0 ≤ C' ∧ …`), and every consumer
+(`qc_image_outerSquare_diam_sq_le_innerSquare_volume`,
+`IsQCGeometric.ae_differentiableAt'`, the `ReverseLengthAreaEnergy` roundness uses) reads the
+constant only existentially. Hence the eventual discharging proof is FREE to land an EXPONENTIAL
+constant
 `C(K) = (√2)^K · e^{2πC₀}` from the crude ring inversion `D/d ≤ exp(2π·(mod_upper + C₀))` — it
 need NOT achieve the linear `2K+2`. (The linear value happens to be true and tight-up-to-factor-2
 at `f = id`: `d = 2h = r√2`, `diam(O) = 2√2·r = (2·1+2)/2·d`.) The bound is uniform in `x, r`
@@ -7131,8 +7139,9 @@ refuted by a concrete counterexample, for two compounding reasons:
 
 * **Conjugate-family category error.** `imageCurveFamily f` consists of CROSSING curves (joining
   `f''leftSide` to `f''rightSide` inside the bounded `f''image`); `annulusSeparatingFamily p a b`
-  consists of WINDING LOOPS. These are conjugate families with reciprocal moduli, so admissibility of
-  `σ` for the crossing family carries no direct information about admissibility of `circRearrange p σ`
+  consists of WINDING LOOPS. These are conjugate families with reciprocal moduli, so admissibility
+  of `σ` for the crossing family carries no direct information about admissibility of
+  `circRearrange p σ`
   for the conjugate winding family.
 
 * **Missing geometric coupling.** In the per-`σ` form the round centre `p` and radii `a < b` enter
@@ -7155,7 +7164,8 @@ the genuine min-cut / Beurling-duality monotonicity of the separating modulus un
 symmetrization, after the monotone-graph reduction of winding loops (slope penalty
 `√(1+h'²) ≥ 1`). The naïve radiality argument is FALSE (`circRearrange p σ` is not radial; the
 per-circle preservation `inner_energy_eq` gives only an angular-INTEGRAL identity, not a pointwise
-lower bound). The inequality is TRUE but its proof needs extremal-length min-cut/max-flow duality and
+lower bound). The inequality is TRUE but its proof needs extremal-length min-cut/max-flow duality
+and
 polarization-of-capacity monotonicity, both Mathlib-absent. It cannot be reduced below this single
 modulus inequality. -/
 theorem image_separatingModulus_round_le {f : ℂ → ℂ} {K : ℝ}
@@ -7176,13 +7186,14 @@ For a round center `p` and radii `0 < a < b` chosen by the set symmetrization
 `grotzsch_eccentric_separating_lower` consumes; it is a thin forwarder to the genuine symmetrization
 residual `image_separatingModulus_round_le`.
 
-**History (FALSE-AS-STATED correction).** This lemma previously asserted a *per-density admissibility
-transfer* — "every `σ` admissible for the image family ⟹ `circRearrange p σ` admissible for the round
-family" — and was wired into the consumer through
+**History (FALSE-AS-STATED correction).** This lemma previously asserted a *per-density
+admissibility transfer* — "every `σ` admissible for the image family ⟹ `circRearrange p σ`
+admissible for the round family" — and was wired into the consumer through
 `curveModulus_circRearrange_le_of_admissible_transfer`. That per-`σ` form is **false** (conjugate
-crossing-vs-winding families; `circRearrange p σ` can vanish on `annulus p a b` when `σ` is supported
-away from `p`); see the full counterexample in `image_separatingModulus_round_le`. The consumer never
-needed the per-`σ` transfer — only the modulus inequality, which is TRUE — so we state and forward
+crossing-vs-winding families; `circRearrange p σ` can vanish on `annulus p a b` when `σ` is
+supported away from `p`); see the full counterexample in `image_separatingModulus_round_le`. The
+consumer never needed the per-`σ` transfer — only the modulus inequality, which is TRUE — so we
+state and forward
 that directly, removing the false intermediate (and its dependence on
 `curveModulus_circRearrange_le_of_admissible_transfer`). -/
 theorem grotzsch_round_modulus_le_image {f : ℂ → ℂ} {K : ℝ}
@@ -7287,8 +7298,9 @@ The genuine symmetrization content is now isolated into the single residual
 * the **value comparison** `separatingValue (D/d) − C₀ ≤ separatingValue (b/a)` (the
   symmetrization/isoperimetric defect budget, `C₀ = log 16 / (2π)` the Teichmüller constant); and
 * the **circular-rearrangement admissibility transfer** — the genuine Pólya–Szegő / Grötzsch step —
-  that the circular rearrangement `circRearrange p σ` of *every* density `σ` admissible for the image
-  winding family is admissible for the round separating family `annulusSeparatingFamily p a b`.
+  that the circular rearrangement `circRearrange p σ` of *every* density `σ` admissible for the
+  image winding family is admissible for the round separating family
+  `annulusSeparatingFamily p a b`.
 
 Everything below the residual is then proved **for real** here, purely from in-repo bricks:
 * `curveModulus_circRearrange_le_of_admissible_transfer` (energy-tight: the transfer ⟹
@@ -7301,7 +7313,8 @@ Everything below the residual is then proved **for real** here, purely from in-r
 Chaining: `ofReal (separatingValue (b/a)) ≤ curveModulus (round sep) ≤ M_image`, hence
 `separatingValue (b/a) ≤ M_image.toReal`, and the value comparison gives the stated
 `separatingValue (D/d) − C₀ ≤ M_image.toReal`. The strict ratio is passed straight through. Thus
-the WHOLE of `grotzsch_eccentric_separating_lower` is proved against the single transfer residual. -/
+the WHOLE of `grotzsch_eccentric_separating_lower` is proved against the single transfer
+residual. -/
 theorem grotzsch_eccentric_separating_lower {f : ℂ → ℂ} {K : ℝ} (hf : IsQCGeometric f K) :
     ∃ C₀ : ℝ, 0 ≤ C₀ ∧ ∀ (x : ℂ) {r h : ℝ}, 0 < r → h = r / Real.sqrt 2 →
       ∀ {d : ℝ}, 0 < d →
@@ -7440,11 +7453,11 @@ theorem grotzsch_symmetrization_kernel {f : ℂ → ℂ} {K : ℝ} (hf : IsQCGeo
 per-frame conclusion of `grotzsch_symmetrization_kernel` (`1 < D/d` and the separating-modulus LOWER
 bound), the proven UPPER transport `image_cutAnnulus_modulus_upper` (`M_up ≤ K·separatingValue √2`)
 and the proven real inversion `separatingValue_le_imp_le_exp` give the EXPLICIT uniform diameter
-bound `diam (f''outer) ≤ exp(2π·(K·separatingValue √2 + C₀))·d`. The constant is uniform in `x, r, d`
-(it depends only on `K` and `C₀`), which is exactly what the top assembly node needs. -/
+bound `diam (f''outer) ≤ exp(2π·(K·separatingValue √2 + C₀))·d`. The constant is uniform in
+`x, r, d` (it depends only on `K` and `C₀`), which is exactly what the top assembly node needs. -/
 private theorem grotzsch_diam_le_of_kernel {f : ℂ → ℂ} {K : ℝ} (hf : IsQCGeometric f K)
     (x : ℂ) {r h : ℝ} (hr : 0 < r) (hh : h = r / Real.sqrt 2) {d : ℝ} (hd : 0 < d)
-    (hhpos : 0 < h) (hhr : h < r) {C₀ : ℝ} (hC₀0 : 0 ≤ C₀)
+    (hhpos : 0 < h) (hhr : h < r) {C₀ : ℝ} (_hC₀0 : 0 ≤ C₀)
     (hDd_gt1 : 1 < Metric.diam (f '' qcOuterSquare x r) / d)
     (hkernel : separatingValue (Metric.diam (f '' qcOuterSquare x r) / d) - C₀
         ≤ (curveModulus ((cutAnnulusQuadrilateral x h r hhpos hhr).imageCurveFamily f)).toReal) :
@@ -7497,8 +7510,8 @@ attained separation of the two inner image sides. The constant is now the EXPONE
 `C' = exp(2π·(K·separatingValue √2 + C₀))` (from the crude Grötzsch ring inversion), uniform in
 `x, r` because the universal Teichmüller defect `C₀` is obtained ONCE from
 `grotzsch_symmetrization_kernel` and the UPPER transport `K·separatingValue √2` depends only on `K`.
-All quasiconformal content is delegated to the proven inversion assembly `grotzsch_diam_le_of_kernel`
-plus the single named symmetrization kernel. -/
+All quasiconformal content is delegated to the proven inversion assembly
+`grotzsch_diam_le_of_kernel` plus the single named symmetrization kernel. -/
 theorem qc_quasiround_distortion_bound {f : ℂ → ℂ} {K : ℝ} (hf : IsQCGeometric f K) :
     ∃ C' : ℝ, 0 ≤ C' ∧ ∀ (x : ℂ) (r : ℝ), 0 < r →
       ∀ (h : ℝ), h = r / Real.sqrt 2 →

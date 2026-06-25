@@ -27,11 +27,11 @@ almost everywhere, and satisfies a Beltrami equation with dilatation bound
 
 * `IsQCGeometric.exists_acl_weakGradient` — **reverse length–area**: the modulus bound forces
   absolute continuity on almost every horizontal and vertical line, with `L²_loc` partials.
-  *(research-scale; the converse of the length–area inequality)*
+  *(the converse of the length–area inequality)*
 * `IsQCGeometric.ae_differentiableAt` — **Stepanov / Gehring–Lehto a.e. differentiability**:
   an ACL map with `L²_loc` partials is (totally) differentiable almost everywhere. Rademacher
   does not apply (the map is not Lipschitz); this is the Stepanov refinement.
-  *(research-scale; approximate differentiability is absent from Mathlib)*
+  *(approximate differentiability is absent from Mathlib)*
 * `IsQCGeometric.exists_beltrami` — **dilatation bound**: at almost every point the pointwise
   dilatation `‖∂̄f / ∂f‖` is `≤ (K − 1)/(K + 1)`, packaged as a `BeltramiCoeff`.
 
@@ -45,7 +45,7 @@ open scoped ENNReal NNReal
 namespace RiemannDynamics
 
 /-- **Reverse length–area / Gehring–Lehto infinitesimal data (the single genuine GMT
-residual of Direction B).**
+residual of the geometric ⇒ analytic direction).**
 
 For a geometric `K`-quasiconformal map `f` the modulus bound
 `M(f(Q)) ≤ K · M(Q)` on every quadrilateral forces, classically, the entire *infinitesimal*
@@ -81,10 +81,10 @@ geometric ⇒ analytic direction (the orientation hypothesis `SensePreserving` i
 topological and carries no differentiability — see the `IsQCGeometric` docstring), so it
 cannot be assumed in order to *define* the partials, and the pointwise dilatation bound is a
 downstream Gehring–Lehto consequence of the very slice-AC it would help establish. The four
-facts emerge **together** from the length–area / no-singular-part analysis; isolating any one
-of them separately would require the others as hypotheses, so a single bundled residual is the
+facts emerge **together** from the length–area / no-singular-part analysis; separating any one
+of them out would require the others as hypotheses, so a single bundled residual is the
 honest granularity. Its mathematical content is **exactly** the same "no singular part" claim
-that the analytic side isolates as `IsQCAnalytic.inverse_reverseLengthArea_weakGradient`
+stated on the analytic side as `IsQCAnalytic.inverse_reverseLengthArea_weakGradient`
 (`QC/InverseQC.lean`), specialised to the inverse map: closing either in full closes both.
 
 ## Status: Mathlib/repo-absent
@@ -123,8 +123,9 @@ theorem IsQCGeometric.reverseLengthArea_data {f : ℂ → ℂ} {K : ℝ} (hf : I
   -- roundness and no `grotzsch_symmetrization_kernel`.
   have hdiff : ∀ᵐ w : ℂ, DifferentiableAt ℝ f w := hf.ae_differentiableAt_gehringLehto
   -- (2),(3) The pointwise dilatation bound and nondegeneracy of the Jacobian, derived **directly**
-  -- from the Grötzsch-free `infinitesimal_dilatation` filtered with the a.e.-differentiability `hdiff`
-  -- (rather than via `ae_dilatation_bound`, which routes through the roundness `ae_differentiableAt'`).
+  -- from the Grötzsch-free `infinitesimal_dilatation` filtered with the a.e.-differentiability
+  -- `hdiff` (rather than via `ae_dilatation_bound`, which routes through the roundness
+  -- `ae_differentiableAt'`).
   have hdil : ∀ᵐ w : ℂ,
       ‖fderiv ℝ f w‖ ^ 2 ≤ K * (fderiv ℝ f w).det ∧ (fderiv ℝ f w).det ≠ 0 := by
     filter_upwards [hdiff, hf.infinitesimal_dilatation] with w hd himp
@@ -137,7 +138,7 @@ theorem IsQCGeometric.reverseLengthArea_data {f : ℂ → ℂ} {K : ℝ} (hf : I
   have hdetpos : ∀ᵐ w : ℂ, 0 < (fderiv ℝ f w).det := by
     refine hf.2.1.ae_det_pos ?_
     filter_upwards [hdiff, hdil] with w hd hw using ⟨hd, hw.2⟩
-  -- The forward slice-AC data, taken **Grötzsch-free** from the new energy residual
+  -- The forward slice-AC data, taken **Grötzsch-free** from the energy residual
   -- `exists_acl_memLp_sliceGradient` (its `ACLHorizontal`/`ACLVertical` conjuncts bundle slice
   -- absolute continuity). NOTE: we do *not* use `ae_slice_absolutelyContinuous` here — that route
   -- factors through `ae_slice_boundedVariation`/`ae_slice_noSingularPart`, which still call the
@@ -180,7 +181,7 @@ absolutely continuous on almost every horizontal and vertical line, with `x`- an
 modulus bound `M(f(Q)) ≤ K · M(Q)` on rectangles forces, by a Fubini/length–area argument,
 absolute continuity of the line slices together with the square-integrable energy bound.
 
-The genuine reverse-length-area / "no singular part" content is isolated in the single residual
+The genuine reverse-length-area / "no singular part" content is the single residual
 `IsQCGeometric.reverseLengthArea_data`; here it is packaged into the `ACL` + `L²_loc` shape by
 the fully proven keystone `acl_weakGradient_of_qcInverse` (`QC/LengthAreaInverse.lean`), whose
 energy half (`memLpLocOn_inverse_partial_of_dilatation`) derives the square-integrable bound on

@@ -542,7 +542,8 @@ theorem IsQCGeometric.ae_slice_noSingularPart {f : ℂ → ℂ} {K : ℝ}
   have hgxLI : LocallyIntegrable (fun w => (fderiv ℝ f w) 1) := hLIofL2 hL2x
   have hgyLI : LocallyIntegrable (fun w => (fderiv ℝ f w) Complex.I) := hLIofL2 hL2y
   -- The weak directional derivatives, via the non-circular difference-quotient bridge: the
-  -- classical partials `(fderiv ℝ f ·) v` are the weak derivatives, fed by the roundness `L²`-bound.
+  -- classical partials `(fderiv ℝ f ·) v` are the weak derivatives, fed by the roundness
+  -- `L²`-bound.
   have hwx : HasWeakDirDeriv 1 (fun w => (fderiv ℝ f w) 1) f Set.univ :=
     hasWeakDirDeriv_of_ae_differentiable_of_differenceQuotient_L2
       (by simp) hfc hfloc hdiff
@@ -1175,7 +1176,8 @@ theorem IsQCGeometric.ae_dilatation_bound {f : ℂ → ℂ} {K : ℝ}
     ∀ᵐ w : ℂ,
       ‖fderiv ℝ f w‖ ^ 2 ≤ K * (fderiv ℝ f w).det ∧ (fderiv ℝ f w).det ≠ 0 := by
   -- The sharp pointwise dilatation bound and nondegeneracy are supplied by the infinitesimal
-  -- modulus blow-up theorem `IsQCGeometric.infinitesimal_dilatation` (`QC/InfinitesimalModulus.lean`):
+  -- modulus blow-up theorem `IsQCGeometric.infinitesimal_dilatation`
+  -- (`QC/InfinitesimalModulus.lean`):
   -- at almost every point of differentiability the differential `L = Df w` satisfies
   -- `det L ≠ 0` and `‖L‖² ≤ K·det L`.  Almost-everywhere differentiability comes from
   -- `ae_differentiableAt'`.

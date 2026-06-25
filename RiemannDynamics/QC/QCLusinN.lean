@@ -421,7 +421,7 @@ private theorem IsQCGeometric.pushforwardGood_modulus_le {f : ℂ → ℂ} {K : 
   have hKne0 : ENNReal.ofReal K ≠ 0 := by
     simp only [ne_eq, ENNReal.ofReal_eq_zero, not_le]; linarith
   have hKnetop : ENNReal.ofReal K ≠ ⊤ := ENNReal.ofReal_ne_top
-  show curveModulus ((fun γ : ℝ → ℂ => f ∘ γ) '' Γgood) ≤ ENNReal.ofReal K * curveModulus Γ
+  change curveModulus ((fun γ : ℝ → ℂ => f ∘ γ) '' Γgood) ≤ ENNReal.ofReal K * curveModulus Γ
   conv_rhs => rw [curveModulus, ENNReal.mul_iInf_of_ne hKne0 hKnetop]
   refine le_iInf fun ρ => ?_
   rw [ENNReal.mul_iInf_of_ne hKne0 hKnetop]
@@ -619,7 +619,7 @@ the general distortion `curveModulus_image_le` then forces the image-segment mod
 `≤ K · 0 = 0`, a contradiction. -/
 theorem IsQCGeometric.lusinN_axisRect {f : ℂ → ℂ} {K : ℝ} (hf : IsQCGeometric f K)
     {S : Set ℂ} (hSmeas : MeasurableSet S) (hSnull : volume S = 0)
-    {a b s t : ℝ} (hab : a < b) (hst : s < t) :
+    {a b s t : ℝ} (hab : a < b) (_hst : s < t) :
     volume (f '' S ∩ axisRect a b s t) = 0 := by
   classical
   set g : ℂ → ℂ := ⇑(hf.2.1.isHomeomorph.homeomorph f).symm with hg

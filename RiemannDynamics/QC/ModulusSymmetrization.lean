@@ -16,8 +16,7 @@ import Mathlib.Topology.Order.LeftRightNhds
 # Conformal modulus: annulus estimates toward the Grötzsch/Teichmüller inversion
 
 This file develops the conformal-modulus geometry needed for the modulus⇒diameter
-(Grötzsch/Teichmüller) inversion that the geometric⇒analytic quasiconformal direction
-ultimately rests on (`grotzsch_modulus_diam_bound` in `QC/GeometricDifferentiable.lean`).
+(Grötzsch/Teichmüller) inversion in the quasiconformal theory.
 
 The foundational brick here is the **round-annulus connecting-modulus upper bound**: any
 family of curves that crosses a round annulus `{R₁ ≤ |z − p| ≤ R₂}` radially has conformal
@@ -65,7 +64,7 @@ private theorem ae_deriv_eq_zero_of_level_set (r : ℝ → ℝ) (c : ℝ) :
   apply measure_mono_null _ hnull
   intro t ht
   simp only [mem_setOf_eq] at ht ⊢
-  push_neg at ht
+  push Not at ht
   obtain ⟨hdiff, hrt⟩ := ht.1
   exact ⟨hdiff, hrt, ht.2⟩
 
@@ -273,7 +272,7 @@ theorem curveModulus_crossing_annulus_le {p : ℂ} {R₁ R₂ : ℝ} (hR₁ : 0 
     refine ⟨hρmeas, fun γ hγ => ?_⟩
     obtain ⟨hγac, ⟨t₁, ht₁, ht₁ball⟩, ⟨t₂, ht₂, ht₂ball⟩⟩ := hcross γ hγ
     -- unfold the arc-length line integral and the density
-    show (1 : ℝ≥0∞) ≤ ∫⁻ t in Set.Icc (0:ℝ) 1,
+    change (1 : ℝ≥0∞) ≤ ∫⁻ t in Set.Icc (0:ℝ) 1,
       (if R₁ ≤ ‖γ t - p‖ ∧ ‖γ t - p‖ ≤ R₂ then ENNReal.ofReal (1 / (‖γ t - p‖ * L)) else 0)
         * (‖deriv γ t‖₊ : ℝ≥0∞)
     -- abbreviations (as definitions only, never forced into defeq with ‖·‖)
@@ -343,9 +342,9 @@ theorem curveModulus_crossing_annulus_le {p : ℂ} {R₁ R₂ : ℝ} (hR₁ : 0 
     have hclrt₂ : cl (r t₂) = R₂ := by
       simp only [hcldef, max_eq_right (le_trans hR₁₂.le hrt₂), min_eq_left hrt₂]
     have hGt₁ : G t₁ = Real.log R₁ / L := by
-      show Real.log (cl (r t₁)) / L = Real.log R₁ / L; rw [hclrt₁]
+      change Real.log (cl (r t₁)) / L = Real.log R₁ / L; rw [hclrt₁]
     have hGt₂ : G t₂ = Real.log R₂ / L := by
-      show Real.log (cl (r t₂)) / L = Real.log R₂ / L; rw [hclrt₂]
+      change Real.log (cl (r t₂)) / L = Real.log R₂ / L; rw [hclrt₂]
     have hincr : |G t₂ - G t₁| = 1 := by
       rw [hGt₁, hGt₂, div_sub_div_same, abs_div, abs_of_pos hLpos, ← hLeq, abs_of_pos hLpos,
         div_self (ne_of_gt hLpos)]
@@ -459,7 +458,7 @@ theorem curveModulus_crossing_annulus_le {p : ℂ} {R₁ R₂ : ℝ} (hR₁ : 0 
       · simp only [if_neg hc, zero_mul, le_refl]
     -- transfer to ℝ≥0∞
     -- the goal's ‖γ t - p‖ is defeq to r t
-    show (‖deriv G t‖₊ : ℝ≥0∞) ≤
+    change (‖deriv G t‖₊ : ℝ≥0∞) ≤
       (if R₁ ≤ r t ∧ r t ≤ R₂ then ENNReal.ofReal (1 / (r t * L)) else 0) * (‖deriv γ t‖₊ : ℝ≥0∞)
     rw [show (‖deriv G t‖₊ : ℝ≥0∞) = ENNReal.ofReal |deriv G t| from by
       rw [← enorm_eq_nnnorm, ← ofReal_norm_eq_enorm, Real.norm_eq_abs]]
@@ -473,7 +472,6 @@ theorem curveModulus_crossing_annulus_le {p : ℂ} {R₁ R₂ : ℝ} (hR₁ : 0 
               have : 0 < r t := lt_of_lt_of_le hR₁ hc.1
               positivity), ← enorm_eq_nnnorm, ← ofReal_norm_eq_enorm]
           · rw [if_neg hc, if_neg hc]; simp
-
   -- ============================ CONCLUSION ============================
   calc curveModulus Γ ≤ ∫⁻ z, (ρ z) ^ 2 := iInf₂_le ρ hρadm
     _ = ENNReal.ofReal (2 * π / L) := henergy
@@ -546,7 +544,8 @@ theorem curveModulus_radialFamily_ge {p : ℂ} {R₁ R₂ : ℝ} (hR₁ : 0 < R�
       filter_upwards with x hx; exact inv_nonneg.mpr (le_of_lt (lt_of_lt_of_le hR₁ hx.1))
     rw [← ofReal_integral_eq_lintegral_ofReal hintb hnn]
     congr 1
-    rw [MeasureTheory.integral_Icc_eq_integral_Ioc, ← intervalIntegral.integral_of_le (le_of_lt hR₁₂),
+    rw [MeasureTheory.integral_Icc_eq_integral_Ioc,
+      ← intervalIntegral.integral_of_le (le_of_lt hR₁₂),
       show (fun x : ℝ => x⁻¹) = (fun x : ℝ => 1 / x) from by funext x; rw [one_div],
       integral_one_div_of_pos hR₁ hR₂]
   -- ======================================================================
@@ -570,7 +569,8 @@ theorem curveModulus_radialFamily_ge {p : ℂ} {R₁ R₂ : ℝ} (hR₁ : 0 < R�
         ρ (radialSegment p R₁ R₂ θ t) * (‖deriv (radialSegment p R₁ R₂ θ) t‖₊ : ℝ≥0∞) :=
       hρadm _ hmem
     -- the derivative of the radial segment has constant `nnnorm = R₂ − R₁`.
-    have hderiv : ∀ t, (‖deriv (radialSegment p R₁ R₂ θ) t‖₊ : ℝ≥0∞) = ENNReal.ofReal (R₂ - R₁) := by
+    have hderiv : ∀ t,
+        (‖deriv (radialSegment p R₁ R₂ θ) t‖₊ : ℝ≥0∞) = ENNReal.ofReal (R₂ - R₁) := by
       intro t
       have hd : HasDerivAt (radialSegment p R₁ R₂ θ)
           (((R₂ - R₁ : ℝ) : ℂ) * Complex.exp (θ * Complex.I)) t := by
@@ -587,8 +587,8 @@ theorem curveModulus_radialFamily_ge {p : ℂ} {R₁ R₂ : ℝ} (hR₁ : 0 < R�
         abs_of_pos (by linarith)]
     simp only [hderiv] at hadm0
     -- substitution `r = R₁ + t·(R₂ − R₁)` cancels the Jacobian against `R₂ − R₁`.
-    have hFmeas : Measurable
-        (fun r : ℝ => ρ (p + (r : ℂ) * Complex.exp (θ * Complex.I)) * ENNReal.ofReal (R₂ - R₁)) := by
+    have hFmeas : Measurable (fun r : ℝ =>
+        ρ (p + (r : ℂ) * Complex.exp (θ * Complex.I)) * ENNReal.ofReal (R₂ - R₁)) := by
       apply Measurable.mul _ measurable_const
       exact hρmeas.comp (Measurable.add measurable_const
         (Complex.measurable_ofReal.mul measurable_const))
@@ -655,7 +655,7 @@ theorem curveModulus_radialFamily_ge {p : ℂ} {R₁ R₂ : ℝ} (hR₁ : 0 < R�
       rw [ENNReal.one_rpow, ENNReal.mul_rpow_of_nonneg _ _ (by norm_num),
         ← ENNReal.rpow_mul, ← ENNReal.rpow_mul] at h2
       norm_num at h2
-      convert h2 using 2 <;> norm_num
+      convert h2 using 2
     have hofL : ENNReal.ofReal L ≠ 0 := by simp [ENNReal.ofReal_eq_zero, not_le, hLpos]
     rw [ENNReal.ofReal_div_of_pos hLpos, ENNReal.ofReal_one,
       ENNReal.div_le_iff_le_mul (Or.inl hofL) (Or.inl ENNReal.ofReal_ne_top)]
@@ -711,9 +711,8 @@ theorem curveModulus_radialFamily_ge {p : ℂ} {R₁ R₂ : ℝ} (hR₁ : 0 < R�
 
 /-! ## Toward the Grötzsch/Teichmüller symmetrization (foundational bricks)
 
-The single geometric⇒analytic residual `grotzsch_modulus_diam_bound`
-(`QC/GeometricDifferentiable.lean`) reduces to bounding `diam (f''outer)` from the modulus of the
-image ring. The round-annulus modulus *values* are pinned exactly by bricks 1+2
+The Grötzsch/Teichmüller modulus⇒diameter inversion reduces to bounding `diam (f''outer)` from the
+modulus of the image ring. The round-annulus modulus *values* are pinned exactly by bricks 1+2
 (`curveModulus_crossing_annulus_le` UPPER, `curveModulus_radialFamily_ge` LOWER), and the monotone
 inversion + the measure-preserving reflection primitive are provided below as reusable foundations.
 
@@ -906,8 +905,8 @@ reflection pair `{z, reflectIm z}` without changing the total area energy. This 
 fully-proven rearrangement brick: the half-plane localization of `lintegral_polarization_energy`.
 
 In particular `polarize ρ` competes for `curveModulus` at **no greater energy cost** than `ρ`; the
-remaining content of polarization-modulus monotonicity is purely the admissibility/family transfer
-(see the residual note below), the genuine Mathlib-absent symmetrization step. -/
+remaining content of polarization-modulus monotonicity is purely the admissibility/family transfer,
+the genuine Mathlib-absent symmetrization step. -/
 theorem lintegral_polarize_sq {ρ : ℂ → ℝ≥0∞} (hρ : Measurable ρ) :
     ∫⁻ z, (polarize ρ z) ^ 2 = ∫⁻ z, (ρ z) ^ 2 := by
   have hρr : Measurable (fun z => ρ (reflectIm z)) := hρ.comp measurable_reflectIm
@@ -951,7 +950,7 @@ theorem lintegral_polarize_sq {ρ : ℂ → ℝ≥0∞} (hρ : Measurable ρ) :
 
 /-- **Polarization preserves admissibility of the energy bound** (immediate corollary of energy
 neutrality): if `ρ` already meets a target energy `E`, so does `polarize ρ` (with equality in fact).
-Recorded as the `≤` form used by `curveModulus` infimum estimates. -/
+This is the `≤` form used by `curveModulus` infimum estimates. -/
 theorem lintegral_polarize_sq_le {ρ : ℂ → ℝ≥0∞} (hρ : Measurable ρ) :
     ∫⁻ z, (polarize ρ z) ^ 2 ≤ ∫⁻ z, (ρ z) ^ 2 :=
   (lintegral_polarize_sq hρ).le
@@ -959,7 +958,7 @@ theorem lintegral_polarize_sq_le {ρ : ℂ → ℝ≥0∞} (hρ : Measurable ρ)
 /-! ### Polarization-modulus monotonicity (reflection congruence + the energy-tight interface)
 
 With `lintegral_polarize_sq` (energy neutrality, fully proven above) the polarization-modulus
-monotonicity splits into two genuinely distinct halves, *both* of which are banked below as TRUE,
+monotonicity splits into two genuinely distinct halves, *both* of which are TRUE,
 axiom-clean, configuration-independent facts:
 
 1. **Reflection congruence-invariance** (`curveModulus_reflectIm`): the reflection
@@ -972,8 +971,8 @@ axiom-clean, configuration-independent facts:
    *whenever* the polarized density `polarize ρ` of every `Γ`-admissible `ρ` is admissible for the
    polarized family `Γ'`, then `curveModulus Γ' ≤ curveModulus Γ`. This is exactly the
    `curveModulus Γ' ≤ ∫(polarize ρ)² = ∫ρ²` chain, with the *genuine* symmetrization content —
-   the admissibility/folding transfer — isolated as an explicit, satisfiable hypothesis rather than
-   a `sorry` or a mis-stated family condition. The transfer is genuinely intricate in general (a
+   the admissibility/folding transfer — as an explicit, satisfiable hypothesis. The transfer is
+   genuinely intricate in general (a
    lower-half-plane curve sees `polarize ρ = min ≤ ρ`, so admissibility genuinely requires folding
    the curve across the axis — the Mathlib-absent Steiner/circular symmetrization step), and the
    interface lemma is precisely where that step plugs in.
@@ -1007,7 +1006,7 @@ private theorem deriv_reflectIm_comp (γ : ℝ → ℂ) (t : ℝ) :
       have hf := h.hasDerivAt.hasFDerivAt
       have hcomp := (Complex.conjCLE : ℂ →L[ℝ] ℂ).hasFDerivAt.comp t hf
       rw [hasDerivAt_iff_hasFDerivAt]; convert hcomp using 1; ext1; simp
-    show deriv (fun s => (Complex.conjCLE : ℂ →L[ℝ] ℂ) (γ s)) t = _
+    change deriv (fun s => (Complex.conjCLE : ℂ →L[ℝ] ℂ) (γ s)) t = _
     rw [hd.deriv]; rfl
   · have hnd : ¬ DifferentiableAt ℝ (fun s => reflectIm (γ s)) t := by
       intro hc
@@ -1096,7 +1095,7 @@ theorem curveModulus_reflectIm (Γ : Set (ℝ → ℂ)) :
 then polarizing does not increase the modulus: `curveModulus Γ' ≤ curveModulus Γ`.
 
 This is the exact monotonicity statement of single polarization, with the genuine symmetrization
-content — the admissibility/folding transfer — isolated as the explicit hypothesis `htransfer`. The
+content — the admissibility/folding transfer — as the explicit hypothesis `htransfer`. The
 proof is purely the energy-tightness `curveModulus Γ' ≤ ∫ (polarize ρ)² = ∫ ρ²` (each `polarize ρ`
 competes in the infimum for `Γ'`, at energy exactly `∫ ρ²` by `lintegral_polarize_sq`), taken over
 all `Γ`-admissible `ρ`. The hypothesis `htransfer` is genuine and satisfiable — see
@@ -1236,7 +1235,7 @@ theorem annulusValue_le_imp_le_exp {t c : ℝ} (ht : 1 < t) (hc : 0 < c)
 
 The connecting machinery above (`annulusValue`, `annulusValue_le_imp_le_exp`) controls the
 **radial gap** `R₂/R₁` of a *round* sub-annulus. As the task's parity analysis establishes, the
-genuine `grotzsch_modulus_diam_bound` node concerns instead the **diameter** `D = diam(f''outer)`
+genuine modulus⇒diameter node concerns instead the **diameter** `D = diam(f''outer)`
 of a *spread-out* image continuum versus the inner separation `d`, and these are controlled by the
 **separating** (winding-loop) modulus, NOT the connecting one.
 
@@ -1312,10 +1311,10 @@ theorem separatingValue_le_imp_le_exp {t M C₀ : ℝ} (ht : 1 < t)
   calc t = Real.exp (Real.log t) := (Real.exp_log (by linarith)).symm
     _ ≤ Real.exp (2 * π * (M + C₀)) := Real.exp_le_exp.2 hlog_le
 
-/-! ### The eccentric connecting family and the symmetrization residuals (architecture)
+/-! ### The eccentric connecting family and the symmetrization residuals
 
-These are the cleanly-stated residuals of the symmetrization route. They are the `sorry`-leaves of
-the dependency tree; each is TRUE, classically named, and on the critical path. The proven bricks
+These are the cleanly-stated residuals of the symmetrization route. Each is TRUE, classically named,
+and on the critical path (still open). The proven bricks
 above (`curveModulus_crossing_annulus_le`, `curveModulus_radialFamily_ge`, `reflectIm`/
 `lintegral_polarization_energy` rearrangement primitives, the connecting inversion
 `annulusValue_le_imp_le_exp`, and the CORRECT-PARITY separating inversion
@@ -1332,10 +1331,8 @@ long-segment core), but its proof is the *limit* of the polarization primitive
 `lintegral_polarization_energy`
 (Steiner/circular symmetrization), which is Mathlib-absent. It is fed into
 `separatingValue_le_imp_le_exp` (above) together with the QC separating-modulus UPPER transport to
-produce the diameter bound `D/d ≤ exp(2π·(M_up + C₀))`. It lives as the `sorry` of
-`grotzsch_modulus_diam_bound` (`QC/GeometricDifferentiable.lean`); it is deliberately NOT restated
-here as a self-standing lemma to avoid duplicating the node (and to avoid any risk of a mis-stated
-duplicate).
+produce the diameter bound `D/d ≤ exp(2π·(M_up + C₀))`. It is the open residual of the
+Grötzsch/Teichmüller modulus⇒diameter inversion, and is not restated here as a self-standing lemma.
 -/
 
 /-- The **eccentric connecting family** of a continuum `E` and a far set `F` inside the ball
@@ -1492,7 +1489,7 @@ theorem curveModulus_ge_coarea_invLength
     _ ≤ ∫⁻ z, (ρ z) ^ 2 * (‖fderiv ℝ u z‖₊ : ℝ≥0∞) := hcoarea
     _ ≤ ∫⁻ z, (ρ z) ^ 2 := hRHSle
 
-/-! ### The isolated symmetrization residual (TRUE, configuration-independent perimeter estimate)
+/-! ### The remaining symmetrization residual (TRUE, configuration-independent perimeter estimate)
 
 With `curveModulus_ge_coarea_invLength` the separating-modulus symmetrization residual reduces to a
 purely geometric **perimeter / level-set length** statement, the only remaining Mathlib-absent
@@ -1510,9 +1507,8 @@ core only lengthens the off-round level sets, *decreasing* `(L(c))⁻¹`, but th
 `C₀ = log 16 / (2π)`, the Teichmüller constant). Its proof is the Mathlib-absent circular
 rearrangement / isoperimetric step; it feeds `separatingValue_le_imp_le_exp` together with the QC
 separating-modulus UPPER transport to yield the diameter bound `D/d ≤ exp (2π·(M_up + C₀))`. It is
-deliberately NOT restated as a self-standing lemma here (to avoid duplicating the
-`grotzsch_modulus_diam_bound` node), but `curveModulus_ge_coarea_invLength` is precisely the bridge
-that converts it into the modulus lower bound. -/
+not restated as a self-standing lemma here; `curveModulus_ge_coarea_invLength` is precisely the
+bridge that converts it into the modulus lower bound. -/
 
 /-- **Radial inverse-length integral (co-area level-length kernel).**
 
@@ -1551,7 +1547,7 @@ analogue for the **circular rearrangement** `circRearrange p σ` (built in
 symmetrization move whose iterated/limit form is the Grötzsch/Teichmüller symmetrization, and its
 energy-neutrality brick `lintegral_circRearrange_sq` (`∫ (circRearrange p σ)² = ∫ σ²`) is fully
 proven and axiom-clean. As with polarization, the *only* remaining symmetrization content is the
-admissibility/folding transfer, isolated below as the explicit hypothesis `htransfer`. -/
+admissibility/folding transfer, carried below by the explicit hypothesis `htransfer`. -/
 
 /-- **Circular-rearrangement modulus monotonicity (the energy-tight interface).** The planar
 analogue of `curveModulus_polarize_le_of_admissible_transfer`: if the circular rearrangement
@@ -1563,7 +1559,7 @@ The proof is purely the energy-tightness chain `curveModulus Γ' ≤ ∫ (circRe
 (each `circRearrange p σ` competes in the infimum for `Γ'`, at energy exactly `∫ σ²` by
 `lintegral_circRearrange_sq`), taken over all `Γ`-admissible `σ`. The genuine symmetrization content
 — the admissibility/folding transfer (a curve on the lower angular arc sees the rearranged density
-move below `σ`, so admissibility requires folding the curve onto the upper arc) — is isolated as the
+move below `σ`, so admissibility requires folding the curve onto the upper arc) — is the
 explicit, satisfiable hypothesis `htransfer`, exactly as in the polarization case. -/
 theorem curveModulus_circRearrange_le_of_admissible_transfer
     {Γ Γ' : Set (ℝ → ℂ)} (p : ℂ)
