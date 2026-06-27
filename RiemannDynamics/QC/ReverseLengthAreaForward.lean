@@ -445,4 +445,94 @@ theorem axisRect_imageModulus_le_ofReal {f : ℂ → ℂ} {K : ℝ} (hf : IsQCGe
   rw [ENNReal.ofReal_mul hK0]
   exact axisRect_imageModulus_le hf hab hst
 
+/-! ### The swapped axis-rectangle quadrilateral (structural bricks)
+
+The **swapped** axis-rectangle parametrises the rectangle so its left/right sides are the
+bottom/top edges. Its connecting family is therefore the *separating* (bottom ↔ top) family
+of the rectangle — the conjugate of the standard crossing family. The structural lemmas
+(`*_image`, `*_leftSide`, `*_rightSide`, `*_toFun`) are placed here so downstream files —
+including `QC/LoewnerReciprocity.lean` (the planar reciprocity workstream) — can reference
+the swapped quadrilateral without depending on the heavy `QC/GeometricDifferentiable.lean`.
+The admissibility / modulus upper bound for the swapped variant
+(`axisRectDensitySwap_admissible`, `axisRectSwap_modulus_upper_bound`) live in
+`QC/GeometricDifferentiable.lean` (they consume `funcIncrement_le_arcLength`, which is
+also there). -/
+
+/-- The **swapped** axis-rectangle quadrilateral: the parametrization
+`⟨x, y⟩ ↦ ⟨a + (b−a)·y, s + (t−s)·x⟩` of the unit square onto `[a, b] × [s, t]`, i.e. the standard
+`axisRectMap` precomposed with the coordinate swap `Prod.swap`. Its **left** side is the *bottom*
+edge `[a, b] × {s}`, its **right** side is the *top* edge `[a, b] × {t}`, and its image region is
+the same rectangle `[a, b] × [s, t]`. Its connecting (crossing) family is therefore the *separating*
+(bottom ↔ top) family of the rectangle — the conjugate of the standard crossing family. -/
+noncomputable def axisRectQuadrilateralSwap (a b s t : ℝ) (hab : a < b) (hst : s < t) :
+    Quadrilateral where
+  toFun := axisRectMap a b s t ∘ Prod.swap
+  continuous_toFun := (axisRectMap_continuous a b s t).comp continuous_swap
+  injOn_unitSquare := by
+    intro p hp q hq h
+    have hswap : unitSquare = Prod.swap ⁻¹' unitSquare := by
+      ext w; simp only [unitSquare, Set.mem_preimage, Set.mem_prod, Prod.fst_swap, Prod.snd_swap]
+      exact and_comm
+    have hps : Prod.swap p ∈ unitSquare := by rw [hswap] at hp; exact hp
+    have hqs : Prod.swap q ∈ unitSquare := by rw [hswap] at hq; exact hq
+    have := axisRectMap_injOn hab hst hps hqs h
+    exact Prod.swap_injective this
+
+@[simp] theorem axisRectQuadrilateralSwap_toFun (a b s t : ℝ) (hab : a < b) (hst : s < t) :
+    (axisRectQuadrilateralSwap a b s t hab hst).toFun = axisRectMap a b s t ∘ Prod.swap := rfl
+
+/-- The image region of the swapped rectangle quadrilateral is the same rectangle `[a, b] × [s, t]`
+as the unswapped one: the coordinate swap is a bijection of the unit square. -/
+theorem axisRectQuadrilateralSwap_image {a b s t : ℝ} (hab : a < b) (hst : s < t) :
+    (axisRectQuadrilateralSwap a b s t hab hst).image
+      = (axisRectQuadrilateral a b s t hab hst).image := by
+  rw [Quadrilateral.image, Quadrilateral.image, axisRectQuadrilateralSwap_toFun,
+    axisRectQuadrilateral_toFun, Set.image_comp]
+  congr 1
+  -- `swap '' unitSquare = unitSquare`, since `swap` is a self-bijection of the (symmetric) square.
+  rw [unitSquare, Set.image_swap_prod]
+
+/-- The left side of the swapped rectangle is its *bottom* edge `{z | s ≤ z.im, z.re ∈ [a, b],
+z.im = s}`. -/
+theorem axisRectQuadrilateralSwap_leftSide {a b s t : ℝ} (hab : a < b) (hst : s < t) :
+    (axisRectQuadrilateralSwap a b s t hab hst).leftSide
+      = {z : ℂ | z.im = s ∧ (a ≤ z.re ∧ z.re ≤ b)} := by
+  have hbma : (0:ℝ) < b - a := by linarith
+  ext z
+  simp only [Quadrilateral.leftSide, axisRectQuadrilateralSwap_toFun, Function.comp_apply,
+    axisRectMap, Set.mem_image, Set.mem_prod, Set.mem_singleton_iff, Set.mem_Icc, Set.mem_setOf_eq,
+    Prod.fst_swap, Prod.snd_swap, Prod.exists]
+  constructor
+  · rintro ⟨x, y, ⟨rfl, hx0, hx1⟩, rfl⟩
+    refine ⟨by dsimp only [Complex.im]; ring, ?_, ?_⟩ <;>
+      dsimp only [Complex.re] <;> nlinarith
+  · rintro ⟨him, hre0, hre1⟩
+    refine ⟨0, (z.re - a)/(b - a), ⟨rfl, ?_, ?_⟩, ?_⟩
+    · exact div_nonneg (by linarith) hbma.le
+    · rw [div_le_one hbma]; linarith
+    · apply Complex.ext <;> dsimp only [Complex.re, Complex.im]
+      · field_simp; ring
+      · rw [mul_zero, add_zero]; exact him.symm
+
+/-- The right side of the swapped rectangle is its *top* edge `{z | z.im = t, z.re ∈ [a, b]}`. -/
+theorem axisRectQuadrilateralSwap_rightSide {a b s t : ℝ} (hab : a < b) (hst : s < t) :
+    (axisRectQuadrilateralSwap a b s t hab hst).rightSide
+      = {z : ℂ | z.im = t ∧ (a ≤ z.re ∧ z.re ≤ b)} := by
+  have hbma : (0:ℝ) < b - a := by linarith
+  ext z
+  simp only [Quadrilateral.rightSide, axisRectQuadrilateralSwap_toFun, Function.comp_apply,
+    axisRectMap, Set.mem_image, Set.mem_prod, Set.mem_singleton_iff, Set.mem_Icc, Set.mem_setOf_eq,
+    Prod.fst_swap, Prod.snd_swap, Prod.exists]
+  constructor
+  · rintro ⟨x, y, ⟨rfl, hx0, hx1⟩, rfl⟩
+    refine ⟨by dsimp only [Complex.im]; ring, ?_, ?_⟩ <;>
+      dsimp only [Complex.re] <;> nlinarith
+  · rintro ⟨him, hre0, hre1⟩
+    refine ⟨1, (z.re - a)/(b - a), ⟨rfl, ?_, ?_⟩, ?_⟩
+    · exact div_nonneg (by linarith) hbma.le
+    · rw [div_le_one hbma]; linarith
+    · apply Complex.ext <;> dsimp only [Complex.re, Complex.im]
+      · field_simp; ring
+      · rw [mul_one]; linarith [him]
+
 end RiemannDynamics

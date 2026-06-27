@@ -6,6 +6,7 @@ Authors: Will (Ziang) Li
 import RiemannDynamics.QC.Geometric
 import RiemannDynamics.QC.SensePreserving
 import RiemannDynamics.QC.ReverseLengthAreaForward
+import RiemannDynamics.QC.LoewnerReciprocity
 import RiemannDynamics.QC.ModulusSymmetrization
 import RiemannDynamics.Analysis.Sobolev.Stepanov
 import RiemannDynamics.Analysis.Sobolev.Coarea.Assembly
@@ -376,84 +377,15 @@ The conjugate family `Γ*` is realized as the image crossing family of the **swa
 `(1/(t−s))·𝟙_R`, with the imaginary-part projection inequality
 `funcIncrement_le_arcLength … Complex.imCLM`). The one genuinely two-dimensional input that remains
 is the reciprocity inequality itself, isolated as the precise residual
-`conjugateImageModulus_reciprocity` (its docstring names the absent classical ingredient). -/
+`conjugateImageModulus_reciprocity` (its docstring names the absent classical ingredient).
 
-/-- The **swapped** axis-rectangle quadrilateral: the parametrization
-`⟨x, y⟩ ↦ ⟨a + (b−a)·y, s + (t−s)·x⟩` of the unit square onto `[a, b] × [s, t]`, i.e. the standard
-`axisRectMap` precomposed with the coordinate swap `Prod.swap`. Its **left** side is the *bottom*
-edge `[a, b] × {s}`, its **right** side is the *top* edge `[a, b] × {t}`, and its image region is
-the same rectangle `[a, b] × [s, t]`. Its connecting (crossing) family is therefore the *separating*
-(bottom ↔ top) family of the rectangle — the conjugate of the standard crossing family. -/
-noncomputable def axisRectQuadrilateralSwap (a b s t : ℝ) (hab : a < b) (hst : s < t) :
-    Quadrilateral where
-  toFun := axisRectMap a b s t ∘ Prod.swap
-  continuous_toFun := (axisRectMap_continuous a b s t).comp continuous_swap
-  injOn_unitSquare := by
-    intro p hp q hq h
-    have hswap : unitSquare = Prod.swap ⁻¹' unitSquare := by
-      ext w; simp only [unitSquare, Set.mem_preimage, Set.mem_prod, Prod.fst_swap, Prod.snd_swap]
-      exact and_comm
-    have hps : Prod.swap p ∈ unitSquare := by rw [hswap] at hp; exact hp
-    have hqs : Prod.swap q ∈ unitSquare := by rw [hswap] at hq; exact hq
-    have := axisRectMap_injOn hab hst hps hqs h
-    exact Prod.swap_injective this
-
-@[simp] theorem axisRectQuadrilateralSwap_toFun (a b s t : ℝ) (hab : a < b) (hst : s < t) :
-    (axisRectQuadrilateralSwap a b s t hab hst).toFun = axisRectMap a b s t ∘ Prod.swap := rfl
-
-/-- The image region of the swapped rectangle quadrilateral is the same rectangle `[a, b] × [s, t]`
-as the unswapped one: the coordinate swap is a bijection of the unit square. -/
-theorem axisRectQuadrilateralSwap_image {a b s t : ℝ} (hab : a < b) (hst : s < t) :
-    (axisRectQuadrilateralSwap a b s t hab hst).image
-      = (axisRectQuadrilateral a b s t hab hst).image := by
-  rw [Quadrilateral.image, Quadrilateral.image, axisRectQuadrilateralSwap_toFun,
-    axisRectQuadrilateral_toFun, Set.image_comp]
-  congr 1
-  -- `swap '' unitSquare = unitSquare`, since `swap` is a self-bijection of the (symmetric) square.
-  rw [unitSquare, Set.image_swap_prod]
-
-/-- The left side of the swapped rectangle is its *bottom* edge `{z | s ≤ z.im, z.re ∈ [a, b],
-z.im = s}`. -/
-theorem axisRectQuadrilateralSwap_leftSide {a b s t : ℝ} (hab : a < b) (hst : s < t) :
-    (axisRectQuadrilateralSwap a b s t hab hst).leftSide
-      = {z : ℂ | z.im = s ∧ (a ≤ z.re ∧ z.re ≤ b)} := by
-  have hbma : (0:ℝ) < b - a := by linarith
-  ext z
-  simp only [Quadrilateral.leftSide, axisRectQuadrilateralSwap_toFun, Function.comp_apply,
-    axisRectMap, Set.mem_image, Set.mem_prod, Set.mem_singleton_iff, Set.mem_Icc, Set.mem_setOf_eq,
-    Prod.fst_swap, Prod.snd_swap, Prod.exists]
-  constructor
-  · rintro ⟨x, y, ⟨rfl, hx0, hx1⟩, rfl⟩
-    refine ⟨by dsimp only [Complex.im]; ring, ?_, ?_⟩ <;>
-      dsimp only [Complex.re] <;> nlinarith
-  · rintro ⟨him, hre0, hre1⟩
-    refine ⟨0, (z.re - a)/(b - a), ⟨rfl, ?_, ?_⟩, ?_⟩
-    · exact div_nonneg (by linarith) hbma.le
-    · rw [div_le_one hbma]; linarith
-    · apply Complex.ext <;> dsimp only [Complex.re, Complex.im]
-      · field_simp; ring
-      · rw [mul_zero, add_zero]; exact him.symm
-
-/-- The right side of the swapped rectangle is its *top* edge `{z | z.im = t, z.re ∈ [a, b]}`. -/
-theorem axisRectQuadrilateralSwap_rightSide {a b s t : ℝ} (hab : a < b) (hst : s < t) :
-    (axisRectQuadrilateralSwap a b s t hab hst).rightSide
-      = {z : ℂ | z.im = t ∧ (a ≤ z.re ∧ z.re ≤ b)} := by
-  have hbma : (0:ℝ) < b - a := by linarith
-  ext z
-  simp only [Quadrilateral.rightSide, axisRectQuadrilateralSwap_toFun, Function.comp_apply,
-    axisRectMap, Set.mem_image, Set.mem_prod, Set.mem_singleton_iff, Set.mem_Icc, Set.mem_setOf_eq,
-    Prod.fst_swap, Prod.snd_swap, Prod.exists]
-  constructor
-  · rintro ⟨x, y, ⟨rfl, hx0, hx1⟩, rfl⟩
-    refine ⟨by dsimp only [Complex.im]; ring, ?_, ?_⟩ <;>
-      dsimp only [Complex.re] <;> nlinarith
-  · rintro ⟨him, hre0, hre1⟩
-    refine ⟨1, (z.re - a)/(b - a), ⟨rfl, ?_, ?_⟩, ?_⟩
-    · exact div_nonneg (by linarith) hbma.le
-    · rw [div_le_one hbma]; linarith
-    · apply Complex.ext <;> dsimp only [Complex.re, Complex.im]
-      · field_simp; ring
-      · rw [mul_one]; linarith [him]
+The swapped axis-rectangle quadrilateral itself and its structural lemmas
+(`axisRectQuadrilateralSwap`, `*_{image,leftSide,rightSide,toFun}`) live in
+`QC/ReverseLengthAreaForward.lean` so the planar Loewner-reciprocity workstream
+(`QC/LoewnerReciprocity.lean`) can reference the swap without depending on this heavy
+file. The admissibility / modulus upper-bound bricks
+(`axisRectDensitySwap_admissible`, `axisRectSwap_modulus_upper_bound`) are kept here
+because they consume `funcIncrement_le_arcLength` (above), which lives in this file. -/
 
 /-- The constant density `(1/(t−s))·𝟙_R` on the rectangle is **admissible** for the swapped
 (bottom ↔ top) connecting family: every absolutely continuous curve from the bottom side to the top
@@ -5043,26 +4975,51 @@ This is the genuine topological/measure content of conformal-modulus reciprocity
 *Conformal Invariants* Ch. 4; Väisälä §II): every crossing curve meets every separating curve in a
 topological square, and the co-area/Fubini pairing over the image foliation delivers the bound.
 
-**Status.** Isolated as the single `sorry`.  Mathlib-absent: there is no Jordan-separation /
-topological-square crossing lemma, and no planar co-area for the curved image foliation of a *mere*
-homeomorphism (the only Mathlib change-of-variables tool needs an injective differentiable map
-with a known differential, not a level-set foliation).  This is the irreducible reciprocity atom
-and the central node of the "build reciprocity first" program.
+**Status.** **Discharged by reduction** to the planar Loewner reciprocity workstream
+(`QC/LoewnerReciprocity.lean`). The body is a one-line call into
+`loewner_image_cross_bound_axisRect`, whose signature matches this theorem exactly. The
+genuine Beurling–Ahlfors content has been factored into two named architectural sorries
+in `LoewnerReciprocity.lean`: the affine atom `loewner_affine_cross_bound_full`
+(`f = id`, axis rectangle, full AC-curve-family admissibility — closeable via the
+truncation + Beurling-ρ-potential + L²-limit Lipschitz-eikonal pipeline using the proved
+Sobolev co-area engine `eilenberg_coarea_grad_le`) and the source ↔ image reduction
+`loewner_image_cross_bound_axisRect` itself (using `rectangle_crossing` + the
+`IsQCGeometric f K` modulus bound). Filling those two sorries is multi-session
+research engineering; closure of *this* theorem now bottoms out at the named Loewner
+residuals rather than at a one-off sorry in this file.
 
-A *geodesic ρ-potential* route to this bound was attempted and **retired as unsound for the sharp
-eikonal**: the cheap-connector `‖∇u‖ ≤ ρ(z)` is FALSE for finite-energy `ρ` (planar Kakeya/Nikodym —
-a thin heavy transversal "wall", invisible to small ball-averages at `z` yet crossed by every
-fan/detour path at the macroscopic scale `d = ‖y − z‖`, forcing cost `(ρ(z) + Θ(1)·ε)·d` with a
-dimensional dilution factor `≥ 9π/8 > 1`).  The conclusion still holds (such a wall makes `∫∫ ρ²`
-large), but only via the energy/crossing duality, not a potential. -/
+The classical mathematics: there is no Jordan-separation / topological-square crossing
+lemma in Mathlib, and no planar co-area for the curved image foliation of a *mere*
+homeomorphism (the only Mathlib change-of-variables tool needs an injective differentiable
+map with a known differential, not a level-set foliation). The kept Sperner /
+Poincaré–Miranda crossing machinery (`Analysis/RectangleCrossing.lean`'s
+`rectangle_crossing`), the Eilenberg–Harrold simple-arc, and the proved
+`eilenberg_coarea_grad_le` (`Analysis/Sobolev/Coarea/Assembly.lean`) are the building
+blocks the Loewner workstream uses.
+
+A *geodesic ρ-potential* route to this bound was attempted and **retired as unsound for
+the sharp eikonal**: the cheap-connector `‖∇u‖ ≤ ρ(z)` is FALSE for finite-energy `ρ`
+(planar Kakeya/Nikodym — a thin heavy transversal "wall", invisible to small
+ball-averages at `z` yet crossed by every fan/detour path at the macroscopic scale
+`d = ‖y − z‖`, forcing cost `(ρ(z) + Θ(1)·ε)·d` with a dimensional dilution factor
+`≥ 9π/8 > 1`). The conclusion still holds (such a wall makes `∫∫ ρ²` large), but only via
+the energy/crossing duality, not a potential. The Beurling potential approach in
+`loewner_affine_cross_bound_full` is constrained to *bounded* `ρ_n = min(ρ, n)` (where
+the eikonal holds) plus an admissibility-preserving renormalization and an L² limit
+passage — this finesses the Kakeya counterexample. -/
 theorem imageConjugate_cross_bound {f : ℂ → ℂ} {Kqc : ℝ} (hf : IsHomeomorph f)
     (hfqc : IsQCGeometric f Kqc)
     {a b s t : ℝ} (hab : a < b) (hst : s < t) {ρ σ : ℂ → ℝ≥0∞}
     (hρ : IsAdmissibleDensity ρ ((axisRectQuadrilateral a b s t hab hst).imageCurveFamily f))
     (hσ : IsAdmissibleDensity σ
       ((axisRectQuadrilateralSwap a b s t hab hst).imageCurveFamily f)) :
-    1 ≤ ∫⁻ z, ρ z * σ z := by
-  sorry
+    1 ≤ ∫⁻ z, ρ z * σ z :=
+  -- Discharged by the planar Loewner reciprocity workstream
+  -- (`QC/LoewnerReciprocity.lean`); the genuine Beurling–Ahlfors content lives in
+  -- `loewner_affine_cross_bound_full` (the affine atom) and the source ↔ image
+  -- reduction is `loewner_image_cross_bound_axisRect`. The signatures match exactly
+  -- and the call is one-to-one.
+  loewner_image_cross_bound_axisRect hf hfqc hab hst hρ hσ
 
 /-- **The length–area cross-inequality (conformal-modulus reciprocity, energy form).**
 
