@@ -5,7 +5,7 @@ Authors: Will (Ziang) Li
 -/
 import RiemannDynamics.QC.Geometric
 import RiemannDynamics.QC.ReverseLengthAreaForward
-import RiemannDynamics.QC.GeometricDifferentiable
+import RiemannDynamics.QC.GeometricDifferentiable.Reciprocity
 
 /-!
 # The infinitesimal modulus distortion (blow-up argument)

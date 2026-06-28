@@ -7,7 +7,7 @@ import RiemannDynamics.QC.Geometric
 import RiemannDynamics.QC.SensePreserving
 import RiemannDynamics.QC.ReverseLengthArea
 import RiemannDynamics.QC.InverseQC
-import RiemannDynamics.QC.GeometricDifferentiable
+import RiemannDynamics.QC.GeometricDifferentiable.Reciprocity
 import RiemannDynamics.QC.InfinitesimalModulus
 import RiemannDynamics.Analysis.Sobolev.AbsolutelyContinuousLines
 import RiemannDynamics.Analysis.Sobolev.WeakDeriv

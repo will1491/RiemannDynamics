@@ -1,7 +1,5 @@
 import RiemannDynamics.Basic
 
-import RiemannDynamics.Analysis.RectangleCrossing
-
 import RiemannDynamics.Sphere.Basic
 import RiemannDynamics.Sphere.SphericalMetric
 import RiemannDynamics.Sphere.RationalMap
@@ -73,7 +71,9 @@ import RiemannDynamics.Analysis.Sobolev.GehringLehto
 import RiemannDynamics.Analysis.Sobolev.Morrey.OscillationBound
 import RiemannDynamics.Analysis.Sobolev.Morrey.LusinN
 
+import RiemannDynamics.Analysis.RectangleCrossing
 import RiemannDynamics.Analysis.Rearrangement1D
+import RiemannDynamics.Analysis.PolyaSzego1D
 import RiemannDynamics.Analysis.CircularRearrangement
 import RiemannDynamics.Analysis.Isoperimetric
 
@@ -117,6 +117,9 @@ import RiemannDynamics.QC.ModulusSymmetrization
 import RiemannDynamics.QC.ReverseLengthAreaEnergy
 import RiemannDynamics.QC.InverseQC
 import RiemannDynamics.QC.MultiplicityAreaFormula
-import RiemannDynamics.QC.GeometricDifferentiable
+import RiemannDynamics.QC.GeometricDifferentiable.Primitives
+import RiemannDynamics.QC.GeometricDifferentiable.PlaneSeparation
+import RiemannDynamics.QC.GeometricDifferentiable.RectifiablePathHelpers
+import RiemannDynamics.QC.GeometricDifferentiable.Reciprocity
 import RiemannDynamics.QC.GeometricToAnalytic
 import RiemannDynamics.QC.Equivalence
