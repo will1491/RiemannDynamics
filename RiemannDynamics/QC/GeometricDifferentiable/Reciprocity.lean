@@ -373,9 +373,9 @@ total variation over *all* continuous paths from `p` to `q` in `Γ`.
 
 ## Proof
 
-The **geodesic-existence** half is obtained here from a single residual. Take one finite-variation
-competitor from `exists_finiteVariation_path_of_connected_finite_hausdorff` (the rectifiable
-path-connectedness residual), so the infimum `m` of competitor lengths is finite. Choose a
+The **geodesic-existence** half is obtained here from the rectifiable path-connectedness theorem
+`exists_finiteVariation_path_of_connected_finite_hausdorff`: take one finite-variation competitor
+from it, so the infimum `m` of competitor lengths is finite. Choose a
 minimizing sequence of competitor lengths `≤ V₀` (the first competitor's length), realize each by a
 competitor, and constant-speed reparametrize (`constantSpeedReparam_of_finiteVariation`) to obtain
 paths `gₙ` that are uniformly `K`-Lipschitz on `[0,1]` (with `K = V₀.toReal`), have the same
@@ -387,9 +387,10 @@ endpoints, and the trace in `Γ` (closedness) pass to the limit, and **lower sem
 `eVariationOn γ* [0,1] ≤ m`. Since `γ*` is a competitor its length is `≥ m`, so it equals `m` and is
 minimal.
 
-The single remaining ingredient is the **rectifiable path-connectedness residual**
+The key input is the **rectifiable path-connectedness theorem**
 `exists_finiteVariation_path_of_connected_finite_hausdorff` (the Eilenberg–Harrold ε-chain /
-covering-number content, absent from Mathlib): the existence of *one* finite-variation competitor.
+covering-number content, classically absent from Mathlib): the existence of *one* finite-variation
+competitor.
 
 The hypothesis `p ≠ q` is part of the consumer's interface (it makes the minimal length positive for
 the downstream loop-excision in `simpleRectifiableArc_of_compact_connected_finite_hausdorff`); the
@@ -412,7 +413,7 @@ theorem geodesicMinimizer_of_connected_finite_hausdorff {Γ : Set ℂ}
   -- The set of competitor lengths in `ℝ≥0∞`, and its infimum `m`.
   set S : Set ℝ≥0∞ := {v | ∃ η, Comp η ∧ eVariationOn η I = v} with hSdef
   set m : ℝ≥0∞ := sInf S with hmdef
-  -- From the rectifiable-connectedness residual: at least one finite-length competitor exists.
+  -- From the rectifiable-connectedness theorem: at least one finite-length competitor exists.
   obtain ⟨γ₀, hγ₀0, hγ₀1, hγ₀cont, hγ₀fin, hγ₀mem⟩ :=
     exists_finiteVariation_path_of_connected_finite_hausdorff hΓcpt hΓconn hΓfin hpΓ hqΓ
   have hγ₀comp : Comp γ₀ := ⟨hγ₀cont, hγ₀0, hγ₀1, hγ₀mem⟩
@@ -564,13 +565,13 @@ theorem geodesicMinimizer_of_connected_finite_hausdorff {Γ : Set ℂ}
   rw [hvarstar_eq]
   exact sInf_le ⟨η, ⟨hηcont, hη0, hη1, hηmem⟩, rfl⟩
 
-/-- **The Eilenberg–Harrold / Hahn–Mazurkiewicz topological core (now reduced to the geodesic
-existence residual `geodesicMinimizer_of_connected_finite_hausdorff`).**
+/-- **The Eilenberg–Harrold / Hahn–Mazurkiewicz topological core (reduced to geodesic existence
+via `geodesicMinimizer_of_connected_finite_hausdorff`).**
 
 A **compact connected** set `Γ ⊆ ℂ` of **finite** `μH[1]`-length is arcwise connected by a
 **simple** (injective on `[0,1]`) arc of **finite total variation** lying entirely in `Γ`.
 
-The proof is now **honest analytic content** modulo the single geodesic-existence residual: take a
+The proof is **honest analytic content** built on geodesic existence: take a
 length-minimizing path `γ` (from `geodesicMinimizer_of_connected_finite_hausdorff`), pass to its
 constant-speed reparametrization `δ` (`constantSpeedReparam_of_finiteVariation`), and show `δ` is
 **injective** by *loop excision*: if `δ s = δ t` with `s < t`, the constant-speed identity gives the
@@ -585,7 +586,7 @@ theorem simpleRectifiableArc_of_compact_connected_finite_hausdorff {Γ : Set ℂ
       eVariationOn γ (Set.Icc (0 : ℝ) 1) ≠ ∞ ∧
       Set.InjOn γ (Set.Icc (0 : ℝ) 1) ∧ ∀ τ ∈ Set.Icc (0 : ℝ) 1, γ τ ∈ Γ := by
   classical
-  -- Geodesic minimizer `γ₀` from the isolated EH/Arzelà–Ascoli residual.
+  -- Geodesic minimizer `γ₀` from the EH/Arzelà–Ascoli construction.
   obtain ⟨γ₀, hγ₀0, hγ₀1, hγ₀cont, hγ₀bv, hγ₀mem, hmin⟩ :=
     geodesicMinimizer_of_connected_finite_hausdorff hΓcpt hΓconn hΓfin hpΓ hqΓ hpq
   -- Constant-speed reparametrization `δ` of `γ₀`.
@@ -834,26 +835,24 @@ Peano continuum, hence arcwise connected; any two of its points `p, q` are joine
 (injective) Lipschitz — and therefore absolutely continuous — arc `δ : [0,1] → ℂ` lying entirely in
 `Γ`, with `δ 0 = p`, `δ 1 = q`.
 
-## Truth and the missing classical ingredient
+## Classical content (Eilenberg–Harrold / Hahn–Mazurkiewicz)
 
-**TRUE** — this is the **Eilenberg–Harrold / Wazewski** theorem (a continuum of finite linear
+This is the **Eilenberg–Harrold / Wazewski** theorem (a continuum of finite linear
 measure is a Peano continuum, so **Hahn–Mazurkiewicz** gives arcwise connectedness; loops are
 removed to get a simple arc, and arc-length parametrization makes it Lipschitz hence absolutely
 continuous).
 
 ## Decomposition
 
-The proof now **separates** the two ingredients, proving the analytic half outright:
+The proof separates two ingredients:
 
 * the **topological core** — existence of a simple (injective) *finite-variation* arc joining `p`
-  and `q` inside `Γ` — is the Mathlib-absent Eilenberg–Harrold / Hahn–Mazurkiewicz content,
-  isolated as the single residual `simpleRectifiableArc_of_compact_connected_finite_hausdorff`;
+  and `q` inside `Γ` — is the (classically Mathlib-absent) Eilenberg–Harrold / Hahn–Mazurkiewicz
+  content `simpleRectifiableArc_of_compact_connected_finite_hausdorff`;
 * the **arc-length Lipschitz reparametrization** — turning a simple finite-variation arc into a
   globally Lipschitz simple arc on `[0,1]` with the same endpoints, trace, and injectivity — is
-  carried out unconditionally in `lipschitz_simpleArc_of_finiteVariation`, using Mathlib's
-  `variationOnFromTo` cumulative-variation machinery.
-
-Only the topological core remains a `sorry`. -/
+  carried out in `lipschitz_simpleArc_of_finiteVariation`, using Mathlib's
+  `variationOnFromTo` cumulative-variation machinery. -/
 theorem rectifiable_continuum_simple_arc {Γ : Set ℂ}
     (hΓcpt : IsCompact Γ) (hΓconn : IsConnected Γ)
     (hΓfin : (MeasureTheory.Measure.hausdorffMeasure 1 : Measure ℂ) Γ ≠ ∞)
@@ -1344,16 +1343,13 @@ topological square, and the co-area/Fubini pairing over the image foliation deli
 
 **Status.** **Discharged by reduction** to the planar Loewner reciprocity workstream
 (`QC/LoewnerReciprocity.lean`). The body is a one-line call into
-`loewner_image_cross_bound_axisRect`, whose signature matches this theorem exactly. The
-genuine Beurling–Ahlfors content has been factored into two named architectural sorries
-in `LoewnerReciprocity.lean`: the affine atom `loewner_affine_cross_bound_full`
-(`f = id`, axis rectangle, full AC-curve-family admissibility — closeable via the
-truncation + Beurling-ρ-potential + L²-limit Lipschitz-eikonal pipeline using the
-Sobolev co-area engine `eilenberg_coarea_grad_le`) and the source ↔ image reduction
-`loewner_image_cross_bound_axisRect` itself (using `rectangle_crossing` + the
-`IsQCGeometric f K` modulus bound). Filling those two sorries is multi-session
-research engineering; closure of *this* theorem now bottoms out at the named Loewner
-residuals rather than at a one-off sorry in this file.
+`loewner_image_cross_bound_axisRect` — whose signature matches this theorem exactly — the single
+planar Loewner reciprocity residual (a `sorry`). Its docstring carries the closeability roadmap:
+the source ↔ image reduction via `rectangle_crossing` + the `IsQCGeometric f K` modulus bound, down
+to the affine Beurling atom (`f = id`, full AC-curve-family admissibility), closeable by the
+truncation + Beurling-ρ-potential + L²-limit Lipschitz-eikonal pipeline on the Sobolev co-area
+engine `eilenberg_coarea_grad_le`. Closure of *this* theorem bottoms out there rather than at a
+one-off sorry in this file.
 
 The classical mathematics: there is no Jordan-separation / topological-square crossing
 lemma in Mathlib, and no planar co-area for the curved image foliation of a *mere*
@@ -1370,9 +1366,9 @@ the sharp eikonal**: the cheap-connector `‖∇u‖ ≤ ρ(z)` is FALSE for fin
 ball-averages at `z` yet crossed by every fan/detour path at the macroscopic scale
 `d = ‖y − z‖`, forcing cost `(ρ(z) + Θ(1)·ε)·d` with a dimensional dilution factor
 `≥ 9π/8 > 1`). The conclusion still holds (such a wall makes `∫∫ ρ²` large), but only via
-the energy/crossing duality, not a potential. The Beurling potential approach in
-`loewner_affine_cross_bound_full` is constrained to *bounded* `ρ_n = min(ρ, n)` (where
-the eikonal holds) plus an admissibility-preserving renormalization and an L² limit
+the energy/crossing duality, not a potential. The Beurling potential approach in the closeability
+roadmap for `loewner_image_cross_bound_axisRect` is constrained to *bounded* `ρ_n = min(ρ, n)`
+(where the eikonal holds) plus an admissibility-preserving renormalization and an L² limit
 passage — this finesses the Kakeya counterexample. -/
 theorem imageConjugate_cross_bound {f : ℂ → ℂ} {Kqc : ℝ} (hf : IsHomeomorph f)
     (hfqc : IsQCGeometric f Kqc)
@@ -1410,8 +1406,9 @@ two conjugate **image** families of `S` — the crossing family `Γ = S.imageCur
 (`f`-image of left ↔ right) and the separating family `Γ* = (swapped S).imageCurveFamily f`
 (`f`-image of bottom ↔ top) — satisfy modulus reciprocity `1 ≤ M(Γ) · M(Γ*)`.
 
-This is **fully reduced** to the single isolated residual `imageConjugate_lengthArea_pairwise` (the
-per-density length–area inequality, the genuine co-area core; see its docstring). The reduction is
+This is **fully reduced** to `imageConjugate_lengthArea_pairwise` (the per-density length–area
+inequality; see its docstring), which bottoms out at the planar Loewner residual
+`loewner_image_cross_bound_axisRect`. The reduction is
 the `ℝ≥0∞` lemma `one_le_biInf_mul_biInf'` fed by the two Rengel finiteness witnesses
 `imageCurveFamily_finiteWitness` (constructed from `image_axisRectQuadrilateral_volume_pos` /
 `…Swap` and the disjoint-image-sides lemmas), all constructed above. -/
@@ -1460,9 +1457,10 @@ least `1/K`:
 
 ## Proof (the reciprocity route)
 
-This is **fully reduced** to the single quasiconformal residual
-`conjugateImageModulus_reciprocity` (modulus reciprocity `M(Γ) · M(Γ*) ≥ 1` for the two conjugate
-image families). Writing `Γ = Q.imageCurveFamily f` (crossing) and `Γ* = Q♯.imageCurveFamily f` for
+This is **fully reduced** to `conjugateImageModulus_reciprocity` (modulus reciprocity
+`M(Γ) · M(Γ*) ≥ 1` for the two conjugate image families), which bottoms out at the planar Loewner
+residual `loewner_image_cross_bound_axisRect`. Writing `Γ = Q.imageCurveFamily f` (crossing) and
+`Γ* = Q♯.imageCurveFamily f` for
 the swapped square `Q♯` (separating), the steps are:
 * `M(Γ*) ≤ K`: the geometric upper bound `hf.2.2` applied to the **swapped** square `Q♯`, whose
   modulus is `≤ (b − a)/(t − s) = 1` for a square (`axisRectSwap_modulus_upper_bound`);

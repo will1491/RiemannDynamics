@@ -19,43 +19,34 @@ import Mathlib.Topology.MetricSpace.UniformConvergence
 import Mathlib.Topology.MetricSpace.CoveringNumbers
 
 /-!
-# A.e. differentiability of a geometric quasiconformal map (the direct metric / Stepanov route)
+# Foundational primitives for the geometric reverse-length–area / reciprocity development
 
-This file proves, **directly from the geometric definition and Stepanov's theorem**, that a
-geometric `K`-quasiconformal map `f : ℂ → ℂ` is real-Fréchet-differentiable at almost every
-point:
+This file collects the elementary, reusable primitives on which the geometric ⇒ analytic
+reverse-length–area machinery is built; the higher-level development lives in the sibling files
+`PlaneSeparation`, `RectifiablePathHelpers`, and `Reciprocity`.
 
-> `IsQCGeometric.ae_differentiableAt' : ∀ᵐ z, DifferentiableAt ℝ f z`.
+## Contents
 
-This is an **independent route** to a.e. differentiability that does *not* pass through the
-reverse-length-area / ACL machinery (`IsQCGeometric.reverseLengthArea_data` in
-`QC/GeometricToAnalytic.lean`, which carries the large Gehring–Lehto `sorry`). Instead it uses
-only the **finite-upper-metric-derivative** form of the Stepanov hypothesis.
+* **STEP 1 — ball ↔ axis squares.** The closed ball `closedBall x r` is sandwiched between its
+  inscribed axis square `qcInnerSquare x r` (half-side `r/√2`, corners on the circle) and
+  circumscribed axis square `qcOuterSquare x r` (half-side `r`); these inclusions and their images
+  are elementary plane geometry, with no quasiconformal content.
 
-## The classical chain
+* **STEP 2 — Rengel's inequality.** The length–area area lower bound `rengel_area_lower_bound`:
+  for a curve family `Γ` whose curves connect two sets at distance `≥ d` while staying inside a
+  measurable region `R`, `d² · M(Γ) ≤ area(R)`, via the admissible density `(1/d)·𝟙_R` (each
+  connecting curve has arc length `≥` chord `≥ d`). This turns a modulus *lower* bound into an
+  area *lower* bound.
 
-1. **Volume derivative finite a.e. (Lebesgue differentiation).** Since `f` is a homeomorphism
-   (`SensePreserving.isHomeomorph`), the pushforward set function `B ↦ volume (f '' B)` is the
-   honest Borel measure `ν = Measure.map f.symm volume`. It is locally finite (`f` continuous
-   ⟹ `f '' compact` is compact, hence of finite volume). On the Besicovitch-covering space `ℂ`,
-   Lebesgue differentiation (`Besicovitch.ae_tendsto_rnDeriv`) gives, for almost every `x`, that
-   `ν (closedBall x r) / volume (closedBall x r) → ν.rnDeriv volume x`, and the limit is finite
-   a.e. (`Measure.rnDeriv_lt_top`). So `ν (closedBall x r) ≲ r²` for all small `r`, a.e. `x`.
+* **STEP 3 — conjugate-square modulus reciprocity reduction.** The swapped square
+  `axisRectQuadrilateralSwap` and its structural lemmas, the Rengel finiteness witnesses
+  `imageCurveFamily_finiteWitness`, and the `ℝ≥0∞` lemma `one_le_biInf_mul_biInf'` that turns the
+  per-density length–area inequality into modulus reciprocity. The reciprocity itself is assembled
+  in `Reciprocity` and bottoms out at the planar Loewner residual
+  `loewner_image_cross_bound_axisRect`.
 
-2. **QC roundness (`qc_image_ball_diam_sq_le_volume`, the single genuine QC residual).** For a
-   geometric `K`-quasiconformal map,
-   `(diam (f '' closedBall x r))² ≤ C(K) · volume (f '' closedBall x r)`:
-   the image of a ball is "round", its squared diameter controlled by its area. This is the one
-   genuinely two-dimensional quasiconformal estimate; it is isolated below as a single precise
-   `sorry`. Its classical proof uses the modulus of a ring/annulus (Grötzsch / Teichmüller
-   extremal estimates), which is **absent from both Mathlib and this repository** (the repository
-   has the rectangle modulus `axisRect_modulus` but no ring-modulus or separating-continua
-   estimate). See the docstring of `qc_image_ball_diam_sq_le_volume`.
-
-3. **Combine.** For `y` with `ρ := ‖y − x‖` small, `‖f y − f x‖ ≤ diam (f '' closedBall x ρ)
-   ≤ √(C · ν(closedBall x ρ)) ≲ √(C · M · π) · ρ = √(C · M · π) · ‖y − x‖`, where `M = rnDeriv + 1`.
-   This is exactly the finite-upper-metric-derivative Stepanov hypothesis, and
-   `RiemannDynamics.Stepanov.ae_differentiableAt_of_ae_limsup_slope_lt_top` finishes.
+* **Reusable primitives** — Hausdorff / co-area, measure-theory / path-algebra, and
+  path-concatenation / affine-reparametrization machinery used across the development.
 -/
 
 open MeasureTheory Metric Set Filter Topology
@@ -63,17 +54,14 @@ open scoped ENNReal NNReal Real
 
 namespace RiemannDynamics
 
-/-! ## STEP 1 — elementary reduction of the ball to two concentric axis squares
+/-! ## STEP 1 — the ball and its two concentric axis squares
 
 The Euclidean closed ball `closedBall x r` sits between two concentric axis-aligned squares:
 the inscribed square `qcInnerSquare x r` of half-side `r/√2` (its far corner lies exactly on the
-circle of radius `r`) and the circumscribed square `qcOuterSquare x r` of half-side `r`. Since the
-quasiconformal map `f` is a homeomorphism — in particular injective with continuous, hence compact,
-images — these set inclusions transport to the images, and `Metric.diam`/`volume` are monotone
-under inclusion. This reduces the ball roundness estimate to a roundness estimate comparing the
-**diameter of the outer image square** with the **area of the inner image square**
-(`qc_image_outerSquare_diam_sq_le_innerSquare_volume`). All lemmas of this section are elementary
-plane geometry; they carry no quasiconformal content. -/
+circle of radius `r`) and the circumscribed square `qcOuterSquare x r` of half-side `r`. For a
+homeomorphism — in particular injective with continuous, hence compact, images — these set
+inclusions transport to the images, and `Metric.diam`/`volume` are monotone under inclusion. All
+lemmas of this section are elementary plane geometry; they carry no quasiconformal content. -/
 
 /-- The inscribed axis-aligned square of the ball `closedBall x r`: the closed axis square centred
 at `x` with half-side `r/√2`. Its four corners lie on the circle of radius `r`, so it is contained
@@ -160,27 +148,12 @@ theorem isCompact_qcOuterSquare (x : ℂ) (r : ℝ) : IsCompact (qcOuterSquare x
 
 /-! ## STEP 2 — Rengel's inequality (the elementary length–area area lower bound)
 
-The reduction above leaves the two-dimensional quasiconformal estimate: the squared diameter of
-the **outer** image square is controlled by the area of the **inner** image square. We dissect it
-into three pieces and prove the elementary one (**Rengel's inequality**) in full:
-
-* **Rengel's inequality** (`rengel_area_lower_bound`, below): for a curve family `Γ` whose
-  curves connect two sets `A₁, A₂` at distance `≥ d` while staying inside a measurable region `R`,
-  `d² · M(Γ) ≤ area(R)`. The proof is the admissible-density argument (template:
-  `axisRect_modulus_upper_bound`): the density `(1/d)·𝟙_R` is admissible (each connecting curve
-  has arc length `≥` chord `≥ d`), so `M(Γ) ≤ ∫ ρ² = area(R)/d²`. This turns a modulus *lower*
-  bound into the area *lower* bound.
-
-* **Modulus lower bound** (`square_imageCurveFamily_modulus_ge`, isolated TRUE residual): the image
-  crossing family of an axis *square* has modulus `≥ 1/K`. This is the genuine extremal-length
-  reciprocity wall.
-
-* **Quasiround distortion** (`qc_quasiround_data`, isolated TRUE residual): the outer image square
-  has diameter `≤ C(K) ·` (inner image side-distance), and the inner image sides are at positive
-  distance. This is the genuine QC two-point-distortion wall.
-
-The first piece is genuinely elementary; the latter two are the two-dimensional quasiconformal
-content absent from Mathlib and this repository, isolated as precise TRUE residuals below. -/
+**Rengel's inequality** `rengel_area_lower_bound`: for a curve family `Γ` whose curves connect two
+sets `A₁, A₂` at distance `≥ d` while staying inside a measurable region `R`, `d² · M(Γ) ≤ area(R)`.
+The proof is the admissible-density argument (template: `axisRect_modulus_upper_bound`): the density
+`(1/d)·𝟙_R` is admissible (each connecting curve has arc length `≥` chord `≥ d`), so
+`M(Γ) ≤ ∫ ρ² = area(R)/d²`. This turns a modulus *lower* bound into an area *lower* bound, and is
+the elementary length–area input to the reciprocity reduction (STEP 3). -/
 
 /-- **Functional-increment ≤ arc length.** For an absolutely continuous curve `δ : ℝ → ℂ` on
 `[0, 1]` and a real-linear continuous functional `L : ℂ →L[ℝ] ℝ` of operator norm `≤ 1`, the
@@ -259,16 +232,19 @@ noncomputable def normFunctional (w : ℂ) : ℂ →L[ℝ] ℝ :=
   (‖w‖⁻¹ : ℝ) • (Complex.reCLM.comp
     ((ContinuousLinearMap.mul ℝ ℂ (starRingEnd ℂ w)).restrictScalars ℝ))
 
+/-- The defining formula: `normFunctional w v = ‖w‖⁻¹ · Re(conj w · v)`. -/
 theorem normFunctional_apply (w v : ℂ) :
     normFunctional w v = ‖w‖⁻¹ * ((starRingEnd ℂ w) * v).re := by
   simp [normFunctional]
 
+/-- `normFunctional w` sends `w` to its norm: `normFunctional w w = ‖w‖` (for `w ≠ 0`). -/
 theorem normFunctional_self {w : ℂ} (hw : w ≠ 0) : normFunctional w w = ‖w‖ := by
   rw [normFunctional_apply, Complex.mul_re, Complex.conj_re, Complex.conj_im,
     show w.re * w.re - -w.im * w.im = Complex.normSq w by rw [Complex.normSq_apply]; ring,
     Complex.normSq_eq_norm_sq]
   field_simp
 
+/-- `normFunctional w` is `1`-Lipschitz: its operator norm is at most `1`. -/
 theorem norm_normFunctional_le (w : ℂ) : ‖normFunctional w‖ ≤ 1 := by
   refine ContinuousLinearMap.opNorm_le_bound _ zero_le_one (fun v => ?_)
   rw [normFunctional_apply, one_mul]
@@ -356,11 +332,10 @@ theorem rengel_area_lower_bound {R : Set ℂ} (hRmeas : MeasurableSet R)
         rw [← mul_assoc, ← ENNReal.ofReal_mul (by positivity),
           mul_one_div, div_self (by positivity), ENNReal.ofReal_one, one_mul]
 
-/-! ## STEP 3 — the two genuine quasiconformal residuals
+/-! ## STEP 3 — the genuinely two-dimensional quasiconformal estimates
 
-After Rengel, two genuinely two-dimensional quasiconformal estimates remain, both absent from
-Mathlib and this repository. Each is isolated below as a single precise `sorry` whose statement is
-**TRUE** and whose precise missing classical ingredient is named. -/
+After Rengel, the remaining estimates are genuinely two-dimensional and classically absent from
+Mathlib (the conjugate square and modulus reciprocity); they are developed below. -/
 
 /-! ### The conjugate (swapped) square and modulus reciprocity
 
@@ -375,9 +350,9 @@ The conjugate family `Γ*` is realized as the image crossing family of the **swa
 *upper* bound — all we need to instantiate `M(Γ*) ≤ K` — is the swapped analogue of
 `axisRect_modulus_upper_bound` and is carried out in full below (the admissible density
 `(1/(t−s))·𝟙_R`, with the imaginary-part projection inequality
-`funcIncrement_le_arcLength … Complex.imCLM`). The one genuinely two-dimensional input that remains
-is the reciprocity inequality itself, isolated as the precise residual
-`conjugateImageModulus_reciprocity` (its docstring names the absent classical ingredient).
+`funcIncrement_le_arcLength … Complex.imCLM`). The one genuinely two-dimensional input is the
+reciprocity inequality itself, `conjugateImageModulus_reciprocity` (assembled in `Reciprocity`,
+bottoming out at the planar Loewner residual `loewner_image_cross_bound_axisRect`).
 
 The swapped axis-rectangle quadrilateral itself and its structural lemmas
 (`axisRectQuadrilateralSwap`, `*_{image,leftSide,rightSide,toFun}`) live in
@@ -478,9 +453,11 @@ The reciprocity `1 ≤ M(Γ) · M(Γ*)` is the infimum, over admissible density 
 **per-pair** length–area inequality `1 ≤ (∫∫ ρ²) · (∫∫ σ²)`. We make this reduction sound and
 explicit: the `curveModulus`/`iInf` wrappers and all the `ℝ≥0∞` finiteness bookkeeping are
 discharged below (an `ℝ≥0∞` lemma `one_le_biInf_mul_biInf'` plus finiteness witnesses for the two
-image families via Rengel densities), leaving the *single* genuinely two-dimensional residual
-`imageConjugate_lengthArea_pairwise` (the per-pair inequality), whose proof is the co-area /
-length–area decomposition over the image foliation that is absent from Mathlib and this repository.
+image families via Rengel densities), leaving the *single* genuinely two-dimensional input
+`imageConjugate_lengthArea_pairwise` (the per-pair inequality), which reduces to the atomic
+cross-bound `imageConjugate_cross_bound` and thence to the planar Loewner residual
+`loewner_image_cross_bound_axisRect` (the co-area / length–area decomposition over the image
+foliation, absent from Mathlib).
 
 Crucially, the naïve route "Cauchy–Schwarz `(∫∫ ρσ)² ≤ (∫∫ ρ²)(∫∫ σ²)` then `∫∫ ρσ ≥ 1` then `inf`
 over independent `ρ, σ`" is **unsound**: `∫∫ ρσ ≥ 1` is *false* for arbitrary admissible pairs
@@ -488,7 +465,7 @@ over independent `ρ, σ`" is **unsound**: `∫∫ ρσ ≥ 1` is *false* for ar
 `∫ a = ∫ b = 0` keeps `ρ, σ` admissible while making `∫∫ ρσ` drop below `1` once the perturbations
 are correlated across the two constraints). The per-pair *product* inequality
 `1 ≤ (∫∫ ρ²)(∫∫ σ²)` does hold for every admissible pair and is exactly equivalent (via the
-infimum) to the goal, so it is the honest atomic residual. -/
+infimum) to the goal, so it is the honest atomic reduction target. -/
 
 /-- **Positive uniform separation of two disjoint nonempty compacta.** In a metric space, two
 disjoint nonempty compact sets `A`, `B` are at a uniform positive distance: there is `d > 0` with
@@ -1132,9 +1109,12 @@ theorem absolutelyContinuousOnInterval_congr {f g : ℝ → ℂ} {a b : ℝ}
 /-- The straight segment `t ↦ z + t (y − z)` from `z` to `y`, parametrized affinely on `[0, 1]`. -/
 noncomputable def segPath (z y : ℂ) : ℝ → ℂ := fun t => z + (t : ℂ) * (y - z)
 
+/-- The straight segment starts at `z`: `segPath z y 0 = z`. -/
 theorem segPath_zero (z y : ℂ) : segPath z y 0 = z := by simp [segPath]
+/-- The straight segment ends at `y`: `segPath z y 1 = y`. -/
 theorem segPath_one (z y : ℂ) : segPath z y 1 = y := by simp [segPath]
 
+/-- The straight segment has constant derivative `y − z` at every point. -/
 theorem segPath_hasDerivAt (z y : ℂ) (t : ℝ) : HasDerivAt (segPath z y) (y - z) t := by
   have h1 : HasDerivAt (fun t : ℝ => (t : ℂ) * (y - z)) (y - z) t := by
     have : HasDerivAt (fun t : ℝ => (t : ℂ)) (1 : ℂ) t := by
@@ -1144,13 +1124,16 @@ theorem segPath_hasDerivAt (z y : ℂ) (t : ℝ) : HasDerivAt (segPath z y) (y -
     have := (hasDerivAt_const t z).add h1; rwa [zero_add] at this
   exact h2
 
+/-- The derivative of the straight segment is the constant `y − z`. -/
 theorem segPath_deriv (z y : ℂ) (t : ℝ) : deriv (segPath z y) t = y - z :=
   (segPath_hasDerivAt z y t).deriv
 
+/-- The straight segment is continuous. -/
 theorem segPath_continuous (z y : ℂ) : Continuous (segPath z y) := by
   unfold segPath
   exact continuous_const.add ((Complex.continuous_ofReal).mul continuous_const)
 
+/-- The straight segment is `‖y − z‖`-Lipschitz. -/
 theorem segPath_lipschitz (z y : ℂ) :
     LipschitzWith (Real.toNNReal ‖y - z‖) (segPath z y) := by
   refine LipschitzWith.of_dist_le_mul (fun t₁ t₂ => ?_)
@@ -1161,6 +1144,7 @@ theorem segPath_lipschitz (z y : ℂ) :
   rw [this, norm_mul, Complex.norm_real, Real.norm_eq_abs,
     Real.coe_toNNReal _ (norm_nonneg _), Real.dist_eq, mul_comm]
 
+/-- The straight segment is absolutely continuous on `[0, 1]`. -/
 theorem segPath_ac (z y : ℂ) : AbsolutelyContinuousOnInterval (segPath z y) 0 1 :=
   ((segPath_lipschitz z y).lipschitzOnWith).absolutelyContinuousOnInterval
 
@@ -1178,6 +1162,7 @@ reparametrized to `[0, 1]`. -/
 noncomputable def glueCurve (δ δp : ℝ → ℂ) : ℝ → ℂ :=
   fun t => if t ≤ 1/2 then δ (2 * t) else δp (2 * t - 1)
 
+/-- The glue of two continuous curves that match at the join (`δ 1 = δp 0`) is continuous. -/
 theorem glueCurve_continuous {δ δp : ℝ → ℂ} (hδc : Continuous δ) (hδpc : Continuous δp)
     (hmatch : δ 1 = δp 0) : Continuous (glueCurve δ δp) := by
   unfold glueCurve
@@ -1186,16 +1171,21 @@ theorem glueCurve_continuous {δ δp : ℝ → ℂ} (hδc : Continuous δ) (hδp
   · exact hδpc.comp (by fun_prop)
   · intro x hx; rw [hx]; norm_num; rw [hmatch]
 
+/-- The glued curve starts at the first piece's start: `glueCurve δ δp 0 = δ 0`. -/
 theorem glueCurve_zero (δ δp : ℝ → ℂ) : glueCurve δ δp 0 = δ 0 := by simp [glueCurve]
+/-- The glued curve ends at the second piece's end: `glueCurve δ δp 1 = δp 1`. -/
 theorem glueCurve_one (δ δp : ℝ → ℂ) : glueCurve δ δp 1 = δp 1 := by
   simp only [glueCurve]; rw [if_neg (by norm_num)]; norm_num
 
+/-- On the left half `[0, 1/2]` the glued curve is the reparametrized first piece `t ↦ δ (2t)`. -/
 theorem glueCurve_eqOn_left (δ δp : ℝ → ℂ) :
     Set.EqOn (fun t => δ (2*t+0)) (glueCurve δ δp) (Set.uIcc 0 (1/2)) := by
   intro t ht
   rw [Set.uIcc_of_le (by norm_num), Set.mem_Icc] at ht
   simp only [glueCurve, add_zero]; rw [if_pos (by linarith [ht.2])]
 
+/-- On the right half `[1/2, 1]` the glued curve is the reparametrized second piece
+`t ↦ δp (2t − 1)`. -/
 theorem glueCurve_eqOn_right {δ δp : ℝ → ℂ} (hmatch : δ 1 = δp 0) :
     Set.EqOn (fun t => δp (2*t+(-1))) (glueCurve δ δp) (Set.uIcc (1/2) 1) := by
   intro t ht
@@ -1205,6 +1195,7 @@ theorem glueCurve_eqOn_right {δ δp : ℝ → ℂ} (hmatch : δ 1 = δp 0) :
   · rw [← h]; norm_num [← hmatch]
   · rw [if_neg (by linarith)]; ring_nf
 
+/-- If both pieces stay in `S` on `[0, 1]`, so does the glued curve. -/
 theorem glueCurve_mem {δ δp : ℝ → ℂ} {S : Set ℂ}
     (hδ : ∀ t ∈ Set.Icc (0 : ℝ) 1, δ t ∈ S) (hδp : ∀ t ∈ Set.Icc (0 : ℝ) 1, δp t ∈ S) :
     ∀ t ∈ Set.Icc (0 : ℝ) 1, glueCurve δ δp t ∈ S := by
@@ -1215,6 +1206,8 @@ theorem glueCurve_mem {δ δp : ℝ → ℂ} {S : Set ℂ}
   · rw [if_pos h]; exact hδ _ (Set.mem_Icc.mpr ⟨by linarith [ht.1], by linarith⟩)
   · rw [if_neg h]; exact hδp _ (Set.mem_Icc.mpr ⟨by linarith, by linarith [ht.2]⟩)
 
+/-- The glue of two absolutely continuous curves matching at the join is absolutely continuous
+on `[0, 1]`. -/
 theorem glueCurve_ac {δ δp : ℝ → ℂ}
     (hδac : AbsolutelyContinuousOnInterval δ 0 1)
     (hδpac : AbsolutelyContinuousOnInterval δp 0 1) (hmatch : δ 1 = δp 0) :

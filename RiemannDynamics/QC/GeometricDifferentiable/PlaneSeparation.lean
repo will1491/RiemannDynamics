@@ -165,8 +165,7 @@ theorem arcLengthLineIntegral_reversePath (ρ : ℂ → ℝ≥0∞) (hρ : Measu
 /-! ### Point-set topology of the plane-separation core (Brouwer-free)
 
 The lemmas in this section establish the abstract level-continuum existence statement
-`rect_level_continuum` via the genuinely two-dimensional boundary-bumping crux `rectLevel_no_split`
-(the corrected, **true** `hsep`-form — see its docstring for the FALSE earlier version it replaces).
+`rect_level_continuum` via the genuinely two-dimensional boundary-bumping crux `rectLevel_no_split`.
 **The entire section is axiom-clean**: the rectangle geometry
 (`rectLevel_isCompact_rect`, `rectLevel_isConnected_rect`), the **Šura–Bura quasi-component
 separation** (`rectLevel_exists_isClopen_separating`) and component-extraction
@@ -634,20 +633,6 @@ bottom points `{im = s} ∩ K` topologically separated from its top points `{im 
 (contrapositive, the form used here): if **no** preconnected `S ⊆ K` meets both the bottom edge
 `{im = s}` and the top edge `{im = t}`, that is a contradiction.
 
-## History — a previously FALSE statement, now corrected
-
-The earlier formalization of this crux took the much weaker hypotheses *"`K` splits as disjoint
-compacta `K₁ ⊔ K₂` with `K₁` meeting the bottom edge and `K₂` meeting the top edge"* and concluded
-`False`. **That statement is FALSE**: take `Rect = [0,3]×[0,1]` and `v` depending only on `re` with
-`v(0) = 0`, `v` rising to `c = ½` at `re = 1`, bulging `> ½` on `(1,2)`, returning to `½` at
-`re = 2`, then rising to `v(3) = 1`. Its level set `K = ({re = 1} ∪ {re = 2}) × [0,1]` is **two
-disjoint full-height segments**; `K₁ = {re = 1} × [0,1]`, `K₂ = {re = 2} × [0,1]` are disjoint
-compacta with `K₁ ∋ (1,0)` (bottom) and `K₂ ∋ (2,1)` (top), satisfying *every* hypothesis of the
-old statement, yet the conclusion `False` is unwarranted — both segments individually join bottom to
-top, so there is no contradiction. The old weak hypotheses dropped the load-bearing separation
-structure (*no preconnected subset of `K` joins bottom to top*) and were satisfiable, making the
-lemma a latent false `sorry`. It is restated here with the correct, **true** hypothesis `hsep`.
-
 ## Proof (Brouwer-free, axiom-clean)
 
 This is the classical Steinhaus-chessboard / Šura–Bura plane-separation core. It is established here
@@ -934,9 +919,9 @@ private theorem rectLevel_no_split {a b s t : ℝ} (hab : a ≤ b) (hst : s ≤ 
 The decomposition of the rectifiable-continuum theorem `rectifiable_continuum_simple_arc` separates
 its two ingredients:
 
-* the **topological core** (Eilenberg–Harrold / Hahn–Mazurkiewicz, Mathlib-absent): a rectifiable
-  continuum contains a *simple* (injective) **finite-variation** arc joining any two points —
-  isolated as the residual `simpleRectifiableArc_of_compact_connected_finite_hausdorff`; and
+* the **topological core** (Eilenberg–Harrold / Hahn–Mazurkiewicz, classically Mathlib-absent):
+  a rectifiable continuum contains a *simple* (injective) **finite-variation** arc joining any
+  two points — `simpleRectifiableArc_of_compact_connected_finite_hausdorff`; and
 * the **arc-length reparametrization**: a simple finite-variation arc can be
   reparametrized to a globally Lipschitz simple arc on `[0,1]` — the genuine analytic content for
   which Mathlib does have machinery (`variationOnFromTo`, `Mathlib.Analysis.ConstantSpeed`).
