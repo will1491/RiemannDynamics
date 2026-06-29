@@ -6,13 +6,13 @@ Authors: Will (Ziang) Li
 import RiemannDynamics.QC.Geometric
 import RiemannDynamics.QC.SensePreserving
 import RiemannDynamics.QC.ReverseLengthArea
-import RiemannDynamics.QC.InverseQC
+import RiemannDynamics.QC.InverseQC.SliceAC
 import RiemannDynamics.QC.GeometricDifferentiable.Reciprocity
 import RiemannDynamics.QC.InfinitesimalModulus
 import RiemannDynamics.Analysis.Sobolev.AbsolutelyContinuousLines
 import RiemannDynamics.Analysis.Sobolev.WeakDeriv
 import RiemannDynamics.Analysis.Sobolev.DifferenceQuotient
-import RiemannDynamics.Analysis.Sobolev.GehringLehto
+import RiemannDynamics.Analysis.Sobolev.GehringLehto.Differentiability
 
 /-!
 # Forward reverse length–area: the Grötzsch-free slice residuals

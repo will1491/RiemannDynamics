@@ -10,7 +10,7 @@ import RiemannDynamics.Analysis.SingularIntegral.Beurling.LpHighOpNorm
 import RiemannDynamics.Analysis.SingularIntegral.GehringHigherIntegrability.Residual
 import RiemannDynamics.Analysis.Sobolev.Wirtinger
 import RiemannDynamics.Analysis.Sobolev.WeakDeriv
-import RiemannDynamics.QC.LengthArea
+import RiemannDynamics.QC.LengthArea.Fuglede
 import Mathlib.Topology.MetricSpace.Contracting
 
 /-!

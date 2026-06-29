@@ -38,9 +38,11 @@ noncomputable def reversePath (δ : ℝ → ℂ) : ℝ → ℂ := fun t => δ (1
 @[simp] theorem reversePath_zero (δ : ℝ → ℂ) : reversePath δ 0 = δ 1 := by simp [reversePath]
 @[simp] theorem reversePath_one (δ : ℝ → ℂ) : reversePath δ 1 = δ 0 := by simp [reversePath]
 
+/-- The reversal of a continuous path is continuous. -/
 theorem reversePath_continuous {δ : ℝ → ℂ} (hδ : Continuous δ) : Continuous (reversePath δ) :=
   hδ.comp (by fun_prop)
 
+/-- If `δ` stays in `S` on `[0, 1]`, so does its reversal `reversePath δ`. -/
 theorem reversePath_mem {δ : ℝ → ℂ} {S : Set ℂ}
     (hδ : ∀ t ∈ Set.Icc (0 : ℝ) 1, δ t ∈ S) : ∀ t ∈ Set.Icc (0 : ℝ) 1, reversePath δ t ∈ S := by
   intro t ht; rw [Set.mem_Icc] at ht
@@ -180,6 +182,7 @@ Brouwer and already axiom-clean in the repository. -/
 private def rectLevelRect (a b s t : ℝ) : Set ℂ :=
   {z : ℂ | (a ≤ z.re ∧ z.re ≤ b) ∧ (s ≤ z.im ∧ z.im ≤ t)}
 
+/-- The horizontal embedding `x ↦ ⟨x, s⟩` is continuous. -/
 private theorem rectLevel_continuous_mk_left (s : ℝ) :
     Continuous (fun x : ℝ => Complex.mk x s) := by
   have : (fun x : ℝ => Complex.mk x s) = (fun x : ℝ => (x : ℂ) + s * Complex.I) := by
@@ -243,16 +246,20 @@ private theorem rectLevel_exists_isClopen_separating {K : Type*} [TopologicalSpa
     obtain ⟨x, hxu, hzCx⟩ := hz
     exact (hCQ x (husub hxu)).le_bot ⟨hzCx, hzQ⟩
 
+/-- `rectLevelRect a b s t` is the product `[a, b] ×ℂ [s, t]`. -/
 private theorem rectLevel_rect_eq_reProdIm (a b s t : ℝ) :
     rectLevelRect a b s t = Set.Icc a b ×ℂ Set.Icc s t := by
   ext z; simp only [rectLevelRect, mem_setOf_eq, Complex.mem_reProdIm, Set.mem_Icc]
 
+/-- The coordinate rectangle `[a, b] × [s, t]` is compact. -/
 private theorem rectLevel_isCompact_rect (a b s t : ℝ) : IsCompact (rectLevelRect a b s t) := by
   rw [rectLevel_rect_eq_reProdIm]; exact (isCompact_Icc).reProdIm (isCompact_Icc)
 
+/-- The coordinate rectangle `[a, b] × [s, t]` is closed. -/
 private theorem rectLevel_isClosed_rect (a b s t : ℝ) : IsClosed (rectLevelRect a b s t) :=
   (rectLevel_isCompact_rect a b s t).isClosed
 
+/-- The coordinate rectangle `[a, b] × [s, t]` is connected (for `a ≤ b`, `s ≤ t`). -/
 private theorem rectLevel_isConnected_rect {a b s t : ℝ} (hab : a ≤ b) (hst : s ≤ t) :
     IsConnected (rectLevelRect a b s t) := by
   have hpre : rectLevelRect a b s t = Complex.equivRealProdCLM.toHomeomorph ⁻¹'
@@ -975,6 +982,7 @@ theorem continuousOn_variationOnFromTo {γ : ℝ → ℂ} {s : Set ℝ}
 and always lands in `[0,1]`; used to make the reparametrized arc *globally* Lipschitz. -/
 noncomputable def clamp01 (τ : ℝ) : ℝ := max 0 (min 1 τ)
 
+/-- `clamp01 τ` always lies in `[0, 1]`. -/
 theorem clamp01_mem (τ : ℝ) : clamp01 τ ∈ Icc (0 : ℝ) 1 := by
   unfold clamp01
   refine ⟨le_max_left _ _, ?_⟩
@@ -982,11 +990,13 @@ theorem clamp01_mem (τ : ℝ) : clamp01 τ ∈ Icc (0 : ℝ) 1 := by
   · simp [h]
   · rw [min_eq_right h, max_le_iff]; exact ⟨by norm_num, h⟩
 
+/-- `clamp01` fixes `[0, 1]` pointwise: `clamp01 τ = τ` for `τ ∈ [0, 1]`. -/
 theorem clamp01_eq_self {τ : ℝ} (hτ : τ ∈ Icc (0 : ℝ) 1) : clamp01 τ = τ := by
   unfold clamp01
   obtain ⟨h0, h1⟩ := hτ
   rw [min_eq_right h1, max_eq_right h0]
 
+/-- `clamp01` is `1`-Lipschitz. -/
 private theorem lipschitzWith_clamp01 : LipschitzWith 1 clamp01 := by
   rw [lipschitzWith_iff_dist_le_mul]
   intro τ τ'

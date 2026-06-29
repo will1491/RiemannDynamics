@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Will (Ziang) Li
 -/
 import RiemannDynamics.QC.Modulus
-import RiemannDynamics.QC.LengthArea
+import RiemannDynamics.QC.LengthArea.Fuglede
 import RiemannDynamics.Analysis.CircularRearrangement
 import RiemannDynamics.Analysis.Sobolev.Coarea.Assembly
 import Mathlib.Analysis.SpecialFunctions.PolarCoord
