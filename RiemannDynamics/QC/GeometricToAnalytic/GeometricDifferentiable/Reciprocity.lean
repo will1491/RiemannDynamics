@@ -3,7 +3,7 @@ Copyright (c) 2026 Will (Ziang) Li. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Will (Ziang) Li
 -/
-import RiemannDynamics.QC.GeometricDifferentiable.RectifiablePathHelpers
+import RiemannDynamics.QC.GeometricToAnalytic.GeometricDifferentiable.RectifiablePathHelpers
 
 /-!
 # Rectifiable arcs and conjugate-image modulus reciprocity
@@ -1342,7 +1342,7 @@ This is the genuine topological/measure content of conformal-modulus reciprocity
 topological square, and the co-area/Fubini pairing over the image foliation delivers the bound.
 
 **Status.** **Discharged by reduction** to the planar Loewner reciprocity workstream
-(`QC/LoewnerReciprocity.lean`). The body is a one-line call into
+(`QC/GeometricToAnalytic/LoewnerReciprocity.lean`). The body is a one-line call into
 `loewner_image_cross_bound_axisRect` — whose signature matches this theorem exactly — the single
 planar Loewner reciprocity residual (a `sorry`). Its docstring carries the closeability roadmap:
 the source ↔ image reduction via `rectangle_crossing` + the `IsQCGeometric f K` modulus bound, down
@@ -1378,10 +1378,8 @@ theorem imageConjugate_cross_bound {f : ℂ → ℂ} {Kqc : ℝ} (hf : IsHomeomo
       ((axisRectQuadrilateralSwap a b s t hab hst).imageCurveFamily f)) :
     1 ≤ ∫⁻ z, ρ z * σ z :=
   -- Discharged by the planar Loewner reciprocity workstream
-  -- (`QC/LoewnerReciprocity.lean`); the genuine Beurling–Ahlfors content lives in
-  -- `loewner_affine_cross_bound_full` (the affine atom) and the source ↔ image
-  -- reduction is `loewner_image_cross_bound_axisRect`. The signatures match exactly
-  -- and the call is one-to-one.
+  -- (`QC/GeometricToAnalytic/LoewnerReciprocity.lean`): the single reciprocity residual
+  -- `loewner_image_cross_bound_axisRect`. The signatures match exactly and the call is one-to-one.
   loewner_image_cross_bound_axisRect hf hfqc hab hst hρ hσ
 
 /-- **The length–area cross-inequality (conformal-modulus reciprocity, energy form).**

@@ -3,8 +3,8 @@ Copyright (c) 2026 Will (Ziang) Li. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Will (Ziang) Li
 -/
-import RiemannDynamics.QC.Modulus
-import RiemannDynamics.QC.SensePreserving
+import RiemannDynamics.QC.Defs.Modulus
+import RiemannDynamics.QC.Defs.SensePreserving
 import Mathlib.Topology.Homeomorph.Defs
 import Mathlib.MeasureTheory.Integral.IntervalIntegral.AbsolutelyContinuousFun
 
@@ -28,7 +28,7 @@ For a homeomorphism this single inequality (applied also to `f⁻¹`) is equival
 the two-sided bound `K⁻¹ · modulus Q ≤ modulus (f Q) ≤ K · modulus Q`.
 
 This is the geometric track of the two quasiconformal definitions; the analytic
-track (`IsQCAnalytic`, via the Beltrami equation) lives in `QC/Analytic.lean`, and
+track (`IsQCAnalytic`, via the Beltrami equation) lives in `QC/Defs/Analytic.lean`, and
 the two are proved equivalent in `QC/Equivalence.lean`. The geometric track owns the
 compactness, removability, and Weyl (`1`-quasiconformal ⇒ conformal) lemmas.
 

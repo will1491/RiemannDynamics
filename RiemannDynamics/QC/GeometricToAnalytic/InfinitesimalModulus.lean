@@ -3,9 +3,9 @@ Copyright (c) 2026 Will (Ziang) Li. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Will (Ziang) Li
 -/
-import RiemannDynamics.QC.Geometric
-import RiemannDynamics.QC.ReverseLengthAreaForward
-import RiemannDynamics.QC.GeometricDifferentiable.Reciprocity
+import RiemannDynamics.QC.Defs.Geometric
+import RiemannDynamics.QC.LengthArea.ReverseLengthAreaForward
+import RiemannDynamics.QC.GeometricToAnalytic.GeometricDifferentiable.Reciprocity
 
 /-!
 # The infinitesimal modulus distortion (blow-up argument)

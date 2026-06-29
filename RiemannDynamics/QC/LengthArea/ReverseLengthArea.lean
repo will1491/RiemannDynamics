@@ -3,8 +3,8 @@ Copyright (c) 2026 Will (Ziang) Li. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Will (Ziang) Li
 -/
-import RiemannDynamics.QC.BanachZaretsky
-import RiemannDynamics.QC.BanachIndicatrix
+import RiemannDynamics.QC.Foundations.BanachZaretsky
+import RiemannDynamics.QC.Foundations.BanachIndicatrix
 import RiemannDynamics.Analysis.Sobolev.AbsolutelyContinuousLines
 import Mathlib.MeasureTheory.Function.AbsolutelyContinuous
 
@@ -12,8 +12,8 @@ import Mathlib.MeasureTheory.Function.AbsolutelyContinuous
 # The reverse length–area reduction (general, reusable)
 
 This file packages the **reverse length–area method** into reusable, self-contained reduction
-lemmas, so that both the quasiconformal inverse (`QC/InverseQC.lean`) and Direction B
-(`QC/GeometricToAnalytic.lean`) can consume the *same* statement.
+lemmas, so that both the quasiconformal inverse (`QC/InverseQC/`) and Direction B
+(`QC/GeometricToAnalytic/Assembly.lean`) can consume the *same* statement.
 
 The classical reverse length–area theorem (Lehto–Virtanen / Väisälä §31.2; Marcus–Mizel, ARMA 45
 (1972)) asserts that the pointwise a.e. gradient of a quasiconformal-type map `g` is its
@@ -51,7 +51,7 @@ that Mathlib lacks (no approximate differentiability, no Federer co-area, no pla
 datum of the inverse (injective, continuous, a.e.-differentiable, condition N⁺, the pointwise
 dilatation bound, `L²_loc` pointwise partials) yet has singular (non-AC) slices — so this statement
 is *false* for the shear, and correctly so: the shear is not the inverse of an `IsQCAnalytic` map
-(the forward `f`'s genuine `W^{1,2}_loc` structure excludes it). See `QC/InverseQC.lean`.
+(the forward `f`'s genuine `W^{1,2}_loc` structure excludes it). See `QC/InverseQC/`.
 
 *Reference:* O. Lehto, K. I. Virtanen, *Quasiconformal Mappings in the Plane*; J. Väisälä, §31.2;
 M. Marcus, V. J. Mizel, ARMA 45 (1972) 294–320; S. Hencl, P. Koskela, App. A.

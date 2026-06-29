@@ -3,12 +3,12 @@ Copyright (c) 2026 Will (Ziang) Li. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Will (Ziang) Li
 -/
-import RiemannDynamics.QC.Geometric
-import RiemannDynamics.QC.SensePreserving
-import RiemannDynamics.QC.ReverseLengthArea
+import RiemannDynamics.QC.Defs.Geometric
+import RiemannDynamics.QC.Defs.SensePreserving
+import RiemannDynamics.QC.LengthArea.ReverseLengthArea
 import RiemannDynamics.QC.InverseQC.SliceAC
-import RiemannDynamics.QC.GeometricDifferentiable.Reciprocity
-import RiemannDynamics.QC.InfinitesimalModulus
+import RiemannDynamics.QC.GeometricToAnalytic.GeometricDifferentiable.Reciprocity
+import RiemannDynamics.QC.GeometricToAnalytic.InfinitesimalModulus
 import RiemannDynamics.Analysis.Sobolev.AbsolutelyContinuousLines
 import RiemannDynamics.Analysis.Sobolev.WeakDeriv
 import RiemannDynamics.Analysis.Sobolev.DifferenceQuotient
@@ -18,7 +18,7 @@ import RiemannDynamics.Analysis.Sobolev.GehringLehto.Differentiability
 # Forward reverse length–area: the Grötzsch-free slice residuals
 
 This file decomposes the single bundled residual `IsQCGeometric.reverseLengthArea_data`
-(`QC/GeometricToAnalytic.lean`) — the heart of the hard direction
+(`QC/GeometricToAnalytic/Assembly.lean`) — the heart of the hard direction
 `isQCAnalytic_of_isQCGeometric` — into named, individually-attackable forward GMT residuals
 stated in terms of the **one-dimensional slice derivatives** (`forwardSliceDerivX/Y`), so the
 whole development is **Grötzsch-free** (no quasiconformal-roundness, no symmetrization): it
@@ -394,7 +394,7 @@ This is the one genuinely length–area-*equality* fact of the forward direction
 a `sorry` residual** because every available engine for it is forbidden on this critical path:
 
 * The **multiplicity area formula** `multiplicityAreaFormula_noSingularPart` (the repo's only
-  proven no-singular-part engine, `QC/InverseQC.lean`) requires the a.e. 2D-differentiability
+  proven no-singular-part engine, `QC/InverseQC/`) requires the a.e. 2D-differentiability
   hypothesis `hGdiff : ∀ᵐ w, DifferentiableAt ℝ G w` — but this leaf *feeds*
   `ae_differentiableAt_gehringLehto`, so 2D differentiability of `f` is precisely what is **not**
   yet available here (using it is a cycle, and is on the explicit forbidden list).

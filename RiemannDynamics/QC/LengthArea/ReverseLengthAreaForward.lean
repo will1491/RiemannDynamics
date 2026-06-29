@@ -3,8 +3,8 @@ Copyright (c) 2026 Will (Ziang) Li. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Will (Ziang) Li
 -/
-import RiemannDynamics.QC.Geometric
-import RiemannDynamics.QC.LengthAreaInverse
+import RiemannDynamics.QC.Defs.Geometric
+import RiemannDynamics.QC.LengthArea.LengthAreaInverse
 
 /-!
 # The axis-aligned rectangle quadrilateral and the slice-energy length–area inequality
@@ -451,11 +451,14 @@ The **swapped** axis-rectangle parametrises the rectangle so its left/right side
 bottom/top edges. Its connecting family is therefore the *separating* (bottom ↔ top) family
 of the rectangle — the conjugate of the standard crossing family. The structural lemmas
 (`*_image`, `*_leftSide`, `*_rightSide`, `*_toFun`) are placed here so downstream files —
-including `QC/LoewnerReciprocity.lean` (the planar reciprocity workstream) — can reference
-the swapped quadrilateral without depending on the heavy `QC/GeometricDifferentiable.lean`.
+including `QC/GeometricToAnalytic/LoewnerReciprocity.lean` (the planar reciprocity workstream) — can
+reference
+the swapped quadrilateral without depending on the heavy
+`QC/GeometricToAnalytic/GeometricDifferentiable/`.
 The admissibility / modulus upper bound for the swapped variant
 (`axisRectDensitySwap_admissible`, `axisRectSwap_modulus_upper_bound`) live in
-`QC/GeometricDifferentiable.lean` (they consume `funcIncrement_le_arcLength`, which is
+`QC/GeometricToAnalytic/GeometricDifferentiable/` (they consume `funcIncrement_le_arcLength`, which
+is
 also there). -/
 
 /-- The **swapped** axis-rectangle quadrilateral: the parametrization

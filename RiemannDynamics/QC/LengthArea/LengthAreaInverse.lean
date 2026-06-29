@@ -10,7 +10,7 @@ import RiemannDynamics.Analysis.Sobolev.SobolevToACL
 # Length–area / Lusin-N⁺ for the quasiconformal inverse
 
 This file builds the classical **length–area** development needed to close the
-keystone `IsQCAnalytic.inverse_memW12loc` (`QC/InverseQC.lean`): the inverse
+keystone `IsQCAnalytic.inverse_memW12loc` (`QC/InverseQC/`): the inverse
 homeomorphism `g = f⁻¹` of an analytic-quasiconformal map is absolutely continuous
 on almost every line with `L²_loc` partials (Väisälä §31.2 / Lehto–Virtanen).
 
@@ -729,7 +729,7 @@ theorem memLpLocOn_inverse_partial_of_dilatation {g : ℂ → ℂ} {K : ℝ} (hK
 /-! ## The keystone assembly -/
 
 /-- **ACL weak gradient of a quasiconformal-type inverse** (keystone assembly). Given
-the inverse-map data that `QC/InverseQC.lean` already supplies for `g = f⁻¹` — `g` is
+the inverse-map data that `QC/InverseQC/` already supplies for `g = f⁻¹` — `g` is
 a homeomorphism, differentiable a.e., with a.e. positive Jacobian and the inverse-side
 dilatation bound `‖Dg w‖² ≤ K · det (Dg w)` — the map `g` is absolutely continuous on
 almost every horizontal and vertical line, with `L²_loc` partials.

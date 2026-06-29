@@ -18,7 +18,8 @@ critical and regular sets into the headline result:
   square maps `(u, im)` / `(u, re)` + `coarea_piece_le` per piece);
 * `coarea_set_sharp` — the unweighted set form `∫⁻ c, μH[1] (u ⁻¹' {c} ∩ A) ≤ ∫⁻ z in A, ‖∇u‖`;
 * `eilenberg_coarea_grad_le` — the gradient-weighted Eilenberg inequality (the headline result,
-  consumed by `QC/GeometricDifferentiable.lean`), obtained from `coarea_set_sharp` by layer-cake.
+  consumed by `QC/GeometricToAnalytic/GeometricDifferentiable/`), obtained from `coarea_set_sharp`
+  by layer-cake.
 -/
 
 open MeasureTheory Set Filter Topology

@@ -3,7 +3,7 @@ Copyright (c) 2026 Will (Ziang) Li. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Will (Ziang) Li
 -/
-import RiemannDynamics.QC.BeltramiCoeff
+import RiemannDynamics.QC.Defs.BeltramiCoeff
 
 /-!
 # Quasiconformal maps: the analytic definition
@@ -43,7 +43,7 @@ everywhere; where `f` is not differentiable `fderiv ℝ f z` is `0`, so the
 almost-everywhere positivity is the substantive sense-preserving condition.) This
 is the orientation condition of the analytic definition `IsQCAnalytic` below; the
 geometric definition `IsQCGeometric` instead uses the purely topological
-`SensePreserving` (in `QC/SensePreserving.lean`), so that a.e. differentiability and
+`SensePreserving` (in `QC/Defs/SensePreserving.lean`), so that a.e. differentiability and
 positivity of the Jacobian remain conclusions of the geometric ⇒ analytic direction
 rather than hypotheses. The two are reconciled by the translation bridges
 `SensePreserving.of_orientationPreservingHomeo` and `SensePreserving.ae_det_pos`. -/

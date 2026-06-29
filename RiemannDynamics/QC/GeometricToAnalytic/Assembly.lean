@@ -3,12 +3,12 @@ Copyright (c) 2026 Will (Ziang) Li. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Will (Ziang) Li
 -/
-import RiemannDynamics.QC.Geometric
-import RiemannDynamics.QC.Analytic
-import RiemannDynamics.QC.SensePreserving
-import RiemannDynamics.QC.LengthAreaInverse
-import RiemannDynamics.QC.ReverseLengthArea
-import RiemannDynamics.QC.ReverseLengthAreaEnergy
+import RiemannDynamics.QC.Defs.Geometric
+import RiemannDynamics.QC.Defs.Analytic
+import RiemannDynamics.QC.Defs.SensePreserving
+import RiemannDynamics.QC.LengthArea.LengthAreaInverse
+import RiemannDynamics.QC.LengthArea.ReverseLengthArea
+import RiemannDynamics.QC.LengthArea.ReverseLengthAreaEnergy
 import RiemannDynamics.Analysis.Sobolev.AbsolutelyContinuousLines
 import RiemannDynamics.Analysis.Sobolev.Stepanov
 
@@ -85,14 +85,15 @@ facts emerge **together** from the length–area / no-singular-part analysis; se
 of them out would require the others as hypotheses, so a single bundled residual is the
 honest granularity. Its mathematical content is **exactly** the same "no singular part" claim
 stated on the analytic side as `IsQCAnalytic.inverse_reverseLengthArea_weakGradient`
-(`QC/InverseQC.lean`), specialised to the inverse map: closing either in full closes both.
+(`QC/InverseQC/`), specialised to the inverse map: closing either in full closes both.
 
 ## Status: Mathlib/repo-absent
 
 The "no singular part" core requires the Federer co-area / multiplicity area formula in its
 *non-injective* (`≤`) direction together with the variation lower bound `Var ≥ ∫|deriv|`, plus
 approximate differentiability and the planar Lusin-(N) bridge — none of which are in Mathlib
-(`QC/MultiplicityAreaFormula.lean` proves the fibered Banach-indicatrix bound but the area
+(`QC/Foundations/MultiplicityAreaFormula.lean` proves the fibered Banach-indicatrix bound but the
+area
 *equality* coupling is absent). It is the sole remaining node of this stage.
 
 ## Soundness (shear sanity check)
@@ -183,7 +184,8 @@ absolute continuity of the line slices together with the square-integrable energ
 
 The genuine reverse-length-area / "no singular part" content is the single residual
 `IsQCGeometric.reverseLengthArea_data`; here it is packaged into the `ACL` + `L²_loc` shape by
-the fully proven keystone `acl_weakGradient_of_qcInverse` (`QC/LengthAreaInverse.lean`), whose
+the fully proven keystone `acl_weakGradient_of_qcInverse` (`QC/LengthArea/LengthAreaInverse.lean`),
+whose
 energy half (`memLpLocOn_inverse_partial_of_dilatation`) derives the square-integrable bound on
 the partials directly from the pointwise dilatation bound `‖Df‖² ≤ K · det (Df)`. -/
 theorem IsQCGeometric.exists_acl_weakGradient {f : ℂ → ℂ} {K : ℝ} (hf : IsQCGeometric f K) :

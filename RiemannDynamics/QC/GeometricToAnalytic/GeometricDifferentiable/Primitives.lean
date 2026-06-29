@@ -3,11 +3,11 @@ Copyright (c) 2026 Will (Ziang) Li. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Will (Ziang) Li
 -/
-import RiemannDynamics.QC.Geometric
-import RiemannDynamics.QC.SensePreserving
-import RiemannDynamics.QC.ReverseLengthAreaForward
-import RiemannDynamics.QC.LoewnerReciprocity
-import RiemannDynamics.QC.ModulusSymmetrization
+import RiemannDynamics.QC.Defs.Geometric
+import RiemannDynamics.QC.Defs.SensePreserving
+import RiemannDynamics.QC.LengthArea.ReverseLengthAreaForward
+import RiemannDynamics.QC.GeometricToAnalytic.LoewnerReciprocity
+import RiemannDynamics.QC.GeometricToAnalytic.ModulusSymmetrization
 import RiemannDynamics.Analysis.Sobolev.Stepanov
 import RiemannDynamics.Analysis.Sobolev.Coarea.Assembly
 import RiemannDynamics.Hyperbolic.WindingNumber.CircleRectangleWinding
@@ -356,8 +356,9 @@ bottoming out at the planar Loewner residual `loewner_image_cross_bound_axisRect
 
 The swapped axis-rectangle quadrilateral itself and its structural lemmas
 (`axisRectQuadrilateralSwap`, `*_{image,leftSide,rightSide,toFun}`) live in
-`QC/ReverseLengthAreaForward.lean` so the planar Loewner-reciprocity workstream
-(`QC/LoewnerReciprocity.lean`) can reference the swap without depending on this heavy
+`QC/LengthArea/ReverseLengthAreaForward.lean` so the planar Loewner-reciprocity workstream
+(`QC/GeometricToAnalytic/LoewnerReciprocity.lean`) can reference the swap without depending on this
+heavy
 file. The admissibility / modulus upper-bound bricks
 (`axisRectDensitySwap_admissible`, `axisRectSwap_modulus_upper_bound`) are kept here
 because they consume `funcIncrement_le_arcLength` (above), which lives in this file. -/

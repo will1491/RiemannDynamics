@@ -5,7 +5,7 @@ Authors: Will (Ziang) Li
 -/
 import RiemannDynamics.QC.InverseQC.SliceAC
 import RiemannDynamics.QC.LengthArea.Fuglede
-import RiemannDynamics.QC.GeometricToAnalytic
+import RiemannDynamics.QC.GeometricToAnalytic.Assembly
 
 /-!
 # The analytic ⇔ geometric quasiconformal equivalence (clean endpoints)
@@ -16,10 +16,10 @@ This file states the headline equivalence theorems in their clean, hypothesis-fr
 * `qc_analytic_iff_geometric` — the full equivalence.
 
 The analytic ⇒ geometric direction is necessarily proved **here**, downstream of
-`QC/InverseQC.lean`, rather than in `QC/Equivalence.lean`: its image-side modulus argument
+`QC/InverseQC/`, rather than in `QC/Equivalence.lean`: its image-side modulus argument
 needs both the inverse-is-quasiconformal fact `IsQCAnalytic.inverse_isQCAnalytic` and the
 planar Lusin-(N) fact `IsQCAnalytic.image_lusinN` (which rests on the higher-integrability
-machinery in `Beltrami.lean`, importing `QC/LengthArea.lean`) — both of which sit strictly
+machinery in `Beltrami.lean`, importing `QC/LengthArea/`) — both of which sit strictly
 below the `Equivalence` file. The proof is self-contained downstream, taking the Lusin-(N)
 fact from `IsQCAnalytic.image_lusinN` rather than as an explicit hypothesis.
 -/
@@ -701,7 +701,7 @@ private theorem pushforwardGood_modulus_le {f : ℂ → ℂ} {K : ℝ} (hK : 1 �
 structure with Beltrami norm `≤ (K − 1)/(K + 1)` is `K`-quasiconformal in the geometric
 (modulus) sense.
 
-The proof is the genuine image-side argument, available downstream of `QC/InverseQC.lean`
+The proof is the genuine image-side argument, available downstream of `QC/InverseQC/`
 where the inverse map `g = f⁻¹` is known to be analytic-quasiconformal
 (`IsQCAnalytic.inverse_isQCAnalytic`). For each quadrilateral `Q`, the genuine image family
 `Q.imageCurveFamily f` (all absolutely continuous curves joining the image sides) is split
@@ -934,7 +934,7 @@ theorem isQCGeometric_of_isQCAnalytic {f : ℂ → ℂ} {K : ℝ} (hK : 1 ≤ K)
 geometric (modulus) sense is absolutely continuous on lines, hence lies in
 `W^{1,2}_loc`, and satisfies the Beltrami equation with a coefficient of norm at
 most `(K − 1)/(K + 1)`. The proof assembles the Gehring–Lehto stages of
-`QC/GeometricToAnalytic.lean` (`exists_acl_weakGradient`, `ae_differentiableAt`,
+`QC/GeometricToAnalytic/Assembly.lean` (`exists_acl_weakGradient`, `ae_differentiableAt`,
 `exists_beltrami`); these remain the open research-scale residual. -/
 theorem isQCAnalytic_of_isQCGeometric {f : ℂ → ℂ} {K : ℝ} (hK : 1 ≤ K)
     (hf : IsQCGeometric f K) :
