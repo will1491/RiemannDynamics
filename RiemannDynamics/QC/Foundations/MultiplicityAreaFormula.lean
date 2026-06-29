@@ -20,7 +20,7 @@ import Mathlib.MeasureTheory.Function.AEEqOfLIntegral
 import Mathlib.LinearAlgebra.Complex.Determinant
 import Mathlib.Topology.Algebra.Module.FiniteDimension
 import Mathlib.Analysis.Complex.UpperHalfPlane.Measure
-import RiemannDynamics.QC.BanachIndicatrix
+import RiemannDynamics.QC.Foundations.BanachIndicatrix
 
 open MeasureTheory Complex Set Function Filter Topology
 open scoped ENNReal

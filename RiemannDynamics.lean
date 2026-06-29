@@ -1,7 +1,5 @@
 import RiemannDynamics.Basic
 
-import RiemannDynamics.Analysis.RectangleCrossing
-
 import RiemannDynamics.Sphere.Basic
 import RiemannDynamics.Sphere.SphericalMetric
 import RiemannDynamics.Sphere.RationalMap
@@ -69,11 +67,14 @@ import RiemannDynamics.Analysis.Sobolev.WeakDeriv
 import RiemannDynamics.Analysis.Sobolev.AbsolutelyContinuousLines
 import RiemannDynamics.Analysis.Sobolev.SobolevToACL
 import RiemannDynamics.Analysis.Sobolev.DifferenceQuotient
-import RiemannDynamics.Analysis.Sobolev.GehringLehto
+import RiemannDynamics.Analysis.Sobolev.GehringLehto.CourantLebesgue
+import RiemannDynamics.Analysis.Sobolev.GehringLehto.Differentiability
 import RiemannDynamics.Analysis.Sobolev.Morrey.OscillationBound
 import RiemannDynamics.Analysis.Sobolev.Morrey.LusinN
 
+import RiemannDynamics.Analysis.RectangleCrossing
 import RiemannDynamics.Analysis.Rearrangement1D
+import RiemannDynamics.Analysis.PolyaSzego1D
 import RiemannDynamics.Analysis.CircularRearrangement
 import RiemannDynamics.Analysis.Isoperimetric
 
@@ -101,22 +102,28 @@ import RiemannDynamics.Analysis.SingularIntegral.DyadicCubes
 import RiemannDynamics.Analysis.SingularIntegral.DyadicLebesgue
 import RiemannDynamics.Analysis.SingularIntegral.Beurling.Beltrami
 
-import RiemannDynamics.QC.BeltramiCoeff
-import RiemannDynamics.QC.Analytic
-import RiemannDynamics.QC.SensePreserving
-import RiemannDynamics.QC.Modulus
-import RiemannDynamics.QC.Geometric
-import RiemannDynamics.QC.BanachZaretsky
-import RiemannDynamics.QC.BanachIndicatrix
-import RiemannDynamics.QC.LengthArea
-import RiemannDynamics.QC.LengthAreaInverse
-import RiemannDynamics.QC.ReverseLengthAreaForward
-import RiemannDynamics.QC.LoewnerReciprocity
-import RiemannDynamics.QC.ReverseLengthArea
-import RiemannDynamics.QC.ModulusSymmetrization
-import RiemannDynamics.QC.ReverseLengthAreaEnergy
-import RiemannDynamics.QC.InverseQC
-import RiemannDynamics.QC.MultiplicityAreaFormula
-import RiemannDynamics.QC.GeometricDifferentiable
-import RiemannDynamics.QC.GeometricToAnalytic
+import RiemannDynamics.QC.Defs.BeltramiCoeff
+import RiemannDynamics.QC.Defs.Analytic
+import RiemannDynamics.QC.Defs.SensePreserving
+import RiemannDynamics.QC.Defs.Modulus
+import RiemannDynamics.QC.Defs.Geometric
+import RiemannDynamics.QC.Foundations.BanachZaretsky
+import RiemannDynamics.QC.Foundations.BanachIndicatrix
+import RiemannDynamics.QC.LengthArea.CurveModulus
+import RiemannDynamics.QC.LengthArea.Mollification
+import RiemannDynamics.QC.LengthArea.Fuglede
+import RiemannDynamics.QC.LengthArea.LengthAreaInverse
+import RiemannDynamics.QC.LengthArea.ReverseLengthAreaForward
+import RiemannDynamics.QC.GeometricToAnalytic.LoewnerReciprocity
+import RiemannDynamics.QC.LengthArea.ReverseLengthArea
+import RiemannDynamics.QC.GeometricToAnalytic.ModulusSymmetrization
+import RiemannDynamics.QC.LengthArea.ReverseLengthAreaEnergy
+import RiemannDynamics.QC.InverseQC.LusinN
+import RiemannDynamics.QC.InverseQC.SliceAC
+import RiemannDynamics.QC.Foundations.MultiplicityAreaFormula
+import RiemannDynamics.QC.GeometricToAnalytic.GeometricDifferentiable.Primitives
+import RiemannDynamics.QC.GeometricToAnalytic.GeometricDifferentiable.PlaneSeparation
+import RiemannDynamics.QC.GeometricToAnalytic.GeometricDifferentiable.RectifiablePathHelpers
+import RiemannDynamics.QC.GeometricToAnalytic.GeometricDifferentiable.Reciprocity
+import RiemannDynamics.QC.GeometricToAnalytic.Assembly
 import RiemannDynamics.QC.Equivalence

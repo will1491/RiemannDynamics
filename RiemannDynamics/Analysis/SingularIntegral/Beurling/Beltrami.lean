@@ -10,7 +10,7 @@ import RiemannDynamics.Analysis.SingularIntegral.Beurling.LpHighOpNorm
 import RiemannDynamics.Analysis.SingularIntegral.GehringHigherIntegrability.Residual
 import RiemannDynamics.Analysis.Sobolev.Wirtinger
 import RiemannDynamics.Analysis.Sobolev.WeakDeriv
-import RiemannDynamics.QC.LengthArea
+import RiemannDynamics.QC.LengthArea.Fuglede
 import Mathlib.Topology.MetricSpace.Contracting
 
 /-!
@@ -20,7 +20,7 @@ This file develops, as a **dependency-ordered chain**, the analytic core of
 *Bojarski higher integrability*: a `W^{1,2}_loc` solution `f` of an elliptic
 Beltrami equation `∂̄f = μ ∂f` with `‖μ‖∞ < 1` has its holomorphic Wirtinger
 derivative `∂f` locally in `Lᵖ` for some `p > 2`. The assembled target `L6`
-(`dz_memLpLocOn_of_beltrami`) matches the conclusion of `QC/InverseQC.lean`'s
+(`dz_memLpLocOn_of_beltrami`) matches the conclusion of `QC/InverseQC/`'s
 `beltrami_higher_integrability` exactly, so the latter reduces to a call into this
 file. `L6` in turn reduces to the Gehring reverse-Hölder / Caccioppoli
 self-improvement residual living in
@@ -729,7 +729,7 @@ even when they are, the a.e. classical partials need not equal the weak partials
 (Cantor-type counterexamples). The genuine Bojarski statement is about the **weak**
 gradient, and L5/L6 below are re-anchored accordingly. The pointwise-to-weak passage
 is performed only at the *quasiconformal* consumer
-(`IsQCAnalytic.dz_higher_integrability` in `QC/InverseQC.lean`), where the extra
+(`IsQCAnalytic.dz_higher_integrability` in `QC/InverseQC/`), where the extra
 orientation/Jacobian datum of `IsQCAnalytic` makes it sound. -/
 
 /-! ## Helpers for L5 -/
@@ -1199,7 +1199,7 @@ holomorphic Wirtinger derivative `Wdz := ½(gx − i gy)` is locally in `Lᵖ` f
 `p > 2`.
 
 This is the **sound** Bojarski conclusion: it speaks of the weak gradient, never of
-`fderiv ℝ f`. `QC/InverseQC.lean`'s `beltrami_higher_integrability` reduces to this,
+`fderiv ℝ f`. `QC/InverseQC/`'s `beltrami_higher_integrability` reduces to this,
 and the *quasiconformal* consumer there bridges from `Wdz` back to the pointwise
 `dz f` using `IsQCAnalytic` data.
 

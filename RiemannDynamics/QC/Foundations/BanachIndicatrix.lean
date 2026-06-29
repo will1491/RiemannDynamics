@@ -24,7 +24,7 @@ This file builds the inequality direction `eVariationOn f (Icc a b) ≤ ∫⁻ y
 direction consumed downstream (the swept-area / bounded-variation estimate of the quasiconformal
 inverse keystone), together with its specialisations to **injective** maps.
 
-## Why the `≤` direction is the load-bearing one (and is fully proven here)
+## Why the `≤` direction is the load-bearing one
 
 The keystone application needs, for an **injective** slice, that its real and imaginary parts have
 finite total variation bounded by the Lebesgue measure of the slice image. For an injective `f` the
@@ -60,12 +60,12 @@ yields `∑ᵢ edist … ≤ ∫⁻ N_f`, and taking the supremum over partition
 ## Main results
 
 * `RiemannDynamics.eVariationOn_le_lintegral_indicatrix` — the inequality direction of the Banach
-  indicatrix theorem (PROVEN): `eVariationOn f (Icc a b) ≤ ∫⁻ y, N_f(y) dy`.
+  indicatrix theorem: `eVariationOn f (Icc a b) ≤ ∫⁻ y, N_f(y) dy`.
 * `RiemannDynamics.eVariationOn_le_volume_image_of_injOn` — for `f` continuous and injective on
-  `[a, b]`, `eVariationOn f (Icc a b) ≤ volume (f '' Icc a b)` (PROVEN); the indicatrix collapses to
+  `[a, b]`, `eVariationOn f (Icc a b) ≤ volume (f '' Icc a b)`; the indicatrix collapses to
   `≤ 1`.
 * `RiemannDynamics.boundedVariationOn_Icc_of_injOn_continuousOn` — such an `f` is of bounded
-  variation on `[a, b]` (PROVEN); the continuous image of a compact interval has finite measure.
+  variation on `[a, b]`; the continuous image of a compact interval has finite measure.
 -/
 
 open MeasureTheory Set Filter Function
@@ -198,7 +198,7 @@ lemma mult_le_indicatrix {f : ℝ → ℝ} {a b : ℝ} (hcont : ContinuousOn f (
     _ ≤ ((Set.encard {x ∈ Set.Icc a b | f x = y}) : ℝ≥0∞) := by
         exact_mod_cast Set.encard_le_encard hImgSub
 
-/-- **The Banach indicatrix theorem (inequality direction), PROVEN.** For a function continuous on
+/-- **The Banach indicatrix theorem (inequality direction).** For a function continuous on
 `[a, b]`, the total variation is bounded by the integral of the Banach indicatrix:
 
 `eVariationOn f (Icc a b) ≤ ∫⁻ y, N_f(y) dy`, where `N_f(y) = encard {x ∈ [a, b] | f x = y}`.
@@ -240,7 +240,7 @@ lemma indicatrix_le_indicator_image_of_injOn {f : ℝ → ℝ} {a b : ℝ}
       exact fun hx hfx => hy ⟨x, hx, hfx⟩
     rw [hempty]; simp
 
-/-- **Variation bounded by image measure (injective continuous case), PROVEN.** For `f` continuous
+/-- **Variation bounded by image measure (injective continuous case).** For `f` continuous
 and injective on `[a, b]`, `eVariationOn f (Icc a b) ≤ volume (f '' Icc a b)`. The Banach indicatrix
 collapses to `≤ 1` and integrates to the image measure. -/
 theorem eVariationOn_le_volume_image_of_injOn {f : ℝ → ℝ} {a b : ℝ}
@@ -254,7 +254,7 @@ theorem eVariationOn_le_volume_image_of_injOn {f : ℝ → ℝ} {a b : ℝ}
         lintegral_mono (fun y => indicatrix_le_indicator_image_of_injOn hinj y)
     _ = volume (f '' Set.Icc a b) := by rw [lintegral_indicator_const hms, one_mul]
 
-/-- **Bounded variation of an injective continuous map on a compact interval, PROVEN.** The
+/-- **Bounded variation of an injective continuous map on a compact interval.** The
 continuous image of `[a, b]` is compact, hence of finite Lebesgue measure, so the variation is
 finite. -/
 theorem boundedVariationOn_Icc_of_injOn_continuousOn {f : ℝ → ℝ} {a b : ℝ}

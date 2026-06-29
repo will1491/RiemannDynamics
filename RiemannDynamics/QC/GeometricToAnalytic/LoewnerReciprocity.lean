@@ -3,13 +3,14 @@ Copyright (c) 2026 Will (Ziang) Li. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Will (Ziang) Li
 -/
-import RiemannDynamics.QC.ReverseLengthAreaForward
+import RiemannDynamics.QC.LengthArea.ReverseLengthAreaForward
 
 /-!
 # Loewner planar reciprocity — the image cross-bound residual
 
 This file states the single planar Loewner / Beurling–Ahlfors reciprocity residual consumed by
-`imageConjugate_cross_bound` (`QC/GeometricDifferentiable.lean`) on the geometric ⇒ analytic
+`imageConjugate_cross_bound` (`QC/GeometricToAnalytic/GeometricDifferentiable/`) on the geometric ⇒
+analytic
 critical path: for a geometric `K`-quasiconformal homeomorphism `f` and densities `ρ`, `σ`
 admissible for the image crossing family and the image separating (swap) family of an axis
 rectangle, the cross-product integrates to at least `1`,
@@ -73,7 +74,8 @@ rectangle, the cross-product integrates to at least `1`:
   `1 ≤ ∫⁻ z, ρ z * σ z`.
 
 This has the **identical signature** to `imageConjugate_cross_bound`
-(`QC/GeometricDifferentiable.lean`); it discharges that lemma by a one-line call. See the file
+(`QC/GeometricToAnalytic/GeometricDifferentiable/`); it discharges that lemma by a one-line call.
+See the file
 docstring for why it is Mathlib-absent and for the closeability roadmap. -/
 theorem loewner_image_cross_bound_axisRect {f : ℂ → ℂ} (hf : IsHomeomorph f)
     {K : ℝ} (hfqc : IsQCGeometric f K)
