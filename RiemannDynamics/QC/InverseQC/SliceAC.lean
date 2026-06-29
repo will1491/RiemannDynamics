@@ -40,8 +40,8 @@ the load-bearing input: it supplies the forward map's genuine `W^{1,2}_loc`/modu
 a.e.-differentiable with condition N⁺ and the pointwise dilatation bound (the inverse-side
 data this file already proves), yet its horizontal slices `y + s ·` are singular (not AC), so
 it is NOT ACL. The forward structure rules it out by the reverse length–area / Banach–Zaretsky
-method (`QC/Foundations/BanachZaretsky.lean`); the same research-scale ingredient powers the §9.2
-`IsQCGeometric.exists_acl_weakGradient` block. -/
+method (`QC/Foundations/BanachZaretsky.lean`).
+-/
 
 /-! ## Step 3 / (b'): assembling per-slice absolute continuity
 
@@ -1021,11 +1021,8 @@ with inverse homeomorphism `g = f⁻¹`, the a.e.-defined **pointwise** partials
 
 This is the **reverse length–area theorem** (Lehto–Virtanen / Väisälä §31.2; Marcus–Mizel,
 ARMA 45 (1972)) specialised to the inverse map. Its mathematical content is **exactly** the
-"no singular part" claim isolated by the two AC walls below, and it is the inverse-side
-instance of the **same** statement as the Dir B keystone
-`IsQCGeometric.exists_acl_weakGradient` (`QC/GeometricToAnalytic/Assembly.lean`): closing it in
-general
-closes Dir B too. The proof requires the genuine, irreducibly two-dimensional area-coupling of
+"no singular part" claim isolated by the two AC walls below. The proof requires the genuine,
+irreducibly two-dimensional area-coupling of
 the forward map (`hf.2.1 : MemW12loc f`, the modulus/length–area structure) — the required
 Federer co-area / multiplicity input (absent from Mathlib's injective-only change of variables)
 is supplied in-repo (`MultiplicityAreaFormula.lean`), so it is fully PROVEN here, reduced to the
@@ -1097,8 +1094,7 @@ partials. Equivalently, the distributional gradient of `g` has no singular part.
 
 *Proof.* This is exactly the reverse length–area / Stepanov weak gradient of the inverse,
 isolated as the single genuine GMT residual `inverse_reverseLengthArea_weakGradient` (the
-"no singular part" content). It is the inverse-side instance of the Dir B keystone
-`IsQCGeometric.exists_acl_weakGradient`. *Dependency:*
+"no singular part" content). *Dependency:*
 `inverse_reverseLengthArea_weakGradient`. -/
 theorem IsQCAnalytic.inverse_hasWeakGradient {f : ℂ → ℂ} {b : BeltramiCoeff}
     (hf : IsQCAnalytic f b) :

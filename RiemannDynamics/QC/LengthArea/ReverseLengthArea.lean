@@ -12,8 +12,8 @@ import Mathlib.MeasureTheory.Function.AbsolutelyContinuous
 # The reverse length–area reduction (general, reusable)
 
 This file packages the **reverse length–area method** into reusable, self-contained reduction
-lemmas, so that both the quasiconformal inverse (`QC/InverseQC/`) and Direction B
-(`QC/GeometricToAnalytic/Assembly.lean`) can consume the *same* statement.
+lemmas, so that the quasiconformal inverse (`QC/InverseQC/`) can consume a single, reusable
+statement.
 
 The classical reverse length–area theorem (Lehto–Virtanen / Väisälä §31.2; Marcus–Mizel, ARMA 45
 (1972)) asserts that the pointwise a.e. gradient of a quasiconformal-type map `g` is its

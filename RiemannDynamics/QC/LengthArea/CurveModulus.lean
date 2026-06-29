@@ -19,7 +19,7 @@ import Mathlib.MeasureTheory.Function.UniformIntegrable
 The equivalence of the analytic and geometric definitions of quasiconformality
 rests on the **length–area method**, which relates the modulus distortion of a
 quasiconformal map to its differential. This subfolder collects the infrastructure
-lemmas that the two directions of `qc_analytic_iff_geometric` consume — the pieces
+lemmas that the analytic ⇒ geometric direction consumes — the pieces
 that go beyond the absolute-continuity-on-lines theory and the change-of-variables
 formula already in hand.
 

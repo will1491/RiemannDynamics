@@ -5,23 +5,20 @@ Authors: Will (Ziang) Li
 -/
 import RiemannDynamics.QC.InverseQC.SliceAC
 import RiemannDynamics.QC.LengthArea.Fuglede
-import RiemannDynamics.QC.GeometricToAnalytic.Assembly
 
 /-!
-# The analytic ⇔ geometric quasiconformal equivalence (clean endpoints)
+# The analytic ⇒ geometric quasiconformal direction
 
-This file states the headline equivalence theorems in their clean, hypothesis-free form:
+This file proves the analytic ⇒ geometric direction in its clean, hypothesis-free form:
 
-* `isQCGeometric_of_isQCAnalytic` — analytic ⇒ geometric;
-* `qc_analytic_iff_geometric` — the full equivalence.
+* `isQCGeometric_of_isQCAnalytic` — a map with an analytic-quasiconformal structure (Beltrami
+  norm `≤ (K − 1)/(K + 1)`) is `K`-quasiconformal in the geometric (modulus) sense.
 
-The analytic ⇒ geometric direction is necessarily proved **here**, downstream of
-`QC/InverseQC/`, rather than in `QC/Equivalence.lean`: its image-side modulus argument
-needs both the inverse-is-quasiconformal fact `IsQCAnalytic.inverse_isQCAnalytic` and the
-planar Lusin-(N) fact `IsQCAnalytic.image_lusinN` (which rests on the higher-integrability
-machinery in `Beltrami.lean`, importing `QC/LengthArea/`) — both of which sit strictly
-below the `Equivalence` file. The proof is self-contained downstream, taking the Lusin-(N)
-fact from `IsQCAnalytic.image_lusinN` rather than as an explicit hypothesis.
+It is proved **here**, downstream of `QC/InverseQC/`: its image-side modulus argument needs both
+the inverse-is-quasiconformal fact `IsQCAnalytic.inverse_isQCAnalytic` and the planar Lusin-(N)
+fact `IsQCAnalytic.image_lusinN` (which rests on the higher-integrability machinery in
+`Beltrami.lean`, importing `QC/LengthArea/`). The proof is self-contained, taking the Lusin-(N)
+fact from `IsQCAnalytic.image_lusinN` rather than as a hypothesis.
 -/
 
 open MeasureTheory Complex Set
@@ -929,62 +926,5 @@ theorem isQCGeometric_of_isQCAnalytic {f : ℂ → ℂ} {K : ℝ} (hK : 1 ≤ K)
     curveModulus_sdiff_modulus_zero hexcsub hexc0
   rw [hΔ] at hsdiff ⊢
   rw [← hsdiff]; exact hgood_le
-
-/-- **Geometric ⇒ analytic** (the hard direction). A `K`-quasiconformal map in the
-geometric (modulus) sense is absolutely continuous on lines, hence lies in
-`W^{1,2}_loc`, and satisfies the Beltrami equation with a coefficient of norm at
-most `(K − 1)/(K + 1)`. The proof assembles the Gehring–Lehto stages of
-`QC/GeometricToAnalytic/Assembly.lean` (`exists_acl_weakGradient`, `ae_differentiableAt`,
-`exists_beltrami`); these remain the open research-scale residual. -/
-theorem isQCAnalytic_of_isQCGeometric {f : ℂ → ℂ} {K : ℝ} (hK : 1 ≤ K)
-    (hf : IsQCGeometric f K) :
-    ∃ b : BeltramiCoeff, b.normInf ≤ (K - 1) / (K + 1) ∧ IsQCAnalytic f b := by
-  classical
-  -- The Beltrami coefficient and the Beltrami equation (third `IsQCAnalytic` conjunct).
-  obtain ⟨b, hbnd, hbel⟩ := IsQCGeometric.exists_beltrami hK hf
-  -- `f` is an orientation-preserving homeomorphism.
-  have hhomeo : IsHomeomorph f := hf.2.1.isHomeomorph
-  have hfcont : Continuous f := hhomeo.continuous
-  have hdetpos : ∀ᵐ z : ℂ, 0 < (fderiv ℝ f z).det :=
-    (IsQCGeometric.reverseLengthArea_data hf).2.1
-  -- The ACL + `L²_loc` data for the weak gradient.
-  obtain ⟨gx, gy, haclx, hacly, hgxL2, hgyL2⟩ := IsQCGeometric.exists_acl_weakGradient hf
-  -- Local integrability of an `L²_loc` function (loc-`L²` ⟹ loc-`L¹`).
-  have hLIofL2 : ∀ {h : ℂ → ℂ}, MemLpLocOn h (2 : ℝ≥0∞) Set.univ → LocallyIntegrable h := by
-    intro h hh
-    rw [MeasureTheory.locallyIntegrable_iff]
-    intro Kc hKc
-    have hmem : MemLp h (2 : ℝ≥0∞) (volume.restrict Kc) := hh Kc (Set.subset_univ _) hKc
-    have : IsFiniteMeasure (volume.restrict Kc) := by
-      constructor; rw [Measure.restrict_apply_univ]; exact hKc.measure_lt_top
-    exact (hmem.mono_exponent (by norm_num)).integrable (le_refl 1)
-  have hgxLI : LocallyIntegrable gx := hLIofL2 hgxL2
-  have hgyLI : LocallyIntegrable gy := hLIofL2 hgyL2
-  have hfLI : LocallyIntegrable f := hfcont.locallyIntegrable
-  -- `f ∈ L²_loc` (it is continuous, hence locally bounded, hence locally `L²` on compacts).
-  have hfL2 : MemLpLocOn f (2 : ℝ≥0∞) Set.univ := by
-    intro Kc _ hKc
-    have hfin : IsFiniteMeasure (volume.restrict Kc) := by
-      constructor; rw [Measure.restrict_apply_univ]; exact hKc.measure_lt_top
-    obtain ⟨C, hC⟩ := hKc.exists_bound_of_continuousOn hfcont.continuousOn
-    have hmeas : AEStronglyMeasurable f (volume.restrict Kc) :=
-      hfcont.aestronglyMeasurable
-    have hbound : ∀ᵐ x ∂(volume.restrict Kc), ‖f x‖ ≤ C := by
-      rw [ae_restrict_iff' hKc.measurableSet]
-      exact Filter.Eventually.of_forall hC
-    exact (memLp_top_of_bound hmeas C hbound).mono_exponent le_top
-  -- `MemW12loc f = MemWklocP f 1 2 univ`, assembled from ACL + `L²_loc`.
-  have hW12 : MemW12loc f :=
-    memWklocP_one_of_acl hfL2 hgxL2 hgyL2 hfLI hgxLI hgyLI haclx hacly
-  exact ⟨b, hbnd, ⟨hhomeo, hdetpos⟩, hW12, hbel⟩
-
-/-- **Equivalence of the analytic and geometric quasiconformal definitions.** For `1 ≤ K`, a
-map admits an analytic-quasiconformal structure with Beltrami norm at most `(K − 1)/(K + 1)`
-if and only if it is `K`-quasiconformal in the geometric (modulus) sense. -/
-theorem qc_analytic_iff_geometric {f : ℂ → ℂ} {K : ℝ} (hK : 1 ≤ K) :
-    (∃ b : BeltramiCoeff, b.normInf ≤ (K - 1) / (K + 1) ∧ IsQCAnalytic f b) ↔
-      IsQCGeometric f K :=
-  ⟨fun ⟨_, hb, hf⟩ => isQCGeometric_of_isQCAnalytic hK hb hf,
-    isQCAnalytic_of_isQCGeometric hK⟩
 
 end RiemannDynamics
