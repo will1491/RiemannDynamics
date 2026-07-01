@@ -375,6 +375,83 @@ theorem HasWeakDirDeriv.const_smul (c : ℂ) (h : HasWeakDirDeriv v g f Ω) :
     exact smul_comm _ c _
   rw [hlhs, hrhs, h φ hφ hcs htsupp, smul_neg]
 
+/-- **Additivity in the direction.** If `g₁` is a weak directional derivative of
+`f` in the direction `v₁` and `g₂` in the direction `v₂`, then `g₁ + g₂` is a
+weak directional derivative in the direction `v₁ + v₂` (the directional
+derivative `z ↦ (fderiv ℝ φ z) v` is linear in `v`). -/
+theorem HasWeakDirDeriv.dir_add {v₁ v₂ : ℂ}
+    (h₁ : HasWeakDirDeriv v₁ g₁ f Ω) (h₂ : HasWeakDirDeriv v₂ g₂ f Ω)
+    (hf : LocallyIntegrableOn f Ω) (hg₁ : LocallyIntegrableOn g₁ Ω)
+    (hg₂ : LocallyIntegrableOn g₂ Ω) :
+    HasWeakDirDeriv (v₁ + v₂) (fun z => g₁ z + g₂ z) f Ω := by
+  -- (continuous real, compactly supported in `Ω`) • (locally integrable on `Ω`) is integrable.
+  have integ : ∀ (m : ℂ → ℝ), Continuous m → HasCompactSupport m → tsupport m ⊆ Ω →
+      ∀ {h : ℂ → ℂ}, LocallyIntegrableOn h Ω → Integrable (fun z => m z • h z) volume := by
+    intro m hm hcsm htsuppm h hh
+    have hK : IsCompact (tsupport m) := hcsm
+    have hhon : IntegrableOn h (tsupport m) volume :=
+      hh.integrableOn_compact_subset htsuppm hK
+    have hon : IntegrableOn (fun z => m z • h z) (tsupport m) volume :=
+      hhon.continuousOn_smul hm.continuousOn hK
+    have hsupp : Function.support (fun z => m z • h z) ⊆ tsupport m := by
+      intro z hz
+      apply subset_tsupport m
+      simp only [Function.mem_support] at hz ⊢
+      intro hmz; apply hz; simp [hmz]
+    exact (integrableOn_iff_integrable_of_support_subset hsupp).mp hon
+  intro φ hφ hcs htsupp
+  change ∫ z, ((fderiv ℝ φ z) (v₁ + v₂)) • f z = - ∫ z, φ z • (g₁ z + g₂ z)
+  -- Integrability facts.
+  have hcont1 : Continuous (fun z => (fderiv ℝ φ z) v₁) :=
+    (hφ.continuous_fderiv (by norm_num)).clm_apply continuous_const
+  have hcont2 : Continuous (fun z => (fderiv ℝ φ z) v₂) :=
+    (hφ.continuous_fderiv (by norm_num)).clm_apply continuous_const
+  have hcs1 : HasCompactSupport (fun z => (fderiv ℝ φ z) v₁) :=
+    HasCompactSupport.fderiv_apply ℝ hcs v₁
+  have hcs2 : HasCompactSupport (fun z => (fderiv ℝ φ z) v₂) :=
+    HasCompactSupport.fderiv_apply ℝ hcs v₂
+  have hts1 : tsupport (fun z => (fderiv ℝ φ z) v₁) ⊆ Ω :=
+    (tsupport_fderiv_apply_subset ℝ v₁).trans htsupp
+  have hts2 : tsupport (fun z => (fderiv ℝ φ z) v₂) ⊆ Ω :=
+    (tsupport_fderiv_apply_subset ℝ v₂).trans htsupp
+  have iI1 : Integrable (fun z => ((fderiv ℝ φ z) v₁) • f z) volume := integ _ hcont1 hcs1 hts1 hf
+  have iI2 : Integrable (fun z => ((fderiv ℝ φ z) v₂) • f z) volume := integ _ hcont2 hcs2 hts2 hf
+  have iIg1 : Integrable (fun z => φ z • g₁ z) volume := integ _ hφ.continuous hcs htsupp hg₁
+  have iIg2 : Integrable (fun z => φ z • g₂ z) volume := integ _ hφ.continuous hcs htsupp hg₂
+  have hlhs : (∫ z, ((fderiv ℝ φ z) (v₁ + v₂)) • f z)
+      = (∫ z, ((fderiv ℝ φ z) v₁) • f z) + ∫ z, ((fderiv ℝ φ z) v₂) • f z := by
+    rw [← integral_add iI1 iI2]
+    apply integral_congr_ae
+    filter_upwards with z
+    rw [map_add]; module
+  have hrhs : (∫ z, φ z • (g₁ z + g₂ z)) = (∫ z, φ z • g₁ z) + ∫ z, φ z • g₂ z := by
+    rw [← integral_add iIg1 iIg2]
+    apply integral_congr_ae
+    filter_upwards with z
+    exact smul_add _ _ _
+  rw [hlhs, hrhs, h₁ φ hφ hcs htsupp, h₂ φ hφ hcs htsupp]
+  ring
+
+/-- **Homogeneity in the direction.** Scaling the direction by a real constant
+scales the weak directional derivative by the same constant. -/
+theorem HasWeakDirDeriv.dir_smul (c : ℝ) (h : HasWeakDirDeriv v g f Ω) :
+    HasWeakDirDeriv (c • v) (fun z => c • g z) f Ω := by
+  intro φ hφ hcs htsupp
+  change ∫ z, ((fderiv ℝ φ z) (c • v)) • f z = - ∫ z, φ z • (c • g z)
+  have hlhs : (∫ z, ((fderiv ℝ φ z) (c • v)) • f z)
+      = c • ∫ z, ((fderiv ℝ φ z) v) • f z := by
+    have heq : (fun z => ((fderiv ℝ φ z) (c • v)) • f z)
+        = fun z => c • (((fderiv ℝ φ z) v) • f z) := by
+      funext z; rw [map_smul, smul_assoc]
+    rw [heq]
+    exact integral_smul c (fun z => ((fderiv ℝ φ z) v) • f z)
+  have hrhs : (∫ z, φ z • (c • g z)) = c • ∫ z, φ z • g z := by
+    have heq : (fun z => φ z • (c • g z)) = fun z => c • (φ z • g z) := by
+      funext z; rw [smul_comm]
+    rw [heq]
+    exact integral_smul c (fun z => φ z • g z)
+  rw [hlhs, hrhs, h φ hφ hcs htsupp]; module
+
 /-- **Classical derivatives are weak derivatives.** A `C¹` function on an open
 set has its classical directional derivative `z ↦ (fderiv ℝ f z) v` as a weak
 directional derivative — integration by parts with no boundary term. -/

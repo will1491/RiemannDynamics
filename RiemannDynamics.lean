@@ -79,6 +79,11 @@ import RiemannDynamics.Analysis.CircularRearrangement
 import RiemannDynamics.Analysis.Isoperimetric
 import RiemannDynamics.Analysis.WeakCompactness
 import RiemannDynamics.Analysis.ArcLengthVariation
+import RiemannDynamics.Analysis.PoissonDirichlet
+import RiemannDynamics.Analysis.Subharmonic
+import RiemannDynamics.Analysis.HarmonicHarnack
+import RiemannDynamics.Analysis.PerronEnvelope
+import RiemannDynamics.Analysis.RingPotential
 
 import RiemannDynamics.Analysis.SingularIntegral.Cauchy
 import RiemannDynamics.Analysis.SingularIntegral.CalderonZygmund
@@ -126,5 +131,9 @@ import RiemannDynamics.QC.Calculus.Weyl
 import RiemannDynamics.QC.Calculus.Compactness
 import RiemannDynamics.QC.Calculus.Removability
 import RiemannDynamics.QC.Regularity.RingModulus
+import RiemannDynamics.QC.Regularity.SeparatingModulus
+import RiemannDynamics.QC.Regularity.ModulusEnergy
+import RiemannDynamics.QC.Regularity.DirichletPrinciple
+import RiemannDynamics.QC.Regularity.H1ZeroDensity
 import RiemannDynamics.QC.Regularity.Grotzsch
 import RiemannDynamics.QC.Regularity.Quasisymmetry

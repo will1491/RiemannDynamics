@@ -636,6 +636,113 @@ theorem hardyLittlewood_decreasingRearrange (hT : 0 ≤ T)
         (distribFun_inter_decreasingRearrange_eq_min hT
           (ENNReal.ofReal a) (ENNReal.ofReal b)).symm
 
+/-! ### The symmetric-decreasing rearrangement
+
+The plain decreasing rearrangement has left-anchored super-level sets `Ico 0 (D t)`, whose boundary
+is the single point `D t`. Circular symmetrization and the one-dimensional Pólya–Szegő inequality
+need instead the **symmetric-decreasing** rearrangement, whose super-level sets are open intervals
+*centered* at the midpoint `T / 2`, with the **two-point** boundary `{T/2 ± (D t)/2}`. It comes from
+the plain rearrangement by folding the interval about its midpoint. -/
+
+/-- The **symmetric-decreasing rearrangement** of `f` on `Icc 0 T`, centered at the midpoint:
+`f^sym x = f♯[T] (2 * |x - T / 2|)`. Folding by `x ↦ 2 * |x - T / 2|` bends the left-anchored
+super-level intervals of the plain rearrangement into intervals centered at `T / 2`, so
+the profile peaks at the midpoint and decreases symmetrically toward the two endpoints. Each
+super-level boundary is the two-point set `{T/2 ± (distribFun T f t)/2}`. -/
+def decreasingRearrangeSymm (T : ℝ) (f : ℝ → ℝ≥0∞) (x : ℝ) : ℝ≥0∞ :=
+  decreasingRearrange T f (2 * |x - T / 2|)
+
+/-- The symmetric-decreasing rearrangement is measurable. -/
+theorem measurable_decreasingRearrangeSymm : Measurable (decreasingRearrangeSymm T f) := by
+  unfold decreasingRearrangeSymm
+  have hinner : Measurable (fun x : ℝ => 2 * |x - T / 2|) :=
+    (continuous_const.mul ((continuous_id.sub continuous_const).abs)).measurable
+  exact measurable_decreasingRearrange.comp hinner
+
+/-- **The super-level set of the symmetric-decreasing rearrangement is a centered open interval.**
+For `0 ≤ T`, `{x ∈ Icc 0 T | t < f^sym x}` equals the open interval `Ioo (T/2 - D/2) (T/2 + D/2)`
+centered at `T / 2`, where `D = (distribFun T f t).toReal`. Its two endpoints form the two-point
+super-level boundary that the symmetric rearrangement is designed to produce. -/
+theorem superlevel_decreasingRearrangeSymm_eq_Ioo (hT : 0 ≤ T) (t : ℝ≥0∞) :
+    {x ∈ Icc (0 : ℝ) T | t < decreasingRearrangeSymm T f x}
+      = Ioo (T / 2 - (distribFun T f t).toReal / 2)
+          (T / 2 + (distribFun T f t).toReal / 2) := by
+  have hDtop : distribFun T f t ≠ ⊤ := distribFun_ne_top t
+  set D : ℝ := (distribFun T f t).toReal with hDdef
+  have hDnn : 0 ≤ D := ENNReal.toReal_nonneg
+  have hDT : D ≤ T := by
+    have := distribFun_le_ofReal_T (T := T) (f := f) t
+    calc D ≤ (ENNReal.ofReal T).toReal := ENNReal.toReal_mono ofReal_ne_top this
+      _ = T := ENNReal.toReal_ofReal hT
+  ext x
+  simp only [Set.mem_setOf_eq, Set.mem_Ioo]
+  unfold decreasingRearrangeSymm
+  rw [lt_decreasingRearrange_iff (2 * |x - T / 2|) t]
+  have hnn : (0 : ℝ) ≤ 2 * |x - T / 2| := by positivity
+  have hval : ENNReal.ofReal (2 * |x - T / 2|) < distribFun T f t ↔ 2 * |x - T / 2| < D := by
+    rw [hDdef, ← ENNReal.ofReal_toReal hDtop, ENNReal.ofReal_lt_ofReal_iff_of_nonneg hnn,
+        ENNReal.ofReal_toReal hDtop]
+  rw [hval]
+  constructor
+  · rintro ⟨_, hlt⟩
+    have hlt' : |x - T / 2| < D / 2 := by linarith
+    rw [abs_lt] at hlt'
+    exact ⟨by linarith [hlt'.1], by linarith [hlt'.2]⟩
+  · rintro ⟨h1, h2⟩
+    have hlt' : |x - T / 2| < D / 2 := by
+      rw [abs_lt]; exact ⟨by linarith, by linarith⟩
+    exact ⟨⟨by linarith, by linarith⟩, by linarith⟩
+
+/-- **Equimeasurability**: the symmetric-decreasing rearrangement has the same distribution function
+as `f`. The centered super-level interval has length exactly `distribFun T f t`. -/
+theorem distribFun_decreasingRearrangeSymm (hT : 0 ≤ T) (t : ℝ≥0∞) :
+    distribFun T (decreasingRearrangeSymm T f) t = distribFun T f t := by
+  change volume {x ∈ Set.Icc (0 : ℝ) T | t < decreasingRearrangeSymm T f x} = _
+  rw [superlevel_decreasingRearrangeSymm_eq_Ioo hT t, Real.volume_Ioo]
+  have hlen : T / 2 + (distribFun T f t).toReal / 2 - (T / 2 - (distribFun T f t).toReal / 2)
+      = (distribFun T f t).toReal := by ring
+  rw [hlen, ENNReal.ofReal_toReal (distribFun_ne_top t)]
+
+/-- **Integral preservation.** The symmetric-decreasing rearrangement preserves the Lebesgue
+integral over `Icc 0 T`. Requires `f` measurable and `0 ≤ T`. -/
+theorem lintegral_decreasingRearrangeSymm_eq (hT : 0 ≤ T) (hf : Measurable f) :
+    (∫⁻ x in Icc (0 : ℝ) T, decreasingRearrangeSymm T f x) = ∫⁻ x in Icc (0 : ℝ) T, f x := by
+  rw [lintegral_eq_lintegral_meas_lt_ennreal measurable_decreasingRearrangeSymm,
+      lintegral_eq_lintegral_meas_lt_ennreal hf]
+  refine lintegral_congr (fun t => ?_)
+  exact distribFun_decreasingRearrangeSymm hT (ENNReal.ofReal t)
+
+/-- **Energy / `p`-th power preservation.** For `0 < p`, the symmetric-decreasing rearrangement
+preserves the `p`-energy `∫⁻ (f x)^p` over `Icc 0 T`; in particular the `p = 1, 2` cases relevant to
+the conformal modulus. Requires `f` measurable and `0 ≤ T`. -/
+theorem lintegral_rpow_decreasingRearrangeSymm_eq (hT : 0 ≤ T) (hf : Measurable f) {p : ℝ}
+    (hp : 0 < p) :
+    (∫⁻ x in Icc (0 : ℝ) T, decreasingRearrangeSymm T f x ^ p)
+      = ∫⁻ x in Icc (0 : ℝ) T, f x ^ p := by
+  have hmeasf : Measurable (fun x => f x ^ p) := hf.pow_const p
+  have hmeasr : Measurable (fun x => decreasingRearrangeSymm T f x ^ p) :=
+    measurable_decreasingRearrangeSymm.pow_const p
+  rw [lintegral_eq_lintegral_meas_lt_ennreal hmeasr,
+      lintegral_eq_lintegral_meas_lt_ennreal hmeasf]
+  refine lintegral_congr (fun t => ?_)
+  -- Super-level set of `g^p` is the super-level set of `g` at the shifted threshold.
+  have hrw : ∀ g : ℝ → ℝ≥0∞,
+      {x ∈ Icc (0 : ℝ) T | ENNReal.ofReal t < g x ^ p}
+        = {x ∈ Icc (0 : ℝ) T | (ENNReal.ofReal t) ^ (p⁻¹) < g x} := by
+    intro g
+    ext x
+    simp only [mem_setOf_eq, and_congr_right_iff]
+    intro _
+    constructor
+    · intro h
+      have := ENNReal.rpow_lt_rpow h (by positivity : (0:ℝ) < p⁻¹)
+      rwa [← ENNReal.rpow_mul, mul_inv_cancel₀ hp.ne', ENNReal.rpow_one] at this
+    · intro h
+      have := ENNReal.rpow_lt_rpow h hp
+      rwa [← ENNReal.rpow_mul, inv_mul_cancel₀ hp.ne', ENNReal.rpow_one] at this
+  rw [hrw (decreasingRearrangeSymm T f), hrw f]
+  exact distribFun_decreasingRearrangeSymm hT ((ENNReal.ofReal t) ^ (p⁻¹))
+
 end RiemannDynamics
 
 end

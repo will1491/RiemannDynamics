@@ -657,6 +657,45 @@ theorem curveModulus_zero_of_lintegralSq_finite {ρ₀ : ℂ → ℝ≥0∞}
   refine ge_of_tendsto htend ?_
   filter_upwards [Filter.eventually_ge_atTop 1] with k hk using hbound k hk
 
+/-- **Fuglede modulus estimate with a positive uniform lower bound.** If a finite-energy density
+`ρ₀` has line integral bounded below by a positive constant `c` (`c ≤ ∫_γ ρ₀` for every `γ ∈ Δ`),
+then the modulus of `Δ` is at most `(∫ ρ₀²) / c²`. The density `ρ₀ / c` is admissible for `Δ` with
+energy `(∫ ρ₀²) / c²`. Quantitative form of `curveModulus_zero_of_lintegralSq_finite`, used to bound
+the exceptional family in the bounded-density approximation. -/
+theorem curveModulus_le_of_lintegralSq_finite_of_lineIntegral_ge {ρ₀ : ℂ → ℝ≥0∞}
+    (hρ₀meas : Measurable ρ₀) {c : ℝ≥0∞} (hc : 0 < c) (hctop : c ≠ ∞)
+    {Δ : Set (ℝ → ℂ)} (hΔ : ∀ γ ∈ Δ, c ≤ arcLengthLineIntegral ρ₀ γ) :
+    curveModulus Δ ≤ (∫⁻ z, (ρ₀ z) ^ 2) / c ^ 2 := by
+  -- The energy of `ρ₀`.
+  set C : ℝ≥0∞ := ∫⁻ z, (ρ₀ z) ^ 2 with hC
+  have hcne : c ≠ 0 := hc.ne'
+  -- The rescaled density `ρk := ρ₀ / c` is admissible for `Δ`.
+  set ρk : ℂ → ℝ≥0∞ := fun z => ρ₀ z / c with hρk
+  have hρkmeas : Measurable ρk := by rw [hρk]; exact hρ₀meas.div_const _
+  have hcinv_ne : c⁻¹ ≠ 0 := ENNReal.inv_ne_zero.2 hctop
+  have hcinv_top : c⁻¹ ≠ ∞ := ENNReal.inv_ne_top.2 hcne
+  -- Admissibility: `ALI (ρ₀/c) γ = c⁻¹ · ALI ρ₀ γ ≥ c⁻¹ · c = 1`.
+  have hadm : IsAdmissibleDensity ρk Δ := by
+    refine ⟨hρkmeas, fun γ hγ => ?_⟩
+    have hALI : arcLengthLineIntegral ρk γ = c⁻¹ * arcLengthLineIntegral ρ₀ γ := by
+      unfold arcLengthLineIntegral
+      have hpt : (fun t => ρk (γ t) * (‖deriv γ t‖₊ : ℝ≥0∞))
+          = fun t => c⁻¹ * (ρ₀ (γ t) * (‖deriv γ t‖₊ : ℝ≥0∞)) := by
+        funext t; simp only [hρk, ENNReal.div_eq_inv_mul]; ring
+      rw [hpt, lintegral_const_mul' _ _ hcinv_top]
+    rw [hALI]
+    calc (1 : ℝ≥0∞) = c⁻¹ * c := (ENNReal.inv_mul_cancel hcne hctop).symm
+      _ ≤ c⁻¹ * arcLengthLineIntegral ρ₀ γ := by gcongr; exact hΔ γ hγ
+  -- Energy: `∫⁻ (ρ₀/c)² = C · (c⁻¹)² = C / c²`.
+  have henergy : ∫⁻ z, (ρk z) ^ 2 = C / c ^ 2 := by
+    have hpt : (fun z => (ρk z) ^ 2) = fun z => c⁻¹ ^ 2 * (ρ₀ z) ^ 2 := by
+      funext z; simp only [hρk, ENNReal.div_eq_inv_mul, mul_pow]
+    rw [hpt, lintegral_const_mul' _ _ (by simp [hcinv_top]), ← hC,
+      ENNReal.div_eq_inv_mul, ← ENNReal.inv_pow]
+  calc curveModulus Δ
+      ≤ ∫⁻ z, (ρk z) ^ 2 := iInf₂_le ρk hadm
+    _ = C / c ^ 2 := henergy
+
 /-- **Fuglede line-integral convergence (the modulus-a.e. core).** Let `G n` be a
 sequence of nonnegative measurable densities whose `L²` norms have summable roots,
 `∑ₙ (∫⁻ (G n)²)^{1/2} < ∞`. Then, along every family `Γ` of continuous curves, the

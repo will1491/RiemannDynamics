@@ -57,7 +57,7 @@ def angularProfile (p : ℂ) (σ : ℂ → ℝ≥0∞) (r : ℝ) : ℝ → ℝ�
 angular profile `angularProfile p σ r` is replaced by its symmetric decreasing rearrangement on
 `[0, 2π]`, evaluated at the parameter `arg(z − p) + π` corresponding to `z`. -/
 def circRearrange (p : ℂ) (σ : ℂ → ℝ≥0∞) : ℂ → ℝ≥0∞ :=
-  fun z => decreasingRearrange (2 * π) (angularProfile p σ ‖z - p‖) (Complex.arg (z - p) + π)
+  fun z => decreasingRearrangeSymm (2 * π) (angularProfile p σ ‖z - p‖) (Complex.arg (z - p) + π)
 
 /-- For fixed radius `r`, the angular profile is measurable in the angle. -/
 theorem measurable_angularProfile (p : ℂ) (σ : ℂ → ℝ≥0∞) (hσ : Measurable σ) (r : ℝ) :
@@ -105,20 +105,29 @@ theorem measurable_circRearrange (p : ℂ) (σ : ℂ → ℝ≥0∞) (hσ : Meas
   intro c
   have hpre : circRearrange p σ ⁻¹' Ioi c = {z : ℂ | c < circRearrange p σ z} := rfl
   rw [hpre]
+  -- fold identity: `f^sym (θ + π) = f♯[2π] (2 |θ|)` (since the centre is `π`)
+  have hfold : ∀ (g : ℝ → ℝ≥0∞) (θ : ℝ),
+      decreasingRearrangeSymm (2 * π) g (θ + π) = decreasingRearrange (2 * π) g (2 * |θ|) := by
+    intro g θ
+    unfold decreasingRearrangeSymm
+    congr 2
+    rw [show (2 * π) / 2 = π by ring, add_sub_cancel_right]
   have hchar : {z : ℂ | c < circRearrange p σ z}
-      = {z : ℂ | ENNReal.ofReal (Complex.arg (z - p) + π)
+      = {z : ℂ | ENNReal.ofReal (2 * |Complex.arg (z - p)|)
           < distribFun (2 * π) (angularProfile p σ ‖z - p‖) c} := by
     ext z
-    simp only [mem_setOf_eq, circRearrange]
+    simp only [mem_setOf_eq, circRearrange, hfold]
     exact lt_decreasingRearrange_iff (T := 2 * π) (f := angularProfile p σ ‖z - p‖)
-      (Complex.arg (z - p) + π) c
+      (2 * |Complex.arg (z - p)|) c
   rw [hchar]
   have hmeasD : Measurable (fun z : ℂ => distribFun (2 * π) (angularProfile p σ ‖z - p‖) c) :=
     (measurable_distribFun_section p σ hσ c).comp
       ((continuous_norm.comp (continuous_id.sub continuous_const)).measurable)
-  have hmeasX : Measurable (fun z : ℂ => ENNReal.ofReal (Complex.arg (z - p) + π)) :=
+  have hmeasX : Measurable (fun z : ℂ => ENNReal.ofReal (2 * |Complex.arg (z - p)|)) :=
     ENNReal.measurable_ofReal.comp
-      ((Complex.measurable_arg.comp (measurable_id.sub measurable_const)).add measurable_const)
+      (measurable_const.mul
+        (_root_.continuous_abs.measurable.comp
+          (Complex.measurable_arg.comp (measurable_id.sub measurable_const))))
   exact measurableSet_lt hmeasX hmeasD
 
 /-- **Angular translation of a line integral.** Substituting `θ ↦ θ + π` carries the polar angle
@@ -142,20 +151,20 @@ polar angle interval `(−π, π)`. This is `lintegral_rpow_decreasingRearrange_
 transported to `(−π, π)` via the angular translation. -/
 theorem inner_energy_rpow_eq (p : ℂ) (σ : ℂ → ℝ≥0∞) (hσ : Measurable σ) (r : ℝ) {e : ℝ}
     (he : 0 < e) :
-    (∫⁻ θ in Ioo (-π) π, (decreasingRearrange (2 * π) (angularProfile p σ r) (θ + π)) ^ e)
+    (∫⁻ θ in Ioo (-π) π, (decreasingRearrangeSymm (2 * π) (angularProfile p σ r) (θ + π)) ^ e)
       = ∫⁻ θ in Ioo (-π) π, (angularProfile p σ r (θ + π)) ^ e := by
   rw [lintegral_translate_angle
-        (fun φ => (decreasingRearrange (2 * π) (angularProfile p σ r) φ) ^ e),
+        (fun φ => (decreasingRearrangeSymm (2 * π) (angularProfile p σ r) φ) ^ e),
       lintegral_translate_angle (fun φ => (angularProfile p σ r φ) ^ e),
       setLIntegral_congr Ioo_ae_eq_Icc, setLIntegral_congr Ioo_ae_eq_Icc]
-  exact lintegral_rpow_decreasingRearrange_eq (T := 2 * π) (f := angularProfile p σ r)
+  exact lintegral_rpow_decreasingRearrangeSymm_eq (T := 2 * π) (f := angularProfile p σ r)
     (by positivity) (measurable_angularProfile p σ hσ r) he
 
 /-- **Per-radius angular energy preservation (the circle brick), `L²` case.** On each circle the
 squared energy of the rearranged angular profile equals that of the original, over the polar
 angle interval `(−π, π)`. -/
 theorem inner_energy_eq (p : ℂ) (σ : ℂ → ℝ≥0∞) (hσ : Measurable σ) (r : ℝ) :
-    (∫⁻ θ in Ioo (-π) π, (decreasingRearrange (2 * π) (angularProfile p σ r) (θ + π)) ^ 2)
+    (∫⁻ θ in Ioo (-π) π, (decreasingRearrangeSymm (2 * π) (angularProfile p σ r) (θ + π)) ^ 2)
       = ∫⁻ θ in Ioo (-π) π, (angularProfile p σ r (θ + π)) ^ 2 := by
   have hpow : ∀ a : ℝ≥0∞, a ^ (2 : ℕ) = a ^ (2 : ℝ) := fun a => by
     rw [← ENNReal.rpow_natCast a 2]; norm_num
@@ -199,7 +208,7 @@ theorem lintegral_circRearrange_sq (p : ℂ) (σ : ℂ → ℝ≥0∞) (hσ : Me
     have hcirc : ∀ θ ∈ Ioo (-π) π,
         ENNReal.ofReal r • (circRearrange p σ (p + Complex.polarCoord.symm (r, θ))) ^ 2
           = ENNReal.ofReal r •
-              (decreasingRearrange (2 * π) (angularProfile p σ r) (θ + π)) ^ 2 := by
+              (decreasingRearrangeSymm (2 * π) (angularProfile p σ r) (θ + π)) ^ 2 := by
       intro θ hθ
       have hnorm : ‖(p + Complex.polarCoord.symm (r, θ)) - p‖ = r := by
         rw [add_sub_cancel_left, Complex.norm_polarCoord_symm, abs_of_pos hr]
@@ -257,7 +266,7 @@ theorem lintegral_circRearrange_rpow (p : ℂ) (σ : ℂ → ℝ≥0∞) (hσ : 
   · have hcirc : ∀ θ ∈ Ioo (-π) π,
         ENNReal.ofReal r • (circRearrange p σ (p + Complex.polarCoord.symm (r, θ))) ^ e
           = ENNReal.ofReal r •
-              (decreasingRearrange (2 * π) (angularProfile p σ r) (θ + π)) ^ e := by
+              (decreasingRearrangeSymm (2 * π) (angularProfile p σ r) (θ + π)) ^ e := by
       intro θ hθ
       have hnorm : ‖(p + Complex.polarCoord.symm (r, θ)) - p‖ = r := by
         rw [add_sub_cancel_left, Complex.norm_polarCoord_symm, abs_of_pos hr]
@@ -299,10 +308,14 @@ theorem circRearrange_radial (p : ℂ) (σ : ℂ → ℝ≥0∞) {g : ℝ → �
     congr 1
     rw [add_sub_cancel_left, norm_mul, Complex.norm_real, Complex.norm_exp_ofReal_mul_I, mul_one,
       Real.norm_eq_abs, abs_norm]
-  -- the parameter `arg(z − p) + π` lies in `[0, 2π)`, so rearranging the constant returns it
-  have hx0 : 0 ≤ Complex.arg (z - p) + π := by have := Complex.neg_pi_lt_arg (z - p); linarith
-  have hxT : Complex.arg (z - p) + π < 2 * π := by
-    have := lt_of_le_of_ne (Complex.arg_le_pi (z - p)) hz; linarith
-  rw [circRearrange, hconst, decreasingRearrange_const (σ z) hx0 hxT]
+  -- `|arg(z − p)| < π`, so the fold argument `2 |arg(z − p)|` lies in `[0, 2π)`
+  have habs : |Complex.arg (z - p)| < π := by
+    rw [abs_lt]
+    exact ⟨Complex.neg_pi_lt_arg (z - p), lt_of_le_of_ne (Complex.arg_le_pi (z - p)) hz⟩
+  rw [circRearrange, hconst]
+  unfold decreasingRearrangeSymm
+  rw [decreasingRearrange_const (σ z) (by positivity) ?_]
+  rw [show (2 * π) / 2 = π by ring, add_sub_cancel_right]
+  calc 2 * |Complex.arg (z - p)| < 2 * π := by linarith [habs]
 
 end RiemannDynamics

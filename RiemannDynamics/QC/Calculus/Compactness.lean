@@ -19,14 +19,19 @@ import Mathlib.Topology.Homeomorph.Lemmas
 /-!
 # Quasiconformal calculus: compactness
 
-Geometric quasiconformality is closed under locally uniform limits: a locally uniform limit of
-geometric `K`-quasiconformal maps that is itself a homeomorphism is again geometrically
-`K`-quasiconformal. This closedness is the substantive half of the compactness of normalized
-`K`-quasiconformal families — once a uniform normalization supplies the equicontinuity needed to
-extract a locally uniformly convergent subsequence (the distortion / Hölder estimate), the limit
-is `K`-quasiconformal by the theorem below.
+Geometric quasiconformality is closed under locally uniform limits, and normalized uniformly
+`K`-quasiconformal families are normal:
 
-The limit theorem rests on two structural facts:
+* **Closedness** (`isQCGeometric_of_tendstoLocallyUniformly`) — a locally uniform limit of geometric
+  `K`-quasiconformal maps that is itself a homeomorphism is again geometrically `K`-quasiconformal.
+* **Normal-family compactness** (`exists_subseq_tendstoLocallyUniformly_isQCGeometric`) — a
+  two-point–normalized sequence of geometric `K`-quasiconformal maps (`fₙ p = a`, `fₙ q = b` with
+  `p ≠ q` and `a ≠ b`) has a subsequence converging locally uniformly to a geometric
+  `K`-quasiconformal limit. The two-value normalization supplies equicontinuity of the family and of
+  its inverses together with pointwise bounds; an Arzelà–Ascoli extraction then yields a locally
+  uniform limit that is a homeomorphism, which closedness makes `K`-quasiconformal.
+
+Closedness rests on two structural facts:
 
 * `sensePreserving_of_tendstoLocallyUniformly` — the topological orientation (`SensePreserving`)
   passes to a homeomorphic locally uniform limit, since the image circles converge uniformly to a
@@ -34,6 +39,10 @@ The limit theorem rests on two structural facts:
   transported by homotopy invariance;
 * `curveModulus_imageCurveFamily_lsc` — the image-family modulus is lower semicontinuous under
   locally uniform convergence of the maps (the conformal-modulus form of Väisälä's theorem).
+
+The extraction rests on `pointwise_bounded_of_equicontinuousOn` for the pointwise bounds, the
+Arzelà–Ascoli step `exists_subseq_tendsto_continuousMap` in `C(ℂ, ℂ)`, and
+`isHomeomorph_of_tendstoLocallyUniformly_inverse` for identifying the limit as a homeomorphism.
 -/
 
 open Filter Set Metric Topology
