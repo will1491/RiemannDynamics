@@ -5,6 +5,7 @@ Authors: Will (Ziang) Li
 -/
 import RiemannDynamics.QC.Regularity.RingModulus
 import RiemannDynamics.QC.Regularity.GeometricDilatation
+import RiemannDynamics.QC.Equivalence
 
 /-!
 # Quasiconformal transport of the round-annulus ring modulus
