@@ -1244,7 +1244,22 @@ equation from `inverse_beltrami` (whose `b'` is the witness). *Dependency:*
 theorem IsQCAnalytic.inverse_isQCAnalytic {f : ℂ → ℂ} {b : BeltramiCoeff}
     (hf : IsQCAnalytic f b) :
     ∃ b' : BeltramiCoeff, IsQCAnalytic (⇑(hf.1.1.homeomorph f).symm) b' := by
-  obtain ⟨b', hbel⟩ := hf.inverse_beltrami
+  obtain ⟨b', _, hbel⟩ := hf.inverse_beltrami
   exact ⟨b', hf.inverse_orientationPreservingHomeo, hf.inverse_memW12loc, hbel⟩
+
+/-- **The inverse of an analytic-quasiconformal map is analytic-quasiconformal, with the
+Beltrami norm controlled by that of `f`.** The inverse homeomorphism `g = f⁻¹` of an
+`IsQCAnalytic` map satisfies `IsQCAnalytic g b'` for a Beltrami coefficient `b'` whose
+essential-sup norm does not exceed that of `b` (indeed the reflected coefficient has the
+same pointwise modulus as `b`). The `normInf` bound is the quantitative refinement of
+`IsQCAnalytic.inverse_isQCAnalytic` needed to propagate a dilatation bound `(K−1)/(K+1)`
+from `f` to `g`. *Dependency:* `inverse_beltrami`, `inverse_memW12loc`,
+`inverse_orientationPreservingHomeo`. -/
+theorem IsQCAnalytic.inverse_isQCAnalytic' {f : ℂ → ℂ} {b : BeltramiCoeff}
+    (hf : IsQCAnalytic f b) :
+    ∃ b' : BeltramiCoeff, b'.normInf ≤ b.normInf ∧
+      IsQCAnalytic (⇑(hf.1.1.homeomorph f).symm) b' := by
+  obtain ⟨b', hb'le, hbel⟩ := hf.inverse_beltrami
+  exact ⟨b', hb'le, hf.inverse_orientationPreservingHomeo, hf.inverse_memW12loc, hbel⟩
 
 end RiemannDynamics

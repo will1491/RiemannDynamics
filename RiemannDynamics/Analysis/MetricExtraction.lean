@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Will (Ziang) Li
 -/
 import RiemannDynamics.QC.Regularity.RingModulus
-import RiemannDynamics.QC.Regularity.Quasisymmetry
+import RiemannDynamics.QC.Regularity.RingModulusTransport
 import RiemannDynamics.QC.LengthArea.CurveConcat
 import Mathlib.Analysis.SpecialFunctions.Log.Basic
 import Mathlib.Analysis.SpecialFunctions.Exp
@@ -475,8 +475,153 @@ theorem exists_mem_dist_eq_of_isConnected {F : Set ℂ} (hF : IsConnected F) {c 
   obtain ⟨w, hwF, hwρ⟩ := himg hmem
   exact ⟨w, hwF, hwρ⟩
 
+/-- **Arc-length of a vertical segment as a `y`-integral.** For the vertical curve
+`t ↦ x + i (p + t d)` (`d > 0`), the `ρ`-arc-length line integral equals
+`∫_{(p, p+d)} ρ(x + i y) dy` via the affine change of variables `y = p + t d` (Jacobian `d`). -/
+private theorem arcLength_vertical_seg (ρ : ℂ → ℝ≥0∞) (x p d : ℝ) (hd : 0 < d) :
+    arcLengthLineIntegral ρ (fun t => (x : ℂ) + ((p + t * d : ℝ) : ℂ) * Complex.I)
+      = ∫⁻ y in Set.Ioo p (p + d), ρ ((x : ℂ) + (y : ℝ) * Complex.I) := by
+  set V : ℝ → ℂ := fun t => (x : ℂ) + ((p + t * d : ℝ) : ℂ) * Complex.I with hV
+  have hVderiv : ∀ t, HasDerivAt V (((d : ℝ) : ℂ) * Complex.I) t := by
+    intro t
+    have h1 : HasDerivAt (fun t : ℝ => ((p + t * d : ℝ) : ℂ) * Complex.I)
+        (((d : ℝ) : ℂ) * Complex.I) t := by
+      have := (((hasDerivAt_id t).mul_const d).const_add p).ofReal_comp.mul_const Complex.I
+      simpa using this
+    simpa [hV] using h1.const_add (x : ℂ)
+  have hVnorm : ∀ t, ‖deriv V t‖ = d := by
+    intro t; rw [(hVderiv t).deriv, norm_mul, Complex.norm_real, Complex.norm_I, mul_one,
+      Real.norm_eq_abs, abs_of_pos hd]
+  set L : ℝ → ℝ := fun t => p + t * d with hLdef
+  have hLimg : L '' Set.Ioo (0 : ℝ) 1 = Set.Ioo p (p + d) := by
+    ext y; simp only [Set.mem_image, Set.mem_Ioo, hLdef]
+    constructor
+    · rintro ⟨t, ht, rfl⟩; exact ⟨by nlinarith [ht.1, ht.2, hd], by nlinarith [ht.2, hd]⟩
+    · rintro ⟨hy1, hy2⟩
+      exact ⟨(y - p) / d, ⟨by rw [lt_div_iff₀ hd]; linarith,
+        by rw [div_lt_one hd]; linarith⟩, by field_simp; ring⟩
+  have hLderiv : ∀ t ∈ Set.Ioo (0:ℝ) 1, HasDerivWithinAt L d (Set.Ioo (0:ℝ) 1) t := by
+    intro t _
+    have : HasDerivAt L d t := by
+      rw [hLdef]; simpa using (((hasDerivAt_id t).mul_const d).const_add p)
+    exact this.hasDerivWithinAt
+  have hLinj : Set.InjOn L (Set.Ioo (0:ℝ) 1) := by
+    intro u _ v _ huv; simp only [hLdef] at huv; exact mul_right_cancel₀ hd.ne' (by linarith [huv])
+  have hcov : ∫⁻ y in Set.Ioo p (p + d), ρ ((x : ℂ) + (y : ℝ) * Complex.I)
+      = ∫⁻ t in Set.Ioo (0 : ℝ) 1,
+          ENNReal.ofReal d * ρ ((x : ℂ) + ((L t : ℝ) : ℂ) * Complex.I) := by
+    rw [← hLimg, lintegral_image_eq_lintegral_abs_deriv_mul measurableSet_Ioo
+      (f := L) (f' := fun _ => d) hLderiv hLinj]
+    apply lintegral_congr; intro t; rw [abs_of_pos hd]
+  rw [hcov]; unfold arcLengthLineIntegral
+  rw [Measure.restrict_congr_set (Ioo_ae_eq_Icc).symm]
+  apply lintegral_congr; intro t
+  rw [show (‖deriv V t‖₊ : ℝ≥0∞) = ENNReal.ofReal ‖deriv V t‖ from by
+    rw [ofReal_norm_eq_enorm, enorm_eq_nnnorm], hVnorm, mul_comm]
+
+/-- **Arc-length of a circular arc as a `θ`-integral.** For the arc `t ↦ r · exp(i (φ + t Δ))`
+(`0 ≤ r`, `Δ ≠ 0`) the `ρ`-arc-length line integral equals
+`∫ ofReal r · ρ(r exp(iθ)) dθ` over the swept angular interval `(min φ (φ+Δ), max φ (φ+Δ))`, the
+arc length element being `r dθ`. -/
+private theorem arcLength_arc_seg (ρ : ℂ → ℝ≥0∞) (r φ Δ : ℝ) (hr : 0 ≤ r) (hΔ : Δ ≠ 0) :
+    arcLengthLineIntegral ρ (fun t => (r : ℂ) * Complex.exp (((φ + t * Δ : ℝ)) * Complex.I))
+      = ∫⁻ θ in Set.Ioo (min φ (φ + Δ)) (max φ (φ + Δ)),
+          ENNReal.ofReal r * ρ ((r : ℂ) * Complex.exp (((θ : ℝ)) * Complex.I)) := by
+  set A : ℝ → ℂ := fun t => (r : ℂ) * Complex.exp (((φ + t * Δ : ℝ)) * Complex.I) with hA
+  have hAderiv : ∀ t, HasDerivAt A
+      ((r : ℂ) * (Complex.exp (((φ + t * Δ : ℝ)) * Complex.I) * ((Δ : ℂ) * Complex.I))) t := by
+    intro t
+    have h1 : HasDerivAt (fun t : ℝ => ((φ + t * Δ : ℝ) : ℂ) * Complex.I)
+        ((Δ : ℂ) * Complex.I) t := by
+      have := (((hasDerivAt_id t).mul_const Δ).const_add φ).ofReal_comp.mul_const Complex.I
+      simpa using this
+    exact ((Complex.hasDerivAt_exp _).comp t h1).const_mul (r : ℂ)
+  have hAnorm : ∀ t, ‖deriv A t‖ = r * |Δ| := by
+    intro t
+    rw [(hAderiv t).deriv, norm_mul, norm_mul, norm_mul, Complex.norm_real, Complex.norm_exp,
+      Complex.norm_real, Complex.norm_I, mul_one, Real.norm_eq_abs, abs_of_nonneg hr,
+      Real.norm_eq_abs]
+    simp only [Complex.mul_re, Complex.ofReal_re, Complex.I_re, Complex.ofReal_im, Complex.I_im,
+      mul_zero, mul_one, sub_zero, Real.exp_zero, one_mul]
+  set L : ℝ → ℝ := fun t => φ + t * Δ with hLdef
+  have hLimg : L '' Set.Ioo (0 : ℝ) 1 = Set.Ioo (min φ (φ + Δ)) (max φ (φ + Δ)) := by
+    ext y; simp only [Set.mem_image, Set.mem_Ioo, hLdef]
+    rcases lt_or_gt_of_ne hΔ with hneg | hpos
+    · rw [min_eq_right (by linarith), max_eq_left (by linarith)]
+      constructor
+      · rintro ⟨t, ht, rfl⟩; exact ⟨by nlinarith [ht.2, hneg], by nlinarith [ht.1, hneg]⟩
+      · rintro ⟨hy1, hy2⟩
+        exact ⟨(y - φ) / Δ, ⟨by rw [lt_div_iff_of_neg hneg]; linarith,
+          by rw [div_lt_one_of_neg hneg]; linarith⟩, by field_simp; ring⟩
+    · rw [min_eq_left (by linarith), max_eq_right (by linarith)]
+      constructor
+      · rintro ⟨t, ht, rfl⟩; exact ⟨by nlinarith [ht.1, hpos], by nlinarith [ht.2, hpos]⟩
+      · rintro ⟨hy1, hy2⟩
+        exact ⟨(y - φ) / Δ, ⟨by rw [lt_div_iff₀ hpos]; linarith,
+          by rw [div_lt_one hpos]; linarith⟩, by field_simp; ring⟩
+  have hLderiv : ∀ t ∈ Set.Ioo (0:ℝ) 1, HasDerivWithinAt L Δ (Set.Ioo (0:ℝ) 1) t := by
+    intro t _
+    have : HasDerivAt L Δ t := by
+      rw [hLdef]; simpa using (((hasDerivAt_id t).mul_const Δ).const_add φ)
+    exact this.hasDerivWithinAt
+  have hLinj : Set.InjOn L (Set.Ioo (0:ℝ) 1) := by
+    intro u _ v _ huv; simp only [hLdef] at huv; exact mul_right_cancel₀ hΔ (by linarith [huv])
+  have hcov : ∫⁻ θ in Set.Ioo (min φ (φ + Δ)) (max φ (φ + Δ)),
+        ENNReal.ofReal r * ρ ((r : ℂ) * Complex.exp (((θ : ℝ)) * Complex.I))
+      = ∫⁻ t in Set.Ioo (0 : ℝ) 1, ENNReal.ofReal |Δ| *
+          (ENNReal.ofReal r * ρ ((r : ℂ) * Complex.exp (((L t : ℝ)) * Complex.I))) := by
+    rw [← hLimg, lintegral_image_eq_lintegral_abs_deriv_mul measurableSet_Ioo
+      (f := L) (f' := fun _ => Δ) hLderiv hLinj]
+  rw [hcov]; unfold arcLengthLineIntegral
+  rw [Measure.restrict_congr_set (Ioo_ae_eq_Icc).symm]
+  apply lintegral_congr; intro t
+  rw [show (‖deriv A t‖₊ : ℝ≥0∞) = ENNReal.ofReal ‖deriv A t‖ from by
+    rw [ofReal_norm_eq_enorm, enorm_eq_nnnorm], hAnorm, ENNReal.ofReal_mul hr]
+  change ρ ((r : ℂ) * Complex.exp (((φ + t * Δ : ℝ)) * Complex.I))
+        * (ENNReal.ofReal r * ENNReal.ofReal |Δ|)
+    = ENNReal.ofReal |Δ| * (ENNReal.ofReal r * ρ ((r : ℂ) * Complex.exp (((L t : ℝ)) * Complex.I)))
+  rw [hLdef]; ring
+
+/-- **Energy bound for a two-piece L-curve.** Concatenate a vertical piece `Vγ` (from `Ê` to a
+common point in `U`) with an arc piece `arcT` (from that point to `F'`), both absolutely continuous
+on `[0, 1]` with interiors in `U`. The concatenation joins `Ê` to `F'` inside `U`, so any density
+admissible for `connectingCurveFamily Ê F' U` gives arc-length at least `1`; by additivity this
+splits over the two pieces. Combined with the vertical piece's length `= IV`, the arc piece's
+length `= ∫_{(a,b)} c · g` over the swept angular window `(a, b) ⊆ (lo, hi)`, and finiteness of the
+scale `c`, the sub-arc energy is bounded by `c · ∫_{(lo,hi)} g`, giving
+`1 ≤ IV + c · ∫_{(lo,hi)} g`. -/
+private theorem lCurve_case_two_final {ρ : ℂ → ℝ≥0∞} {Ê F' U : Set ℂ} {Vγ arcT : ℝ → ℂ}
+    {IV c : ℝ≥0∞} {g : ℝ → ℝ≥0∞} {a b lo hi : ℝ}
+    (hρadm : ∀ γ ∈ connectingCurveFamily Ê F' U, 1 ≤ arcLengthLineIntegral ρ γ)
+    (hVcont : Continuous Vγ) (hVac : AbsolutelyContinuousOnInterval Vγ 0 1)
+    (hAcont : Continuous arcT) (hAac : AbsolutelyContinuousOnInterval arcT 0 1)
+    (hjoin : Vγ 1 = arcT 0) (hV0 : Vγ 0 ∈ Ê) (hA1 : arcT 1 ∈ F')
+    (hVint : ∀ t ∈ Set.Ioo (0 : ℝ) 1, Vγ t ∈ U) (hseam : Vγ 1 ∈ U)
+    (hAint : ∀ t ∈ Set.Ioo (0 : ℝ) 1, arcT t ∈ U)
+    (hVlen : arcLengthLineIntegral ρ Vγ = IV)
+    (harcTlen : arcLengthLineIntegral ρ arcT = ∫⁻ θ in Set.Ioo a b, c * g θ)
+    (hc : c ≠ ⊤) (hsub : Set.Ioo a b ⊆ Set.Ioo lo hi) :
+    1 ≤ IV + c * ∫⁻ θ in Set.Ioo lo hi, g θ := by
+  obtain ⟨cγ, hcγcont, hcγac, hcγ0, hcγ1, _, hcγopen, hcγadd⟩ :=
+    exists_concat_curve hVcont hVac hAcont hAac hjoin
+  have hcγmem : cγ ∈ connectingCurveFamily Ê F' U := by
+    refine ⟨hcγcont, hcγac, ?_, ?_, ?_⟩
+    · rw [hcγ0]; exact hV0
+    · rw [hcγ1]; exact hA1
+    · intro t ht
+      rcases hcγopen t ht with (hV | hs) | hA
+      · obtain ⟨u, hu, heq⟩ := hV; rw [← heq]; exact hVint u hu
+      · rw [Set.mem_singleton_iff] at hs; rw [hs]; exact hseam
+      · obtain ⟨u, hu, heq⟩ := hA; rw [← heq]; exact hAint u hu
+  have hadm : 1 ≤ arcLengthLineIntegral ρ cγ := hρadm cγ hcγmem
+  rw [hcγadd ρ, hVlen, harcTlen] at hadm
+  refine hadm.trans (add_le_add (le_refl IV) ?_)
+  rw [lintegral_const_mul' _ _ hc]
+  exact mul_le_mul' (le_refl _) (lintegral_mono_set hsub)
+
+set_option maxHeartbeats 400000 in -- foliation argument: per-point L-curve, several changes of
+-- variables and Cauchy–Schwarz estimates, elaboration exceeds the default heartbeat budget.
 open Set in
-set_option maxHeartbeats 400000 in
 /-- **The L-curve lower bound (normalized).** Let `f : ℂ → ℂ` be a homeomorphism of the plane,
 `x₀` a base point, and `0 < a < b`. Write
 
@@ -969,7 +1114,7 @@ theorem ofReal_le_curveModulus_lCurve {f : ℂ → ℂ} (hf : IsHomeomorph f) {x
       intro r θ hr
       rw [harcpt, norm_mul, Complex.norm_real, Complex.norm_exp]
       simp only [Complex.mul_re, Complex.ofReal_re, Complex.I_re, Complex.ofReal_im,
-        Complex.I_im, mul_zero, mul_one, sub_zero, zero_mul, Real.exp_zero, mul_one,
+        Complex.I_im, mul_zero, mul_one, sub_zero, Real.exp_zero,
         Real.norm_eq_abs, abs_of_nonneg hr]
     have harccont : ∀ r : ℝ, Continuous (arcpt r) := by
       intro r
@@ -992,7 +1137,7 @@ theorem ofReal_le_curveModulus_lCurve {f : ℂ → ℂ} (hf : IsHomeomorph f) {x
         Complex.norm_exp, Complex.norm_real, Complex.norm_I, mul_one, Real.norm_eq_abs,
         abs_of_nonneg hr, Real.norm_eq_abs]
       simp only [Complex.mul_re, Complex.ofReal_re, Complex.I_re, Complex.ofReal_im,
-        Complex.I_im, mul_zero, mul_one, sub_zero, zero_mul, Real.exp_zero, one_mul]
+        Complex.I_im, mul_zero, mul_one, sub_zero, Real.exp_zero, one_mul]
     -- The arc curve is Lipschitz (hence AC) on `[0,1]`.
     have harclip : ∀ (r α Δ : ℝ), (hr : 0 ≤ r) →
         LipschitzWith (⟨r * |Δ|, mul_nonneg hr (abs_nonneg _)⟩ : ℝ≥0)
@@ -1037,7 +1182,7 @@ theorem ofReal_le_curveModulus_lCurve {f : ℂ → ℂ} (hf : IsHomeomorph f) {x
           = ENNReal.ofReal ‖deriv (fun t => arcpt r (α + t * Δ)) t‖ from by
         rw [ofReal_norm_eq_enorm, enorm_eq_nnnorm], harcnormderiv r α Δ hr,
         ENNReal.ofReal_mul hr, abs_of_pos hΔ]
-      show ρ (arcpt r (α + t * Δ)) * (ENNReal.ofReal r * ENNReal.ofReal Δ)
+      change ρ (arcpt r (α + t * Δ)) * (ENNReal.ofReal r * ENNReal.ofReal Δ)
         = ENNReal.ofReal Δ * (ENNReal.ofReal r * ρ (arcpt r (Lθ t)))
       rw [hLθ]; ring
     -- Polar circle-slice comparison: the annulus `1 < |z| < 1+s` energy, sliced by circles
@@ -1064,7 +1209,8 @@ theorem ofReal_le_curveModulus_lCurve {f : ℂ → ℂ} (hf : IsHomeomorph f) {x
         have hd : ∀ t ∈ Set.Ioo (0:ℝ) s,
             HasDerivWithinAt (fun x => 1 + x) 1 (Set.Ioo (0:ℝ) s) t :=
           fun t _ => ((hasDerivAt_id t).const_add 1).hasDerivWithinAt
-        have hinj : Set.InjOn (fun x => 1 + x) (Set.Ioo (0:ℝ) s) := fun u _ v _ h => by simpa using h
+        have hinj : Set.InjOn (fun x => 1 + x) (Set.Ioo (0:ℝ) s) :=
+          fun u _ v _ h => by simpa using h
         rw [← himg, lintegral_image_eq_lintegral_abs_deriv_mul measurableSet_Ioo hd hinj]
         simp
       rw [hshift]
@@ -1137,8 +1283,8 @@ theorem ofReal_le_curveModulus_lCurve {f : ℂ → ℂ} (hf : IsHomeomorph f) {x
         refine le_trans hlow (le_add_right ?_)
         apply lintegral_mono_set
         intro y hy; exact ⟨hy.1, lt_of_lt_of_le hy.2 hcase⟩
-      · -- Sub-case (ii): the vertical reaches the splice height `Tx` inside `U`; complete with an arc.
-        push_neg at hcase
+      · -- Sub-case (ii): the vertical reaches the splice height `Tx` inside `U`; finish by an arc.
+        rw [not_le] at hcase
         set r : ℝ := 1 + x with hr
         -- `U ⊆ K` and `U ∩ F' = ∅`.
         have hUsubK : U ⊆ K := by
@@ -1227,7 +1373,10 @@ theorem ofReal_le_curveModulus_lCurve {f : ℂ → ℂ} (hf : IsHomeomorph f) {x
         set Δ' : ℝ := ts * Δ with hΔ'
         set arcT : ℝ → ℂ := fun t => arcpt r (φ + t * Δ') with harcT
         have harcTeq : ∀ t, arcT t = arcγ (t * ts) := by
-          intro t; rw [harcT, harcγ, hΔ']; congr 1; ring
+          intro t
+          simp only [harcT, harcγ, hΔ']
+          congr 1
+          ring
         have harcT0 : arcT 0 = emb x Tx := by rw [harcTeq]; simp [harcγ0]
         have harcT1 : arcT 1 = arcγ ts := by rw [harcTeq]; simp
         have harcTcont : Continuous arcT := (harccont r).comp (by fun_prop)
@@ -1257,7 +1406,56 @@ theorem ofReal_le_curveModulus_lCurve {f : ℂ → ℂ} (hf : IsHomeomorph f) {x
               norm_mul, Complex.norm_real, Complex.norm_I, mul_one, Real.norm_eq_abs,
               abs_of_pos hdpos]
           exact (hlip.lipschitzOnWith (s := Set.uIcc 0 1)).absolutelyContinuousOnInterval
-        sorry
+        -- Concatenate the vertical `Vγ` with the truncated arc `arcT` into an admissible L-curve.
+        have hΔ'ne : Δ' ≠ 0 := mul_ne_zero (ne_of_gt htspos) hΔne
+        have hVint : ∀ t ∈ Set.Ioo (0 : ℝ) 1, Vγ t ∈ U := by
+          intro u hu
+          rw [hVγ]
+          refine hHU (yTop x + u * d) ⟨lt_add_of_pos_right _ (mul_pos hu.1 hdpos), ?_⟩
+          have h1 : u * d < d := by
+            have := mul_lt_mul_of_pos_right hu.2 hdpos; rwa [one_mul] at this
+          rw [hd] at h1; linarith [hcase]
+        have hAint : ∀ t ∈ Set.Ioo (0 : ℝ) 1, arcT t ∈ U := by
+          intro u hu
+          rw [harcTeq]
+          refine harcU (u * ts) ⟨(mul_pos hu.1 htspos).le, ?_⟩
+          have := mul_lt_mul_of_pos_right hu.2 htspos; rwa [one_mul] at this
+        -- Vertical piece: `arcLengthLineIntegral ρ Vγ = ∫_{(yTop x, Tx)} ρ(emb x ·)`.
+        have hVlen : arcLengthLineIntegral ρ Vγ = ∫⁻ y in Set.Ioo (yTop x) Tx, ρ (emb x y) := by
+          have h := arcLength_vertical_seg ρ x (yTop x) d hdpos
+          rw [show yTop x + d = Tx from by rw [hd]; ring] at h
+          exact h
+        -- Arc piece: change to the `θ`-integral over the swept sub-arc of `(-π, π)`.
+        have harcTlen : arcLengthLineIntegral ρ arcT
+            = ∫⁻ θ in Set.Ioo (min φ (φ + Δ')) (max φ (φ + Δ')),
+                ENNReal.ofReal r * ρ (arcpt r θ) :=
+          arcLength_arc_seg ρ r φ Δ' h1xpos.le hΔ'ne
+        -- The swept sub-arc lies in `(-π, π)`.
+        have hΔ'conv : φ + Δ' = (1 - ts) * φ + ts * ψ := by rw [hΔ', hΔ]; ring
+        have hlowπ : -π < min φ (φ + Δ') := by
+          rw [lt_min_iff]
+          refine ⟨hφIoc.1, ?_⟩
+          rw [hΔ'conv]
+          have h1 : (1 - ts) * (-π) ≤ (1 - ts) * φ :=
+            mul_le_mul_of_nonneg_left hφIoc.1.le (by linarith [htsIcc.2])
+          have h2 : ts * (-π) < ts * ψ := mul_lt_mul_of_pos_left hψIoc.1 htspos
+          have hid : (1 - ts) * (-π) + ts * (-π) = -π := by ring
+          linarith [h1, h2, hid]
+        have hhiπ : max φ (φ + Δ') ≤ π := by
+          rw [max_le_iff]
+          refine ⟨hφIoc.2, ?_⟩
+          rw [hΔ'conv]
+          have h1 : (1 - ts) * φ ≤ (1 - ts) * π :=
+            mul_le_mul_of_nonneg_left hφIoc.2 (by linarith [htsIcc.2])
+          have h2 : ts * ψ ≤ ts * π := mul_le_mul_of_nonneg_left hψIoc.2 htspos.le
+          have hid : (1 - ts) * π + ts * π = π := by ring
+          linarith [h1, h2, hid]
+        have hsub : Set.Ioo (min φ (φ + Δ')) (max φ (φ + Δ')) ⊆ Set.Ioo (-π) π :=
+          fun θ hθ => ⟨lt_of_lt_of_le hlowπ hθ.1.le, lt_of_lt_of_le hθ.2 hhiπ⟩
+        -- Assemble: concatenate, split the length, and bound the swept arc by the full circle.
+        exact lCurve_case_two_final hρadm hVγcont hVγac harcTcont harcTac
+          (hVγ1.trans harcT0.symm) (hVγ0 ▸ hyTopMem x hx) (harcT1 ▸ htsF) hVint (hVγ1 ▸ hpU)
+          hAint hVlen harcTlen ENNReal.ofReal_ne_top hsub
     -- Turn the split into a per-`x` energy bound via one-dimensional Cauchy–Schwarz on each piece.
     have fibreA : ∀ x ∈ Set.Ioo (0 : ℝ) s,
         ENNReal.ofReal (1 / 2)
@@ -1346,13 +1544,11 @@ theorem ofReal_le_curveModulus_lCurve {f : ℂ → ℂ} (hf : IsHomeomorph f) {x
         calc B ^ 2 = ENNReal.ofReal ((1 + x) ^ 2) * Bc ^ 2 := by
               rw [hB, mul_pow, ← ENNReal.ofReal_pow (by linarith [hx.1])]
           _ ≤ ENNReal.ofReal ((1 + x) ^ 2) * (ENNReal.ofReal (2 * π) * circleE) :=
-              mul_le_mul_left' hBcsq _
+              mul_le_mul' (le_refl _) hBcsq
           _ = ENNReal.ofReal ((1 + x) ^ 2 * (2 * π)) * circleE := by
               rw [ENNReal.ofReal_mul (by positivity : (0:ℝ) ≤ (1+x)^2), mul_assoc]
-          _ ≤ ENNReal.ofReal (8 * π) * circleE := by
-              apply mul_le_mul_right'
-              apply ENNReal.ofReal_le_ofReal
-              nlinarith [Real.pi_pos, h1x]
+          _ ≤ ENNReal.ofReal (8 * π) * circleE :=
+              mul_le_mul' (ENNReal.ofReal_le_ofReal (by nlinarith [Real.pi_pos, h1x])) (le_refl _)
       -- Combine: `1/2 ≤ A² + B² ≤ 3·windowE + 8π·circleE`.
       have : ENNReal.ofReal (1 / 2) ≤ A ^ 2 + B ^ 2 := by
         rw [show ENNReal.ofReal (1 / 2) = 1 / 2 from by
@@ -1402,9 +1598,9 @@ theorem ofReal_le_curveModulus_lCurve {f : ℂ → ℂ} (hf : IsHomeomorph f) {x
         _ ≤ ENNReal.ofReal 3 * W + ENNReal.ofReal (8 * π) * W := by
             gcongr
             · rw [lintegral_const_mul' _ _ ENNReal.ofReal_ne_top]
-              exact mul_le_mul_left' (plane_cmp (-1) 3) _
+              exact mul_le_mul' (le_refl _) (plane_cmp (-1) 3)
             · rw [lintegral_const_mul' _ _ ENNReal.ofReal_ne_top]
-              exact mul_le_mul_left' circle_cmp _
+              exact mul_le_mul' (le_refl _) circle_cmp
     -- Conclude `ofReal (s²/60) ≤ W`.
     have hfactor : ENNReal.ofReal 3 * W + ENNReal.ofReal (8 * π) * W
         = ENNReal.ofReal (3 + 8 * π) * W := by
@@ -1412,7 +1608,6 @@ theorem ofReal_le_curveModulus_lCurve {f : ℂ → ℂ} (hf : IsHomeomorph f) {x
     rw [hfactor] at hint
     -- `ofReal (s/2) ≤ (3 + 8π)·W ⟹ ofReal (s²/60) ≤ W`.
     have hpi : (3 : ℝ) + 8 * π ≤ 30 := by nlinarith [Real.pi_lt_d2]
-    show ENNReal.ofReal (s ^ 2 / 60) ≤ W
     have hden : ENNReal.ofReal (3 + 8 * π) ≠ 0 :=
       (ENNReal.ofReal_pos.mpr (by positivity)).ne'
     calc ENNReal.ofReal (s ^ 2 / 60)
@@ -1427,5 +1622,297 @@ theorem ofReal_le_curveModulus_lCurve {f : ℂ → ℂ} (hf : IsHomeomorph f) {x
           gcongr
       _ = W := by
           rw [mul_comm, mul_div_assoc, ENNReal.div_self hden ENNReal.ofReal_ne_top, mul_one]
+
+/-- **The `ball \ closedBall` region is the round annulus.** For a base point `x₀` and radii
+`a`, `b`, the set-difference `Metric.ball x₀ b \ Metric.closedBall x₀ a` equals the open round
+annulus `RoundAnnulus x₀ a b = {a < dist · x₀ < b}`. -/
+theorem ball_diff_closedBall_eq_roundAnnulus (x₀ : ℂ) (a b : ℝ) :
+    Metric.ball x₀ b \ Metric.closedBall x₀ a = RoundAnnulus x₀ a b := by
+  ext z
+  simp only [Set.mem_diff, Metric.mem_ball, Metric.mem_closedBall, RoundAnnulus,
+    Set.mem_setOf_eq, not_le]
+  exact ⟨fun h => ⟨h.2, h.1⟩, fun h => ⟨h.2, h.1⟩⟩
+
+/-- **The inner/outer circle is a metric sphere.** `innerCircle x₀ r = Metric.sphere x₀ r` and
+likewise for `outerCircle`, both being `{z | dist z x₀ = r}`. -/
+theorem innerCircle_eq_sphere (x₀ : ℂ) (r : ℝ) : innerCircle x₀ r = Metric.sphere x₀ r := rfl
+
+set_option linter.unusedVariables false in
+/-- **The connecting family is unchanged when the inner boundary disk is replaced by its bounding
+sphere.** Let `f : ℂ → ℂ` be a homeomorphism and `0 < a < b`. With ambient ring
+`U := f '' RoundAnnulus x₀ a b` and outer boundary `F`, the connecting family whose inner boundary
+is the *closed disk image* `f '' closedBall x₀ a` coincides with the one whose inner boundary is the
+*sphere image* `f '' sphere x₀ a`.
+
+The `⊇` inclusion is `image_mono` (`sphere ⊆ closedBall`). For `⊆`: a connecting curve `γ` starts
+at `γ 0 ∈ f '' closedBall x₀ a` with interior `γ '' (0,1) ⊆ U`, and `U` is disjoint from
+`f '' closedBall x₀ a` (injectivity: the round annulus is disjoint from the closed disk). Hence
+`γ 0` is a limit of points off `f '' closedBall x₀ a`, so `γ 0 ∈ frontier (f '' closedBall x₀ a)`;
+and `frontier (f '' closedBall x₀ a) = f '' sphere x₀ a` because a homeomorphism commutes with
+`frontier` and `frontier (closedBall x₀ a) = sphere x₀ a` (as `a ≠ 0`). -/
+theorem connectingCurveFamily_closedBall_eq_sphere {f : ℂ → ℂ} (hf : IsHomeomorph f)
+    {x₀ : ℂ} {a b : ℝ} (ha : 0 < a) (hab : a < b) {F : Set ℂ} :
+    connectingCurveFamily (f '' Metric.closedBall x₀ a) F (f '' RoundAnnulus x₀ a b)
+      = connectingCurveFamily (f '' Metric.sphere x₀ a) F (f '' RoundAnnulus x₀ a b) := by
+  classical
+  set U : Set ℂ := f '' RoundAnnulus x₀ a b with hU
+  -- The image sphere is the topological frontier of the image closed disk.
+  have hcoe : ∀ (s : Set ℂ), f '' s = ⇑(hf.homeomorph f) '' s := by
+    intro s; ext w; constructor
+    · rintro ⟨y, hy, rfl⟩; exact ⟨y, hy, (IsHomeomorph.homeomorph_apply f hf y).symm⟩
+    · rintro ⟨y, hy, rfl⟩; exact ⟨y, hy, IsHomeomorph.homeomorph_apply f hf y⟩
+  have hfront : frontier (f '' Metric.closedBall x₀ a) = f '' Metric.sphere x₀ a := by
+    rw [hcoe (Metric.closedBall x₀ a), hcoe (Metric.sphere x₀ a),
+      ← (hf.homeomorph f).image_frontier, frontier_closedBall x₀ ha.ne']
+  -- `U` is disjoint from the image closed disk (injectivity + annulus ∩ closed disk = ∅).
+  have hinj : Function.Injective f := hf.injective
+  have hdisj : Disjoint U (f '' Metric.closedBall x₀ a) := by
+    rw [Set.disjoint_left]
+    rintro w ⟨y, hyA, rfl⟩ ⟨z, hzB, hzeq⟩
+    have : z = y := hinj hzeq
+    subst this
+    simp only [RoundAnnulus, Set.mem_setOf_eq] at hyA
+    rw [Metric.mem_closedBall] at hzB
+    linarith [hyA.1]
+  apply Set.eq_of_subset_of_subset
+  · -- `⊆`: relocate the start onto the frontier = image sphere.
+    rintro γ ⟨hcont, hac, h0, h1, hint⟩
+    refine ⟨hcont, hac, ?_, h1, hint⟩
+    rw [← hfront]
+    -- `γ 0 ∈ closure Uᶜ` (approached by interior points in `U ⊆ complement of the disk`).
+    have hlim : Tendsto γ (𝓝[>] (0 : ℝ)) (𝓝 (γ 0)) :=
+      (hcont.tendsto 0).mono_left nhdsWithin_le_nhds
+    have hev : ∀ᶠ t in 𝓝[>] (0 : ℝ), γ t ∈ (f '' Metric.closedBall x₀ a)ᶜ := by
+      have hsub : Set.Ioo (0 : ℝ) 1 ∈ 𝓝[>] (0 : ℝ) := Ioo_mem_nhdsGT (by norm_num)
+      filter_upwards [hsub] with t ht
+      exact fun hmem => (Set.disjoint_left.mp hdisj) (hint t ht) hmem
+    have hclos : γ 0 ∈ closure (f '' Metric.closedBall x₀ a)ᶜ :=
+      mem_closure_of_tendsto hlim hev
+    rw [frontier]
+    refine ⟨subset_closure h0, ?_⟩
+    rw [closure_compl] at hclos; exact hclos
+  · -- `⊇`: `sphere ⊆ closedBall`, so the start already lies in the closed disk image.
+    rintro γ ⟨hcont, hac, h0, h1, hint⟩
+    exact ⟨hcont, hac, Set.image_mono Metric.sphere_subset_closedBall h0, h1, hint⟩
+
+/-- **Sense-preservation is preserved under conformal affine post-composition.** For `c ≠ 0`, if
+`f` is topologically sense-preserving then so is `affineMap c d ∘ f`. The image loop of
+`affineMap c d ∘ f` about its centre is `c · (image loop of f)`, so a continuous logarithm of the
+`f`-loop shifted by the constant `Complex.log c` is a continuous logarithm of the composite loop
+with the *same* increment `2π i` over a turn (the constant shift cancels in the difference). -/
+theorem sensePreserving_affine_comp {f : ℂ → ℂ} (hf : SensePreserving f) {c d : ℂ} (hc : c ≠ 0) :
+    SensePreserving (affineMap c d ∘ f) := by
+  refine ⟨(affineMap_isHomeomorph hc d).comp hf.1, ?_⟩
+  filter_upwards [hf.2] with z₀ hz₀
+  filter_upwards [hz₀] with r hr
+  obtain ⟨L, hLcont, hLexp, hLincr⟩ := hr
+  refine ⟨fun θ => L θ + Complex.log c, hLcont.add continuous_const, fun θ => ?_, ?_⟩
+  · rw [Complex.exp_add, Complex.exp_log hc, Function.comp_apply, Function.comp_apply,
+      affineMap_apply, affineMap_apply, hLexp θ]
+    ring
+  · have : (L (2 * Real.pi) + Complex.log c) - (L 0 + Complex.log c)
+        = L (2 * Real.pi) - L 0 := by ring
+    rw [this, hLincr]
+
+/-- **Geometric quasiconformality is preserved under conformal affine post-composition.** For
+`c ≠ 0`, `affineMap c d ∘ f` is geometrically `K`-quasiconformal whenever `f` is. The distortion
+constant `K` is unchanged: the outer-conformal image-family modulus invariance
+`curveModulus_imageCurveFamily_outer_conformal` gives
+`M(Q.imageCurveFamily (affineMap c d ∘ f)) = M(Q.imageCurveFamily f) ≤ K · M(Q)`, and sense-
+preservation transports by `sensePreserving_affine_comp`. -/
+theorem isQCGeometric_affine_comp {f : ℂ → ℂ} {K : ℝ} (hf : IsQCGeometric f K) {c d : ℂ}
+    (hc : c ≠ 0) : IsQCGeometric (affineMap c d ∘ f) K := by
+  refine ⟨hf.1, sensePreserving_affine_comp hf.2.1 hc, fun Q => ?_⟩
+  rw [curveModulus_imageCurveFamily_outer_conformal (affineMap_isHomeomorph hc d)
+    (affineMap_differentiable c d).differentiableOn f Q]
+  exact hf.2.2 Q
+
+/-- **Distance scaling under a conformal affine map.** `dist (affineMap c d w₁) (affineMap c d w₂)
+= ‖c‖ · dist w₁ w₂`. -/
+theorem dist_affineMap (c d w₁ w₂ : ℂ) :
+    dist (affineMap c d w₁) (affineMap c d w₂) = ‖c‖ * dist w₁ w₂ := by
+  simp only [affineMap_apply, dist_eq_norm]
+  rw [show c * w₁ + d - (c * w₂ + d) = c * (w₁ - w₂) by ring, norm_mul]
+
+open scoped Pointwise in
+/-- **`infDist` scaling under a conformal affine map.** For `c ≠ 0`,
+`infDist (affineMap c d p) (affineMap c d '' T) = ‖c‖ · infDist p T`. -/
+theorem infDist_affineMap {c : ℂ} (hc : c ≠ 0) (d p : ℂ) (T : Set ℂ) :
+    Metric.infDist (affineMap c d p) (affineMap c d '' T) = ‖c‖ * Metric.infDist p T := by
+  have hisom : Isometry (fun w : ℂ => w + d) :=
+    Isometry.of_dist_eq (fun x y => by simp [dist_eq_norm])
+  have hsmul : c • T = (fun w => c * w) '' T := by
+    ext w; simp only [Set.mem_smul_set, Set.mem_image, smul_eq_mul]
+  have himg : affineMap c d '' T = (fun w => w + d) '' (c • T) := by
+    rw [hsmul, ← Set.image_comp]
+    apply Set.image_congr'
+    intro w; simp only [affineMap_apply, Function.comp_apply]
+  have hpt : affineMap c d p = (fun w => w + d) (c • p) := by
+    simp only [affineMap_apply, smul_eq_mul]
+  rw [himg, hpt, Metric.infDist_image hisom, infDist_smul₀ hc]
+
+/-- **The normalized sandwich bound.** Let `f` be geometrically `K`-quasiconformal, `0 < a < b`, in
+the *normalized* frame of the L-curve lower bound: `f x₀ = 0`, the inner disk image lies in
+`closedBall 0 s` with `s` attained at `(s : ℂ) ∈ f '' closedBall x₀ a`, the image outer sphere has
+`infDist 0 (f '' sphere x₀ b) = 1`, and the gate `s² < 1/2`. Then `s² / 60 ≤ K · (2π / log (b/a))`.
+
+Chaining the L-curve lower bound `ofReal_le_curveModulus_lCurve` (`ofReal (s²/60) ≤` modulus of the
+inner-disk connecting family), the family equality
+`connectingCurveFamily_closedBall_eq_sphere` (replacing the inner disk boundary by its sphere), and
+the transported ring modulus `geometric_ring_modulus_transport`
+(`≤ ofReal K · ofReal (2π / log(b/a))`), then reading the resulting `ENNReal` inequality of
+nonnegative reals back to `ℝ`. -/
+theorem normalized_sandwich {f : ℂ → ℂ} {K : ℝ} (hf : IsQCGeometric f K)
+    {x₀ : ℂ} {a b s : ℝ} (ha : 0 < a) (hab : a < b) (hcenter : f x₀ = 0)
+    (hspos : 0 < s) (hs2 : s ^ 2 < 1 / 2)
+    (hEsub : f '' Metric.closedBall x₀ a ⊆ Metric.closedBall (0 : ℂ) s)
+    (hsE : (s : ℂ) ∈ f '' Metric.closedBall x₀ a)
+    (hb : Metric.infDist (0 : ℂ) (f '' Metric.sphere x₀ b) = 1) :
+    s ^ 2 / 60 ≤ K * (2 * Real.pi / Real.log (b / a)) := by
+  have hhomeo : IsHomeomorph f := hf.2.1.isHomeomorph
+  -- L-curve lower bound on the inner-disk connecting family.
+  have hlow := ofReal_le_curveModulus_lCurve hhomeo ha hab hcenter hspos hs2 hEsub hsE hb
+  -- Rewrite the ambient region `ball b \ closedBall a` as `RoundAnnulus x₀ a b`.
+  rw [ball_diff_closedBall_eq_roundAnnulus,
+    connectingCurveFamily_closedBall_eq_sphere hhomeo ha hab] at hlow
+  -- The transported ring modulus upper bound; `sphere = innerCircle/outerCircle`.
+  have htr := geometric_ring_modulus_transport hf (z₀ := x₀) (r := a) (R := b) ha hab
+  rw [← innerCircle_eq_sphere, ← innerCircle_eq_sphere] at hlow
+  have hchain : ENNReal.ofReal (s ^ 2 / 60)
+      ≤ ENNReal.ofReal K * ENNReal.ofReal (2 * Real.pi / Real.log (b / a)) :=
+    le_trans hlow htr
+  -- Read the `ENNReal` inequality back to `ℝ`.
+  rw [← ENNReal.ofReal_mul (le_trans zero_le_one hf.1)] at hchain
+  have hlogpos : 0 < Real.log (b / a) :=
+    Real.log_pos ((one_lt_div ha).mpr hab)
+  have hrhs_nonneg : 0 ≤ K * (2 * Real.pi / Real.log (b / a)) := by
+    apply mul_nonneg (le_trans zero_le_one hf.1)
+    positivity
+  exact (ENNReal.ofReal_le_ofReal_iff hrhs_nonneg).mp hchain
+
+/-- **The de-normalized shell-ratio sandwich (STAR).** For a geometrically `K`-quasiconformal `f`
+and `0 < a < b`, write the two image shells about `f x₀`:
+
+* `a' := sSup {r | ∃ ζ ∈ f '' closedBall x₀ a, r = dist ζ (f x₀)}` — the farthest image distance of
+  the inner disk (attained: the image is compact);
+* `b' := infDist (f x₀) (f '' sphere x₀ b)` — the nearest image distance of the outer sphere.
+
+Under the nondegeneracy `0 < a'` and the gate `(a'/b')² < 1/2`, the shell ratio obeys
+`(a'/b')² / 60 ≤ K · (2π / log (b/a))`.
+
+Proof: normalize by the conformal affine similarity `φ w := c · (w − f x₀)` with `‖c‖ = 1/b'`,
+rotated so the farthest image point lands on the positive real axis at `a'/b'`. Then `φ ∘ f` is
+geometrically `K`-quasiconformal (`isQCGeometric_affine_comp`), `(φ∘f) x₀ = 0`, its inner disk image
+lies in `closedBall 0 (a'/b')` with `a'/b'` attained at the real point, and its outer sphere has
+`infDist 0 · = 1` (all by `dist_affineMap`/`infDist_affineMap`). `normalized_sandwich` with
+`s := a'/b'` gives the bound. -/
+theorem geometric_shellRatio_star {f : ℂ → ℂ} {K : ℝ} (hf : IsQCGeometric f K)
+    {x₀ : ℂ} {a b : ℝ} (ha : 0 < a) (hab : a < b)
+    (ha'pos : 0 < sSup {r : ℝ | ∃ ζ ∈ f '' Metric.closedBall x₀ a, r = dist ζ (f x₀)})
+    (hgate : (sSup {r : ℝ | ∃ ζ ∈ f '' Metric.closedBall x₀ a, r = dist ζ (f x₀)}
+        / Metric.infDist (f x₀) (f '' Metric.sphere x₀ b)) ^ 2 < 1 / 2) :
+    (sSup {r : ℝ | ∃ ζ ∈ f '' Metric.closedBall x₀ a, r = dist ζ (f x₀)}
+        / Metric.infDist (f x₀) (f '' Metric.sphere x₀ b)) ^ 2 / 60
+      ≤ K * (2 * Real.pi / Real.log (b / a)) := by
+  classical
+  have hhomeo : IsHomeomorph f := hf.2.1.isHomeomorph
+  set S : Set ℝ := {r : ℝ | ∃ ζ ∈ f '' Metric.closedBall x₀ a, r = dist ζ (f x₀)} with hSdef
+  set a' : ℝ := sSup S with ha'
+  set b' : ℝ := Metric.infDist (f x₀) (f '' Metric.sphere x₀ b) with hb'
+  -- `S` is the `dist · (f x₀)`-image of the compact `f '' closedBall x₀ a`, so `a'` is attained.
+  have hKcpt : IsCompact (f '' Metric.closedBall x₀ a) :=
+    (isCompact_closedBall x₀ a).image hhomeo.continuous
+  have hSimg : S = (fun ζ => dist ζ (f x₀)) '' (f '' Metric.closedBall x₀ a) := by
+    ext r; simp only [hSdef, Set.mem_setOf_eq, Set.mem_image]
+    exact ⟨fun ⟨ζ, hζ, h⟩ => ⟨ζ, hζ, h.symm⟩, fun ⟨ζ, hζ, h⟩ => ⟨ζ, hζ, h.symm⟩⟩
+  have hSne : (f '' Metric.closedBall x₀ a).Nonempty :=
+    ⟨f x₀, x₀, Metric.mem_closedBall_self ha.le, rfl⟩
+  have hbdd : BddAbove S := by
+    rw [hSimg]; exact hKcpt.bddAbove_image (continuous_id.dist continuous_const).continuousOn
+  have ha'mem : a' ∈ S := by
+    rw [hSimg, ha']; rw [hSimg]
+    exact (hKcpt.image (continuous_id.dist continuous_const)).sSup_mem (hSne.image _)
+  obtain ⟨ζ₀, hζ₀E, hζ₀d⟩ := ha'mem
+  -- Positivity of `b'`: `f x₀` is off the (closed, nonempty) image sphere by injectivity.
+  have hb'nn : 0 ≤ b' := Metric.infDist_nonneg
+  have hFcpt : IsCompact (f '' Metric.sphere x₀ b) :=
+    (isCompact_sphere x₀ b).image hhomeo.continuous
+  have hbpos : 0 < b := lt_trans ha hab
+  have hFne : (f '' Metric.sphere x₀ b).Nonempty := by
+    obtain ⟨w, hw⟩ := (NormedSpace.sphere_nonempty (x := x₀) (r := b)).mpr hbpos.le
+    exact ⟨f w, w, hw, rfl⟩
+  have hcenter_off : f x₀ ∉ f '' Metric.sphere x₀ b := by
+    rintro ⟨y, hy, hyeq⟩
+    have hxy : x₀ = y := hhomeo.injective hyeq.symm
+    rw [← hxy, Metric.mem_sphere, dist_self] at hy
+    exact hbpos.ne hy
+  have hb'pos : 0 < b' := by
+    rw [hb']
+    exact (hFcpt.isClosed.notMem_iff_infDist_pos hFne).mp hcenter_off
+  have ha'b' : a' < b' := by
+    have hs1 : a' / b' < 1 := by
+      by_contra hle
+      have hge : 1 ≤ a' / b' := not_lt.mp hle
+      nlinarith [hgate]
+    rwa [div_lt_one hb'pos] at hs1
+  set s : ℝ := a' / b' with hs
+  have hspos : 0 < s := div_pos ha'pos hb'pos
+  have hs2 : s ^ 2 < 1 / 2 := hgate
+  -- The rotation aligning the farthest image point to the positive real axis.
+  set θ : ℝ := Complex.arg (ζ₀ - f x₀) with hθ
+  set c : ℂ := Complex.exp (-(θ : ℂ) * Complex.I) / (b' : ℂ) with hc
+  have hb'C : (b' : ℂ) ≠ 0 := by exact_mod_cast hb'pos.ne'
+  have hcne : c ≠ 0 := div_ne_zero (Complex.exp_ne_zero _) hb'C
+  have hcnorm : ‖c‖ = 1 / b' := by
+    rw [hc, norm_div, Complex.norm_exp]
+    simp only [neg_mul, Complex.neg_re, Complex.mul_re, Complex.ofReal_re, Complex.I_re,
+      Complex.ofReal_im, Complex.I_im, mul_zero, mul_one, sub_zero, neg_zero, Real.exp_zero,
+      Complex.norm_real, Real.norm_eq_abs, abs_of_pos hb'pos, one_div]
+  set d : ℂ := -(c * f x₀) with hd
+  set g : ℂ → ℂ := affineMap c d ∘ f with hg
+  have hgQC : IsQCGeometric g K := isQCGeometric_affine_comp hf hcne
+  have hgeq : ∀ w, g w = c * (f w - f x₀) := by
+    intro w; simp only [hg, Function.comp_apply, affineMap_apply, hd]; ring
+  -- `g x₀ = 0`.
+  have hgcenter : g x₀ = 0 := by rw [hgeq]; ring
+  -- Image sets as `affineMap`-images of the `f`-image sets.
+  have hgimg : ∀ (T : Set ℂ), g '' T = affineMap c d '' (f '' T) := by
+    intro T; rw [hg, Set.image_comp]
+  -- Distance from `g w` to `0`: `‖c‖ · dist (f w) (f x₀)`.
+  have hgdist : ∀ w, dist (g w) 0 = ‖c‖ * dist (f w) (f x₀) := by
+    intro w; rw [hgeq, dist_zero_right, dist_eq_norm, norm_mul]
+  -- (hEsub) inner disk image lies in `closedBall 0 s`.
+  have hEsub : g '' Metric.closedBall x₀ a ⊆ Metric.closedBall (0 : ℂ) s := by
+    rintro w ⟨y, hy, rfl⟩
+    rw [Metric.mem_closedBall, hgdist, hcnorm, hs]
+    have hle : dist (f y) (f x₀) ≤ a' :=
+      le_csSup hbdd ⟨f y, ⟨y, hy, rfl⟩, rfl⟩
+    rw [one_div, div_eq_inv_mul]
+    exact mul_le_mul_of_nonneg_left hle (by positivity)
+  -- (hsE) the real point `s` is attained at the farthest image preimage.
+  have hsE : (s : ℂ) ∈ g '' Metric.closedBall x₀ a := by
+    obtain ⟨w₀, hw₀, hw₀eq⟩ := hζ₀E
+    refine ⟨w₀, hw₀, ?_⟩
+    rw [hgeq, hw₀eq]
+    -- `ζ₀ - f x₀ = a' · exp(θ I)` (polar form), so `c · (ζ₀ - f x₀) = a'/b' = s`.
+    have hpolar : ζ₀ - f x₀ = (a' : ℂ) * Complex.exp ((θ : ℂ) * Complex.I) := by
+      have hnorm : (a' : ℂ) = (‖ζ₀ - f x₀‖ : ℂ) := by
+        rw [hζ₀d, dist_eq_norm]
+      rw [hnorm, hθ]
+      exact (Complex.norm_mul_exp_arg_mul_I (ζ₀ - f x₀)).symm
+    rw [hpolar, hc]
+    rw [show (Complex.exp (-(θ : ℂ) * Complex.I) / (b' : ℂ))
+        * ((a' : ℂ) * Complex.exp ((θ : ℂ) * Complex.I))
+        = (a' : ℂ) / (b' : ℂ) * (Complex.exp (-(θ : ℂ) * Complex.I)
+          * Complex.exp ((θ : ℂ) * Complex.I)) by ring]
+    rw [← Complex.exp_add, show -(θ : ℂ) * Complex.I + (θ : ℂ) * Complex.I = 0 by ring,
+      Complex.exp_zero, mul_one, hs, Complex.ofReal_div]
+  -- (hb) the outer sphere image has `infDist 0 · = 1`.
+  have hbnorm : Metric.infDist (0 : ℂ) (g '' Metric.sphere x₀ b) = 1 := by
+    rw [hgimg, ← hgcenter, hg, Function.comp_apply, infDist_affineMap hcne, ← hb', hcnorm,
+      one_div, inv_mul_cancel₀ hb'pos.ne']
+  -- Apply the normalized sandwich to `g` and rewrite `s = a'/b'`.
+  have hres := normalized_sandwich hgQC ha hab hgcenter hspos hs2 hEsub hsE hbnorm
+  rwa [hs] at hres
 
 end RiemannDynamics

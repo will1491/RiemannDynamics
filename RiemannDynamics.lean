@@ -83,6 +83,7 @@ import RiemannDynamics.Analysis.CircularPolyaSzegoExtension
 import RiemannDynamics.Analysis.BaernsteinComparison
 import RiemannDynamics.Analysis.Isoperimetric
 import RiemannDynamics.Analysis.WeakCompactness
+import RiemannDynamics.Analysis.JacobianWeakContinuity
 import RiemannDynamics.Analysis.ArcLengthVariation
 import RiemannDynamics.Analysis.PoissonDirichlet
 import RiemannDynamics.Analysis.Subharmonic

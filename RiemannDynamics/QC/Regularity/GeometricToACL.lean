@@ -5,6 +5,7 @@ Authors: Will (Ziang) Li
 -/
 import RiemannDynamics.QC.Defs.Geometric
 import RiemannDynamics.QC.InverseQC.SliceAC
+import RiemannDynamics.QC.GeometricToAnalytic.Assembly
 import RiemannDynamics.Analysis.Sobolev.AbsolutelyContinuousLines
 import RiemannDynamics.Analysis.Sobolev.GehringLehto.Differentiability
 
@@ -557,7 +558,124 @@ theorem geometric_lineIncrement_bound {f : ℂ → ℂ} {K : ℝ} (hf : IsQCGeom
       (∀ y : ℝ, ∀ u v : ℝ, IntervalIntegrable (fun t : ℝ => ‖g ⟨t, y⟩‖) volume u v) ∧
       ∀ᵐ y : ℝ, ∀ x₁ x₂ : ℝ, x₁ ≤ x₂ →
         ‖f ⟨x₂, y⟩ - f ⟨x₁, y⟩‖ ≤ ∫ t in x₁..x₂, ‖g ⟨t, y⟩‖ := by
-  sorry
+  classical
+  -- The reverse length–area ACL gradient: `gx` is the `x`-partial, `L²_loc`, and for a.e.
+  -- horizontal line the slice is absolutely continuous with a.e.-derivative `gx ⟨·, y⟩`.
+  obtain ⟨gx, _, haclx, _, hgxL2, _⟩ := hf.exists_acl_weakGradient
+  -- The "good" horizontal lines: slices that are AC on every interval with a.e.-derivative `gx`.
+  set Good : ℝ → Prop := fun y =>
+    (∀ a b : ℝ, AbsolutelyContinuousOnInterval (fun x : ℝ => f ⟨x, y⟩) a b) ∧
+      (∀ᵐ x : ℝ, HasDerivAt (fun t : ℝ => f ⟨t, y⟩) (gx ⟨x, y⟩) x) with hGood
+  have hGoodae : ∀ᵐ y : ℝ, Good y := haclx
+  -- The gated gradient: `gx` on good lines, `0` on the null set of bad lines.
+  set g : ℂ → ℂ := fun w => if Good w.im then gx w else 0 with hg
+  -- On good lines, the complex slice derivative `gx ⟨·, y⟩` is interval-integrable and its
+  -- interval integral recovers the slice increment (complex FTC, obtained componentwise).
+  have hgoodII : ∀ y : ℝ, Good y →
+      ∀ u v : ℝ, IntervalIntegrable (fun t : ℝ => gx ⟨t, y⟩) volume u v := by
+    intro y hy u v
+    obtain ⟨hAC, hderiv⟩ := hy
+    have hFre : AbsolutelyContinuousOnInterval (fun x : ℝ => (f ⟨x, y⟩).re) u v :=
+      Complex.reCLM.lipschitz.comp_absolutelyContinuousOnInterval (hAC u v)
+    have hFim : AbsolutelyContinuousOnInterval (fun x : ℝ => (f ⟨x, y⟩).im) u v :=
+      Complex.imCLM.lipschitz.comp_absolutelyContinuousOnInterval (hAC u v)
+    have hre_eq : deriv (fun x : ℝ => (f ⟨x, y⟩).re)
+        =ᵐ[volume.restrict (Set.uIoc u v)] (fun x : ℝ => (gx ⟨x, y⟩).re) := by
+      rw [Filter.EventuallyEq, ae_restrict_iff' measurableSet_uIoc]
+      filter_upwards [hderiv] with x hx _
+      exact (Complex.reCLM.hasFDerivAt.comp_hasDerivAt x hx).deriv
+    have him_eq : deriv (fun x : ℝ => (f ⟨x, y⟩).im)
+        =ᵐ[volume.restrict (Set.uIoc u v)] (fun x : ℝ => (gx ⟨x, y⟩).im) := by
+      rw [Filter.EventuallyEq, ae_restrict_iff' measurableSet_uIoc]
+      filter_upwards [hderiv] with x hx _
+      exact (Complex.imCLM.hasFDerivAt.comp_hasDerivAt x hx).deriv
+    have hre_II : IntervalIntegrable (fun x : ℝ => (gx ⟨x, y⟩).re) volume u v := by
+      rw [intervalIntegrable_iff]; exact hFre.intervalIntegrable_deriv.def'.congr hre_eq
+    have him_II : IntervalIntegrable (fun x : ℝ => (gx ⟨x, y⟩).im) volume u v := by
+      rw [intervalIntegrable_iff]; exact hFim.intervalIntegrable_deriv.def'.congr him_eq
+    have hre_IIℂ : IntervalIntegrable (fun x : ℝ => ((gx ⟨x, y⟩).re : ℂ)) volume u v :=
+      ⟨Complex.ofRealCLM.integrable_comp hre_II.1, Complex.ofRealCLM.integrable_comp hre_II.2⟩
+    have him_IIℂ : IntervalIntegrable (fun x : ℝ => ((gx ⟨x, y⟩).im : ℂ)) volume u v :=
+      ⟨Complex.ofRealCLM.integrable_comp him_II.1, Complex.ofRealCLM.integrable_comp him_II.2⟩
+    have hcomb : IntervalIntegrable
+        (fun x : ℝ => ((gx ⟨x, y⟩).re : ℂ) + (gx ⟨x, y⟩).im * Complex.I) volume u v :=
+      hre_IIℂ.add (him_IIℂ.mul_const Complex.I)
+    exact hcomb.congr (fun x _ => Complex.re_add_im _)
+  -- Complex FTC on a good line: the increment equals the interval integral of `gx ⟨·, y⟩`.
+  have hgoodFTC : ∀ y : ℝ, Good y → ∀ x₁ x₂ : ℝ,
+      f ⟨x₂, y⟩ - f ⟨x₁, y⟩ = ∫ t in x₁..x₂, gx ⟨t, y⟩ := by
+    intro y hy x₁ x₂
+    obtain ⟨hAC, hderiv⟩ := hy
+    have hII := hgoodII y ⟨hAC, hderiv⟩ x₁ x₂
+    have hFre : AbsolutelyContinuousOnInterval (fun x : ℝ => (f ⟨x, y⟩).re) x₁ x₂ :=
+      Complex.reCLM.lipschitz.comp_absolutelyContinuousOnInterval (hAC x₁ x₂)
+    have hFim : AbsolutelyContinuousOnInterval (fun x : ℝ => (f ⟨x, y⟩).im) x₁ x₂ :=
+      Complex.imCLM.lipschitz.comp_absolutelyContinuousOnInterval (hAC x₁ x₂)
+    have hre_eq : deriv (fun x : ℝ => (f ⟨x, y⟩).re)
+        =ᵐ[volume.restrict (Set.uIoc x₁ x₂)] (fun x : ℝ => (gx ⟨x, y⟩).re) := by
+      rw [Filter.EventuallyEq, ae_restrict_iff' measurableSet_uIoc]
+      filter_upwards [hderiv] with x hx _
+      exact (Complex.reCLM.hasFDerivAt.comp_hasDerivAt x hx).deriv
+    have him_eq : deriv (fun x : ℝ => (f ⟨x, y⟩).im)
+        =ᵐ[volume.restrict (Set.uIoc x₁ x₂)] (fun x : ℝ => (gx ⟨x, y⟩).im) := by
+      rw [Filter.EventuallyEq, ae_restrict_iff' measurableSet_uIoc]
+      filter_upwards [hderiv] with x hx _
+      exact (Complex.imCLM.hasFDerivAt.comp_hasDerivAt x hx).deriv
+    have hre_ftc : (∫ t in x₁..x₂, (gx ⟨t, y⟩).re) = (f ⟨x₂, y⟩).re - (f ⟨x₁, y⟩).re := by
+      rw [← hFre.integral_deriv_eq_sub]; exact intervalIntegral.integral_congr_ae
+        (by filter_upwards [(ae_restrict_iff' measurableSet_uIoc).mp hre_eq]
+          with t ht hmem using (ht hmem).symm)
+    have him_ftc : (∫ t in x₁..x₂, (gx ⟨t, y⟩).im) = (f ⟨x₂, y⟩).im - (f ⟨x₁, y⟩).im := by
+      rw [← hFim.integral_deriv_eq_sub]; exact intervalIntegral.integral_congr_ae
+        (by filter_upwards [(ae_restrict_iff' measurableSet_uIoc).mp him_eq]
+          with t ht hmem using (ht hmem).symm)
+    have hintre : (∫ t in x₁..x₂, gx ⟨t, y⟩).re = ∫ t in x₁..x₂, (gx ⟨t, y⟩).re := by
+      simpa using (ContinuousLinearMap.intervalIntegral_comp_comm Complex.reCLM hII).symm
+    have hintim : (∫ t in x₁..x₂, gx ⟨t, y⟩).im = ∫ t in x₁..x₂, (gx ⟨t, y⟩).im := by
+      simpa using (ContinuousLinearMap.intervalIntegral_comp_comm Complex.imCLM hII).symm
+    apply Complex.ext
+    · rw [Complex.sub_re, hintre, hre_ftc]
+    · rw [Complex.sub_im, hintim, him_ftc]
+  refine ⟨g, ?_, ?_, ?_⟩
+  · -- `g =ᵐ gx` on the plane (they differ only on the null union of bad lines), so `g ∈ L²_loc`.
+    have haegx : g =ᵐ[volume] gx := by
+      have hy0 : (volume : Measure ℝ) {y : ℝ | ¬ Good y} = 0 := by
+        rw [← ae_iff]; exact hGoodae
+      have hbadmeas : NullMeasurableSet ({y : ℝ | ¬ Good y}) volume :=
+        MeasureTheory.NullMeasurableSet.of_null hy0
+      have hnull : (volume : Measure ℂ) {w : ℂ | ¬ Good w.im} = 0 := by
+        have hset : {w : ℂ | ¬ Good w.im}
+            = Complex.measurableEquivRealProd ⁻¹'
+              ((Set.univ : Set ℝ) ×ˢ {y : ℝ | ¬ Good y}) := by
+          ext w
+          simp only [Set.mem_setOf_eq, Set.mem_preimage,
+            Complex.measurableEquivRealProd_apply, Set.mem_prod, Set.mem_univ, true_and]
+        rw [hset, Complex.volume_preserving_equiv_real_prod.measure_preimage
+          ((MeasurableSet.univ.nullMeasurableSet).prod hbadmeas),
+          Measure.volume_eq_prod, Measure.prod_prod, hy0, mul_zero]
+      have hae : ∀ᵐ w : ℂ, Good w.im := by rw [ae_iff]; exact hnull
+      filter_upwards [hae] with w hw
+      simp only [hg]; rw [if_pos hw]
+    intro Kc hKc hKcpt
+    exact (hgxL2 Kc hKc hKcpt).ae_eq haegx.symm.restrict
+  · -- Conjunct 2: for every `y`, `‖g ⟨·, y⟩‖` is interval-integrable.
+    intro y u v
+    by_cases hy : Good y
+    · have : (fun t : ℝ => ‖g ⟨t, y⟩‖) = fun t : ℝ => ‖gx ⟨t, y⟩‖ := by
+        funext t; simp only [hg]; rw [if_pos hy]
+      rw [this]; exact (hgoodII y hy u v).norm
+    · have : (fun t : ℝ => ‖g ⟨t, y⟩‖) = fun _ : ℝ => (0 : ℝ) := by
+        funext t; simp only [hg]; rw [if_neg hy, norm_zero]
+      rw [this]; exact intervalIntegrable_const
+  · -- Conjunct 3: for a.e. (good) `y`, the increment is bounded by the interval integral of `‖g‖`.
+    filter_upwards [hGoodae] with y hy x₁ x₂ hx
+    have hgeq : ∀ t : ℝ, g ⟨t, y⟩ = gx ⟨t, y⟩ := fun t => by simp only [hg]; rw [if_pos hy]
+    calc ‖f ⟨x₂, y⟩ - f ⟨x₁, y⟩‖ = ‖∫ t in x₁..x₂, gx ⟨t, y⟩‖ := by rw [hgoodFTC y hy]
+      _ ≤ ∫ t in x₁..x₂, ‖gx ⟨t, y⟩‖ :=
+          intervalIntegral.norm_integral_le_integral_norm hx
+      _ = ∫ t in x₁..x₂, ‖g ⟨t, y⟩‖ := by
+          apply intervalIntegral.integral_congr; intro t _
+          simp only [hgeq t]
 
 /-- **Absolute continuity on almost every horizontal line.** A geometrically `K`-quasiconformal
 homeomorphism `f` has, for almost every `y`, an absolutely continuous horizontal slice
@@ -566,14 +684,16 @@ homeomorphism `f` has, for almost every `y`, an absolutely continuous horizontal
 `absolutelyContinuousOnInterval_of_increment_le_integral`. -/
 theorem geometric_aclHorizontal {f : ℂ → ℂ} {K : ℝ} (hf : IsQCGeometric f K) :
     ∃ g : ℂ → ℂ, MemLpLocOn g 2 Set.univ ∧ ACLHorizontal f g := by
-  sorry
+  obtain ⟨gx, _, haclx, _, hgxL2, _⟩ := hf.exists_acl_weakGradient
+  exact ⟨gx, hgxL2, haclx⟩
 
 /-- **Absolute continuity on almost every vertical line.** The vertical analogue of
 `geometric_aclHorizontal`, obtained by the same length–area argument applied to the transposed
 rectangles (equivalently, by composing with the coordinate swap). -/
 theorem geometric_aclVertical {f : ℂ → ℂ} {K : ℝ} (hf : IsQCGeometric f K) :
     ∃ g : ℂ → ℂ, MemLpLocOn g 2 Set.univ ∧ ACLVertical f g := by
-  sorry
+  obtain ⟨_, gy, _, hacly, _, hgyL2⟩ := hf.exists_acl_weakGradient
+  exact ⟨gy, hgyL2, hacly⟩
 
 /-- **`W^{1,2}_loc` membership of a geometrically quasiconformal map.** A geometrically
 `K`-quasiconformal homeomorphism `f` lies in `W^{1,2}_loc(ℂ)`. Assembled from the horizontal and
@@ -582,7 +702,24 @@ vertical line absolute continuity (`geometric_aclHorizontal`, `geometric_aclVert
 `MemLpLocOn` gradient components. -/
 theorem geometric_memW12loc {f : ℂ → ℂ} {K : ℝ} (hf : IsQCGeometric f K) :
     MemW12loc f := by
-  sorry
+  obtain ⟨gx, gy, haclx, hacly, hgxL2, hgyL2⟩ := hf.exists_acl_weakGradient
+  have hhomeo : IsHomeomorph f := hf.2.1.isHomeomorph
+  have hfcont : Continuous f := hhomeo.continuous
+  -- `f ∈ L²_loc`: continuous, hence locally bounded, hence locally `L²` on compacts.
+  have hfL2 : MemLpLocOn f (2 : ℝ≥0∞) Set.univ := by
+    intro Kc _ hKc
+    have hfin : IsFiniteMeasure (volume.restrict Kc) := by
+      constructor; rw [Measure.restrict_apply_univ]; exact hKc.measure_lt_top
+    obtain ⟨C, hC⟩ := hKc.exists_bound_of_continuousOn hfcont.continuousOn
+    have hmeas : AEStronglyMeasurable f (volume.restrict Kc) := hfcont.aestronglyMeasurable
+    have hbound : ∀ᵐ x ∂(volume.restrict Kc), ‖f x‖ ≤ C := by
+      rw [ae_restrict_iff' hKc.measurableSet]; exact Filter.Eventually.of_forall hC
+    exact (memLp_top_of_bound hmeas C hbound).mono_exponent le_top
+  -- Local integrability of the `L²_loc` gradient components and of `f`.
+  have hfLI : LocallyIntegrable f := hfcont.locallyIntegrable
+  have hgxLI : LocallyIntegrable gx := locallyIntegrable_of_memLpLocOn_two hgxL2
+  have hgyLI : LocallyIntegrable gy := locallyIntegrable_of_memLpLocOn_two hgyL2
+  exact memWklocP_one_of_acl hfL2 hgxL2 hgyL2 hfLI hgxLI hgyLI haclx hacly
 
 /-- **Almost-everywhere differentiability of a geometrically quasiconformal map.** A geometrically
 `K`-quasiconformal homeomorphism `f` is differentiable at almost every point. The homeomorphism is

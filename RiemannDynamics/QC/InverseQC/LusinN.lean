@@ -446,7 +446,7 @@ the Wirtinger chain rule for `g ∘ f = id` inverts the linear relation
 `inverse_differentiableAt_ae`, `dzbar_comp`/`dz_comp`. -/
 theorem IsQCAnalytic.inverse_beltrami {f : ℂ → ℂ} {b : BeltramiCoeff}
     (hf : IsQCAnalytic f b) :
-    ∃ b' : BeltramiCoeff,
+    ∃ b' : BeltramiCoeff, b'.normInf ≤ b.normInf ∧
       ∀ᵐ w, dzbar (⇑(hf.1.1.homeomorph f).symm) w
         = b'.μ w * dz (⇑(hf.1.1.homeomorph f).symm) w := by
   classical
@@ -529,7 +529,13 @@ theorem IsQCAnalytic.inverse_beltrami {f : ℂ → ℂ} {b : BeltramiCoeff}
     refine lt_of_le_of_lt (eLpNormEssSup_le_of_ae_bound (Filter.Eventually.of_forall hμ'_le)) ?_
     rw [show (1 : ℝ≥0∞) = ENNReal.ofReal 1 by simp]
     exact (ENNReal.ofReal_lt_ofReal_iff_of_nonneg hc0).mpr hc1
-  refine ⟨⟨μ', hμ'_meas, hμ'_bound⟩, ?_⟩
+  -- The essential-sup bound `‖μ'‖∞ ≤ c = b.normInf`, exported from the everywhere clamp.
+  have hμ'_essle : eLpNormEssSup μ' volume ≤ ENNReal.ofReal c :=
+    eLpNormEssSup_le_of_ae_bound (Filter.Eventually.of_forall hμ'_le)
+  have hnormInf_le : (⟨μ', hμ'_meas, hμ'_bound⟩ : BeltramiCoeff).normInf ≤ b.normInf := by
+    rw [BeltramiCoeff.normInf, ← hc, ← ENNReal.toReal_ofReal hc0]
+    exact ENNReal.toReal_mono ENNReal.ofReal_ne_top hμ'_essle
+  refine ⟨⟨μ', hμ'_meas, hμ'_bound⟩, hnormInf_le, ?_⟩
   -- **The Beltrami equation for `g`** at a.e. `w`.
   filter_upwards [hgdiff, hfdiff, hdetpos, hbelw, hμbndw]
     with w hwg hwf hwdet hwbel hwbnd

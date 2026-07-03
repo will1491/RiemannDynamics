@@ -40,8 +40,8 @@ point the image circles wind `+1`; together with almost-everywhere differentiabi
 and nonvanishing Jacobian this forces the determinant to be positive
 (`SensePreserving.ae_det_pos`). -/
 theorem geometric_ae_det_pos {f : ℂ → ℂ} {K : ℝ} (hf : IsQCGeometric f K) :
-    ∀ᵐ z : ℂ, 0 < (fderiv ℝ f z).det := by
-  sorry
+    ∀ᵐ z : ℂ, 0 < (fderiv ℝ f z).det :=
+  (IsQCGeometric.reverseLengthArea_data hf).2.1
 
 /-- **Lusin condition N for the geometric quasiconformal inverse.** For a homeomorphism
 `f : ℂ → ℂ` that is differentiable almost everywhere (`hae_diff`) with almost-everywhere
@@ -141,6 +141,37 @@ theorem geometric_sliced_noSingular {f : ℂ → ℂ} {K : ℝ} (hf : IsQCGeomet
     (hae_det : ∀ᵐ z : ℂ, 0 < (fderiv ℝ f z).det)
     {E : Set ℂ} (hEmeas : MeasurableSet E) (hEnull : volume E = 0) :
     ∀ᵐ x : ℝ, volume {y : ℝ | (Complex.mk x y : ℂ) ∈ f '' E} = 0 := by
-  sorry
+  -- The a.e.-nondegeneracy and measurability hypotheses are subsumed: the super-critical weak
+  -- gradient below is extracted from `hf` alone, and Lusin (N) needs only nullity of `E`.
+  have _ := hae_diff
+  have _ := hae_det
+  have _ := hEmeas
+  -- **Forward Lusin (N).** The map `f` has a super-critical (`L^p_loc`, `p > 2`) weak gradient,
+  -- so it maps the null set `E` to a null set (planar Marcus–Mizel / Morrey).
+  obtain ⟨p, gx, gy, hp2, hgrad, hgxp, hgyp⟩ :=
+    IsQCGeometric.exists_weakGradient_memLpLocOn_gt_two hf
+  have hcont : Continuous f := hhomeo.continuous
+  have hT : volume (f '' E) = 0 :=
+    lusinN_image_null_of_weakGradient hp2 hcont hgrad hgxp hgyp hEnull
+  -- **Fubini slicing.** A null planar set meets almost every vertical line in a null set.
+  set T : Set ℂ := f '' E with hTdef
+  -- Transport `T` to a null set `T'` in `ℝ × ℝ` (coordinates `(x, y) = (re, im)`).
+  have hmp : MeasurePreserving Complex.measurableEquivRealProd.symm
+      (volume : Measure (ℝ × ℝ)) (volume : Measure ℂ) :=
+    Complex.volume_preserving_equiv_real_prod.symm Complex.measurableEquivRealProd
+  set T' : Set (ℝ × ℝ) := Complex.measurableEquivRealProd.symm ⁻¹' T with hT'def
+  have hT'null : volume T' = 0 := hmp.quasiMeasurePreserving.preimage_null hT
+  -- For the product measure, `volume T' = 0` ⟹ a.e. first-fiber (the `x = re`) is null.
+  have hprodnull : ∀ᵐ q : ℝ × ℝ ∂((volume : Measure ℝ).prod volume), q ∉ T' := by
+    rw [ae_iff]; simpa [Measure.volume_eq_prod] using hT'null
+  have hae : ∀ᵐ x : ℝ, ∀ᵐ y : ℝ, (x, y) ∉ T' := Measure.ae_ae_of_ae_prod hprodnull
+  refine hae.mono (fun x hx => ?_)
+  have hmem : ∀ y : ℝ, ((x, y) ∈ T') ↔ ((Complex.mk x y) ∈ T) := by
+    intro y
+    simp only [hT'def, Set.mem_preimage, Complex.measurableEquivRealProd_symm_apply]
+  rw [ae_iff] at hx
+  have hset : {y : ℝ | (Complex.mk x y : ℂ) ∈ T} = {y : ℝ | (x, y) ∈ T'} := by
+    ext y; rw [Set.mem_setOf_eq, Set.mem_setOf_eq, hmem y]
+  rw [hset]; simpa using hx
 
 end RiemannDynamics

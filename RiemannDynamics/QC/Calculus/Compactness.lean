@@ -707,14 +707,47 @@ theorem exists_subseq_tendstoLocallyUniformly_isQCGeometric {fₙ : ℕ → ℂ 
     have hKsub : K' ⊆ insert p (insert q K') :=
       (Set.subset_insert _ _).trans (Set.subset_insert _ _)
     exact (equicontinuousOn_of_uniform_isQCGeometric hfK hScpt hpS hqS hpq hδ0 hlb hub).mono hKsub
-  -- Inverse equicontinuity on every compact set.
+  -- The inverse family is normalized at the image points `a, b`: `gₙ a = p`, `gₙ b = q`.
+  have hga' : ∀ n, gₙ n a = p := by intro n; rw [← hfp n]; exact hli n p
+  have hgb' : ∀ n, gₙ n b = q := by intro n; rw [← hfq n]; exact hli n q
+  -- Inverse equicontinuity on every compact set. The image-side cover `U := closedBall p C` for the
+  -- uniform inverse-image bound (`exists_uniform_image_bound` applied to the normalized inverse
+  -- family) supplies the covering hypothesis of `equicontinuousOn_inv_of_uniform_isQCGeometric`.
+  have hgKall : ∀ n, IsQCGeometric (gₙ n) K := by
+    intro n
+    have hinvK := isQCGeometric_inv_of_isQCGeometric (hfK n)
+    have hbridge : ⇑((hfK n).2.1.isHomeomorph.homeomorph (fₙ n)).symm = gₙ n := by
+      funext w
+      have hfinj : Function.Injective (fₙ n) := (hfK n).2.1.isHomeomorph.injective
+      have hL : fₙ n (((hfK n).2.1.isHomeomorph.homeomorph (fₙ n)).symm w) = w := by
+        rw [← IsHomeomorph.homeomorph_apply (fₙ n) (hfK n).2.1.isHomeomorph
+              (((hfK n).2.1.isHomeomorph.homeomorph (fₙ n)).symm w)]
+        exact ((hfK n).2.1.isHomeomorph.homeomorph (fₙ n)).apply_symm_apply w
+      have hR : fₙ n (gₙ n w) = w := hri n w
+      exact hfinj (hL.trans hR.symm)
+    rwa [hbridge] at hinvK
   have heqc_g : ∀ K' : Set ℂ, IsCompact K' → EquicontinuousOn gₙ K' := by
     intro K' hK'
     have hScpt : IsCompact (insert p (insert q K')) := (hK'.insert q).insert p
     have hpS : p ∈ insert p (insert q K') := Set.mem_insert _ _
     have hqS : q ∈ insert p (insert q K') := Set.mem_insert_of_mem _ (Set.mem_insert _ _)
+    -- Uniform bound `C` on `dist (gₙ x₀)(gₙ x)` over the compact `insert a (insert b K')`.
+    have hSacpt : IsCompact (insert a (insert b K')) := (hK'.insert b).insert a
+    have haS : a ∈ insert a (insert b K') := Set.mem_insert _ _
+    have hbS : b ∈ insert a (insert b K') := Set.mem_insert_of_mem _ (Set.mem_insert _ _)
+    have hubg : ∀ n, dist (gₙ n a) (gₙ n b) ≤ dist p q := fun n => by
+      rw [hga' n, hgb' n]
+    obtain ⟨C, hC⟩ := exists_uniform_image_bound hgKall hSacpt haS hbS hab hubg
+    -- `U := closedBall p C` covers all `gₙ '' K'`, so `K' ⊆ fₙ '' U`.
+    set U : Set ℂ := Metric.closedBall p C with hUdef
+    have hUcpt : IsCompact U := isCompact_closedBall p C
+    have hTU : ∀ n, K' ⊆ fₙ n '' U := by
+      intro n z hz
+      refine ⟨gₙ n z, ?_, hri n z⟩
+      rw [hUdef, Metric.mem_closedBall, ← hga' n]
+      exact hC n z (Set.subset_insert _ _ (Set.subset_insert _ _ hz)) a haS
     exact equicontinuousOn_inv_of_uniform_isQCGeometric hfK gₙ
-      (fun n => ⟨hli n, hri n⟩) hScpt hpS hqS hpq hδ0 hlb hub hK'
+      (fun n => ⟨hli n, hri n⟩) hScpt hpS hqS hpq hδ0 hlb hub hK' hUcpt hTU
   -- Pointwise boundedness of both families.
   have hga : ∀ n, gₙ n a = p := by intro n; rw [← hfp n]; exact hli n p
   have hbd_f : ∀ z : ℂ, ∃ Q : Set ℂ, IsCompact Q ∧ ∀ n, fₙ n z ∈ Q := by
