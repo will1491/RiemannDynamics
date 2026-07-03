@@ -458,7 +458,7 @@ is consumed by the main `isQCGeometric_of_isQCAnalytic` proof for the good sourc
 argument is the dilatation-controlled change of variables: from the a.e. bound
 `‖(Df)⁻¹‖² · det (Df) ≤ K`, the transferred density `σ(w) = ρ(g w)·‖(Df(g w))⁻¹‖`
 (`g = f⁻¹`) is admissible for the good image with energy at most `K · ∫ ρ²`. -/
-private theorem pushforwardGood_modulus_le {f : ℂ → ℂ} {K : ℝ} (hK : 1 ≤ K)
+theorem pushforwardGood_modulus_le {f : ℂ → ℂ} {K : ℝ} (hK : 1 ≤ K)
     {b : BeltramiCoeff} (hb : b.normInf ≤ (K - 1) / (K + 1)) (hf : IsQCAnalytic f b)
     (Γ : Set (ℝ → ℂ)) (_hΓcont : ∀ γ ∈ Γ, Continuous γ)
     (_hΓac : ∀ γ ∈ Γ, AbsolutelyContinuousOnInterval γ 0 1) :

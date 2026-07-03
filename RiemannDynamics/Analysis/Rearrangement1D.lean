@@ -743,6 +743,114 @@ theorem lintegral_rpow_decreasingRearrangeSymm_eq (hT : 0 ≤ T) (hf : Measurabl
   rw [hrw (decreasingRearrangeSymm T f), hrw f]
   exact distribFun_decreasingRearrangeSymm hT ((ENNReal.ofReal t) ^ (p⁻¹))
 
+/-- **The symmetric-decreasing rearrangement of a centered-trough profile is its half-period
+translate.** Let `g : ℝ → ℝ≥0∞` be symmetric about the midpoint (`g (T/2 + t) = g (T/2 - t)` for
+all `t`), nondecreasing on `[T/2, T]`, and continuous on `[T/2, T]` — a profile with a central
+trough at `T/2` and peaks at the endpoints. Then for `x ∈ (0, T)` the symmetric-decreasing
+rearrangement moves the peak to the center: `g^sym x = g (T - |x - T/2|)`.
+
+The superlevel set `{g > g x₀}` (`x₀ := T - |x - T/2|`) is contained in the pair of end intervals
+`[0, T - x₀) ∪ (x₀, T]` by monotonicity and reflection, giving the upper bound; conversely each
+level `t < g x₀` has superlevel set containing `[0, T - x₀ + ε] ∪ [x₀ - ε, T]` for a small
+continuity margin `ε`, giving the lower bound through the distribution function. -/
+theorem decreasingRearrangeSymm_symmetric_trough {T : ℝ} {g : ℝ → ℝ≥0∞}
+    (hsymm : ∀ t : ℝ, g (T / 2 + t) = g (T / 2 - t))
+    (hmono : MonotoneOn g (Icc (T / 2) T))
+    (hcont : ContinuousOn g (Icc (T / 2) T))
+    {x : ℝ} (hx : x ∈ Ioo (0 : ℝ) T) :
+    decreasingRearrangeSymm T g x = g (T - |x - T / 2|) := by
+  have hrefl : ∀ z : ℝ, g (T - z) = g z := by
+    intro z
+    have h := hsymm (T / 2 - z)
+    rwa [show T / 2 + (T / 2 - z) = T - z by ring, show T / 2 - (T / 2 - z) = z by ring] at h
+  set m : ℝ := |x - T / 2| with hm
+  have hm0 : 0 ≤ m := abs_nonneg _
+  have hmT : m < T / 2 := by
+    rw [hm, abs_lt]
+    exact ⟨by linarith [hx.1], by linarith [hx.2]⟩
+  set x₀ : ℝ := T - m with hx₀
+  have hx₀mem : x₀ ∈ Icc (T / 2) T := ⟨by rw [hx₀]; linarith, by rw [hx₀]; linarith⟩
+  have hx₀gt : T / 2 < x₀ := by rw [hx₀]; linarith
+  change decreasingRearrange T g (2 * m) = g x₀
+  refine le_antisymm ?_ ?_
+  · -- upper bound: the superlevel set above `g x₀` fits in the two end intervals
+    apply sInf_le
+    change distribFun T g (g x₀) ≤ ENNReal.ofReal (2 * m)
+    have hsub : {z | z ∈ Icc (0 : ℝ) T ∧ g x₀ < g z} ⊆ Ico 0 m ∪ Ioc x₀ T := by
+      rintro z ⟨hzI, hzg⟩
+      rcases le_or_gt z (T / 2) with hz2 | hz2
+      · left
+        refine ⟨hzI.1, ?_⟩
+        by_contra hcon
+        push Not at hcon
+        have h1 : T - z ∈ Icc (T / 2) T := ⟨by linarith, by linarith [hzI.1]⟩
+        have h2 : T - z ≤ x₀ := by rw [hx₀]; linarith
+        have := hmono h1 hx₀mem h2
+        rw [hrefl z] at this
+        exact absurd hzg (not_lt.mpr this)
+      · right
+        refine ⟨?_, hzI.2⟩
+        by_contra hcon
+        push Not at hcon
+        exact absurd hzg (not_lt.mpr (hmono ⟨hz2.le, hzI.2⟩ hx₀mem hcon))
+    calc volume {z | z ∈ Icc (0 : ℝ) T ∧ g x₀ < g z}
+        ≤ volume (Ico (0 : ℝ) m ∪ Ioc x₀ T) := measure_mono hsub
+      _ ≤ volume (Ico (0 : ℝ) m) + volume (Ioc x₀ T) := measure_union_le _ _
+      _ = ENNReal.ofReal (2 * m) := by
+          rw [Real.volume_Ico, Real.volume_Ioc, sub_zero, show T - x₀ = m by rw [hx₀]; ring,
+            ← ENNReal.ofReal_add hm0 hm0]
+          congr 1
+          ring
+  · -- lower bound: any admissible level `t` dominates `g x₀` by a continuity margin
+    apply le_sInf
+    intro t ht
+    simp only [Set.mem_setOf_eq] at ht
+    by_contra hcon
+    push Not at hcon
+    have hcw : ContinuousWithinAt g (Icc (T / 2) T) x₀ := hcont x₀ hx₀mem
+    have hmem : g ⁻¹' Ioi t ∈ 𝓝[Icc (T / 2) T] x₀ := hcw (isOpen_Ioi.mem_nhds hcon)
+    rw [Metric.mem_nhdsWithin_iff] at hmem
+    obtain ⟨ε, hε, hball⟩ := hmem
+    set δ : ℝ := min (ε / 2) ((x₀ - T / 2) / 2) with hδ
+    have hδ0 : 0 < δ := lt_min (by linarith) (by linarith)
+    have hδε : δ < ε := lt_of_le_of_lt (min_le_left _ _) (by linarith)
+    have hδx₀ : 2 * δ ≤ x₀ - T / 2 := by
+      have := min_le_right (ε / 2) ((x₀ - T / 2) / 2)
+      rw [hδ]
+      linarith
+    have hsup1 : Icc (x₀ - δ) T ⊆ {z | z ∈ Icc (0 : ℝ) T ∧ t < g z} := by
+      rintro z ⟨hz1, hz2⟩
+      have hzIcc : z ∈ Icc (T / 2) T := ⟨by linarith, hz2⟩
+      refine ⟨⟨by linarith, hz2⟩, ?_⟩
+      rcases le_or_gt x₀ z with hc | hc
+      · exact lt_of_lt_of_le hcon (hmono hx₀mem hzIcc hc)
+      · have hzball : z ∈ Metric.ball x₀ ε := by
+          rw [Metric.mem_ball, Real.dist_eq, abs_lt]
+          exact ⟨by linarith, by linarith⟩
+        exact hball ⟨hzball, hzIcc⟩
+    have hsup2 : Icc (0 : ℝ) (m + δ) ⊆ {z | z ∈ Icc (0 : ℝ) T ∧ t < g z} := by
+      rintro z ⟨hz1, hz2⟩
+      have h1 : T - z ∈ Icc (x₀ - δ) T := ⟨by rw [hx₀]; linarith, by linarith⟩
+      have h2 := hsup1 h1
+      exact ⟨⟨hz1, by linarith⟩, by rw [← hrefl z]; exact h2.2⟩
+    have hdisj : Disjoint (Icc (0 : ℝ) (m + δ)) (Icc (x₀ - δ) T) := by
+      rw [Set.disjoint_left]
+      intro a ha1 ha2
+      have hlt : m + δ < x₀ - δ := by rw [hx₀]; linarith
+      linarith [ha1.2, ha2.1]
+    have hD : ENNReal.ofReal (2 * m + 2 * δ) ≤ distribFun T g t := by
+      have hle : volume (Icc (0 : ℝ) (m + δ) ∪ Icc (x₀ - δ) T)
+          ≤ volume {z | z ∈ Icc (0 : ℝ) T ∧ t < g z} :=
+        measure_mono (Set.union_subset hsup2 hsup1)
+      rwa [measure_union hdisj measurableSet_Icc, Real.volume_Icc, Real.volume_Icc, sub_zero,
+        show T - (x₀ - δ) = m + δ by rw [hx₀]; ring,
+        ← ENNReal.ofReal_add (by linarith) (by linarith),
+        show m + δ + (m + δ) = 2 * m + 2 * δ by ring] at hle
+    have hlt : ENNReal.ofReal (2 * m) < ENNReal.ofReal (2 * m + 2 * δ) := by
+      rw [ENNReal.ofReal_lt_ofReal_iff (by linarith)]
+      linarith
+    exact absurd (lt_of_lt_of_le hlt (hD.trans ht)) (lt_irrefl _)
+
 end RiemannDynamics
 
 end

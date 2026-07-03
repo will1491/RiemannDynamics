@@ -662,4 +662,282 @@ theorem SubharmonicOn.poissonModify {f : ℂ → ℝ} {U : Set ℂ}
       _ = Real.circleAverage P c₀ r := hHavgP
   · exact hPsub_off c₀ hc₀ hc₀ball r hr hballr
 
+/-- **Subharmonicity from arbitrarily small circles.** A continuous function on an open set that
+satisfies the sub-mean-value inequality on all sufficiently small circles at each point satisfies it
+on every circle whose closed disk lies in the set: comparison with the harmonic (Poisson)
+modification on the closed disk reduces the global inequality to the local one through the maximum
+principle, which itself consumes only one small circle per point. -/
+theorem subharmonicOn_of_locally {f : ℂ → ℝ} {U : Set ℂ} (hU : IsOpen U)
+    (hf : ContinuousOn f U)
+    (hloc : ∀ c ∈ U, ∃ r₀ > 0, ∀ r : ℝ, 0 < r → r < r₀ → Metric.closedBall c r ⊆ U →
+      f c ≤ Real.circleAverage f c r) :
+    SubharmonicOn f U := by
+  classical
+  have _ := hU
+  refine ⟨hf, ?_⟩
+  intro c _ r hr hball
+  have hrne : r ≠ 0 := ne_of_gt hr
+  have hsphere : Metric.sphere c r ⊆ U := (Metric.sphere_subset_closedBall).trans hball
+  have hfsphere : ContinuousOn f (Metric.sphere c r) := hf.mono hsphere
+  -- The harmonic (Poisson) modification `P` of `f` on the disk.
+  set P : ℂ → ℝ := poissonModify f c r with hP
+  have hPoff : ∀ z, z ∉ Metric.ball c r → P z = f z := by
+    intro z hz; simp only [hP, poissonModify, if_neg hz]
+  have hQharm : InnerProductSpace.HarmonicOnNhd (poissonIntegral f c r) (Metric.ball c r) :=
+    poissonIntegral_harmonicOn f c hr hfsphere
+  -- `P` is harmonic on the open ball.
+  have hPharm : InnerProductSpace.HarmonicOnNhd P (Metric.ball c r) := by
+    intro w hw
+    have heqw : P =ᶠ[𝓝 w] poissonIntegral f c r := by
+      filter_upwards [Metric.isOpen_ball.mem_nhds hw] with z hz
+      simp only [hP, poissonModify, if_pos hz]
+    rw [InnerProductSpace.harmonicAt_congr_nhds heqw]
+    exact hQharm w hw
+  -- `P` is continuous on the closed ball (Poisson boundary limit matches `f` on the circle).
+  have hPcb : ContinuousOn P (Metric.closedBall c r) := by
+    have hQball : ContinuousOn (poissonIntegral f c r) (Metric.ball c r) := hQharm.continuousOn
+    have hsplit : Metric.closedBall c r = Metric.ball c r ∪ Metric.sphere c r :=
+      Metric.ball_union_sphere.symm
+    intro ζ hζ
+    rw [Metric.mem_closedBall] at hζ
+    rcases lt_or_eq_of_le hζ with hlt | heq
+    · have hζball : ζ ∈ Metric.ball c r := Metric.mem_ball.2 hlt
+      have heqf : P =ᶠ[𝓝 ζ] poissonIntegral f c r := by
+        filter_upwards [Metric.isOpen_ball.mem_nhds hζball] with z hz
+        simp only [hP, poissonModify, if_pos hz]
+      have hca : ContinuousAt (poissonIntegral f c r) ζ :=
+        (hQball ζ hζball).continuousAt (Metric.isOpen_ball.mem_nhds hζball)
+      exact (hca.congr heqf.symm).continuousWithinAt
+    · have hζsphere : ζ ∈ Metric.sphere c r := Metric.mem_sphere.2 heq
+      have hnotball : ζ ∉ Metric.ball c r := by rw [Metric.mem_ball, heq]; exact lt_irrefl _
+      have hPζ : P ζ = f ζ := hPoff ζ hnotball
+      rw [hsplit]
+      apply ContinuousWithinAt.union
+      · have htend : Tendsto (poissonIntegral f c r) (𝓝[Metric.ball c r] ζ) (𝓝 (f ζ)) :=
+          poissonIntegral_tendsto_boundary f c hr hfsphere hζsphere
+        have heqball : P =ᶠ[𝓝[Metric.ball c r] ζ] poissonIntegral f c r := by
+          filter_upwards [self_mem_nhdsWithin] with z hz
+          simp only [hP, poissonModify, if_pos hz]
+        rw [ContinuousWithinAt, hPζ]
+        exact htend.congr' heqball.symm
+      · have hcwf : ContinuousWithinAt f (Metric.sphere c r) ζ := hfsphere ζ hζsphere
+        apply hcwf.congr (fun z hz => ?_) hPζ
+        have : z ∉ Metric.ball c r := by
+          rw [Metric.mem_ball, Metric.mem_sphere.1 hz]; exact lt_irrefl _
+        simp only [hP, poissonModify, if_neg this]
+  -- The difference `g = f - P` vanishes on the circle and obeys the small-circle inequality.
+  set g : ℂ → ℝ := fun z => f z - P z with hg
+  have hgcont : ContinuousOn g (Metric.closedBall c r) := by
+    apply ContinuousOn.sub (hf.mono hball) hPcb
+  -- Maximum principle from small circles: `g ≤ 0` on the open ball.
+  have hgle : ∀ z ∈ Metric.ball c r, g z ≤ 0 := by
+    intro c₁ hc₁
+    by_contra hcon
+    rw [not_le] at hcon
+    -- The strictly subharmonic perturbation `q z = ‖z - c₁‖²` (with `q c₁ = 0`).
+    set q : ℂ → ℝ := fun z => ‖z - c₁‖ ^ 2 with hq
+    -- Exact circle average of `q`: `⨍_{sphere a ρ} q = ‖a - c₁‖² + ρ²`.
+    have hqavg : ∀ (a : ℂ) (ρ : ℝ),
+        Real.circleAverage q a ρ = ‖a - c₁‖ ^ 2 + ρ ^ 2 := by
+      intro a ρ
+      have hcm : ∀ θ : ℝ, ‖circleMap a ρ θ - c₁‖ ^ 2
+          = (‖a - c₁‖ ^ 2 + ρ ^ 2) + 2 * ρ * (a - c₁).re * Real.cos θ
+            + 2 * ρ * (a - c₁).im * Real.sin θ := by
+        intro θ
+        rw [Complex.sq_norm, Complex.sq_norm, Complex.normSq_apply, Complex.normSq_apply]
+        simp only [circleMap, Complex.add_re, Complex.add_im, Complex.sub_re, Complex.sub_im,
+          Complex.mul_re, Complex.mul_im, Complex.ofReal_re, Complex.ofReal_im,
+          Complex.exp_ofReal_mul_I_re, Complex.exp_ofReal_mul_I_im]
+        nlinarith [Real.sin_sq_add_cos_sq θ]
+      rw [Real.circleAverage_def]
+      have hinteq : (∫ θ in (0 : ℝ)..(2 * π), q (circleMap a ρ θ))
+          = ∫ θ in (0 : ℝ)..(2 * π), ((‖a - c₁‖ ^ 2 + ρ ^ 2)
+              + 2 * ρ * (a - c₁).re * Real.cos θ + 2 * ρ * (a - c₁).im * Real.sin θ) :=
+        intervalIntegral.integral_congr (fun θ _ => hcm θ)
+      rw [hinteq]
+      have hc1 : IntervalIntegrable (fun _ : ℝ => ‖a - c₁‖ ^ 2 + ρ ^ 2) volume 0 (2 * π) :=
+        continuous_const.intervalIntegrable _ _
+      have hc2 : IntervalIntegrable (fun θ : ℝ => 2 * ρ * (a - c₁).re * Real.cos θ)
+          volume 0 (2 * π) := by
+        have : Continuous fun θ : ℝ => 2 * ρ * (a - c₁).re * Real.cos θ := by fun_prop
+        exact this.intervalIntegrable _ _
+      have hc3 : IntervalIntegrable (fun θ : ℝ => 2 * ρ * (a - c₁).im * Real.sin θ)
+          volume 0 (2 * π) := by
+        have : Continuous fun θ : ℝ => 2 * ρ * (a - c₁).im * Real.sin θ := by fun_prop
+        exact this.intervalIntegrable _ _
+      rw [intervalIntegral.integral_add (hc1.add hc2) hc3,
+        intervalIntegral.integral_add hc1 hc2, intervalIntegral.integral_const,
+        intervalIntegral.integral_const_mul, intervalIntegral.integral_const_mul,
+        integral_cos, integral_sin]
+      simp only [Real.sin_zero, Real.sin_two_pi, Real.cos_zero, Real.cos_two_pi, smul_eq_mul]
+      have hpi : (2 * π) ≠ 0 := by positivity
+      field_simp
+      ring
+    have hqcont : Continuous q := by rw [hq]; fun_prop
+    -- A uniform bound `q ≤ C` on the compact closed disk.
+    have hKcompact : IsCompact (Metric.closedBall c r) := isCompact_closedBall c r
+    obtain ⟨C, hC⟩ := hKcompact.exists_bound_of_continuousOn (f := q) hqcont.continuousOn
+    have hc₁K : c₁ ∈ Metric.closedBall c r := Metric.ball_subset_closedBall hc₁
+    have hC0 : (0 : ℝ) ≤ C := le_trans (norm_nonneg _) (hC c₁ hc₁K)
+    have hqle : ∀ z ∈ Metric.closedBall c r, q z ≤ C := fun z hz => le_trans (le_abs_self _)
+      (by simpa [Real.norm_eq_abs] using hC z hz)
+    -- Choose `ε > 0` so small that `ε C < g c₁`.
+    set ε : ℝ := g c₁ / (C + 1) with hε
+    have hεpos : 0 < ε := by
+      rw [hε]; apply div_pos (by linarith [hcon]) (by positivity)
+    have hperturb : ε * C < g c₁ := by
+      rw [hε]
+      have hCC : C / (C + 1) < 1 := by
+        rw [div_lt_one (by positivity)]; linarith
+      have : g c₁ / (C + 1) * C = g c₁ * (C / (C + 1)) := by ring
+      rw [this]
+      nlinarith [hcon, hCC]
+    -- The perturbed function `G = g + ε q` attains its maximum on the closed disk at some `p`.
+    set G : ℂ → ℝ := fun z => g z + ε * q z with hG
+    have hGcont : ContinuousOn G (Metric.closedBall c r) := by
+      apply ContinuousOn.add hgcont
+      exact continuousOn_const.mul hqcont.continuousOn
+    obtain ⟨p, hpK, hpmax⟩ := hKcompact.exists_isMaxOn ⟨c₁, hc₁K⟩ hGcont
+    -- The maximum point cannot lie in the open ball: `hloc` supplies a small circle there.
+    have hpV : p ∉ Metric.ball c r := by
+      intro hpball
+      obtain ⟨δ, hδpos, hδsub⟩ := Metric.isOpen_iff.1 Metric.isOpen_ball p hpball
+      obtain ⟨r₀, hr₀pos, hsmv⟩ := hloc p (hball (Metric.ball_subset_closedBall hpball))
+      set ρ : ℝ := min (δ / 2) (r₀ / 2) with hρ
+      have hρpos : 0 < ρ := by
+        rw [hρ]; exact lt_min (by linarith) (by linarith)
+      have hρltr₀ : ρ < r₀ := by
+        rw [hρ]; exact lt_of_le_of_lt (min_le_right _ _) (by linarith)
+      have hρabs : |ρ| = ρ := abs_of_pos hρpos
+      have hballρ : Metric.closedBall p ρ ⊆ Metric.ball c r := by
+        intro z hz
+        apply hδsub
+        rw [Metric.mem_ball]
+        rw [Metric.mem_closedBall] at hz
+        have hρδ : ρ < δ := by
+          rw [hρ]; exact lt_of_le_of_lt (min_le_left _ _) (by linarith)
+        linarith
+      have hballρU : Metric.closedBall p ρ ⊆ U :=
+        hballρ.trans (Metric.ball_subset_closedBall.trans hball)
+      have hsphereρ : Metric.sphere p ρ ⊆ Metric.closedBall c r :=
+        (Metric.sphere_subset_closedBall).trans (hballρ.trans Metric.ball_subset_closedBall)
+      -- Circle-integrability on `sphere p ρ`.
+      have hfci : CircleIntegrable f p ρ :=
+        (hf.mono ((Metric.sphere_subset_closedBall).trans hballρU)).circleIntegrable hρpos.le
+      have hPci : CircleIntegrable P p ρ := (hPcb.mono hsphereρ).circleIntegrable hρpos.le
+      have hgci : CircleIntegrable g p ρ := (hgcont.mono hsphereρ).circleIntegrable hρpos.le
+      have hGci : CircleIntegrable G p ρ := (hGcont.mono hsphereρ).circleIntegrable hρpos.le
+      -- Sub-mean-value for `g` on this circle: `f` by `hloc`, `P` by harmonicity.
+      have hfmean : f p ≤ Real.circleAverage f p ρ := hsmv ρ hρpos hρltr₀ hballρU
+      have hPmeanρ : Real.circleAverage P p ρ = P p :=
+        HarmonicOnNhd.circleAverage_eq (by rw [hρabs]; exact hPharm.mono hballρ)
+      have hgmean : g p ≤ Real.circleAverage g p ρ := by
+        rw [hg]; simp only
+        rw [show Real.circleAverage (fun z => f z - P z) p ρ
+              = Real.circleAverage f p ρ - Real.circleAverage P p ρ from
+            Real.circleAverage_fun_sub hfci hPci, hPmeanρ]
+        linarith [hfmean]
+      have hqmean : Real.circleAverage q p ρ = q p + ρ ^ 2 := by
+        rw [hqavg p ρ, hq]
+      -- Strict sub-mean-value inequality for `G` at `p`.
+      have hGavg : Real.circleAverage G p ρ
+          = Real.circleAverage g p ρ + ε * (q p + ρ ^ 2) := by
+        rw [hG]
+        rw [show (fun z => g z + ε * q z) = g + (fun z => ε * q z) from rfl]
+        rw [Real.circleAverage_add hgci (by
+          apply (((continuousOn_const).mul hqcont.continuousOn).circleIntegrable hρpos.le))]
+        rw [show (fun z => ε * q z) = (fun z => ε • q z) from funext fun z => by
+          simp [smul_eq_mul]]
+        rw [Real.circleAverage_fun_smul, hqmean, smul_eq_mul]
+      have hGstrict : G p < Real.circleAverage G p ρ := by
+        rw [hGavg, hG]
+        have : ε * q p < ε * (q p + ρ ^ 2) := by
+          apply mul_lt_mul_of_pos_left _ hεpos
+          nlinarith [hρpos]
+        simp only
+        linarith [hgmean]
+      -- But `p` is a maximum of `G`, so `⨍ G ≤ G p`.
+      have hGmax_avg : Real.circleAverage G p ρ ≤ G p := by
+        apply Real.circleAverage_mono_on_of_le_circle hGci
+        intro x hx
+        have hxK : x ∈ Metric.closedBall c r := hsphereρ (by rwa [hρabs] at hx)
+        exact hpmax hxK
+      linarith [hGstrict, hGmax_avg]
+    -- Hence `p` lies on the circle, where `g p = 0`; the maximum forces `g c₁ ≤ ε C`.
+    have hgp : g p = 0 := by
+      rw [hg]; simp only [hPoff p hpV, sub_self]
+    have hmaxc₁ : G c₁ ≤ G p := hpmax hc₁K
+    have hGc₁ : G c₁ = g c₁ := by
+      rw [hG]; simp only [hq, sub_self, norm_zero]; ring
+    have hGp : G p ≤ ε * C := by
+      rw [hG]; simp only
+      have hqpC : q p ≤ C := hqle p hpK
+      linarith [hgp, mul_le_mul_of_nonneg_left hqpC hεpos.le]
+    rw [hGc₁] at hmaxc₁
+    linarith [hmaxc₁, hGp, hperturb]
+  -- Conclude via the mean value of the harmonic modification at the full radius.
+  have hfcP : f c ≤ P c := by
+    have := hgle c (Metric.mem_ball_self hr)
+    rw [hg] at this; simp only at this; linarith
+  have hPcontcl : ContinuousOn P (closure (Metric.ball c r)) := by
+    rw [closure_ball c hrne]; exact hPcb
+  have hPmean : Real.circleAverage P c r = P c := by
+    apply HarmonicContOnCl.circleAverage_eq
+    refine ⟨?_, ?_⟩
+    · rw [abs_of_pos hr]; exact hPharm
+    · rw [abs_of_pos hr]; exact hPcontcl
+  have hPavgf : Real.circleAverage P c r = Real.circleAverage f c r := by
+    apply Real.circleAverage_congr_sphere
+    intro z hz
+    rw [abs_of_pos hr] at hz
+    have : z ∉ Metric.ball c r := by
+      rw [Metric.mem_ball, Metric.mem_sphere.1 hz]; exact lt_irrefl _
+    exact hPoff z this
+  calc f c ≤ P c := hfcP
+    _ = Real.circleAverage P c r := hPmean.symm
+    _ = Real.circleAverage f c r := hPavgf
+
+/-- **Subharmonicity of the extension by zero.** For `u` harmonic and nonnegative on `V ∩ W`, if
+the extension of `u` by `0` off `V` is continuous on the open set `W`, then that extension is
+subharmonic on `W`. At a centre in `V` small circle averages agree with those of `u` and the
+mean-value equality applies; at a centre outside `V` the extension vanishes while its circle
+averages are nonnegative. -/
+theorem subharmonicOn_indicator_of_harmonicOnNhd {u : ℂ → ℝ} {V W : Set ℂ}
+    (hV : IsOpen V) (hW : IsOpen W)
+    (hu : InnerProductSpace.HarmonicOnNhd u (V ∩ W))
+    (hu0 : ∀ z ∈ V ∩ W, 0 ≤ u z)
+    (hcont : ContinuousOn (Set.indicator V u) W) :
+    SubharmonicOn (Set.indicator V u) W := by
+  apply subharmonicOn_of_locally hW hcont
+  intro c hc
+  by_cases hcV : c ∈ V
+  · -- Centre in `V`: small closed disks lie in `V ∩ W`, where the indicator equals `u` and the
+    -- mean-value equality for the harmonic function `u` applies.
+    obtain ⟨r₀, hr₀pos, hr₀sub⟩ := Metric.isOpen_iff.1 (hV.inter hW) c ⟨hcV, hc⟩
+    refine ⟨r₀, hr₀pos, fun r hr hrlt _ => ?_⟩
+    have hball : Metric.closedBall c r ⊆ V ∩ W :=
+      (Metric.closedBall_subset_ball hrlt).trans hr₀sub
+    have habs : |r| = r := abs_of_pos hr
+    have havg : Real.circleAverage (Set.indicator V u) c r = Real.circleAverage u c r := by
+      apply Real.circleAverage_congr_sphere
+      intro z hz
+      rw [habs] at hz
+      exact Set.indicator_of_mem (hball (Metric.sphere_subset_closedBall hz)).1 u
+    have hmean : Real.circleAverage u c r = u c :=
+      HarmonicOnNhd.circleAverage_eq (by rw [habs]; exact hu.mono hball)
+    have heq : Set.indicator V u c = Real.circleAverage (Set.indicator V u) c r := by
+      rw [Set.indicator_of_mem hcV, havg, hmean]
+    exact heq.le
+  · -- Centre off `V`: the indicator vanishes at `c` while its circle averages are nonnegative,
+    -- since on each admissible circle the integrand is `u ≥ 0` on `V ∩ W` and `0` off `V`.
+    refine ⟨1, one_pos, fun r hr _ hball => ?_⟩
+    rw [Set.indicator_of_notMem hcV]
+    apply Real.circleAverage_nonneg_of_nonneg
+    intro z hz
+    rw [abs_of_pos hr] at hz
+    have hzW : z ∈ W := hball (Metric.sphere_subset_closedBall hz)
+    by_cases hzV : z ∈ V
+    · rw [Set.indicator_of_mem hzV]; exact hu0 z ⟨hzV, hzW⟩
+    · rw [Set.indicator_of_notMem hzV]
+
 end RiemannDynamics

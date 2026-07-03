@@ -574,6 +574,72 @@ theorem arcLengthLineIntegral_le_liminf_of_tendstoUniformly {ρ : ℂ → ℝ≥
   filter_upwards with k
   exact pillarA (hδcont k) (hδac k) (2 ^ m) (Idy m) hImono hImem
 
+/-- **Fuglede a.e. line-integral convergence (`L²` form).** Let `E : ℕ → ℂ → ℝ≥0∞` be a
+sequence of measurable densities whose energies tend to `0`,
+`(∫⁻ (E k)²) → 0`. Then there is a strictly increasing index map `φ` such that, along every
+family `Γ` of continuous curves, the subfamily on which the arc-length line integrals
+`∫_γ E (φ k) ds` fail to tend to `0` has zero modulus.
+
+This is the classical Fuglede lemma: strong `L²` convergence of a density sequence forces line-
+integral convergence along all curves outside a family of modulus zero. It is proved by extracting
+a subsequence whose root-energies decay geometrically (hence are summable) and applying the
+elementary Fuglede modulus estimate `curveModulus_lineIntegral_not_tendsto_zero`. This is the
+device that bridges an `L²` (weak/Mazur) density limit to admissibility along curves, sidestepping
+the coarea formula: line integrals are not `L²`-continuous (curves are null sets), but they *are*
+modulus-a.e. convergent for `L²`-convergent densities. -/
+theorem fuglede_ae_lineIntegral_tendsto {E : ℕ → ℂ → ℝ≥0∞}
+    (hEmeas : ∀ k, Measurable (E k))
+    (hEtendsto : Filter.Tendsto (fun k => ∫⁻ z, (E k z) ^ 2) atTop (nhds 0)) :
+    ∃ φ : ℕ → ℕ, StrictMono φ ∧ ∀ Γ : Set (ℝ → ℂ), (∀ γ ∈ Γ, Continuous γ) →
+      curveModulus {γ ∈ Γ | ¬ Filter.Tendsto
+        (fun k => arcLengthLineIntegral (E (φ k)) γ) atTop (nhds 0)} = 0 := by
+  classical
+  -- The energy sequence `a k := ∫⁻ (E k)²` tends to `0`, so it eventually undercuts any threshold.
+  set a : ℕ → ℝ≥0∞ := fun k => ∫⁻ z, (E k z) ^ 2 with ha
+  have hkey : ∀ c : ℝ≥0∞, c ≠ 0 → ∀ N : ℕ, ∃ k, N < k ∧ a k ≤ c := by
+    intro c hc N
+    have hev : ∀ᶠ k in atTop, a k ≤ c :=
+      (ENNReal.tendsto_nhds_zero.mp hEtendsto) c (pos_iff_ne_zero.mpr hc)
+    obtain ⟨k, hk, hkc⟩ := (hev.and (Filter.eventually_gt_atTop N)).exists
+    exact ⟨k, hkc, hk⟩
+  -- The geometric threshold (squared so its root dominates `(1/2)^k`).
+  have hthresh : ∀ k : ℕ, ((ENNReal.ofReal ((1 / 2 : ℝ) ^ k)) ^ 2) ≠ 0 := by
+    intro k; apply pow_ne_zero; rw [Ne, ENNReal.ofReal_eq_zero, not_le]; positivity
+  choose g hg1 hg2 using hkey
+  -- The extracted subsequence `φ`, strictly increasing with `a (φ k) ≤ ((1/2)^k)²`.
+  set φ : ℕ → ℕ := fun k => Nat.rec
+    (g ((ENNReal.ofReal ((1 / 2 : ℝ) ^ 0)) ^ 2) (hthresh 0) 0)
+    (fun k prev => g ((ENNReal.ofReal ((1 / 2 : ℝ) ^ (k + 1))) ^ 2) (hthresh (k + 1)) prev) k
+    with hφ
+  have hφmono : StrictMono φ := by
+    apply strictMono_nat_of_lt_succ
+    intro k
+    exact hg1 ((ENNReal.ofReal ((1 / 2 : ℝ) ^ (k + 1))) ^ 2) (hthresh (k + 1)) (φ k)
+  have hφbound : ∀ k, a (φ k) ≤ (ENNReal.ofReal ((1 / 2 : ℝ) ^ k)) ^ 2 := by
+    intro k
+    cases k with
+    | zero => exact hg2 _ _ 0
+    | succ n => exact hg2 _ _ (φ n)
+  refine ⟨φ, hφmono, ?_⟩
+  intro Γ hΓcont
+  -- The subsampled densities `G k := E (φ k)` have summable root-energies.
+  set G : ℕ → ℂ → ℝ≥0∞ := fun k => E (φ k) with hG
+  have hGmeas : ∀ k, Measurable (G k) := fun k => hEmeas (φ k)
+  have hGroot : ∀ k, (∫⁻ z, (G k z) ^ 2) ^ ((1 : ℝ) / 2) ≤ ENNReal.ofReal ((1 / 2 : ℝ) ^ k) := by
+    intro k
+    calc (∫⁻ z, (G k z) ^ 2) ^ ((1 : ℝ) / 2)
+        ≤ ((ENNReal.ofReal ((1 / 2 : ℝ) ^ k)) ^ 2) ^ ((1 : ℝ) / 2) := by
+          gcongr; exact hφbound k
+      _ = ENNReal.ofReal ((1 / 2 : ℝ) ^ k) := by
+          rw [← ENNReal.rpow_natCast (ENNReal.ofReal ((1 / 2 : ℝ) ^ k)) 2,
+            ← ENNReal.rpow_mul]; norm_num
+  have hsum : ∑' k, (∫⁻ z, (G k z) ^ 2) ^ ((1 : ℝ) / 2) ≠ ∞ := by
+    apply ne_top_of_le_ne_top _ (ENNReal.tsum_le_tsum hGroot)
+    rw [← ENNReal.ofReal_tsum_of_nonneg (fun n => by positivity)
+      (summable_geometric_of_lt_one (by norm_num) (by norm_num))]
+    exact ENNReal.ofReal_ne_top
+  exact curveModulus_lineIntegral_not_tendsto_zero hGmeas hsum hΓcont
+
 /-- **Absolutely-continuous approximation in the image families (uniformly quasiconformal case).**
 Let `fₙ → g` locally uniformly with `g` a homeomorphism and the `fₙ` uniformly `K`-quasiconformal.
 Every absolutely continuous curve `δlim` in the `g`-image family of `Q` is the uniform limit, along
