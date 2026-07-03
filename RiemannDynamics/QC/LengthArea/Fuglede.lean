@@ -42,9 +42,12 @@ eventually within `ε` of the target `∫ fdNormMulDeriv f γ`:
 
 Proof: the reverse triangle inequality bounds the excess by the arc-length integral of
 the differential difference `‖fderiv ℝ f_n − fderiv ℝ f‖`, which tends to `0` by
-`hgood_φ`. -/
-theorem fderiv_mollified_lineIntegral_le {f : ℂ → ℂ} {b : BeltramiCoeff}
-    (hf : IsQCAnalytic f b) {γ : ℝ → ℂ} (hγcont : Continuous γ)
+`hgood_φ`.
+
+De-gated: only continuity of `f` is consumed (the mollification of a continuous locally
+integrable map is `C¹`, and the trace convergence is the hypothesis `hgood_φ` itself). -/
+theorem fderiv_mollified_lineIntegral_le {f : ℂ → ℂ}
+    (hfcont : Continuous f) {γ : ℝ → ℂ} (hγcont : Continuous γ)
     (_hγac : AbsolutelyContinuousOnInterval γ 0 1)
     (hfin : arcLengthLineIntegral (fun z => (‖fderiv ℝ f z‖₊ : ℝ≥0∞)) γ ≠ ∞)
     (x y : ℝ) (hxy : Set.uIcc x y ⊆ Set.Icc (0 : ℝ) 1)
@@ -64,7 +67,6 @@ theorem fderiv_mollified_lineIntegral_le {f : ℂ → ℂ} {b : BeltramiCoeff}
   set fn : ℕ → ℂ → ℂ :=
     fun n => MeasureTheory.convolution ((φ n).normed MeasureTheory.volume) f
       (ContinuousLinearMap.lsmul ℝ ℝ) MeasureTheory.volume with hfndef
-  have hfcont : Continuous f := hf.1.1.continuous
   have hfloc : MeasureTheory.LocallyIntegrable f := hfcont.locallyIntegrable
   -- Each `fn n` is `C¹`, hence `fderiv ℝ (fn n)` is continuous.
   have hfn_contDiff : ∀ n, ContDiff ℝ 1 (fn n) := fun n =>
@@ -230,9 +232,9 @@ take `g = f_n = ρ_n ⋆ f` (`ρ_n` a normed `ContDiffBump` with `rOut → 0`); 
 is `C¹` (`HasCompactSupport.contDiff_convolution_left`), part (i) is the pointwise
 convergence `f_n (z) → f (z)`
 (`ContDiffBump.convolution_tendsto_right_of_continuous`, `f` continuous), and part
-(ii) is `fderiv_mollified_lineIntegral_le`. -/
-theorem exists_contDiff_approx_along_curve {f : ℂ → ℂ} {b : BeltramiCoeff}
-    (hf : IsQCAnalytic f b) {γ : ℝ → ℂ} (hγcont : Continuous γ)
+(ii) is `fderiv_mollified_lineIntegral_le`. De-gated: only continuity of `f` is consumed. -/
+theorem exists_contDiff_approx_along_curve {f : ℂ → ℂ}
+    (hfcont : Continuous f) {γ : ℝ → ℂ} (hγcont : Continuous γ)
     (hγac : AbsolutelyContinuousOnInterval γ 0 1)
     (hfin : arcLengthLineIntegral (fun z => (‖fderiv ℝ f z‖₊ : ℝ≥0∞)) γ ≠ ∞)
     (x y : ℝ) (hxy : Set.uIcc x y ⊆ Set.Icc (0 : ℝ) 1) (hgood : GoodCurve f γ) :
@@ -241,8 +243,7 @@ theorem exists_contDiff_approx_along_curve {f : ℂ → ℂ} {b : BeltramiCoeff}
       (∫ t in Set.uIoc x y, ‖fderiv ℝ g (γ t)‖ * ‖deriv γ t‖) ≤
         (∫ t in Set.uIoc x y, fdNormMulDeriv f γ t) + ε := by
   intro ε hε
-  -- `f` is continuous and locally integrable (from `IsQCAnalytic`).
-  have hfcont : Continuous f := hf.1.1.continuous
+  -- `f` is continuous and locally integrable.
   have hfloc : MeasureTheory.LocallyIntegrable f := hfcont.locallyIntegrable
   -- The good-curve mollifier sequence `φ n` of normed bumps with `rOut → 0`.
   obtain ⟨φ, hφrout, hgood_φ⟩ := hgood
@@ -261,7 +262,7 @@ theorem exists_contDiff_approx_along_curve {f : ℂ → ℂ} {b : BeltramiCoeff}
   have hfn_density : ∀ᶠ n in Filter.atTop,
       (∫ t in Set.uIoc x y, ‖fderiv ℝ (fn n) (γ t)‖ * ‖deriv γ t‖) ≤
         (∫ t in Set.uIoc x y, fdNormMulDeriv f γ t) + ε :=
-    fderiv_mollified_lineIntegral_le hf hγcont hγac hfin x y hxy hε φ hφrout hgood_φ
+    fderiv_mollified_lineIntegral_le hfcont hγcont hγac hfin x y hxy hε φ hφrout hgood_φ
   -- The endpoint convergences give eventual `ε`-closeness.
   have hev_close : ∀ z : ℂ, ∀ᶠ n in Filter.atTop, dist (f z) (fn n z) ≤ ε := by
     intro z
@@ -290,9 +291,13 @@ the triangle inequality
 bounds the LHS by `∫ fdNormMulDeriv f γ + 3ε` for every `ε > 0`; letting `ε → 0`
 closes the inequality. The mollification setup, smooth chain-rule/FTC bound, and
 ℂ-valued density integrability are supplied by the helpers above; the
-trace-convergence core is `exists_contDiff_approx_along_curve`. -/
-theorem fugledeUpperGradient {f : ℂ → ℂ} {b : BeltramiCoeff}
-    (hf : IsQCAnalytic f b) {γ : ℝ → ℂ} (hγcont : Continuous γ)
+trace-convergence core is `exists_contDiff_approx_along_curve`.
+
+De-gated core: only continuity of `f` is consumed — the finite gradient line integral and the
+mollified trace convergence are the hypotheses `hfin` and `hgood`. The `IsQCAnalytic` wrapper
+is `fugledeUpperGradient` below. -/
+theorem fugledeUpperGradient_of_continuous {f : ℂ → ℂ}
+    (hfcont : Continuous f) {γ : ℝ → ℂ} (hγcont : Continuous γ)
     (hγac : AbsolutelyContinuousOnInterval γ 0 1)
     (hfin : arcLengthLineIntegral (fun z => (‖fderiv ℝ f z‖₊ : ℝ≥0∞)) γ ≠ ∞)
     (x y : ℝ) (hxy : Set.uIcc x y ⊆ Set.Icc (0 : ℝ) 1) (hgood : GoodCurve f γ) :
@@ -302,7 +307,8 @@ theorem fugledeUpperGradient {f : ℂ → ℂ} {b : BeltramiCoeff}
   refine le_of_forall_pos_le_add (fun ε hε => ?_)
   -- Obtain the `C¹` approximant `g` for tolerance `ε / 3`.
   obtain ⟨g, hg_smooth, hgx, hgy, hg_int⟩ :=
-    exists_contDiff_approx_along_curve hf hγcont hγac hfin x y hxy hgood (ε / 3) (by positivity)
+    exists_contDiff_approx_along_curve hfcont hγcont hγac hfin x y hxy hgood (ε / 3)
+      (by positivity)
   -- The proven smooth upper-gradient bound for `g`.
   have hsmooth := dist_comp_le_setIntegral_of_contDiff hg_smooth hγcont hγac x y hxy
   -- Triangle inequality: insert `g (γ x)`, `g (γ y)` between the `f`-endpoints.
@@ -320,19 +326,29 @@ theorem fugledeUpperGradient {f : ℂ → ℂ} {b : BeltramiCoeff}
       (∫ t in Set.uIoc x y, fdNormMulDeriv f γ t) + ε / 3 := hg_int
   linarith [htri, hgx, hgy', hsmooth, this]
 
-/-- **(Fuglede upper-gradient inequality, statement-fixed `[0,1]`-restricted form.)**
-The distance moved by `f ∘ γ` across a subinterval `uIoc x y ⊆ [0,1]` is bounded by
-the arc-length integral of `‖fderiv ℝ f‖` over that subinterval. The `[0,1]` guard
-`hxy : uIcc x y ⊆ Icc 0 1` is essential and consumable: `hfin` only controls the
-gradient line integral over `[0,1]`, and the downstream length–area assembly only
-ever integrates along `[0,1]`. A thin wrapper over `fugledeUpperGradient`. -/
-theorem dist_le_setIntegral_fderiv_norm_mul_deriv {f : ℂ → ℂ} {b : BeltramiCoeff}
+/-- **(Fuglede upper-gradient inequality.)** `IsQCAnalytic` wrapper of
+`fugledeUpperGradient_of_continuous` (only continuity of `f` is consumed). -/
+theorem fugledeUpperGradient {f : ℂ → ℂ} {b : BeltramiCoeff}
     (hf : IsQCAnalytic f b) {γ : ℝ → ℂ} (hγcont : Continuous γ)
     (hγac : AbsolutelyContinuousOnInterval γ 0 1)
     (hfin : arcLengthLineIntegral (fun z => (‖fderiv ℝ f z‖₊ : ℝ≥0∞)) γ ≠ ∞)
     (x y : ℝ) (hxy : Set.uIcc x y ⊆ Set.Icc (0 : ℝ) 1) (hgood : GoodCurve f γ) :
     dist ((f ∘ γ) x) ((f ∘ γ) y) ≤ ∫ t in Set.uIoc x y, fdNormMulDeriv f γ t :=
-  fugledeUpperGradient hf hγcont hγac hfin x y hxy hgood
+  fugledeUpperGradient_of_continuous hf.1.1.continuous hγcont hγac hfin x y hxy hgood
+
+/-- **(Fuglede upper-gradient inequality, statement-fixed `[0,1]`-restricted form.)**
+The distance moved by `f ∘ γ` across a subinterval `uIoc x y ⊆ [0,1]` is bounded by
+the arc-length integral of `‖fderiv ℝ f‖` over that subinterval. The `[0,1]` guard
+`hxy : uIcc x y ⊆ Icc 0 1` is essential and consumable: `hfin` only controls the
+gradient line integral over `[0,1]`, and the downstream length–area assembly only
+ever integrates along `[0,1]`. A thin wrapper over `fugledeUpperGradient_of_continuous`. -/
+theorem dist_le_setIntegral_fderiv_norm_mul_deriv {f : ℂ → ℂ}
+    (hfcont : Continuous f) {γ : ℝ → ℂ} (hγcont : Continuous γ)
+    (hγac : AbsolutelyContinuousOnInterval γ 0 1)
+    (hfin : arcLengthLineIntegral (fun z => (‖fderiv ℝ f z‖₊ : ℝ≥0∞)) γ ≠ ∞)
+    (x y : ℝ) (hxy : Set.uIcc x y ⊆ Set.Icc (0 : ℝ) 1) (hgood : GoodCurve f γ) :
+    dist ((f ∘ γ) x) ((f ∘ γ) y) ≤ ∫ t in Set.uIoc x y, fdNormMulDeriv f γ t :=
+  fugledeUpperGradient_of_continuous hfcont hγcont hγac hfin x y hxy hgood
 
 /-- **(Interval integrability of the density.)** The real
 arc-length integrand `g t := ‖fderiv ℝ f (γ t)‖ · ‖deriv γ t‖` is integrable on
@@ -343,9 +359,9 @@ continuous (it is AC on every interval), so `g` is measurable, and the lower
 integral of its enorm over `[0,1]` equals
 `arcLengthLineIntegral ‖fderiv ℝ f‖ γ`, which is finite by `hfin`. A nonnegative
 measurable function with finite lower integral is integrable, and
-`IntegrableOn.mono_set` restricts from `[0,1]` to `uIcc a c`. -/
-theorem integrableOn_fderiv_norm_mul_deriv_uIcc {f : ℂ → ℂ} {b : BeltramiCoeff}
-    (_hf : IsQCAnalytic f b) {γ : ℝ → ℂ} (hγcont : Continuous γ)
+`IntegrableOn.mono_set` restricts from `[0,1]` to `uIcc a c`. No hypothesis on `f`
+beyond the finiteness `hfin` is consumed. -/
+theorem integrableOn_fdNormMulDeriv_uIcc {f : ℂ → ℂ} {γ : ℝ → ℂ} (hγcont : Continuous γ)
     (hfin : arcLengthLineIntegral (fun z => (‖fderiv ℝ f z‖₊ : ℝ≥0∞)) γ ≠ ∞)
     (a c : ℝ) (huIcc : Set.uIcc a c ⊆ Set.Icc (0 : ℝ) 1) :
     IntegrableOn (fdNormMulDeriv f γ) (Set.uIcc a c) := by
@@ -374,6 +390,16 @@ theorem integrableOn_fderiv_norm_mul_deriv_uIcc {f : ℂ → ℂ} {b : BeltramiC
         rw [arcLengthLineIntegral]
     _ ≠ ∞ := hfin
 
+/-- **(Interval integrability of the density.)** `IsQCAnalytic`-flavoured wrapper of
+`integrableOn_fdNormMulDeriv_uIcc`, kept for the pre-existing consumers; the quasiconformal
+hypothesis is not consumed. -/
+theorem integrableOn_fderiv_norm_mul_deriv_uIcc {f : ℂ → ℂ} {b : BeltramiCoeff}
+    (_hf : IsQCAnalytic f b) {γ : ℝ → ℂ} (hγcont : Continuous γ)
+    (hfin : arcLengthLineIntegral (fun z => (‖fderiv ℝ f z‖₊ : ℝ≥0∞)) γ ≠ ∞)
+    (a c : ℝ) (huIcc : Set.uIcc a c ⊆ Set.Icc (0 : ℝ) 1) :
+    IntegrableOn (fdNormMulDeriv f γ) (Set.uIcc a c) :=
+  integrableOn_fdNormMulDeriv_uIcc hγcont hfin a c huIcc
+
 /-- **(Fuglede length–area content.)** Absolute continuity of `f ∘ γ` on every
 interval, given that the gradient line integral
 `∫₀¹ ‖fderiv ℝ f (γ t)‖ ‖γ' t‖ dt` is finite and the curve `γ` is itself
@@ -382,14 +408,15 @@ absolutely continuous.
 The genuine analytic core rests on two ingredients:
 `dist_le_setIntegral_fderiv_norm_mul_deriv` (the upper-gradient inequality along
 the curve — the mollification / `L¹`-trace step) and
-`integrableOn_fderiv_norm_mul_deriv_uIcc` (interval integrability of the density).
+`integrableOn_fdNormMulDeriv_uIcc` (interval integrability of the density).
 On top of those, this proof is the elementary `ε`-`δ` glue: it mirrors Mathlib's
 `IntervalIntegrable.absolutelyContinuousOnInterval_intervalIntegral`, bounding the
 distance-sum over a disjoint interval family by the set-integral of the density
 over their union and using that the integral over a small-measure set is small
-(`Integrable.tendsto_setIntegral_nhds_zero`). -/
+(`Integrable.tendsto_setIntegral_nhds_zero`). De-gated: only continuity of `f` is
+consumed. -/
 theorem absolutelyContinuous_comp_of_finite_lineIntegral {f : ℂ → ℂ}
-    {b : BeltramiCoeff} (hf : IsQCAnalytic f b) {γ : ℝ → ℂ} (hγcont : Continuous γ)
+    (hfcont : Continuous f) {γ : ℝ → ℂ} (hγcont : Continuous γ)
     (hγac : AbsolutelyContinuousOnInterval γ 0 1)
     (hfin : arcLengthLineIntegral (fun z => (‖fderiv ℝ f z‖₊ : ℝ≥0∞)) γ ≠ ∞)
     (hgood : GoodCurve f γ) :
@@ -399,7 +426,7 @@ theorem absolutelyContinuous_comp_of_finite_lineIntegral {f : ℂ → ℂ}
   -- The density `g` and its integrability on `uIcc a c`.
   set g : ℝ → ℝ := fdNormMulDeriv f γ with hg
   have hgint : IntegrableOn g (Set.uIcc a c) :=
-    integrableOn_fderiv_norm_mul_deriv_uIcc hf hγcont hfin a c huIcc
+    integrableOn_fdNormMulDeriv_uIcc hγcont hfin a c huIcc
   -- `g` is nonnegative.
   have hgnonneg : ∀ t, 0 ≤ g t := fun t => by
     rw [hg, fdNormMulDeriv]; positivity
@@ -466,7 +493,7 @@ theorem absolutelyContinuous_comp_of_finite_lineIntegral {f : ℂ → ℂ}
             ∫ t in Set.uIoc (I i).1 (I i).2, g t ∂(volume.restrict (Set.uIoc a c)) := by
           refine Finset.sum_le_sum (fun i hi => ?_)
           rw [Measure.restrict_restrict_of_subset (hsub i hi)]
-          exact dist_le_setIntegral_fderiv_norm_mul_deriv hf hγcont hγac hfin (I i).1 (I i).2
+          exact dist_le_setIntegral_fderiv_norm_mul_deriv hfcont hγcont hγac hfin (I i).1 (I i).2
             (hsub01 i hi) hgood
       _ = ∫ t in s (n, I), g t ∂(volume.restrict (Set.uIoc a c)) := by
           rw [hs]
@@ -487,8 +514,7 @@ the contact between `γ` and the degeneracy set
 which forces the parameter footprint `{t ∈ [0,1] | deriv γ t ≠ 0 ∧ γ t ∈ N}` to
 be Lebesgue-null; off it, `deriv γ t ≠ 0` implies `DifferentiableAt ℝ f (γ t)`.
 Combining the two a.e. facts gives the chain rule a.e. on `[0,1]`. -/
-theorem chainRule_hasDerivAt_of_finite {f : ℂ → ℂ} {b : BeltramiCoeff}
-    (_hf : IsQCAnalytic f b) {γ : ℝ → ℂ} (hγcont : Continuous γ)
+theorem chainRule_hasDerivAt_of_finite {f : ℂ → ℂ} {γ : ℝ → ℂ} (hγcont : Continuous γ)
     (hγac : AbsolutelyContinuousOnInterval γ 0 1)
     (_hfin : arcLengthLineIntegral (fun z => (‖fderiv ℝ f z‖₊ : ℝ≥0∞)) γ ≠ ∞)
     (hmeet : ¬ 1 ≤ arcLengthLineIntegral
@@ -604,8 +630,8 @@ the genuine Fuglede/chain-rule content:
     `‖f(γ t)−f(γ s)‖ ≤ ∫ₛᵗ ‖Df(γ)‖‖γ'‖`. The ACL theory is for coordinate
     lines, not general curves, so this is
     `absolutelyContinuous_comp_of_finite_lineIntegral`. -/
-theorem chainRule_good_of_finite {f : ℂ → ℂ} {b : BeltramiCoeff}
-    (hf : IsQCAnalytic f b) {γ : ℝ → ℂ} (hγcont : Continuous γ)
+theorem chainRule_good_of_finite {f : ℂ → ℂ}
+    (hfcont : Continuous f) {γ : ℝ → ℂ} (hγcont : Continuous γ)
     (hγac : AbsolutelyContinuousOnInterval γ 0 1)
     (hfin : arcLengthLineIntegral (fun z => (‖fderiv ℝ f z‖₊ : ℝ≥0∞)) γ ≠ ∞)
     (hmeet : ¬ 1 ≤ arcLengthLineIntegral
@@ -695,16 +721,22 @@ theorem chainRule_good_of_finite {f : ℂ → ℂ} {b : BeltramiCoeff}
   -- ===================================================================
   -- CLAUSES 1 and 3: the genuine Fuglede / chain-rule content.
   -- ===================================================================
-  refine ⟨absolutelyContinuous_comp_of_finite_lineIntegral hf hγcont hγac hfin hgood,
+  refine ⟨absolutelyContinuous_comp_of_finite_lineIntegral hfcont hγcont hγac hfin hgood,
     hclause2, ?_⟩
-  exact chainRule_hasDerivAt_of_finite hf hγcont hγac hfin hmeet
+  exact chainRule_hasDerivAt_of_finite hγcont hγac hfin hmeet
 
 /-- **Fuglede: the non-good curves of a family have zero modulus.** Assembled from
-the mollified-gradient `L²` energy decay (`mollified_fderiv_ball_energy_tendsto_zero`)
+the mollified-gradient `L²` energy decay
+(`mollified_fderiv_ball_energy_tendsto_zero_of_memW12loc`)
 and the Fuglede line-integral sweep (`curveModulus_lineIntegral_not_tendsto_zero`) via
-a ball exhaustion of the (continuous) curves. -/
-theorem IsQCAnalytic.curveModulus_notGoodCurve_zero {f : ℂ → ℂ} {b : BeltramiCoeff}
-    (hf : IsQCAnalytic f b) (Γ : Set (ℝ → ℂ)) (hcont : ∀ γ ∈ Γ, Continuous γ) :
+a ball exhaustion of the (continuous) curves.
+
+De-gated form: stated over the explicit hypothesis triple (continuity + a.e.
+differentiability + `MemW12loc`); the `IsQCAnalytic` wrapper is
+`IsQCAnalytic.curveModulus_notGoodCurve_zero` below. -/
+theorem curveModulus_notGoodCurve_zero_of_memW12loc {f : ℂ → ℂ}
+    (hfcont : Continuous f) (hdiff : ∀ᵐ z, DifferentiableAt ℝ f z) (hW12 : MemW12loc f)
+    (Γ : Set (ℝ → ℂ)) (hcont : ∀ γ ∈ Γ, Continuous γ) :
     curveModulus {γ ∈ Γ | ¬ GoodCurve f γ} = 0 := by
   classical
   -- ===================================================================
@@ -760,7 +792,7 @@ theorem IsQCAnalytic.curveModulus_notGoodCurve_zero {f : ℂ → ℂ} {b : Beltr
   set a : ℕ → ℝ≥0∞ := fun n => ∫⁻ z in Metric.ball (0 : ℂ) R, (D n z) ^ 2 with ha
   -- Pillar A: the ball-energy of the differential difference tends to `0`.
   have haTendsto : Filter.Tendsto a Filter.atTop (nhds 0) :=
-    mollified_fderiv_ball_energy_tendsto_zero hf R φ₀ hφ₀rout
+    mollified_fderiv_ball_energy_tendsto_zero_of_memW12loc hfcont hdiff hW12 R φ₀ hφ₀rout
   -- ===================================================================
   -- Extract a subsequence `σ` whose root-energies are geometrically small.
   -- ===================================================================
@@ -864,6 +896,14 @@ theorem IsQCAnalytic.curveModulus_notGoodCurve_zero {f : ℂ → ℂ} {b : Beltr
   · exact hφ₀rout.comp hσmono.tendsto_atTop
   · exact hTend'
 
+/-- **Fuglede: the non-good curves of a family have zero modulus.** `IsQCAnalytic` wrapper
+of `curveModulus_notGoodCurve_zero_of_memW12loc`. -/
+theorem IsQCAnalytic.curveModulus_notGoodCurve_zero {f : ℂ → ℂ} {b : BeltramiCoeff}
+    (hf : IsQCAnalytic f b) (Γ : Set (ℝ → ℂ)) (hcont : ∀ γ ∈ Γ, Continuous γ) :
+    curveModulus {γ ∈ Γ | ¬ GoodCurve f γ} = 0 :=
+  curveModulus_notGoodCurve_zero_of_memW12loc hf.1.1.continuous
+    (IsQCAnalytic.ae_differentiableAt hf) hf.2.1 Γ hcont
+
 /-- **Fuglede's theorem (quasiconformal case).** For a quasiconformal map `f`, the
 curves `γ` of a family along which the chain rule for `f` fails — either `f ∘ γ` is
 not absolutely continuous, or its derivative does not agree almost everywhere with
@@ -948,6 +988,7 @@ theorem IsQCAnalytic.chainRule_exceptional_modulus_zero {f : ℂ → ℂ} {b : B
   have hgood : GoodCurve f γ := by
     by_contra hng; exact hnF3 ⟨hγΓ, hng⟩
   -- Then all three good clauses hold, contradicting `hbad`.
-  exact hbad (chainRule_good_of_finite hf (hcont γ hγΓ) (hac γ hγΓ) hfin hmeet hgood)
+  exact hbad
+    (chainRule_good_of_finite hf.1.1.continuous (hcont γ hγΓ) (hac γ hγΓ) hfin hmeet hgood)
 
 end RiemannDynamics

@@ -9,6 +9,7 @@ import RiemannDynamics.QC.Defs.SensePreserving
 import RiemannDynamics.QC.LengthArea.LengthAreaInverse
 import RiemannDynamics.QC.LengthArea.ReverseLengthArea
 import RiemannDynamics.QC.LengthArea.ReverseLengthAreaEnergy
+import RiemannDynamics.QC.GeometricToAnalytic.NondegeneracyAssembly
 import RiemannDynamics.Analysis.Sobolev.AbsolutelyContinuousLines
 import RiemannDynamics.Analysis.Sobolev.Stepanov
 

@@ -6,7 +6,6 @@ Authors: Will (Ziang) Li
 import RiemannDynamics.QC.Defs.Geometric
 import RiemannDynamics.QC.Defs.SensePreserving
 import RiemannDynamics.QC.LengthArea.ReverseLengthAreaForward
-import RiemannDynamics.QC.GeometricToAnalytic.LoewnerReciprocity
 import RiemannDynamics.QC.GeometricToAnalytic.ModulusSymmetrization
 import RiemannDynamics.Analysis.Sobolev.Stepanov
 import RiemannDynamics.Analysis.Sobolev.Coarea.Assembly

@@ -308,29 +308,32 @@ theorem fderiv_ae_eq_weakDirDeriv {f g : ℂ → ℂ} {v : ℂ}
     rw [hσ_invol] at hz
     exact hz
 
-/-- **`G := ‖Df‖` is square-integrable on every ball.** For a quasiconformal map
-`f ∈ W^{1,2}_loc`, the operator norm `G z := ‖fderiv ℝ f z‖₊` of the (strong)
-differential has finite `L²`-energy on every Euclidean ball: `∫⁻_{ball 0 R} G² < ∞`.
+/-- **`G := ‖Df‖` is square-integrable on every ball (de-gated form).** For a continuous,
+almost-everywhere differentiable `f ∈ W^{1,2}_loc`, the operator norm
+`G z := ‖fderiv ℝ f z‖₊` of the (strong) differential has finite `L²`-energy on every
+Euclidean ball: `∫⁻_{ball 0 R} G² < ∞`.
 
-This is the genuine Sobolev input. It combines (a) the a.e. identification of the
-strong differential `fderiv ℝ f` with the weak gradient `(gx, gy)` of
-`MemW12loc f` (where `f` is differentiable a.e., the columns of `fderiv ℝ f` are
-the weak partials — the converse-of-ACL bridge `fderiv_ae_eq_weakDirDeriv`),
+This is the genuine Sobolev input, stated over the explicit hypothesis triple
+(continuity + a.e. differentiability + `MemW12loc`) rather than `IsQCAnalytic`, so it applies
+to any Sobolev homeomorphism-like map — in particular to the inverse of a geometric
+quasiconformal map, whose a.e. differentiability is obtained without any Beltrami equation.
+It combines (a) the a.e. identification of the strong differential `fderiv ℝ f` with the weak
+gradient `(gx, gy)` of `MemW12loc f` (where `f` is differentiable a.e., the columns of
+`fderiv ℝ f` are the weak partials — the converse-of-ACL bridge `fderiv_ae_eq_weakDirDeriv`),
 giving the pointwise a.e. bound `‖fderiv ℝ f z‖ ≤ ‖gx z‖ + ‖gy z‖`, with (b) the
-`L²_loc` membership of `gx, gy` from `hf.2.1`, which makes `‖gx‖ + ‖gy‖`
+`L²_loc` membership of `gx, gy` from `MemW12loc f`, which makes `‖gx‖ + ‖gy‖`
 square-integrable on the compact closed ball `closedBall 0 R ⊇ ball 0 R`. The
 strong⇄weak a.e. bridge is `fderiv_ae_eq_weakDirDeriv`. -/
-theorem IsQCAnalytic.lintegralSq_fderiv_ball_ne_top {f : ℂ → ℂ} {b : BeltramiCoeff}
-    (hf : IsQCAnalytic f b) (R : ℝ) :
+theorem lintegralSq_fderiv_ball_ne_top_of_memW12loc {f : ℂ → ℂ}
+    (hfcont : Continuous f) (hdiff : ∀ᵐ z, DifferentiableAt ℝ f z) (hW12 : MemW12loc f)
+    (R : ℝ) :
     (∫⁻ z in Metric.ball (0 : ℂ) R, (‖fderiv ℝ f z‖₊ : ℝ≥0∞) ^ 2) ≠ ∞ := by
   classical
   -- Extract the weak gradient `(gx, gy)` from `MemW12loc f`.
-  obtain ⟨_hLp, gx, gy, ⟨hwgx, hwgy⟩, hmgx, hmgy⟩ := hf.2.1
+  obtain ⟨_hLp, gx, gy, ⟨hwgx, hwgy⟩, hmgx, hmgy⟩ := hW12
   -- `hmgx : MemWklocP gx 0 2 univ = MemLpLocOn gx 2 univ`; likewise `hmgy`.
   have hLpgx : MemLpLocOn gx 2 Set.univ := hmgx
   have hLpgy : MemLpLocOn gy 2 Set.univ := hmgy
-  -- The map `f` is differentiable a.e. (Gehring–Lehto, from orientation preservation).
-  have hdiff : ∀ᵐ z, DifferentiableAt ℝ f z := IsQCAnalytic.ae_differentiableAt hf
   -- The compact closed ball `K := closedBall 0 R ⊇ ball 0 R`.
   set K : Set ℂ := Metric.closedBall (0 : ℂ) R with hK
   have hKcompact : IsCompact K := isCompact_closedBall (0 : ℂ) R
@@ -351,8 +354,8 @@ theorem IsQCAnalytic.lintegralSq_fderiv_ball_ne_top {f : ℂ → ℂ} {b : Beltr
     exact memLp_one_iff_integrable.mp hmem1
   have hgxloc : LocallyIntegrableOn gx Set.univ := memLpLoc_to_loc hLpgx
   have hgyloc : LocallyIntegrableOn gy Set.univ := memLpLoc_to_loc hLpgy
-  -- `f` is locally integrable: it is a homeomorphism, hence continuous.
-  have hfloc : LocallyIntegrable f := hf.1.1.continuous.locallyIntegrable
+  -- `f` is locally integrable: it is continuous.
+  have hfloc : LocallyIntegrable f := hfcont.locallyIntegrable
   -- The strong⇄weak a.e. bridge: classical partials equal the weak partials a.e.
   have haex : ∀ᵐ z, (fderiv ℝ f z) (1 : ℂ) = gx z :=
     fderiv_ae_eq_weakDirDeriv hwgx hgxloc hdiff (Or.inl rfl) hfloc
@@ -435,6 +438,16 @@ theorem IsQCAnalytic.lintegralSq_fderiv_ball_ne_top {f : ℂ → ℂ} {b : Beltr
     exact ENNReal.add_lt_top.mpr ⟨lt_of_le_of_ne le_top hgxsqfin, lt_of_le_of_ne le_top hgysqfin⟩
   exact ne_of_lt (lt_of_le_of_lt (lintegral_mono_set hball_sub_K) (lt_of_le_of_ne le_top hfin))
 
+/-- **`G := ‖Df‖` is square-integrable on every ball.** `IsQCAnalytic` wrapper of
+`lintegralSq_fderiv_ball_ne_top_of_memW12loc`: continuity is `hf.1.1.continuous`, a.e.
+differentiability is Gehring–Lehto (`IsQCAnalytic.ae_differentiableAt`), and `MemW12loc` is
+the field `hf.2.1`. -/
+theorem IsQCAnalytic.lintegralSq_fderiv_ball_ne_top {f : ℂ → ℂ} {b : BeltramiCoeff}
+    (hf : IsQCAnalytic f b) (R : ℝ) :
+    (∫⁻ z in Metric.ball (0 : ℂ) R, (‖fderiv ℝ f z‖₊ : ℝ≥0∞) ^ 2) ≠ ∞ :=
+  lintegralSq_fderiv_ball_ne_top_of_memW12loc hf.1.1.continuous
+    (IsQCAnalytic.ae_differentiableAt hf) hf.2.1 R
+
 /-- **The unbounded-image exceptional curves have zero modulus.** The curves `γ`
 of a family `Γ` along which the gradient line integral `∫₀¹ G(γ t)‖γ' t‖ dt` is
 infinite *and whose trace `γ '' [0,1]` is contained in no ball* form a zero-modulus
@@ -449,8 +462,8 @@ breaks. In every intended application the curve family consists of **continuous*
 curves on `[0,1]` (e.g. `Quadrilateral.curveFamily`), for which `γ '' [0,1]` is
 compact, hence bounded, so this subfamily is *empty* and the modulus is trivially
 `0`. The statement therefore carries a continuity/boundedness hypothesis `hcont` on `Γ`. -/
-theorem curveModulus_lineIntegral_top_unbounded_zero {f : ℂ → ℂ} {b : BeltramiCoeff}
-    (_hf : IsQCAnalytic f b) (Γ : Set (ℝ → ℂ)) (hcont : ∀ γ ∈ Γ, Continuous γ) :
+theorem curveModulus_lineIntegral_top_unbounded_zero {f : ℂ → ℂ}
+    (Γ : Set (ℝ → ℂ)) (hcont : ∀ γ ∈ Γ, Continuous γ) :
     curveModulus {γ ∈ Γ |
       arcLengthLineIntegral (fun z => (‖fderiv ℝ f z‖₊ : ℝ≥0∞)) γ = ∞ ∧
         ∀ n : ℕ, ∃ t ∈ Set.Icc (0 : ℝ) 1, γ t ∉ Metric.ball (0 : ℂ) n} = 0 := by
@@ -510,9 +523,14 @@ on every ball.  The proof localizes:
 The exceptional family is the union of these two parts, so `curveModulus_mono`
 plus `curveModulus_union_zero` finish.  The two genuine analytic inputs are the
 ball-energy bound (the strong-`fderiv` ⇄ weak-gradient a.e. bridge) and countable
-subadditivity. -/
-theorem curveModulus_lineIntegral_top_zero {f : ℂ → ℂ} {b : BeltramiCoeff}
-    (hf : IsQCAnalytic f b) (Γ : Set (ℝ → ℂ)) (hcont : ∀ γ ∈ Γ, Continuous γ) :
+subadditivity.
+
+De-gated form: stated over the explicit hypothesis triple (continuity + a.e.
+differentiability + `MemW12loc`); the `IsQCAnalytic` wrapper is
+`curveModulus_lineIntegral_top_zero` below. -/
+theorem curveModulus_lineIntegral_top_zero_of_memW12loc {f : ℂ → ℂ}
+    (hfcont : Continuous f) (hdiff : ∀ᵐ z, DifferentiableAt ℝ f z) (hW12 : MemW12loc f)
+    (Γ : Set (ℝ → ℂ)) (hcont : ∀ γ ∈ Γ, Continuous γ) :
     curveModulus {γ ∈ Γ |
       arcLengthLineIntegral (fun z => (‖fderiv ℝ f z‖₊ : ℝ≥0∞)) γ = ∞} = 0 := by
   classical
@@ -544,7 +562,7 @@ theorem curveModulus_lineIntegral_top_zero {f : ℂ → ℂ} {b : BeltramiCoeff}
         · simp only [hGn, Set.indicator_of_mem hz]
         · simp only [hGn, Set.indicator_of_notMem hz]; norm_num
       rw [hpt, lintegral_indicator measurableSet_ball]
-      exact hf.lintegralSq_fderiv_ball_ne_top (n : ℝ)
+      exact lintegralSq_fderiv_ball_ne_top_of_memW12loc hfcont hdiff hW12 (n : ℝ)
     -- Along every `γ ∈ Δ n`, the line integral of `Gₙ` is `∞` (it equals that of `G`).
     have hΔinf : ∀ γ ∈ Δ n, arcLengthLineIntegral (Gn n) γ = ∞ := by
       rintro γ ⟨-, hγinf, hγtrace⟩
@@ -561,7 +579,7 @@ theorem curveModulus_lineIntegral_top_zero {f : ℂ → ℂ} {b : BeltramiCoeff}
   -- The unbounded-trace part.
   set U : Set (ℝ → ℂ) := {γ ∈ Γ | arcLengthLineIntegral G γ = ∞ ∧
       ∀ n : ℕ, ∃ t ∈ Set.Icc (0 : ℝ) 1, γ t ∉ Metric.ball (0 : ℂ) n} with hU
-  have hUzero : curveModulus U = 0 := curveModulus_lineIntegral_top_unbounded_zero hf Γ hcont
+  have hUzero : curveModulus U = 0 := curveModulus_lineIntegral_top_unbounded_zero Γ hcont
   -- The exceptional family is contained in `(⋃ₙ Δ n) ∪ U`.
   have hsub : E ⊆ (⋃ n, Δ n) ∪ U := by
     rintro γ ⟨hγΓ, hγinf⟩
@@ -579,6 +597,15 @@ theorem curveModulus_lineIntegral_top_zero {f : ℂ → ℂ} {b : BeltramiCoeff}
   calc curveModulus E
       ≤ curveModulus ((⋃ n, Δ n) ∪ U) := curveModulus_mono hsub
     _ = 0 := curveModulus_union_zero hUnionZero hUzero
+
+/-- **(F1) The infinite-gradient-line-integral family has zero modulus.** `IsQCAnalytic`
+wrapper of `curveModulus_lineIntegral_top_zero_of_memW12loc`. -/
+theorem curveModulus_lineIntegral_top_zero {f : ℂ → ℂ} {b : BeltramiCoeff}
+    (hf : IsQCAnalytic f b) (Γ : Set (ℝ → ℂ)) (hcont : ∀ γ ∈ Γ, Continuous γ) :
+    curveModulus {γ ∈ Γ |
+      arcLengthLineIntegral (fun z => (‖fderiv ℝ f z‖₊ : ℝ≥0∞)) γ = ∞} = 0 :=
+  curveModulus_lineIntegral_top_zero_of_memW12loc hf.1.1.continuous
+    (IsQCAnalytic.ae_differentiableAt hf) hf.2.1 Γ hcont
 
 /-- The real arc-length integrand `g t := ‖fderiv ℝ f (γ t)‖ · ‖deriv γ t‖`, the
 `ℝ`-valued density whose finiteness drives the Fuglede absolute-continuity
@@ -1254,9 +1281,14 @@ globally `L²`, and on the given ball the mollified truncations agree with the
 mollified partials once `rOut < 1`; so the operator-norm bound
 `‖T‖ ≤ ‖T 1‖ + ‖T I‖` reduces the energy to the two scalar pieces
 `∫ ‖ρ_n ⋆ gx_R - gx_R‖²` and `∫ ‖ρ_n ⋆ gy_R - gy_R‖²`, each tending to `0` by the
-scalar `L²` mollification convergence `eLpNorm_convolution_normed_sub_tendsto_zero`. -/
-theorem mollified_fderiv_ball_energy_tendsto_zero {f : ℂ → ℂ} {b : BeltramiCoeff}
-    (hf : IsQCAnalytic f b) (R : ℝ) (φ : ℕ → ContDiffBump (0 : ℂ))
+scalar `L²` mollification convergence `eLpNorm_convolution_normed_sub_tendsto_zero`.
+
+De-gated form: stated over the explicit hypothesis triple (continuity + a.e.
+differentiability + `MemW12loc`); the `IsQCAnalytic` wrapper is
+`mollified_fderiv_ball_energy_tendsto_zero` below. -/
+theorem mollified_fderiv_ball_energy_tendsto_zero_of_memW12loc {f : ℂ → ℂ}
+    (hfcont : Continuous f) (hdiff : ∀ᵐ z, DifferentiableAt ℝ f z) (hW12 : MemW12loc f)
+    (R : ℝ) (φ : ℕ → ContDiffBump (0 : ℂ))
     (hφrout : Filter.Tendsto (fun n => (φ n).rOut) Filter.atTop (nhds 0)) :
     Filter.Tendsto (fun n => ∫⁻ z in Metric.ball (0 : ℂ) R,
         (‖fderiv ℝ (MeasureTheory.convolution ((φ n).normed MeasureTheory.volume) f
@@ -1269,11 +1301,10 @@ theorem mollified_fderiv_ball_energy_tendsto_zero {f : ℂ → ℂ} {b : Beltram
   set fn : ℕ → ℂ → ℂ := fun n => MeasureTheory.convolution (ρ n) f
     (ContinuousLinearMap.lsmul ℝ ℝ) MeasureTheory.volume with hfn
   -- ===== (0) Extract the weak gradient `(gx, gy)` from `MemW12loc f`. =====
-  obtain ⟨_hLp, gx, gy, ⟨hwgx, hwgy⟩, hmgx, hmgy⟩ := hf.2.1
+  obtain ⟨_hLp, gx, gy, ⟨hwgx, hwgy⟩, hmgx, hmgy⟩ := hW12
   have hLpgx : MemLpLocOn gx 2 Set.univ := hmgx
   have hLpgy : MemLpLocOn gy 2 Set.univ := hmgy
-  have hdiff : ∀ᵐ z, DifferentiableAt ℝ f z := IsQCAnalytic.ae_differentiableAt hf
-  have hfloc : MeasureTheory.LocallyIntegrable f := hf.1.1.continuous.locallyIntegrable
+  have hfloc : MeasureTheory.LocallyIntegrable f := hfcont.locallyIntegrable
   -- `L²_loc ⟹ L¹_loc ⟹ LocallyIntegrable`.
   have memLpLoc_to_loc : ∀ {g : ℂ → ℂ}, MemLpLocOn g 2 Set.univ →
       MeasureTheory.LocallyIntegrable g := by
@@ -1512,5 +1543,17 @@ theorem mollified_fderiv_ball_energy_tendsto_zero {f : ℂ → ℂ} {b : Beltram
   refine tendsto_of_tendsto_of_tendsto_of_le_of_le' tendsto_const_nhds hDto
     (Filter.Eventually.of_forall (fun n => zero_le _)) hdom
 
+/-- **(A: mollified-gradient `L²` energy decay on a ball.)** `IsQCAnalytic` wrapper of
+`mollified_fderiv_ball_energy_tendsto_zero_of_memW12loc`. -/
+theorem mollified_fderiv_ball_energy_tendsto_zero {f : ℂ → ℂ} {b : BeltramiCoeff}
+    (hf : IsQCAnalytic f b) (R : ℝ) (φ : ℕ → ContDiffBump (0 : ℂ))
+    (hφrout : Filter.Tendsto (fun n => (φ n).rOut) Filter.atTop (nhds 0)) :
+    Filter.Tendsto (fun n => ∫⁻ z in Metric.ball (0 : ℂ) R,
+        (‖fderiv ℝ (MeasureTheory.convolution ((φ n).normed MeasureTheory.volume) f
+            (ContinuousLinearMap.lsmul ℝ ℝ) MeasureTheory.volume) z
+          - fderiv ℝ f z‖₊ : ℝ≥0∞) ^ 2)
+      Filter.atTop (nhds 0) :=
+  mollified_fderiv_ball_energy_tendsto_zero_of_memW12loc hf.1.1.continuous
+    (IsQCAnalytic.ae_differentiableAt hf) hf.2.1 R φ hφrout
 
 end RiemannDynamics

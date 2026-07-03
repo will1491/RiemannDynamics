@@ -5,7 +5,7 @@ Authors: Will (Ziang) Li
 -/
 import RiemannDynamics.QC.Defs.Geometric
 import RiemannDynamics.QC.LengthArea.ReverseLengthAreaForward
-import RiemannDynamics.QC.GeometricToAnalytic.GeometricDifferentiable.Reciprocity
+import RiemannDynamics.QC.GeometricToAnalytic.GeometricDifferentiable.ReciprocityAssembly
 
 /-!
 # The infinitesimal modulus distortion (blow-up argument)
@@ -1523,107 +1523,47 @@ theorem squareQuad_imageModulus_conj_eq_realDiag (L : ℂ → ℂ) (σ₁ σ₂ 
   exact squareQuad_imageModulus_eq_realDiag L σ₂ σ₁ (Complex.I * c) (Complex.I * d)
     (θ + Real.pi / 2) hc' hd' h2 h1 hfact'
 
-/-- **Inverse Lusin condition (`N⁻¹`) of a geometric quasiconformal map.** The inverse `f⁻¹` of a
-geometric `K`-quasiconformal homeomorphism maps Lebesgue-null sets to Lebesgue-null sets. This is
-the inverse companion of the forward Lusin condition `IsQCGeometric.lusinN` (`QC/QCLusinN.lean`).
+/-! ## The cycle-free worst-orientation Wirtinger bracket (or-zero form)
 
-It is the genuine remaining content of the a.e. nondegeneracy `J_f > 0` (the area-formula half is
-proved against it in `ae_fderiv_ne_zero` below). Classically it follows from the inverse map being
-`W^{1,p}_loc` for some `p > 2` — the Gehring higher integrability of the quasiconformal inverse —
-via the planar Marcus–Mizel theorem `lusinN_image_null_of_weakGradient`
-(`Analysis/Sobolev/Morrey/LusinN.lean`): a continuous planar `W^{1,p>2}` map satisfies Lusin's
-condition (N). The inverse map's `W^{1,p>2}` regularity requires the two-sided modulus bound for
-`f⁻¹` (equivalently the Beurling reciprocity `M·M* ≤ 1`), which is not part of the one-sided
-geometric definition `IsQCGeometric`; it is isolated here as a single `sorry`. -/
-theorem IsQCGeometric.inverse_lusinN {f : ℂ → ℂ} {K : ℝ} (hf : IsQCGeometric f K) :
-    ∀ A : Set ℂ, volume A = 0 →
-      volume (⇑(hf.2.1.isHomeomorph.homeomorph f).symm '' A) = 0 := by
-  sorry
+The blow-up Rengel dilatation bound (`linearImage_dilatation_of_realDiag`) combined with the
+singular-value factorisation (`fderiv_factor_data`) extracts the worst-orientation Wirtinger
+bracket at every point of differentiability, **except** for the total collapse `Df x = 0`,
+which a purely infinitesimal argument cannot exclude: the radial stretch `f z = z·|z|` is a
+sense-preserving `2`-quasiconformal homeomorphism differentiable at `0` with `Df 0 = 0`. The
+*or-zero* form below records exactly this dichotomy. It consumes only the winding datum of
+sense-preservation and the proved blow-up machinery, so it is available **upstream** of the
+a.e. nondegeneracy `IsQCGeometric.ae_fderiv_ne_zero`
+(`QC/GeometricToAnalytic/NondegeneracyAssembly.lean`), whose proof runs through the inverse
+Lusin condition and therefore must not be cited here. The classical two-conjunct bracket
+`IsQCGeometric.wirtinger_bracket_of_blowup` is recovered there by filtering the zero branch
+against `ae_fderiv_ne_zero`. -/
 
-/-- **A.e. nondegeneracy of the differential (`J_f > 0` almost everywhere).** For a geometric
-`K`-quasiconformal map `f`, at almost every point of differentiability the differential `L = Df x`
-is nonzero. Combined with the worst-orientation Rengel bound (which excludes the rank-one
-degeneration `q = p > 0`), this yields `det L > 0` almost everywhere.
+/-- **Worst-orientation Wirtinger bracket, or-zero form (cycle-free).** At almost every point
+of differentiability of a geometric `K`-quasiconformal map, either the differential vanishes
+identically, or the Wirtinger data `p = ‖∂f x‖`, `q = ‖∂̄f x‖` satisfies the
+worst-orientation linear-dilatation bracket `q < p` and `(p + q) ≤ K·(p − q)`.
 
-WARNING — the *pointwise* exclusion of `L = 0` is **mathematically false**. A `K`-quasiconformal
-homeomorphism may be differentiable at an individual point with vanishing differential: the radial
-stretch `f (z) = z · |z|` is a sense-preserving `2`-quasiconformal homeomorphism — in polar form it
-is `(r, θ) ↦ (r², θ)`, whose principal stretches `2r` (radial) and `r` (tangential) give the
-constant dilatation `2` — yet it is real-differentiable at `0` with `fderiv ℝ f 0 = 0`, because
-`‖f z − f 0‖ / ‖z − 0‖ = |z| → 0`. Thus `f` and `x = 0` satisfy `IsQCGeometric f 2`,
-`DifferentiableAt ℝ f 0`, and `fderiv ℝ f 0 = 0` with **no** contradiction available: the
-zero-differential set is the single null point `{0}`. Nondegeneracy therefore can only hold almost
-everywhere, exactly as stated here.
+*Proof.* The classical bracket proof run with the winding field alone. The case `q > p` is
+excluded by sense-preservation (`windingOne_iff_det_pos`: `det = p² − q² < 0` contradicts
+winding `+1`); `q = p > 0` is excluded by the blow-up Rengel bound at the favourable
+orientation (the factorisation `realDiagMap (2p) 0` forces `2p ≤ K·0 = 0`); the remaining
+total collapse `q = p = 0` means `Df x = 0` and is returned as the left branch instead of
+being excluded. With `q < p`, the conjugate of the worst orientation factorises as
+`realDiagMap (p+q) (p−q)` and the Rengel bound yields the bracket.
 
-This is the classical `J_f > 0` a.e. theorem for quasiconformal homeomorphisms (Lehto–Virtanen,
-*Quasiconformal Mappings in the Plane*). The proof here is **complete modulo the inverse Lusin
-residual** `IsQCGeometric.inverse_lusinN`: the easy `≤` half of the area formula
-(`addHaar_image_eq_zero_of_det_fderivWithin_eq_zero`) shows the zero-Jacobian set
-`E = {x | DifferentiableAt ℝ f x ∧ fderiv ℝ f x = 0}` has null image `f '' E` (the determinant
-`(fderiv ℝ f).det` vanishes on `E`); the inverse Lusin condition `(N⁻¹)` then pulls this back,
-`E = f⁻¹ '' (f '' E)`, to `volume E = 0`, which is exactly the complement of the a.e. statement. It
-is consumed by `wirtinger_bracket_of_blowup` to discharge the total-collapse case `p = q = 0`. -/
-theorem IsQCGeometric.ae_fderiv_ne_zero {f : ℂ → ℂ} {K : ℝ} (hf : IsQCGeometric f K) :
-    ∀ᵐ x : ℂ, DifferentiableAt ℝ f x → fderiv ℝ f x ≠ 0 := by
-  classical
-  set g : ℂ → ℂ := ⇑(hf.2.1.isHomeomorph.homeomorph f).symm with hg
-  set E : Set ℂ := {x | DifferentiableAt ℝ f x ∧ fderiv ℝ f x = 0} with hE
-  -- (a) The zero-Jacobian set has null image (easy `≤` half of the area formula).
-  have hfE : volume (f '' E) = 0 := by
-    refine MeasureTheory.addHaar_image_eq_zero_of_det_fderivWithin_eq_zero volume
-      (f' := fun x => fderiv ℝ f x) ?_ ?_
-    · intro x hx; exact hx.1.hasFDerivAt.hasFDerivWithinAt
-    · intro x hx; change (fderiv ℝ f x).det = 0; rw [hx.2, ContinuousLinearMap.det]; simp
-  -- (b) Pull back through the inverse Lusin condition `N⁻¹`.
-  have hgfE : volume (g '' (f '' E)) = 0 := hf.inverse_lusinN _ hfE
-  have hgfx : ∀ x : ℂ, g (f x) = x := by
-    intro x
-    have hfx : (hf.2.1.isHomeomorph.homeomorph f) x = f x := rfl
-    rw [hg, ← hfx, Homeomorph.symm_apply_apply]
-  have hgf : g '' (f '' E) = E := by
-    rw [Set.image_image]; simp only [hgfx, Set.image_id']
-  rw [hgf] at hgfE
-  -- `volume E = 0` is the complement of the a.e. statement.
-  rw [MeasureTheory.ae_iff]
-  have hset : {x : ℂ | ¬ (DifferentiableAt ℝ f x → fderiv ℝ f x ≠ 0)} = E := by
-    ext x; simp only [hE, Set.mem_setOf_eq, Classical.not_imp, not_not]
-  rw [hset]; exact hgfE
-
-/-! ## PIECE 3 + 5 — assembly of the worst-orientation Wirtinger bracket
-
-The blow-up Rengel dilatation bound (`linearImage_dilatation_of_realDiag`, `σ₁ ≤ K·σ₂` at a
-factorised orientation) is combined with the singular-value factorisation (`fderiv_factor_data`,
-PIECE 3) to extract the worst-orientation Wirtinger bracket. The ordering `q < p` is obtained by
-excluding `q ≥ p`: `q > p` makes `det L = p² − q² < 0 ≠ 0`, which the topological sense-preservation
-(`windingOne_iff_det_pos`) contradicts; `q = p > 0` makes the *favourable* factorisation
-`realDiagMap (2p) 0` (`σ₂ = 0`), and the Rengel bound gives `2p ≤ K·0 = 0`, contradicting `p > 0`;
-the remaining total collapse `q = p = 0` (i.e. `L = 0`) is excluded almost everywhere by the
-nondegeneracy residual `IsQCGeometric.ae_fderiv_ne_zero`. With `q < p`, the *conjugate* of the
-worst orientation factorises as `realDiagMap (p+q) (p−q)`, and the Rengel bound gives
-`(p+q) ≤ K·(p−q)`. -/
-
-/-- **Worst-orientation Wirtinger bracket from the modulus blow-up.** At almost every point of
-differentiability, the Wirtinger data `p = ‖∂f x‖`, `q = ‖∂̄f x‖` of a geometric `K`-quasiconformal
-map satisfies the worst-orientation linear-dilatation bracket
-
-  `q < p`    and    `(p + q) ≤ K·(p − q)`,
-
-equivalently `det L = p² − q² > 0` (nondegeneracy) and `‖L‖²/det L = (p+q)/(p−q) ≤ K` (sharp
-dilatation), where `L = Df x`. Assembled from the blow-up Rengel dilatation bound
-`linearImage_dilatation_of_realDiag` via the singular-value factorisation (`fderiv_factor_data`):
-the conjugate of the worst orientation factorises as `realDiagMap (p+q) (p−q)`, giving directly
-`(p+q) ≤ K·(p−q)`; the degenerate factorisations rule out `q = p` (modulo the total collapse
-`L = 0`, the normal-families kernel), and the topological sense-preservation upgrades to `q < p`. -/
-theorem IsQCGeometric.wirtinger_bracket_of_blowup {f : ℂ → ℂ} {K : ℝ} (hf : IsQCGeometric f K) :
+Reference: Lehto–Virtanen, *Quasiconformal Mappings in the Plane*, 2nd ed., Ch. IV §5 (the
+pointwise dilatation bound at points of differentiability). -/
+theorem IsQCGeometric.wirtinger_bracket_or_zero {f : ℂ → ℂ} {K : ℝ}
+    (hf : IsQCGeometric f K) :
     ∀ᵐ x : ℂ, DifferentiableAt ℝ f x →
-      ‖dzbar f x‖ < ‖dz f x‖ ∧
-        ‖dz f x‖ + ‖dzbar f x‖ ≤ K * (‖dz f x‖ - ‖dzbar f x‖) := by
+      fderiv ℝ f x = 0 ∨
+        (‖dzbar f x‖ < ‖dz f x‖ ∧
+          ‖dz f x‖ + ‖dzbar f x‖ ≤ K * (‖dz f x‖ - ‖dzbar f x‖)) := by
   have hKpos : (0 : ℝ) < K := lt_of_lt_of_le one_pos hf.1
   have hKne : K ≠ 0 := ne_of_gt hKpos
   have hcont : Continuous f := hf.2.1.isHomeomorph.continuous
-  -- The winding-one structure and a.e. nondegeneracy of the differential hold a.e.
-  filter_upwards [hf.2.1.2, hf.ae_fderiv_ne_zero] with x hwind hLneimp hxd
-  have hLne : fderiv ℝ f x ≠ 0 := hLneimp hxd
+  -- Only the winding-one structure is filtered; a.e. nondegeneracy is NOT assumed.
+  filter_upwards [hf.2.1.2] with x hwind hxd
   -- Abbreviations for the Wirtinger data and the differential.
   set L : ℂ → ℂ := fun w => fderiv ℝ f x w with hL
   set p₀ : ℂ := dz f x with hp₀
@@ -1644,19 +1584,19 @@ theorem IsQCGeometric.wirtinger_bracket_of_blowup {f : ℂ → ℂ} {K : ℝ} (h
     have h := Complex.norm_mul_exp_arg_mul_I c
     rw [hcnorm] at h; push_cast at h; rwa [one_mul] at h
   -- =====================================================================
-  -- STEP 1 — `q < p` (nondegeneracy with sense-preservation).
+  -- STEP 1 — either total collapse (`L = 0`) or `q < p`.
   --
-  -- We exclude `q ≥ p` by cases: `q > p` (det < 0, sense-preservation); `q = p > 0` (the
-  -- *favourable* orientation factorisation `realDiagMap (2p) 0` has separating half-height `0`, so
-  -- the Rengel dilatation bound gives `2p ≤ K·0 = 0`, contradicting `p > 0`); and `q = p = 0`, i.e.
-  -- `L = 0` (total collapse, excluded by the normal-families kernel).
+  -- We exclude `q > p` (det < 0, sense-preservation) and `q = p > 0` (the *favourable*
+  -- orientation factorisation `realDiagMap (2p) 0` has separating half-height `0`, so the
+  -- Rengel dilatation bound gives `2p ≤ K·0 = 0`, contradicting `p > 0`); the remaining
+  -- total collapse `q = p = 0`, i.e. `L = 0`, is RETURNED rather than excluded.
   -- =====================================================================
-  have hqltp : q < p := by
+  have hmain : fderiv ℝ f x = 0 ∨ q < p := by
     rcases lt_or_ge q p with hlt | hge'
-    · exact hlt
-    exfalso
+    · exact Or.inr hlt
     rcases lt_or_eq_of_le hge' with hgt | heq
-    · -- `p < q`: `det L = p² − q² < 0 ≠ 0`; sense-preservation forces `det L > 0`, contradiction.
+    · -- `p < q`: `det L = p² − q² < 0 ≠ 0`; sense-preservation forces `det L > 0`.
+      exfalso
       have hdetlt : (fderiv ℝ f x).det < 0 := by rw [hdetval]; nlinarith [hpnn, hqnn]
       have hdetne : (fderiv ℝ f x).det ≠ 0 := ne_of_lt hdetlt
       have hdetpos : 0 < (fderiv ℝ f x).det :=
@@ -1664,15 +1604,16 @@ theorem IsQCGeometric.wirtinger_bracket_of_blowup {f : ℂ → ℂ} {K : ℝ} (h
       linarith
     · -- `p = q`  (`heq : p = q`).
       by_cases hp0 : p = 0
-      · -- `p = q = 0` ⟹ `L = 0`; excluded by the a.e. nondegeneracy `hLne`.
+      · -- `p = q = 0` ⟹ `L = 0`: the left branch.
         have hq0 : q = 0 := by rw [← heq, hp0]
         have hp₀0 : p₀ = 0 := by rw [← norm_eq_zero, ← hp, hp0]
         have hq₀0 : q₀ = 0 := by rw [← norm_eq_zero, ← hq, hq0]
         have hLzero : ∀ w, L w = 0 := by
           intro w; rw [hLrep, hp₀0, hq₀0]; ring
-        exact hLne (ContinuousLinearMap.ext hLzero)
+        exact Or.inl (ContinuousLinearMap.ext hLzero)
       · -- `p = q > 0`: the favourable orientation factorises as `realDiagMap (2p) 0`;
         -- the Rengel dilatation bound gives `2p ≤ K·0 = 0`, contradicting `p > 0`.
+        exfalso
         have hppos : 0 < p := lt_of_le_of_ne hpnn (Ne.symm hp0)
         obtain ⟨c, d, hcnorm, hdnorm, hfact⟩ := fderiv_factor_data p₀ q₀ 1 (by norm_num)
           (by rw [← hp]; exact hppos)
@@ -1688,6 +1629,9 @@ theorem IsQCGeometric.wirtinger_bracket_of_blowup {f : ℂ → ℂ} {K : ℝ} (h
           (le_refl (0:ℝ)) hdnorm hθ hfact'
         simp only [mul_zero] at hdil
         linarith
+  rcases hmain with hzero | hqltp
+  · exact Or.inl hzero
+  refine Or.inr ?_
   have hppos : 0 < p := lt_of_le_of_lt hqnn hqltp
   have hdiffpos : 0 < p - q := by linarith
   have hsumpos : 0 < p + q := by linarith
@@ -1722,18 +1666,36 @@ theorem IsQCGeometric.wirtinger_bracket_of_blowup {f : ℂ → ℂ} {K : ℝ} (h
   -- The Rengel dilatation bound at the conjugate orientation: `(p+q) ≤ K·(p−q)`.
   exact linearImage_dilatation_of_realDiag hf hxd hsumpos (le_of_lt hdiffpos) hdnorm' hc' hfactconj
 
-/-! ## PIECE 5 — assembly of the target -/
+/-- **Pointwise dilatation bound, or-zero form (cycle-free).** At almost every point of
+differentiability of a geometric `K`-quasiconformal map, the differential `L = Df x` has
+nonnegative Jacobian and linear dilatation at most `K` in the weak sense
+`‖L‖² ≤ K·det L` — with **no** nondegeneracy claim: the total collapse `L = 0` satisfies
+both inequalities trivially (`0 ≤ 0` and `0 ≤ K·0`).
 
-/-- **Infinitesimal modulus distortion (sharp pointwise dilatation bound).** For a geometric
-`K`-quasiconformal map `f`, at almost every point of differentiability the differential `L = Df x`
-is nondegenerate and has linear dilatation at most `K`:
-`det L ≠ 0` and `‖L‖² ≤ K · det L`. This is the infinitesimal modulus blow-up argument; it is the
-operator-norm residual consumed by `IsQCGeometric.ae_dilatation_bound`. -/
-theorem IsQCGeometric.infinitesimal_dilatation {f : ℂ → ℂ} {K : ℝ} (hf : IsQCGeometric f K) :
+This is the exact weakening of `IsQCGeometric.infinitesimal_dilatation` that survives without
+the inverse Lusin condition; it suffices for the clamped-Beltrami construction (Lean's
+`0/0 = 0` convention makes the Beltrami quotient vanish at collapsed points) and for the
+`L²` energy bound of the partials, which are the two consumers on the inverse-map route
+(`QC/GeometricToAnalytic/NondegeneracyAssembly.lean`).
+
+*Proof.* Zero branch: everything vanishes. Bracket branch:
+`infinitesimal_dilatation_of_wirtinger_bracket` plus `det L = p² − q² > 0` from `q < p`. -/
+theorem IsQCGeometric.dilatation_le_or_zero {f : ℂ → ℂ} {K : ℝ}
+    (hf : IsQCGeometric f K) :
     ∀ᵐ x : ℂ, DifferentiableAt ℝ f x →
-      (fderiv ℝ f x).det ≠ 0 ∧ ‖fderiv ℝ f x‖ ^ 2 ≤ K * (fderiv ℝ f x).det := by
-  filter_upwards [hf.wirtinger_bracket_of_blowup] with x hx hxdiff
-  obtain ⟨hqp, hbracket⟩ := hx hxdiff
-  exact infinitesimal_dilatation_of_wirtinger_bracket hqp hbracket
+      0 ≤ (fderiv ℝ f x).det ∧ ‖fderiv ℝ f x‖ ^ 2 ≤ K * (fderiv ℝ f x).det := by
+  filter_upwards [hf.wirtinger_bracket_or_zero] with x hor hxd
+  rcases hor hxd with hzero | ⟨hqp, hbr⟩
+  · -- Total collapse: `det = 0`, `‖L‖ = 0`, so both inequalities are equalities `0 ≤ 0`.
+    have hdet0 : (fderiv ℝ f x).det = 0 := by
+      rw [hzero, ContinuousLinearMap.det]; simp
+    rw [hdet0, hzero]
+    simp
+  · -- Bracket branch: the algebraic bridge plus positivity of the Jacobian.
+    have hdil := infinitesimal_dilatation_of_wirtinger_bracket hqp hbr
+    have hdetnn : 0 ≤ (fderiv ℝ f x).det := by
+      rw [det_fderiv_eq_wirtinger]
+      nlinarith [hqp, norm_nonneg (dzbar f x), norm_nonneg (dz f x)]
+    exact ⟨hdetnn, hdil.2⟩
 
 end RiemannDynamics

@@ -6,9 +6,11 @@ Authors: Will (Ziang) Li
 import RiemannDynamics.QC.Defs.Geometric
 import RiemannDynamics.QC.Defs.SensePreserving
 import RiemannDynamics.QC.LengthArea.ReverseLengthArea
+import RiemannDynamics.QC.LengthArea.BishopRengel
+import RiemannDynamics.QC.LengthArea.BishopMaster
+import RiemannDynamics.QC.LengthArea.BishopSlices
 import RiemannDynamics.QC.InverseQC.SliceAC
 import RiemannDynamics.QC.GeometricToAnalytic.GeometricDifferentiable.Reciprocity
-import RiemannDynamics.QC.GeometricToAnalytic.InfinitesimalModulus
 import RiemannDynamics.Analysis.Sobolev.AbsolutelyContinuousLines
 import RiemannDynamics.Analysis.Sobolev.WeakDeriv
 import RiemannDynamics.Analysis.Sobolev.DifferenceQuotient
@@ -32,21 +34,28 @@ into the residuals below; the rest of the reduction (to `exists_acl_memLp_sliceG
 `ae_differentiableAt_gehringLehto`) is carried out in full from the repository's already-proven
 infrastructure (`axisRect_imageModulus_le`, `rengel_area_lower_bound`).
 
-## The residuals and their downstream consumers
+## The chain and its downstream consumers
 
-* `IsQCGeometric.forward_lengthArea_energy` — the diff-free length–area energy brick (finite box
-  integrals of the squared slice variation and the squared slice derivative). Feeds both
-  `forward_ae_slice_bv` and `forward_sliceDeriv_memLp`.
-* `IsQCGeometric.forward_ae_slice_bv` (**proved** from the brick) — almost every slice has finite
-  variation on every interval (the length–area *inequality*).
-* `IsQCGeometric.forward_ae_slice_noSingularPart` — the no-singular-part / Lusin-(N) bound (the
-  length–area *equality*), upgrading bounded variation to absolute continuity.
-* `IsQCGeometric.forward_sliceDeriv_memLp` (**proved** from the brick) — the slice derivatives are
-  locally square-integrable.
+Every theorem of the chain is stated over the parametrized hypothesis `AxisRectModulusBound f K`
+(`1 ≤ K`, `IsHomeomorph f`, and the two axis-rectangle image-modulus bounds — the *only* part of
+`IsQCGeometric f K` the proofs consume), so the whole ACL theory applies verbatim to the
+**inverse** of a geometric quasiconformal map once its axis-rectangle bounds are established
+(`IsQCGeometric.inverse_axisRectModulusBound`). Thin `IsQCGeometric` wrappers at the end of the
+file, via `IsQCGeometric.toAxisRectModulusBound`, keep the original API:
 
-These assemble into `IsQCGeometric.exists_acl_memLp_sliceGradient` (ACL slices with `L²_loc`
-energy), from which `IsQCGeometric.ae_differentiableAt_gehringLehto` follows by the proved
-Gehring–Lehto theorem `ae_differentiableAt_of_W12loc_homeomorph`.
+* `AxisRectModulusBound.forward_lengthArea_energy` — the diff-free length–area energy brick
+  (finite box integrals of the squared slice variation and the squared slice derivative). Feeds
+  both `forward_ae_slice_bv` and `forward_sliceDeriv_memLp`.
+* `AxisRectModulusBound.forward_ae_slice_bv` — almost every slice has finite variation on every
+  interval (the length–area *inequality*).
+* `AxisRectModulusBound.forward_ae_slice_noSingularPart` — the no-singular-part / Lusin-(N)
+  bound (the length–area *equality*), upgrading bounded variation to absolute continuity.
+* `AxisRectModulusBound.forward_sliceDeriv_memLp` — the slice derivatives are locally
+  square-integrable.
+
+These assemble into `AxisRectModulusBound.exists_acl_memLp_sliceGradient` (ACL slices with
+`L²_loc` energy), from which `AxisRectModulusBound.ae_differentiableAt_gehringLehto` follows by
+the proved Gehring–Lehto theorem `ae_differentiableAt_of_W12loc_homeomorph`.
 -/
 
 open MeasureTheory Complex
@@ -166,28 +175,19 @@ bound via `setLIntegral_axisRect_eq_iterated_*` + `measurable_forwardSliceDeriv*
 **differentiability-free** by construction: the slice variations and slice derivatives are intrinsic
 one-dimensional quantities of the continuous map `f`.
 
-## Closeability (honest assessment): the forward image-family length–area lower bound.
+**Proved** from the Bishop box-energy bricks `qc_forward_energy_box_horizontal`/
+`qc_forward_energy_box_vertical` (`QC/LengthArea/BishopSlices.lean`), which run the classical
+Lehto–Virtanen / Bishop chord–area transfer (Rengel separation bound + reciprocity lower bound +
+the monotone image-area profiles) entirely from the axis-rectangle modulus bounds. The
+hypothesis is the parametrized `AxisRectModulusBound f K`, so the brick applies verbatim to any
+homeomorphism with axis-rectangle bounds — in particular to the inverse of a geometric
+quasiconformal map (`IsQCGeometric.inverse_axisRectModulusBound`). The `IsQCGeometric` wrapper
+is `IsQCGeometric.forward_lengthArea_energy` at the end of this file.
 
-The classical proof (Lehto–Virtanen; Väisälä §31.1) transfers the geometric modulus upper bound
-`M(f(R)) ≤ K·(t−s)/(b−a)` (`axisRect_imageModulus_le`, proven) to the slice energy by building, on
-the **image** plane, the *reciprocal-slice-length* admissible density `ρ(w) = 1/ℓ_f(y)` on the image
-of the height-`y` slice (where `ℓ_f(y)` is the image-slice length): every image curve `f∘γ_y` then
-has `∫_{f∘γ_y} ρ ds = 1`, so `ρ` is admissible and `M(f(R)) ≥ ∫ρ² dArea`, and a Cauchy–Schwarz /
-Fubini coupling on the image plane converts `∫ρ²` into the slice-energy lower bound, giving
-`∫_y ℓ_f(y)² dy ≤ K·area(f(R)) < ∞` (the image area is finite since `f''R` is compact). This is the
-*easy* (mod-upper ⟹ energy-upper) direction — **no** Grötzsch symmetrization, **no** reciprocity.
-
-It is **kept as a `sorry` residual**: the repository has the source-side length–area lower bound
-(`lengthArea_modulus_lower_bound`, `segmentFamily_modulus_ge`) and the image-modulus upper bound
-(`axisRect_imageModulus_le`), but **not** the image-plane reciprocal-density coupling, which needs a
-co-area / change-of-variables *equality* on the (non-Lipschitz, BV-sliced) image — Mathlib-absent in
-this regime. This is the genuine forward length–area energy bottleneck (the Gehring–Lehto brick).
-It may **not** be discharged via the proven `ae_slice_boundedVariation`/`memLpLocOn_partials`, which
-route through `ae_differentiableAt'`/`qc_image_ball_diam_sq_le_volume`: those feed
-`ae_differentiableAt_gehringLehto` *through this very leaf*, so using them is a cycle and is on the
-forbidden list. The diff-free image-family lower bound is the unique honest route. -/
-theorem IsQCGeometric.forward_lengthArea_energy {f : ℂ → ℂ} {K : ℝ}
-    (hf : IsQCGeometric f K) :
+Reference: Lehto–Virtanen, *Quasiconformal Mappings in the Plane*, Ch. IV §2; Väisälä §31.1;
+Bishop, *Quasiconformal Mappings*, Ch. 3 Theorem 4.1. -/
+theorem AxisRectModulusBound.forward_lengthArea_energy {f : ℂ → ℂ} {K : ℝ}
+    (hf : AxisRectModulusBound f K) :
     (∀ a b s t : ℝ,
         (∫⁻ y in Set.Icc s t,
             (eVariationOn (fun x : ℝ => (f ⟨x, y⟩).re) (Set.Icc a b)) ^ 2) ≠ ⊤ ∧
@@ -202,7 +202,73 @@ theorem IsQCGeometric.forward_lengthArea_energy {f : ℂ → ℂ} {K : ℝ}
             (eVariationOn (fun y : ℝ => (f ⟨x, y⟩).im) (Set.Icc s t)) ^ 2) ≠ ⊤ ∧
         (∫⁻ x in Set.Icc a b, ∫⁻ y in Set.Icc s t,
             (‖forwardSliceDerivY f ⟨x, y⟩‖₊ : ℝ≥0∞) ^ 2) ≠ ⊤) := by
-  sorry
+  -- The slice-derivative fields unfold to the one-dimensional `deriv`s used in the box bounds.
+  have hderivX : ∀ y x : ℝ, forwardSliceDerivX f ⟨x, y⟩ = deriv (fun u : ℝ => f ⟨u, y⟩) x := by
+    intro y x; simp only [forwardSliceDerivX]
+  have hderivY : ∀ x y : ℝ, forwardSliceDerivY f ⟨x, y⟩ = deriv (fun u : ℝ => f ⟨x, u⟩) y := by
+    intro x y; simp only [forwardSliceDerivY]
+  constructor
+  · -- Horizontal triple.
+    intro a b s t
+    rcases lt_or_ge s t with hst | hts
+    · rcases lt_or_ge a b with hab | hba
+      · -- Nondegenerate box: the Bishop box-energy bound applies verbatim.
+        obtain ⟨h1, h2, h3⟩ := qc_forward_energy_box_horizontal hf hab hst
+        refine ⟨h1, h2, ?_⟩
+        simp only [hderivX]
+        exact h3
+      · -- Degenerate abscissa window `b ≤ a`: the slice set is subsingleton / null.
+        have hsub : (Set.Icc a b).Subsingleton := Set.subsingleton_Icc_of_ge hba
+        have hvar : ∀ g : ℝ → ℝ, eVariationOn g (Set.Icc a b) = 0 := fun g =>
+          eVariationOn.subsingleton g hsub
+        have hvol : (volume : Measure ℝ) (Set.Icc a b) = 0 := by
+          rw [Real.volume_Icc]
+          exact ENNReal.ofReal_eq_zero.mpr (by linarith)
+        have hz : ∀ y : ℝ,
+            (∫⁻ x in Set.Icc a b, (‖forwardSliceDerivX f ⟨x, y⟩‖₊ : ℝ≥0∞) ^ 2) = 0 :=
+          fun y => setLIntegral_measure_zero _ _ hvol
+        refine ⟨?_, ?_, ?_⟩
+        · simp [hvar]
+        · simp [hvar]
+        · simp only [hz, lintegral_zero]
+          exact ENNReal.zero_ne_top
+    · -- Degenerate height window `t ≤ s`: the outer integrals are over a null set.
+      have hvol : (volume : Measure ℝ) (Set.Icc s t) = 0 := by
+        rw [Real.volume_Icc]
+        exact ENNReal.ofReal_eq_zero.mpr (by linarith)
+      exact ⟨by rw [setLIntegral_measure_zero _ _ hvol]; exact ENNReal.zero_ne_top,
+        by rw [setLIntegral_measure_zero _ _ hvol]; exact ENNReal.zero_ne_top,
+        by rw [setLIntegral_measure_zero _ _ hvol]; exact ENNReal.zero_ne_top⟩
+  · -- Vertical triple (mirror).
+    intro a b s t
+    rcases lt_or_ge a b with hab | hba
+    · rcases lt_or_ge s t with hst | hts
+      · obtain ⟨h1, h2, h3⟩ := qc_forward_energy_box_vertical hf hab hst
+        refine ⟨h1, h2, ?_⟩
+        simp only [hderivY]
+        exact h3
+      · -- Degenerate height window `t ≤ s`.
+        have hsub : (Set.Icc s t).Subsingleton := Set.subsingleton_Icc_of_ge hts
+        have hvar : ∀ g : ℝ → ℝ, eVariationOn g (Set.Icc s t) = 0 := fun g =>
+          eVariationOn.subsingleton g hsub
+        have hvol : (volume : Measure ℝ) (Set.Icc s t) = 0 := by
+          rw [Real.volume_Icc]
+          exact ENNReal.ofReal_eq_zero.mpr (by linarith)
+        have hz : ∀ x : ℝ,
+            (∫⁻ y in Set.Icc s t, (‖forwardSliceDerivY f ⟨x, y⟩‖₊ : ℝ≥0∞) ^ 2) = 0 :=
+          fun x => setLIntegral_measure_zero _ _ hvol
+        refine ⟨?_, ?_, ?_⟩
+        · simp [hvar]
+        · simp [hvar]
+        · simp only [hz, lintegral_zero]
+          exact ENNReal.zero_ne_top
+    · -- Degenerate abscissa window `b ≤ a`.
+      have hvol : (volume : Measure ℝ) (Set.Icc a b) = 0 := by
+        rw [Real.volume_Icc]
+        exact ENNReal.ofReal_eq_zero.mpr (by linarith)
+      exact ⟨by rw [setLIntegral_measure_zero _ _ hvol]; exact ENNReal.zero_ne_top,
+        by rw [setLIntegral_measure_zero _ _ hvol]; exact ENNReal.zero_ne_top,
+        by rw [setLIntegral_measure_zero _ _ hvol]; exact ENNReal.zero_ne_top⟩
 
 /-- **From a box `eVariation²`-integral bound to a.e.-finite slice variation (general engine).**
 If `g : ℝ → ℝ → ℝ` is a jointly continuous slice family whose squared slice variation has a finite
@@ -303,13 +369,13 @@ component `eVariation²` box bounds force a.e.-finite component variation by
 `Var(f) ≤ Var(Re f) + Var(Im f)`). It is the **diff-free** analogue of
 `IsQCGeometric.ae_slice_boundedVariation`, which routes through `ae_differentiableAt'` (the
 forbidden 2D differentiability). -/
-theorem IsQCGeometric.forward_ae_slice_bv {f : ℂ → ℂ} {K : ℝ}
-    (hf : IsQCGeometric f K) :
+theorem AxisRectModulusBound.forward_ae_slice_bv {f : ℂ → ℂ} {K : ℝ}
+    (hf : AxisRectModulusBound f K) :
     (∀ᵐ y : ℝ, ∀ a b : ℝ,
         eVariationOn (fun x : ℝ => f ⟨x, y⟩) (Set.Icc a b) ≠ ⊤) ∧
     (∀ᵐ x : ℝ, ∀ a b : ℝ,
         eVariationOn (fun y : ℝ => f ⟨x, y⟩) (Set.Icc a b) ≠ ⊤) := by
-  have hcont : Continuous f := hf.2.1.isHomeomorph.continuous
+  have hcont : Continuous f := hf.2.1.continuous
   obtain ⟨hHoriz, hVert⟩ := hf.forward_lengthArea_energy
   -- Joint continuity of the horizontal real/imaginary slice families.
   have hjoint_hx_re : Continuous (fun p : ℝ × ℝ => (f ⟨p.2, p.1⟩).re) := by
@@ -388,32 +454,19 @@ The derivatives here are the **one-dimensional slice** derivatives `deriv (fun s
 (not `(fderiv ℝ f · 1).re`), matching the diff-free witnesses `forwardSliceDerivX`/
 `forwardSliceDerivY`. It supplies the `hmaf` input to `ae_slice_AC_of_maf`.
 
-## Closeability (honest assessment): the irreducible diff-free no-singular-part node.
+**Proved** from the Bishop slice-absolute-continuity bricks
+`AxisRectModulusBound.ae_horizontal_slice_absolutelyContinuous`/
+`AxisRectModulusBound.ae_vertical_slice_absolutelyContinuous`
+(`QC/LengthArea/BishopSlices.lean`): a.e. slice absolute continuity, projected to each real
+component, gives the one-dimensional no-singular-part inequality
+`eVariationOn ≤ ∫⁻ ‖deriv‖₊` on every interval. The hypothesis is the parametrized
+`AxisRectModulusBound f K` (the `IsQCGeometric` wrapper is at the end of this file), so the
+brick applies verbatim at the inverse map.
 
-This is the one genuinely length–area-*equality* fact of the forward direction and it is **kept as
-a `sorry` residual** because every available engine for it is forbidden on this critical path:
-
-* The **multiplicity area formula** `multiplicityAreaFormula_noSingularPart` (the repo's only
-  proven no-singular-part engine, `QC/InverseQC/`) requires the a.e. 2D-differentiability
-  hypothesis `hGdiff : ∀ᵐ w, DifferentiableAt ℝ G w` — but this leaf *feeds*
-  `ae_differentiableAt_gehringLehto`, so 2D differentiability of `f` is precisely what is **not**
-  yet available here (using it is a cycle, and is on the explicit forbidden list).
-* The **co-area** engine `eilenberg_coarea_grad_le` (`Coarea/Assembly.lean`) needs `LipschitzWith`,
-  which the QC map is not.
-* The **Banach–Zaretsky** converse (`monotone_ftc_of_luzinN`, `absolutelyContinuousOnInterval_of_*`)
-  would close it from a **1D Lusin-(N)** of the monotone Jordan pieces of each slice; but obtaining
-  that 1D piece-(N) from the proven **2D** forward Lusin condition `IsQCGeometric.lusinN`
-  (`QCLusinN.lean`) is exactly the *forward fibered Lusin-(N)* of `Φ⟨x,y⟩ = (f⟨x,y⟩).re + i·y`,
-  which collapses `f`'s image transversally and is **not** derivable from `f''(null)` being null
-  without the area-equality (a Fubini/co-area coupling), i.e. without the very thing being proved.
-
-So this residual is the classical Lehto–Virtanen / Marcus–Mizel area-equality core; it is
-**Mathlib/repo-absent in the diff-free regime** and is the honest minimal endpoint. (The
-*inequality* half — bounded variation and `L²_loc` energy — is fully discharged diff-free from the
-single `forward_lengthArea_energy` brick in `forward_ae_slice_bv`/`forward_sliceDeriv_memLp` above.)
--/
-theorem IsQCGeometric.forward_ae_slice_noSingularPart {f : ℂ → ℂ} {K : ℝ}
-    (hf : IsQCGeometric f K) :
+Reference: Lehto–Virtanen, *Quasiconformal Mappings in the Plane*, Ch. IV §§2–3;
+Väisälä §31.2; Bishop, *Quasiconformal Mappings*, Ch. 3 Theorem 4.1. -/
+theorem AxisRectModulusBound.forward_ae_slice_noSingularPart {f : ℂ → ℂ} {K : ℝ}
+    (hf : AxisRectModulusBound f K) :
     (∀ᵐ y : ℝ, ∀ a b : ℝ,
         eVariationOn (fun x : ℝ => (f ⟨x, y⟩).re) (Set.Icc a b)
             ≤ ∫⁻ x in Set.Icc a b, ‖deriv (fun s : ℝ => (f ⟨s, y⟩).re) x‖₊ ∧
@@ -424,7 +477,37 @@ theorem IsQCGeometric.forward_ae_slice_noSingularPart {f : ℂ → ℂ} {K : ℝ
             ≤ ∫⁻ y in Set.Icc a b, ‖deriv (fun s : ℝ => (f ⟨x, s⟩).re) y‖₊ ∧
         eVariationOn (fun y : ℝ => (f ⟨x, y⟩).im) (Set.Icc a b)
             ≤ ∫⁻ y in Set.Icc a b, ‖deriv (fun s : ℝ => (f ⟨x, s⟩).im) y‖₊) := by
-  sorry
+  constructor
+  · -- Horizontal slices: a.e. absolute continuity, projected to each real component,
+    -- then the one-dimensional no-singular-part inequality.
+    filter_upwards [hf.ae_horizontal_slice_absolutelyContinuous] with y hy a b
+    rcases le_or_gt a b with hab | hba
+    · have hAC := hy a b
+      have hre : AbsolutelyContinuousOnInterval (fun x : ℝ => (f ⟨x, y⟩).re) a b := by
+        have h := Complex.reCLM.lipschitz.comp_absolutelyContinuousOnInterval hAC
+        simpa only [Function.comp_def, Complex.reCLM_apply] using h
+      have him : AbsolutelyContinuousOnInterval (fun x : ℝ => (f ⟨x, y⟩).im) a b := by
+        have h := Complex.imCLM.lipschitz.comp_absolutelyContinuousOnInterval hAC
+        simpa only [Function.comp_def, Complex.imCLM_apply] using h
+      exact ⟨hre.eVariationOn_le_lintegral_deriv hab, him.eVariationOn_le_lintegral_deriv hab⟩
+    · -- Degenerate interval `b < a`: the variation over the subsingleton `Icc` vanishes.
+      have hsub : (Set.Icc a b).Subsingleton := Set.subsingleton_Icc_of_ge hba.le
+      exact ⟨le_of_eq_of_le (eVariationOn.subsingleton _ hsub) (zero_le _),
+        le_of_eq_of_le (eVariationOn.subsingleton _ hsub) (zero_le _)⟩
+  · -- Vertical slices (mirror).
+    filter_upwards [hf.ae_vertical_slice_absolutelyContinuous] with x hx a b
+    rcases le_or_gt a b with hab | hba
+    · have hAC := hx a b
+      have hre : AbsolutelyContinuousOnInterval (fun y : ℝ => (f ⟨x, y⟩).re) a b := by
+        have h := Complex.reCLM.lipschitz.comp_absolutelyContinuousOnInterval hAC
+        simpa only [Function.comp_def, Complex.reCLM_apply] using h
+      have him : AbsolutelyContinuousOnInterval (fun y : ℝ => (f ⟨x, y⟩).im) a b := by
+        have h := Complex.imCLM.lipschitz.comp_absolutelyContinuousOnInterval hAC
+        simpa only [Function.comp_def, Complex.imCLM_apply] using h
+      exact ⟨hre.eVariationOn_le_lintegral_deriv hab, him.eVariationOn_le_lintegral_deriv hab⟩
+    · have hsub : (Set.Icc a b).Subsingleton := Set.subsingleton_Icc_of_ge hba.le
+      exact ⟨le_of_eq_of_le (eVariationOn.subsingleton _ hsub) (zero_le _),
+        le_of_eq_of_le (eVariationOn.subsingleton _ hsub) (zero_le _)⟩
 
 /-- **Box Tonelli for an `ℝ≥0∞`-valued integrand (`y`-outer form).** For a measurable
 `H : ℂ → ℝ≥0∞`, the integral over the axis rectangle `(a,b)×(s,t)` is the iterated integral with the
@@ -520,11 +603,11 @@ This is the **diff-free** analogue of `IsQCGeometric.memLpLocOn_partials`: that 
 operator norm `‖fderiv ℝ f‖` via quasiconformal roundness (`qc_image_ball_diam_sq_le_volume`, the
 forbidden route); here the energy is carried by the *slice* derivatives directly through the
 length–area inequality, with no 2D differentiability. -/
-theorem IsQCGeometric.forward_sliceDeriv_memLp {f : ℂ → ℂ} {K : ℝ}
-    (hf : IsQCGeometric f K) :
+theorem AxisRectModulusBound.forward_sliceDeriv_memLp {f : ℂ → ℂ} {K : ℝ}
+    (hf : AxisRectModulusBound f K) :
     MemLpLocOn (forwardSliceDerivX f) 2 Set.univ ∧
     MemLpLocOn (forwardSliceDerivY f) 2 Set.univ := by
-  have hcont : Continuous f := hf.2.1.isHomeomorph.continuous
+  have hcont : Continuous f := hf.2.1.continuous
   obtain ⟨hHoriz, hVert⟩ := hf.forward_lengthArea_energy
   -- The two slice-derivative fields are measurable.
   have hmX : Measurable (forwardSliceDerivX f) := measurable_forwardSliceDerivX hcont
@@ -589,12 +672,12 @@ single Grötzsch-free residual that **replaces** the research sorry `grotzsch_sy
 on the critical path of `reverseLengthArea_data`. The a.e. differentiability and pointwise
 dilatation data are then recovered downstream via the proven Gehring–Lehto theorem
 (`ae_differentiableAt_of_W12loc_homeomorph`) rather than via quasiconformal roundness. -/
-theorem IsQCGeometric.exists_acl_memLp_sliceGradient {f : ℂ → ℂ} {K : ℝ}
-    (hf : IsQCGeometric f K) :
+theorem AxisRectModulusBound.exists_acl_memLp_sliceGradient {f : ℂ → ℂ} {K : ℝ}
+    (hf : AxisRectModulusBound f K) :
     ∃ gx gy : ℂ → ℂ, ACLHorizontal f gx ∧ ACLVertical f gy ∧
       MemLpLocOn gx (2 : ℝ≥0∞) Set.univ ∧ MemLpLocOn gy (2 : ℝ≥0∞) Set.univ := by
   classical
-  have hcont : Continuous f := hf.2.1.isHomeomorph.continuous
+  have hcont : Continuous f := hf.2.1.continuous
   -- The three diff-free length–area residuals.
   obtain ⟨hBVx, hBVy⟩ := hf.forward_ae_slice_bv
   obtain ⟨hNSx, hNSy⟩ := hf.forward_ae_slice_noSingularPart
@@ -777,12 +860,12 @@ the quasiconformal-roundness / Grötzsch-symmetrization route. The forward rever
 residual `exists_acl_memLp_sliceGradient` supplies an `L²_loc` ACL gradient `(gx, gy)`, i.e.
 `f ∈ W^{1,2}_loc` as a homeomorphism; the proven Gehring–Lehto theorem
 `ae_differentiableAt_of_W12loc_homeomorph` then yields total differentiability almost everywhere. -/
-theorem IsQCGeometric.ae_differentiableAt_gehringLehto {f : ℂ → ℂ} {K : ℝ}
-    (hf : IsQCGeometric f K) :
+theorem AxisRectModulusBound.ae_differentiableAt_gehringLehto {f : ℂ → ℂ} {K : ℝ}
+    (hf : AxisRectModulusBound f K) :
     ∀ᵐ x : ℂ, DifferentiableAt ℝ f x := by
   classical
-  have hfcont : Continuous f := hf.2.1.isHomeomorph.continuous
-  have hhomeo : IsHomeomorph f := hf.2.1.isHomeomorph
+  have hfcont : Continuous f := hf.2.1.continuous
+  have hhomeo : IsHomeomorph f := hf.2.1
   obtain ⟨gx, gy, haclx, hacly, hgx2, hgy2⟩ := hf.exists_acl_memLp_sliceGradient
   -- `L²_loc ⟹ L¹_loc` on compacts supplies the local integrability the weak-gradient bridge needs.
   have hLIofL2 : ∀ {h : ℂ → ℂ}, MemLpLocOn h (2 : ℝ≥0∞) Set.univ → LocallyIntegrable h := by
@@ -802,5 +885,77 @@ theorem IsQCGeometric.ae_differentiableAt_gehringLehto {f : ℂ → ℂ} {K : �
   -- The proven Gehring–Lehto theorem: a `W^{1,2}_loc` homeomorphism is a.e. differentiable.
   exact RiemannDynamics.GehringLehto.ae_differentiableAt_of_W12loc_homeomorph
     hhomeo hwg hgx2 hgy2
+
+/-! ## The `IsQCGeometric` wrappers
+
+Thin wrappers restating the whole chain over the original geometric hypothesis, via
+`IsQCGeometric.toAxisRectModulusBound`. All pre-existing downstream consumers
+(`QC/GeometricToAnalytic/Assembly.lean` and beyond) use these. -/
+
+/-- `AxisRectModulusBound.forward_lengthArea_energy` for a geometric `K`-quasiconformal map. -/
+theorem IsQCGeometric.forward_lengthArea_energy {f : ℂ → ℂ} {K : ℝ}
+    (hf : IsQCGeometric f K) :
+    (∀ a b s t : ℝ,
+        (∫⁻ y in Set.Icc s t,
+            (eVariationOn (fun x : ℝ => (f ⟨x, y⟩).re) (Set.Icc a b)) ^ 2) ≠ ⊤ ∧
+        (∫⁻ y in Set.Icc s t,
+            (eVariationOn (fun x : ℝ => (f ⟨x, y⟩).im) (Set.Icc a b)) ^ 2) ≠ ⊤ ∧
+        (∫⁻ y in Set.Icc s t, ∫⁻ x in Set.Icc a b,
+            (‖forwardSliceDerivX f ⟨x, y⟩‖₊ : ℝ≥0∞) ^ 2) ≠ ⊤) ∧
+    (∀ a b s t : ℝ,
+        (∫⁻ x in Set.Icc a b,
+            (eVariationOn (fun y : ℝ => (f ⟨x, y⟩).re) (Set.Icc s t)) ^ 2) ≠ ⊤ ∧
+        (∫⁻ x in Set.Icc a b,
+            (eVariationOn (fun y : ℝ => (f ⟨x, y⟩).im) (Set.Icc s t)) ^ 2) ≠ ⊤ ∧
+        (∫⁻ x in Set.Icc a b, ∫⁻ y in Set.Icc s t,
+            (‖forwardSliceDerivY f ⟨x, y⟩‖₊ : ℝ≥0∞) ^ 2) ≠ ⊤) :=
+  hf.toAxisRectModulusBound.forward_lengthArea_energy
+
+/-- `AxisRectModulusBound.forward_ae_slice_bv` for a geometric `K`-quasiconformal map. -/
+theorem IsQCGeometric.forward_ae_slice_bv {f : ℂ → ℂ} {K : ℝ}
+    (hf : IsQCGeometric f K) :
+    (∀ᵐ y : ℝ, ∀ a b : ℝ,
+        eVariationOn (fun x : ℝ => f ⟨x, y⟩) (Set.Icc a b) ≠ ⊤) ∧
+    (∀ᵐ x : ℝ, ∀ a b : ℝ,
+        eVariationOn (fun y : ℝ => f ⟨x, y⟩) (Set.Icc a b) ≠ ⊤) :=
+  hf.toAxisRectModulusBound.forward_ae_slice_bv
+
+/-- `AxisRectModulusBound.forward_ae_slice_noSingularPart` for a geometric `K`-quasiconformal
+map. -/
+theorem IsQCGeometric.forward_ae_slice_noSingularPart {f : ℂ → ℂ} {K : ℝ}
+    (hf : IsQCGeometric f K) :
+    (∀ᵐ y : ℝ, ∀ a b : ℝ,
+        eVariationOn (fun x : ℝ => (f ⟨x, y⟩).re) (Set.Icc a b)
+            ≤ ∫⁻ x in Set.Icc a b, ‖deriv (fun s : ℝ => (f ⟨s, y⟩).re) x‖₊ ∧
+        eVariationOn (fun x : ℝ => (f ⟨x, y⟩).im) (Set.Icc a b)
+            ≤ ∫⁻ x in Set.Icc a b, ‖deriv (fun s : ℝ => (f ⟨s, y⟩).im) x‖₊) ∧
+    (∀ᵐ x : ℝ, ∀ a b : ℝ,
+        eVariationOn (fun y : ℝ => (f ⟨x, y⟩).re) (Set.Icc a b)
+            ≤ ∫⁻ y in Set.Icc a b, ‖deriv (fun s : ℝ => (f ⟨x, s⟩).re) y‖₊ ∧
+        eVariationOn (fun y : ℝ => (f ⟨x, y⟩).im) (Set.Icc a b)
+            ≤ ∫⁻ y in Set.Icc a b, ‖deriv (fun s : ℝ => (f ⟨x, s⟩).im) y‖₊) :=
+  hf.toAxisRectModulusBound.forward_ae_slice_noSingularPart
+
+/-- `AxisRectModulusBound.forward_sliceDeriv_memLp` for a geometric `K`-quasiconformal map. -/
+theorem IsQCGeometric.forward_sliceDeriv_memLp {f : ℂ → ℂ} {K : ℝ}
+    (hf : IsQCGeometric f K) :
+    MemLpLocOn (forwardSliceDerivX f) 2 Set.univ ∧
+    MemLpLocOn (forwardSliceDerivY f) 2 Set.univ :=
+  hf.toAxisRectModulusBound.forward_sliceDeriv_memLp
+
+/-- `AxisRectModulusBound.exists_acl_memLp_sliceGradient` for a geometric `K`-quasiconformal
+map. -/
+theorem IsQCGeometric.exists_acl_memLp_sliceGradient {f : ℂ → ℂ} {K : ℝ}
+    (hf : IsQCGeometric f K) :
+    ∃ gx gy : ℂ → ℂ, ACLHorizontal f gx ∧ ACLVertical f gy ∧
+      MemLpLocOn gx (2 : ℝ≥0∞) Set.univ ∧ MemLpLocOn gy (2 : ℝ≥0∞) Set.univ :=
+  hf.toAxisRectModulusBound.exists_acl_memLp_sliceGradient
+
+/-- `AxisRectModulusBound.ae_differentiableAt_gehringLehto` for a geometric `K`-quasiconformal
+map. -/
+theorem IsQCGeometric.ae_differentiableAt_gehringLehto {f : ℂ → ℂ} {K : ℝ}
+    (hf : IsQCGeometric f K) :
+    ∀ᵐ x : ℂ, DifferentiableAt ℝ f x :=
+  hf.toAxisRectModulusBound.ae_differentiableAt_gehringLehto
 
 end RiemannDynamics

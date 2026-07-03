@@ -538,4 +538,71 @@ theorem axisRectQuadrilateralSwap_rightSide {a b s t : ℝ} (hab : a < b) (hst :
       · field_simp; ring
       · rw [mul_one]; linarith [him]
 
+/-! ### The axis-rectangle modulus-bound hypothesis (the parametrized QC input)
+
+The entire forward length–area chain (the Bishop bricks in `QC/LengthArea/Bishop*.lean` and the
+residual chain in `QC/LengthArea/ReverseLengthAreaEnergy.lean`) consumes the geometric
+quasiconformality hypothesis `IsQCGeometric f K` **only** through three facts: `1 ≤ K`, `f` is a
+homeomorphism, and the image-family modulus bounds on the (crossing and separating families of)
+axis rectangles. `AxisRectModulusBound` packages exactly these facts, so the chain can be
+instantiated at maps that are not known to be quasiconformal on *all* quadrilaterals — in
+particular at the **inverse** `g = f⁻¹` of a geometric quasiconformal map, whose axis-rectangle
+bounds are produced by the explicit-density length–area argument
+(`IsQCGeometric.inverse_axisRectModulusBound` in
+`QC/GeometricToAnalytic/NondegeneracyAssembly.lean`) without any two-sided modulus reciprocity.
+
+Reference: O. Lehto, K. I. Virtanen, *Quasiconformal Mappings in the Plane*, 2nd ed., Ch. IV
+(the ACL theorem consumes only rectangle moduli); J. Väisälä, *Lectures on n-Dimensional
+Quasiconformal Mappings*, §31. -/
+
+/-- **The axis-rectangle modulus-bound hypothesis.** `AxisRectModulusBound f K` holds when
+`1 ≤ K`, `f` is a homeomorphism of `ℂ`, and for every axis rectangle `R = (a, b) × (s, t)` the
+image connecting family of the standard (crossing) parametrization has modulus at most
+`K·(t − s)/(b − a)` and the image connecting family of the swapped (separating) parametrization
+has modulus at most `K·(b − a)/(t − s)`.
+
+This is precisely the sub-hypothesis of `IsQCGeometric f K` that the forward length–area /
+ACL chain consumes (see `IsQCGeometric.toAxisRectModulusBound`); it is strictly weaker — it
+mentions only axis rectangles, never general quadrilaterals — which is what makes it provable
+for the inverse map by the length–area transfer with the explicit admissible density
+`ρ = 𝟙_{g(R̄)}·‖Df‖/(b−a)` (Lehto–Virtanen's rectangle estimate, no reciprocity). -/
+def AxisRectModulusBound (f : ℂ → ℂ) (K : ℝ) : Prop :=
+  1 ≤ K ∧ IsHomeomorph f ∧
+    (∀ (a b s t : ℝ) (hab : a < b) (hst : s < t),
+        curveModulus ((axisRectQuadrilateral a b s t hab hst).imageCurveFamily f)
+          ≤ ENNReal.ofReal (K * ((t - s) / (b - a)))) ∧
+    (∀ (a b s t : ℝ) (hab : a < b) (hst : s < t),
+        curveModulus ((axisRectQuadrilateralSwap a b s t hab hst).imageCurveFamily f)
+          ≤ ENNReal.ofReal (K * ((b - a) / (t - s))))
+
+namespace AxisRectModulusBound
+
+variable {f : ℂ → ℂ} {K : ℝ}
+
+/-- The constant of an axis-rectangle modulus bound is at least one. -/
+theorem one_le (hf : AxisRectModulusBound f K) : 1 ≤ K := hf.1
+
+/-- A map with an axis-rectangle modulus bound is a homeomorphism. -/
+theorem isHomeomorph (hf : AxisRectModulusBound f K) : IsHomeomorph f := hf.2.1
+
+/-- **Crossing bound, product form.** The image-family modulus of the standard axis-rectangle
+parametrization is at most `ENNReal.ofReal K * ENNReal.ofReal ((t − s)/(b − a))` — the split
+`ℝ≥0∞`-product form the Rengel bricks consume. -/
+theorem axisRect_le (hf : AxisRectModulusBound f K) {a b s t : ℝ} (hab : a < b) (hst : s < t) :
+    curveModulus ((axisRectQuadrilateral a b s t hab hst).imageCurveFamily f)
+      ≤ ENNReal.ofReal K * ENNReal.ofReal ((t - s) / (b - a)) := by
+  rw [← ENNReal.ofReal_mul (le_trans zero_le_one hf.1)]
+  exact hf.2.2.1 a b s t hab hst
+
+/-- **Separating bound, product form.** The image-family modulus of the swapped axis-rectangle
+parametrization is at most `ENNReal.ofReal K * ENNReal.ofReal ((b − a)/(t − s))`. -/
+theorem axisRectSwap_le (hf : AxisRectModulusBound f K) {a b s t : ℝ} (hab : a < b)
+    (hst : s < t) :
+    curveModulus ((axisRectQuadrilateralSwap a b s t hab hst).imageCurveFamily f)
+      ≤ ENNReal.ofReal K * ENNReal.ofReal ((b - a) / (t - s)) := by
+  rw [← ENNReal.ofReal_mul (le_trans zero_le_one hf.1)]
+  exact hf.2.2.2 a b s t hab hst
+
+end AxisRectModulusBound
+
 end RiemannDynamics

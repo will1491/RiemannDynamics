@@ -919,7 +919,28 @@ private theorem rectLevel_no_split {a b s t : ℝ} (hab : a ≤ b) (hst : s ≤ 
   exact square_crossing_contradiction hab hst θ hbot_cont hrgt_cont htop_cont hlft_cont
     Hbot Hrgt Htop Hlft
 
-
+/-- **Level sets of a left-right transition function cross the rectangle bottom-to-top.**
+For a continuous `v : ℂ → ℝ` with `v = 0` on the left edge and `v = 1` on the right edge of
+the closed rectangle `[a,b] × [s,t]`, every intermediate level `c ∈ (0,1)` contains a
+preconnected subset of the rectangle meeting both the bottom edge `{im = s}` and the top
+edge `{im = t}`. This is the public, positive form of the plane-separation core
+`rectLevel_no_split` (apply it by contradiction). -/
+theorem exists_preconnected_level_crossing {a b s t : ℝ} (hab : a ≤ b) (hst : s ≤ t)
+    {v : ℂ → ℝ} (hv : Continuous v)
+    (hv0 : ∀ z : ℂ, z.re = a → s ≤ z.im → z.im ≤ t → v z = 0)
+    (hv1 : ∀ z : ℂ, z.re = b → s ≤ z.im → z.im ≤ t → v z = 1)
+    {c : ℝ} (hc : c ∈ Set.Ioo (0 : ℝ) 1) :
+    ∃ S : Set ℂ, IsPreconnected S ∧
+      S ⊆ {z : ℂ | (a ≤ z.re ∧ z.re ≤ b) ∧ (s ≤ z.im ∧ z.im ≤ t)} ∧
+      (∀ z ∈ S, v z = c) ∧ (∃ p ∈ S, p.im = s) ∧ (∃ q ∈ S, q.im = t) := by
+  by_contra hcon
+  refine rectLevel_no_split hab hst hv hv0 hv1 hc ?_
+  intro S hSpre hSsub hp hq
+  rw [Set.subset_inter_iff] at hSsub
+  refine hcon ⟨S, hSpre, hSsub.1, ?_, hp, hq⟩
+  intro z hz
+  have hzc := hSsub.2 hz
+  rwa [Set.mem_preimage, Set.mem_singleton_iff] at hzc
 
 /-! ### Arc-length Lipschitz reparametrization of a simple rectifiable arc
 
