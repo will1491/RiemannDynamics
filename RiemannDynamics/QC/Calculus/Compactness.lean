@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Will (Ziang) Li
 -/
 import RiemannDynamics.QC.Defs.Geometric
-import RiemannDynamics.QC.LengthArea.ModulusLSC
+import RiemannDynamics.QC.Calculus.AnalyticClosedness
 import RiemannDynamics.QC.Regularity.Quasisymmetry
 import Mathlib.Topology.Instances.AddCircle.Defs
 import Mathlib.Topology.UniformSpace.CompactConvergence
@@ -22,23 +22,22 @@ import Mathlib.Topology.Homeomorph.Lemmas
 Geometric quasiconformality is closed under locally uniform limits, and normalized uniformly
 `K`-quasiconformal families are normal:
 
-* **Closedness** (`isQCGeometric_of_tendstoLocallyUniformly`) — a locally uniform limit of geometric
-  `K`-quasiconformal maps that is itself a homeomorphism is again geometrically `K`-quasiconformal.
 * **Normal-family compactness** (`exists_subseq_tendstoLocallyUniformly_isQCGeometric`) — a
   two-point–normalized sequence of geometric `K`-quasiconformal maps (`fₙ p = a`, `fₙ q = b` with
   `p ≠ q` and `a ≠ b`) has a subsequence converging locally uniformly to a geometric
   `K`-quasiconformal limit. The two-value normalization supplies equicontinuity of the family and of
-  its inverses together with pointwise bounds; an Arzelà–Ascoli extraction then yields a locally
-  uniform limit that is a homeomorphism, which closedness makes `K`-quasiconformal.
+  its inverses together with pointwise bounds; an Arzelà–Ascoli extraction then yields locally
+  uniform limits of the maps and of their inverses, the limit is a homeomorphism, and the
+  analytic-route closedness theorem
+  (`isQCGeometric_of_tendstoLocallyUniformly_inverse`, `QC/Calculus/AnalyticClosedness.lean`)
+  makes it `K`-quasiconformal.
 
-Closedness rests on two structural facts:
+The file also proves a standalone structural fact:
 
 * `sensePreserving_of_tendstoLocallyUniformly` — the topological orientation (`SensePreserving`)
   passes to a homeomorphic locally uniform limit, since the image circles converge uniformly to a
   loop bounded away from the centre, so the winding `+1` (continuous-log increment `2π i`) is
-  transported by homotopy invariance;
-* `curveModulus_imageCurveFamily_lsc` — the image-family modulus is lower semicontinuous under
-  locally uniform convergence of the maps (the conformal-modulus form of Väisälä's theorem).
+  transported by homotopy invariance.
 
 The extraction rests on `pointwise_bounded_of_equicontinuousOn` for the pointwise bounds, the
 Arzelà–Ascoli step `exists_subseq_tendsto_continuousMap` in `C(ℂ, ℂ)`, and
@@ -490,27 +489,6 @@ theorem sensePreserving_of_tendstoLocallyUniformly {fₙ : ℕ → ℂ → ℂ} 
     rw [hLfinale θ]
   · rw [hτ_def] at hLfinalincr; exact hLfinalincr
 
-/-- **Closedness of geometric `K`-quasiconformality under locally uniform limits.** A locally
-uniform limit `g` of geometric `K`-quasiconformal maps `fₙ`, which is itself a homeomorphism, is
-geometrically `K`-quasiconformal: the orientation passes to the limit
-(`sensePreserving_of_tendstoLocallyUniformly`) and the modulus distortion bound
-`M(fₙ(Q)) ≤ K · M(Q)` passes to the limit through the lower semicontinuity
-`curveModulus_imageCurveFamily_lsc`. The homeomorphism hypothesis rules out the degenerate constant
-limit (with a normalization fixing three points it is automatic). -/
-theorem isQCGeometric_of_tendstoLocallyUniformly {fₙ : ℕ → ℂ → ℂ} {g : ℂ → ℂ} {K : ℝ}
-    (hf : ∀ n, IsQCGeometric (fₙ n) K)
-    (hconv : TendstoLocallyUniformly fₙ g atTop)
-    (hg : IsHomeomorph g) :
-    IsQCGeometric g K := by
-  refine ⟨(hf 0).1, sensePreserving_of_tendstoLocallyUniformly (fun n => (hf n).2.1) hconv hg,
-    fun Q => ?_⟩
-  calc curveModulus (Q.imageCurveFamily g)
-      ≤ liminf (fun n => curveModulus (Q.imageCurveFamily (fₙ n))) atTop :=
-        curveModulus_imageCurveFamily_lsc hf hconv hg Q
-    _ ≤ liminf (fun _ => ENNReal.ofReal K * Q.modulus) atTop :=
-        liminf_le_liminf (by filter_upwards with n using (hf n).2.2 Q)
-    _ = ENNReal.ofReal K * Q.modulus := liminf_const _
-
 /-- **Pointwise boundedness from compact equicontinuity and a fixed anchor value.** If a family
 `F : ι → ℂ → ℂ` is equicontinuous on every compact set and all members agree at an anchor point
 (`F i p = a` for all `i`), then at every point `z` the values `F i z` lie within a single radius of
@@ -661,9 +639,11 @@ theorem isHomeomorph_of_tendstoLocallyUniformly_inverse
 uniformly `K`-quasiconformal sequence `fₙ : ℕ → ℂ → ℂ` has a subsequence converging locally
 uniformly to a geometrically `K`-quasiconformal limit. The normalization fixes two distinct values:
 `fₙ p = a` and `fₙ q = b` with `p ≠ q` and `a ≠ b`, for all `n`. This is the companion to the
-closedness theorem `isQCGeometric_of_tendstoLocallyUniformly`: closedness shows the limit is
-`K`-quasiconformal *given* locally uniform convergence to a homeomorphism, while compactness
-produces both the convergent subsequence and the homeomorphic limit.
+closedness theorem `isQCGeometric_of_tendstoLocallyUniformly_inverse`
+(`QC/Calculus/AnalyticClosedness.lean`): closedness shows the limit is `K`-quasiconformal *given*
+locally uniform convergence of the maps and of their inverses to a homeomorphism pair, while
+compactness produces the convergent subsequence, the convergent inverses, and the homeomorphic
+limit.
 
 The two-value normalization is exactly what makes the statement true on the plane `ℂ` (rather than
 the sphere `ℂ̂`). The scale bound `dist (fₙ p) (fₙ q) = dist a b > 0` (from `a ≠ b`) — both an upper
@@ -795,9 +775,11 @@ theorem exists_subseq_tendstoLocallyUniformly_isQCGeometric {fₙ : ℕ → ℂ 
   have hg₀_homeo : IsHomeomorph (g₀ : ℂ → ℂ) :=
     isHomeomorph_of_tendstoLocallyUniformly_inverse g₀.continuous h₀.continuous
       hlu_f hlu_g (fun k => hli (φ k)) (fun k => hri (φ k))
-  -- Closedness: the limit is geometrically `K`-quasiconformal.
+  -- Closedness (analytic route): the limit is geometrically `K`-quasiconformal.
   have hQC : IsQCGeometric (g₀ : ℂ → ℂ) K :=
-    isQCGeometric_of_tendstoLocallyUniformly (fun k => hfK (φ k)) hlu_f hg₀_homeo
+    isQCGeometric_of_tendstoLocallyUniformly_inverse (fun k => hfK (φ k))
+      (fun k => hgKall (φ k)) (fun k => hli (φ k)) (fun k => hri (φ k))
+      hlu_f hlu_g hg₀_homeo
   exact ⟨φ, (g₀ : ℂ → ℂ), hφ, hQC, hlu_f⟩
 
 end RiemannDynamics

@@ -88,6 +88,28 @@ def TendstoWeaklyL2 (hₙ : ℕ → ℂ → ℂ) (h : ℂ → ℂ) : Prop :=
   ∀ ψ : ℂ → ℂ, MemLp ψ 2 volume →
     Filter.Tendsto (fun n => ∫ z, hₙ n z * ψ z) Filter.atTop (nhds (∫ z, h z * ψ z))
 
+/-- **Local weak `L²` convergence tested against compactly supported `L²` functions.**
+The sequence `hₙ` converges weakly in `L²_loc` to `h` if the pairing `∫ (hₙ z) * ψ z`
+converges to `∫ (h z) * ψ z` for every complex `L²(volume)` test function `ψ` with
+compact support. This is the correct notion for sequences that are only locally
+square-integrable (a globally `L²` pairing need not even be defined for them): every
+divergence-structure test that arises from a compactly supported smooth weight is of
+this compactly-supported form, so the null-Lagrangian cluster below runs on it. -/
+def TendstoWeaklyL2Loc (hₙ : ℕ → ℂ → ℂ) (h : ℂ → ℂ) : Prop :=
+  ∀ ψ : ℂ → ℂ, MemLp ψ 2 volume → HasCompactSupport ψ →
+    Filter.Tendsto (fun n => ∫ z, hₙ n z * ψ z) Filter.atTop (nhds (∫ z, h z * ψ z))
+
+/-- Global weak `L²` convergence implies the compactly-supported-test form. -/
+theorem TendstoWeaklyL2.tendstoWeaklyL2Loc {hₙ : ℕ → ℂ → ℂ} {h : ℂ → ℂ}
+    (hw : TendstoWeaklyL2 hₙ h) : TendstoWeaklyL2Loc hₙ h :=
+  fun ψ hψ _ => hw ψ hψ
+
+/-- Local weak `L²` convergence passes to subsequences. -/
+theorem TendstoWeaklyL2Loc.comp_strictMono {hₙ : ℕ → ℂ → ℂ} {h : ℂ → ℂ}
+    (hw : TendstoWeaklyL2Loc hₙ h) {φ : ℕ → ℕ} (hφ : StrictMono φ) :
+    TendstoWeaklyL2Loc (fun k => hₙ (φ k)) h :=
+  fun ψ hψ hcs => (hw ψ hψ hcs).comp hφ.tendsto_atTop
+
 /-- The real determinant of the differential in the two coordinate partial
 derivatives: `det (Df) = (∂ₓ(Re f))(∂ᵧ(Im f)) − (∂ᵧ(Re f))(∂ₓ(Im f))`. Equivalently,
 in terms of the complex partials `∂ₓf`, `∂ᵧf` this is
@@ -1546,7 +1568,7 @@ theorem hasWeakDirDeriv_of_tendsto {fₙ : ℕ → ℂ → ℂ} {g u : ℂ → �
     (hconv : TendstoLocallyUniformly fₙ g Filter.atTop)
     (hfcont : ∀ n, Continuous (fₙ n)) (hgcont : Continuous g)
     {gxₙ : ℕ → ℂ → ℂ} (hgxₙ : ∀ n, HasWeakDirDeriv v (gxₙ n) (fₙ n) Set.univ)
-    (hweak : TendstoWeaklyL2 gxₙ u) :
+    (hweak : TendstoWeaklyL2Loc gxₙ u) :
     HasWeakDirDeriv v u g Set.univ := by
   intro φ hφ hcs _htsupp
   change ∫ z, ((fderiv ℝ φ z) v) • g z = - ∫ z, φ z • u z
@@ -1614,7 +1636,7 @@ theorem hasWeakDirDeriv_of_tendsto {fₙ : ℕ → ℂ → ℂ} {g u : ℂ → �
     intro h; congr 1; funext z; rw [Complex.real_smul, mul_comm]
   have hR : Filter.Tendsto (fun n => ∫ z, φ z • gxₙ n z) Filter.atTop
       (nhds (∫ z, φ z • u z)) := by
-    have hw := hweak (fun z => ((φ z : ℝ) : ℂ)) hφL2
+    have hw := hweak (fun z => ((φ z : ℝ) : ℂ)) hφL2 hφcs
     rw [hpair u] at hw
     exact hw.congr fun n => hpair (gxₙ n)
   -- The per-`n` identity and uniqueness of limits.
@@ -1646,7 +1668,7 @@ theorem tendsto_integral_jacobianWeak_smul {fₙ : ℕ → ℂ → ℂ} {g : ℂ
     (hgnx : ∀ n, MemLpLocOn (gxₙ n) 2 Set.univ) (hgny : ∀ n, MemLpLocOn (gyₙ n) 2 Set.univ)
     (hgLim : HasWeakGradient gxLim gyLim g Set.univ)
     (hgLimx : MemLpLocOn gxLim 2 Set.univ) (hgLimy : MemLpLocOn gyLim 2 Set.univ)
-    (hweakx : TendstoWeaklyL2 gxₙ gxLim) (hweaky : TendstoWeaklyL2 gyₙ gyLim)
+    (hweakx : TendstoWeaklyL2Loc gxₙ gxLim) (hweaky : TendstoWeaklyL2Loc gyₙ gyLim)
     (φ : ℂ → ℝ) (hφ : ContDiff ℝ ∞ φ) (hφc : HasCompactSupport φ) {M : ℝ}
     (hMx : ∀ n, ∫ z in tsupport φ, ‖gxₙ n z‖ ^ 2 ≤ M)
     (hMy : ∀ n, ∫ z in tsupport φ, ‖gyₙ n z‖ ^ 2 ≤ M) :
@@ -1710,7 +1732,7 @@ theorem tendsto_integral_jacobianWeak_smul {fₙ : ℕ → ℂ → ℂ} {g : ℂ
   -- The core per-term convergence, applied to `(gxₙ, q)` and `(gyₙ, p)`.
   have hcore : ∀ (wₙ : ℕ → ℂ → ℂ) (wLim : ℂ → ℂ) (t : ℂ → ℝ),
       Continuous t → tsupport t ⊆ K → (∀ n, MemLpLocOn (wₙ n) 2 Set.univ) →
-      MemLpLocOn wLim 2 Set.univ → TendstoWeaklyL2 wₙ wLim →
+      MemLpLocOn wLim 2 Set.univ → TendstoWeaklyL2Loc wₙ wLim →
       (∀ n, ∫ z in K, ‖wₙ n z‖ ^ 2 ≤ M) →
       Filter.Tendsto (fun n => ∫ z, (fₙ n z).re * (wₙ n z).im * t z) Filter.atTop
         (nhds (∫ z, (g z).re * (wLim z).im * t z)) := by
@@ -1765,7 +1787,7 @@ theorem tendsto_integral_jacobianWeak_smul {fₙ : ℕ → ℂ → ℂ} {g : ℂ
           Complex.I_re, Complex.I_im, Complex.ofReal_re, Complex.ofReal_im]
         ring
       rw [← hpairing wLim hwL]
-      refine (Complex.reCLM.continuous.tendsto _).comp (hwweak ψ hψLp) |>.congr fun n => ?_
+      refine (Complex.reCLM.continuous.tendsto _).comp (hwweak ψ hψLp hψcs) |>.congr fun n => ?_
       rw [Function.comp_apply, Complex.reCLM_apply, hpairing (wₙ n) (hwn n)]
     -- UNIFORM TERM: `∫ (fₙ.re − g.re)·(wₙ).im·t → 0`.
     have hunifterm : Filter.Tendsto
@@ -1942,5 +1964,64 @@ theorem tendsto_integral_jacobianWeak_smul {fₙ : ℕ → ℂ → ℂ} {g : ℂ
       = fun n => (∫ z, (fₙ n z).re * (gxₙ n z).im * q z)
         - ∫ z, (fₙ n z).re * (gyₙ n z).im * p z from funext hseqeq, hlimeq]
   exact hxlim.sub hylim
+
+/-- **(J4-loc) Weighted weak lower semicontinuity of the `L²` norm, local form.** The
+weighted-energy lower semicontinuity of `le_liminf_integral_normSq_smul` for sequences
+that are only locally square-integrable and converge weakly against compactly supported
+tests, with a bounded nonnegative weight `w` vanishing outside a compact set `S`.
+
+Truncating the sequence to `S` reduces to the global statement: the indicator
+truncations are genuinely `L²(volume)`, converge weakly in the global sense (any `L²`
+test `ψ` pairs with the truncation exactly as the compactly supported test `𝟙_S·ψ`
+pairs with the original), and the weighted energies are unchanged since `w` vanishes
+off `S`. -/
+theorem le_liminf_integral_normSq_smul_of_compactSupport {hₙ : ℕ → ℂ → ℂ} {h : ℂ → ℂ}
+    (hw_conv : TendstoWeaklyL2Loc hₙ h)
+    (hmemH : MemLpLocOn h 2 Set.univ) (hmemHn : ∀ n, MemLpLocOn (hₙ n) 2 Set.univ)
+    {w : ℂ → ℝ} (hwmeas : Measurable w) {C : ℝ} (hwnn : ∀ z, 0 ≤ w z)
+    (hwle : ∀ z, w z ≤ C) {S : Set ℂ} (hS : IsCompact S)
+    (hw0 : ∀ z ∉ S, w z = 0) :
+    ∫ z, ‖h z‖ ^ 2 * w z
+      ≤ (Filter.liminf (fun n => ∫ z, ‖hₙ n z‖ ^ 2 * w z) Filter.atTop) := by
+  have hSm : MeasurableSet S := hS.isClosed.measurableSet
+  -- The truncations to `S` are genuinely `L²(volume)`.
+  have hmemH' : MemLp (S.indicator h) 2 volume :=
+    (memLp_indicator_iff_restrict hSm).mpr (hmemH S (Set.subset_univ S) hS)
+  have hmemHn' : ∀ n, MemLp (S.indicator (hₙ n)) 2 volume := fun n =>
+    (memLp_indicator_iff_restrict hSm).mpr (hmemHn n S (Set.subset_univ S) hS)
+  -- The truncations converge weakly in the global sense: a global `L²` test `ψ`
+  -- pairs with the truncation exactly as the compactly supported test `𝟙_S·ψ`
+  -- pairs with the original sequence.
+  have hconv' : TendstoWeaklyL2 (fun n => S.indicator (hₙ n)) (S.indicator h) := by
+    intro ψ hψ
+    have hψ'mem : MemLp (S.indicator ψ) 2 volume :=
+      (memLp_indicator_iff_restrict hSm).mpr (hψ.restrict S)
+    have hψ'cs : HasCompactSupport (S.indicator ψ) :=
+      HasCompactSupport.intro hS fun _ hx => Set.indicator_of_notMem hx ψ
+    have hpair : ∀ g : ℂ → ℂ, ∀ z, g z * S.indicator ψ z = S.indicator g z * ψ z := by
+      intro g z
+      by_cases hz : z ∈ S
+      · rw [Set.indicator_of_mem hz, Set.indicator_of_mem hz]
+      · rw [Set.indicator_of_notMem hz, Set.indicator_of_notMem hz, zero_mul, mul_zero]
+    have hconv := hw_conv (S.indicator ψ) hψ'mem hψ'cs
+    have hrhs : (∫ z, h z * S.indicator ψ z) = ∫ z, S.indicator h z * ψ z :=
+      integral_congr_ae (Filter.Eventually.of_forall (hpair h))
+    rw [hrhs] at hconv
+    exact hconv.congr fun n =>
+      integral_congr_ae (Filter.Eventually.of_forall (hpair (hₙ n)))
+  -- The weighted energies are unchanged by the truncation: `w` vanishes off `S`.
+  have henergy : ∀ g : ℂ → ℂ, ∀ z, ‖S.indicator g z‖ ^ 2 * w z = ‖g z‖ ^ 2 * w z := by
+    intro g z
+    by_cases hz : z ∈ S
+    · rw [Set.indicator_of_mem hz]
+    · rw [Set.indicator_of_notMem hz, hw0 z hz, mul_zero, mul_zero]
+  have hmain := le_liminf_integral_normSq_smul hconv' hmemH' hmemHn' hwmeas hwnn hwle
+  have hLHS : (∫ z, ‖S.indicator h z‖ ^ 2 * w z) = ∫ z, ‖h z‖ ^ 2 * w z :=
+    integral_congr_ae (Filter.Eventually.of_forall (henergy h))
+  have hRHS : (fun n => ∫ z, ‖S.indicator (hₙ n) z‖ ^ 2 * w z)
+      = fun n => ∫ z, ‖hₙ n z‖ ^ 2 * w z :=
+    funext fun n => integral_congr_ae (Filter.Eventually.of_forall (henergy (hₙ n)))
+  rw [hLHS, hRHS] at hmain
+  exact hmain
 
 end RiemannDynamics

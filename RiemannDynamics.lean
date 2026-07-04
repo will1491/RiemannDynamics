@@ -84,6 +84,7 @@ import RiemannDynamics.Analysis.BaernsteinComparison
 import RiemannDynamics.Analysis.Isoperimetric
 import RiemannDynamics.Analysis.WeakCompactness
 import RiemannDynamics.Analysis.JacobianWeakContinuity
+import RiemannDynamics.Analysis.WeakL2Limit
 import RiemannDynamics.Analysis.ArcLengthVariation
 import RiemannDynamics.Analysis.PoissonDirichlet
 import RiemannDynamics.Analysis.Subharmonic
@@ -159,6 +160,7 @@ import RiemannDynamics.QC.GeometricToAnalytic.Assembly
 import RiemannDynamics.QC.Equivalence
 import RiemannDynamics.QC.Calculus.Composition
 import RiemannDynamics.QC.Calculus.Weyl
+import RiemannDynamics.QC.Calculus.AnalyticClosedness
 import RiemannDynamics.QC.Calculus.Compactness
 import RiemannDynamics.QC.Calculus.Removability
 import RiemannDynamics.QC.Regularity.RingModulus

@@ -19,8 +19,10 @@ modulus of the image connecting family of a quadrilateral is lower semicontinuou
 
 `curveModulus (Q.imageCurveFamily g) ≤ liminf (fun n => curveModulus (Q.imageCurveFamily (fₙ n)))`.
 
-This is the conformal-modulus form of Väisälä's lower-semicontinuity theorem and the substantive
-analytic input to the closedness of geometric `K`-quasiconformality under locally uniform limits.
+This is the conformal-modulus form of Väisälä's lower-semicontinuity theorem. It is an
+independent goal of the length–area programme: the closedness of geometric
+`K`-quasiconformality under locally uniform limits is proved through the analytic route
+(`QC/Calculus/AnalyticClosedness.lean`) and does not consume this file.
 
 ## Architecture
 
