@@ -30,8 +30,9 @@ This identity, with its separating-family counterpart, yields conjugate-modulus 
 
 ## Main statements
 
-* `curveModulus_connecting_le_dirichletEnergy` — `M_connecting ≤ D(u)` (the easy direction);
-* `dirichletEnergy_le_curveModulus_connecting` — `D(u) ≤ M_connecting` (the co-area direction).
+* `curveModulus_connecting_le_dirichletEnergy` — `M_connecting ≤ D(u)` (the easy direction).
+  The converse Dirichlet-principle direction `D(u) ≤ M_connecting` is future work and is not
+  stated here.
 
 ## References
 
@@ -529,23 +530,5 @@ theorem dirichletEnergy_min_rhoDistance_le {ρ : ℂ → ℝ≥0∞} {E U : Set 
         refine lintegral_mono_ae ?_
         filter_upwards [hgrad] with z hz; gcongr
     _ ≤ ∫⁻ z, (ρ z) ^ 2 := setLIntegral_le_lintegral U _
-
-/-- **The Dirichlet energy of the potential is at most the connecting modulus** (the
-Dirichlet-principle direction). For a density `ρ` admissible for the connecting family, the
-`ρ`-distance `v z = ⨅ {∫_γ ρ : γ joins E to z inside U}` vanishes on `E`, is `≥ 1` on `F`, and
-satisfies the eikonal upper-gradient inequality `‖∇v‖ ≤ ρ` almost everywhere; the truncation
-`min v 1` is then a competitor sharing the potential's boundary values, so the Dirichlet principle
-`∫_U |∇u|² ≤ ∫_U |∇(min v 1)|²` combined with `∫_U |∇(min v 1)|² ≤ ∫ ρ²` gives the bound after
-taking the infimum over admissible `ρ`. The level sets of `u` are the *separating* curves, along
-which an admissible connecting density is uncontrolled, so co-area applied to `u` bounds the
-separating modulus rather than this one; the connecting lower bound genuinely proceeds through the
-`ρ`-distance. The boundary sets `E`, `F` must be nondegenerate continua: for point sets the
-connecting modulus is `0` while the energy is positive, so the bound requires that hypothesis. -/
-theorem dirichletEnergy_le_curveModulus_connecting {u : ℂ → ℝ} {E F U : Set ℂ} (hUopen : IsOpen U)
-    (hu : InnerProductSpace.HarmonicOnNhd u U) (hucont : ContinuousOn u (closure U))
-    (hE : ∀ z ∈ E, u z = 0) (hF : ∀ z ∈ F, u z = 1)
-    (hbdd : Bornology.IsBounded U) :
-    dirichletEnergy u U ≤ curveModulus (connectingCurveFamily E F U) := by
-  sorry
 
 end RiemannDynamics

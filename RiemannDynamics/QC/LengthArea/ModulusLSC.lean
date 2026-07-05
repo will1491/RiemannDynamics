@@ -12,47 +12,26 @@ import Mathlib.Order.LiminfLimsup
 import Mathlib.MeasureTheory.Function.Floor
 
 /-!
-# Lower semicontinuity of the image-family modulus
+# Lower semicontinuity of weighted line integrals, and the Fuglede convergence lemma
 
-Under locally uniform convergence `fₙ → g` of homeomorphisms of the plane, the conformal
-modulus of the image connecting family of a quadrilateral is lower semicontinuous:
-
-`curveModulus (Q.imageCurveFamily g) ≤ liminf (fun n => curveModulus (Q.imageCurveFamily (fₙ n)))`.
-
-This is the conformal-modulus form of Väisälä's lower-semicontinuity theorem. It is an
-independent goal of the length–area programme: the closedness of geometric
-`K`-quasiconformality under locally uniform limits is proved through the analytic route
-(`QC/Calculus/AnalyticClosedness.lean`) and does not consume this file.
-
-## Architecture
-
-The top-level theorem `curveModulus_imageCurveFamily_lsc` is assembled by pure `ℝ≥0∞`
-order theory from a single core reduction
-`exists_admissibleDensity_imageCurveFamily_limit`, which produces — from a *tail* of the
-approximating sequence — a density admissible for the `g`-image family with energy bounded by the
-infimal tail energy.  The core reduction in turn rests on the following genuinely classical
-sub-lemmas, each stated *without any derivative-control hypothesis* (uniform convergence of bare
-homeomorphisms gives no convergence of derivatives, and the pushforward of a polygonal path by a
-bare homeomorphism need not even be absolutely continuous):
+Two classical curve-family facts of the length–area programme:
 
 * `arcLengthLineIntegral_le_liminf_of_tendstoUniformly` — **weighted line-integral lower
-  semicontinuity** along a uniformly convergent sequence of curves.  This is the only place where
-  the limiting curve and its approximants interact; it is phrased through
-  `arcLengthLineIntegral` (no derivatives of the limit are referenced beyond the integral itself).
+  semicontinuity**: for a lower semicontinuous density `ρ`, the arc-length line integral
+  `∫_γ ρ ds` is lower semicontinuous along uniformly convergent sequences of absolutely
+  continuous curves. No derivative control of the approximants is assumed (and none holds for
+  bare uniform convergence); the statement is phrased through `arcLengthLineIntegral` only.
 
-* `exists_imageCurveFamily_approx` — an **absolute-continuity-preserving approximation device**:
-  every absolutely continuous curve in the `g`-image family is the uniform limit of absolutely
-  continuous curves lying in the `fₙ`-image families along a tail.  No derivative control of the
-  approximants is asserted.
+* `fuglede_ae_lineIntegral_tendsto` — **Fuglede's a.e. line-integral convergence** (`L²` form):
+  a density sequence with vanishing energy admits a subsequence whose line integrals tend to
+  zero along every curve outside a family of zero modulus.
 
-* `exists_admissibleDensity_imageCurveFamily_limit` — the **weak-`L²` limit-density construction**:
-  near-optimal `ℝ≥0∞` densities for the tail families are bridged to real `L²(ℂ)`, a weakly
-  convergent subsequence and its Mazur convex combinations produce an a.e. limit density of
-  controlled energy, and the two sub-lemmas above promote it to admissibility for the limit family.
-
-The weighted line-integral lower-semicontinuity is proved; the two remaining foundational
-sub-lemmas (the uniformly-quasiconformal curve approximation and the weak-`L²` density limit) carry
-the `sorry`s and rest on the quasiconformal-regularity layer in `QC/Regularity/`.
+Both are inputs to extremal-length arguments in which curve families vary — e.g. Väisälä's
+lower semicontinuity of the image-family modulus under locally uniform convergence, whose
+remaining ingredient (an absolute-continuity-preserving curve-approximation device for uniformly
+quasiconformal images) is future work. The closedness of geometric `K`-quasiconformality under
+locally uniform limits does not need any of this: it is proved through the analytic route in
+`QC/Calculus/AnalyticClosedness.lean`.
 -/
 
 open MeasureTheory Filter
@@ -642,85 +621,6 @@ theorem fuglede_ae_lineIntegral_tendsto {E : ℕ → ℂ → ℝ≥0∞}
     exact ENNReal.ofReal_ne_top
   exact curveModulus_lineIntegral_not_tendsto_zero hGmeas hsum hΓcont
 
-/-- **Absolutely-continuous approximation in the image families (uniformly quasiconformal case).**
-Let `fₙ → g` locally uniformly with `g` a homeomorphism and the `fₙ` uniformly `K`-quasiconformal.
-Every absolutely continuous curve `δlim` in the `g`-image family of `Q` is the uniform limit, along
-a strictly increasing tail `k ↦ fₙ (φ k)` with `n ≤ φ 0`, of absolutely continuous curves `δ k`
-lying in the corresponding `fₙ (φ k)`-image families.
-
-Uniform `K`-quasiconformality is essential. For bare homeomorphisms the statement is false: a
-uniformly small homeomorphic crumpling of the square into an Osgood-type wild disk leaves no
-rectifiable — hence no absolutely continuous — left-to-right crossing near the target curve, so no
-such approximants exist. Under uniform `K`-quasiconformality the `fₙ` are uniformly quasisymmetric
-(equicontinuous with equicontinuous inverses) and the image disks `fₙ '' Q.image` carry a uniform
-quasiconformal structure in which nearby interior points are joined by short rectifiable arcs; the
-approximants are then built by quasiconformal transport of a polygonal curve in the model square. -/
-theorem exists_imageCurveFamily_approx {fₙ : ℕ → ℂ → ℂ} {g : ℂ → ℂ} {K : ℝ}
-    (hfK : ∀ n, IsQCGeometric (fₙ n) K)
-    (hconv : TendstoLocallyUniformly fₙ g atTop) (hg : IsHomeomorph g) (Q : Quadrilateral)
-    {δlim : ℝ → ℂ} (hδlim : δlim ∈ Q.imageCurveFamily g) (n : ℕ) :
-    ∃ (φ : ℕ → ℕ) (δ : ℕ → ℝ → ℂ), StrictMono φ ∧ n ≤ φ 0 ∧
-      (∀ k, δ k ∈ Q.imageCurveFamily (fₙ (φ k))) ∧
-      TendstoUniformlyOn δ δlim atTop (Set.Icc (0 : ℝ) 1) := by
-  sorry
-
-/-- **Weak-`L²` limit density for the image families (core reduction).**
-Under locally uniform convergence `fₙ → g` with `g` a homeomorphism, there is, for every tail
-index `n`, a measurable density `ρlim : ℂ → ℝ≥0∞` that is admissible for the `g`-image family of `Q`
-and whose energy is bounded by the infimum of the tail moduli:
-
-`∫⁻ z, (ρlim z) ^ 2 ≤ ⨅ i ≥ n, curveModulus (Q.imageCurveFamily (fₙ i))`.
-
-This is the heart of Väisälä's argument, valid for uniformly `K`-quasiconformal `fₙ`.  For each
-`i ≥ n` extract a near-optimal `ℝ≥0∞` density admissible for `Q.imageCurveFamily (fₙ i)` with energy
-within `1/(i+1)` of the modulus (`iInf_lt_iff`); restrict to a subsequence realizing the infimal
-tail energy.  Bridge the finite-energy `ℝ≥0∞` densities to genuine real `L²(ℂ)` functions, apply
-`exists_weak_subseq_of_bounded` to get a weak limit and `mem_closure_convexHull_of_weak_limit`
-(Mazur) to obtain admissible convex combinations converging a.e. to a limit density `ρlim` of energy
-`≤` the infimal tail energy.  Admissibility of `ρlim` for the `g`-image family follows because each
-absolutely continuous curve in the `g`-image family is approximated, via
-`exists_imageCurveFamily_approx` (which needs the uniform quasiconformality), by absolutely
-continuous curves in the `fₙ`-image families along which the line integral is lower semicontinuous
-(`arcLengthLineIntegral_le_liminf_of_tendstoUniformly`, applied to the lower-semicontinuous
-envelope of `ρlim`). -/
-theorem exists_admissibleDensity_imageCurveFamily_limit {fₙ : ℕ → ℂ → ℂ} {g : ℂ → ℂ} {K : ℝ}
-    (hfK : ∀ n, IsQCGeometric (fₙ n) K)
-    (hconv : TendstoLocallyUniformly fₙ g atTop) (hg : IsHomeomorph g) (Q : Quadrilateral)
-    (n : ℕ) :
-    ∃ ρlim : ℂ → ℝ≥0∞, IsAdmissibleDensity ρlim (Q.imageCurveFamily g) ∧
-      (∫⁻ z, (ρlim z) ^ 2) ≤ ⨅ i ≥ n, curveModulus (Q.imageCurveFamily (fₙ i)) := by
-  sorry
-
 end Quadrilateral
-
-/-- **Lower semicontinuity of the image-family modulus.** Under locally uniform convergence
-`fₙ → g` with `g` a homeomorphism, the modulus of the image connecting family of a quadrilateral is
-at most the lower limit of the moduli of the approximating image families:
-
-`curveModulus (Q.imageCurveFamily g) ≤ liminf (fun n => curveModulus (Q.imageCurveFamily (fₙ n)))`.
-
-This is the conformal-modulus form of Väisälä's lower-semicontinuity theorem, valid for uniformly
-`K`-quasiconformal `fₙ`. The hypothesis is essential: for bare homeomorphisms it is false (a
-uniformly small homeomorphic crumpling collapses the modulus, `curveModulus (fₙ family) → 0` while
-`curveModulus (g family) > 0`). Given the core reduction
-`exists_admissibleDensity_imageCurveFamily_limit` — a density admissible for the limit family with
-energy below each infimal tail modulus — the bound is pure `ℝ≥0∞` order theory:
-`curveModulus (g family) ≤ energy ≤ ⨅ i ≥ n, curveModulus (fₙ i family)` for every `n`, and the
-right-hand side suprema over `n` to `liminf`. -/
-theorem curveModulus_imageCurveFamily_lsc {fₙ : ℕ → ℂ → ℂ} {g : ℂ → ℂ} {K : ℝ}
-    (hfK : ∀ n, IsQCGeometric (fₙ n) K)
-    (hconv : TendstoLocallyUniformly fₙ g atTop) (hg : IsHomeomorph g) (Q : Quadrilateral) :
-    curveModulus (Q.imageCurveFamily g)
-      ≤ Filter.liminf (fun n => curveModulus (Q.imageCurveFamily (fₙ n))) atTop := by
-  -- `liminf` of an `ℝ≥0∞` sequence is the supremum over `n` of the infimal tails.
-  rw [Filter.liminf_eq_iSup_iInf_of_nat]
-  -- It suffices to bound the left side by each infimal tail `⨅ i ≥ n, curveModulus (fₙ i family)`.
-  refine le_iSup_of_le 0 ?_
-  -- For the tail starting at `n = 0`, pick the admissible limit density and bound its energy.
-  obtain ⟨ρlim, hρlimadm, hρlimenergy⟩ :=
-    Quadrilateral.exists_admissibleDensity_imageCurveFamily_limit hfK hconv hg Q 0
-  calc curveModulus (Q.imageCurveFamily g)
-      ≤ ∫⁻ z, (ρlim z) ^ 2 := iInf₂_le ρlim hρlimadm
-    _ ≤ ⨅ i ≥ 0, curveModulus (Q.imageCurveFamily (fₙ i)) := hρlimenergy
 
 end RiemannDynamics
