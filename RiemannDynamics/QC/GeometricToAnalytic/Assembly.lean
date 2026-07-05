@@ -59,8 +59,7 @@ structure of `f` at once:
   derivatives of `f` (equivalently, the distributional gradient of `f` has *no singular
   part*, i.e. `f ∈ W^{1,1}_loc` with these partials).
 
-This is the classical **reverse length–area theorem** (Lehto–Virtanen, *Quasiconformal
-Mappings in the Plane*; Väisälä §31.2; Marcus–Mizel, ARMA 45 (1972)). In the standard proof
+This is the classical **reverse length–area theorem**. In the standard proof
 one first runs the length–area inequality: for an axis rectangle `R = (a,b)×(s,t)` the
 horizontal-segment family has modulus `(t−s)/(b−a)` from below
 (`lengthArea_modulus_lower_bound`), and combined with the geometric upper bound

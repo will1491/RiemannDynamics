@@ -15,8 +15,8 @@ This file packages the **reverse length–area method** into reusable, self-cont
 lemmas, so that the quasiconformal inverse (`QC/InverseQC/`) can consume a single, reusable
 statement.
 
-The classical reverse length–area theorem (Lehto–Virtanen / Väisälä §31.2; Marcus–Mizel, ARMA 45
-(1972)) asserts that the pointwise a.e. gradient of a quasiconformal-type map `g` is its
+The classical reverse length–area theorem asserts that the pointwise a.e. gradient of a
+quasiconformal-type map `g` is its
 *distributional* gradient — equivalently, `g` is absolutely continuous on almost every line, i.e.
 the distributional gradient has **no singular part**. The genuine analytic content lives entirely
 in one fact: **almost every horizontal and vertical slice of `g` is absolutely continuous.** This
@@ -52,9 +52,6 @@ datum of the inverse (injective, continuous, a.e.-differentiable, condition N⁺
 dilatation bound, `L²_loc` pointwise partials) yet has singular (non-AC) slices — so this statement
 is *false* for the shear, and correctly so: the shear is not the inverse of an `IsQCAnalytic` map
 (the forward `f`'s genuine `W^{1,2}_loc` structure excludes it). See `QC/InverseQC/`.
-
-*Reference:* O. Lehto, K. I. Virtanen, *Quasiconformal Mappings in the Plane*; J. Väisälä, §31.2;
-M. Marcus, V. J. Mizel, ARMA 45 (1972) 294–320; S. Hencl, P. Koskela, App. A.
 -/
 
 open MeasureTheory Complex Set Filter

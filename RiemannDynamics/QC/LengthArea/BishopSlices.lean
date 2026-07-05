@@ -33,12 +33,6 @@ integration over the transverse variable, for a geometric `K`-quasiconformal hom
 Together these discharge the two length–area residuals of the forward (easy) direction of
 the reverse length–area theorem: the finite slice-energy box bounds and the
 no-singular-part variation bound for almost every slice.
-
-References: C. Bishop, *Quasiconformal Mappings* (book draft), Ch. 3, Theorem 4.1;
-L. Ahlfors, *Lectures on Quasiconformal Mappings*, Ch. II; O. Lehto, K. I. Virtanen,
-*Quasiconformal Mappings in the Plane*, Ch. IV; J. Väisälä, *Lectures on n-Dimensional
-Quasiconformal Mappings*, §31; K. Astala, T. Iwaniec, G. Martin, *Elliptic PDE and QC
-Mappings in the Plane*, §3.3 (the `L²` upgrade).
 -/
 
 open MeasureTheory Complex
@@ -230,9 +224,7 @@ splitting `r_k = √w_k · (r_k/√w_k)` gives
 Convert to `ℝ≥0∞` (`edist_dist`, `ENNReal.ofReal` of a finite nonnegative sum) and take
 `iSup_le`. Nonnegativity of `Φ′(y)` comes from monotonicity of the profile
 (`Monotone.ae_hasDerivAt_deriv`-style slope argument at the differentiability point).
-
-Reference: Bishop, *Quasiconformal Mappings*, Ch. 3, Theorem 4.1 (the Cauchy–Schwarz step
-`(∑ bⱼ)² ≤ (∑ bⱼ²m)(∑ 1/m)`). -/
+-/
 theorem qc_slice_eVariationOn_le_horizontal {f : ℂ → ℂ} {K : ℝ} (hf : AxisRectModulusBound f K)
     {α β σ y : ℝ} (hσy : σ < y)
     (hΦ : DifferentiableAt ℝ (imageAreaProfileY f α β σ) y) :
@@ -440,9 +432,7 @@ the `j`-th subinterval `[x_j, x_{j+1})` is the chord quotient `‖h x_{j+1} − 
 * Fatou (`MeasureTheory.lintegral_liminf_le`; each `G_m` is a finite sum of indicator
   functions, hence measurable) transfers the uniform bound to the limit; the endpoint `b`
   and the non-differentiability set are null.
-
-Reference: Lehto–Virtanen, Ch. IV; Astala–Iwaniec–Martin, §3.3 (the passage from the
-length–area bound to `W^{1,2}_loc` via difference quotients and Fatou). -/
+-/
 theorem qc_slice_deriv_energy_le_horizontal {f : ℂ → ℂ} {K : ℝ} (hf : AxisRectModulusBound f K)
     {α β σ y : ℝ} (hσy : σ < y)
     (hΦ : DifferentiableAt ℝ (imageAreaProfileY f α β σ) y)
@@ -909,8 +899,7 @@ slices and the squared slice-derivative energy have finite integrals over the bo
 Integrate with `lintegral_mono_ae` (no measurability of the left-hand integrand needed) and
 dominate `∫⁻ y in [s,t], ofReal (deriv Φ y)` by `ofReal (Φ t − Φ s)`
 (`lintegral_ofReal_deriv_le_of_monotone`); both bounds are finite (`ENNReal.mul_ne_top`).
-
-Reference: Bishop, *Quasiconformal Mappings*, Ch. 3, Theorem 4.1; Väisälä, §31.1. -/
+-/
 theorem qc_forward_energy_box_horizontal {f : ℂ → ℂ} {K : ℝ} (hf : AxisRectModulusBound f K)
     {a b s t : ℝ} (hab : a < b) (hst : s < t) :
     (∫⁻ y in Set.Icc s t,
@@ -1159,9 +1148,7 @@ The hypothesis is load-bearing: the conclusion fails for the singular Cantor she
 `⟨x, y⟩ ↦ ⟨x, y + c(x)⟩` (`c` the Cantor function), a homeomorphism that is not
 geometrically quasiconformal — the image separating families of thin strips over Cantor
 intervals violate exactly the modulus bound consumed here.
-
-Reference: Bishop, *Quasiconformal Mappings*, Ch. 3, Theorem 4.1; Ahlfors, Ch. II;
-Lehto–Virtanen, Ch. IV ("a quasiconformal mapping is ACL"); Väisälä, §31.2. -/
+-/
 theorem AxisRectModulusBound.ae_horizontal_slice_absolutelyContinuous {f : ℂ → ℂ} {K : ℝ}
     (hf : AxisRectModulusBound f K) :
     ∀ᵐ y : ℝ, ∀ a b : ℝ,

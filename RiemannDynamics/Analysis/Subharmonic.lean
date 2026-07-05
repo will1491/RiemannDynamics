@@ -37,12 +37,6 @@ This file provides the four ingredients Perron's method needs:
 * `SubharmonicOn.le_of_frontier_le` — the maximum principle (boundary bound propagates inward);
 * `poissonModify_ge`, `poissonModify_harmonicOn`, `SubharmonicOn.poissonModify` — Poisson
   modification.
-
-## References
-
-* T. Ransford, *Potential Theory in the Complex Plane*, Ch. 2–3 (subharmonic functions, Perron's
-  method).
-* L. V. Ahlfors, *Complex Analysis*, Ch. 6 (subharmonic functions and the Dirichlet problem).
 -/
 
 open MeasureTheory Filter Metric Topology

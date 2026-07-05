@@ -39,13 +39,6 @@ angle, and the `2π i` increment is exactly one counterclockwise turn (the same 
 
 * `separatingModulus_roundAnnulus` — `separatingModulus z₀ r R = log (R / r) / (2π)`;
 * `roundAnnulus_reciprocity` — `ringModulus z₀ r R * separatingModulus z₀ r R = 1`.
-
-## References
-
-* O. Lehto and K. I. Virtanen, *Quasiconformal mappings in the plane*, Ch. II §1 (the module of a
-  ring domain and the conjugate quadrilateral).
-* L. V. Ahlfors, *Lectures on quasiconformal mappings*, Ch. I §D (extremal length and its
-  conjugate).
 -/
 
 open MeasureTheory

@@ -20,8 +20,8 @@ image separating family `Γ*` satisfy `1 ≤ (∫∫ ρ²) · (∫∫ σ²)`
 (`imageConjugate_lengthArea_pairwise`, below). Taking the infimum over `ρ` then `σ`, this
 per-pair bound is exactly the conjugate-image reciprocity `1 ≤ M(Γ) · M(Γ*)` (via
 `one_le_biInf_mul_biInf'` and the finiteness witnesses `imageCurveFamily_finiteWitness`).
-This is the **easy** direction (Ahlfors, *Conformal Invariants* Ch. 4; Väisälä §II;
-Lehto–Virtanen); no conformality or differentiability of `f` is used.
+This is the **easy** direction of reciprocity; no conformality or differentiability of `f`
+is used.
 
 The finite-energy hypotheses on both densities are the honest classical form of the
 cross-bound (Eriksson-Bique–Poggi-Corradini take `σ ∈ L^q` in exactly the same role), and
@@ -42,8 +42,8 @@ of an axis rectangle and an admissible finite-energy `σ` for the conjugate imag
 
   `1 ≤ ∫∫ ρ · σ`.
 
-This is the genuine topological/measure content of conformal-modulus reciprocity (Beurling;
-Ahlfors, *Conformal Invariants* Ch. 4; Väisälä §II): every crossing curve meets every
+This is the genuine topological/measure content of conformal-modulus reciprocity: every
+crossing curve meets every
 separating curve in a topological square, and the co-area pairing over the level sets of the
 Beurling chain potential delivers the bound.
 

@@ -41,11 +41,6 @@ conformal modulus and conjugate-modulus reciprocity).
 * `poissonIntegral_harmonicOn` — the Poisson integral is harmonic on the open ball;
 * `poissonIntegral_tendsto_boundary` — at a boundary point where `g` is continuous, the Poisson
   integral converges to `g`.
-
-## References
-
-* L. V. Ahlfors, *Complex Analysis*, Ch. 6 §2 (the Poisson integral and the Dirichlet problem).
-* T. Ransford, *Potential Theory in the Complex Plane*, Ch. 1 (Poisson integral, Perron's method).
 -/
 
 open MeasureTheory Filter Metric Topology

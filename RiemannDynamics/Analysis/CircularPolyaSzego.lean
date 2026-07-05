@@ -58,13 +58,6 @@ raw circular rearrangement `circSymm` that obstructs the polarization and coarea
   integral of the rearranged profile.
 * `RiemannDynamics.monotone_starFunction`, `RiemannDynamics.starFunction_zero` — the same facts for
   the Baernstein star function.
-
-## References
-
-* A. Baernstein II, *A unified approach to symmetrization*, in *Partial Differential Equations of
-  Elliptic Type* (Cortona, 1992).
-* A. Baernstein II, *Integral means, univalent functions and circular symmetrization*,
-  Acta Math. **133** (1974).
 -/
 
 open MeasureTheory Set ENNReal Filter Topology Complex

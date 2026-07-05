@@ -31,10 +31,6 @@ the reciprocity layer.
 ## Main statements
 
 * `dirichletEnergy_le_of_compactSupport` — the compact-support Dirichlet principle.
-
-## References
-
-* T. Ransford, *Potential Theory in the Complex Plane*, Ch. 4 (the Dirichlet principle).
 -/
 
 open MeasureTheory Filter Metric Topology

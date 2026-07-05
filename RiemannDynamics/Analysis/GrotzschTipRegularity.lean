@@ -35,13 +35,6 @@ branch cut lies along `[0, ∞)`, hence along the slit near `0`.
   `‖z − s‖^(−1/2)` and `‖z‖^(−1/2)` bounds for `‖gradC v‖` near the two tips.
 * `grotzschPotential_flux_bound_far`, `grotzschPotential_flux_bound_near` — the product
   `v · ‖gradC v‖` is bounded near each tip, the deliverable the flux integrand needs there.
-
-## References
-
-* O. Lehto, K. I. Virtanen, *Quasiconformal Mappings in the Plane*, Ch. II (the Grötzsch ring and
-  its modulus).
-* L. V. Ahlfors, *Conformal Invariants*, Ch. 4 (extremal length and the square-root uniformization
-  of a slit tip).
 -/
 
 open MeasureTheory Filter Metric Topology Complex

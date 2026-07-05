@@ -37,12 +37,6 @@ geometric `K`-quasiconformal homeomorphism `f : ℂ → ℂ` along axis-parallel
 These bricks isolate all the genuinely two-dimensional content of the forward (easy)
 direction of the reverse length–area theorem; everything downstream of them is finite
 combinatorics, one-dimensional real analysis, and `ℝ≥0∞` bookkeeping.
-
-References: C. Bishop, *Quasiconformal Mappings* (book draft), Ch. 3 "Analytic aspects of
-quasiconformal mappings", Theorem 4.1; L. Ahlfors, *Lectures on Quasiconformal Mappings*,
-Ch. II; O. Lehto, K. I. Virtanen, *Quasiconformal Mappings in the Plane*, Ch. I §4 (Rengel's
-inequality) and Ch. IV (the ACL theorem); J. Väisälä, *Lectures on n-Dimensional
-Quasiconformal Mappings*, §31.
 -/
 
 open MeasureTheory Complex
@@ -118,7 +112,7 @@ The axis-rectangle hypothesis gives only the one-sided upper bounds
 `1 ≤ M(Γ) · M(Γ*)` between the image crossing family `Γ` and the image separating family
 `Γ*` of the same rectangle, by applying the upper bound to the *conjugate* family
 and inverting in `ℝ≥0∞`. This replaces the two-sided modulus quasi-invariance of the
-classical texts (Bishop, Theorem 4.1, step `M(R'ⱼ) ≥ M(Rⱼ)/K`). -/
+classical treatments (the step `M(R'ⱼ) ≥ M(Rⱼ)/K`). -/
 
 /-- **Crossing-modulus lower bound for the image family of an arbitrary axis rectangle.**
 For a map `f` with `AxisRectModulusBound f K` and the rectangle `[a,b] × [s,t]`, the image
@@ -136,9 +130,7 @@ constant, by `ℝ≥0∞` inversion arithmetic (`ENNReal.ofReal_div_of_pos`,
 `ENNReal.ofReal_inv_of_pos`, with `0 < K` from `hf.1 : 1 ≤ K`). The proved
 `square_imageCurveFamily_modulus_ge` is this argument specialized to squares, where the
 aspect-ratio factor `(b−a)/(t−s)` collapses to `1`; here the factor is kept.
-
-Reference: Bishop, *Quasiconformal Mappings*, Ch. 3, Theorem 4.1 (the step
-`M(R'ⱼ) ≥ M(Rⱼ)/K`); Lehto–Virtanen, *Quasiconformal Mappings in the Plane*, Ch. IV. -/
+-/
 theorem axisRect_imageModulus_ge {f : ℂ → ℂ} {K : ℝ} (hf : AxisRectModulusBound f K)
     {a b s t : ℝ} (hab : a < b) (hst : s < t) :
     ENNReal.ofReal ((t - s) / (K * (b - a)))
@@ -186,8 +178,7 @@ continuous curves joining `f '' ([a,b] × {s})` to `f '' ([a,b] × {t})` inside
 bounding the *crossing* factor by `hf.axisRect_le hab hst :
 M ≤ ENNReal.ofReal K * ENNReal.ofReal ((t−s)/(b−a))` and inverting onto the separating
 factor `N` with the same `ℝ≥0∞` arithmetic.
-
-Reference: Bishop, *Quasiconformal Mappings*, Ch. 3, Theorem 4.1; Lehto–Virtanen, Ch. IV. -/
+-/
 theorem axisRectSwap_imageModulus_ge {f : ℂ → ℂ} {K : ℝ} (hf : AxisRectModulusBound f K)
     {a b s t : ℝ} (hab : a < b) (hst : s < t) :
     ENNReal.ofReal ((b - a) / (K * (t - s)))
@@ -241,8 +232,8 @@ density behind that lemma is the flat `ρ = (1/d) · 𝟙_{f '' Q.image}`: an ab
 continuous curve from `A₁` to `A₂` has arc length at least `dist(A₁, A₂) ≥ d`, and the
 energy of `ρ` is `area/d²`.
 
-This is Rengel's inequality in the honest form `s² ≤ M · m` with *side-set* separation
-(Lehto–Virtanen, Ch. I §4; Ahlfors, *Lectures on Quasiconformal Mappings*, Ch. II). -/
+This is Rengel's inequality in the honest form `s² ≤ M · m` with *side-set*
+separation. -/
 theorem imageCurveFamily_sep_sq_mul_modulus_le_volume {f : ℂ → ℂ} (hf : Continuous f)
     (Q : Quadrilateral) {d : ℝ} (hd : 0 < d)
     (hdist : ∀ p ∈ f '' Q.leftSide, ∀ q ∈ f '' Q.rightSide, d ≤ dist p q) :
@@ -261,9 +252,7 @@ image region through `axisRectQuadrilateral_image`, which identifies `Q.image` w
 `axisRect a b s t`): `ofReal (d²) · ofReal ((t−s)/(K(b−a))) ≤ ofReal (d²) · M ≤ volume`.
 The image volume is finite (compact image), so the inequality transfers to `toReal` by
 `ENNReal.toReal` monotonicity and `ENNReal.ofReal_mul`.
-
-Reference: Bishop, Theorem 4.1 (the flat density `ρ ≡ 1` on `R'ⱼ` giving
-`M(R'ⱼ) ≤ area(R'ⱼ)/bⱼ²`, combined with `M(R'ⱼ) ≥ M(Rⱼ)/K`). -/
+-/
 theorem qc_sep_sq_le_imageArea_horizontal {f : ℂ → ℂ} {K : ℝ} (hf : AxisRectModulusBound f K)
     {a b s t d : ℝ} (hab : a < b) (hst : s < t) (hd : 0 < d)
     (hdist : ∀ p ∈ f '' (axisRectQuadrilateral a b s t hab hst).leftSide,
@@ -381,8 +370,8 @@ theorem AxisRectModulusBound.vertical_strip_sep_sq_le {f : ℂ → ℂ} {K : ℝ
 
 /-! ## The monotone image-area profiles
 
-The classical monotone area function `A(y) = area (f '' ([α,β] × [σ,y]))` (Bishop,
-Theorem 4.1; Ahlfors, Ch. II; Väisälä, §31: the base measure `Φ(A) = m(f(A × J))`). For
+The classical monotone area function `A(y) = area (f '' ([α,β] × [σ,y]))` (the base
+measure `Φ(A) = m(f(A × J))` of the length–area method). For
 continuous `f` every value is finite (compact image), the profile is monotone, hence
 differentiable a.e. by Lebesgue's theorem, and its derivative controls the per-height
 Rengel sums. -/
@@ -527,8 +516,7 @@ f '' ([α,β] × {y})`. The segment image is null by hypothesis, so `measure_uni
 after `toReal` arithmetic.
 
 This is the step that lets the classical proofs compare a family of disjoint strips at
-height `y` against the one-sided difference quotient `(A(y+h) − A(y))/h` (Bishop,
-Theorem 4.1; Väisälä, §31.2). -/
+height `y` against the one-sided difference quotient `(A(y+h) − A(y))/h`. -/
 theorem imageArea_strip_le_profileY_diff_right {f : ℂ → ℂ} (hf : Continuous f)
     (hinj : Function.Injective f) {α β σ y h : ℝ} (hh : 0 < h) (hσ : σ ≤ y)
     (hseg : volume (f '' axisRect α β y y) = 0) :

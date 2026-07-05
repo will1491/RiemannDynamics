@@ -32,11 +32,6 @@ is the extremal metric of the connecting family, and its boundary flux is the mo
 * `perronEnvelope_tendsto_of_barrier` — at a barrier point where `φ` is continuous, the Perron
   envelope tends to `φ ζ`;
 * `exists_ringPotential` — the harmonic potential of a regular ring domain (`0` on `E`, `1` on `F`).
-
-## References
-
-* T. Ransford, *Potential Theory in the Complex Plane*, Ch. 4 (barriers, regularity, the Dirichlet
-  solution).
 -/
 
 open MeasureTheory Filter Metric Topology

@@ -25,12 +25,6 @@ Three ingredients of Baernstein's comparison argument for the star function.
   and `2·(π − im)` on the strip and asymptotically nonpositive at the right edge is nonpositive.
   The proof runs the maximum principle against the harmonic barrier `ε·e^{−re}·sin(im)` on large
   bounded rectangles, using Jordan's inequality `2·min(θ, π−θ) ≤ π·sin θ` on the far-left edge.
-
-## References
-
-* A. Baernstein II, *Integral means, univalent functions and circular symmetrization*,
-  Acta Math. **133** (1974).
-* T. Ransford, *Potential Theory in the Complex Plane*, Ch. 2 (maximum principles).
 -/
 
 open MeasureTheory Set ENNReal Filter Topology Complex

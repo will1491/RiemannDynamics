@@ -20,8 +20,8 @@ the *single hardest foundational input* of the regularity layer; everything down
 (quasisymmetry, equicontinuity, normal families) is derived from them by `K`-quasiconformal modulus
 distortion.
 
-Each estimate below is a *true classical theorem* (Väisälä §11, Lehto–Virtanen Ch. II, Ahlfors
-Ch. III). None of them holds for a bare homeomorphism: they are statements about the conformal
+Each estimate below is a *true classical theorem*. None of them holds for a bare
+homeomorphism: they are statements about the conformal
 modulus of *concrete plane rings*, used downstream only through the inequality
 `curveModulus (f-image family) ≤ K · curveModulus (family)` that defines `IsQCGeometric f K`. The
 estimates here carry **no derivative control** — they are pure modulus facts about plane domains.
@@ -32,14 +32,6 @@ estimates here carry **no derivative control** — they are pure modulus facts a
   round-annulus admissible density and a squeeze. This is the vanishing half of the extremal
   Grötzsch asymptotics; the sharp extremal theory (Grötzsch's inequality, the Teichmüller
   identity and comparison) is future work and is not stated here.
-
-## References
-
-* J. Väisälä, *Lectures on n-dimensional quasiconformal mappings*, §11 (Grötzsch and Teichmüller
-  rings; the extremal property).
-* O. Lehto and K. I. Virtanen, *Quasiconformal mappings in the plane*, Ch. II §1 (the module of a
-  ring domain and the extremal estimates).
-* L. V. Ahlfors, *Lectures on quasiconformal mappings*, Ch. III §A.
 -/
 
 open MeasureTheory Filter

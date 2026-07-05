@@ -42,12 +42,6 @@ here and is part of the extremal theory.) Two canonical extremal rings are recor
   i.e. the `curveModulus` of the family of curves connecting its two boundary circles;
 * `grotzschRing s`, `teichmullerRing t` — the two canonical extremal rings;
 * `grotzschModulus s`, `teichmullerModulus t` — their moduli.
-
-## References
-
-* J. Väisälä, *Lectures on n-dimensional quasiconformal mappings*, §§6–7, 11.
-* O. Lehto and K. I. Virtanen, *Quasiconformal mappings in the plane*, Ch. II.
-* L. V. Ahlfors, *Lectures on quasiconformal mappings*, Ch. III.
 -/
 
 open MeasureTheory

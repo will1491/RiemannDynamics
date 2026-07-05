@@ -12,7 +12,7 @@ import RiemannDynamics.Analysis.Sobolev.SobolevToACL
 This file builds the classical **length–area** development needed to close the
 keystone `IsQCAnalytic.inverse_memW12loc` (`QC/InverseQC/`): the inverse
 homeomorphism `g = f⁻¹` of an analytic-quasiconformal map is absolutely continuous
-on almost every line with `L²_loc` partials (Väisälä §31.2 / Lehto–Virtanen).
+on almost every line with `L²_loc` partials (the reverse length–area theorem).
 
 The load-bearing classical content is the **absolute continuity of the image area**
 (Lusin condition N⁺) under the modulus / dilatation bound. The *correctness*

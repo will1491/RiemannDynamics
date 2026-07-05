@@ -32,7 +32,7 @@ continuity* — the "no singular part" claim — is the genuine analytic content
 formula `multiplicityAreaFormula_noSingularPart`) and packaged by
 `inverse_reverseLengthArea_weakGradient`.
 
-**This is the Lehto–Virtanen / Väisälä §31.2 reverse length–area theorem for the inverse —
+**This is the classical reverse length–area theorem for the inverse —
 genuinely not derivable from the pointwise a.e. data.** The hypothesis `IsQCAnalytic f b` is
 the load-bearing input: it supplies the forward map's genuine `W^{1,2}_loc`/modulus structure
 (`hf.2.1 : MemW12loc f`), which the area-preserving singular shear `g⟨x,y⟩ = x + i(y + s x)`
@@ -949,10 +949,7 @@ super-critical weak gradient via Morrey.
 and it does *not* satisfy condition (N) (it carries the null set on which `s'` is supported to a set
 of positive measure). The hypothesis `hf` is load-bearing: `f`'s genuine `W^{1,2}_loc`/Gehring
 super-critical structure (consumed by the fibered Lusin-(N) of Steps 1–2 via Morrey) is exactly
-what excludes the shear, since the shear has no `Lᵖ`, `p > 2`, weak gradient.
-
-*References:* H. Federer, *Geometric Measure Theory*, 3.2.3 (area formula); Lehto–Virtanen;
-Väisälä §31.2; Marcus–Mizel, ARMA 45 (1972). -/
+what excludes the shear, since the shear has no `Lᵖ`, `p > 2`, weak gradient. -/
 theorem IsQCAnalytic.inverse_slice_monotoneDecompN {f : ℂ → ℂ} {b : BeltramiCoeff}
     (hf : IsQCAnalytic f b) :
     (∀ᵐ y : ℝ,
@@ -983,9 +980,7 @@ structure — the shear is *not* the inverse of an `IsQCAnalytic` map because `f
 area-coupling (absent from Mathlib's injective-only change of variables) is supplied in-repo
 (`MultiplicityAreaFormula.lean`, `inverse_slice_monotoneDecompN`), so this is now PROVEN via the
 Banach–Zaretsky bridge. The downstream weak gradient and AC walls reduce to this via
-the *fully proven* `hasWeakGradient_of_aeSliceAC` (`QC/LengthArea/ReverseLengthArea.lean`).
-
-*Reference:* Lehto–Virtanen; Väisälä §31.2; Marcus–Mizel, ARMA 45 (1972); Hencl–Koskela, App. A. -/
+the *fully proven* `hasWeakGradient_of_aeSliceAC` (`QC/LengthArea/ReverseLengthArea.lean`). -/
 theorem IsQCAnalytic.inverse_slice_absolutelyContinuous_core_x {f : ℂ → ℂ} {b : BeltramiCoeff}
     (hf : IsQCAnalytic f b) :
     ∀ᵐ y : ℝ, ∀ a c : ℝ,
@@ -1019,8 +1014,8 @@ with inverse homeomorphism `g = f⁻¹`, the a.e.-defined **pointwise** partials
 
 ## The reverse length–area weak gradient (now PROVEN)
 
-This is the **reverse length–area theorem** (Lehto–Virtanen / Väisälä §31.2; Marcus–Mizel,
-ARMA 45 (1972)) specialised to the inverse map. Its mathematical content is **exactly** the
+This is the **reverse length–area theorem** specialised to the inverse map. Its
+mathematical content is **exactly** the
 "no singular part" claim isolated by the two AC walls below. The proof requires the genuine,
 irreducibly two-dimensional area-coupling of
 the forward map (`hf.2.1 : MemW12loc f`, the modulus/length–area structure) — the required
@@ -1043,10 +1038,6 @@ slice-AC cores below.
   `∫Var ≤ area`, nor from per-line N⁺; all of those are satisfied by the
   shear. The honest extra ingredient is precisely the *weak*-derivative identity, supplied by
   the forward Sobolev/modulus structure.
-
-*Reference:* O. Lehto, K. I. Virtanen, *Quasiconformal Mappings in the Plane*; J. Väisälä,
-*Lectures on n-dimensional QC mappings*, §31.2; M. Marcus, V. J. Mizel, ARMA 45 (1972),
-294–320; S. Hencl, P. Koskela, *Lectures on Mappings of Finite Distortion*, App. A.
 
 ## The genuine residual, narrowed to slice absolute continuity
 

@@ -33,12 +33,6 @@ harmonic function agreeing with the envelope.
 * `subharmonicOn_mem_perronFamily_le_perronEnvelope` — every family member is `≤` the envelope;
 * `perronEnvelope_le_sSup` — the envelope is bounded by the frontier supremum of `φ`;
 * `perronEnvelope_harmonicOn` — **Perron's theorem**: the envelope is harmonic on `U`.
-
-## References
-
-* T. Ransford, *Potential Theory in the Complex Plane*, Ch. 4 (Perron's method, the Perron family
-  and envelope).
-* L. V. Ahlfors, *Complex Analysis*, Ch. 6 §4.
 -/
 
 open MeasureTheory Filter Metric Topology

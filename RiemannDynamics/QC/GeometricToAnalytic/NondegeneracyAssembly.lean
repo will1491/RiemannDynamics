@@ -13,18 +13,15 @@ import RiemannDynamics.Analysis.Sobolev.Morrey.LusinN
 # Nondegeneracy assembly: the inverse Lusin condition and `J_f > 0` a.e.
 
 This file assembles the almost-everywhere nondegeneracy of the differential of a geometric
-`K`-quasiconformal homeomorphism `f : ℂ → ℂ` — the classical `J_f > 0` a.e. theorem
-(Lehto–Virtanen, *Quasiconformal Mappings in the Plane*, Ch. IV; Väisälä, *Lectures on
-n-Dimensional Quasiconformal Mappings*, §33) — from the **inverse Lusin condition (N⁻¹)**:
+`K`-quasiconformal homeomorphism `f : ℂ → ℂ` — the classical `J_f > 0` a.e. theorem —
+from the **inverse Lusin condition (N⁻¹)**:
 the inverse homeomorphism `g = f⁻¹` maps Lebesgue-null sets to Lebesgue-null sets.
 
-Classically, (N⁻¹) for `f` is exactly condition (N) for `g`, and every classical text obtains
-it by showing the inverse map is itself Sobolev-regular and then applying a condition-(N)
-theorem to it: Väisälä (§§31–33) uses the symmetry of his metric definition; Lehto–Virtanen
-(Ch. I, Ch. IV) invert the quadrilateral modulus through the reciprocity `M(Q)·M(Q̃) = 1`
-(Riemann mapping plus Carathéodory boundary correspondence); Astala–Iwaniec–Martin (*Elliptic
-PDE and Quasiconformal Mappings in the Plane*, Ch. 3) run the analytic machinery at the
-inverse. Here the reciprocity step is replaced by the **length–area transfer with an explicit
+Classically, (N⁻¹) for `f` is exactly condition (N) for `g`, and the classical treatments
+obtain it by showing the inverse map is itself Sobolev-regular and then applying a
+condition-(N) theorem to it (through the metric definition's symmetry, the quadrilateral
+reciprocity `M(Q)·M(Q̃) = 1`, or the analytic machinery run at the inverse). Here the
+reciprocity step is replaced by the **length–area transfer with an explicit
 admissible density** (the keystone `IsQCGeometric.inverse_axisRectModulusBound` below), which
 produces the axis-rectangle modulus bounds for `g` directly; the parametrized forward ACL
 chain (`AxisRectModulusBound.*`, `QC/LengthArea/ReverseLengthAreaEnergy.lean`) then applies
@@ -69,13 +66,6 @@ Downstream (proved here, re-homed from `InfinitesimalModulus.lean`):
 area formula and (N⁻¹)), `IsQCGeometric.wirtinger_bracket_of_blowup` (the two-conjunct
 Wirtinger bracket, from the or-zero form filtered against nondegeneracy), and
 `IsQCGeometric.infinitesimal_dilatation` (the sharp pointwise dilatation bound).
-
-References: B. Bojarski, Mat. Sb. 43(85) (1957) 451–503; F. W. Gehring, Acta Math. 130
-(1973) 265–277; M. Marcus, V. Mizel, Arch. Ration. Mech. Anal. 45 (1972) 294–320;
-O. Lehto, K. I. Virtanen, *Quasiconformal Mappings in the Plane*, 2nd ed., Springer 1973,
-Ch. IV; J. Väisälä, *Lectures on n-Dimensional Quasiconformal Mappings*, LNM 229, §§31–33;
-K. Astala, T. Iwaniec, G. Martin, *Elliptic PDE and Quasiconformal Mappings in the Plane*,
-Princeton 2009, Ch. 3, Ch. 5.
 -/
 
 open MeasureTheory Complex
@@ -100,9 +90,7 @@ positive determinant and the same dilatation bound.
 `‖L⁻¹‖²/det (L⁻¹) = (p + q)²/(p² − q²) = ‖L‖²/det L ≤ K`. The `ContinuousLinearMap.inverse`
 bookkeeping goes through `ContinuousLinearMap.toContinuousLinearEquivOfDetNeZero` and
 `ContinuousLinearMap.inverse_equiv`.
-
-Reference: Lehto–Virtanen, *Quasiconformal Mappings in the Plane*, Ch. I §9 (the dilatation
-of an affine map and its inverse); Astala–Iwaniec–Martin, §2.4. -/
+-/
 theorem _root_.ContinuousLinearMap.inverse_dilatation {L : ℂ →L[ℝ] ℂ} {K : ℝ}
     (hdet : 0 < L.det) (hK : ‖L‖ ^ 2 ≤ K * L.det) :
     0 < (ContinuousLinearMap.inverse L).det ∧
@@ -167,9 +155,7 @@ is `memWklocP_one_of_acl` (`Analysis/Sobolev/AbsolutelyContinuousLines.lean`) wi
 `IsQCGeometric.dilatation_le_or_zero`. This is the pattern of
 `IsQCGeometric.reverseLengthArea_data` (`QC/GeometricToAnalytic/Assembly.lean`) run with the
 or-zero bound in place of the nondegenerate one.
-
-Reference: Lehto–Virtanen, Ch. IV §§2–3 (ACL and `L²` derivatives); Gehring–Lehto (a.e.
-differentiability of plane monotone `W^{1,2}` functions). -/
+-/
 theorem IsQCGeometric.forwardW12Data {f : ℂ → ℂ} {K : ℝ} (hf : IsQCGeometric f K) :
     (∀ᵐ z : ℂ, DifferentiableAt ℝ f z) ∧
     HasWeakGradient (fun w => (fderiv ℝ f w) 1) (fun w => (fderiv ℝ f w) Complex.I) f
@@ -285,8 +271,7 @@ with an explicit admissible density.
 This is Lehto–Virtanen's rectangle length–area estimate (Ch. IV §2) with the "image length
 dominates the side" step justified by Fuglede's theorem instead of piecewise smoothness; it
 is the standard proof that the analytic definition is inverse-invariant, run directly at the
-geometric data. Reference: Lehto–Virtanen, Ch. IV; Väisälä §31; Astala–Iwaniec–Martin §3.3
-(the corresponding analytic computation). -/
+geometric data. -/
 theorem IsQCGeometric.inverse_axisRectModulusBound {f g : ℂ → ℂ} {K : ℝ}
     (hf : IsQCGeometric f K) (hfg : ∀ w, f (g w) = w) (hgf : ∀ z, g (f z) = z) :
     AxisRectModulusBound g K := by
@@ -598,9 +583,7 @@ producing the weak Wirtinger form consumed by `beltrami_higher_integrability`
 `L²_loc` bounds). Decompose `∂f ∈ Lᵖ_loc` back into both partials via `gx = ∂f + ∂̄f`,
 `gy = i(∂f − ∂̄f)` and `‖∂̄f‖ ≤ ‖μ‖∞·‖∂f‖`, as in
 `IsQCAnalytic.exists_weakGradient_memLpLocOn_gt_two` (`QC/InverseQC/LusinN.lean`).
-
-Reference: Bojarski, Mat. Sb. 43(85) (1957); Astala–Iwaniec–Martin, Ch. 5; Gehring, Acta
-Math. 130 (1973). -/
+-/
 theorem IsQCGeometric.exists_weakGradient_memLpLocOn_gt_two {f : ℂ → ℂ} {K : ℝ}
     (hf : IsQCGeometric f K) :
     ∃ (p : ℝ) (gx gy : ℂ → ℂ), 2 < p ∧ HasWeakGradient gx gy f Set.univ ∧
@@ -727,10 +710,7 @@ Lebesgue-null sets to Lebesgue-null sets.
 `f ∈ W^{1,p}_loc` with `p > 2`; the planar Marcus–Mizel theorem
 `lusinN_image_null_of_weakGradient` (`Analysis/Sobolev/Morrey/LusinN.lean`) applies to the
 continuous `f` and its super-critical weak gradient.
-
-Reference: Marcus–Mizel, Arch. Ration. Mech. Anal. 45 (1972) 294–320 (continuous `W^{1,p}`,
-`p > n`, maps satisfy (N)); Väisälä §33 (condition (N) for quasiconformal maps);
-Astala–Iwaniec–Martin §3.7. -/
+-/
 theorem IsQCGeometric.lusinN {f : ℂ → ℂ} {K : ℝ} (hf : IsQCGeometric f K) :
     ∀ S : Set ℂ, volume S = 0 → volume (f '' S) = 0 := by
   intro S hS
@@ -760,8 +740,7 @@ At each good `w`, the easy half of the inverse function theorem
 differentiability of `g` and the inverse differential formula;
 `ContinuousLinearMap.inverse_dilatation` transfers positivity of the Jacobian and the
 dilatation bound.
-
-Reference: Lehto–Virtanen, Ch. IV §5; Väisälä §33; Astala–Iwaniec–Martin §3.3. -/
+-/
 theorem IsQCGeometric.inverse_pointwise_data {f g : ℂ → ℂ} {K : ℝ}
     (hf : IsQCGeometric f K) (hfg : ∀ w, f (g w) = w) (hgf : ∀ z, g (f z) = z) :
     (∀ᵐ w : ℂ, DifferentiableAt ℝ f (g w) ∧ 0 < (fderiv ℝ f (g w)).det) ∧
@@ -898,8 +877,7 @@ vertical line, with locally square-integrable slice partials. Pure instantiation
 parametrized forward ACL chain (`AxisRectModulusBound.exists_acl_memLp_sliceGradient`)
 at the keystone axis-rectangle bounds for `g`
 (`IsQCGeometric.inverse_axisRectModulusBound`).
-
-Reference: Lehto–Virtanen, Ch. IV §2 (the ACL theorem consumes only rectangle moduli). -/
+-/
 theorem IsQCGeometric.inverse_exists_acl_memLp_sliceGradient {f g : ℂ → ℂ} {K : ℝ}
     (hf : IsQCGeometric f K) (hfg : ∀ w, f (g w) = w) (hgf : ∀ z, g (f z) = z) :
     ∃ gx gy : ℂ → ℂ, ACLHorizontal g gx ∧ ACLVertical g gy ∧
@@ -928,9 +906,7 @@ the clamped quotient `μ w := if ‖dzbar g w / dz g w‖ ≤ (K−1)/(K+1) then
 (N6) by the reverse dilatation algebra of `IsQCGeometric.exists_beltrami`
 (`QC/GeometricToAnalytic/Assembly.lean`, STEP 8); since `dz g`/`dzbar g` are by definition
 the Wirtinger combinations of the pointwise partials, the weak form is definitional.
-
-Reference: Astala–Iwaniec–Martin §3.3 (the inverse's Beltrami equation); Lehto–Virtanen,
-Ch. IV. -/
+-/
 theorem IsQCGeometric.inverse_weakGradient_beltrami {f g : ℂ → ℂ} {K : ℝ}
     (hf : IsQCGeometric f K) (hfg : ∀ w, f (g w) = w) (hgf : ∀ z, g (f z) = z) :
     ∃ μ : ℂ → ℂ, Measurable μ ∧ eLpNormEssSup μ volume < 1 ∧
@@ -1052,9 +1028,7 @@ geometric `K`-quasiconformal map has a weak gradient with components locally `L�
 decompose the super-critical weak `∂`-derivative into both partials via
 `g_x = ∂g + ∂̄g`, `g_y = i(∂g − ∂̄g)` and `‖∂̄g‖ ≤ ‖μ‖∞·‖∂g‖`, exactly as in
 `IsQCAnalytic.exists_weakGradient_memLpLocOn_gt_two` (`QC/InverseQC/LusinN.lean`).
-
-Reference: Bojarski, Mat. Sb. 43(85) (1957); Gehring, Acta Math. 130 (1973);
-Astala–Iwaniec–Martin, Ch. 5. -/
+-/
 theorem IsQCGeometric.inverse_exists_weakGradient_memLpLocOn_gt_two {f g : ℂ → ℂ} {K : ℝ}
     (hf : IsQCGeometric f K) (hfg : ∀ w, f (g w) = w) (hgf : ∀ z, g (f z) = z) :
     ∃ (p : ℝ) (gx gy : ℂ → ℂ), 2 < p ∧ HasWeakGradient gx gy g Set.univ ∧
@@ -1143,10 +1117,7 @@ axis-rectangle bounds N3, the parametrized ACL chain N8, the pointwise inverse d
 Bojarski at `g`) lies in `W^{1,p}_loc` for some `p > 2`. The planar Marcus–Mizel theorem
 `lusinN_image_null_of_weakGradient` (`Analysis/Sobolev/Morrey/LusinN.lean`) then yields
 condition (N) for `g`, which is the stated conclusion.
-
-Reference: Lehto–Virtanen, *Quasiconformal Mappings in the Plane*, Ch. IV (`(N⁻¹)` and
-`J_f ≠ 0` a.e.); Väisälä §33 (condition (N) applied to the inverse map); Marcus–Mizel,
-Arch. Ration. Mech. Anal. 45 (1972); Astala–Iwaniec–Martin §3.7–3.8. -/
+-/
 theorem IsQCGeometric.inverse_lusinN {f : ℂ → ℂ} {K : ℝ} (hf : IsQCGeometric f K) :
     ∀ A : Set ℂ, volume A = 0 →
       volume (⇑(hf.2.1.isHomeomorph.homeomorph f).symm '' A) = 0 := by
@@ -1181,8 +1152,8 @@ constant dilatation `2` — yet it is real-differentiable at `0` with `fderiv �
 zero-differential set is the single null point `{0}`. Nondegeneracy therefore can only hold almost
 everywhere, exactly as stated here.
 
-This is the classical `J_f > 0` a.e. theorem for quasiconformal homeomorphisms (Lehto–Virtanen,
-*Quasiconformal Mappings in the Plane*). The proof here is **complete modulo the inverse Lusin
+This is the classical `J_f > 0` a.e. theorem for quasiconformal homeomorphisms.
+The proof here is **complete modulo the inverse Lusin
 residual** `IsQCGeometric.inverse_lusinN`: the easy `≤` half of the area formula
 (`addHaar_image_eq_zero_of_det_fderivWithin_eq_zero`) shows the zero-Jacobian set
 `E = {x | DifferentiableAt ℝ f x ∧ fderiv ℝ f x = 0}` has null image `f '' E` (the determinant

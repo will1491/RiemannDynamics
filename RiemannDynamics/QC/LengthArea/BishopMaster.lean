@@ -28,12 +28,6 @@ The two estimates differ genuinely in shape (interval families and constants), b
 all their two-dimensional content through the strip increment bounds
 `AxisRectModulusBound.horizontal_strip_sep_sq_le`/`vertical_strip_sep_sq_le` and the profile
 lemmas.
-
-References: C. Bishop, *Quasiconformal Mappings* (book draft), Ch. 3, Theorem 4.1 (the
-chain `(∑ bⱼ)² ≤ (∑ bⱼ²m)(∑ 1/m) ≤ … ≤ K·(A(y+1/n) − A(y))·n → K·A′(y)`); L. Ahlfors,
-*Lectures on Quasiconformal Mappings*, Ch. II; O. Lehto, K. I. Virtanen, *Quasiconformal
-Mappings in the Plane*, Ch. IV; J. Väisälä, *Lectures on n-Dimensional Quasiconformal
-Mappings*, §31.
 -/
 
 open MeasureTheory Complex
@@ -72,10 +66,7 @@ suffices to prove `∑ (max (rᵢ − ε) 0)²/wᵢ ≤ K(2D + ε′)` for all `
    `f '' ([α,β] × [y, y+δ])`, so their areas sum below the two-sided profile bound
    (`imageArea_strip_le_profileY_diff`): `∑ᵢ ≤ Φ(y+δ) − Φ(y−δ) ≤ (2D + ε′)δ`.
 8. Divide by `δ/K`.
-
-Reference: Bishop, *Quasiconformal Mappings*, Ch. 3, Theorem 4.1; Väisälä, §31;
-Lehto–Virtanen, Ch. IV; the passage to `L²` energy via this same estimate is
-Astala–Iwaniec–Martin, *Elliptic PDE and QC Mappings in the Plane*, §3.3. -/
+-/
 theorem qc_master_sum_sq_div_le_horizontal {f : ℂ → ℂ} {K : ℝ} (hf : AxisRectModulusBound f K)
     {α β σ y : ℝ} (hσy : σ < y)
     (hΦ : DifferentiableAt ℝ (imageAreaProfileY f α β σ) y)
@@ -694,9 +685,7 @@ triangle inequality yields the edge separation `Dᵢ − ε` for the strip
 Divide by `h` and let `h → 0⁺`: the left side is `h`-free and the right difference quotient
 tends to `Φ′(y)` (`hasDerivAt_iff_tendsto_slope` restricted to `𝓝[>] y`, `le_of_tendsto`).
 Then let `ε → 0` (finitely many terms, each continuous in `ε`).
-
-Reference: Bishop, *Quasiconformal Mappings*, Ch. 3, Theorem 4.1 (the display
-`∑ bⱼ² · m ≤ K · (A(y+1/n) − A(y)) · n → K·A′(y)`); Ahlfors, Ch. II; Väisälä, §31.2. -/
+-/
 theorem AxisRectModulusBound.horizontal_family_sq_sum_le {f : ℂ → ℂ} {K : ℝ}
     (hf : AxisRectModulusBound f K) {α β σ y : ℝ} (hσy : σ ≤ y)
     (hdiff : DifferentiableAt ℝ (imageAreaProfileY f α β σ) y)

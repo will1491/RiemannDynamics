@@ -21,9 +21,9 @@ normal-family compactness theorem (`QC/Calculus/Compactness.lean`) consumes:
 * **Inverse stability**: the inverse of a geometric `K`-quasiconformal map is geometric
   `K`-quasiconformal (through the analytic equivalence layer).
 
-Every statement is a true classical theorem (Väisälä §§10–22, Lehto–Virtanen Ch. II–III, Ahlfors
-Ch. III) and **fails for bare homeomorphisms** — the `IsQCGeometric`/`uniformly K-qc` hypothesis is
-load-bearing throughout, and no statement assumes any derivative control.
+Every statement is a true classical theorem and **fails for bare homeomorphisms** — the
+`IsQCGeometric`/`uniformly K-qc` hypothesis is load-bearing throughout, and no statement
+assumes any derivative control.
 
 ## Main statements
 
@@ -33,20 +33,12 @@ load-bearing throughout, and no statement assumes any derivative control.
 * `equicontinuousOn_of_uniform_isQCGeometric` — **(E)**: a normalized uniformly `K`-qc family is
   equicontinuous on compacta;
 * `equicontinuousOn_inv_of_uniform_isQCGeometric` — the inverses are equicontinuous on compacta.
-
-## References
-
-* J. Väisälä, *Lectures on n-dimensional quasiconformal mappings*, §§10 (quasisymmetry), 19–21
-  (distortion and equicontinuity).
-* O. Lehto and K. I. Virtanen, *Quasiconformal mappings in the plane*, Ch. II §6, Ch. III.
-* L. V. Ahlfors, *Lectures on quasiconformal mappings*, Ch. III §C.
 -/
 
 open MeasureTheory Filter Metric
 open scoped ENNReal NNReal Topology
 
 namespace RiemannDynamics
-
 
 /-- **The inverse of a geometric `K`-quasiconformal map is geometric `K`-quasiconformal.** Since
 `IsQCGeometric f K` is the symmetric modulus-distortion condition (the image-family modulus is used,

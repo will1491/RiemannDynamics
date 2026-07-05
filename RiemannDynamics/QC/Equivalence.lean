@@ -141,8 +141,8 @@ modulus-almost-every `δ`, `g` is differentiable along `δ` with the chain rule
 points `deriv δ t = 0`** (where it forces `deriv (g ∘ δ) t = 0`).  The singular shear
 `g(x + iy) = x + i(y + s x)` (s monotone singular) shows this is *false* without the
 genuine Sobolev/ACL structure of `g`, so `hf` (through `inverse_memW12loc`) is
-load-bearing.  This is exactly the planar borderline (`p = n = 2`) Fuglede theorem
-(Väisälä, *Lectures on n-dimensional QC mappings*, §28), absent from Mathlib. -/
+load-bearing.  This is exactly the planar borderline (`p = n = 2`) Fuglede theorem,
+absent from Mathlib. -/
 private theorem imageStationary_fugledeNode_modulus_zero {f : ℂ → ℂ} {b : BeltramiCoeff}
     (hf : IsQCAnalytic f b) (Δ : Set (ℝ → ℂ))
     (_hΔcont : ∀ δ ∈ Δ, Continuous δ)

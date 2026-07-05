@@ -26,12 +26,6 @@ the unit circle `grotzschOuter`.
 * `grotzschPotential_reflection_le`, `grotzschPotential_monotone_arg` — the polarization
   inequality across a diameter and the resulting angular monotonicity: on each circle `|z| = r`
   the potential is nondecreasing in the angle `θ ∈ [0, π]`.
-
-## References
-
-* T. Ransford, *Potential Theory in the Complex Plane*, Ch. 4 (barriers and regularity).
-* V. N. Dubinin, *Condenser Capacities and Symmetrization in Geometric Function Theory*, Ch. 2
-  (polarization and radial monotonicity of condenser potentials).
 -/
 
 open MeasureTheory Filter Metric Topology Complex Laplacian

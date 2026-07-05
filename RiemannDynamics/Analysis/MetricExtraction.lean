@@ -33,11 +33,6 @@ future modulus-transport step supplies such an inscription, the metric bound fol
 * `equicontinuousOn_of_uniform_isQCGeometric_of_inscription` — the forward equicontinuity of a
   normalized uniformly `K`-quasiconformal family, with the inscription+transport package `hInsc`
   as the single remaining hypothesis.
-
-## References
-
-* O. Lehto and K. I. Virtanen, *Quasiconformal mappings in the plane*, Ch. II §1, Ch. III.
-* L. V. Ahlfors, *Lectures on quasiconformal mappings*, Ch. III.
 -/
 
 open MeasureTheory Filter Metric

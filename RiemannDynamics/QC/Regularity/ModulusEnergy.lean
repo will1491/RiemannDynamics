@@ -33,11 +33,6 @@ This identity, with its separating-family counterpart, yields conjugate-modulus 
 * `curveModulus_connecting_le_dirichletEnergy` — `M_connecting ≤ D(u)` (the easy direction).
   The converse Dirichlet-principle direction `D(u) ≤ M_connecting` is future work and is not
   stated here.
-
-## References
-
-* L. V. Ahlfors, *Conformal Invariants*, Ch. 4 (extremal length, the modulus as a Dirichlet
-  integral).
 -/
 
 open MeasureTheory Filter Metric Topology

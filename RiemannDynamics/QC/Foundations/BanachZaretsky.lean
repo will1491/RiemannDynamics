@@ -377,8 +377,7 @@ the infimum over open `V ⊇ f '' A` of `volume V`. For each such `V`, the preim
 `stieltjesMeasure_le_volume_image_of_isOpen` gives
 `μ_f A ≤ μ_f (f ⁻¹' V) ≤ volume (f '' (f ⁻¹' V)) ≤ volume V`. Taking the infimum yields the claim.
 
-This is the genuine Banach–Zaretsky inequality (Hencl–Koskela, *Lectures on mappings of finite
-distortion*, Lemma A.32; Saks, *Theory of the Integral*, IV §6); together with condition (N) it
+This is the genuine Banach–Zaretsky inequality; together with condition (N) it
 makes `μ_f ≪ volume` (`monotone_absolutelyContinuous_of_luzinN`). -/
 theorem stieltjesMeasure_le_volume_image {f : ℝ → ℝ} (hf : Monotone f) (hcont : Continuous f)
     (A : Set ℝ) :

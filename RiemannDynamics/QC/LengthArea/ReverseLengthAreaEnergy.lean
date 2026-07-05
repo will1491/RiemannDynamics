@@ -65,7 +65,7 @@ namespace RiemannDynamics
 
 /-! ## The diff-free slice-derivative witnesses and the three forward length–area residuals
 
-The forward reverse-length-area theorem (Lehto–Virtanen, Väisälä §31) must be proved **without**
+The forward reverse-length-area theorem must be proved **without**
 any a.e. differentiability of `f` (it *feeds* `ae_differentiableAt_gehringLehto`). So the ACL
 gradient witnesses cannot be `fderiv ℝ f · v`; they are the **one-dimensional slice derivatives**,
 which exist a.e. from *slice* bounded variation (a 1D fact,
@@ -167,7 +167,7 @@ variation and the slice-derivative energy integrate to a finite quantity over th
 finiteness facts are stated per axis (horizontal slices indexed by height `y ∈ [s,t]`, vertical
 slices indexed by abscissa `x ∈ [a,b]`).
 
-This is the genuinely two-dimensional length–area *inequality* (Väisälä §31.1), the single brick
+This is the genuinely two-dimensional length–area *inequality*, the single brick
 from which the bounded-variation residual `forward_ae_slice_bv` and the `L²_loc` energy residual
 `forward_sliceDeriv_memLp` are both **fully derived below** (a.e.-finite variation from the
 `eVariation²` box bound via `ae_eVariationOn_ne_top_of_box`; `MemLp` from the derivative-energy box
@@ -183,9 +183,7 @@ hypothesis is the parametrized `AxisRectModulusBound f K`, so the brick applies 
 homeomorphism with axis-rectangle bounds — in particular to the inverse of a geometric
 quasiconformal map (`IsQCGeometric.inverse_axisRectModulusBound`). The `IsQCGeometric` wrapper
 is `IsQCGeometric.forward_lengthArea_energy` at the end of this file.
-
-Reference: Lehto–Virtanen, *Quasiconformal Mappings in the Plane*, Ch. IV §2; Väisälä §31.1;
-Bishop, *Quasiconformal Mappings*, Ch. 3 Theorem 4.1. -/
+-/
 theorem AxisRectModulusBound.forward_lengthArea_energy {f : ℂ → ℂ} {K : ℝ}
     (hf : AxisRectModulusBound f K) :
     (∀ a b s t : ℝ,
@@ -444,7 +442,7 @@ has its total variation dominated by the integral of its (a.e.-existing) *slice*
 Banach–Zaretsky "no singular part" condition `eVariationOn ≤ ∫⁻ ‖deriv‖₊` — and symmetrically for
 vertical slices.
 
-This is the genuinely two-dimensional content (the length–area *equality*, Väisälä §31.2), ruling
+This is the genuinely two-dimensional content (the length–area *equality*), ruling
 out a singular part in the slice and upgrading bounded variation (`forward_ae_slice_bv`) to absolute
 continuity. It is FALSE for the area-preserving singular shear `g⟨x,y⟩ = x + i(y + s·x)` (whose
 slice `x ↦ y + s·x` is singular but has `deriv = 1` a.e.), so the hypothesis `IsQCGeometric f K` is
@@ -462,9 +460,7 @@ component, gives the one-dimensional no-singular-part inequality
 `eVariationOn ≤ ∫⁻ ‖deriv‖₊` on every interval. The hypothesis is the parametrized
 `AxisRectModulusBound f K` (the `IsQCGeometric` wrapper is at the end of this file), so the
 brick applies verbatim at the inverse map.
-
-Reference: Lehto–Virtanen, *Quasiconformal Mappings in the Plane*, Ch. IV §§2–3;
-Väisälä §31.2; Bishop, *Quasiconformal Mappings*, Ch. 3 Theorem 4.1. -/
+-/
 theorem AxisRectModulusBound.forward_ae_slice_noSingularPart {f : ℂ → ℂ} {K : ℝ}
     (hf : AxisRectModulusBound f K) :
     (∀ᵐ y : ℝ, ∀ a b : ℝ,

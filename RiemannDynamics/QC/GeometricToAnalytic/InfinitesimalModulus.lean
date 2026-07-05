@@ -1550,9 +1550,7 @@ orientation (the factorisation `realDiagMap (2p) 0` forces `2p ≤ K·0 = 0`); t
 total collapse `q = p = 0` means `Df x = 0` and is returned as the left branch instead of
 being excluded. With `q < p`, the conjugate of the worst orientation factorises as
 `realDiagMap (p+q) (p−q)` and the Rengel bound yields the bracket.
-
-Reference: Lehto–Virtanen, *Quasiconformal Mappings in the Plane*, 2nd ed., Ch. IV §5 (the
-pointwise dilatation bound at points of differentiability). -/
+-/
 theorem IsQCGeometric.wirtinger_bracket_or_zero {f : ℂ → ℂ} {K : ℝ}
     (hf : IsQCGeometric f K) :
     ∀ᵐ x : ℂ, DifferentiableAt ℝ f x →

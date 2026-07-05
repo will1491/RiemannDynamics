@@ -41,10 +41,6 @@ is supported in a compact subset of `U` on which `φ` is Lipschitz and tapers to
   vanishing Lipschitz competitor.
 * `dirichletEnergy_le_of_hardy_boundaryVanishing` — the same for a boundary-vanishing *locally*
   Lipschitz competitor with a finite Hardy integral.
-
-## References
-
-* L. C. Evans, *Partial Differential Equations*, §5.3–5.5 (Sobolev spaces, `H¹₀`).
 -/
 
 open MeasureTheory Filter Metric Topology

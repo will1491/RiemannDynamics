@@ -16,8 +16,7 @@ This file builds the foundational bricks for the **reverse length–area inequal
 image-family modulus bound `M(f(R)) ≤ K · (t − s)/(b − a)` for a geometric
 `K`-quasiconformal `f` (`axisRect_imageModulus_le`).
 
-These are the axiom-clean foundational bricks of the reverse length–area method
-(Väisälä, *Lectures on n-dimensional QC maps* §31; Astala–Iwaniec–Martin §3): the exact
+These are the axiom-clean foundational bricks of the reverse length–area method: the exact
 rectangle modulus and its quasiconformal distortion bound.
 
 ## Main definitions
@@ -550,10 +549,7 @@ particular at the **inverse** `g = f⁻¹` of a geometric quasiconformal map, wh
 bounds are produced by the explicit-density length–area argument
 (`IsQCGeometric.inverse_axisRectModulusBound` in
 `QC/GeometricToAnalytic/NondegeneracyAssembly.lean`) without any two-sided modulus reciprocity.
-
-Reference: O. Lehto, K. I. Virtanen, *Quasiconformal Mappings in the Plane*, 2nd ed., Ch. IV
-(the ACL theorem consumes only rectangle moduli); J. Väisälä, *Lectures on n-Dimensional
-Quasiconformal Mappings*, §31. -/
+-/
 
 /-- **The axis-rectangle modulus-bound hypothesis.** `AxisRectModulusBound f K` holds when
 `1 ≤ K`, `f` is a homeomorphism of `ℂ`, and for every axis rectangle `R = (a, b) × (s, t)` the

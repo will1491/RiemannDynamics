@@ -1023,9 +1023,9 @@ The proof uses the **ℓ²-combination** of near-optimal densities: extract for 
 ε/2ⁿ⁺¹`, and set `ρ = (∑' n, ρₙ²)^{1/2}`. Since `ρ ≥ ρₙ` pointwise, `ρ` is
 admissible for the union; and `∫ρ² = ∑' n, ∫ρₙ²` by Tonelli, bounding the union
 modulus by `∑' n, curveModulus (Γ n) + ε`. This is the standard fact that the
-conformal modulus is an outer measure on curve families (Väisälä, *Lectures*,
-Theorem 6.2), and the keystone reassembly brick for upgrading quadrilateral
-distortion to general curve-family distortion. -/
+conformal modulus is an outer measure on curve families, and the keystone
+reassembly brick for upgrading quadrilateral distortion to general curve-family
+distortion. -/
 theorem curveModulus_iUnion_le_tsum {Γ : ℕ → Set (ℝ → ℂ)} :
     curveModulus (⋃ n, Γ n) ≤ ∑' n, curveModulus (Γ n) := by
   classical

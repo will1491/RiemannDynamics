@@ -27,11 +27,6 @@ prove harmonicity of the Perron envelope:
 
 * `harmonic_eq_zero_of_nonneg_eq_zero` — the strong minimum principle;
 * `harmonicOnNhd_of_monotone_tendsto` — Harnack's principle (monotone harmonic limits).
-
-## References
-
-* T. Ransford, *Potential Theory in the Complex Plane*, Ch. 1–3 (Harnack's inequality and principle,
-  the minimum principle).
 -/
 
 open MeasureTheory Filter Metric Topology

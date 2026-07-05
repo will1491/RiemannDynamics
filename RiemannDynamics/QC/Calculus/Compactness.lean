@@ -655,9 +655,8 @@ giving equicontinuity of the family and of its inverses on every compact set; wi
 boundedness (anchored by `fₙ p = a` and `gₙ a = p`) the Arzelà–Ascoli extraction
 `exists_subseq_tendsto_continuousMap` produces locally uniformly convergent subsequences of both,
 whose limits are mutual inverses, so the limit is a homeomorphism
-(`isHomeomorph_of_tendstoLocallyUniformly_inverse`) and hence `K`-quasiconformal by closedness.
-(Lehto–Virtanen, *Quasiconformal mappings in the plane*, Ch. II §5; Väisälä, *Lectures on
-n-dimensional quasiconformal mappings*, §§19–21.) -/
+(`isHomeomorph_of_tendstoLocallyUniformly_inverse`) and hence `K`-quasiconformal by
+closedness. -/
 theorem exists_subseq_tendstoLocallyUniformly_isQCGeometric {fₙ : ℕ → ℂ → ℂ} {K : ℝ}
     {p q a b : ℂ} (hfK : ∀ n, IsQCGeometric (fₙ n) K) (hpq : p ≠ q) (hab : a ≠ b)
     (hfp : ∀ n, fₙ n p = a) (hfq : ∀ n, fₙ n q = b) :
