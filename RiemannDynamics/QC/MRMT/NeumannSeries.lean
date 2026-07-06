@@ -5,7 +5,7 @@ Authors: Will (Ziang) Li
 -/
 import RiemannDynamics.Analysis.SingularIntegral.Beurling.Beltrami
 import RiemannDynamics.Analysis.SingularIntegral.Cauchy
-import RiemannDynamics.Analysis.WeakL2Limit
+import RiemannDynamics.Analysis.WeakLimits.WeakL2Limit
 
 /-!
 # The Neumann-series principal solution of the Beltrami equation

@@ -4,8 +4,8 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Will (Ziang) Li
 -/
 import Mathlib
-import RiemannDynamics.Analysis.BaernsteinComparison
-import RiemannDynamics.Analysis.GrotzschPotential
+import RiemannDynamics.Analysis.Baernstein.BaernsteinComparison
+import RiemannDynamics.Analysis.GrotzschRing.GrotzschPotential
 import RiemannDynamics.QC.Regularity.ModulusEnergy
 import RiemannDynamics.QC.Regularity.RingModulus
 

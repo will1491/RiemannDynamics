@@ -3,10 +3,10 @@ Copyright (c) 2026 Will (Ziang) Li. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Will (Ziang) Li
 -/
-import RiemannDynamics.Analysis.CircularPolyaSzegoExtension
-import RiemannDynamics.Analysis.BaernsteinComparison
-import RiemannDynamics.Analysis.GrotzschPotential
-import RiemannDynamics.Analysis.FluxEnergy
+import RiemannDynamics.Analysis.Baernstein.CircularPolyaSzegoExtension
+import RiemannDynamics.Analysis.Baernstein.BaernsteinComparison
+import RiemannDynamics.Analysis.GrotzschRing.GrotzschPotential
+import RiemannDynamics.Analysis.GrotzschRing.FluxEnergy
 
 /-!
 # Baernstein N16: the star comparison `J ≤ 0` and circle-means comparison

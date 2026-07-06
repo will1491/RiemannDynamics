@@ -3,7 +3,7 @@ Copyright (c) 2026 Will (Ziang) Li. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Will (Ziang) Li
 -/
-import RiemannDynamics.Analysis.CircularRearrangement
+import RiemannDynamics.Analysis.Symmetrization.CircularRearrangement
 
 /-!
 # Circular symmetrization of a real function and super-level equimeasurability

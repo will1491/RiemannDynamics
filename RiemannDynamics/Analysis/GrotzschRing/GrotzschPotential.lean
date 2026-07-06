@@ -4,9 +4,9 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Will (Ziang) Li
 -/
 import RiemannDynamics.QC.Regularity.RingModulus
-import RiemannDynamics.Analysis.RingPotential
-import RiemannDynamics.Analysis.PolarizationDir
-import RiemannDynamics.Analysis.BaernsteinComparison
+import RiemannDynamics.Analysis.GrotzschRing.RingPotential
+import RiemannDynamics.Analysis.Symmetrization.PolarizationDir
+import RiemannDynamics.Analysis.Baernstein.BaernsteinComparison
 
 /-!
 # The harmonic potential of the Grötzsch ring

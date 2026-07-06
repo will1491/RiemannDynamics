@@ -3,8 +3,8 @@ Copyright (c) 2026 Will (Ziang) Li. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Will (Ziang) Li
 -/
-import RiemannDynamics.Analysis.FluxEnergy
-import RiemannDynamics.Analysis.GrotzschPotential
+import RiemannDynamics.Analysis.GrotzschRing.FluxEnergy
+import RiemannDynamics.Analysis.GrotzschRing.GrotzschPotential
 
 /-!
 # Tip regularity of the Grötzsch potential

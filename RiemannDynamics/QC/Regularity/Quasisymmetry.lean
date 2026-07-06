@@ -5,7 +5,7 @@ Authors: Will (Ziang) Li
 -/
 import RiemannDynamics.QC.Regularity.Grotzsch
 import RiemannDynamics.QC.Equivalence
-import RiemannDynamics.Analysis.MetricExtraction
+import RiemannDynamics.Analysis.GrotzschRing.MetricExtraction
 import Mathlib.Topology.UniformSpace.Equicontinuity
 import Mathlib.Topology.MetricSpace.Lipschitz
 

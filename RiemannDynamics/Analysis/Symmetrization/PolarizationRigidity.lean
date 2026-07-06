@@ -3,8 +3,8 @@ Copyright (c) 2026 Will (Ziang) Li. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Will (Ziang) Li
 -/
-import RiemannDynamics.Analysis.FunctionSymmetrization
-import RiemannDynamics.Analysis.PolarizationDir
+import RiemannDynamics.Analysis.Symmetrization.FunctionSymmetrization
+import RiemannDynamics.Analysis.Symmetrization.PolarizationDir
 
 /-!
 # Polarization rigidity toward the circular symmetrization

@@ -6,7 +6,7 @@ Authors: Will (Ziang) Li
 import RiemannDynamics.QC.LengthArea.CurveModulus
 import RiemannDynamics.QC.LengthArea.CurveConcat
 import RiemannDynamics.QC.Regularity.RingModulus
-import RiemannDynamics.Analysis.LineLebesgue
+import RiemannDynamics.Analysis.Helpers.LineLebesgue
 import RiemannDynamics.Analysis.Sobolev.AbsolutelyContinuousLines
 import Mathlib.Analysis.Calculus.Rademacher
 

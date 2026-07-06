@@ -5,8 +5,8 @@ Authors: Will (Ziang) Li
 -/
 import RiemannDynamics.QC.Defs.Geometric
 import RiemannDynamics.QC.LengthArea.CurveModulus
-import RiemannDynamics.Analysis.WeakCompactness
-import RiemannDynamics.Analysis.ArcLengthVariation
+import RiemannDynamics.Analysis.WeakLimits.WeakCompactness
+import RiemannDynamics.Analysis.Helpers.ArcLengthVariation
 import Mathlib.Topology.UniformSpace.CompactConvergence
 import Mathlib.Order.LiminfLimsup
 import Mathlib.MeasureTheory.Function.Floor

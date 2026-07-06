@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Will (Ziang) Li
 -/
 import RiemannDynamics.QC.GeometricToAnalytic.GeometricDifferentiable.Reciprocity
-import RiemannDynamics.Analysis.WeightedLengthLSC
+import RiemannDynamics.Analysis.Helpers.WeightedLengthLSC
 
 /-!
 # The level-slice separating-arc bound

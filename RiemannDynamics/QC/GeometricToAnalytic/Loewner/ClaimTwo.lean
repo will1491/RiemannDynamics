@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Will (Ziang) Li
 -/
 import RiemannDynamics.QC.GeometricToAnalytic.Loewner.ChainPotential
-import RiemannDynamics.Analysis.WeightedLengthLSC
+import RiemannDynamics.Analysis.Helpers.WeightedLengthLSC
 import Mathlib.Analysis.Calculus.FDeriv.Measurable
 import Mathlib.Analysis.SpecificLimits.Basic
 
@@ -28,7 +28,7 @@ into `F` through `D_i` of `g_i`-cost `≤ 1 − δ`.
 
 * The cushion survives to the envelopes (`le_moreauEnvelope_of_forall_le`), so the chain
   cost dominates `ε ·` (chain length): chain lengths are bounded by `(1−δ)/ε`.
-* `exists_lipschitz_interpolation` (`Analysis/WeightedLengthLSC.lean`) interpolates each
+* `exists_lipschitz_interpolation` (`Analysis/Helpers/WeightedLengthLSC.lean`) interpolates each
   chain by a single `L`-Lipschitz curve through the chain segments (so within
   `2/(i+1)` of `Ω`), with weighted length against each fixed envelope `g_{i₀}` bounded by
   the chain cost plus `i₀ · (1/(i+1)) · L → 0` (envelopes are monotone:

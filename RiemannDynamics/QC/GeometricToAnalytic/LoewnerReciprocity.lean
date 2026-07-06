@@ -41,7 +41,7 @@ Write `Ω = f(R)`, `E = f(left side)`, `F = f(right side)` — a compact preconn
 two disjoint closed boundary continua. Fix a cushion scale `n` and a Vitali–Carathéodory
 envelope `Φ ≥ max(ρ, 1/n)` — lower semicontinuous, with squared energy on `Ω` within `1/n`
 of that of `max(ρ, 1/n)` (`exists_lsc_sq_approx`, `Loewner/CoareaSlice.lean`). Its
-Moreau–Yosida envelopes `g_i` (`Analysis/MoreauYosida.lean`) are continuous, `i`-Lipschitz,
+Moreau–Yosida envelopes `g_i` (`Analysis/Helpers/MoreauYosida.lean`) are continuous, `i`-Lipschitz,
 increasing, and recover `Φ` pointwise.
 
 1. **Chain potential** (`Loewner/ChainPotential.lean`): the discrete Beurling potential

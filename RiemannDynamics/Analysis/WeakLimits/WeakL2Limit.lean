@@ -3,7 +3,7 @@ Copyright (c) 2026 Will (Ziang) Li. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Will (Ziang) Li
 -/
-import RiemannDynamics.Analysis.JacobianWeakContinuity
+import RiemannDynamics.Analysis.WeakLimits.JacobianWeakContinuity
 import Mathlib.MeasureTheory.Measure.SeparableMeasure
 import Mathlib.MeasureTheory.Covering.DensityTheorem
 
@@ -11,8 +11,8 @@ import Mathlib.MeasureTheory.Covering.DensityTheorem
 # Weak `L²_loc` limits: extraction, calculus, and the variational inequality lemma
 
 Connective tissue between the abstract Hilbert-space weak compactness of
-`Analysis/WeakCompactness.lean` and the concrete `L²_loc` pairing form
-(`TendstoWeaklyL2Loc`, `Analysis/JacobianWeakContinuity.lean`) that the
+`Analysis/WeakLimits/WeakCompactness.lean` and the concrete `L²_loc` pairing form
+(`TendstoWeaklyL2Loc`, `Analysis/WeakLimits/JacobianWeakContinuity.lean`) that the
 null-Lagrangian cluster consumes.
 
 * `exists_subseq_tendstoWeaklyL2Loc` — **local weak `L²` sequential compactness**: a

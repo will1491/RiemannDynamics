@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Will (Ziang) Li
 -/
 import RiemannDynamics.QC.LengthArea.Mollification
-import RiemannDynamics.Analysis.WeakCompactness
+import RiemannDynamics.Analysis.WeakLimits.WeakCompactness
 import Mathlib.Analysis.Calculus.FDeriv.Symmetric
 import Mathlib.Analysis.Normed.Operator.BanachSteinhaus
 
@@ -42,7 +42,7 @@ The file develops this in the repo's weak-derivative vocabulary
 Weak `L²` convergence is phrased through the pairing against `L²` test functions
 `∫ hₙ·ψ → ∫ h·ψ` (`TendstoWeaklyL2`), which is the form the divergence identity tests
 and which the Hilbert-space inner-product convergence of
-`RiemannDynamics.Analysis.WeakCompactness` specializes to.
+`RiemannDynamics.Analysis.WeakLimits.WeakCompactness` specializes to.
 -/
 
 open MeasureTheory Complex

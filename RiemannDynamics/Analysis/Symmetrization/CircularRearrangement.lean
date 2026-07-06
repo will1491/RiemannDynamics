@@ -3,7 +3,7 @@ Copyright (c) 2026 Will (Ziang) Li. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Will (Ziang) Li
 -/
-import RiemannDynamics.Analysis.Rearrangement1D
+import RiemannDynamics.Analysis.Symmetrization.Rearrangement1D
 import Mathlib.Analysis.SpecialFunctions.PolarCoord
 import Mathlib.Analysis.Complex.UpperHalfPlane.Measure
 
@@ -11,7 +11,7 @@ import Mathlib.Analysis.Complex.UpperHalfPlane.Measure
 # Circular (Schwarz) rearrangement on `ℂ` and planar energy preservation
 
 This file lifts the one-dimensional decreasing rearrangement `decreasingRearrange`
-(built in `RiemannDynamics.Analysis.Rearrangement1D`) to the **circular rearrangement**
+(built in `RiemannDynamics.Analysis.Symmetrization.Rearrangement1D`) to the **circular rearrangement**
 `circRearrange p σ` of an extended-real density `σ : ℂ → ℝ≥0∞` about a centre `p : ℂ`.
 
 On each circle `{‖z − p‖ = r}` one rearranges the angular profile `θ ↦ σ(p + r e^{iθ})` by

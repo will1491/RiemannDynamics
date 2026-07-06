@@ -1,7 +1,7 @@
-import RiemannDynamics.Analysis.GrotzschEnergy
-import RiemannDynamics.Analysis.SequentialIBP
-import RiemannDynamics.Analysis.GrotzschPotential
-import RiemannDynamics.Analysis.BaernsteinN16
+import RiemannDynamics.Analysis.GrotzschRing.GrotzschEnergy
+import RiemannDynamics.Analysis.GrotzschRing.SequentialIBP
+import RiemannDynamics.Analysis.GrotzschRing.GrotzschPotential
+import RiemannDynamics.Analysis.Baernstein.BaernsteinN16
 import RiemannDynamics.QC.Regularity.ModulusEnergy
 import RiemannDynamics.QC.Regularity.RingModulus
 

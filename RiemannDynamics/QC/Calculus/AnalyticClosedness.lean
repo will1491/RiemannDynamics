@@ -6,7 +6,7 @@ Authors: Will (Ziang) Li
 import RiemannDynamics.QC.Equivalence
 import RiemannDynamics.QC.GeometricToAnalytic.NondegeneracyAssembly
 import RiemannDynamics.QC.Regularity.Quasisymmetry
-import RiemannDynamics.Analysis.WeakL2Limit
+import RiemannDynamics.Analysis.WeakLimits.WeakL2Limit
 
 /-!
 # Closedness of geometric quasiconformality: the analytic route

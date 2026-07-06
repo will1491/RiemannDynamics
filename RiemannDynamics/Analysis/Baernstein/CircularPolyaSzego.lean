@@ -3,8 +3,8 @@ Copyright (c) 2026 Will (Ziang) Li. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Will (Ziang) Li
 -/
-import RiemannDynamics.Analysis.CircularRearrangement
-import RiemannDynamics.Analysis.Subharmonic
+import RiemannDynamics.Analysis.Symmetrization.CircularRearrangement
+import RiemannDynamics.Analysis.Potential.Subharmonic
 import Mathlib.Analysis.Complex.Harmonic.Analytic
 import Mathlib.Analysis.InnerProductSpace.Harmonic.Constructions
 import Mathlib.Analysis.Complex.HasPrimitives
@@ -38,7 +38,7 @@ and integral-preservation lemmas).
 The star-function route converts the *energy* inequality `D(u★) ≤ D(u)` into a *subharmonicity*
 statement about `u★` — a shape the project's continuous sub-mean-value subharmonic layer
 (`RiemannDynamics.SubharmonicOn` and its max / maximum-principle / Poisson-modification API in
-`Analysis/Subharmonic.lean`) is built to express. Crucially `u★` is assembled from circle integrals
+`Analysis/Potential/Subharmonic.lean`) is built to express. Crucially `u★` is assembled from circle integrals
 of the *harmonic* (hence smooth) ring potential, so it avoids the missing gradient regularity of the
 raw circular rearrangement `circSymm` that obstructs the polarization and coarea routes.
 

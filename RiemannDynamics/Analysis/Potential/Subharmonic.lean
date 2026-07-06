@@ -3,7 +3,7 @@ Copyright (c) 2026 Will (Ziang) Li. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Will (Ziang) Li
 -/
-import RiemannDynamics.Analysis.PoissonDirichlet
+import RiemannDynamics.Analysis.Potential.PoissonDirichlet
 import Mathlib.Analysis.Complex.Harmonic.MeanValue
 import Mathlib.Analysis.SpecialFunctions.Integrals.Basic
 

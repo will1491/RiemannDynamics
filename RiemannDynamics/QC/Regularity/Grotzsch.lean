@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Will (Ziang) Li
 -/
 import RiemannDynamics.QC.Regularity.RingModulus
-import RiemannDynamics.Analysis.CircularRearrangement
+import RiemannDynamics.Analysis.Symmetrization.CircularRearrangement
 import Mathlib.Analysis.SpecialFunctions.Log.Basic
 
 /-!

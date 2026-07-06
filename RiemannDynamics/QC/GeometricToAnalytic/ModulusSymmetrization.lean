@@ -5,7 +5,7 @@ Authors: Will (Ziang) Li
 -/
 import RiemannDynamics.QC.Defs.Modulus
 import RiemannDynamics.QC.LengthArea.Fuglede
-import RiemannDynamics.Analysis.CircularRearrangement
+import RiemannDynamics.Analysis.Symmetrization.CircularRearrangement
 import RiemannDynamics.Analysis.Sobolev.Coarea.Assembly
 import Mathlib.Analysis.SpecialFunctions.PolarCoord
 import Mathlib.Analysis.SpecialFunctions.Integrals.Basic
@@ -1543,7 +1543,7 @@ theorem radialInvLength_integral {C D c0 c1 : ℝ} (_hC : 0 < C) (hcD : 0 < c0 +
 
 The polarization interface `curveModulus_polarize_le_of_admissible_transfer` has an exact planar
 analogue for the **circular rearrangement** `circRearrange p σ` (built in
-`RiemannDynamics.Analysis.CircularRearrangement`). Circular rearrangement is the genuine planar
+`RiemannDynamics.Analysis.Symmetrization.CircularRearrangement`). Circular rearrangement is the genuine planar
 symmetrization move whose iterated/limit form is the Grötzsch/Teichmüller symmetrization, and its
 energy-neutrality brick `lintegral_circRearrange_sq` (`∫ (circRearrange p σ)² = ∫ σ²`) is fully
 proven and axiom-clean. As with polarization, the *only* remaining symmetrization content is the

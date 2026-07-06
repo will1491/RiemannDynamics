@@ -2,8 +2,8 @@
 Copyright (c) 2026 RiemannDynamics contributors. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 -/
-import RiemannDynamics.Analysis.FluxEnergy
-import RiemannDynamics.Analysis.GrotzschTipRegularity
+import RiemannDynamics.Analysis.GrotzschRing.FluxEnergy
+import RiemannDynamics.Analysis.GrotzschRing.GrotzschTipRegularity
 
 /-!
 # The Grötzsch potential energy identity
