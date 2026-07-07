@@ -30,7 +30,7 @@ The file also hosts the small shared lemma that the frontier of a Fatou
 component lies in the Julia set, consumed by several parts of the endgame.
 -/
 
-open Function OnePoint
+open Function OnePoint Filter Topology
 
 namespace RiemannDynamics
 
@@ -262,7 +262,353 @@ theorem exists_fiberCount {f : ℂ̂ → ℂ̂}
       deriv (fun x : ℂ => chartFiniteMap (f ((x : ℂ̂)))) z ≠ 0) :
     ∃ k : ℕ, 1 ≤ k ∧ ∀ w ∈ fcOrbit f U (n + 1),
       (f ⁻¹' {w} ∩ fcOrbit f U n).ncard = k := by
-  sorry
+  classical
+  have hd1 : 1 ≤ degreeOfRational f := le_trans one_le_two hd
+  obtain ⟨r, hr⟩ := id hf
+  set S := fcOrbit f U n with hSdef
+  set T := fcOrbit f U (n + 1) with hTdef
+  have hSfc : IsFatouComponent f S := isFatouComponent_fcOrbit n hf hd1 hU
+  have hTfc : IsFatouComponent f T := isFatouComponent_fcOrbit (n + 1) hf hd1 hU
+  have himg : f '' S = T := fcOrbit_image_eq hf hd1 hU n
+  have cf : ∀ t : ℂ, chartFiniteMap ((t : ℂ̂)) = t := fun _ => rfl
+  have hread : ∀ t : ℂ, r.toSphereMap ((t : ℂ̂))
+      = if r.denReduced.eval t = 0 then (∞ : ℂ̂)
+        else ((r.numReduced.eval t / r.denReduced.eval t : ℂ) : ℂ̂) := fun _ => rfl
+  have hdenR : r.denReduced ≠ 0 := by
+    unfold RationalData.denReduced
+    intro hz
+    have h1 : r.den = gcd r.num r.den * (r.den / gcd r.num r.den) :=
+      (EuclideanDomain.mul_div_cancel' (gcd_ne_zero_of_right r.den_ne_zero)
+        (gcd_dvd_right _ _)).symm
+    rw [hz, mul_zero] at h1
+    exact r.den_ne_zero h1
+  have hrdeg : 2 ≤ r.degree := by
+    rw [← degreeOfRational_eq_of_witness f r hr]; exact hd
+  have hWr : r.wronskian ≠ 0 := r.wronskian_ne_zero hrdeg
+  -- Stage 0: on `S` the reduced denominator does not vanish (a pole would make
+  -- the finite-chart reading discontinuous, hence with zero `deriv`).
+  have hden_ne : ∀ x : ℂ, ((x : ℂ̂) ∈ S) → r.denReduced.eval x ≠ 0 := by
+    intro x hxS h0
+    have hcx := hcrit x hxS
+    have hdiff : DifferentiableAt ℂ (fun t : ℂ => chartFiniteMap (f ((t : ℂ̂)))) x := by
+      by_contra hnd
+      exact hcx (deriv_zero_of_not_differentiableAt hnd)
+    have hφx : chartFiniteMap (f ((x : ℂ̂))) = 0 := by
+      rw [hr, hread x, if_pos h0]
+      rfl
+    -- eventually on the punctured neighbourhood the denominator is nonzero
+    have hZfin : {t : ℂ | r.denReduced.IsRoot t}.Finite :=
+      Polynomial.finite_setOf_isRoot hdenR
+    have hclosed : IsClosed ({t : ℂ | r.denReduced.IsRoot t} \ {x}) :=
+      (hZfin.subset Set.diff_subset).isClosed
+    have hxmem : x ∈ ({t : ℂ | r.denReduced.IsRoot t} \ {x})ᶜ := fun h => h.2 rfl
+    have hev_ne : ∀ᶠ t in 𝓝[≠] x, r.denReduced.eval t ≠ 0 := by
+      filter_upwards [nhdsWithin_le_nhds (hclosed.isOpen_compl.mem_nhds hxmem),
+        self_mem_nhdsWithin] with t ht htx
+      exact fun h0t => ht ⟨h0t, htx⟩
+    -- two incompatible limits along the punctured neighbourhood
+    have h1 : Tendsto (fun t : ℂ => f ((t : ℂ̂))) (𝓝[≠] x) (𝓝 (∞ : ℂ̂)) := by
+      have hc : ContinuousAt (fun t : ℂ => f ((t : ℂ̂))) x :=
+        (hf.continuous.comp OnePoint.continuous_coe).continuousAt
+      have hfx : f ((x : ℂ̂)) = ∞ := by rw [hr, hread x, if_pos h0]
+      have h := hc.tendsto
+      rw [hfx] at h
+      exact h.mono_left nhdsWithin_le_nhds
+    have h2 : Tendsto (fun t : ℂ => ((chartFiniteMap (f ((t : ℂ̂))) : ℂ) : ℂ̂))
+        (𝓝[≠] x) (𝓝 (((0 : ℂ) : ℂ̂))) := by
+      have hφt := hdiff.continuousAt.tendsto
+      rw [hφx] at hφt
+      exact ((OnePoint.continuous_coe.tendsto (0 : ℂ)).comp hφt).mono_left
+        nhdsWithin_le_nhds
+    have heq : (fun t : ℂ => ((chartFiniteMap (f ((t : ℂ̂))) : ℂ) : ℂ̂))
+        =ᶠ[𝓝[≠] x] fun t : ℂ => f ((t : ℂ̂)) := by
+      filter_upwards [hev_ne] with t ht
+      rw [hr, hread t, if_neg ht, cf]
+    have h1' : Tendsto (fun t : ℂ => ((chartFiniteMap (f ((t : ℂ̂))) : ℂ) : ℂ̂))
+        (𝓝[≠] x) (𝓝 (∞ : ℂ̂)) :=
+      Filter.Tendsto.congr' (Filter.EventuallyEq.symm heq) h1
+    exact OnePoint.coe_ne_infty (0 : ℂ) (tendsto_nhds_unique h2 h1')
+  -- values on `S` are finite
+  have hSfin : ∀ u ∈ S, f u ≠ ∞ := by
+    intro u huS
+    have hune : u ≠ ∞ := fun h => hinf (h ▸ huS)
+    obtain ⟨x, rfl⟩ := OnePoint.ne_infty_iff_exists.mp hune
+    rw [hr, hread x, if_neg (hden_ne x huS)]
+    exact OnePoint.coe_ne_infty _
+  have hTfin : ∀ w ∈ T, ∃ y : ℂ, w = ((y : ℂ̂)) := by
+    intro w hwT
+    rw [← himg] at hwT
+    obtain ⟨u, huS, rfl⟩ := hwT
+    obtain ⟨y, hy⟩ := OnePoint.ne_infty_iff_exists.mp (hSfin u huS)
+    exact ⟨y, hy.symm⟩
+  -- Stage 1: fibers over finite points are finite (they are root sets of the
+  -- nonzero polynomial `num - y·den`; its vanishing would kill the Wronskian).
+  have hfib_fin : ∀ y : ℂ, (f ⁻¹' {((y : ℂ̂))} ∩ S).Finite := by
+    intro y
+    have hq : r.numReduced - Polynomial.C y * r.denReduced ≠ 0 := by
+      intro h0
+      apply hWr
+      have hnum : r.numReduced = Polynomial.C y * r.denReduced := sub_eq_zero.mp h0
+      unfold RationalData.wronskian
+      rw [hnum, Polynomial.derivative_C_mul]
+      ring
+    have hsub : f ⁻¹' {((y : ℂ̂))} ∩ S ⊆ (fun x : ℂ => ((x : ℂ̂))) ''
+        {x : ℂ | (r.numReduced - Polynomial.C y * r.denReduced).IsRoot x} := by
+      rintro u ⟨hufy, huS⟩
+      have hune : u ≠ ∞ := fun h => hinf (h ▸ huS)
+      obtain ⟨x, rfl⟩ := OnePoint.ne_infty_iff_exists.mp hune
+      have hden := hden_ne x huS
+      have hfx : f ((x : ℂ̂)) = ((y : ℂ̂)) := hufy
+      rw [hr, hread x, if_neg hden] at hfx
+      have hdiv : r.numReduced.eval x / r.denReduced.eval x = y :=
+        OnePoint.coe_eq_coe.mp hfx
+      rw [div_eq_iff hden] at hdiv
+      refine ⟨x, ?_, rfl⟩
+      show (r.numReduced - Polynomial.C y * r.denReduced).eval x = 0
+      rw [Polynomial.eval_sub, Polynomial.eval_mul, Polynomial.eval_C, hdiv, sub_self]
+    exact ((Polynomial.finite_setOf_isRoot hq).image _).subset hsub
+  -- Local injectivity: near each finite non-critical point `f` is injective
+  have hloc : ∀ x : ℂ, ((x : ℂ̂) ∈ S) → ∃ Wc : Set ℂ, IsOpen Wc ∧ x ∈ Wc ∧
+      ∀ t₁ ∈ Wc, ∀ t₂ ∈ Wc, f ((t₁ : ℂ̂)) = f ((t₂ : ℂ̂)) → t₁ = t₂ := by
+    intro x hxS
+    have hcx := hcrit x hxS
+    have hden := hden_ne x hxS
+    have hev : (fun t : ℂ => r.numReduced.eval t / r.denReduced.eval t)
+        =ᶠ[𝓝 x] fun t : ℂ => chartFiniteMap (f ((t : ℂ̂))) := by
+      filter_upwards [r.denReduced.continuous.continuousAt.eventually_ne hden] with t ht
+      rw [hr, hread t, if_neg ht, cf]
+    obtain ⟨D, hstrict⟩ : ∃ D : ℂ,
+        HasStrictDerivAt (fun t : ℂ => chartFiniteMap (f ((t : ℂ̂)))) D x :=
+      ⟨_, ((r.numReduced.hasStrictDerivAt x).div
+        (r.denReduced.hasStrictDerivAt x) hden).congr_of_eventuallyEq hev⟩
+    have hD : D ≠ 0 := hstrict.hasDerivAt.deriv ▸ hcx
+    obtain ⟨Wc, hWsub, hWopen, hxW⟩ :=
+      mem_nhds_iff.mp (hstrict.eventually_left_inverse hD)
+    refine ⟨Wc, hWopen, hxW, ?_⟩
+    intro t₁ ht₁ t₂ ht₂ hft
+    have h₁ : HasStrictDerivAt.localInverse _ _ _ hstrict hD
+        (chartFiniteMap (f ((t₁ : ℂ̂)))) = t₁ := hWsub ht₁
+    have h₂ : HasStrictDerivAt.localInverse _ _ _ hstrict hD
+        (chartFiniteMap (f ((t₂ : ℂ̂)))) = t₂ := hWsub ht₂
+    rw [← h₁, hft, h₂]
+  -- `S` read in the finite chart is open
+  have hScopen : IsOpen ((fun t : ℂ => ((t : ℂ̂))) ⁻¹' S) :=
+    hSfc.isOpen.preimage OnePoint.continuous_coe
+  -- Stage 2: the fiber count is locally constant on `T`
+  have hlc : ∀ w₀ ∈ T, ∃ P : Set ℂ̂, P ∈ 𝓝 w₀ ∧ ∀ w ∈ P ∩ T,
+      (f ⁻¹' {w} ∩ S).ncard = (f ⁻¹' {w₀} ∩ S).ncard := by
+    intro w₀ hw₀T
+    obtain ⟨a, rfl⟩ := hTfin w₀ hw₀T
+    -- the fiber over the base point, read in the finite chart
+    obtain ⟨Fc, hFcdef⟩ : ∃ s : Set ℂ,
+        s = (fun t : ℂ => ((t : ℂ̂))) ⁻¹' (f ⁻¹' {((a : ℂ̂))} ∩ S) := ⟨_, rfl⟩
+    have hFc_fin : Fc.Finite := by
+      rw [hFcdef]
+      exact (hfib_fin a).preimage OnePoint.coe_injective.injOn
+    have hFC : f ⁻¹' {((a : ℂ̂))} ∩ S = (fun t : ℂ => ((t : ℂ̂))) '' Fc := by
+      apply Set.Subset.antisymm
+      · rintro u ⟨huf, huS⟩
+        have hune : u ≠ ∞ := fun h => hinf (h ▸ huS)
+        obtain ⟨x, rfl⟩ := OnePoint.ne_infty_iff_exists.mp hune
+        exact ⟨x, by rw [hFcdef]; exact ⟨huf, huS⟩, rfl⟩
+      · rintro _ ⟨x, hx, rfl⟩
+        rw [hFcdef] at hx
+        exact hx
+    have hFcS : ∀ x ∈ Fc, ((x : ℂ̂)) ∈ S := by
+      intro x hx; rw [hFcdef] at hx; exact hx.2
+    have hFcf : ∀ x ∈ Fc, f ((x : ℂ̂)) = ((a : ℂ̂)) := by
+      intro x hx; rw [hFcdef] at hx; exact hx.1
+    -- one local record per fiber point: a branch through it, staying in `S`,
+    -- with a capture neighbourhood on which it collects all preimages
+    have hrec : ∀ x : ℂ, ∃ (V : Set ℂ) (g : ℂ → ℂ) (O : Set ℂ̂), x ∈ Fc →
+        (IsOpen V ∧ a ∈ V ∧ ContinuousOn g V ∧ g a = x ∧
+          (∀ y ∈ V, f ((g y : ℂ̂)) = ((y : ℂ̂)) ∧ ((g y : ℂ̂)) ∈ S) ∧
+          O ∈ 𝓝 ((x : ℂ̂)) ∧
+          (∀ u ∈ O, ∀ y ∈ V, f u = ((y : ℂ̂)) → u = ((g y : ℂ̂)))) := by
+      intro x
+      by_cases hx : x ∈ Fc
+      swap
+      · exact ⟨∅, id, ∅, fun h => absurd h hx⟩
+      have hxS : ((x : ℂ̂)) ∈ S := hFcS x hx
+      obtain ⟨V₀, g, hV₀open, haV₀, hga, hgdiff, hbr⟩ :=
+        exists_branch_of_deriv_ne_zero hf (hFcf x hx) (hcrit x hxS)
+      obtain ⟨Wc, hWopen, hxW, hWinj⟩ := hloc x hxS
+      refine ⟨V₀ ∩ g ⁻¹' (Wc ∩ (fun t : ℂ => ((t : ℂ̂))) ⁻¹' S), g,
+        (fun t : ℂ => ((t : ℂ̂))) '' Wc, fun _ => ⟨?_, ⟨haV₀, ?_⟩,
+          hgdiff.continuousOn.mono Set.inter_subset_left, hga, ?_, ?_, ?_⟩⟩
+      · exact hgdiff.continuousOn.isOpen_inter_preimage hV₀open
+          (hWopen.inter hScopen)
+      · rw [Set.mem_preimage, hga]
+        exact ⟨hxW, hxS⟩
+      · intro y hy
+        exact ⟨hbr y hy.1, hy.2.2⟩
+      · rw [OnePoint.nhds_coe_eq, Filter.mem_map,
+          Set.preimage_image_eq _ OnePoint.coe_injective]
+        exact hWopen.mem_nhds hxW
+      · rintro _ ⟨t, htW, rfl⟩ y hyV hfu
+        have hteq : f ((t : ℂ̂)) = f ((g y : ℂ̂)) := by
+          rw [hfu, hbr y hyV.1]
+        rw [hWinj t htW (g y) hyV.2.1 hteq]
+    choose Vr gr Onb hrec using hrec
+    have hVor : ∀ x ∈ Fc, IsOpen (Vr x) := fun x hx => (hrec x hx).1
+    have haVr : ∀ x ∈ Fc, a ∈ Vr x := fun x hx => (hrec x hx).2.1
+    have hgcr : ∀ x ∈ Fc, ContinuousOn (gr x) (Vr x) := fun x hx => (hrec x hx).2.2.1
+    have hgar : ∀ x ∈ Fc, gr x a = x := fun x hx => (hrec x hx).2.2.2.1
+    have hbrr : ∀ x ∈ Fc, ∀ y ∈ Vr x,
+        f ((gr x y : ℂ̂)) = ((y : ℂ̂)) ∧ ((gr x y : ℂ̂)) ∈ S :=
+      fun x hx => (hrec x hx).2.2.2.2.1
+    have hOnr : ∀ x ∈ Fc, Onb x ∈ 𝓝 ((x : ℂ̂)) := fun x hx => (hrec x hx).2.2.2.2.2.1
+    have hcapr : ∀ x ∈ Fc, ∀ u ∈ Onb x, ∀ y ∈ Vr x,
+        f u = ((y : ℂ̂)) → u = ((gr x y : ℂ̂)) :=
+      fun x hx => (hrec x hx).2.2.2.2.2.2
+    -- stray exclusion: near `↑a` every preimage in `S` is captured by a record
+    have hexcl : ∃ N ∈ 𝓝 ((a : ℂ̂)), ∀ u, f u ∈ N → u ∈ S → ∃ x ∈ Fc, u ∈ Onb x := by
+      by_contra hcon
+      push Not at hcon
+      obtain ⟨ℱ, hℱdef⟩ : ∃ F : Filter ℂ̂,
+          F = Filter.comap f (𝓝 ((a : ℂ̂))) ⊓ 𝓟 (S \ ⋃ x ∈ Fc, Onb x) := ⟨_, rfl⟩
+      have hneF : ℱ.NeBot := by
+        rw [hℱdef, Filter.inf_principal_neBot_iff]
+        intro Uf hUf
+        obtain ⟨N, hN, hNsub⟩ := Filter.mem_comap.mp hUf
+        obtain ⟨u, hfu, huS, hustray⟩ := hcon N hN
+        refine ⟨u, hNsub hfu, huS, ?_⟩
+        intro hmem
+        obtain ⟨x, hx, hux⟩ := Set.mem_iUnion₂.mp hmem
+        exact hustray x hx hux
+      have hle : ℱ ≤ 𝓟 (closure S) := by
+        rw [hℱdef]
+        exact le_trans inf_le_right
+          (Filter.principal_mono.mpr (Set.diff_subset.trans subset_closure))
+      obtain ⟨u, hucl, hclust⟩ := isClosed_closure.isCompact.exists_clusterPt hle
+      have hfu : f u = ((a : ℂ̂)) := by
+        have ht : Tendsto f ℱ (𝓝 ((a : ℂ̂))) := by
+          rw [hℱdef]
+          exact Filter.tendsto_iff_comap.mpr inf_le_left
+        exact eq_of_nhds_neBot (hclust.map hf.continuous.continuousAt ht)
+      have huS : u ∈ S := by
+        by_contra huS
+        have hufr : u ∈ frontier S := by
+          rw [hSfc.isOpen.frontier_eq]
+          exact ⟨hucl, huS⟩
+        have huJ : u ∈ JuliaSet f := hSfc.frontier_subset_juliaSet hufr
+        rw [← juliaSet_preimage_eq_of_isRational hf hd1] at huJ
+        have huJ' : f u ∈ JuliaSet f := huJ
+        rw [hfu] at huJ'
+        exact huJ' (hTfc.subset_fatouSet hw₀T)
+      have humem : u ∈ (fun t : ℂ => ((t : ℂ̂))) '' Fc := by
+        rw [← hFC]
+        exact ⟨hfu, huS⟩
+      obtain ⟨x, hxFc, rfl⟩ := humem
+      have hstray : (S \ ⋃ x ∈ Fc, Onb x) ∈ ℱ := by
+        rw [hℱdef]
+        exact Filter.mem_inf_of_right (Filter.mem_principal_self _)
+      haveI : (𝓝 ((x : ℂ̂)) ⊓ ℱ).NeBot := hclust
+      obtain ⟨v, hvO, hvS⟩ := Filter.nonempty_of_mem
+        (Filter.inter_mem (Filter.mem_inf_of_left (hOnr x hxFc))
+          (Filter.mem_inf_of_right hstray))
+      exact hvS.2 (Set.mem_iUnion₂.mpr ⟨x, hxFc, hvO⟩)
+    obtain ⟨N, hNnhds, hNcap⟩ := hexcl
+    -- the final branch domain: common, with pairwise-distinct branch values,
+    -- and mapping into the capture neighbourhood
+    obtain ⟨Vfin, hVfindef⟩ : ∃ V : Set ℂ, V =
+        ((⋂ x ∈ Fc, Vr x) ∩
+          ⋂ x₁ ∈ Fc, ⋂ x₂ ∈ Fc, ite (x₁ = x₂) Set.univ
+            ((Vr x₁ ∩ Vr x₂) ∩ (fun y => gr x₁ y - gr x₂ y) ⁻¹' {(0 : ℂ)}ᶜ)) ∩
+          (fun t : ℂ => ((t : ℂ̂))) ⁻¹' interior N := ⟨_, rfl⟩
+    have hVfin_open : IsOpen Vfin := by
+      rw [hVfindef]
+      refine (IsOpen.inter (hFc_fin.isOpen_biInter hVor) ?_).inter
+        (isOpen_interior.preimage OnePoint.continuous_coe)
+      refine hFc_fin.isOpen_biInter fun x₁ hx₁ => hFc_fin.isOpen_biInter fun x₂ hx₂ => ?_
+      split_ifs with h12
+      · exact isOpen_univ
+      · exact ContinuousOn.isOpen_inter_preimage
+          (((hgcr x₁ hx₁).mono Set.inter_subset_left).sub
+            ((hgcr x₂ hx₂).mono Set.inter_subset_right))
+          ((hVor x₁ hx₁).inter (hVor x₂ hx₂)) isOpen_compl_singleton
+    have haVfin : a ∈ Vfin := by
+      rw [hVfindef]
+      refine ⟨⟨Set.mem_iInter₂.mpr haVr, ?_⟩, ?_⟩
+      · refine Set.mem_iInter₂.mpr fun x₁ hx₁ => Set.mem_iInter₂.mpr fun x₂ hx₂ => ?_
+        split_ifs with h12
+        · trivial
+        · refine ⟨⟨haVr x₁ hx₁, haVr x₂ hx₂⟩, ?_⟩
+          show gr x₁ a - gr x₂ a ∉ ({(0 : ℂ)} : Set ℂ)
+          rw [hgar x₁ hx₁, hgar x₂ hx₂]
+          exact fun h0 => h12 (sub_eq_zero.mp h0)
+      · exact mem_interior_iff_mem_nhds.mpr hNnhds
+    refine ⟨(fun t : ℂ => ((t : ℂ̂))) '' Vfin, ?_, ?_⟩
+    · rw [OnePoint.nhds_coe_eq, Filter.mem_map,
+        Set.preimage_image_eq _ OnePoint.coe_injective]
+      exact hVfin_open.mem_nhds haVfin
+    · rintro w ⟨⟨y, hyVfin, rfl⟩, hwT⟩
+      rw [hVfindef] at hyVfin
+      obtain ⟨⟨hyVall, hyD⟩, hyN⟩ := hyVfin
+      have hyVx : ∀ x ∈ Fc, y ∈ Vr x := Set.mem_iInter₂.mp hyVall
+      -- the fiber over `↑y` is exactly the set of branch values
+      have himgfib : f ⁻¹' {((y : ℂ̂))} ∩ S = (fun x : ℂ => ((gr x y : ℂ̂))) '' Fc := by
+        apply Set.Subset.antisymm
+        · rintro u ⟨huf, huS⟩
+          have hufeq : f u = ((y : ℂ̂)) := huf
+          have huN : f u ∈ N := by
+            rw [hufeq]
+            exact interior_subset hyN
+          obtain ⟨x, hxFc, hxO⟩ := hNcap u huN huS
+          exact ⟨x, hxFc, (hcapr x hxFc u hxO y (hyVx x hxFc) hufeq).symm⟩
+        · rintro _ ⟨x, hxFc, rfl⟩
+          exact ⟨(hbrr x hxFc y (hyVx x hxFc)).1, (hbrr x hxFc y (hyVx x hxFc)).2⟩
+      have hinj1 : Set.InjOn (fun x : ℂ => ((gr x y : ℂ̂))) Fc := by
+        intro x₁ hx₁ x₂ hx₂ heq
+        by_contra h12
+        have hy12 := Set.mem_iInter₂.mp (Set.mem_iInter₂.mp hyD x₁ hx₁) x₂ hx₂
+        rw [if_neg h12] at hy12
+        have hgne : gr x₁ y - gr x₂ y ∉ ({(0 : ℂ)} : Set ℂ) := hy12.2
+        exact hgne (sub_eq_zero_of_eq (OnePoint.coe_eq_coe.mp heq))
+      rw [himgfib, hFC, hinj1.ncard_image, (OnePoint.coe_injective.injOn).ncard_image]
+  -- Stage 3: local constancy on the connected `T` gives a global count
+  obtain ⟨w₀, hw₀T⟩ := hTfc.nonempty
+  refine ⟨(f ⁻¹' {w₀} ∩ S).ncard, ?_, ?_⟩
+  · obtain ⟨y₀, rfl⟩ := hTfin w₀ hw₀T
+    have hne : (f ⁻¹' {((y₀ : ℂ̂))} ∩ S).Nonempty := by
+      rw [← himg] at hw₀T
+      obtain ⟨u, huS, huf⟩ := hw₀T
+      exact ⟨u, huf, huS⟩
+    exact (Set.ncard_pos (hfib_fin y₀)).mpr hne
+  · by_contra hbad
+    push Not at hbad
+    obtain ⟨w₁, hw₁T, hw₁ne⟩ := hbad
+    have hpatch : ∀ w : ℂ̂, ∃ P : Set ℂ̂, w ∈ T → (P ∈ 𝓝 w ∧ ∀ w' ∈ P ∩ T,
+        (f ⁻¹' {w'} ∩ S).ncard = (f ⁻¹' {w} ∩ S).ncard) := by
+      intro w
+      by_cases hw : w ∈ T
+      · obtain ⟨P, h1, h2⟩ := hlc w hw
+        exact ⟨P, fun _ => ⟨h1, h2⟩⟩
+      · exact ⟨∅, fun h => absurd h hw⟩
+    choose P hP using hpatch
+    have hcover : T ⊆ (⋃ w ∈ {w ∈ T | (f ⁻¹' {w} ∩ S).ncard
+          = (f ⁻¹' {w₀} ∩ S).ncard}, interior (P w)) ∪
+        ⋃ w ∈ {w ∈ T | (f ⁻¹' {w} ∩ S).ncard ≠ (f ⁻¹' {w₀} ∩ S).ncard},
+          interior (P w) := by
+      intro w hw
+      have hmem : w ∈ interior (P w) := mem_interior_iff_mem_nhds.mpr (hP w hw).1
+      by_cases hval : (f ⁻¹' {w} ∩ S).ncard = (f ⁻¹' {w₀} ∩ S).ncard
+      · exact Or.inl (Set.mem_iUnion₂.mpr ⟨w, ⟨hw, hval⟩, hmem⟩)
+      · exact Or.inr (Set.mem_iUnion₂.mpr ⟨w, ⟨hw, hval⟩, hmem⟩)
+    obtain ⟨z, hzT, hzA, hzB⟩ := hTfc.isConnected.isPreconnected _ _
+      (isOpen_biUnion fun _ _ => isOpen_interior)
+      (isOpen_biUnion fun _ _ => isOpen_interior) hcover
+      ⟨w₀, hw₀T, Set.mem_iUnion₂.mpr ⟨w₀, ⟨hw₀T, rfl⟩,
+        mem_interior_iff_mem_nhds.mpr (hP w₀ hw₀T).1⟩⟩
+      ⟨w₁, hw₁T, Set.mem_iUnion₂.mpr ⟨w₁, ⟨hw₁T, hw₁ne⟩,
+        mem_interior_iff_mem_nhds.mpr (hP w₁ hw₁T).1⟩⟩
+    obtain ⟨wa, hwa, hza⟩ := Set.mem_iUnion₂.mp hzA
+    obtain ⟨wb, hwb, hzb⟩ := Set.mem_iUnion₂.mp hzB
+    have h1 : (f ⁻¹' {z} ∩ S).ncard = (f ⁻¹' {wa} ∩ S).ncard :=
+      (hP wa hwa.1).2 z ⟨interior_subset hza, hzT⟩
+    have h2 : (f ⁻¹' {z} ∩ S).ncard = (f ⁻¹' {wb} ∩ S).ncard :=
+      (hP wb hwb.1).2 z ⟨interior_subset hzb, hzT⟩
+    exact hwb.2 (by rw [← h2, h1, hwa.2])
 
 /-- A component step with constant fiber count one is injective on the
 source component. -/
@@ -272,7 +618,17 @@ theorem injOn_of_fiberCount_one {f : ℂ̂ → ℂ̂}
     (h1 : ∀ w ∈ fcOrbit f U (n + 1),
       (f ⁻¹' {w} ∩ fcOrbit f U n).ncard = 1) :
     Set.InjOn f (fcOrbit f U n) := by
-  sorry
+  intro x hx y hy hxy
+  have hwT : f x ∈ fcOrbit f U (n + 1) := by
+    rw [← fcOrbit_image_eq hf hd hU n]
+    exact ⟨x, hx, rfl⟩
+  have hcard := h1 (f x) hwT
+  rw [Set.ncard_eq_one] at hcard
+  obtain ⟨a, ha⟩ := hcard
+  have hxa : x ∈ f ⁻¹' {f x} ∩ fcOrbit f U n := ⟨rfl, hx⟩
+  have hya : y ∈ f ⁻¹' {f x} ∩ fcOrbit f U n := ⟨by simp [hxy], hy⟩
+  rw [ha, Set.mem_singleton_iff] at hxa hya
+  rw [hxa, hya]
 
 /-- **Injectivity telescopes**: if every single component step from index
 `N` on is injective, then every iterate is injective on the `N`-th

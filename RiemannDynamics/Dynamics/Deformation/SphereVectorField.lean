@@ -1454,7 +1454,7 @@ theorem hasL2WeakDzbar_dbarSolver {μ : ℂ → ℂ}
   -- `P₁ := P h₁`, `P₂ := P ν`, and `V z := -z²·P₂(z⁻¹)`, so that
   -- `dbarSolver μ z = P₁ z + V z` (`-z²·u = -(z²·u)`, matching the
   -- `−z²·u(1/z)` shape of the transport lemma).  CT5 gives `∂̄P₁ = h₁`
-  -- and `∂̄P₂ = ν` weakly on `ℂ`; the transport black box turns the
+  -- and `∂̄P₂ = ν` weakly on `ℂ`; the inversion transport turns the
   -- latter into `∂̄V = τ` weakly on `{0}ᶜ`, `τ z = (z²/z̄²)·ν(z⁻¹)`.
   -- Unfolding `ν` at `z⁻¹`:
   --  · `1 < |z|` (so `z⁻¹ ∈ ball 0 1 ∖ {0}`):
