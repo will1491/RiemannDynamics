@@ -191,7 +191,146 @@ theorem exists_nonzero_seed_with_deltaField_eq_zero
         deltaField r
           (dbarSolver (spreadCoeff r (Metric.closedBall a ρ)
             (seedCombo a ρ (2 * r.degree + 2) c))) z = 0 := by
-  sorry
+  classical
+  have hd1 : 1 ≤ r.degree := le_trans one_le_two hd
+  set K := 2 * r.degree + 2 with hK
+  set S : Set ℂ := Metric.closedBall a ρ with hSdef
+  have hSm : MeasurableSet S := measurableSet_closedBall
+  -- ===== The seed package: vanishing off `S`, measurability, boundedness. =====
+  have hσ0 : ∀ c : Fin K → ℂ, ∀ z : ℂ, z ∉ S → seedCombo a ρ K c z = 0 := by
+    intro c z hz
+    have hz' : z ∉ Metric.ball a ρ := fun h => hz (Metric.ball_subset_closedBall h)
+    unfold seedCombo
+    refine Finset.sum_eq_zero fun k _ => ?_
+    unfold seedBasis
+    rw [if_neg hz', mul_zero]
+  have hσm : ∀ c : Fin K → ℂ, Measurable (seedCombo a ρ K c) := by
+    intro c
+    unfold seedCombo
+    refine Finset.measurable_sum _ fun k _ => ?_
+    refine Measurable.const_mul ?_ (c k)
+    unfold seedBasis
+    refine Measurable.ite measurableSet_ball ?_ measurable_const
+    fun_prop
+  have hσb : ∀ c : Fin K → ℂ, eLpNormEssSup (seedCombo a ρ K c) volume < ⊤ := by
+    intro c
+    have hρ0 : (0 : ℝ) ≤ ρ := le_of_lt hρ
+    have hbd : ∀ z : ℂ, ‖seedCombo a ρ K c z‖
+        ≤ ∑ k : Fin K, ‖c k‖ * (((k : ℕ) : ℝ) + 1) * ρ ^ (k : ℕ) := by
+      intro z
+      unfold seedCombo
+      refine le_trans (norm_sum_le _ _) (Finset.sum_le_sum fun k _ => ?_)
+      rw [norm_mul, mul_assoc]
+      refine mul_le_mul_of_nonneg_left ?_ (norm_nonneg _)
+      unfold seedBasis
+      by_cases hz : z ∈ Metric.ball a ρ
+      · rw [if_pos hz, norm_mul, norm_pow, Complex.norm_conj]
+        have h1 : ‖((k : ℕ) : ℂ) + 1‖ = ((k : ℕ) : ℝ) + 1 := by
+          have h2 : ((k : ℕ) : ℂ) + 1 = (((k : ℕ) + 1 : ℕ) : ℂ) := by push_cast; ring
+          rw [h2, Complex.norm_natCast]
+          push_cast; ring
+        rw [h1]
+        refine mul_le_mul_of_nonneg_left ?_ (by positivity)
+        exact pow_le_pow_left₀ (norm_nonneg _)
+          (le_of_lt (mem_ball_iff_norm.mp hz)) _
+      · rw [if_neg hz, norm_zero]
+        exact mul_nonneg (by positivity) (pow_nonneg hρ0 _)
+    exact lt_of_le_of_lt (eLpNormEssSup_le_of_ae_bound (ae_of_all volume hbd))
+      ENNReal.ofReal_lt_top
+  -- ===== The spread package: measurability, boundedness, invariance. =====
+  have hμm : ∀ c : Fin K → ℂ,
+      AEMeasurable (spreadCoeff r S (seedCombo a ρ K c)) volume := fun c =>
+    spreadCoeff_aemeasurable hd1 hU hW hinj hinf hcrit hball hSm (hσ0 c) (hσm c)
+  have hμb : ∀ c : Fin K → ℂ,
+      eLpNormEssSup (spreadCoeff r S (seedCombo a ρ K c)) volume < ⊤ := fun c =>
+    lt_of_le_of_lt (spreadCoeff_eLpNormEssSup_le hd1 hU hW hinj hinf hcrit hball
+      hSm (hσ0 c) (hσm c)) (hσb c)
+  have hμinv : ∀ c : Fin K → ℂ,
+      IsInvariantBeltrami r (spreadCoeff r S (seedCombo a ρ K c)) := fun c =>
+    isInvariantBeltrami_spreadCoeff hd1 hU hW hinj hinf hcrit hball hSm
+      (hσ0 c) (hσm c)
+  -- ===== Linearity of the pipeline at the `deltaField` level. =====
+  have hpipe_add : ∀ c c' : Fin K → ℂ, ∀ z : ℂ,
+      deltaField r (dbarSolver (spreadCoeff r S (seedCombo a ρ K (c + c')))) z
+        = deltaField r (dbarSolver (spreadCoeff r S (seedCombo a ρ K c))) z
+          + deltaField r (dbarSolver (spreadCoeff r S (seedCombo a ρ K c'))) z := by
+    intro c c' z
+    have h1 : seedCombo a ρ K (c + c')
+        = fun w => seedCombo a ρ K c w + seedCombo a ρ K c' w := by
+      funext w
+      simp only [seedCombo, Pi.add_apply, add_mul]
+      exact Finset.sum_add_distrib
+    have h3 : dbarSolver (spreadCoeff r S (seedCombo a ρ K (c + c')))
+        = fun w => dbarSolver (spreadCoeff r S (seedCombo a ρ K c)) w
+            + dbarSolver (spreadCoeff r S (seedCombo a ρ K c')) w := by
+      rw [h1, spreadCoeff_add r S]
+      exact dbarSolver_add (hμm c) (hμm c') (hμb c) (hμb c')
+    simp only [deltaField, h3]
+    ring
+  have hpipe_smul : ∀ (t : ℂ) (c : Fin K → ℂ), ∀ z : ℂ,
+      deltaField r (dbarSolver (spreadCoeff r S (seedCombo a ρ K (t • c)))) z
+        = t * deltaField r (dbarSolver (spreadCoeff r S (seedCombo a ρ K c))) z := by
+    intro t c z
+    have h1 : seedCombo a ρ K (t • c)
+        = fun w => t * seedCombo a ρ K c w := by
+      funext w
+      simp only [seedCombo, Pi.smul_apply, smul_eq_mul, Finset.mul_sum, mul_assoc]
+    have h3 : dbarSolver (spreadCoeff r S (seedCombo a ρ K (t • c)))
+        = fun w => t * dbarSolver (spreadCoeff r S (seedCombo a ρ K c)) w := by
+      rw [h1, spreadCoeff_smul r S]
+      exact dbarSolver_smul t _
+    simp only [deltaField, h3]
+    ring
+  -- ===== The carrier representative of each deformation field. =====
+  have hrep : ∀ c : Fin K → ℂ, ∃ s : SectionSpaceCarrier r, ∀ z : ℂ,
+      r.denReduced.eval z ≠ 0 →
+        deltaField r (dbarSolver (spreadCoeff r S (seedCombo a ρ K c))) z
+          = (s : ℂ → ℂ) z := by
+    intro c
+    obtain ⟨s, hs, hagree⟩ := exists_sectionSpace_rep_deltaField hd1
+      (isSphereVectorField_dbarSolver (hμm c) (hμb c))
+      (hasL2WeakDzbar_dbarSolver (hμm c) (hμb c)) (hμinv c) (hμb c)
+    exact ⟨⟨s, hs⟩, hagree⟩
+  choose Θ hΘ using hrep
+  -- ===== Linearity of `Θ` from uniqueness of the representative. =====
+  have hadd : ∀ c c' : Fin K → ℂ, Θ (c + c') = Θ c + Θ c' := by
+    intro c c'
+    apply Subtype.ext
+    apply sectionSpaceCarrier_eqOn_nonpoles_eq (Θ (c + c')).2 (Θ c + Θ c').2
+    intro z hz
+    rw [← hΘ (c + c') z hz, hpipe_add c c' z, hΘ c z hz, hΘ c' z hz]
+    rfl
+  have hsmul : ∀ (t : ℂ) (c : Fin K → ℂ), Θ (t • c) = t • Θ c := by
+    intro t c
+    apply Subtype.ext
+    apply sectionSpaceCarrier_eqOn_nonpoles_eq (Θ (t • c)).2 (t • Θ c).2
+    intro z hz
+    rw [← hΘ (t • c) z hz, hpipe_smul t c z, hΘ c z hz]
+    rfl
+  let Θₗ : (Fin K → ℂ) →ₗ[ℂ] SectionSpaceCarrier r :=
+    { toFun := Θ, map_add' := hadd, map_smul' := hsmul }
+  -- ===== Dimension count: the kernel is nontrivial. =====
+  haveI hfin1 : Module.Finite ℂ (Polynomial.degreeLT ℂ (2 * r.degree + 1)) :=
+    Module.Finite.equiv (Polynomial.degreeLTEquiv ℂ (2 * r.degree + 1)).symm
+  haveI hfin2 : Module.Finite ℂ (SectionSpaceCarrier r) :=
+    Module.Finite.map (Polynomial.degreeLT ℂ (2 * r.degree + 1)) (polyOverDenSq r)
+  obtain ⟨c, hc0, hcker⟩ : ∃ c : Fin K → ℂ, c ≠ 0 ∧ Θ c = 0 := by
+    by_contra hcon
+    push Not at hcon
+    have hker : LinearMap.ker Θₗ = ⊥ := by
+      rw [LinearMap.ker_eq_bot']
+      intro m hm
+      by_contra hm0
+      have hm' : Θ m = 0 := hm
+      exact hcon m hm0 hm'
+    have hinj' : Function.Injective Θₗ := LinearMap.ker_eq_bot.mp hker
+    have hle := LinearMap.finrank_le_finrank_of_injective hinj'
+    rw [Module.finrank_fin_fun, finrank_sectionSpaceCarrier] at hle
+    omega
+  -- ===== Unpack: the zero representative kills `δv_c` off the poles. =====
+  refine ⟨c, hc0, fun z hz => ?_⟩
+  rw [hΘ c z hz, hcker]
+  rfl
 
 /-- **The contradiction core.** A Fatou component carrying the full
 injectivity package cannot wander: a nonzero seed `c` with trivial
@@ -208,7 +347,100 @@ theorem not_isWandering_of_injective_package
     (hinf : ∀ n : ℕ, ∞ ∉ fcOrbit r.toSphereMap U n)
     (hcrit : ∀ z : ℂ, ((z : ℂ̂) ∈ U) → ∀ n : ℕ, iterDeriv r n z ≠ 0) :
     ¬ IsWandering r.toSphereMap U := by
-  sorry
+  intro hW
+  -- (1) a closed disk in the finite part of `U`
+  obtain ⟨a, ρ, hρ, hball⟩ := hU.exists_closedBall_subset
+  -- degree bookkeeping
+  have hd1 : 1 ≤ r.degree := le_trans one_le_two hd
+  have hfr : IsRational r.toSphereMap := ⟨r, rfl⟩
+  have hdeg1 : 1 ≤ degreeOfRational r.toSphereMap := by
+    rw [degreeOfRational_eq_of_witness r.toSphereMap r rfl]; exact hd1
+  -- (2) a damping point outside the closure of the finite part
+  obtain ⟨b, hb⟩ := exists_damping_point hfr hdeg1 hU hW
+  -- (3) a nonzero kernel seed
+  obtain ⟨c, hc0, hδ⟩ :=
+    exists_nonzero_seed_with_deltaField_eq_zero hd hρ hU hW hinj hinf hcrit hball
+  -- seed-combination facts: support, measurability, boundedness
+  have hσ0 : ∀ z : ℂ, z ∉ Metric.closedBall a ρ →
+      seedCombo a ρ (2 * r.degree + 2) c z = 0 := by
+    intro z hz
+    have hzb : z ∉ Metric.ball a ρ := fun h => hz (Metric.ball_subset_closedBall h)
+    simp [seedCombo, seedBasis, hzb]
+  have hσm : Measurable (seedCombo a ρ (2 * r.degree + 2) c) := by
+    have hkm : ∀ k : Fin (2 * r.degree + 2),
+        Measurable (fun z : ℂ => c k * seedBasis a ρ (k : ℕ) z) := by
+      intro k
+      have hbase : Measurable (seedBasis a ρ (k : ℕ)) := by
+        unfold seedBasis
+        exact Measurable.ite measurableSet_ball (by fun_prop) measurable_const
+      exact hbase.const_mul (c k)
+    exact Finset.measurable_sum Finset.univ (fun k _ => hkm k)
+  have hSm : MeasurableSet (Metric.closedBall a ρ) := measurableSet_closedBall
+  have hσbdd : eLpNormEssSup (seedCombo a ρ (2 * r.degree + 2) c) volume < ⊤ := by
+    refine eLpNormEssSup_lt_top_of_ae_bound
+      (C := ∑ k : Fin (2 * r.degree + 2),
+        ‖c k‖ * ((((k : ℕ) : ℝ) + 1) * ρ ^ (k : ℕ)))
+      (Filter.Eventually.of_forall fun z => ?_)
+    unfold seedCombo
+    refine (norm_sum_le _ _).trans (Finset.sum_le_sum fun k _ => ?_)
+    rw [norm_mul]
+    refine mul_le_mul_of_nonneg_left ?_ (norm_nonneg _)
+    unfold seedBasis
+    split_ifs with h
+    · rw [norm_mul, norm_pow, Complex.norm_conj]
+      have h1 : ‖(((k : ℕ) : ℂ)) + 1‖ = (((k : ℕ) : ℝ)) + 1 := by norm_cast
+      rw [h1]
+      have hza : ‖z - a‖ ≤ ρ := le_of_lt (mem_ball_iff_norm.mp h)
+      exact mul_le_mul_of_nonneg_left
+        (pow_le_pow_left₀ (norm_nonneg _) hza _) (by positivity)
+    · rw [norm_zero]; positivity
+  -- (4) the sphere field `v = dbarSolver μ` and its weak `∂̄`-data
+  have hμm : AEMeasurable
+      (spreadCoeff r (Metric.closedBall a ρ) (seedCombo a ρ (2 * r.degree + 2) c))
+      volume :=
+    spreadCoeff_aemeasurable hd1 hU hW hinj hinf hcrit hball hSm hσ0 hσm
+  have hμb : eLpNormEssSup
+      (spreadCoeff r (Metric.closedBall a ρ) (seedCombo a ρ (2 * r.degree + 2) c))
+      volume < ⊤ :=
+    lt_of_le_of_lt
+      (spreadCoeff_eLpNormEssSup_le hd1 hU hW hinj hinf hcrit hball hSm hσ0 hσm)
+      hσbdd
+  have hv : IsSphereVectorField
+      (dbarSolver (spreadCoeff r (Metric.closedBall a ρ)
+        (seedCombo a ρ (2 * r.degree + 2) c))) :=
+    isSphereVectorField_dbarSolver hμm hμb
+  have hgrad : HasL2WeakDzbar
+      (dbarSolver (spreadCoeff r (Metric.closedBall a ρ)
+        (seedCombo a ρ (2 * r.degree + 2) c)))
+      (spreadCoeff r (Metric.closedBall a ρ) (seedCombo a ρ (2 * r.degree + 2) c))
+      Set.univ :=
+    hasL2WeakDzbar_dbarSolver hμm hμb
+  -- (5) `v` vanishes at every finite Julia point
+  have hjul : ∀ z : ℂ, ((z : ℂ̂) ∈ JuliaSet r.toSphereMap) →
+      dbarSolver (spreadCoeff r (Metric.closedBall a ρ)
+        (seedCombo a ρ (2 * r.degree + 2) c)) z = 0 :=
+    sphereField_eq_zero_on_juliaSet_of_deltaField_eq_zero hd hv hδ
+  -- (6) hence on the frontier of the finite part of `U`
+  have hU'open : IsOpen {z : ℂ | ((z : ℂ̂) ∈ U)} :=
+    hU.isOpen.preimage OnePoint.continuous_coe
+  have hball' : Metric.closedBall a ρ ⊆ {z : ℂ | ((z : ℂ̂) ∈ U)} :=
+    fun z hz => hball z hz
+  have hfront : ∀ p ∈ frontier {z : ℂ | ((z : ℂ̂) ∈ U)},
+      dbarSolver (spreadCoeff r (Metric.closedBall a ρ)
+        (seedCombo a ρ (2 * r.degree + 2) c)) p = 0 := fun p hp =>
+    hjul p (hU.frontier_subset_juliaSet (frontier_finitePart_subset U hp))
+  -- (7) the restriction law gives the local identification `μ = σ_c` on `U`
+  have hrestr : ∀ z : ℂ, ((z : ℂ̂) ∈ U) →
+      spreadCoeff r (Metric.closedBall a ρ) (seedCombo a ρ (2 * r.degree + 2) c) z
+        = seedCombo a ρ (2 * r.degree + 2) c z :=
+    spreadCoeff_restrict hd1 hU hW hinj hcrit hball hσ0
+  have hloc : ∀ᵐ z ∂(volume : Measure ℂ), z ∈ {z : ℂ | ((z : ℂ̂) ∈ U)} →
+      spreadCoeff r (Metric.closedBall a ρ) (seedCombo a ρ (2 * r.degree + 2) c) z
+        = seedCombo a ρ (2 * r.degree + 2) c z :=
+    Filter.Eventually.of_forall fun z hz => hrestr z hz
+  -- (8) seed triviality forces `c = 0`, contradiction
+  exact hc0 (seed_vanish_of_sphereField_vanish_on_frontier hU'open hρ hball'
+    ⟨b, hb⟩ hv hgrad hloc hfront)
 
 /-! ## The theorem -/
 

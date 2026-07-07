@@ -1125,6 +1125,178 @@ theorem seed_vanish_of_sphereField_vanish_on_frontier
     (hloc : ∀ᵐ z ∂(volume : Measure ℂ), z ∈ U' → μ z = seedCombo a ρ K c z)
     (hfront : ∀ p ∈ frontier U', v p = 0) :
     c = 0 := by
-  sorry
+  classical
+  obtain ⟨b, hbc⟩ := hb
+  obtain ⟨hvc, L, hL⟩ := hv
+  -- ## Stage 3: quadratic growth bound for the sphere field
+  have hgrow := hL.norm.eventually_lt_const (lt_add_one ‖L‖)
+  rw [eventually_nhdsWithin_iff, Metric.eventually_nhds_iff] at hgrow
+  obtain ⟨ε, hε, hεb⟩ := hgrow
+  have hfar : ∀ z : ℂ, ε⁻¹ < ‖z‖ → ‖v z‖ ≤ (‖L‖ + 1) * ‖z‖ ^ 2 := by
+    intro z hzn
+    have hz0 : z ≠ 0 := by
+      intro he
+      rw [he, norm_zero] at hzn
+      have := inv_pos.mpr hε
+      linarith
+    have hzpos : (0 : ℝ) < ‖z‖ := norm_pos_iff.mpr hz0
+    have h1 : dist z⁻¹ 0 < ε := by
+      rw [dist_zero_right, norm_inv]
+      exact inv_lt_of_inv_lt₀ hε hzn
+    have h2 := hεb h1 (Set.mem_compl_singleton_iff.mpr (inv_ne_zero hz0))
+    rw [inv_inv] at h2
+    have h3 : ‖(z⁻¹) ^ 2 * v z‖ = ‖v z‖ / ‖z‖ ^ 2 := by
+      rw [norm_mul, norm_pow, norm_inv]
+      ring
+    rw [h3, div_lt_iff₀ (pow_pos hzpos 2)] at h2
+    linarith
+  obtain ⟨C, hC⟩ :=
+    (isCompact_closedBall (0 : ℂ) ε⁻¹).exists_bound_of_continuousOn hvc.continuousOn
+  set B : ℝ := max (‖L‖ + 1) (max C 0) with hBdef
+  have hB0 : (0 : ℝ) ≤ B := le_trans (le_max_right C 0) (le_max_right _ _)
+  have hBL : ‖L‖ + 1 ≤ B := le_max_left _ _
+  have hB : ∀ w : ℂ, ‖v w‖ ≤ B * (1 + ‖w‖ ^ 2) := by
+    intro w
+    by_cases hw : ‖w‖ ≤ ε⁻¹
+    · have h1 : ‖v w‖ ≤ C := hC w (by rwa [Metric.mem_closedBall, dist_zero_right])
+      have h2 : C ≤ B := le_trans (le_max_left C 0) (le_max_right _ _)
+      nlinarith [mul_nonneg hB0 (sq_nonneg ‖w‖)]
+    · have h1 := hfar w (not_le.mp hw)
+      nlinarith [mul_le_mul_of_nonneg_right hBL (sq_nonneg ‖w‖), hB0]
+  -- ## Stage 1: the corrected field is holomorphic on `U'`
+  set h : ℂ → ℂ := fun z => v z - ∑ k : Fin K, c k * seedSolution a ρ k z with hhdef
+  have hd : DifferentiableOn ℂ h U' := by
+    rw [hhdef]
+    exact differentiableOn_sub_seedSolutions hU' hvc hgrad hρ hloc
+  -- ## Stage 4: the pole-cleared polynomial `P` and the clearing identity
+  set P : ℂ → ℂ := fun z =>
+    ∑ k : Fin K, c k * ((ρ ^ (2 * (k.1 + 1)) : ℝ) : ℂ) * (z - a) ^ (K - (k.1 + 1)) with hPdef
+  have hP : ∀ z : ℂ, z ≠ a → (z - a) ^ K * negPowerCombo a ρ K c z = P z := by
+    intro z hz
+    have hza : (z - a) ≠ 0 := sub_ne_zero_of_ne hz
+    simp only [hPdef, negPowerCombo]
+    rw [Finset.mul_sum]
+    refine Finset.sum_congr rfl fun k _ => ?_
+    have hk : k.1 + 1 ≤ K := k.isLt
+    have key : (z - a) ^ K * (z - a) ^ (-(k.1 + 1 : ℤ)) = (z - a) ^ (K - (k.1 + 1)) := by
+      rw [← zpow_natCast (z - a) K, ← zpow_add₀ hza, ← zpow_natCast (z - a) (K - (k.1 + 1))]
+      congr 1
+      omega
+    linear_combination (c k * ((ρ ^ (2 * (k.1 + 1)) : ℝ) : ℂ)) * key
+  have hPdiff : Differentiable ℂ P := by
+    rw [hPdef]
+    exact Differentiable.fun_sum fun k _ => by fun_prop
+  -- membership facts
+  have ha_mem : a ∈ U' := hball (mem_closedBall_self hρ.le)
+  have hbne : ∀ z ∈ U', z ≠ b := fun z hz he => hbc (he ▸ subset_closure hz)
+  -- ## Stage 5: the damped function `F` and its holomorphy on `U'`
+  set F : ℂ → ℂ := fun z =>
+    (h z * (z - a) ^ K + P z) * ((z - b) ^ (K + 3))⁻¹ with hFdef
+  have hFdiff : DifferentiableOn ℂ F U' := by
+    rw [hFdef]
+    refine DifferentiableOn.mul
+      (DifferentiableOn.add (hd.mul ?_) hPdiff.differentiableOn) ?_
+    · exact (Differentiable.differentiableOn (by fun_prop))
+    · intro z hz
+      have h1 : DifferentiableAt ℂ (fun w : ℂ => (w - b) ^ (K + 3)) z := by fun_prop
+      exact (h1.inv (pow_ne_zero _ (sub_ne_zero_of_ne (hbne z hz)))).differentiableWithinAt
+  -- ## Stage 2 + 4: representation of `F` off the closed disk
+  have hFoff : ∀ z : ℂ, z ∉ Metric.closedBall a ρ →
+      F z = v z * (z - a) ^ K * ((z - b) ^ (K + 3))⁻¹ := by
+    intro z hz
+    have hzball : z ∉ Metric.ball a ρ := fun hm => hz (ball_subset_closedBall hm)
+    have hza : z ≠ a := by
+      intro he
+      exact hz (by rw [he]; exact mem_closedBall_self hρ.le)
+    have hh : h z = v z - negPowerCombo a ρ K c z := by
+      simp only [hhdef]
+      rw [sum_seedSolution_eq_negPowerCombo a ρ K c hzball]
+    have hPz := hP z hza
+    simp only [hFdef]
+    rw [hh, ← hPz]
+    ring
+  -- ## Stage 6: `F` tends to `0` at every frontier point of `U'`
+  have hfrontF : ∀ p ∈ frontier U', Tendsto F (nhdsWithin p U') (nhds 0) := by
+    intro p hp
+    have hp2 : p ∈ closure U' \ U' := by rwa [← hU'.frontier_eq]
+    have hpball : p ∉ Metric.closedBall a ρ := fun hm => hp2.2 (hball hm)
+    have hpb : p ≠ b := fun he => hbc (he ▸ hp2.1)
+    have hpbne : ((p - b) ^ (K + 3) : ℂ) ≠ 0 := pow_ne_zero _ (sub_ne_zero_of_ne hpb)
+    have hcont : ContinuousAt (fun z : ℂ => v z * (z - a) ^ K * ((z - b) ^ (K + 3))⁻¹) p := by
+      have h1 : ContinuousAt (fun z : ℂ => v z * (z - a) ^ K) p := by fun_prop
+      have h2 : ContinuousAt (fun z : ℂ => (z - b) ^ (K + 3)) p := by fun_prop
+      exact h1.mul (h2.inv₀ hpbne)
+    have hg0 : Tendsto (fun z : ℂ => v z * (z - a) ^ K * ((z - b) ^ (K + 3))⁻¹)
+        (nhds p) (nhds 0) := by
+      simpa only [hfront p hp, zero_mul] using hcont.tendsto
+    refine (hg0.mono_left nhdsWithin_le_nhds).congr' ?_
+    have hev : ∀ᶠ z in nhdsWithin p U', z ∉ Metric.closedBall a ρ :=
+      mem_nhdsWithin_of_mem_nhds (isClosed_closedBall.isOpen_compl.mem_nhds hpball)
+    filter_upwards [hev] with z hz
+    exact (hFoff z hz).symm
+  -- ## Stage 7: `F` tends to `0` at infinity within `U'`
+  have hinfty : Tendsto F (cocompact ℂ ⊓ Filter.principal U') (nhds 0) := by
+    have hbound : ∀ᶠ z in cocompact ℂ ⊓ Filter.principal U',
+        ‖F z‖ ≤ B * 2 ^ (2 * K + 4) / ‖z‖ := by
+      have hev : ∀ᶠ z : ℂ in cocompact ℂ ⊓ Filter.principal U',
+          2 * (‖a‖ + ‖b‖ + ρ + 1) ≤ ‖z‖ :=
+        (tendsto_norm_cocompact_atTop.eventually_ge_atTop _).filter_mono inf_le_left
+      filter_upwards [hev] with z hz
+      have hz2 : (2 : ℝ) ≤ ‖z‖ := by linarith [norm_nonneg a, norm_nonneg b, hρ.le]
+      have hz0 : (0 : ℝ) < ‖z‖ := by linarith
+      have hnotball : z ∉ Metric.closedBall a ρ := by
+        intro hm
+        rw [Metric.mem_closedBall, dist_eq_norm] at hm
+        linarith [norm_sub_norm_le z a, norm_nonneg a, norm_nonneg b, hρ.le]
+      have ha2 : ‖z - a‖ ≤ 2 * ‖z‖ := by
+        linarith [norm_sub_le z a, norm_nonneg b, hρ.le]
+      have hb2 : ‖z‖ / 2 ≤ ‖z - b‖ := by
+        linarith [norm_sub_norm_le z b, norm_nonneg a, hρ.le]
+      rw [hFoff z hnotball]
+      simp only [norm_mul, norm_pow, norm_inv]
+      have hx1 : (1 : ℝ) ≤ ‖z‖ ^ 2 := by nlinarith
+      have hv2 : ‖v z‖ ≤ 2 * B * ‖z‖ ^ 2 := by
+        nlinarith [hB z, mul_le_mul_of_nonneg_left hx1 hB0]
+      have hnn : (0 : ℝ) ≤ 2 * B * ‖z‖ ^ 2 := mul_nonneg (by linarith) (sq_nonneg _)
+      have hstep1 : ‖v z‖ * ‖z - a‖ ^ K ≤ (2 * B * ‖z‖ ^ 2) * (2 * ‖z‖) ^ K :=
+        mul_le_mul hv2 (pow_le_pow_left₀ (norm_nonneg _) ha2 K)
+          (pow_nonneg (norm_nonneg _) K) hnn
+      have hdpos : (0 : ℝ) < (‖z‖ / 2) ^ (K + 3) := pow_pos (by linarith) _
+      have hstep2 : (‖z - b‖ ^ (K + 3))⁻¹ ≤ ((‖z‖ / 2) ^ (K + 3))⁻¹ :=
+        inv_anti₀ hdpos (pow_le_pow_left₀ (by linarith) hb2 _)
+      calc ‖v z‖ * ‖z - a‖ ^ K * (‖z - b‖ ^ (K + 3))⁻¹
+          ≤ ((2 * B * ‖z‖ ^ 2) * (2 * ‖z‖) ^ K) * ((‖z‖ / 2) ^ (K + 3))⁻¹ :=
+            mul_le_mul hstep1 hstep2 (inv_nonneg.mpr (pow_nonneg (norm_nonneg _) _))
+              (mul_nonneg hnn (pow_nonneg (by linarith) K))
+        _ = B * 2 ^ (2 * K + 4) / ‖z‖ := by
+            rw [div_pow, mul_pow, inv_div]
+            field_simp
+            ring
+    exact squeeze_zero_norm' hbound
+      (tendsto_const_nhds.div_atTop (tendsto_norm_cocompact_atTop.mono_left inf_le_left))
+  -- ## Stage 8: maximum principle kills `F` on `U'`
+  have hF0 : ∀ z ∈ U', F z = 0 :=
+    eqOn_zero_of_forall_frontier_tendsto_zero hU' hFdiff hfrontF hinfty
+  -- ## Stages 9–10: unwind and apply the pole-cancellation endgame
+  refine coeffs_eq_zero_of_negPowerCombo_extends hρ hU' ha_mem hd.neg ?_
+  intro z hzU hza
+  have hzbne : ((z - b) ^ (K + 3) : ℂ) ≠ 0 :=
+    pow_ne_zero _ (sub_ne_zero_of_ne (hbne z hzU))
+  have hFz := hF0 z hzU
+  simp only [hFdef] at hFz
+  have hnum : h z * (z - a) ^ K + P z = 0 := by
+    rcases mul_eq_zero.mp hFz with h1 | h2
+    · exact h1
+    · exact absurd (inv_eq_zero.mp h2) hzbne
+  have hPz := hP z hza
+  have hzane : ((z - a) : ℂ) ^ K ≠ 0 := pow_ne_zero _ (sub_ne_zero_of_ne hza)
+  have hkey : (z - a) ^ K * (h z + negPowerCombo a ρ K c z) = 0 := by
+    linear_combination hnum + hPz
+  have h0 : h z + negPowerCombo a ρ K c z = 0 := by
+    rcases mul_eq_zero.mp hkey with h1 | h2
+    · exact absurd h1 hzane
+    · exact h2
+  simp only [Pi.neg_apply]
+  linear_combination -h0
 
 end RiemannDynamics
