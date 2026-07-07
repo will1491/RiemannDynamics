@@ -71,7 +71,16 @@ theorem iterDeriv_add (r : RationalData) (m n : ℕ) (z : ℂ)
     iterDeriv r (m + n) z
       = iterDeriv r m z
           * iterDeriv r n (chartFiniteMap (r.toSphereMap^[m] ((z : ℂ̂)))) := by
-  sorry
+  have cf : ∀ x : ℂ, chartFiniteMap ((x : ℂ̂)) = x := fun _ => rfl
+  obtain ⟨w, hw⟩ : ∃ w : ℂ, r.toSphereMap^[m] ((z : ℂ̂)) = ((w : ℂ̂)) := by
+    cases hc : r.toSphereMap^[m] ((z : ℂ̂)) with
+    | infty => exact absurd hc hfin
+    | coe v => exact ⟨v, rfl⟩
+  simp only [iterDeriv]
+  rw [Finset.prod_range_add]
+  congr 1
+  refine Finset.prod_congr rfl fun j _ => ?_
+  rw [hw, cf, ← hw, add_comm m j, Function.iterate_add_apply]
 
 /-- Along an orbit segment that stays finite, `iterDeriv` is the honest
 derivative of the finite-chart reading of the iterate (chain rule telescoped
@@ -80,7 +89,105 @@ theorem iterDeriv_eq_deriv_iterate (r : RationalData) (m : ℕ) (z : ℂ)
     (hfin : ∀ j : ℕ, j ≤ m → r.toSphereMap^[j] ((z : ℂ̂)) ≠ ∞) :
     iterDeriv r m z
       = deriv (fun x : ℂ => chartFiniteMap (r.toSphereMap^[m] ((x : ℂ̂)))) z := by
-  sorry
+  have cf : ∀ x : ℂ, chartFiniteMap ((x : ℂ̂)) = x := fun _ => rfl
+  have key : ∀ (k : ℕ) (w : ℂ), (∀ j : ℕ, j ≤ k → r.toSphereMap^[j] ((w : ℂ̂)) ≠ ∞) →
+      HasDerivAt (fun x : ℂ => chartFiniteMap (r.toSphereMap^[k] ((x : ℂ̂))))
+        (iterDeriv r k w) w := by
+    intro k
+    induction k with
+    | zero =>
+        intro w _
+        have h1 : iterDeriv r 0 w = 1 := by simp [iterDeriv]
+        have h2 : (fun x : ℂ => chartFiniteMap (r.toSphereMap^[0] ((x : ℂ̂))))
+            = fun x : ℂ => x := funext fun x => rfl
+        rw [h1, h2]
+        exact hasDerivAt_id w
+    | succ k ih =>
+        intro w hw
+        -- the derivative of the `k`-th reading at `w`, from the induction hypothesis
+        have hk := ih w fun j hj => hw j (Nat.le_succ_of_le hj)
+        -- the finite reading `u` of the `k`-th iterate at `w`
+        obtain ⟨u, hu⟩ : ∃ u : ℂ, r.toSphereMap^[k] ((w : ℂ̂)) = ((u : ℂ̂)) := by
+          cases hc : r.toSphereMap^[k] ((w : ℂ̂)) with
+          | infty => exact absurd hc (hw k (Nat.le_succ k))
+          | coe v => exact ⟨v, rfl⟩
+        have hhw : chartFiniteMap (r.toSphereMap^[k] ((w : ℂ̂))) = u := by
+          rw [hu, cf]
+        -- `u` is not a pole: the `(k+1)`-st point is finite
+        have hfu : r.toSphereMap ((u : ℂ̂)) ≠ ∞ := by
+          have h1 : r.toSphereMap^[k + 1] ((w : ℂ̂)) ≠ ∞ := hw (k + 1) le_rfl
+          rw [Function.iterate_succ_apply', hu] at h1
+          exact h1
+        have hden : r.denReduced.eval u ≠ 0 := by
+          intro h0
+          apply hfu
+          have hread : r.toSphereMap ((u : ℂ̂))
+              = if r.denReduced.eval u = 0 then (∞ : ℂ̂)
+                else ((r.numReduced.eval u / r.denReduced.eval u : ℂ) : ℂ̂) := rfl
+          rw [hread, if_pos h0]
+        -- the derivative of the reading of `f` at the non-pole `u`
+        have hg : HasDerivAt (fun x : ℂ => chartFiniteMap (r.toSphereMap ((x : ℂ̂))))
+            (fderivRational r u) u := by
+          have hdiv : HasDerivAt (fun x : ℂ => r.numReduced.eval x / r.denReduced.eval x)
+              (((Polynomial.derivative r.numReduced).eval u * r.denReduced.eval u
+                  - r.numReduced.eval u * (Polynomial.derivative r.denReduced).eval u)
+                / r.denReduced.eval u ^ 2) u :=
+            (r.numReduced.hasDerivAt u).div (r.denReduced.hasDerivAt u) hden
+          have hev' : (fun x : ℂ => chartFiniteMap (r.toSphereMap ((x : ℂ̂))))
+              =ᶠ[𝓝 u] fun x : ℂ => r.numReduced.eval x / r.denReduced.eval x := by
+            filter_upwards [r.denReduced.continuous.continuousAt.eventually_ne hden] with x hx
+            have hread : r.toSphereMap ((x : ℂ̂))
+                = if r.denReduced.eval x = 0 then (∞ : ℂ̂)
+                  else ((r.numReduced.eval x / r.denReduced.eval x : ℂ) : ℂ̂) := rfl
+            rw [hread, if_neg hx, cf]
+          have hfd : fderivRational r u
+              = ((Polynomial.derivative r.numReduced).eval u * r.denReduced.eval u
+                  - r.numReduced.eval u * (Polynomial.derivative r.denReduced).eval u)
+                / r.denReduced.eval u ^ 2 := by
+            have hwr : r.wronskian.eval u
+                = (Polynomial.derivative r.numReduced).eval u * r.denReduced.eval u
+                  - r.numReduced.eval u * (Polynomial.derivative r.denReduced).eval u := by
+              simp only [RationalData.wronskian, Polynomial.eval_sub, Polynomial.eval_mul]
+            have hfd0 : fderivRational r u
+                = r.wronskian.eval u / (r.denReduced.eval u) ^ 2 := rfl
+            rw [hfd0, hwr]
+          rw [hfd]
+          exact hdiv.congr_of_eventuallyEq hev'
+        -- the set where the `k`-th iterate stays finite is open
+        have hopen : IsOpen {x : ℂ | r.toSphereMap^[k] ((x : ℂ̂)) ≠ ∞} := by
+          have hc : Continuous fun x : ℂ => r.toSphereMap^[k] ((x : ℂ̂)) :=
+            (r.toSphereMap_continuous.iterate k).comp OnePoint.continuous_coe
+          exact OnePoint.isClosed_infty.isOpen_compl.preimage hc
+        -- near `w`, the `(k+1)`-reading is the composite of the two readings
+        have hev : ((fun x : ℂ => chartFiniteMap (r.toSphereMap ((x : ℂ̂))))
+              ∘ fun x : ℂ => chartFiniteMap (r.toSphereMap^[k] ((x : ℂ̂))))
+            =ᶠ[𝓝 w] fun x : ℂ => chartFiniteMap (r.toSphereMap^[k + 1] ((x : ℂ̂))) := by
+          filter_upwards [hopen.mem_nhds (hw k (Nat.le_succ k))] with x hx
+          obtain ⟨v, hv⟩ : ∃ v : ℂ, r.toSphereMap^[k] ((x : ℂ̂)) = ((v : ℂ̂)) := by
+            cases hc : r.toSphereMap^[k] ((x : ℂ̂)) with
+            | infty => exact absurd hc hx
+            | coe v => exact ⟨v, rfl⟩
+          simp only [Function.comp_apply]
+          rw [Function.iterate_succ_apply', hv, cf]
+        -- chain rule at the pair of matched points
+        have hg2 : HasDerivAt (fun x : ℂ => chartFiniteMap (r.toSphereMap ((x : ℂ̂))))
+            (fderivRational r u)
+            ((fun x : ℂ => chartFiniteMap (r.toSphereMap^[k] ((x : ℂ̂)))) w) := by
+          show HasDerivAt _ _ (chartFiniteMap (r.toSphereMap^[k] ((w : ℂ̂))))
+          rw [hhw]
+          exact hg
+        have hcomp := HasDerivAt.comp w hg2 hk
+        -- convert the derivative value through the cocycle product
+        have hval : iterDeriv r (k + 1) w = fderivRational r u * iterDeriv r k w := by
+          have h1 : iterDeriv r (k + 1) w
+              = iterDeriv r k w
+                  * fderivRational r (chartFiniteMap (r.toSphereMap^[k] ((w : ℂ̂)))) := by
+            simp only [iterDeriv]
+            exact Finset.prod_range_succ _ k
+          rw [h1, hhw, mul_comm]
+        rw [hval]
+        exact hcomp.congr_of_eventuallyEq hev.symm
+  exact (key m z hfin).deriv.symm
 
 /-! ## The spread coefficient -/
 
@@ -123,14 +230,28 @@ unconditionally. -/
 theorem spreadCoeff_add (r : RationalData) (S : Set ℂ) (σ₁ σ₂ : ℂ → ℂ) :
     spreadCoeff r S (fun z => σ₁ z + σ₂ z)
       = fun z => spreadCoeff r S σ₁ z + spreadCoeff r S σ₂ z := by
-  sorry
+  funext z
+  unfold spreadCoeff
+  by_cases h : ∃ p : ℕ × ℕ × ℂ, p.2.2 ∈ S ∧
+      r.toSphereMap^[p.1] ((z : ℂ̂)) = r.toSphereMap^[p.2.1] ((p.2.2 : ℂ̂))
+  · simp only [dif_pos h]
+    ring
+  · simp only [dif_neg h]
+    ring
 
 /-- **Homogeneity in the seed.** As for additivity: the selection is
 seed-independent, so scalars pass through pointwise and unconditionally. -/
 theorem spreadCoeff_smul (r : RationalData) (S : Set ℂ) (c : ℂ) (σ : ℂ → ℂ) :
     spreadCoeff r S (fun z => c * σ z)
       = fun z => c * spreadCoeff r S σ z := by
-  sorry
+  funext z
+  unfold spreadCoeff
+  by_cases h : ∃ p : ℕ × ℕ × ℂ, p.2.2 ∈ S ∧
+      r.toSphereMap^[p.1] ((z : ℂ̂)) = r.toSphereMap^[p.2.1] ((p.2.2 : ℂ̂))
+  · simp only [dif_pos h]
+    ring
+  · simp only [dif_neg h]
+    ring
 
 /-! ## The hypothesis package
 
