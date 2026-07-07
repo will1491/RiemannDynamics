@@ -65,6 +65,8 @@ import RiemannDynamics.Analysis.WeakLimits.WeakL2Limit
 
 import RiemannDynamics.Basic
 
+import RiemannDynamics.Dynamics.Deformation.DeltaOperator
+import RiemannDynamics.Dynamics.Deformation.SphereVectorField
 import RiemannDynamics.Dynamics.FatouComponents.Def
 import RiemannDynamics.Dynamics.FatouComponents.GrandOrbit
 import RiemannDynamics.Dynamics.FatouComponents.Periodic
@@ -76,6 +78,10 @@ import RiemannDynamics.Dynamics.JuliaFatou.Perfect
 import RiemannDynamics.Dynamics.JuliaFatou.PeriodicDensity
 import RiemannDynamics.Dynamics.JuliaFatou.RepellingCycles
 import RiemannDynamics.Dynamics.JuliaFatou.RepellingDensity
+import RiemannDynamics.Dynamics.NoWanderingDomains
+import RiemannDynamics.Dynamics.Sullivan.EventualInjectivity
+import RiemannDynamics.Dynamics.Sullivan.SeedTriviality
+import RiemannDynamics.Dynamics.Sullivan.Spreading
 
 import RiemannDynamics.Hyperbolic.ArgumentPrinciple
 import RiemannDynamics.Hyperbolic.DiskMetric
@@ -118,6 +124,7 @@ import RiemannDynamics.QC.Calculus.Compactness
 import RiemannDynamics.QC.Calculus.Composition
 import RiemannDynamics.QC.Calculus.Removability
 import RiemannDynamics.QC.Calculus.Weyl
+import RiemannDynamics.QC.Calculus.WeylLocal
 import RiemannDynamics.QC.Defs.Analytic
 import RiemannDynamics.QC.Defs.BeltramiCoeff
 import RiemannDynamics.QC.Defs.Geometric
