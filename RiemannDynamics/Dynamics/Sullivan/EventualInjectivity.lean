@@ -18,17 +18,22 @@ component may be relabeled along its forward orbit so that, from some time
 on, every iterate is injective on the component and the orbit components
 avoid `∞` and the critical points of the map.
 
-This file states the *interface only*. The two soft normalizations are
-finiteness pigeonholing: the orbit components are pairwise disjoint, `∞`
-lies in at most one of them, and the finitely many critical points of a
-rational map meet only finitely many of them. The injectivity clause is the
-hard dichotomy: each component step `f : Uₙ → Uₙ₊₁` is proper and eventually
-critical-point-free, hence a covering of some degree `≥ 1`; if infinitely
-many steps had degree `≥ 2`, the moduli of a suitable separating curve
-family would grow without bound through the orbit, producing essential
-annuli of arbitrarily large modulus separating the (uniformly perfect) Julia
-set — a contradiction. The internal development of this dichotomy is a later
-sub-architecture; downstream files consume only the statement below.
+The two soft normalizations are finiteness pigeonholing: the orbit
+components are pairwise disjoint, `∞` lies in at most one of them, and the
+finitely many critical points of a rational map meet only finitely many of
+them. The injectivity clause is the hard dichotomy: each component step
+`f : Uₙ → Uₙ₊₁` is proper and critical-point-free, hence a covering of
+constant fiber count `≥ 1` (`exists_fiberCount`); a step of fiber count one
+over its target is injective, and cofinally many steps of fiber count at
+least two are impossible (`not_cofinal_multiple_steps`): such steps force
+multiply connected targets (`not_isConnected_compl_of_multiple_step`, via
+the Riemann-mapping bridge `simplyConnectedSpace_of_unbounded_components`
+and degree-one-over-simply-connected `fiberCount_eq_one_of_simplyConnected`),
+essential loops around Julia-meeting complementary continua then acquire
+unboundedly large forward winding numbers (Sullivan's anchored winding
+growth, `exists_winding_growth_of_cofinal_multiple_steps`), and normality
+of the iterates collapses those curves and confines the enclosed regions,
+contradicting the Julia membership (`not_winding_growth`).
 
 The file also hosts the small shared lemma that the frontier of a Fatou
 component lies in the Julia set, consumed by several parts of the endgame.
@@ -2408,7 +2413,971 @@ theorem exists_winding_growth_of_cofinal_multiple_steps {f : ℂ̂ → ℂ̂}
         (∀ t : unitInterval, ((chartFiniteMap (f^[m] ((γ t : ℂ̂))) : ℂ)) ∉ C) ∧
         ∃ Γ : C(unitInterval, ℂ), (∀ t : unitInterval, Γ t = chartFiniteMap (f^[m] ((γ t : ℂ̂)))) ∧
           ∀ z ∈ C, B ≤ |windingNumber Γ z| := by
-  sorry
+  classical
+  have hd1 : (1 : ℕ) ≤ degreeOfRational f := le_trans one_le_two hd
+  obtain ⟨r, hr⟩ := id hf
+  -- ===================================================================
+  -- STEP A (plan part (1)): every bad step yields a compact preconnected
+  -- Julia-meeting continuum in the complement of the target component.
+  -- Chain: not_isConnected_compl_of_multiple_step (black box) gives a
+  -- disconnected sphere complement; exists_bounded_component_of_not_
+  -- isConnected_compl (proved sibling) gives a point z₀ outside the finite
+  -- part with BOUNDED complementary component C.  C is closed (component
+  -- of a closed set), hence compact; ∂C ⊆ ∂F ⊆ chart-reading of
+  -- ∂(fcOrbit (n+1)) ⊆ JuliaSet, and ∂C ≠ ∅ since C is a nonempty bounded
+  -- closed set in the connected unbounded plane.
+  -- ===================================================================
+  have hcontinuum : ∀ n : ℕ,
+      (∃ k : ℕ, 2 ≤ k ∧ ∀ w ∈ fcOrbit f U (n + 1),
+        (f ⁻¹' {w} ∩ fcOrbit f U n).ncard = k) →
+      ∃ z₀ : ℂ,
+        z₀ ∈ connectedComponentIn {w : ℂ | (w : ℂ̂) ∉ fcOrbit f U (n + 1)} z₀ ∧
+        IsCompact (connectedComponentIn {w : ℂ | (w : ℂ̂) ∉ fcOrbit f U (n + 1)} z₀) ∧
+        (∃ z ∈ connectedComponentIn {w : ℂ | (w : ℂ̂) ∉ fcOrbit f U (n + 1)} z₀,
+          ((z : ℂ̂)) ∈ JuliaSet f) := by
+    intro n hkbad
+    obtain ⟨k, hk2, hk⟩ := hkbad
+    have hVfc : IsFatouComponent f (fcOrbit f U (n + 1)) :=
+      isFatouComponent_fcOrbit (n + 1) hf hd1 hU
+    -- the black-box separation form of the covering dichotomy
+    have hnc : ¬IsConnected ((fcOrbit f U (n + 1))ᶜ : Set ℂ̂) :=
+      not_isConnected_compl_of_multiple_step hf hd hU n (hinf n) (hinf (n + 1))
+        (hcrit n) hk2 hk
+    obtain ⟨z₀, hz₀, hbdd⟩ := exists_bounded_component_of_not_isConnected_compl
+      hVfc.isOpen hVfc.nonempty (hinf (n + 1)) hnc
+    set F : Set ℂ := {w : ℂ | (w : ℂ̂) ∉ fcOrbit f U (n + 1)} with hFdef
+    set C : Set ℂ := connectedComponentIn F z₀ with hCdef
+    have hz₀F : z₀ ∈ F := hz₀
+    have hz₀C : z₀ ∈ C := mem_connectedComponentIn hz₀F
+    have hCsub : C ⊆ F := connectedComponentIn_subset _ _
+    -- the complement set is closed in the plane
+    have hFclosed : IsClosed F :=
+      (hVfc.isOpen.isClosed_compl).preimage OnePoint.continuous_coe
+    -- a connected component of a closed set is closed, hence compact
+    have hCclosed : IsClosed C := by
+      rw [hCdef, connectedComponentIn_eq_image hz₀F]
+      exact hFclosed.isClosedEmbedding_subtypeVal.isClosedMap _
+        isClosed_connectedComponent
+    have hCcpt : IsCompact C := Metric.isCompact_of_isClosed_isBounded hCclosed hbdd
+    refine ⟨z₀, hz₀C, hCcpt, ?_⟩
+    -- the frontier of the bounded component is nonempty
+    haveI : PreconnectedSpace ℂ := ⟨(convex_univ (𝕜 := ℝ) (E := ℂ)).isPreconnected⟩
+    have hCne : C.Nonempty := ⟨z₀, hz₀C⟩
+    have hfrne : (frontier C).Nonempty := by
+      by_contra hemp
+      rw [Set.not_nonempty_iff_eq_empty] at hemp
+      have hopen : IsOpen C := by
+        have h1 : C \ interior C = ∅ := by rw [← hCclosed.frontier_eq]; exact hemp
+        have h2 : interior C = C :=
+          Set.Subset.antisymm interior_subset (Set.diff_eq_empty.mp h1)
+        rw [← h2]; exact isOpen_interior
+      rcases isClopen_iff.mp ⟨hCclosed, hopen⟩ with h | h
+      · exact hCne.ne_empty h
+      · have hub : Bornology.IsBounded (Set.univ : Set ℂ) := h ▸ hbdd
+        obtain ⟨R, hR⟩ := hub.subset_closedBall 0
+        have := hR (Set.mem_univ ((R + 1 : ℝ) : ℂ))
+        rw [Metric.mem_closedBall, dist_zero_right] at this
+        simp only [Complex.norm_real, Real.norm_eq_abs] at this
+        cases abs_le.mp this with
+        | intro h1 h2 => nlinarith [abs_nonneg R, le_abs_self R]
+    obtain ⟨x, hxfr⟩ := hfrne
+    have hxC : x ∈ C := hCclosed.closure_eq ▸ frontier_subset_closure hxfr
+    -- a frontier point of the component is a frontier point of the whole
+    -- closed complement set (maximality of the component swallows balls)
+    have hxniF : x ∉ interior F := by
+      intro hxint
+      obtain ⟨ε, hε, hball⟩ := Metric.isOpen_iff.mp isOpen_interior x hxint
+      have hballF : Metric.ball x ε ⊆ F := fun y hy => interior_subset (hball hy)
+      have hballC : Metric.ball x ε ⊆ C := by
+        rw [hCdef, connectedComponentIn_eq hxC]
+        exact (convex_ball x ε).isPreconnected.subset_connectedComponentIn
+          (Metric.mem_ball_self hε) hballF
+      exact hxfr.2 ((interior_maximal hballC Metric.isOpen_ball) (Metric.mem_ball_self hε))
+    have hxfrF : x ∈ frontier F := ⟨subset_closure (hCsub hxC), hxniF⟩
+    -- transport the frontier through the coercion into the sphere
+    have hFeq : F = ((↑) : ℂ → ℂ̂) ⁻¹' ((fcOrbit f U (n + 1))ᶜ : Set ℂ̂) := rfl
+    have hfrsub : ((x : ℂ̂)) ∈ frontier ((fcOrbit f U (n + 1))ᶜ : Set ℂ̂) := by
+      have h1 : closure (((↑) : ℂ → ℂ̂) ⁻¹' ((fcOrbit f U (n + 1))ᶜ : Set ℂ̂)) ⊆
+          ((↑) : ℂ → ℂ̂) ⁻¹' closure ((fcOrbit f U (n + 1))ᶜ : Set ℂ̂) :=
+        OnePoint.continuous_coe.closure_preimage_subset _
+      have h2 : ((↑) : ℂ → ℂ̂) ⁻¹' interior ((fcOrbit f U (n + 1))ᶜ : Set ℂ̂)
+          ⊆ interior (((↑) : ℂ → ℂ̂) ⁻¹' ((fcOrbit f U (n + 1))ᶜ : Set ℂ̂)) :=
+        preimage_interior_subset_interior_preimage OnePoint.continuous_coe
+      rw [hFeq] at hxfrF
+      exact ⟨h1 hxfrF.1, fun hint => hxfrF.2 (h2 hint)⟩
+    rw [frontier_compl] at hfrsub
+    exact ⟨x, hxC, hVfc.frontier_subset_juliaSet hfrsub⟩
+  -- ===================================================================
+  -- STEP B (plan part (2)): the essential loop.  If the complement of an
+  -- open T ⊆ ℂ has a bounded connected component through z₀, there is a
+  -- closed curve with trace inside T and nonzero winding about z₀.
+  -- Construction: Šura-Bura clopen compact piece A ⊇ C inside the closed
+  -- complement, ε-separated from the rest; the union S of closed δ-grid
+  -- squares meeting A (δ ≪ ε) has topological boundary made of grid edges
+  -- lying in T; per-edge principal-log increments are linear in edges, so
+  -- the boundary cycles' total winding about z₀ equals the sum over squares
+  -- Q ⊆ S of wind(∂Q, z₀) = 1; extract one cycle with nonzero winding.
+  -- ===================================================================
+  have hessloop : ∀ T : Set ℂ, IsOpen T → ∀ z₀ : ℂ, z₀ ∉ T →
+      Bornology.IsBounded (connectedComponentIn Tᶜ z₀) →
+      ∃ lam : C(unitInterval, ℂ), lam 0 = lam 1 ∧ (∀ t : unitInterval, lam t ∈ T) ∧
+        windingNumber lam z₀ ≠ 0 := by
+    intro T hT z₀ hz₀T hbdd
+    -- ---------------------------------------------------------------
+    -- Inner grid stage: black box exists_gridLoop_winding_ne_zero
+    -- (GridPrimitives.lean) — the grid boundary loop of the union of
+    -- δ-squares meeting the separated compact piece A.
+    -- ---------------------------------------------------------------
+    have hgrid : ∀ (A : Set ℂ) (ε : ℝ), 0 < ε → IsCompact A → z₀ ∈ A → A ⊆ Tᶜ →
+        (∀ w ∈ Tᶜ, w ∉ A → ∀ a ∈ A, ε ≤ dist w a) →
+        ∃ lam : C(unitInterval, ℂ), lam 0 = lam 1 ∧ (∀ t : unitInterval, lam t ∈ T) ∧
+          windingNumber lam z₀ ≠ 0 := by
+      intro A ε hε hA hzA hAT hsep
+      exact exists_gridLoop_winding_ne_zero hT A ε hε hA hzA hAT hsep
+    -- ---------------------------------------------------------------
+    -- Outer stage (Šura-Bura separation): the bounded component C of the
+    -- closed complement F := Tᶜ through z₀ admits a compact piece A ⊇ C
+    -- that is relatively clopen in F, hence metrically separated from
+    -- F \ A.  Work in the compact subspace K := F ∩ closedBall 0 (R + 1):
+    -- there the connected component of z₀ is the intersection of its
+    -- clopen neighborhoods, and compactness of the boundary shell yields
+    -- a single clopen neighborhood A'' avoiding the shell.
+    -- ---------------------------------------------------------------
+    set F : Set ℂ := Tᶜ with hFdef
+    have hFclosed : IsClosed F := hT.isClosed_compl
+    have hz₀F : z₀ ∈ F := hz₀T
+    set C : Set ℂ := connectedComponentIn F z₀ with hCdef
+    have hz₀C : z₀ ∈ C := mem_connectedComponentIn hz₀F
+    have hCsub : C ⊆ F := connectedComponentIn_subset _ _
+    obtain ⟨R, hRC⟩ := hbdd.subset_closedBall 0
+    set K : Set ℂ := F ∩ Metric.closedBall 0 (R + 1) with hKdef
+    have hKcpt : IsCompact K :=
+      (isCompact_closedBall 0 (R + 1)).inter_left hFclosed
+    have hCK : C ⊆ K := by
+      intro x hx
+      exact ⟨hCsub hx, Metric.closedBall_subset_closedBall (by linarith) (hRC hx)⟩
+    have hz₀K : z₀ ∈ K := hCK hz₀C
+    -- the component in K agrees with the component in F
+    have hCKeq : connectedComponentIn K z₀ = C := by
+      apply Set.Subset.antisymm
+      · exact connectedComponentIn_mono _ (Set.inter_subset_left)
+      · exact isPreconnected_connectedComponentIn.subset_connectedComponentIn hz₀C hCK
+    -- the boundary shell of K, compact and missed by C
+    set W : Set ℂ := K \ Metric.ball 0 (R + 1) with hWdef
+    have hCW : C ∩ W = ∅ := by
+      ext x
+      simp only [Set.mem_inter_iff, Set.mem_empty_iff_false, iff_false, not_and]
+      intro hxC hxW
+      apply hxW.2
+      have hx := hRC hxC
+      rw [Metric.mem_closedBall] at hx
+      rw [Metric.mem_ball]
+      linarith
+    -- pass to the compact subspace K
+    haveI : CompactSpace K := isCompact_iff_compactSpace.mp hKcpt
+    set z₀' : K := ⟨z₀, hz₀K⟩ with hz₀'def
+    have hccinter := connectedComponent_eq_iInter_isClopen z₀'
+    have hWclosed : IsClosed W := hKcpt.isClosed.sdiff Metric.isOpen_ball
+    have hW'cpt : IsCompact (Subtype.val ⁻¹' W : Set K) :=
+      (hWclosed.preimage continuous_subtype_val).isCompact
+    -- the shell misses every point of the component of z₀ in K
+    have hdisj : (Subtype.val ⁻¹' W : Set K) ∩
+        (⋂ Z : {Z : Set K // IsClopen Z ∧ z₀' ∈ Z}, (Z : Set K)) = ∅ := by
+      rw [← hccinter]
+      ext x
+      simp only [Set.mem_inter_iff, Set.mem_empty_iff_false, iff_false, not_and]
+      intro hxW hxcc
+      have hximg : (x : ℂ) ∈ connectedComponentIn K z₀ := by
+        rw [connectedComponentIn_eq_image hz₀K]
+        exact ⟨x, hxcc, rfl⟩
+      rw [hCKeq] at hximg
+      have hmem : (x : ℂ) ∈ C ∩ W := ⟨hximg, hxW⟩
+      rw [hCW] at hmem
+      exact hmem
+    -- compactness of the shell extracts a single clopen neighborhood
+    obtain ⟨u, hu⟩ := hW'cpt.elim_finite_subfamily_closed
+      (fun Z : {Z : Set K // IsClopen Z ∧ z₀' ∈ Z} => (Z : Set K))
+      (fun Z => Z.2.1.isClosed) hdisj
+    set A'' : Set K := ⋂ Z ∈ u, (Z : Set K) with hA''def
+    have hA''clopen : IsClopen A'' := by
+      apply Set.Finite.isClopen_biInter u.finite_toSet
+      intro Z _
+      exact Z.2.1
+    have hz₀A'' : z₀' ∈ A'' := by
+      rw [hA''def]
+      exact Set.mem_biInter fun Z _ => Z.2.2
+    -- the piece downstairs: compact, clopen in F, containing C, off the shell
+    set A : Set ℂ := Subtype.val '' A'' with hAdef
+    have hA''cpt : IsCompact A'' := hA''clopen.isClosed.isCompact
+    have hAcpt : IsCompact A := hA''cpt.image continuous_subtype_val
+    have hz₀A : z₀ ∈ A := ⟨z₀', hz₀A'', rfl⟩
+    have hAK : A ⊆ K := by rintro _ ⟨x, _, rfl⟩; exact x.2
+    have hAF : A ⊆ F := fun x hx => (hAK hx).1
+    have hAW : A ∩ W = ∅ := by
+      ext x
+      simp only [Set.mem_inter_iff, Set.mem_empty_iff_false, iff_false, not_and]
+      rintro ⟨y, hyA'', rfl⟩ hxW
+      have hmem : y ∈ (Subtype.val ⁻¹' W : Set K) ∩ ⋂ Z ∈ u, (Z : Set K) :=
+        ⟨hxW, hyA''⟩
+      rw [hu] at hmem
+      exact hmem
+    -- A is relatively open in F
+    obtain ⟨V, hVopen, hVeq⟩ := isOpen_induced_iff.mp hA''clopen.isOpen
+    have hAeq : A = F ∩ (V ∩ Metric.ball 0 (R + 1)) := by
+      apply Set.Subset.antisymm
+      · rintro _ ⟨y, hyA'', rfl⟩
+        refine ⟨y.2.1, ?_, ?_⟩
+        · rw [← hVeq] at hyA''
+          exact hyA''
+        · by_contra hball
+          have hmem : (y : ℂ) ∈ A ∩ W := ⟨⟨y, hyA'', rfl⟩, ⟨y.2, hball⟩⟩
+          rw [hAW] at hmem
+          exact hmem
+      · rintro x ⟨hxF, hxV, hxball⟩
+        have hxK : x ∈ K := ⟨hxF, Metric.ball_subset_closedBall hxball⟩
+        refine ⟨⟨x, hxK⟩, ?_, rfl⟩
+        rw [← hVeq]
+        exact hxV
+    have hFAclosed : IsClosed (F \ A) := by
+      rw [hAeq, Set.diff_self_inter]
+      exact hFclosed.sdiff (hVopen.inter Metric.isOpen_ball)
+    -- metric separation of the compact clopen piece from the rest
+    have hdisjAB : Disjoint A (F \ A) := disjoint_sdiff_self_right
+    obtain ⟨ε, hε, hthick⟩ := hdisjAB.exists_thickenings hAcpt hFAclosed
+    have hsep : ∀ w ∈ Tᶜ, w ∉ A → ∀ a ∈ A, ε ≤ dist w a := by
+      intro w hwF hwA a haA
+      by_contra hlt
+      push Not at hlt
+      have hw₁ : w ∈ Metric.thickening ε A :=
+        Metric.mem_thickening_iff.mpr ⟨a, haA, hlt⟩
+      have hw₂ : w ∈ Metric.thickening ε (F \ A) :=
+        Metric.self_subset_thickening hε _ ⟨hwF, hwA⟩
+      exact (Set.disjoint_left.mp hthick hw₁) hw₂
+    exact hgrid A ε hε hAcpt hz₀A hAF hsep
+  -- ===================================================================
+  -- STEP D (plan part (4), engine): one-step argument-principle transport.
+  -- For a closed curve Γ in (the finite chart of) fcOrbit f U j and a
+  -- point q outside the next component, the pushed curve chart∘f∘Γ is
+  -- continuous (no poles on the trace: a pole would map onto ∞ ∈
+  -- fcOrbit (j+1), contradicting hinf) and its winding about q is
+  --   Σ_{ζ : (numReduced − q·denReduced)(ζ) = 0} wind(Γ, ζ)
+  --     − Σ_{π : denReduced(π) = 0} wind(Γ, π)
+  -- by windingNumber_polynomial_comp applied to numerator and denominator.
+  -- ===================================================================
+  have htransport : ∀ (Γ : C(unitInterval, ℂ)), Γ 0 = Γ 1 →
+      ∀ j : ℕ, (∀ t : unitInterval, ((Γ t : ℂ̂)) ∈ fcOrbit f U j) →
+      ∀ q : ℂ, ((q : ℂ̂)) ∉ fcOrbit f U (j + 1) →
+      ∃ Γ' : C(unitInterval, ℂ),
+        (∀ t : unitInterval, Γ' t = chartFiniteMap (f ((Γ t : ℂ̂)))) ∧
+        Γ' 0 = Γ' 1 ∧
+        (∀ t : unitInterval, ((Γ' t : ℂ̂)) ∈ fcOrbit f U (j + 1)) ∧
+        windingNumber Γ' q =
+          (((r.numReduced - Polynomial.C q * r.denReduced).roots.map
+            (fun ζ => windingNumber Γ ζ)).sum) -
+          ((r.denReduced.roots.map (fun ζ => windingNumber Γ ζ)).sum) := by
+    intro Γ hΓcl j hΓmem q hq
+    -- the reduced denominator is a nonzero polynomial
+    have hDne : r.denReduced ≠ 0 := by
+      unfold RationalData.denReduced
+      intro hz
+      have h1 : r.den = gcd r.num r.den * (r.den / gcd r.num r.den) :=
+        (EuclideanDomain.mul_div_cancel' (gcd_ne_zero_of_right r.den_ne_zero)
+          (gcd_dvd_right _ _)).symm
+      rw [hz, mul_zero] at h1
+      exact r.den_ne_zero h1
+    have hrdeg : 2 ≤ r.degree := by
+      rw [← degreeOfRational_eq_of_witness f r hr]; exact hd
+    have hcop : IsCoprime r.numReduced r.denReduced :=
+      isCoprime_div_gcd_div_gcd r.den_ne_zero
+    -- the finite reading of the sphere map on finite points
+    have hreadIf : ∀ w : ℂ, r.toSphereMap ((w : ℂ̂))
+        = if r.denReduced.eval w = 0 then (∞ : ℂ̂)
+          else ((r.numReduced.eval w / r.denReduced.eval w : ℂ) : ℂ̂) := fun _ => rfl
+    -- the map sends the trace into the next orbit component
+    have hnext : ∀ t : unitInterval, f ((Γ t : ℂ̂)) ∈ fcOrbit f U (j + 1) := by
+      intro t
+      rw [← fcOrbit_image_eq hf hd1 hU j]
+      exact ⟨((Γ t : ℂ̂)), hΓmem t, rfl⟩
+    -- no poles on the trace: a pole would map to ∞ in the next component
+    have hDΓ : ∀ t : unitInterval, r.denReduced.eval (Γ t) ≠ 0 := by
+      intro t h0
+      have hval : f ((Γ t : ℂ̂)) = ∞ := by
+        rw [hr, hreadIf (Γ t), if_pos h0]
+      exact hinf (j + 1) (hval ▸ hnext t)
+    -- the image points read finitely as the rational quotient
+    have hread : ∀ t : unitInterval,
+        f ((Γ t : ℂ̂)) = ((r.numReduced.eval (Γ t) / r.denReduced.eval (Γ t) : ℂ) : ℂ̂) := by
+      intro t
+      rw [hr, hreadIf (Γ t), if_neg (hDΓ t)]
+    -- the pushed curve
+    have hcont : Continuous fun t : unitInterval =>
+        r.numReduced.eval (Γ t) / r.denReduced.eval (Γ t) :=
+      (r.numReduced.continuous.comp Γ.continuous).div
+        (r.denReduced.continuous.comp Γ.continuous) hDΓ
+    set Γ' : C(unitInterval, ℂ) := ⟨_, hcont⟩ with hΓ'def
+    have hΓ'val : ∀ t : unitInterval, Γ' t = chartFiniteMap (f ((Γ t : ℂ̂))) := by
+      intro t
+      rw [hread t]
+      rfl
+    have hΓ'cl : Γ' 0 = Γ' 1 := by
+      show r.numReduced.eval (Γ 0) / r.denReduced.eval (Γ 0)
+        = r.numReduced.eval (Γ 1) / r.denReduced.eval (Γ 1)
+      rw [hΓcl]
+    have hΓ'mem : ∀ t : unitInterval, ((Γ' t : ℂ̂)) ∈ fcOrbit f U (j + 1) := by
+      intro t
+      have h := hnext t
+      rw [hread t] at h
+      exact h
+    refine ⟨Γ', hΓ'val, hΓ'cl, hΓ'mem, ?_⟩
+    -- the shifted numerator polynomial
+    set p : Polynomial ℂ := r.numReduced - Polynomial.C q * r.denReduced with hpdef
+    -- it is nonzero: otherwise the map would be the constant q
+    have hp : p ≠ 0 := by
+      intro hp0
+      rw [hpdef] at hp0
+      have heq : r.numReduced = Polynomial.C q * r.denReduced := sub_eq_zero.mp hp0
+      have hdvd : r.denReduced ∣ r.numReduced := ⟨Polynomial.C q, by rw [heq]; ring⟩
+      have hunit : IsUnit r.denReduced := hcop.isUnit_of_dvd' hdvd dvd_rfl
+      have hDdeg : r.denReduced.natDegree = 0 :=
+        Polynomial.natDegree_eq_zero_of_isUnit hunit
+      have hNdeg : r.numReduced.natDegree ≤ 0 := by
+        calc r.numReduced.natDegree
+            = (Polynomial.C q * r.denReduced).natDegree := by rw [heq]
+          _ ≤ (Polynomial.C q).natDegree + r.denReduced.natDegree :=
+              Polynomial.natDegree_mul_le
+          _ = 0 := by rw [Polynomial.natDegree_C, hDdeg]
+      have hdeg : r.degree = max r.numReduced.natDegree r.denReduced.natDegree := rfl
+      rw [hdeg] at hrdeg
+      omega
+    -- the curve avoids the value q, so the shifted numerator avoids 0
+    have hΓ'ne : ∀ t : unitInterval,
+        r.numReduced.eval (Γ t) / r.denReduced.eval (Γ t) ≠ q := by
+      intro t heq
+      apply hq
+      have hfq : f ((Γ t : ℂ̂)) = ((q : ℂ̂)) := by rw [hread t, heq]
+      exact hfq ▸ hnext t
+    have hpΓ : ∀ t : unitInterval, p.eval (Γ t) ≠ 0 := by
+      intro t h0
+      rw [hpdef, Polynomial.eval_sub, Polynomial.eval_mul, Polynomial.eval_C,
+        sub_eq_zero] at h0
+      apply hΓ'ne t
+      rw [h0, mul_div_assoc, div_self (hDΓ t), mul_one]
+    -- factor curves: shifted numerator and inverse denominator
+    have hinvcont : Continuous fun t : unitInterval =>
+        (r.denReduced.eval (Γ t))⁻¹ :=
+      (r.denReduced.continuous.comp Γ.continuous).inv₀ hDΓ
+    set P₁ : C(unitInterval, ℂ) :=
+      ⟨fun t => p.eval (Γ t), p.continuous.comp Γ.continuous⟩ with hP₁def
+    set P₂ : C(unitInterval, ℂ) :=
+      ⟨fun t => r.denReduced.eval (Γ t),
+        r.denReduced.continuous.comp Γ.continuous⟩ with hP₂def
+    set P₃ : C(unitInterval, ℂ) := ⟨_, hinvcont⟩ with hP₃def
+    have hclP₁ : P₁ 0 = P₁ 1 := by
+      show p.eval (Γ 0) = p.eval (Γ 1); rw [hΓcl]
+    have hclP₂ : P₂ 0 = P₂ 1 := by
+      show r.denReduced.eval (Γ 0) = r.denReduced.eval (Γ 1); rw [hΓcl]
+    have hclP₃ : P₃ 0 = P₃ 1 := by
+      show (r.denReduced.eval (Γ 0))⁻¹ = (r.denReduced.eval (Γ 1))⁻¹; rw [hΓcl]
+    have hneP₁ : ∀ t : unitInterval, P₁ t ≠ 0 := hpΓ
+    have hneP₂ : ∀ t : unitInterval, P₂ t ≠ 0 := hDΓ
+    have hneP₃ : ∀ t : unitInterval, P₃ t ≠ 0 := fun t => inv_ne_zero (hDΓ t)
+    -- the shifted pushed curve is the product of the factors
+    have hshift : shiftedCurve Γ' q = P₁ * P₃ := by
+      ext t
+      simp only [shiftedCurve, ContinuousMap.sub_apply, ContinuousMap.const_apply,
+        ContinuousMap.mul_apply, ContinuousMap.coe_mk, hP₁def, hP₃def, hΓ'def]
+      rw [hpdef, Polynomial.eval_sub, Polynomial.eval_mul, Polynomial.eval_C,
+        ← div_eq_mul_inv, eq_div_iff (hDΓ t), sub_mul,
+        div_mul_cancel₀ _ (hDΓ t)]
+    -- winding about q is winding of the shift about 0
+    have hwind_shift : windingNumber (shiftedCurve Γ' q) 0 = windingNumber Γ' q := by
+      have h : shiftedCurve (shiftedCurve Γ' q) 0 = shiftedCurve Γ' q := by
+        ext t; simp [shiftedCurve]
+      unfold windingNumber
+      rw [h]
+    -- windings of the factors via the polynomial argument principle
+    have hcomp₁ : windingNumber P₁ 0 = (p.roots.map fun ζ => windingNumber Γ ζ).sum :=
+      windingNumber_polynomial_comp p hp Γ hΓcl hpΓ
+    have hcomp₂ : windingNumber P₂ 0 =
+        (r.denReduced.roots.map fun ζ => windingNumber Γ ζ).sum :=
+      windingNumber_polynomial_comp r.denReduced hDne Γ hΓcl hDΓ
+    -- the inverse denominator winds oppositely to the denominator
+    have hP₂P₃ : P₂ * P₃ = ContinuousMap.const unitInterval 1 := by
+      ext t
+      simp only [ContinuousMap.mul_apply, ContinuousMap.coe_mk, hP₂def, hP₃def,
+        ContinuousMap.const_apply]
+      exact mul_inv_cancel₀ (hDΓ t)
+    have hzero : (0 : ℤ) = windingNumber P₂ 0 + windingNumber P₃ 0 := by
+      rw [← windingNumber_mul P₂ P₃ hclP₂ hclP₃ hneP₂ hneP₃, hP₂P₃]
+      exact (windingNumber_const 1 0 one_ne_zero).symm
+    -- assemble
+    have hfinal : windingNumber Γ' q = windingNumber P₁ 0 + windingNumber P₃ 0 := by
+      rw [← hwind_shift, hshift]
+      exact windingNumber_mul P₁ P₃ hclP₁ hclP₃ hneP₁ hneP₃
+    omega
+  -- ===================================================================
+  -- ASSEMBLY.  Anchor at the first bad step n₁: N₀ := n₁ + 1, γ := the
+  -- essential loop about the continuum C₁ there.  For B at most the base
+  -- winding use m = 0 with C := C₁ directly; for larger B the anchored
+  -- growth (Sullivan part (i)) pushes the loop forward along later bad
+  -- steps, multiplying windings by the step degrees.
+  -- ===================================================================
+  obtain ⟨n₁, -, hbad₁⟩ := hbad 0
+  obtain ⟨z₁, hz₁mem, hz₁cpt, hz₁J⟩ := hcontinuum n₁ hbad₁
+  set F₁ : Set ℂ := {w : ℂ | (w : ℂ̂) ∉ fcOrbit f U (n₁ + 1)} with hF₁def
+  set C₁ : Set ℂ := connectedComponentIn F₁ z₁ with hC₁def
+  set T₁ : Set ℂ := {w : ℂ | (w : ℂ̂) ∈ fcOrbit f U (n₁ + 1)} with hT₁def
+  have hT₁open : IsOpen T₁ :=
+    (isFatouComponent_fcOrbit (n₁ + 1) hf hd1 hU).isOpen.preimage OnePoint.continuous_coe
+  have hT₁compl : T₁ᶜ = F₁ := by
+    ext w; simp [hT₁def, hF₁def]
+  have hC₁sub : C₁ ⊆ F₁ := connectedComponentIn_subset _ _
+  have hz₁F : z₁ ∈ F₁ := hC₁sub hz₁mem
+  have hz₁T : z₁ ∉ T₁ := by
+    intro h
+    exact hz₁F h
+  obtain ⟨lam, hlamcl, hlammem, hlamwind⟩ :=
+    hessloop T₁ hT₁open z₁ hz₁T (by rw [hT₁compl]; exact hz₁cpt.isBounded)
+  -- the loop trace avoids the continuum
+  have hlamC₁ : ∀ t : unitInterval, lam t ∉ C₁ := fun t ht => hC₁sub ht (hlammem t)
+  -- winding is constant on the preconnected continuum
+  have hwconst : ∀ z ∈ C₁, windingNumber lam z = windingNumber lam z₁ := by
+    intro z hz
+    exact windingNumber_eq_of_preconnected hlamcl isPreconnected_connectedComponentIn
+      hlamC₁ hz hz₁mem
+  -- ===================================================================
+  -- STEP P (proven): the forward-pushed closed curves `Γp m` with
+  --   `Γp m t = chartFiniteMap (f^[m] ↑(lam t))`,
+  -- trace in `fcOrbit f U (n₁ + 1 + m)`, sphere-level orbit membership
+  -- carried along.  One-step construction from `htransport`; the outside
+  -- evaluation point demanded by `htransport` is any point of the NEXT
+  -- component (nonempty), which is disjoint from the current one by the
+  -- wandering hypothesis.
+  -- ===================================================================
+  have hout : ∀ j : ℕ, ∃ q : ℂ, ((q : ℂ̂)) ∉ fcOrbit f U j := by
+    intro j
+    obtain ⟨y, hy⟩ := (isFatouComponent_fcOrbit (j + 1) hf hd1 hU).nonempty
+    have hyne : y ≠ ∞ := fun h => hinf (j + 1) (h ▸ hy)
+    obtain ⟨q, rfl⟩ := OnePoint.ne_infty_iff_exists.mp hyne
+    refine ⟨q, fun hq => ?_⟩
+    exact Set.disjoint_left.mp
+      (isWandering_iff.mp hW j (j + 1) (by omega)) hq hy
+  have hpush : ∀ m : ℕ, ∃ Γ : C(unitInterval, ℂ),
+      (∀ t : unitInterval, Γ t = chartFiniteMap (f^[m] ((lam t : ℂ̂)))) ∧
+      Γ 0 = Γ 1 ∧
+      (∀ t : unitInterval, ((Γ t : ℂ̂)) ∈ fcOrbit f U (n₁ + 1 + m)) ∧
+      (∀ t : unitInterval, f^[m] ((lam t : ℂ̂)) ∈ fcOrbit f U (n₁ + 1 + m)) := by
+    intro m
+    induction m with
+    | zero =>
+        refine ⟨lam, ?_, hlamcl, ?_, ?_⟩
+        · intro t; simp [chartFiniteMap]
+        · intro t; exact hlammem t
+        · intro t; simpa using hlammem t
+    | succ m ih =>
+        obtain ⟨Γm, hval, hcl, hmem, hsph⟩ := ih
+        obtain ⟨q, hq⟩ := hout (n₁ + 1 + m + 1)
+        obtain ⟨Γ', hΓ'val, hΓ'cl, hΓ'mem, -⟩ :=
+          htransport Γm hcl (n₁ + 1 + m) hmem q hq
+        have hsph' : ∀ t : unitInterval,
+            f^[m + 1] ((lam t : ℂ̂)) ∈ fcOrbit f U (n₁ + 1 + (m + 1)) := by
+          intro t
+          have h1 : f^[m + 1] ((lam t : ℂ̂)) = f (f^[m] ((lam t : ℂ̂))) :=
+            Function.iterate_succ_apply' f m _
+          show f^[m + 1] ((lam t : ℂ̂)) ∈ fcOrbit f U (n₁ + 1 + m + 1)
+          rw [h1, ← fcOrbit_image_eq hf hd1 hU (n₁ + 1 + m)]
+          exact ⟨_, hsph t, rfl⟩
+        have hcoe : ∀ t : unitInterval,
+            ((Γm t : ℂ̂)) = f^[m] ((lam t : ℂ̂)) := by
+          intro t
+          have hne : f^[m] ((lam t : ℂ̂)) ≠ ∞ := fun h => hinf _ (h ▸ hsph t)
+          obtain ⟨w, hw⟩ := OnePoint.ne_infty_iff_exists.mp hne
+          rw [hval t, ← hw]
+          rfl
+        refine ⟨Γ', ?_, hΓ'cl, ?_, hsph'⟩
+        · intro t
+          rw [hΓ'val t, hcoe t, ← Function.iterate_succ_apply' f m]
+        · intro t
+          exact hΓ'mem t
+  choose Γp hΓpval hΓpcl hΓpmem hΓpsph using hpush
+  -- the pushed-curve points read back to the sphere iterates
+  have hΓpcoe : ∀ (m : ℕ) (t : unitInterval),
+      ((Γp m t : ℂ̂)) = f^[m] ((lam t : ℂ̂)) := by
+    intro m t
+    have hne : f^[m] ((lam t : ℂ̂)) ≠ ∞ := fun h => hinf _ (h ▸ hΓpsph m t)
+    obtain ⟨w, hw⟩ := OnePoint.ne_infty_iff_exists.mp hne
+    rw [hΓpval m t, ← hw]
+    rfl
+  -- the zeroth push is the essential loop itself
+  have hΓp0 : Γp 0 = lam := by
+    ext t
+    rw [hΓpval 0 t]
+    simp [chartFiniteMap]
+  -- ===================================================================
+  -- Reduced-fraction facts (shared with the transport engine).
+  -- ===================================================================
+  have hrdeg2 : 2 ≤ r.degree := by
+    rw [← degreeOfRational_eq_of_witness f r hr]; exact hd
+  have hDne : r.denReduced ≠ 0 := by
+    unfold RationalData.denReduced
+    intro hz
+    have h1 : r.den = gcd r.num r.den * (r.den / gcd r.num r.den) :=
+      (EuclideanDomain.mul_div_cancel' (gcd_ne_zero_of_right r.den_ne_zero)
+        (gcd_dvd_right _ _)).symm
+    rw [hz, mul_zero] at h1
+    exact r.den_ne_zero h1
+  have hcop : IsCoprime r.numReduced r.denReduced :=
+    isCoprime_div_gcd_div_gcd r.den_ne_zero
+  have hreadIf : ∀ w : ℂ, r.toSphereMap ((w : ℂ̂))
+      = if r.denReduced.eval w = 0 then (∞ : ℂ̂)
+        else ((r.numReduced.eval w / r.denReduced.eval w : ℂ) : ℂ̂) := fun _ => rfl
+  have hreadInf : r.toSphereMap ∞
+      = if r.numReduced.natDegree < r.denReduced.natDegree then ((0 : ℂ) : ℂ̂)
+        else if r.numReduced.natDegree = r.denReduced.natDegree then
+          ((r.numReduced.leadingCoeff / r.denReduced.leadingCoeff : ℂ) : ℂ̂)
+        else (∞ : ℂ̂) := rfl
+  -- ===================================================================
+  -- Generic fiber cardinality: away from the single value `f ∞`, the
+  -- shifted numerator `numReduced − q·denReduced` has full degree
+  -- `r.degree`, so its root multiset (the finite `f`-preimages of `q`,
+  -- with multiplicity) has exactly `r.degree` elements.
+  -- ===================================================================
+  have hshift_deg : ∀ q : ℂ, ((q : ℂ̂)) ≠ f ∞ →
+      (r.numReduced - Polynomial.C q * r.denReduced).natDegree = r.degree := by
+    intro q hq
+    rw [hr] at hq
+    have hdegdef : r.degree = max r.numReduced.natDegree r.denReduced.natDegree := rfl
+    rcases lt_trichotomy r.numReduced.natDegree r.denReduced.natDegree with hlt | heq | hgt
+    · -- `dn < dd`: here `f ∞ = 0`, so `q ≠ 0` and the denominator dominates
+      have hq0 : q ≠ 0 := by
+        intro h0
+        apply hq
+        rw [hreadInf, if_pos hlt, h0]
+      have h1 : (Polynomial.C q * r.denReduced).natDegree = r.denReduced.natDegree :=
+        Polynomial.natDegree_C_mul hq0
+      have h2 : r.numReduced.natDegree < (Polynomial.C q * r.denReduced).natDegree := by
+        rw [h1]; exact hlt
+      rw [hdegdef, max_eq_right hlt.le,
+        Polynomial.natDegree_sub_eq_right_of_natDegree_lt h2, h1]
+    · -- `dn = dd`: here `f ∞` is the ratio of the leading coefficients,
+      -- and avoiding it keeps the top coefficient alive
+      have hlcD : r.denReduced.leadingCoeff ≠ 0 :=
+        Polynomial.leadingCoeff_ne_zero.mpr hDne
+      have hqlc : q * r.denReduced.leadingCoeff ≠ r.numReduced.leadingCoeff := by
+        intro h0
+        apply hq
+        rw [hreadInf,
+          if_neg (by omega : ¬ r.numReduced.natDegree < r.denReduced.natDegree),
+          if_pos heq, ← h0, mul_div_assoc, div_self hlcD, mul_one]
+      have hcoeff : (r.numReduced - Polynomial.C q * r.denReduced).coeff
+          r.numReduced.natDegree ≠ 0 := by
+        rw [Polynomial.coeff_sub, Polynomial.coeff_C_mul,
+          Polynomial.coeff_natDegree, heq, Polynomial.coeff_natDegree]
+        intro h0
+        exact hqlc (sub_eq_zero.mp h0).symm
+      have hle : (r.numReduced - Polynomial.C q * r.denReduced).natDegree ≤
+          r.numReduced.natDegree := by
+        refine le_trans (Polynomial.natDegree_sub_le _ _) ?_
+        rw [max_le_iff]
+        exact ⟨le_refl _, le_trans (Polynomial.natDegree_C_mul_le _ _) heq.ge⟩
+      have hge := Polynomial.le_natDegree_of_ne_zero hcoeff
+      rw [hdegdef, max_eq_left heq.ge]
+      omega
+    · -- `dn > dd`: the numerator dominates for every `q`
+      have h2 : (Polynomial.C q * r.denReduced).natDegree < r.numReduced.natDegree :=
+        lt_of_le_of_lt (Polynomial.natDegree_C_mul_le _ _) hgt
+      rw [hdegdef, max_eq_left hgt.le,
+        Polynomial.natDegree_sub_eq_left_of_natDegree_lt h2]
+  have hshift_card : ∀ q : ℂ, ((q : ℂ̂)) ≠ f ∞ →
+      ((r.numReduced - Polynomial.C q * r.denReduced).roots).card = r.degree := by
+    intro q hq
+    rw [Polynomial.splits_iff_card_roots.mp (IsAlgClosed.splits _), hshift_deg q hq]
+  -- ===================================================================
+  -- STEP T (proven): the iterated-transport TREE IDENTITY.  Define the
+  -- backward-tree winding sum
+  --   `T 0 q     = wind(lam, q)`,
+  --   `T (m+1) q = Σ_{ζ : (numReduced − q·denReduced)(ζ) = 0} T m ζ`
+  -- (roots with multiplicity — the finite `f`-preimages of `q`).  Then
+  -- for every `m` there is a single constant `M` (the accumulated
+  -- pole-tree contribution, independent of `q`) with
+  --   `wind(Γp m, q) = T m q − M`
+  -- for every `q` outside the level-`(n₁+1+m)` component that avoids the
+  -- finitely many forward images `f^[j] ∞` (`1 ≤ j ≤ m`, where the fiber
+  -- cardinality could drop).  Every backward-tree point is automatically
+  -- outside the intermediate orbit components (`fcOrbit_image_eq` +
+  -- `hinf`), so the recursion is self-sustaining; the pole sum needs no
+  -- recursion at all — it is swallowed whole into the constant.
+  -- ===================================================================
+  obtain ⟨T, hT0, hTs⟩ : ∃ T : ℕ → ℂ → ℤ,
+      (∀ q : ℂ, T 0 q = windingNumber lam q) ∧
+      (∀ (m : ℕ) (q : ℂ), T (m + 1) q =
+        (((r.numReduced - Polynomial.C q * r.denReduced).roots.map (T m)).sum)) :=
+    ⟨fun m => Nat.rec (motive := fun _ => ℂ → ℤ) (fun q => windingNumber lam q)
+      (fun _ Tm q => (((r.numReduced - Polynomial.C q * r.denReduced).roots.map
+        Tm).sum)) m,
+     fun _ => rfl, fun _ _ => rfl⟩
+  -- the pole-tree constant, by its explicit recursion: at each step the
+  -- previous constant is multiplied by the full fiber cardinality
+  -- `r.degree` and the pole windings of the current pushed curve join
+  obtain ⟨M, hM0, hMs⟩ : ∃ M : ℕ → ℤ, M 0 = 0 ∧
+      ∀ m : ℕ, M (m + 1) = (r.degree : ℤ) * M m +
+        ((r.denReduced.roots.map (fun ζ => windingNumber (Γp m) ζ)).sum) :=
+    ⟨fun m => Nat.rec (motive := fun _ => ℤ) 0 (fun m Mm => (r.degree : ℤ) * Mm +
+      ((r.denReduced.roots.map (fun ζ => windingNumber (Γp m) ζ)).sum)) m,
+     rfl, fun _ => rfl⟩
+  have htree : ∀ (m : ℕ) (q : ℂ),
+      ((q : ℂ̂)) ∉ fcOrbit f U (n₁ + 1 + m) →
+      (∀ j : ℕ, 1 ≤ j → j ≤ m → ((q : ℂ̂)) ≠ f^[j] ∞) →
+      windingNumber (Γp m) q = T m q - M m := by
+    intro m
+    induction m with
+    | zero =>
+        intro q _ _
+        rw [hT0, hM0, sub_zero, hΓp0]
+    | succ m ih =>
+        intro q hqmem hqexc
+        obtain ⟨Γ', hΓ'val, hΓ'cl, hΓ'mem, hform⟩ :=
+          htransport (Γp m) (hΓpcl m) (n₁ + 1 + m) (hΓpmem m) q hqmem
+        have hΓeq : Γp (m + 1) = Γ' := by
+          ext t
+          rw [hΓ'val t, hΓpval (m + 1) t, hΓpcoe m t, Function.iterate_succ_apply']
+        -- every backward-tree point is admissible one level down
+        have hroot_adm : ∀ ζ ∈ (r.numReduced - Polynomial.C q * r.denReduced).roots,
+            windingNumber (Γp m) ζ = T m ζ - M m := by
+          intro ζ hζ
+          have hζroot := (Polynomial.mem_roots'.mp hζ).2
+          have hpevals : r.numReduced.eval ζ = q * r.denReduced.eval ζ := by
+            rw [Polynomial.IsRoot, Polynomial.eval_sub, Polynomial.eval_mul,
+              Polynomial.eval_C, sub_eq_zero] at hζroot
+            exact hζroot
+          have hden : r.denReduced.eval ζ ≠ 0 := by
+            intro h0
+            have hnum0 : r.numReduced.eval ζ = 0 := by rw [hpevals, h0, mul_zero]
+            obtain ⟨a, b, hab⟩ := hcop
+            have hev := congrArg (Polynomial.eval ζ) hab
+            rw [Polynomial.eval_add, Polynomial.eval_mul, Polynomial.eval_mul,
+              hnum0, h0, mul_zero, mul_zero, add_zero, Polynomial.eval_one] at hev
+            exact zero_ne_one hev
+          have hfζ : f ((ζ : ℂ̂)) = ((q : ℂ̂)) := by
+            rw [hr, hreadIf ζ, if_neg hden, hpevals, mul_div_assoc,
+              div_self hden, mul_one]
+          have hζmem : ((ζ : ℂ̂)) ∉ fcOrbit f U (n₁ + 1 + m) := by
+            intro hmem
+            have himg : f ((ζ : ℂ̂)) ∈ fcOrbit f U (n₁ + 1 + m + 1) := by
+              rw [← fcOrbit_image_eq hf hd1 hU (n₁ + 1 + m)]
+              exact ⟨_, hmem, rfl⟩
+            rw [hfζ] at himg
+            exact hqmem himg
+          have hζexc : ∀ j : ℕ, 1 ≤ j → j ≤ m → ((ζ : ℂ̂)) ≠ f^[j] ∞ := by
+            intro j h1 hjm heqζ
+            apply hqexc (j + 1) (by omega) (by omega)
+            rw [Function.iterate_succ_apply', ← heqζ, hfζ]
+          exact ih ζ hζmem hζexc
+        -- the exclusion at `j = 1` gives the full fiber cardinality
+        have hq1 : ((q : ℂ̂)) ≠ f ∞ := by
+          have h := hqexc 1 le_rfl (by omega)
+          rwa [Function.iterate_one] at h
+        rw [hΓeq, hform, hTs m q, hMs m, Multiset.map_congr rfl hroot_adm,
+          Multiset.sum_map_sub, Multiset.map_const', Multiset.sum_replicate,
+          hshift_card q hq1, nsmul_eq_mul]
+        ring
+  -- the two-point difference form: the pole constant cancels, leaving a
+  -- pure backward-tree count comparison between admissible points
+  have htree_diff : ∀ (m : ℕ) (q q' : ℂ),
+      ((q : ℂ̂)) ∉ fcOrbit f U (n₁ + 1 + m) →
+      (∀ j : ℕ, 1 ≤ j → j ≤ m → ((q : ℂ̂)) ≠ f^[j] ∞) →
+      ((q' : ℂ̂)) ∉ fcOrbit f U (n₁ + 1 + m) →
+      (∀ j : ℕ, 1 ≤ j → j ≤ m → ((q' : ℂ̂)) ≠ f^[j] ∞) →
+      windingNumber (Γp m) q - windingNumber (Γp m) q' = T m q - T m q' := by
+    intro m q q' hq hqe hq' hqe'
+    rw [htree m q hq hqe, htree m q' hq' hqe']
+    ring
+  -- ===================================================================
+  -- DEATH PERMANENCE (proven): if every admissible winding of the
+  -- pushed curve vanishes at one level, it vanishes at the next — the
+  -- transport formula only consumes values at points outside the
+  -- current component (finite preimages and poles).  Any proof of the
+  -- growth kernel must therefore maintain nonvanishing INDUCTIVELY;
+  -- there is no resurrection after total H₁-death.
+  -- ===================================================================
+  have hdeath_perm : ∀ m : ℕ,
+      (∀ z : ℂ, ((z : ℂ̂)) ∉ fcOrbit f U (n₁ + 1 + m) →
+        windingNumber (Γp m) z = 0) →
+      ∀ q : ℂ, ((q : ℂ̂)) ∉ fcOrbit f U (n₁ + 1 + (m + 1)) →
+        windingNumber (Γp (m + 1)) q = 0 := by
+    intro m hall q hq
+    obtain ⟨Γ', hΓ'val, hΓ'cl, hΓ'mem, hform⟩ :=
+      htransport (Γp m) (hΓpcl m) (n₁ + 1 + m) (hΓpmem m) q hq
+    have hΓeq : Γp (m + 1) = Γ' := by
+      ext t
+      rw [hΓ'val t, hΓpval (m + 1) t, hΓpcoe m t, Function.iterate_succ_apply']
+    rw [hΓeq, hform]
+    have hz1 : ∀ ζ ∈ (r.numReduced - Polynomial.C q * r.denReduced).roots,
+        windingNumber (Γp m) ζ = (0 : ℤ) := by
+      intro ζ hζ
+      have hζroot := (Polynomial.mem_roots'.mp hζ).2
+      have hpevals : r.numReduced.eval ζ = q * r.denReduced.eval ζ := by
+        rw [Polynomial.IsRoot, Polynomial.eval_sub, Polynomial.eval_mul,
+          Polynomial.eval_C, sub_eq_zero] at hζroot
+        exact hζroot
+      have hden : r.denReduced.eval ζ ≠ 0 := by
+        intro h0
+        have hnum0 : r.numReduced.eval ζ = 0 := by rw [hpevals, h0, mul_zero]
+        obtain ⟨a, b, hab⟩ := hcop
+        have hev := congrArg (Polynomial.eval ζ) hab
+        rw [Polynomial.eval_add, Polynomial.eval_mul, Polynomial.eval_mul,
+          hnum0, h0, mul_zero, mul_zero, add_zero, Polynomial.eval_one] at hev
+        exact zero_ne_one hev
+      have hfζ : f ((ζ : ℂ̂)) = ((q : ℂ̂)) := by
+        rw [hr, hreadIf ζ, if_neg hden, hpevals, mul_div_assoc,
+          div_self hden, mul_one]
+      have hζmem : ((ζ : ℂ̂)) ∉ fcOrbit f U (n₁ + 1 + m) := by
+        intro hmem
+        have himg : f ((ζ : ℂ̂)) ∈ fcOrbit f U (n₁ + 1 + m + 1) := by
+          rw [← fcOrbit_image_eq hf hd1 hU (n₁ + 1 + m)]
+          exact ⟨_, hmem, rfl⟩
+        rw [hfζ] at himg
+        exact hq himg
+      exact hall ζ hζmem
+    have hz2 : ∀ π ∈ r.denReduced.roots,
+        windingNumber (Γp m) π = (0 : ℤ) := by
+      intro π hπ
+      have hπ0 : r.denReduced.eval π = 0 := (Polynomial.mem_roots'.mp hπ).2
+      have hfπ : f ((π : ℂ̂)) = ∞ := by
+        rw [hr, hreadIf π, if_pos hπ0]
+      have hπmem : ((π : ℂ̂)) ∉ fcOrbit f U (n₁ + 1 + m) := by
+        intro hmem
+        have himg : f ((π : ℂ̂)) ∈ fcOrbit f U (n₁ + 1 + m + 1) := by
+          rw [← fcOrbit_image_eq hf hd1 hU (n₁ + 1 + m)]
+          exact ⟨_, hmem, rfl⟩
+        rw [hfπ] at himg
+        exact hinf _ himg
+      exact hall π hπmem
+    rw [Multiset.map_congr rfl hz1, Multiset.map_congr rfl hz2]
+    simp
+  -- ===================================================================
+  -- THE ANCHORED-GROWTH KERNEL (the irreducible sorry, minimized).
+  -- Everything around it is proven: the pushed curves exist (`Γp`), and
+  -- the packaging step `hjulia` below upgrades any single complement
+  -- point with large winding to a Julia point with the same winding,
+  -- after which SINGLETON continua `{x}` satisfy every clause of the
+  -- frozen conclusion.  What remains is exactly Sullivan Prop 3.4.2
+  -- (i)/(ii) generalized beyond annuli:
+  --
+  --   the forward images of the FIXED essential loop `lam` acquire
+  --   unbounded winding numbers about complement points, at levels of
+  --   the wandering orbit that are pushed cofinally through fiber-count
+  --   `≥ 2` covering steps (`hbad`).
+  --
+  -- PROVEN TOOLKIT IN SCOPE:
+  -- * seed: `hlamwind : windingNumber lam z₁ ≠ 0` about the Julia-meeting
+  --   continuum `C₁` (constancy `hwconst`, `hΓp0 : Γp 0 = lam`), so
+  --   `hkernel_one` below realizes the case `B = 1` at `m = 0`;
+  -- * one-step evolution: `htransport` (the rational argument principle
+  --   in winding form), fiber cardinality `hshift_card` (= `r.degree`
+  --   away from the single value `f ∞`), sphere readbacks `hreadIf`,
+  --   `hreadInf`, `hΓpcoe`;
+  -- * iterated evolution: the TREE IDENTITY `htree`
+  --     `wind(Γp m, q) = T m q − M m`
+  --   with `T` the backward-tree winding sum (`hT0`/`hTs`) and `M` the
+  --   explicitly recursive pole constant (`hM0`/`hMs`), valid for `q`
+  --   outside the level component avoiding the ≤ m values `f^[j] ∞`;
+  --   and its two-point form `htree_diff` (`M` cancels), so growth of
+  --   the tree-count SPREAD `T m q − T m q'` over admissible pairs at a
+  --   single level forces the kernel via the triangle inequality;
+  -- * packaging (below, already wired into the assembly): `hjulia`.
+  --
+  -- MATHEMATICAL STATUS (do not retrace; see the session analyses):
+  -- * The winding vector of `Γp (m+1)` on complement pieces is a
+  --   ℤ-linear image of that of `Γp m` (transport formula; every finite
+  --   preimage of a level-(m+1) complement point and every pole is a
+  --   level-m complement point, by `fcOrbit_image_eq` and `hinf`).
+  --   Hence total winding death is PERMANENT, and nonvanishing must be
+  --   maintained inductively.
+  -- * At a bad step the covering monodromy of
+  --   `f : fcOrbit m₀ → fcOrbit (m₀+1)` on a `k ≥ 2`-point fiber is
+  --   transitive (connected total space), so some loop downstairs has
+  --   monodromy return time `≥ 2`; backward-lifting an essential loop
+  --   through the covering chain multiplies its FORWARD-readback winding
+  --   by the return times and yields, for every `L`, a level-`(n₁+1)`
+  --   loop `γ_L` whose deep forward image winds `≥ 2^L` — but `γ_L`
+  --   DEPENDS on `L`, while the frozen statement demands ONE loop.
+  -- * For the FIXED loop, the obstruction is H₁-death: `f_*` is
+  --   π₁-injective but not H₁-injective, so the pushed class can become
+  --   a product of commutators at a level with `≥ 2` bounded
+  --   complementary pieces, killing all winding functionals at once.
+  --   Ruling this out for one fixed loop is exactly Sullivan's anchor
+  --   (a critical point inside bounded complementary pieces at
+  --   infinitely many bad levels forcing sign-coherent multiplication),
+  --   which the primary literature proves ONLY for annular components
+  --   (π₁ ≅ ℤ); finite connectivity `≥ 3` is classically handled by
+  --   planar Riemann–Hurwitz χ-division (unformalized), infinite
+  --   connectivity only by the Teichmüller branch.
+  -- * If `π₁(fcOrbit (n₁+1))` is finitely generated, the "dead" classes
+  --   form an increasing chain of proper subgroups whose union cannot
+  --   be the whole (finitely generated) group, so SOME fixed loop stays
+  --   alive at every level; upgrading alive-ness to `∀ B` growth and
+  --   removing the finite-generation hypothesis are the open ends.
+  -- ===================================================================
+  have hkernel_one : ∃ m : ℕ, ∃ q : ℂ,
+      ((q : ℂ̂)) ∉ fcOrbit f U (n₁ + 1 + m) ∧
+      (1 : ℤ) ≤ |windingNumber (Γp m) q| := by
+    refine ⟨0, z₁, hz₁F, ?_⟩
+    rw [hΓp0]
+    exact Int.one_le_abs hlamwind
+  -- PROVEN REDUCTION: unbounded SPREAD of the backward-tree count
+  -- between two admissible points at a single level forces the kernel —
+  -- the pole constant `M m` is common to both points, so by the
+  -- triangle inequality one of the two windings is at least half the
+  -- spread.  This converts the kernel into a purely combinatorial
+  -- statement about the multiplicities of backward trees relative to
+  -- the fixed essential loop `lam` (no winding numbers on the left).
+  have hspread_imp :
+      (∀ B : ℕ, ∃ (m : ℕ) (q q' : ℂ),
+        ((q : ℂ̂)) ∉ fcOrbit f U (n₁ + 1 + m) ∧
+        ((q' : ℂ̂)) ∉ fcOrbit f U (n₁ + 1 + m) ∧
+        (∀ j : ℕ, 1 ≤ j → j ≤ m → ((q : ℂ̂)) ≠ f^[j] ∞) ∧
+        (∀ j : ℕ, 1 ≤ j → j ≤ m → ((q' : ℂ̂)) ≠ f^[j] ∞) ∧
+        (2 * B : ℤ) ≤ |T m q - T m q'|) →
+      ∀ B : ℕ, ∃ m : ℕ, ∃ q : ℂ,
+        ((q : ℂ̂)) ∉ fcOrbit f U (n₁ + 1 + m) ∧
+        (B : ℤ) ≤ |windingNumber (Γp m) q| := by
+    intro hsp B
+    obtain ⟨m, q, q', hq, hq', hqe, hqe', hsprd⟩ := hsp B
+    have hdiff := htree_diff m q q' hq hqe hq' hqe'
+    by_cases hbig : (B : ℤ) ≤ |windingNumber (Γp m) q|
+    · exact ⟨m, q, hq, hbig⟩
+    · refine ⟨m, q', hq', ?_⟩
+      have htri : |windingNumber (Γp m) q - windingNumber (Γp m) q'| ≤
+          |windingNumber (Γp m) q| + |windingNumber (Γp m) q'| :=
+        abs_sub _ _
+      rw [hdiff] at htri
+      linarith
+  have hkernel : ∀ B : ℕ, ∃ m : ℕ, ∃ q : ℂ,
+      ((q : ℂ̂)) ∉ fcOrbit f U (n₁ + 1 + m) ∧
+      (B : ℤ) ≤ |windingNumber (Γp m) q| := by
+    sorry
+  -- ===================================================================
+  -- STEP J (proven): packaging.  A complement point `q` with nonzero
+  -- winding yields a JULIA point `x` with the SAME winding: the
+  -- connected component `E` of `q` in the closed complement lies in the
+  -- winding region of the closed pushed curve (winding is constant on
+  -- `E` and nonzero), hence `E` is bounded and compact; its frontier is
+  -- nonempty and consists of frontier points of the whole complement,
+  -- which chart-read into the Julia set.
+  -- ===================================================================
+  have hjulia : ∀ (m : ℕ) (q : ℂ), ((q : ℂ̂)) ∉ fcOrbit f U (n₁ + 1 + m) →
+      windingNumber (Γp m) q ≠ 0 →
+      ∃ x : ℂ, ((x : ℂ̂)) ∈ JuliaSet f ∧ ((x : ℂ̂)) ∉ fcOrbit f U (n₁ + 1 + m) ∧
+        windingNumber (Γp m) x = windingNumber (Γp m) q := by
+    intro m q hqmem hqw
+    have hVfc : IsFatouComponent f (fcOrbit f U (n₁ + 1 + m)) :=
+      isFatouComponent_fcOrbit (n₁ + 1 + m) hf hd1 hU
+    set F : Set ℂ := {w : ℂ | (w : ℂ̂) ∉ fcOrbit f U (n₁ + 1 + m)} with hFdef
+    set E : Set ℂ := connectedComponentIn F q with hEdef
+    have hqF : q ∈ F := hqmem
+    have hqE : q ∈ E := mem_connectedComponentIn hqF
+    have hEsub : E ⊆ F := connectedComponentIn_subset _ _
+    have hFclosed : IsClosed F :=
+      (hVfc.isOpen.isClosed_compl).preimage OnePoint.continuous_coe
+    have hEclosed : IsClosed E := by
+      rw [hEdef, connectedComponentIn_eq_image hqF]
+      exact hFclosed.isClosedEmbedding_subtypeVal.isClosedMap _
+        isClosed_connectedComponent
+    -- the curve avoids the whole closed complement
+    have hcurveE : ∀ t : unitInterval, Γp m t ∉ E := by
+      intro t ht
+      exact (hEsub ht) (hΓpmem m t)
+    -- winding is the (nonzero) value at `q` throughout the component
+    have hwconstE : ∀ z ∈ E, windingNumber (Γp m) z = windingNumber (Γp m) q := by
+      intro z hz
+      exact windingNumber_eq_of_preconnected (hΓpcl m)
+        isPreconnected_connectedComponentIn hcurveE hz hqE
+    -- the component sits inside the winding region: bounded, compact
+    have hEwr : E ⊆ {z : ℂ | z ∉ Set.range (Γp m) ∧ windingNumber (Γp m) z ≠ 0} := by
+      intro z hz
+      refine ⟨fun hzr => ?_, ?_⟩
+      · obtain ⟨t, ht⟩ := hzr
+        exact hcurveE t (ht ▸ hz)
+      · rw [hwconstE z hz]; exact hqw
+    have hEbdd : Bornology.IsBounded E :=
+      (isBounded_windingRegion (hΓpcl m)).subset hEwr
+    have hEcpt : IsCompact E := Metric.isCompact_of_isClosed_isBounded hEclosed hEbdd
+    -- the frontier of the compact component is nonempty
+    haveI : PreconnectedSpace ℂ := ⟨(convex_univ (𝕜 := ℝ) (E := ℂ)).isPreconnected⟩
+    have hEne : E.Nonempty := ⟨q, hqE⟩
+    have hfrne : (frontier E).Nonempty := by
+      by_contra hemp
+      rw [Set.not_nonempty_iff_eq_empty] at hemp
+      have hopen : IsOpen E := by
+        have h1 : E \ interior E = ∅ := by rw [← hEclosed.frontier_eq]; exact hemp
+        have h2 : interior E = E :=
+          Set.Subset.antisymm interior_subset (Set.diff_eq_empty.mp h1)
+        rw [← h2]; exact isOpen_interior
+      rcases isClopen_iff.mp ⟨hEclosed, hopen⟩ with h | h
+      · exact hEne.ne_empty h
+      · have hub : Bornology.IsBounded (Set.univ : Set ℂ) := h ▸ hEbdd
+        obtain ⟨R, hR⟩ := hub.subset_closedBall 0
+        have := hR (Set.mem_univ ((R + 1 : ℝ) : ℂ))
+        rw [Metric.mem_closedBall, dist_zero_right] at this
+        simp only [Complex.norm_real, Real.norm_eq_abs] at this
+        cases abs_le.mp this with
+        | intro h1 h2 => nlinarith [abs_nonneg R, le_abs_self R]
+    obtain ⟨x, hxfr⟩ := hfrne
+    have hxE : x ∈ E := hEclosed.closure_eq ▸ frontier_subset_closure hxfr
+    -- a frontier point of the component is a frontier point of the whole
+    -- closed complement set (maximality of the component swallows balls)
+    have hxniF : x ∉ interior F := by
+      intro hxint
+      obtain ⟨ε, hε, hball⟩ := Metric.isOpen_iff.mp isOpen_interior x hxint
+      have hballF : Metric.ball x ε ⊆ F := fun y hy => interior_subset (hball hy)
+      have hballE : Metric.ball x ε ⊆ E := by
+        rw [hEdef, connectedComponentIn_eq hxE]
+        exact (convex_ball x ε).isPreconnected.subset_connectedComponentIn
+          (Metric.mem_ball_self hε) hballF
+      exact hxfr.2 ((interior_maximal hballE Metric.isOpen_ball) (Metric.mem_ball_self hε))
+    have hxfrF : x ∈ frontier F := ⟨subset_closure (hEsub hxE), hxniF⟩
+    -- transport the frontier through the coercion into the sphere
+    have hFeq : F = ((↑) : ℂ → ℂ̂) ⁻¹' ((fcOrbit f U (n₁ + 1 + m))ᶜ : Set ℂ̂) := rfl
+    have hfrsub : ((x : ℂ̂)) ∈ frontier ((fcOrbit f U (n₁ + 1 + m))ᶜ : Set ℂ̂) := by
+      have h1 : closure (((↑) : ℂ → ℂ̂) ⁻¹' ((fcOrbit f U (n₁ + 1 + m))ᶜ : Set ℂ̂)) ⊆
+          ((↑) : ℂ → ℂ̂) ⁻¹' closure ((fcOrbit f U (n₁ + 1 + m))ᶜ : Set ℂ̂) :=
+        OnePoint.continuous_coe.closure_preimage_subset _
+      have h2 : ((↑) : ℂ → ℂ̂) ⁻¹' interior ((fcOrbit f U (n₁ + 1 + m))ᶜ : Set ℂ̂)
+          ⊆ interior (((↑) : ℂ → ℂ̂) ⁻¹' ((fcOrbit f U (n₁ + 1 + m))ᶜ : Set ℂ̂)) :=
+        preimage_interior_subset_interior_preimage OnePoint.continuous_coe
+      rw [hFeq] at hxfrF
+      exact ⟨h1 hxfrF.1, fun hint => hxfrF.2 (h2 hint)⟩
+    rw [frontier_compl] at hfrsub
+    exact ⟨x, hVfc.frontier_subset_juliaSet hfrsub, hEsub hxE, hwconstE x hxE⟩
+  -- ===================================================================
+  -- FINAL ASSEMBLY: singleton Julia continua carry the winding growth.
+  -- ===================================================================
+  refine ⟨n₁ + 1, lam, hlamcl, fun t => hlammem t, ?_⟩
+  intro B
+  obtain ⟨m, q, hqmem, hqw⟩ := hkernel (B.natAbs + 1)
+  have hqw0 : windingNumber (Γp m) q ≠ 0 := by
+    intro h0
+    have hle : ((B.natAbs + 1 : ℕ) : ℤ) ≤ 0 := by simpa [h0] using hqw
+    omega
+  obtain ⟨x, hxJ, hxmem, hxw⟩ := hjulia m q hqmem hqw0
+  refine ⟨m, {x}, Set.singleton_nonempty x, isPreconnected_singleton,
+    isCompact_singleton, ⟨x, rfl, hxJ⟩, ?_, ?_, Γp m, hΓpval m, ?_⟩
+  · intro z hz
+    rw [Set.mem_singleton_iff] at hz
+    rw [hz]
+    exact hxmem
+  · intro t hmem'
+    rw [Set.mem_singleton_iff] at hmem'
+    have hx' : Γp m t = x := by rw [hΓpval m t]; exact hmem'
+    exact hxmem (hx' ▸ hΓpmem m t)
+  · intro z hz
+    rw [Set.mem_singleton_iff] at hz
+    subst hz
+    rw [hxw]
+    calc B ≤ (B.natAbs : ℤ) := Int.le_natAbs
+      _ ≤ ((B.natAbs + 1 : ℕ) : ℤ) := by push_cast; omega
+      _ ≤ |windingNumber (Γp m) q| := hqw
 
 set_option maxHeartbeats 400000 in
 /-- **Collapse and confinement contradiction.** Unbounded winding growth of
@@ -3568,14 +4537,14 @@ theorem not_winding_growth {f : ℂ̂ → ℂ̂}
     exact hζJ hζF
 
 /-- **The hard branch of the dichotomy**: a wandering orbit cannot have
-covering steps of fiber count at least two cofinally often. Each such step
-multiplies the modulus of a separating curve family of the (multiply
-connected) target component by the fiber count, and homeomorphic steps
-preserve it, so cofinally many multiple steps drive the modulus of an
-essential separating configuration in the Fatou set beyond every bound —
-producing essential annuli of arbitrarily large modulus separating the
-Julia set, which contradicts the uniform-perfectness-type bound obtained
-from the definite-size Montel expansion at Julia points. -/
+covering steps of fiber count at least two cofinally often. Cofinally many
+multiple steps produce essential loops whose forward image curves acquire
+unboundedly large winding numbers about Julia-meeting complementary
+continua (`exists_winding_growth_of_cofinal_multiple_steps`, Sullivan's
+anchored winding growth), while normality of the iterates on the loop's
+trace collapses those curves and continua to points and confines the
+enclosed regions, contradicting membership of the continuum in the Julia
+set (`not_winding_growth`). -/
 theorem not_cofinal_multiple_steps {f : ℂ̂ → ℂ̂}
     (hf : IsRational f) (hd : 2 ≤ degreeOfRational f)
     {U : Set ℂ̂} (hU : IsFatouComponent f U) (hW : IsWandering f U)
