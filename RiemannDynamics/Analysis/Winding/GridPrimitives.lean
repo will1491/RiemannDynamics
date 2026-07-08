@@ -2409,9 +2409,6 @@ theorem exists_gridPath_join {T : Set ℂ} (hT : IsOpen T)
   · have h := hsnap N
     rwa [hzN] at h
 
-set_option linter.unnecessarySeqFocus false in
-set_option linter.unusedTactic false in
-set_option linter.unreachableTactic false in
 set_option maxHeartbeats 400000 in
 /-- **Essential loops around separated compact complementary pieces.** If a
 compact piece `A` of the closed complement of an open set `T` is metrically
@@ -3146,7 +3143,9 @@ theorem exists_gridLoop_winding_ne_zero {T : Set ℂ} (hT : IsOpen T)
       obtain ⟨him, hre1, hre2⟩ := hseg_h i j w hw
       refine hkey (i, j) (i, j - 1) w hs hn ?_ ?_
       · rw [hsq_mem]
-        refine ⟨⟨hre1, hre2⟩, ?_, ?_⟩ <;> rw [him] <;> push_cast <;> nlinarith
+        refine ⟨⟨hre1, hre2⟩, ?_, ?_⟩ <;> rw [him]
+        push_cast
+        nlinarith
       · rw [hsq_mem]
         refine ⟨⟨hre1, hre2⟩, ?_, ?_⟩ <;> rw [him] <;> push_cast <;> nlinarith
     · -- leftward: from (i,j) = (k+1,l) to (k,l);
@@ -3157,7 +3156,9 @@ theorem exists_gridLoop_winding_ne_zero {T : Set ℂ} (hT : IsOpen T)
       · rw [hsq_mem]
         refine ⟨⟨hre1, hre2⟩, ?_, ?_⟩ <;> rw [him] <;> push_cast <;> nlinarith
       · rw [hsq_mem]
-        refine ⟨⟨hre1, hre2⟩, ?_, ?_⟩ <;> rw [him] <;> push_cast <;> nlinarith
+        refine ⟨⟨hre1, hre2⟩, ?_, ?_⟩ <;> rw [him]
+        push_cast
+        nlinarith
     · -- upward from (i,j) to (i,j+1): S-square (i-1,j) left, (i,j) right
       rw [hk, hl] at hw
       obtain ⟨hre, him1, him2⟩ := hseg_v i j w hw
@@ -3165,14 +3166,18 @@ theorem exists_gridLoop_winding_ne_zero {T : Set ℂ} (hT : IsOpen T)
       · rw [hsq_mem]
         refine ⟨⟨?_, ?_⟩, him1, him2⟩ <;> rw [hre] <;> push_cast <;> nlinarith
       · rw [hsq_mem]
-        refine ⟨⟨?_, ?_⟩, him1, him2⟩ <;> rw [hre] <;> push_cast <;> nlinarith
+        refine ⟨⟨?_, ?_⟩, him1, him2⟩ <;> rw [hre]
+        push_cast
+        nlinarith
     · -- downward: from (i,j) = (k,l+1) to (k,l);
       -- S-square (k,l) right, (k-1,l) left
       rw [hi, hj, segment_symm] at hw
       obtain ⟨hre, him1, him2⟩ := hseg_v k l w hw
       refine hkey (k, l) (k - 1, l) w hs hn ?_ ?_
       · rw [hsq_mem]
-        refine ⟨⟨?_, ?_⟩, him1, him2⟩ <;> rw [hre] <;> push_cast <;> nlinarith
+        refine ⟨⟨?_, ?_⟩, him1, him2⟩ <;> rw [hre]
+        push_cast
+        nlinarith
       · rw [hsq_mem]
         refine ⟨⟨?_, ?_⟩, him1, him2⟩ <;> rw [hre] <;> push_cast <;> nlinarith
   -- ================================================================
@@ -3574,21 +3579,23 @@ theorem exists_gridLoop_winding_ne_zero {T : Set ℂ} (hT : IsOpen T)
     rw [hsq_mem]
     rcases hw with h | h | h | h | h
     · obtain ⟨him, h1, h2⟩ := hseg_h p.1 p.2 w h
-      refine ⟨⟨h1, h2⟩, ?_, ?_⟩ <;> rw [him] <;> push_cast <;> nlinarith
+      refine ⟨⟨h1, h2⟩, ?_, ?_⟩ <;> rw [him]
+      nlinarith
     · obtain ⟨hre, h1, h2⟩ := hseg_v (p.1 + 1) p.2 w (by
-        convert h using 2 <;> simp)
+        convert h using 2)
       refine ⟨⟨?_, ?_⟩, h1, h2⟩ <;> rw [hre] <;> push_cast <;> nlinarith
     · rw [segment_symm] at h
       obtain ⟨him, h1, h2⟩ := hseg_h p.1 (p.2 + 1) w (by
-        convert h using 2 <;> simp)
+        convert h using 2)
       refine ⟨⟨h1, h2⟩, ?_, ?_⟩ <;> rw [him] <;> push_cast <;> nlinarith
     · rw [segment_symm] at h
       obtain ⟨hre, h1, h2⟩ := hseg_v p.1 p.2 w h
-      refine ⟨⟨?_, ?_⟩, h1, h2⟩ <;> rw [hre] <;> push_cast <;> nlinarith
+      refine ⟨⟨?_, ?_⟩, h1, h2⟩ <;> rw [hre]
+      nlinarith
     · have hwp : w = gridPoint δ p := h
       rw [hwp]
       rw [hgre, hgim]  -- rewrites inside the goal via hsq_mem shape
-      refine ⟨⟨le_refl _, ?_⟩, le_refl _, ?_⟩ <;> push_cast <;> nlinarith
+      refine ⟨⟨le_refl _, ?_⟩, le_refl _, ?_⟩ <;> nlinarith
   -- Center coordinates of a square.
   have hcen_re : ∀ p : ℤ × ℤ, (gridSquareCenter δ p).re = δ * p.1 + δ / 2 := by
     intro p
@@ -3611,7 +3618,7 @@ theorem exists_gridLoop_winding_ne_zero {T : Set ℂ} (hT : IsOpen T)
   have hcen_mem : ∀ p : ℤ × ℤ, gridSquareCenter δ p ∈ gridSquare δ p := by
     intro p
     rw [hsq_mem, hcen_re, hcen_im]
-    refine ⟨⟨?_, ?_⟩, ?_, ?_⟩ <;> push_cast <;> nlinarith
+    refine ⟨⟨?_, ?_⟩, ?_, ?_⟩ <;> nlinarith
   -- Points outside the closed square have winding zero.
   have hsq_out : ∀ p : ℤ × ℤ, ∀ q : ℂ, q ∉ gridSquare δ p →
       windingNumber (gridLoopCurve δ (sqB p)) q = 0 := by
