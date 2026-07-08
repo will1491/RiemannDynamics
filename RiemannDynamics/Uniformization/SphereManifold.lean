@@ -262,17 +262,4 @@ instance isManifoldSphere : IsManifold 𝓘(ℂ) ω ℂ̂ := by
       change (w⁻¹)⁻¹ = w
       rw [inv_inv]
 
-/-! ## Consequences
-
-The sphere is a compact, connected, second-countable analytic complex curve;
-the instances below are synthesized from the atlas together with the spherical
-metric of `NormalFamilies/Spherical.lean`. -/
-
-open scoped ContDiff in
-example : IsManifold 𝓘(ℂ) 1 ℂ̂ := inferInstance
-example : CompactSpace ℂ̂ := inferInstance
-example : T2Space ℂ̂ := inferInstance
-example : SecondCountableTopology ℂ̂ := inferInstance
-example : ConnectedSpace ℂ̂ := inferInstance
-
 end RiemannDynamics

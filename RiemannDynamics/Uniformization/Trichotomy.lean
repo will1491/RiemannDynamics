@@ -160,6 +160,15 @@ theorem uniformization_trichotomy (M : Type*) [TopologicalSpace M]
     Nonempty (M ≃ₘ^ω⟮𝓘(ℂ), 𝓘(ℂ)⟯ ↥unitDiscOpens) ∨
       Nonempty (M ≃ₘ^ω⟮𝓘(ℂ), 𝓘(ℂ)⟯ ℂ) ∨
         Nonempty (M ≃ₘ^ω⟮𝓘(ℂ), 𝓘(ℂ)⟯ ℂ̂) := by
-  sorry
+  obtain ⟨U, ⟨e⟩⟩ := exists_diffeomorph_opens_sphere_of_simplyConnected M
+  have hsc : SimplyConnectedSpace ↥U :=
+    simplyConnectedSpace_of_homeomorph e.toHomeomorph inferInstance
+  have hconn : ConnectedSpace ↥U :=
+    e.toHomeomorph.surjective.connectedSpace e.toHomeomorph.continuous
+  have hUc : IsConnected (U : Set ℂ̂) := isConnected_iff_connectedSpace.mpr hconn
+  rcases sphere_domain_trichotomy U hUc hsc with h | h | h
+  · exact Or.inl (h.map fun f => e.trans f)
+  · exact Or.inr (Or.inl (h.map fun f => e.trans f))
+  · exact Or.inr (Or.inr (h.map fun f => e.trans f))
 
 end RiemannDynamics
