@@ -1006,6 +1006,22 @@ theorem exists_gridPath_join {T : Set ℂ} (hT : IsOpen T)
   · have h := hsnap N
     rwa [hzN] at h
 
+/-- **Essential loops around separated compact complementary pieces.** If a
+compact piece `A` of the closed complement of an open set `T` is metrically
+separated from the rest of the complement, then some closed curve in `T`
+has nonzero winding number about any prescribed point of `A`: the boundary
+of the union of small grid squares meeting `A` consists of grid edges lying
+in `T`, and by the per-edge principal-logarithm increment linearity the
+total winding of its boundary cycles about the point is one, so some cycle
+is essential. -/
+theorem exists_gridLoop_winding_ne_zero {T : Set ℂ} (hT : IsOpen T)
+    {z₀ : ℂ} (A : Set ℂ) (ε : ℝ) (hε : 0 < ε) (hA : IsCompact A)
+    (hzA : z₀ ∈ A) (hAT : A ⊆ Tᶜ)
+    (hsep : ∀ w ∈ Tᶜ, w ∉ A → ∀ a ∈ A, ε ≤ dist w a) :
+    ∃ γ : C(unitInterval, ℂ), γ 0 = γ 1 ∧ (∀ t : unitInterval, γ t ∈ T) ∧
+      windingNumber γ z₀ ≠ 0 := by
+  sorry
+
 /-- **Primitives exist on domains with no bounded complementary
 components.** The grid integral from a basepoint is path-independent by the
 vanishing of grid-loop integrals, defines a function on each component, and
