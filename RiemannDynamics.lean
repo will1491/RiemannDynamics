@@ -62,6 +62,8 @@ import RiemannDynamics.Analysis.Symmetrization.Rearrangement1D
 import RiemannDynamics.Analysis.WeakLimits.JacobianWeakContinuity
 import RiemannDynamics.Analysis.WeakLimits.WeakCompactness
 import RiemannDynamics.Analysis.WeakLimits.WeakL2Limit
+import RiemannDynamics.Analysis.Winding.Basic
+import RiemannDynamics.Analysis.Winding.GridPrimitives
 
 import RiemannDynamics.Basic
 

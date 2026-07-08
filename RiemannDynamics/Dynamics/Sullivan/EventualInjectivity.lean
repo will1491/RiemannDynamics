@@ -5,6 +5,10 @@ Authors: Will (Ziang) Li
 -/
 import RiemannDynamics.Dynamics.FatouComponents.Periodic
 import RiemannDynamics.Dynamics.JuliaFatou.RepellingDensity
+import RiemannDynamics.Analysis.Winding.GridPrimitives
+import RMT4.Main
+import Mathlib.Topology.Homotopy.Lifting
+import Mathlib.AlgebraicTopology.FundamentalGroupoid.SimplyConnected
 
 /-!
 # Eventual injectivity on a wandering component (interface)
@@ -668,6 +672,421 @@ theorem injOn_iterate_of_tail_injective {f : ℂ̂ → ℂ̂}
         hstep (N + n) (Nat.le_add_right N n) hxn hyn hxy
       exact ih hx hy hiter
 
+/-- **Simple connectivity from unbounded complementary components** (the
+Riemann-mapping bridge). An open connected proper subset of the plane all of
+whose complementary components are unbounded is simply connected: it has
+primitives (`has_primitives_of_unbounded_components`), so the vendored
+Riemann mapping theorem provides a holomorphic bijection onto the unit ball;
+the open mapping theorem upgrades it to a homeomorphism; the ball is convex,
+hence contractible, hence simply connected; and simple connectivity
+transports along homotopy equivalences. -/
+theorem simplyConnectedSpace_of_unbounded_components {T : Set ℂ}
+    (hT : IsOpen T) (hconn : IsConnected T) (hne : T ≠ Set.univ)
+    (hcompl : ∀ z ∉ T, ¬Bornology.IsBounded (connectedComponentIn Tᶜ z)) :
+    SimplyConnectedSpace T := by
+  -- Primitives exist on `T`, so the vendored Riemann mapping theorem applies.
+  obtain ⟨f, hdf, hinj, himg⟩ :=
+    RMT hT hconn hne (has_primitives_of_unbounded_components hT hcompl)
+  -- `f` maps open subsets of `T` to open sets (open mapping theorem; the
+  -- constant alternative contradicts injectivity on the nonempty open `T`).
+  have hopen : ∀ s ⊆ T, IsOpen s → IsOpen (f '' s) := by
+    rcases (hdf.analyticOnNhd hT).is_constant_or_isOpen hconn.isPreconnected with ⟨w, hw⟩ | h
+    · exfalso
+      obtain ⟨z₀, hz₀⟩ := hconn.nonempty
+      have hmem : T ∩ {z₀}ᶜ ∈ 𝓝[≠] z₀ :=
+        Filter.inter_mem (mem_nhdsWithin_of_mem_nhds (hT.mem_nhds hz₀))
+          self_mem_nhdsWithin
+      obtain ⟨y, hyT, hyz⟩ := Filter.nonempty_of_mem hmem
+      exact Set.mem_compl_singleton_iff.mp hyz
+        (hinj hyT hz₀ ((hw _ hyT).trans (hw _ hz₀).symm))
+    · exact h
+  -- Package `f` as a map between the subtypes `↥T` and `↥(ball 0 1)`.
+  have hmemB : ∀ x : T, f x ∈ Metric.ball (0 : ℂ) 1 := fun x => by
+    rw [← himg]; exact Set.mem_image_of_mem f x.2
+  let F : T → Metric.ball (0 : ℂ) 1 := fun x => ⟨f x, hmemB x⟩
+  have hFinj : Function.Injective F := fun x y hxy =>
+    Subtype.ext (hinj x.2 y.2 (congrArg Subtype.val hxy))
+  have hFsurj : Function.Surjective F := by
+    rintro ⟨w, hw⟩
+    rw [← himg] at hw
+    obtain ⟨x, hxT, hfx⟩ := hw
+    exact ⟨⟨x, hxT⟩, Subtype.ext hfx⟩
+  have hFcont : Continuous F := hdf.continuousOn.restrict.subtype_mk hmemB
+  have hFopen : IsOpenMap F := by
+    intro V hV
+    have hval : IsOpen (Subtype.val '' V) := hT.isOpenMap_subtype_val V hV
+    have hsub : Subtype.val '' V ⊆ T := by rintro _ ⟨x, -, rfl⟩; exact x.2
+    have h1 : IsOpen (f '' (Subtype.val '' V)) := hopen _ hsub hval
+    have h2 : F '' V = Subtype.val ⁻¹' (f '' (Subtype.val '' V)) := by
+      ext w
+      constructor
+      · rintro ⟨x, hxV, rfl⟩
+        exact ⟨x, ⟨x, hxV, rfl⟩, rfl⟩
+      · rintro ⟨-, ⟨x, hxV, rfl⟩, hfx⟩
+        exact ⟨x, hxV, Subtype.ext hfx⟩
+    rw [h2]
+    exact h1.preimage continuous_subtype_val
+  -- Upgrade to a homeomorphism `↥T ≃ₜ ↥(ball 0 1)`.
+  have hhomeo : (T : Set ℂ) ≃ₜ (Metric.ball (0 : ℂ) 1 : Set ℂ) :=
+    (Equiv.ofBijective F ⟨hFinj, hFsurj⟩).toHomeomorphOfContinuousOpen hFcont hFopen
+  -- The ball is convex, hence contractible, hence simply connected;
+  -- transport along the homotopy equivalence induced by the homeomorphism.
+  haveI : ContinuousSMul ℝ ℂ := by
+    refine ⟨?_⟩
+    have h : (fun p : ℝ × ℂ => p.1 • p.2) = fun p : ℝ × ℂ => (p.1 : ℂ) * p.2 := by
+      funext p; exact Complex.real_smul
+    rw [h]
+    exact (Complex.continuous_ofReal.comp continuous_fst).mul continuous_snd
+  haveI : ContractibleSpace (Metric.ball (0 : ℂ) 1) :=
+    (convex_ball (0 : ℂ) 1).contractibleSpace (Metric.nonempty_ball.mpr one_pos)
+  exact hhomeo.toHomotopyEquiv.simplyConnectedSpace
+
+/-- Transfer of complement structure to the sphere: for a Fatou-component
+avoiding `∞`, disconnectedness of the sphere complement is equivalent to the
+existence of a bounded complementary component of its finite part. -/
+theorem exists_bounded_component_of_not_isConnected_compl {U : Set ℂ̂}
+    (hU : IsOpen U) (hUne : U.Nonempty) (hinf : ∞ ∉ U)
+    (hnc : ¬IsConnected (Uᶜ : Set ℂ̂)) :
+    ∃ z : ℂ, ((z : ℂ̂) ∉ U) ∧
+      Bornology.IsBounded
+        (connectedComponentIn {w : ℂ | (w : ℂ̂) ∉ U} z) := by
+  classical
+  have hinfc : (∞ : ℂ̂) ∈ Uᶜ := hinf
+  -- There is a point of `Uᶜ` outside the connected component of `∞` in `Uᶜ`.
+  have hx : ∃ x ∈ (Uᶜ : Set ℂ̂), x ∉ connectedComponentIn (Uᶜ : Set ℂ̂) ∞ := by
+    by_contra h
+    push Not at h
+    refine hnc ?_
+    have heq : (Uᶜ : Set ℂ̂) = connectedComponentIn (Uᶜ : Set ℂ̂) ∞ :=
+      Set.Subset.antisymm h (connectedComponentIn_subset _ _)
+    rw [heq]
+    exact isConnected_connectedComponentIn_iff.mpr hinfc
+  obtain ⟨x, hxc, hxcc⟩ := hx
+  induction x using OnePoint.rec with
+  | infty => exact absurd (mem_connectedComponentIn hinfc) hxcc
+  | coe z =>
+    refine ⟨z, hxc, ?_⟩
+    by_contra hub
+    set C : Set ℂ := connectedComponentIn {w : ℂ | (w : ℂ̂) ∉ U} z with hCdef
+    have hzK : z ∈ {w : ℂ | (w : ℂ̂) ∉ U} := hxc
+    have hCz : z ∈ C := mem_connectedComponentIn hzK
+    have hCpre : IsPreconnected C := isPreconnected_connectedComponentIn
+    have hCsub : C ⊆ {w : ℂ | (w : ℂ̂) ∉ U} := by
+      rw [hCdef]; exact connectedComponentIn_subset _ _
+    -- the image of `C` on the sphere and its closure are preconnected
+    have himg : IsPreconnected ((fun w : ℂ => (w : ℂ̂)) '' C) :=
+      hCpre.image _ OnePoint.continuous_coe.continuousOn
+    have hclpre : IsPreconnected (closure ((fun w : ℂ => (w : ℂ̂)) '' C)) := himg.closure
+    -- the closure stays inside the closed set `Uᶜ`
+    have hsubUc : ((fun w : ℂ => (w : ℂ̂)) '' C) ⊆ Uᶜ := by
+      rintro _ ⟨w, hwC, rfl⟩
+      exact hCsub hwC
+    have hclsub : closure ((fun w : ℂ => (w : ℂ̂)) '' C) ⊆ Uᶜ :=
+      hU.isClosed_compl.closure_subset_iff.mpr hsubUc
+    -- unboundedness of `C` forces `∞` into the closure of its image
+    have hinfcl : (∞ : ℂ̂) ∈ closure ((fun w : ℂ => (w : ℂ̂)) '' C) := by
+      rw [mem_closure_iff]
+      intro o ho hoinf
+      have hcompact : IsCompact (((fun w : ℂ => (w : ℂ̂)) ⁻¹' o)ᶜ) :=
+        ((OnePoint.isOpen_iff_of_mem' hoinf).mp ho).1
+      have hbdd : Bornology.IsBounded (((fun w : ℂ => (w : ℂ̂)) ⁻¹' o)ᶜ) :=
+        hcompact.isBounded
+      have hns : ¬ C ⊆ ((fun w : ℂ => (w : ℂ̂)) ⁻¹' o)ᶜ :=
+        fun hsub => hub (hbdd.subset hsub)
+      obtain ⟨w, hwC, hwo⟩ := Set.not_subset.mp hns
+      rw [Set.mem_compl_iff, not_not] at hwo
+      exact ⟨(w : ℂ̂), hwo, ⟨w, hwC, rfl⟩⟩
+    -- maximality of the component of `∞` swallows the closure, contradiction
+    have hzcc : (z : ℂ̂) ∈ connectedComponentIn (Uᶜ : Set ℂ̂) ∞ :=
+      hclpre.subset_connectedComponentIn hinfcl hclsub (subset_closure ⟨z, hCz, rfl⟩)
+    exact hxcc hzcc
+
+/-- **Degree one over a simply connected target.** A component step whose
+target component is simply connected has fiber count one: package the
+covering records as a covering map of subtypes, lift the identity through it
+(unique lifting over simply connected bases), and observe that the image of
+the section is clopen in the connected source. -/
+theorem fiberCount_eq_one_of_simplyConnected {f : ℂ̂ → ℂ̂}
+    (hf : IsRational f) (hd : 2 ≤ degreeOfRational f)
+    {U : Set ℂ̂} (hU : IsFatouComponent f U) (n : ℕ)
+    (hinf : ∞ ∉ fcOrbit f U n)
+    (hcrit : ∀ z : ℂ, ((z : ℂ̂) ∈ fcOrbit f U n) →
+      deriv (fun x : ℂ => chartFiniteMap (f ((x : ℂ̂)))) z ≠ 0)
+    (hsc : SimplyConnectedSpace (fcOrbit f U (n + 1) : Set ℂ̂))
+    {k : ℕ} (hk : ∀ w ∈ fcOrbit f U (n + 1),
+      (f ⁻¹' {w} ∩ fcOrbit f U n).ncard = k) :
+    k = 1 := by
+  sorry
+
+/-- **The separation form of the covering dichotomy**: a component step of
+fiber count at least two has a target whose sphere complement is
+disconnected. Otherwise the finite part of the target would have only
+unbounded complementary components, hence be simply connected by the
+Riemann-mapping bridge, forcing fiber count one. -/
+theorem not_isConnected_compl_of_multiple_step {f : ℂ̂ → ℂ̂}
+    (hf : IsRational f) (hd : 2 ≤ degreeOfRational f)
+    {U : Set ℂ̂} (hU : IsFatouComponent f U) (n : ℕ)
+    (hinf : ∞ ∉ fcOrbit f U n) (hinf' : ∞ ∉ fcOrbit f U (n + 1))
+    (hcrit : ∀ z : ℂ, ((z : ℂ̂) ∈ fcOrbit f U n) →
+      deriv (fun x : ℂ => chartFiniteMap (f ((x : ℂ̂)))) z ≠ 0)
+    {k : ℕ} (hk2 : 2 ≤ k) (hk : ∀ w ∈ fcOrbit f U (n + 1),
+      (f ⁻¹' {w} ∩ fcOrbit f U n).ncard = k) :
+    ¬IsConnected ((fcOrbit f U (n + 1))ᶜ : Set ℂ̂) := by
+  classical
+  intro hcon
+  have hd1 : 1 ≤ degreeOfRational f := le_trans one_le_two hd
+  set W : Set ℂ̂ := fcOrbit f U (n + 1) with hWdef
+  have hWfc : IsFatouComponent f W := isFatouComponent_fcOrbit (n + 1) hf hd1 hU
+  have hWopen : IsOpen W := hWfc.isOpen
+  have hWconn : IsConnected W := hWfc.isConnected
+  -- `W` avoids `∞`, hence lies in the range of the coercion.
+  have hWrange : W ⊆ Set.range (fun w : ℂ => (w : ℂ̂)) := by
+    intro w hw
+    by_contra hnr
+    have hweq : w = ∞ := OnePoint.notMem_range_coe_iff.mp hnr
+    rw [hweq] at hw
+    exact hinf' hw
+  -- The finite part of the target component.
+  set T : Set ℂ := (fun w : ℂ => (w : ℂ̂)) ⁻¹' W with hTdef
+  have himg : (fun w : ℂ => (w : ℂ̂)) '' T = W :=
+    Set.image_preimage_eq_of_subset hWrange
+  have hTopen : IsOpen T := hWopen.preimage OnePoint.continuous_coe
+  have hTne : T.Nonempty := by
+    obtain ⟨w, hw⟩ := hWfc.nonempty
+    obtain ⟨z0, rfl⟩ := hWrange hw
+    exact ⟨z0, hw⟩
+  have hTpre : IsPreconnected T := by
+    have h1 : IsPreconnected ((fun w : ℂ => (w : ℂ̂)) '' T) := by
+      rw [himg]
+      exact hWconn.isPreconnected
+    exact (OnePoint.isOpenEmbedding_coe.isInducing.isPreconnected_image).mp h1
+  have hTconn : IsConnected T := ⟨hTne, hTpre⟩
+  -- The finite part is proper: the (infinite) Julia set misses `W`.
+  have hTneq : T ≠ Set.univ := by
+    intro hTuniv
+    have hWeq : W = Set.range (fun w : ℂ => (w : ℂ̂)) := by
+      rw [← himg, hTuniv, Set.image_univ]
+    have hJsub : JuliaSet f ⊆ {∞} := by
+      intro x hx
+      have hxW : x ∉ W := fun hxW => hx (hWfc.subset_fatouSet hxW)
+      rw [hWeq] at hxW
+      rw [Set.mem_singleton_iff]
+      exact OnePoint.notMem_range_coe_iff.mp hxW
+    exact juliaSet_infinite hf hd ((Set.finite_singleton ∞).subset hJsub)
+  -- Šura-Bura: every complementary component of `T` in the plane is
+  -- unbounded, else a clopen separation of `Wᶜ` on the sphere appears.
+  have hcompl : ∀ z ∉ T, ¬Bornology.IsBounded (connectedComponentIn Tᶜ z) := by
+    intro z hzT hbdd
+    have hzF : z ∈ (Tᶜ : Set ℂ) := hzT
+    have hzC : z ∈ connectedComponentIn Tᶜ z := mem_connectedComponentIn hzF
+    obtain ⟨R, hCR⟩ := hbdd.subset_ball (0 : ℂ)
+    have hFclosed : IsClosed (Tᶜ : Set ℂ) := hTopen.isClosed_compl
+    -- the compact truncation of the complement
+    set K : Set ℂ := Tᶜ ∩ Metric.closedBall (0 : ℂ) R with hKdef
+    have hKcomp : IsCompact K :=
+      (isCompact_closedBall (0 : ℂ) R).inter_left hFclosed
+    have hzK : z ∈ K := ⟨hzF, Metric.ball_subset_closedBall (hCR hzC)⟩
+    have hCsubK : connectedComponentIn Tᶜ z ⊆ K := fun w hw =>
+      ⟨connectedComponentIn_subset _ _ hw,
+        Metric.ball_subset_closedBall (hCR hw)⟩
+    -- the bounded component is a component of the truncation
+    have hCeq : connectedComponentIn K z = connectedComponentIn Tᶜ z := by
+      apply Set.Subset.antisymm
+      · exact connectedComponentIn_mono z Set.inter_subset_left
+      · exact isPreconnected_connectedComponentIn.subset_connectedComponentIn
+          hzC hCsubK
+    haveI hKcs : CompactSpace ↥K := isCompact_iff_compactSpace.mp hKcomp
+    set z' : ↥K := ⟨z, hzK⟩ with hz'def
+    have hcc : Subtype.val '' connectedComponent z' =
+        connectedComponentIn Tᶜ z := by
+      rw [hz'def, ← connectedComponentIn_eq_image hzK]
+      exact hCeq
+    -- the shell of the truncation, inside the subtype
+    set E : Set ↥K := Subtype.val ⁻¹' (Metric.ball (0 : ℂ) R)ᶜ with hEdef
+    have hEclosed : IsClosed E :=
+      (Metric.isOpen_ball.isClosed_compl).preimage continuous_subtype_val
+    have hEcomp : IsCompact E := hEclosed.isCompact
+    -- the connected component of `z'` misses the shell
+    have hccE : connectedComponent z' ∩ E = ∅ := by
+      rw [Set.eq_empty_iff_forall_notMem]
+      rintro w ⟨hwc, hwE⟩
+      have hwC : (w : ℂ) ∈ connectedComponentIn Tᶜ z := by
+        rw [← hcc]
+        exact ⟨w, hwc, rfl⟩
+      exact hwE (hCR hwC)
+    -- Šura-Bura in the compact subtype: finitely many clopen neighbourhoods
+    -- of `z'` already miss the shell
+    have hdisj : E ∩ ⋂ (s : {s : Set ↥K // IsClopen s ∧ z' ∈ s}),
+        (s : Set ↥K) = ∅ := by
+      rw [← connectedComponent_eq_iInter_isClopen z', Set.inter_comm]
+      exact hccE
+    obtain ⟨u, hu⟩ := hEcomp.elim_finite_subfamily_closed
+      (fun s : {s : Set ↥K // IsClopen s ∧ z' ∈ s} => (s : Set ↥K))
+      (fun s => s.2.1.isClosed) hdisj
+    have hu' : E ∩ ⋂ s ∈ u, (s : Set ↥K) = ∅ := hu
+    set A' : Set ↥K := ⋂ s ∈ u, (s : Set ↥K) with hA'def
+    have hA'clopen : IsClopen A' := isClopen_biInter_finset (fun s _ => s.2.1)
+    have hz'A' : z' ∈ A' := Set.mem_iInter₂.mpr (fun s _ => s.2.2)
+    -- the corresponding compact subset of the plane
+    have hAcomp : IsCompact (Subtype.val '' A') :=
+      (hA'clopen.isClosed.isCompact).image continuous_subtype_val
+    have hzA : z ∈ Subtype.val '' A' := ⟨z', hz'A', rfl⟩
+    have hAball : Subtype.val '' A' ⊆ Metric.ball (0 : ℂ) R := by
+      rintro _ ⟨w, hwA', rfl⟩
+      by_contra hnb
+      have hwEmem : w ∈ E := hnb
+      have hcontra : w ∈ E ∩ A' := ⟨hwEmem, hwA'⟩
+      rw [hu'] at hcontra
+      exact hcontra
+    -- `A` is the trace on `Tᶜ` of an open subset of the ball
+    obtain ⟨O₁, hO₁open, hO₁⟩ :=
+      Topology.IsInducing.subtypeVal.isOpen_iff.mp hA'clopen.isOpen
+    have hAeq : Subtype.val '' A' = Tᶜ ∩ (O₁ ∩ Metric.ball (0 : ℂ) R) := by
+      apply Set.Subset.antisymm
+      · rintro _ ⟨w, hwA', rfl⟩
+        refine ⟨w.2.1, ?_, hAball ⟨w, hwA', rfl⟩⟩
+        have hw' : w ∈ Subtype.val ⁻¹' O₁ := by rw [hO₁]; exact hwA'
+        exact hw'
+      · rintro a ⟨haF, haO₁, haB⟩
+        have haK : a ∈ K := ⟨haF, Metric.ball_subset_closedBall haB⟩
+        have haA' : (⟨a, haK⟩ : ↥K) ∈ A' := by
+          rw [← hO₁]
+          exact haO₁
+        exact ⟨⟨a, haK⟩, haA', rfl⟩
+    -- transfer the clopen trace to the sphere complement `Wᶜ`
+    haveI hpc : PreconnectedSpace ↥(Wᶜ : Set ℂ̂) :=
+      Subtype.preconnectedSpace hcon.isPreconnected
+    have hAscomp : IsCompact ((fun w : ℂ => (w : ℂ̂)) '' (Subtype.val '' A')) :=
+      hAcomp.image OnePoint.continuous_coe
+    have hAsubClosed : IsClosed (Subtype.val ⁻¹'
+        ((fun w : ℂ => (w : ℂ̂)) '' (Subtype.val '' A')) : Set ↥(Wᶜ : Set ℂ̂)) :=
+      hAscomp.isClosed.preimage continuous_subtype_val
+    have hOs_open : IsOpen ((fun w : ℂ => (w : ℂ̂)) ''
+        (O₁ ∩ Metric.ball (0 : ℂ) R)) :=
+      OnePoint.isOpenEmbedding_coe.isOpenMap _
+        (hO₁open.inter Metric.isOpen_ball)
+    have hAsubEq : (Subtype.val ⁻¹'
+        ((fun w : ℂ => (w : ℂ̂)) '' (Subtype.val '' A')) : Set ↥(Wᶜ : Set ℂ̂)) =
+        Subtype.val ⁻¹'
+          ((fun w : ℂ => (w : ℂ̂)) '' (O₁ ∩ Metric.ball (0 : ℂ) R)) := by
+      ext x
+      simp only [Set.mem_preimage]
+      constructor
+      · rintro ⟨a, haA, hax⟩
+        rw [hAeq] at haA
+        exact ⟨a, haA.2, hax⟩
+      · rintro ⟨a, haO, hax⟩
+        have haT : a ∈ (Tᶜ : Set ℂ) := by
+          intro haT'
+          have hxW : (x : ℂ̂) ∈ (Wᶜ : Set ℂ̂) := x.2
+          rw [← hax] at hxW
+          exact hxW haT'
+        rw [hAeq]
+        exact ⟨a, ⟨haT, haO⟩, hax⟩
+    have hAsubOpen : IsOpen (Subtype.val ⁻¹'
+        ((fun w : ℂ => (w : ℂ̂)) '' (Subtype.val '' A')) : Set ↥(Wᶜ : Set ℂ̂)) := by
+      rw [hAsubEq]
+      exact hOs_open.preimage continuous_subtype_val
+    have hclopen : IsClopen (Subtype.val ⁻¹'
+        ((fun w : ℂ => (w : ℂ̂)) '' (Subtype.val '' A')) : Set ↥(Wᶜ : Set ℂ̂)) :=
+      ⟨hAsubClosed, hAsubOpen⟩
+    -- a clopen subset of the preconnected `Wᶜ` is empty or everything;
+    -- both options fail
+    rcases isClopen_iff.mp hclopen with hempty | huniv
+    · have hzW : ((z : ℂ̂)) ∈ (Wᶜ : Set ℂ̂) := hzF
+      have hmem : (⟨(z : ℂ̂), hzW⟩ : ↥(Wᶜ : Set ℂ̂)) ∈ (Subtype.val ⁻¹'
+          ((fun w : ℂ => (w : ℂ̂)) '' (Subtype.val '' A')) : Set ↥(Wᶜ : Set ℂ̂)) :=
+        ⟨z, hzA, rfl⟩
+      rw [hempty] at hmem
+      exact hmem
+    · have hinfW : (∞ : ℂ̂) ∈ (Wᶜ : Set ℂ̂) := hinf'
+      have hmem : (⟨∞, hinfW⟩ : ↥(Wᶜ : Set ℂ̂)) ∈ (Subtype.val ⁻¹'
+          ((fun w : ℂ => (w : ℂ̂)) '' (Subtype.val '' A')) : Set ↥(Wᶜ : Set ℂ̂)) := by
+        rw [huniv]
+        exact Set.mem_univ _
+      exact OnePoint.infty_notMem_image_coe hmem
+  -- The Riemann-mapping bridge gives simple connectivity of the finite part,
+  -- which transfers to the sphere component along the open embedding.
+  have hsc : SimplyConnectedSpace T :=
+    simplyConnectedSpace_of_unbounded_components hTopen hTconn hTneq hcompl
+  have hscW : SimplyConnectedSpace (W : Set ℂ̂) := by
+    have h1 : IsSimplyConnected ((fun w : ℂ => (w : ℂ̂)) '' T) :=
+      (OnePoint.isOpenEmbedding_coe.isEmbedding.isSimplyConnected_image).mpr hsc
+    rw [himg] at h1
+    exact h1.simplyConnectedSpace
+  -- Degree one over a simply connected target contradicts `2 ≤ k`.
+  have hk1 : k = 1 :=
+    fiberCount_eq_one_of_simplyConnected hf hd hU n hinf hcrit hscW hk
+  omega
+
+/-- **Normal limits on a wandering orbit are constant**: a locally uniform
+subsequential limit of the iterates on a wandering Fatou component has
+image of measure zero (the orbit components are pairwise disjoint, so their
+spherical areas are summable), and a nonconstant holomorphic map has open
+image. -/
+theorem eventually_constant_limit_of_wandering {f : ℂ̂ → ℂ̂}
+    (hf : IsRational f) (hd : 2 ≤ degreeOfRational f)
+    {U : Set ℂ̂} (hU : IsFatouComponent f U) (hW : IsWandering f U)
+    {φ : ℕ → ℕ} (hφ : StrictMono φ) {g : ℂ̂ → ℂ̂} {K : Set ℂ̂}
+    (hK : IsCompact K) (hKU : K ⊆ U)
+    (hlim : TendstoLocallyUniformlyOn (fun j => f^[φ j]) g Filter.atTop
+      (interior K)) :
+    ∀ x ∈ interior K, ∀ y ∈ interior K,
+      connectedComponentIn (interior K) x =
+        connectedComponentIn (interior K) y → g x = g y := by
+  sorry
+
+/-- **Winding growth along cofinal multiple steps** (the anchoring
+argument). If cofinally many component steps of the wandering orbit have
+fiber count at least two, then — anchored at a critical point around which
+infinitely many of the multiply connected orbit components nest — there is
+an essential loop in an orbit component whose forward image curves acquire
+unboundedly large winding numbers about every point of a connected
+complementary continuum of the ambient component, that continuum meeting the
+Julia set. -/
+theorem exists_winding_growth_of_cofinal_multiple_steps {f : ℂ̂ → ℂ̂}
+    (hf : IsRational f) (hd : 2 ≤ degreeOfRational f)
+    {U : Set ℂ̂} (hU : IsFatouComponent f U) (hW : IsWandering f U)
+    (hinf : ∀ n : ℕ, ∞ ∉ fcOrbit f U n)
+    (hcrit : ∀ n : ℕ, ∀ z : ℂ, ((z : ℂ̂) ∈ fcOrbit f U n) →
+      deriv (fun x : ℂ => chartFiniteMap (f ((x : ℂ̂)))) z ≠ 0)
+    (hbad : ∀ N : ℕ, ∃ n : ℕ, N ≤ n ∧ ∃ k : ℕ, 2 ≤ k ∧
+      ∀ w ∈ fcOrbit f U (n + 1),
+        (f ⁻¹' {w} ∩ fcOrbit f U n).ncard = k) :
+    ∃ (N₀ : ℕ) (γ : C(unitInterval, ℂ)), γ 0 = γ 1 ∧
+      (∀ t : unitInterval, ((γ t : ℂ̂)) ∈ fcOrbit f U N₀) ∧
+      ∀ B : ℤ, ∃ m : ℕ, ∃ C : Set ℂ,
+        C.Nonempty ∧ IsPreconnected C ∧ IsCompact C ∧
+        (∃ z ∈ C, ((z : ℂ̂)) ∈ JuliaSet f) ∧
+        (∀ z ∈ C, ((z : ℂ̂)) ∉ fcOrbit f U (N₀ + m)) ∧
+        (∀ t : unitInterval, ((chartFiniteMap (f^[m] ((γ t : ℂ̂))) : ℂ)) ∉ C) ∧
+        ∃ Γ : C(unitInterval, ℂ), (∀ t : unitInterval, Γ t = chartFiniteMap (f^[m] ((γ t : ℂ̂)))) ∧
+          ∀ z ∈ C, B ≤ |windingNumber Γ z| := by
+  sorry
+
+/-- **Collapse and confinement contradiction.** Unbounded winding growth of
+the iterated image curves about Julia-meeting continua is impossible:
+normality of the iterates on the loop's compact trace makes subsequential
+limits constant on the wandering orbit, winding stability then collapses the
+continua and the curves to a common point, the maximum principle confines
+the enclosed regions along the forward orbit, and normality at a boundary
+Julia point of a confined region contradicts membership in the Julia set. -/
+theorem not_winding_growth {f : ℂ̂ → ℂ̂}
+    (hf : IsRational f) (hd : 2 ≤ degreeOfRational f)
+    {U : Set ℂ̂} (hU : IsFatouComponent f U) (hW : IsWandering f U)
+    (hinf : ∀ n : ℕ, ∞ ∉ fcOrbit f U n)
+    {N₀ : ℕ} {γ : C(unitInterval, ℂ)} (hγcl : γ 0 = γ 1)
+    (hγmem : ∀ t : unitInterval, ((γ t : ℂ̂)) ∈ fcOrbit f U N₀)
+    (hgrow : ∀ B : ℤ, ∃ m : ℕ, ∃ C : Set ℂ,
+      C.Nonempty ∧ IsPreconnected C ∧ IsCompact C ∧
+      (∃ z ∈ C, ((z : ℂ̂)) ∈ JuliaSet f) ∧
+      (∀ z ∈ C, ((z : ℂ̂)) ∉ fcOrbit f U (N₀ + m)) ∧
+      (∀ t : unitInterval, ((chartFiniteMap (f^[m] ((γ t : ℂ̂))) : ℂ)) ∉ C) ∧
+      ∃ Γ : C(unitInterval, ℂ), (∀ t : unitInterval, Γ t = chartFiniteMap (f^[m] ((γ t : ℂ̂)))) ∧
+        ∀ z ∈ C, B ≤ |windingNumber Γ z|) :
+    False := by
+  sorry
+
 /-- **The hard branch of the dichotomy**: a wandering orbit cannot have
 covering steps of fiber count at least two cofinally often. Each such step
 multiplies the modulus of a separating curve family of the (multiply
@@ -687,7 +1106,9 @@ theorem not_cofinal_multiple_steps {f : ℂ̂ → ℂ̂}
       ∀ w ∈ fcOrbit f U (n + 1),
         (f ⁻¹' {w} ∩ fcOrbit f U n).ncard = k) :
     False := by
-  sorry
+  obtain ⟨N₀, γ, hγcl, hγmem, hgrow⟩ :=
+    exists_winding_growth_of_cofinal_multiple_steps hf hd hU hW hinf hcrit hbad
+  exact not_winding_growth hf hd hU hW hinf hγcl hγmem hgrow
 
 /-- **Eventual injectivity package** for a wandering component. A wandering
 Fatou component of a rational map of degree at least two may be replaced by
