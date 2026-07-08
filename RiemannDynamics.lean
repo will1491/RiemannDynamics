@@ -186,3 +186,6 @@ import RiemannDynamics.Sphere.OpenMapping
 import RiemannDynamics.Sphere.RationalMap
 import RiemannDynamics.Sphere.SphereHolomorphic
 import RiemannDynamics.Sphere.SphericalMetric
+import RiemannDynamics.Uniformization.SphereManifold
+import RiemannDynamics.Uniformization.HolomorphicEquiv
+import RiemannDynamics.Uniformization.Trichotomy
