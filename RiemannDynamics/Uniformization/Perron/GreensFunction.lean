@@ -762,7 +762,584 @@ theorem mharmonicOn_greenEnvelope [T2Space M] [ConnectedSpace M] [NoncompactSpac
     {p₀ : M} (hG : HasGreenFunction p₀) :
     MHarmonicOn (greenEnvelope p₀) {p₀}ᶜ ∧
       ∀ x ≠ p₀, BddAbove ((fun v => v x) '' greenFamily p₀) := by
-  sorry
+  classical
+  -- Transfer of subharmonicity along a pointwise equality on a subdomain.
+  have transfer : ∀ (F G : ℂ → ℝ) (U W : Set ℂ), SubharmonicOn F U → W ⊆ U →
+      Set.EqOn F G W → SubharmonicOn G W := by
+    intro F G U W hF hWU hFG
+    refine ⟨(hF.1.mono hWU).congr hFG.symm, ?_⟩
+    intro a ha ρ hρ hb
+    have h1 : G a = F a := (hFG ha).symm
+    have h2 : Real.circleAverage F a ρ = Real.circleAverage G a ρ := by
+      apply Real.circleAverage_congr_sphere
+      intro z hz
+      rw [abs_of_pos hρ] at hz
+      exact hFG (hb (sphere_subset_closedBall hz))
+    rw [h1, ← h2]
+    exact hF.2 a (hWU ha) ρ hρ (hb.trans hWU)
+  -- ### The zero function belongs to the Green's family.
+  have hbase : (fun _ : M => (0 : ℝ)) ∈ greenFamily p₀ := by
+    refine ⟨fun x _ => mharmonicAt_const.msubharmonicAt, continuousOn_const,
+      ⟨∅, isCompact_empty, Set.empty_ne_univ, fun x _ => rfl⟩, ⟨0, ?_⟩⟩
+    have hpc : ContinuousAt (poleCoord p₀) p₀ := by
+      have h1 : ContinuousAt (chartAt ℂ p₀) p₀ :=
+        (chartAt ℂ p₀).continuousAt (mem_chart_source ℂ p₀)
+      exact h1.sub continuousAt_const
+    have h0 : ‖poleCoord p₀ p₀‖ < 1 := by
+      simp [poleCoord]
+    have h5 := (hpc.norm).preimage_mem_nhds (Iio_mem_nhds h0)
+    filter_upwards [nhdsWithin_le_nhds h5] with x hx
+    have hx1 : ‖poleCoord p₀ x‖ < 1 := hx
+    have h6 : Real.log ‖poleCoord p₀ x‖ ≤ 0 := Real.log_nonpos (norm_nonneg _) hx1.le
+    simpa using h6
+  have hne_im : ∀ x : M, ((fun v => v x) '' greenFamily p₀).Nonempty :=
+    fun x => ⟨0, ⟨fun _ => 0, hbase, rfl⟩⟩
+  -- ### Closure of the family under pointwise maximum.
+  have hmax_mem : ∀ v w : M → ℝ, v ∈ greenFamily p₀ → w ∈ greenFamily p₀ →
+      (fun y => max (v y) (w y)) ∈ greenFamily p₀ := by
+    intro v w hv hw
+    obtain ⟨hv1, hv2, ⟨Kv, hKv, hKvne, hKv0⟩, ⟨Cv, hCv⟩⟩ := hv
+    obtain ⟨hw1, hw2, ⟨Kw, hKw, hKwne, hKw0⟩, ⟨Cw, hCw⟩⟩ := hw
+    refine ⟨fun x hx => (hv1 x hx).max (hw1 x hx),
+      fun x hx => (hv2 x hx).max (hw2 x hx),
+      ⟨Kv ∪ Kw, hKv.union hKw, ?_, ?_⟩, ⟨max Cv Cw, ?_⟩⟩
+    · intro hcon
+      exact noncompact_univ M (hcon ▸ (hKv.union hKw))
+    · intro x hxK
+      change max (v x) (w x) = 0
+      rw [hKv0 x (fun h => hxK (Set.mem_union_left Kw h)),
+        hKw0 x (fun h => hxK (Set.mem_union_right Kv h)), max_self]
+    · filter_upwards [hCv, hCw] with x h1 h2
+      have h3 : max (v x) (w x) + Real.log ‖poleCoord p₀ x‖ =
+          max (v x + Real.log ‖poleCoord p₀ x‖) (w x + Real.log ‖poleCoord p₀ x‖) :=
+        (max_add_add_right _ _ _).symm
+      rw [h3]
+      exact max_le (h1.trans (le_max_left _ _)) (h2.trans (le_max_right _ _))
+  /- ### The key local block at a point `p ≠ p₀`: a Harnack-pair neighbourhood
+  (for the clopen boundedness argument) and, given global boundedness, the
+  harmonicity of the envelope at `p` via the Perron/Harnack monotone limit. -/
+  have key : ∀ p : M, p ≠ p₀ →
+      ∃ U : Set M, IsOpen U ∧ p ∈ U ∧ U ⊆ ({p₀}ᶜ : Set M) ∧
+      (∃ wb : M → ℝ, wb ∈ greenFamily p₀ ∧ ∀ v ∈ greenFamily p₀,
+        ∃ q ∈ greenFamily p₀, (∀ x, x ≠ p₀ → v x ≤ q x) ∧
+          ∀ y ∈ U, q y - wb y ≤ 3 * (q p - wb p) ∧ q p - wb p ≤ 3 * (q y - wb y)) ∧
+      ((∀ x, x ≠ p₀ → BddAbove ((fun v => v x) '' greenFamily p₀)) →
+        MHarmonicAt (greenEnvelope p₀) p) := by
+    intro p hp
+    -- ## Chart set-up at `p`.
+    set E : OpenPartialHomeomorph M ℂ := chartAt ℂ p with hE
+    have hpsrc : p ∈ E.source := by rw [hE]; exact mem_chart_source ℂ p
+    have hEatlas : E ∈ IsManifold.maximalAtlas 𝓘(ℂ) ω M := by
+      rw [hE]; exact IsManifold.chart_mem_maximalAtlas p
+    set cΔ : ℂ := E p with hcΔ
+    have hct : cΔ ∈ E.target := by rw [hcΔ]; exact E.map_source hpsrc
+    set T' : Set ℂ := E.target ∩ ⇑E.symm ⁻¹' {p₀}ᶜ with hT'
+    have hT'open : IsOpen T' := E.isOpen_inter_preimage_symm isOpen_compl_singleton
+    have hsymmc : E.symm cΔ = p := by rw [hcΔ]; exact E.left_inv hpsrc
+    have hcT' : cΔ ∈ T' := by
+      refine ⟨hct, ?_⟩
+      rw [Set.mem_preimage, hsymmc]
+      exact Set.mem_compl_singleton_iff.mpr hp
+    obtain ⟨R, hR0, hRsub⟩ := (nhds_basis_closedBall.mem_iff).1 (hT'open.mem_nhds hcT')
+    have hT'tgt : T' ⊆ E.target := Set.inter_subset_left
+    have hsymm_ne : ∀ w ∈ T', E.symm w ≠ p₀ :=
+      fun w hw => Set.mem_compl_singleton_iff.mp hw.2
+    have hsymm_src : ∀ w ∈ T', E.symm w ∈ E.source := fun w hw => E.map_target hw.1
+    have hEE : ∀ w ∈ E.target, E (E.symm w) = w := fun w hw => E.right_inv hw
+    have hsrc_ne : ∀ x, x ∈ E.source → x ≠ p₀ → E x ∈ T' := by
+      intro x hxs hxne
+      refine ⟨E.map_source hxs, ?_⟩
+      rw [Set.mem_preimage, E.left_inv hxs]
+      exact Set.mem_compl_singleton_iff.mpr hxne
+    have hballT : ball cΔ R ⊆ T' := ball_subset_closedBall.trans hRsub
+    -- ## The chart reading of a family member is subharmonic on `T'`.
+    have hread : ∀ v, v ∈ greenFamily p₀ → SubharmonicOn (v ∘ ⇑E.symm) T' := by
+      intro v hv
+      obtain ⟨hvsub, hvcont, -, -⟩ := hv
+      apply subharmonicOn_of_locally hT'open
+      · intro w hw
+        have h1 : ContinuousAt (⇑E.symm) w := E.continuousAt_symm (hT'tgt hw)
+        have h2 : ContinuousAt v (E.symm w) :=
+          hvcont.continuousAt (isOpen_compl_singleton.mem_nhds
+            (Set.mem_compl_singleton_iff.mpr (hsymm_ne w hw)))
+        exact (h2.comp h1).continuousWithinAt
+      · intro w hw
+        have hxs : E.symm w ∈ E.source := hsymm_src w hw
+        have hMS : MSubharmonicAt v (E.symm w) :=
+          hvsub _ (Set.mem_compl_singleton_iff.mpr (hsymm_ne w hw))
+        obtain ⟨ρ, hρ, -, hsub⟩ :=
+          (msubharmonicAt_iff_of_mem_maximalAtlas hEatlas hxs).mp hMS
+        rw [hEE w (hT'tgt hw)] at hsub
+        refine ⟨ρ, hρ, ?_⟩
+        intro ρ' hρ'0 hρ'lt _
+        exact hsub.2 w (mem_ball_self hρ) ρ' hρ'0 (Metric.closedBall_subset_ball hρ'lt)
+    -- ## Plane-side Poisson-modification bricks.
+    have hPMsub : ∀ v, v ∈ greenFamily p₀ →
+        SubharmonicOn (poissonModify (v ∘ ⇑E.symm) cΔ R) T' :=
+      fun v hv => SubharmonicOn.poissonModify (hread v hv) hR0 hRsub
+    have hPMharm : ∀ v, v ∈ greenFamily p₀ →
+        HarmonicOnNhd (poissonModify (v ∘ ⇑E.symm) cΔ R) (ball cΔ R) :=
+      fun v hv => poissonModify_harmonicOn (hread v hv) hR0 hRsub
+    have hPMge : ∀ v, v ∈ greenFamily p₀ → ∀ w ∈ T',
+        (v ∘ ⇑E.symm) w ≤ poissonModify (v ∘ ⇑E.symm) cΔ R w :=
+      fun v hv => poissonModify_ge (hread v hv) hR0 hRsub
+    have hPMoff : ∀ (f : ℂ → ℝ) (w : ℂ), w ∉ ball cΔ R →
+        poissonModify f cΔ R w = f w := by
+      intro f w hw
+      simp only [poissonModify, if_neg hw]
+    -- ## Monotonicity of the modification in the modified function.
+    have hplane_mono : ∀ f g : M → ℝ, f ∈ greenFamily p₀ → g ∈ greenFamily p₀ →
+        (∀ x, x ≠ p₀ → f x ≤ g x) → ∀ z ∈ ball cΔ R,
+          poissonModify (f ∘ ⇑E.symm) cΔ R z ≤ poissonModify (g ∘ ⇑E.symm) cΔ R z := by
+      intro f g hf hg hfg
+      set d : ℂ → ℝ := fun z =>
+        poissonModify (f ∘ ⇑E.symm) cΔ R z - poissonModify (g ∘ ⇑E.symm) cΔ R z with hddef
+      have hdharm : HarmonicOnNhd d (ball cΔ R) := by
+        intro z hz
+        exact (hPMharm f hf z hz).sub (hPMharm g hg z hz)
+      have hdsub : SubharmonicOn d (ball cΔ R) := HarmonicOnNhd.subharmonicOn hdharm
+      have hdcont : ContinuousOn d (closure (ball cΔ R)) := by
+        rw [closure_ball cΔ hR0.ne']
+        exact ((hPMsub f hf).1.mono hRsub).sub ((hPMsub g hg).1.mono hRsub)
+      have hfr : ∀ z ∈ frontier (ball cΔ R), d z ≤ 0 := by
+        intro z hz
+        rw [frontier_ball cΔ hR0.ne'] at hz
+        have hzd : dist z cΔ = R := mem_sphere.1 hz
+        have hznb : z ∉ ball cΔ R := by
+          rw [mem_ball, hzd]
+          exact lt_irrefl R
+        have hzT : z ∈ T' := hRsub (sphere_subset_closedBall hz)
+        have h1 := hfg (E.symm z) (hsymm_ne z hzT)
+        have e1 : poissonModify (f ∘ ⇑E.symm) cΔ R z = f (E.symm z) := hPMoff _ z hznb
+        have e2 : poissonModify (g ∘ ⇑E.symm) cΔ R z = g (E.symm z) := hPMoff _ z hznb
+        simp only [hddef]
+        rw [e1, e2]
+        linarith
+      intro z hz
+      have h2 := hdsub.le_of_frontier_le isOpen_ball isBounded_ball hdcont hfr z hz
+      simp only [hddef] at h2
+      linarith
+    -- ## The surface-level Poisson modification.
+    set Pm : (M → ℝ) → M → ℝ := fun v x =>
+      if x ∈ E.source then poissonModify (v ∘ ⇑E.symm) cΔ R (E x) else v x with hPmdef
+    have hPmsrc : ∀ (v : M → ℝ) (x : M), x ∈ E.source →
+        Pm v x = poissonModify (v ∘ ⇑E.symm) cΔ R (E x) := by
+      intro v x hxs
+      simp only [hPmdef, if_pos hxs]
+    have hPmread : ∀ (v : M → ℝ) (w : ℂ), w ∈ E.target →
+        Pm v (E.symm w) = poissonModify (v ∘ ⇑E.symm) cΔ R w := by
+      intro v w hw
+      rw [hPmsrc v _ (E.map_target hw), hEE w hw]
+    set D : Set M := ⇑E.symm '' closedBall cΔ R with hDdef
+    have hDcomp : IsCompact D := (isCompact_closedBall cΔ R).image_of_continuousOn
+      (E.continuousOn_symm.mono (hRsub.trans hT'tgt))
+    have hDcl : IsClosed D := hDcomp.isClosed
+    have hDsrc : D ⊆ E.source := by
+      rintro x ⟨w, hw, rfl⟩
+      exact E.map_target (hT'tgt (hRsub hw))
+    have hp₀D : p₀ ∉ D := by
+      rintro ⟨w, hw, hwp⟩
+      exact hsymm_ne w (hRsub hw) hwp
+    have hPmoff : ∀ (v : M → ℝ) (x : M), x ∉ D → Pm v x = v x := by
+      intro v x hx
+      by_cases hxs : x ∈ E.source
+      · have hxb : E x ∉ ball cΔ R := by
+          intro hb
+          exact hx ⟨E x, ball_subset_closedBall hb, E.left_inv hxs⟩
+        rw [hPmsrc v x hxs, hPMoff _ _ hxb]
+        simp only [Function.comp_apply, E.left_inv hxs]
+      · simp only [hPmdef, if_neg hxs]
+    have hPmge : ∀ v, v ∈ greenFamily p₀ → ∀ x, x ≠ p₀ → v x ≤ Pm v x := by
+      intro v hv x hx
+      by_cases hxs : x ∈ E.source
+      · rw [hPmsrc v x hxs]
+        have h1 := hPMge v hv (E x) (hsrc_ne x hxs hx)
+        simpa [E.left_inv hxs] using h1
+      · rw [(by simp only [hPmdef, if_neg hxs] : Pm v x = v x)]
+    -- ## Membership of the modification in the family.
+    have hPmmem : ∀ v, v ∈ greenFamily p₀ → Pm v ∈ greenFamily p₀ := by
+      intro v hv
+      have hPMs := hPMsub v hv
+      obtain ⟨hvsub, hvcont, ⟨K, hKcomp, -, hKval⟩, ⟨C, hC⟩⟩ := hv
+      refine ⟨?_, ?_, ⟨K ∪ D, hKcomp.union hDcomp, ?_, ?_⟩, ⟨C, ?_⟩⟩
+      · -- subharmonicity on the punctured surface
+        intro x hx
+        have hxp : x ≠ p₀ := Set.mem_compl_singleton_iff.mp hx
+        by_cases hxs : x ∈ E.source
+        · refine (msubharmonicAt_iff_of_mem_maximalAtlas hEatlas hxs).mpr ?_
+          obtain ⟨ρ, hρ, hρsub⟩ := Metric.isOpen_iff.mp hT'open _ (hsrc_ne x hxs hxp)
+          have heqon : Set.EqOn (poissonModify (v ∘ ⇑E.symm) cΔ R) (Pm v ∘ ⇑E.symm)
+              (ball (E x) ρ) := by
+            intro z hz
+            exact (hPmread v z (hT'tgt (hρsub hz))).symm
+          exact ⟨ρ, hρ, fun z hz => hT'tgt (hρsub hz),
+            transfer _ _ _ _ hPMs (fun z hz => hρsub hz) heqon⟩
+        · have hxD : x ∉ D := fun h => hxs (hDsrc h)
+          obtain ⟨r₁, hr₁, hball₁, hsub₁⟩ := hvsub x hx
+          have hopen2 : IsOpen (ball (chartAt ℂ x x) r₁ ∩
+              ((chartAt ℂ x).target ∩ ⇑(chartAt ℂ x).symm ⁻¹' Dᶜ)) :=
+            isOpen_ball.inter
+              ((chartAt ℂ x).isOpen_inter_preimage_symm hDcl.isOpen_compl)
+          have hmem2 : chartAt ℂ x x ∈ ball (chartAt ℂ x x) r₁ ∩
+              ((chartAt ℂ x).target ∩ ⇑(chartAt ℂ x).symm ⁻¹' Dᶜ) := by
+            refine ⟨mem_ball_self hr₁,
+              (chartAt ℂ x).map_source (mem_chart_source ℂ x), ?_⟩
+            rw [Set.mem_preimage, (chartAt ℂ x).left_inv (mem_chart_source ℂ x)]
+            exact hxD
+          obtain ⟨ρ, hρ, hρsub⟩ := Metric.isOpen_iff.mp hopen2 _ hmem2
+          have heqon : Set.EqOn (v ∘ ⇑(chartAt ℂ x).symm) (Pm v ∘ ⇑(chartAt ℂ x).symm)
+              (ball (chartAt ℂ x x) ρ) := by
+            intro z hz
+            exact (hPmoff v _ ((hρsub hz).2.2)).symm
+          exact ⟨ρ, hρ, fun z hz => (hρsub hz).2.1,
+            transfer _ _ _ _ hsub₁ (fun z hz => (hρsub hz).1) heqon⟩
+      · -- continuity on the punctured surface
+        intro x hx
+        have hxp : x ≠ p₀ := Set.mem_compl_singleton_iff.mp hx
+        apply ContinuousAt.continuousWithinAt
+        by_cases hxs : x ∈ E.source
+        · have h1 : ContinuousAt (poissonModify (v ∘ ⇑E.symm) cΔ R) (E x) :=
+            hPMs.1.continuousAt (hT'open.mem_nhds (hsrc_ne x hxs hxp))
+          refine (h1.comp (E.continuousAt hxs)).congr_of_eventuallyEq ?_
+          filter_upwards [E.open_source.mem_nhds hxs] with y hy
+          exact hPmsrc v y hy
+        · have hxD : x ∉ D := fun h => hxs (hDsrc h)
+          have h1 : ContinuousAt v x :=
+            hvcont.continuousAt (isOpen_compl_singleton.mem_nhds hx)
+          refine h1.congr_of_eventuallyEq ?_
+          filter_upwards [hDcl.isOpen_compl.mem_nhds hxD] with y hy
+          exact hPmoff v y hy
+      · -- the support is not everything
+        intro hcon
+        exact noncompact_univ M (hcon ▸ (hKcomp.union hDcomp))
+      · -- vanishing off the enlarged support
+        intro x hxKD
+        rw [hPmoff v x (fun h => hxKD (Set.mem_union_right K h))]
+        exact hKval x (fun h => hxKD (Set.mem_union_left D h))
+      · -- logarithmic pole growth is untouched
+        filter_upwards [hC,
+          nhdsWithin_le_nhds (hDcl.isOpen_compl.mem_nhds hp₀D)] with x h1 h2
+        rw [hPmoff v x h2]
+        exact h1
+    -- ## The Harnack-pair neighbourhood.
+    have hhalf : 0 < R / 2 := by linarith
+    set U : Set M := E.source ∩ ⇑E ⁻¹' ball cΔ (R / 2) with hUdef
+    have hUopen : IsOpen U :=
+      E.continuousOn.isOpen_inter_preimage E.open_source isOpen_ball
+    have hpU : p ∈ U := by
+      refine ⟨hpsrc, ?_⟩
+      rw [Set.mem_preimage, ← hcΔ]
+      exact mem_ball_self hhalf
+    have hhalfsub : ball cΔ (R / 2) ⊆ ball cΔ R := ball_subset_ball (by linarith)
+    have hUsub : U ⊆ ({p₀}ᶜ : Set M) := by
+      rintro y ⟨hys, hyb⟩
+      rw [Set.mem_preimage] at hyb
+      have h1 : E y ∈ T' := hballT (hhalfsub hyb)
+      have h2 := hsymm_ne _ h1
+      rw [E.left_inv hys] at h2
+      exact Set.mem_compl_singleton_iff.mpr h2
+    refine ⟨U, hUopen, hpU, hUsub, ⟨Pm (fun _ => 0), hPmmem _ hbase, ?_⟩, ?_⟩
+    · -- the two-sided Harnack bounds for the modified competitor
+      intro v hv
+      have hmaxF : (fun y => max (v y) ((fun _ : M => (0 : ℝ)) y)) ∈ greenFamily p₀ :=
+        hmax_mem v (fun _ => 0) hv hbase
+      refine ⟨Pm (fun y => max (v y) ((fun _ : M => (0 : ℝ)) y)), hPmmem _ hmaxF, ?_, ?_⟩
+      · intro x hx
+        exact (le_max_left (v x) _).trans (hPmge _ hmaxF x hx)
+      · set h : ℂ → ℝ := fun z =>
+          poissonModify ((fun y => max (v y) ((fun _ : M => (0 : ℝ)) y)) ∘ ⇑E.symm) cΔ R z -
+            poissonModify ((fun _ : M => (0 : ℝ)) ∘ ⇑E.symm) cΔ R z with hhdef
+        have h2R : 2 * (R / 2) = R := by ring
+        have hharm : HarmonicOnNhd h (ball cΔ (2 * (R / 2))) := by
+          rw [h2R]
+          intro z hz
+          exact (hPMharm _ hmaxF z hz).sub (hPMharm _ hbase z hz)
+        have hpos : ∀ z ∈ ball cΔ (2 * (R / 2)), 0 ≤ h z := by
+          rw [h2R]
+          intro z hz
+          have h1 := hplane_mono (fun _ => 0) (fun y => max (v y) ((fun _ : M => (0 : ℝ)) y))
+            hbase hmaxF (fun x _ => le_max_right _ _) z hz
+          simp only [hhdef]
+          linarith
+        have hHar := harnack_inequality_ball hhalf hharm hpos
+        intro y hy
+        obtain ⟨hlo, hup⟩ := hHar (E y) hy.2
+        have hval_y : h (E y) =
+            Pm (fun y' => max (v y') ((fun _ : M => (0 : ℝ)) y')) y -
+              Pm (fun _ : M => (0 : ℝ)) y := by
+          simp only [hhdef]
+          rw [hPmsrc (fun y' => max (v y') ((fun _ : M => (0 : ℝ)) y')) y hy.1,
+            hPmsrc (fun _ : M => (0 : ℝ)) y hy.1]
+        have hval_c : h cΔ =
+            Pm (fun y' => max (v y') ((fun _ : M => (0 : ℝ)) y')) p -
+              Pm (fun _ : M => (0 : ℝ)) p := by
+          simp only [hhdef]
+          rw [hPmsrc (fun y' => max (v y') ((fun _ : M => (0 : ℝ)) y')) p hpsrc,
+            hPmsrc (fun _ : M => (0 : ℝ)) p hpsrc, ← hcΔ]
+        rw [hval_y, hval_c] at hlo hup
+        exact ⟨by linarith, by linarith⟩
+    · -- ## Harmonicity of the envelope at `p`, given boundedness everywhere.
+      intro hAllBdd
+      obtain ⟨a, hamono, hatend, hamem⟩ :=
+        exists_seq_tendsto_sSup (hne_im p) (hAllBdd p hp)
+      have hamem' : ∀ n, ∃ v, v ∈ greenFamily p₀ ∧ v p = a n := by
+        intro n
+        obtain ⟨v, hvF, hvv⟩ := hamem n
+        exact ⟨v, hvF, hvv⟩
+      choose v' hv'F hv'p using hamem'
+      -- the running maxima of the approximating sequence
+      set V : ℕ → M → ℝ := fun n => Nat.rec (motive := fun _ => M → ℝ) (v' 0)
+        (fun k Vk x => max (Vk x) (v' (k + 1) x)) n with hVdef
+      have hVF : ∀ n, V n ∈ greenFamily p₀ := by
+        intro n
+        induction n with
+        | zero => exact hv'F 0
+        | succ k ih => exact hmax_mem _ _ ih (hv'F (k + 1))
+      have hVmono : ∀ x : M, Monotone fun n => V n x :=
+        fun x => monotone_nat_of_le_succ fun n => le_max_left _ _
+      have hv'leV : ∀ n, v' n p ≤ V n p := by
+        intro n
+        cases n with
+        | zero => exact le_rfl
+        | succ k => exact le_max_right _ _
+      -- plane readings of the modified running maxima
+      set W : ℕ → ℂ → ℝ := fun n => poissonModify (V n ∘ ⇑E.symm) cΔ R with hWdef
+      have hWharm : ∀ n, HarmonicOnNhd (W n) (ball cΔ R) := fun n => hPMharm _ (hVF n)
+      have hWmono : ∀ z ∈ ball cΔ R, Monotone fun n => W n z := by
+        intro z hz
+        refine monotone_nat_of_le_succ fun n => ?_
+        exact hplane_mono (V n) (V (n + 1)) (hVF n) (hVF (n + 1))
+          (fun x _ => hVmono x (Nat.le_succ n)) z hz
+      have hWmem : ∀ (n : ℕ) (z : ℂ), z ∈ ball cΔ R → W n z = Pm (V n) (E.symm z) :=
+        fun n z hz => (hPmread (V n) z (hT'tgt (hballT hz))).symm
+      have hWle : ∀ z ∈ ball cΔ R, ∀ n, W n z ≤ greenEnvelope p₀ (E.symm z) := by
+        intro z hz n
+        rw [hWmem n z hz]
+        exact le_csSup (hAllBdd _ (hsymm_ne z (hballT hz)))
+          ⟨Pm (V n), hPmmem _ (hVF n), rfl⟩
+      have hWbdd : ∀ z ∈ ball cΔ R, BddAbove (Set.range fun n => W n z) := by
+        intro z hz
+        refine ⟨greenEnvelope p₀ (E.symm z), ?_⟩
+        rintro b ⟨n, rfl⟩
+        exact hWle z hz n
+      set flim : ℂ → ℝ := fun z => ⨆ n, W n z with hflimdef
+      have hWtends : ∀ z ∈ ball cΔ R, Tendsto (fun n => W n z) atTop (𝓝 (flim z)) :=
+        fun z hz => tendsto_atTop_ciSup (hWmono z hz) (hWbdd z hz)
+      have hWlelim : ∀ z ∈ ball cΔ R, ∀ n, W n z ≤ flim z :=
+        fun z hz n => le_ciSup (hWbdd z hz) n
+      have hflimharm : HarmonicOnNhd flim (ball cΔ R) :=
+        harmonicOnNhd_of_monotone_tendsto hWharm hWmono hWlelim hWtends
+      have hcball : cΔ ∈ ball cΔ R := mem_ball_self hR0
+      -- the limit attains the envelope value at the centre
+      have henvp : greenEnvelope p₀ p = sSup ((fun v => v p) '' greenFamily p₀) := rfl
+      have hWatc : ∀ n, W n cΔ = Pm (V n) p := by
+        intro n
+        rw [hWmem n cΔ hcball, hsymmc]
+      have hcup : ∀ n, W n cΔ ≤ greenEnvelope p₀ p := by
+        intro n
+        rw [hWatc n]
+        exact le_csSup (hAllBdd p hp) ⟨Pm (V n), hPmmem _ (hVF n), rfl⟩
+      have hclow : ∀ n, a n ≤ W n cΔ := by
+        intro n
+        rw [hWatc n, ← hv'p n]
+        exact (hv'leV n).trans (hPmge _ (hVF n) p hp)
+      have htendc : Tendsto (fun n => W n cΔ) atTop (𝓝 (greenEnvelope p₀ p)) := by
+        rw [henvp]
+        exact tendsto_of_tendsto_of_tendsto_of_le_of_le hatend
+          tendsto_const_nhds hclow (fun n => hcup n)
+      have hflimc : flim cΔ = greenEnvelope p₀ p :=
+        tendsto_nhds_unique (hWtends cΔ hcball) htendc
+      -- the limit attains the envelope value everywhere on the disc
+      have hflimge : ∀ zq ∈ ball cΔ R, greenEnvelope p₀ (E.symm zq) ≤ flim zq := by
+        intro zq hzq
+        have hqne : E.symm zq ≠ p₀ := hsymm_ne zq (hballT hzq)
+        obtain ⟨b, hbmono, hbtend, hbmem⟩ :=
+          exists_seq_tendsto_sSup (hne_im (E.symm zq)) (hAllBdd _ hqne)
+        have hbmem' : ∀ n, ∃ v, v ∈ greenFamily p₀ ∧ v (E.symm zq) = b n := by
+          intro n
+          obtain ⟨v, hvF, hvv⟩ := hbmem n
+          exact ⟨v, hvF, hvv⟩
+        choose g' hg'F hg'q using hbmem'
+        -- combined running maxima of the two approximating sequences
+        set G : ℕ → M → ℝ := fun n => Nat.rec (motive := fun _ => M → ℝ)
+          (fun x => max (V 0 x) (g' 0 x))
+          (fun k Gk x => max (Gk x) (max (V (k + 1) x) (g' (k + 1) x))) n with hGdef
+        have hGF : ∀ n, G n ∈ greenFamily p₀ := by
+          intro n
+          induction n with
+          | zero => exact hmax_mem _ _ (hVF 0) (hg'F 0)
+          | succ k ih => exact hmax_mem _ _ ih (hmax_mem _ _ (hVF (k + 1)) (hg'F (k + 1)))
+        have hVleG : ∀ (n : ℕ) (x : M), V n x ≤ G n x := by
+          intro n x
+          cases n with
+          | zero => exact le_max_left _ _
+          | succ k => exact le_max_of_le_right (le_max_left _ _)
+        have hg'leG : ∀ (n : ℕ) (x : M), g' n x ≤ G n x := by
+          intro n x
+          cases n with
+          | zero => exact le_max_right _ _
+          | succ k => exact le_max_of_le_right (le_max_right _ _)
+        have hGmono : ∀ x : M, Monotone fun n => G n x :=
+          fun x => monotone_nat_of_le_succ fun n => le_max_left _ _
+        set H : ℕ → ℂ → ℝ := fun n => poissonModify (G n ∘ ⇑E.symm) cΔ R with hHdef
+        have hHharm : ∀ n, HarmonicOnNhd (H n) (ball cΔ R) := fun n => hPMharm _ (hGF n)
+        have hHmono : ∀ z ∈ ball cΔ R, Monotone fun n => H n z := by
+          intro z hz
+          refine monotone_nat_of_le_succ fun n => ?_
+          exact hplane_mono (G n) (G (n + 1)) (hGF n) (hGF (n + 1))
+            (fun x _ => hGmono x (Nat.le_succ n)) z hz
+        have hHmem : ∀ (n : ℕ) (z : ℂ), z ∈ ball cΔ R → H n z = Pm (G n) (E.symm z) :=
+          fun n z hz => (hPmread (G n) z (hT'tgt (hballT hz))).symm
+        have hHle : ∀ z ∈ ball cΔ R, ∀ n, H n z ≤ greenEnvelope p₀ (E.symm z) := by
+          intro z hz n
+          rw [hHmem n z hz]
+          exact le_csSup (hAllBdd _ (hsymm_ne z (hballT hz)))
+            ⟨Pm (G n), hPmmem _ (hGF n), rfl⟩
+        have hHbdd : ∀ z ∈ ball cΔ R, BddAbove (Set.range fun n => H n z) := by
+          intro z hz
+          refine ⟨greenEnvelope p₀ (E.symm z), ?_⟩
+          rintro c ⟨n, rfl⟩
+          exact hHle z hz n
+        set glim : ℂ → ℝ := fun z => ⨆ n, H n z with hglimdef
+        have hHtends : ∀ z ∈ ball cΔ R, Tendsto (fun n => H n z) atTop (𝓝 (glim z)) :=
+          fun z hz => tendsto_atTop_ciSup (hHmono z hz) (hHbdd z hz)
+        have hHlelim : ∀ z ∈ ball cΔ R, ∀ n, H n z ≤ glim z :=
+          fun z hz n => le_ciSup (hHbdd z hz) n
+        have hglimharm : HarmonicOnNhd glim (ball cΔ R) :=
+          harmonicOnNhd_of_monotone_tendsto hHharm hHmono hHlelim hHtends
+        -- `W n ≤ H n` on the disc, hence `flim ≤ glim`
+        have hWH : ∀ z ∈ ball cΔ R, ∀ n, W n z ≤ H n z := by
+          intro z hz n
+          exact hplane_mono (V n) (G n) (hVF n) (hGF n) (fun x _ => hVleG n x) z hz
+        have hfg : ∀ z ∈ ball cΔ R, flim z ≤ glim z := by
+          intro z hz
+          simp only [hflimdef, hglimdef]
+          exact ciSup_mono (hHbdd z hz) (fun n => hWH z hz n)
+        -- `glim` also attains the envelope value at the centre
+        have hHatc : ∀ n, H n cΔ = Pm (G n) p := by
+          intro n
+          rw [hHmem n cΔ hcball, hsymmc]
+        have hHcup : ∀ n, H n cΔ ≤ greenEnvelope p₀ p := by
+          intro n
+          rw [hHatc n]
+          exact le_csSup (hAllBdd p hp) ⟨Pm (G n), hPmmem _ (hGF n), rfl⟩
+        have hHclow : ∀ n, a n ≤ H n cΔ := by
+          intro n
+          rw [hHatc n, ← hv'p n]
+          exact ((hv'leV n).trans (hVleG n p)).trans (hPmge _ (hGF n) p hp)
+        have htendcH : Tendsto (fun n => H n cΔ) atTop (𝓝 (greenEnvelope p₀ p)) := by
+          rw [henvp]
+          exact tendsto_of_tendsto_of_tendsto_of_le_of_le hatend
+            tendsto_const_nhds hHclow (fun n => hHcup n)
+        have hglimc : glim cΔ = greenEnvelope p₀ p :=
+          tendsto_nhds_unique (hHtends cΔ hcball) htendcH
+        -- the nonnegative harmonic difference vanishes at the centre, hence everywhere
+        set d : ℂ → ℝ := fun z => glim z - flim z with hd2def
+        have hdharm : HarmonicOnNhd d (ball cΔ R) := by
+          intro z hz
+          exact (hglimharm z hz).sub (hflimharm z hz)
+        have hdnn : ∀ z ∈ ball cΔ R, 0 ≤ d z := by
+          intro z hz
+          simp only [hd2def]
+          linarith [hfg z hz]
+        have hdc : d cΔ = 0 := by
+          simp only [hd2def]
+          rw [hglimc, hflimc]
+          ring
+        have hdzero := harmonic_eq_zero_of_nonneg_eq_zero isOpen_ball
+          (convex_ball cΔ R).isPreconnected hdharm hdnn hcball hdc
+        have hdq : glim zq = flim zq := by
+          have h1 := hdzero zq hzq
+          simp only [hd2def] at h1
+          linarith
+        -- the second sequence pins the envelope value from below
+        have hbup : ∀ n, b n ≤ glim zq := by
+          intro n
+          have h1 : b n ≤ Pm (G n) (E.symm zq) := by
+            rw [← hg'q n]
+            exact (hg'leG n _).trans (hPmge _ (hGF n) _ hqne)
+          rw [← hHmem n zq hzq] at h1
+          exact h1.trans (hHlelim zq hzq n)
+        have henvq : greenEnvelope p₀ (E.symm zq) =
+            sSup ((fun v => v (E.symm zq)) '' greenFamily p₀) := rfl
+        rw [henvq, ← hdq]
+        exact le_of_tendsto' hbtend hbup
+      -- assemble: the envelope reading agrees with `flim` near the centre
+      have hev : flim =ᶠ[𝓝 cΔ] greenEnvelope p₀ ∘ ⇑E.symm := by
+        filter_upwards [isOpen_ball.mem_nhds hcball] with z hz
+        have h1 : flim z ≤ greenEnvelope p₀ (E.symm z) := by
+          simp only [hflimdef]
+          exact ciSup_le fun n => hWle z hz n
+        exact le_antisymm h1 (hflimge z hz)
+      have hHc : HarmonicAt (greenEnvelope p₀ ∘ ⇑E.symm) cΔ :=
+        (harmonicAt_congr_nhds hev).mp (hflimharm cΔ hcball)
+      exact (mharmonicAt_iff_of_mem_maximalAtlas hEatlas hpsrc).mpr (hcΔ ▸ hHc)
+  -- ### Two distinct points exist (the surface is noncompact).
+  have hnt : ∃ x y : M, x ≠ y := by
+    by_contra hcon
+    push Not at hcon
+    haveI : Subsingleton M := ⟨fun a b => hcon a b⟩
+    haveI : CompactSpace M := Finite.compactSpace
+    exact NoncompactSpace.noncompact_univ (X := M) isCompact_univ
+  have hconn : IsConnected ({p₀}ᶜ : Set M) :=
+    isConnected_compl_singleton_of_connected hnt p₀
+  -- ### Boundedness at every point, by the clopen argument.
+  have hBddAll : ∀ x, x ≠ p₀ → BddAbove ((fun v => v x) '' greenFamily p₀) := by
+    obtain ⟨x₀, hx₀ne, hx₀bdd⟩ := hG
+    set S1 : Set M := {x : M | x ∈ ({p₀}ᶜ : Set M) ∧
+      BddAbove ((fun v => v x) '' greenFamily p₀)} with hS1def
+    set S2 : Set M := {x : M | x ∈ ({p₀}ᶜ : Set M) ∧
+      ¬ BddAbove ((fun v => v x) '' greenFamily p₀)} with hS2def
+    have hS1open : IsOpen S1 := by
+      rw [isOpen_iff_mem_nhds]
+      rintro x ⟨hxmem, hxbdd⟩
+      obtain ⟨U, hUopen, hxU, hUsub, ⟨wb, hwbF, hHar⟩, -⟩ :=
+        key x (Set.mem_compl_singleton_iff.mp hxmem)
+      refine Filter.mem_of_superset (hUopen.mem_nhds hxU) fun y hyU => ?_
+      refine ⟨hUsub hyU,
+        ⟨wb y + 3 * (sSup ((fun v => v x) '' greenFamily p₀) - wb x), ?_⟩⟩
+      rintro c ⟨v, hvF, rfl⟩
+      obtain ⟨q, hqF, hqge, hqpair⟩ := hHar v hvF
+      obtain ⟨h1, -⟩ := hqpair y hyU
+      have h2 : q x ≤ sSup ((fun v => v x) '' greenFamily p₀) :=
+        le_csSup hxbdd ⟨q, hqF, rfl⟩
+      have h3 : v y ≤ q y := hqge y (Set.mem_compl_singleton_iff.mp (hUsub hyU))
+      change v y ≤ wb y + 3 * (sSup ((fun v => v x) '' greenFamily p₀) - wb x)
+      linarith
+    have hS2open : IsOpen S2 := by
+      rw [isOpen_iff_mem_nhds]
+      rintro x ⟨hxmem, hxnb⟩
+      obtain ⟨U, hUopen, hxU, hUsub, ⟨wb, hwbF, hHar⟩, -⟩ :=
+        key x (Set.mem_compl_singleton_iff.mp hxmem)
+      refine Filter.mem_of_superset (hUopen.mem_nhds hxU) fun y hyU => ?_
+      refine ⟨hUsub hyU, fun hybdd => hxnb ?_⟩
+      refine ⟨wb x + 3 * (sSup ((fun v => v y) '' greenFamily p₀) - wb y), ?_⟩
+      rintro c ⟨v, hvF, rfl⟩
+      obtain ⟨q, hqF, hqge, hqpair⟩ := hHar v hvF
+      obtain ⟨-, h1⟩ := hqpair y hyU
+      have h2 : q y ≤ sSup ((fun v => v y) '' greenFamily p₀) :=
+        le_csSup hybdd ⟨q, hqF, rfl⟩
+      have h3 : v x ≤ q x := hqge x (Set.mem_compl_singleton_iff.mp hxmem)
+      change v x ≤ wb x + 3 * (sSup ((fun v => v y) '' greenFamily p₀) - wb y)
+      linarith
+    have hdisj : Disjoint S1 S2 := by
+      rw [Set.disjoint_left]
+      rintro x ⟨-, h0⟩ ⟨-, hne⟩
+      exact hne h0
+    have hunion : ({p₀}ᶜ : Set M) ⊆ S1 ∪ S2 := by
+      intro x hx
+      by_cases h : BddAbove ((fun v => v x) '' greenFamily p₀)
+      · exact Or.inl ⟨hx, h⟩
+      · exact Or.inr ⟨hx, h⟩
+    have hkey := IsPreconnected.subset_left_of_subset_union hS1open hS2open hdisj hunion
+      ⟨x₀, Set.mem_compl_singleton_iff.mpr hx₀ne,
+        Set.mem_compl_singleton_iff.mpr hx₀ne, hx₀bdd⟩ hconn.isPreconnected
+    intro x hx
+    exact (hkey (Set.mem_compl_singleton_iff.mpr hx)).2
+  refine ⟨?_, hBddAll⟩
+  intro x hxmem
+  obtain ⟨U, -, -, -, -, hHarm⟩ := key x (Set.mem_compl_singleton_iff.mp hxmem)
+  exact hHarm hBddAll
 
 /-- The Green's function is strictly positive off the pole. -/
 theorem greenEnvelope_pos [T2Space M] [ConnectedSpace M] [NoncompactSpace M]
