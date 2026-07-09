@@ -1582,6 +1582,21 @@ theorem hasGreenFunction_coordDisk_compl (D : CoordDisk M) (p : M)
 
 /-! ## The shrink-uniform bounds -/
 
+/-- **The irreducible core of the cross-symmetry wall**: under ambient
+non-hyperbolicity, the two cross values of the piece Green's functions differ
+by a constant for all sufficiently small shrink parameters. Classically this
+holds with constant zero, by the symmetry of the Green's function of each
+piece. -/
+theorem pieceGreen_cross_bound_core (D₀ : CoordDisk M) {p₁ p₂ : M}
+    (hp₁ : p₁ ∉ D₀.closedCarrier) (hp₂ : p₂ ∉ D₀.closedCarrier)
+    (hne : p₁ ≠ p₂)
+    (hnb : ¬ BddAbove ((fun v => v p₂) '' greenFamily p₁) ∨
+      ¬ BddAbove ((fun v => v p₁) '' greenFamily p₂)) :
+    ∃ t₀ C₀, 0 < t₀ ∧ t₀ ≤ 1 ∧ ∀ t (ht : 0 < t) (ht1 : t ≤ 1), t ≤ t₀ →
+      |pieceGreen (D₀.shrink t ht ht1).compl p₁ p₂ -
+        pieceGreen (D₀.shrink t ht ht1).compl p₂ p₁| ≤ C₀ := by
+  sorry
+
 /-- **The cross-symmetry bound** (the symmetry wall of the dipole
 construction): the two cross values of the piece Green's functions differ by
 a shrink-independent constant. -/
@@ -1591,7 +1606,447 @@ theorem exists_pieceGreen_symm_bound (D₀ : CoordDisk M) {p₁ p₂ : M}
     ∃ C, ∀ t (ht : 0 < t) (ht1 : t ≤ 1),
       |pieceGreen (D₀.shrink t ht ht1).compl p₁ p₂ -
         pieceGreen (D₀.shrink t ht ht1).compl p₂ p₁| ≤ C := by
-  sorry
+  have hcross : (¬ BddAbove ((fun v => v p₂) '' greenFamily p₁) ∨
+        ¬ BddAbove ((fun v => v p₁) '' greenFamily p₂)) →
+      ∃ t₀ C₀, 0 < t₀ ∧ t₀ ≤ 1 ∧ ∀ t (ht : 0 < t) (ht1 : t ≤ 1), t ≤ t₀ →
+        |pieceGreen (D₀.shrink t ht ht1).compl p₁ p₂ -
+          pieceGreen (D₀.shrink t ht ht1).compl p₂ p₁| ≤ C₀ :=
+    pieceGreen_cross_bound_core D₀ hp₁ hp₂ hne
+  classical
+  /- ## Geometry of the shrinking disks. -/
+  have hcarsub : ∀ t (ht : 0 < t) (ht1 : t ≤ 1),
+      (D₀.shrink t ht ht1).closedCarrier ⊆ D₀.closedCarrier := by
+    intro t ht ht1
+    have h1 : (D₀.shrink t ht ht1).closedCarrier =
+        (chartAt ℂ D₀.center).symm ''
+          closedBall (chartAt ℂ D₀.center D₀.center) (t * D₀.radius) := rfl
+    have h2 : D₀.closedCarrier =
+        (chartAt ℂ D₀.center).symm ''
+          closedBall (chartAt ℂ D₀.center D₀.center) D₀.radius := rfl
+    rw [h1, h2]
+    exact Set.image_mono (closedBall_subset_closedBall
+      (mul_le_of_le_one_left D₀.radius_pos.le ht1))
+  have hcarmono : ∀ t t' (ht : 0 < t) (ht1 : t ≤ 1) (ht' : 0 < t')
+      (ht1' : t' ≤ 1), t' ≤ t →
+      (D₀.shrink t' ht' ht1').closedCarrier ⊆
+        (D₀.shrink t ht ht1).closedCarrier := by
+    intro t t' ht ht1 ht' ht1' htt
+    have h1 : (D₀.shrink t' ht' ht1').closedCarrier =
+        (chartAt ℂ D₀.center).symm ''
+          closedBall (chartAt ℂ D₀.center D₀.center) (t' * D₀.radius) := rfl
+    have h2 : (D₀.shrink t ht ht1).closedCarrier =
+        (chartAt ℂ D₀.center).symm ''
+          closedBall (chartAt ℂ D₀.center D₀.center) (t * D₀.radius) := rfl
+    rw [h1, h2]
+    exact Set.image_mono (closedBall_subset_closedBall
+      (mul_le_mul_of_nonneg_right htt D₀.radius_pos.le))
+  have hWmem : ∀ t (ht : 0 < t) (ht1 : t ≤ 1) {y : M}, y ∉ D₀.closedCarrier →
+      y ∈ (D₀.shrink t ht ht1).compl := by
+    intro t ht ht1 y hy hmem
+    exact hy (hcarsub t ht ht1 hmem)
+  have hWsub : ∀ t t' (ht : 0 < t) (ht1 : t ≤ 1) (ht' : 0 < t')
+      (ht1' : t' ≤ 1), t' ≤ t →
+      ((D₀.shrink t ht ht1).compl : Set M) ⊆
+        ((D₀.shrink t' ht' ht1').compl : Set M) := by
+    intro t t' ht ht1 ht' ht1' htt y hy hmem
+    exact hy (hcarmono t t' ht ht1 ht' ht1' htt hmem)
+  have hqW : ∀ t (ht : 0 < t) (ht1 : t ≤ 1),
+      D₀.center ∉ ((D₀.shrink t ht ht1).compl : Set M) := by
+    intro t ht ht1 hmem
+    exact hmem ⟨chartAt ℂ D₀.center D₀.center,
+      mem_closedBall_self (mul_pos ht D₀.radius_pos).le,
+      (chartAt ℂ D₀.center).left_inv (mem_chart_source ℂ D₀.center)⟩
+  have hWne : ∀ t (ht : 0 < t) (ht1 : t ≤ 1),
+      ((D₀.shrink t ht ht1).compl : Set M) ≠ Set.univ := by
+    intro t ht ht1 hcon
+    have hmem : D₀.center ∈ ((D₀.shrink t ht ht1).compl : Set M) := by
+      rw [hcon]; trivial
+    exact hqW t ht ht1 hmem
+  /- ## Plane-side helper: transfer of subharmonicity along an equality. -/
+  have transfer : ∀ (F G : ℂ → ℝ) (U W : Set ℂ), SubharmonicOn F U → W ⊆ U →
+      Set.EqOn F G W → SubharmonicOn G W := by
+    intro F G U W hF hWU hFG
+    refine ⟨(hF.1.mono hWU).congr hFG.symm, ?_⟩
+    intro a ha ρ hρ hb
+    have h1 : G a = F a := (hFG ha).symm
+    have h2 : Real.circleAverage F a ρ = Real.circleAverage G a ρ := by
+      apply Real.circleAverage_congr_sphere
+      intro z hz
+      rw [abs_of_pos hρ] at hz
+      exact hFG (hb (sphere_subset_closedBall hz))
+    rw [h1, ← h2]
+    exact hF.2 a (hWU ha) ρ hρ (hb.trans hWU)
+  /- ## A function vanishing on a neighborhood is subharmonic there. -/
+  have msub_zero : ∀ (f : M → ℝ) (U : Set M) (y : M), IsOpen U → y ∈ U →
+      (∀ z ∈ U, f z = 0) → MSubharmonicAt f y := by
+    intro f U y hUo hyU hf0
+    have hopen2 : IsOpen ((chartAt ℂ y).target ∩ (chartAt ℂ y).symm ⁻¹' U) :=
+      (chartAt ℂ y).isOpen_inter_preimage_symm hUo
+    have hmem2 : chartAt ℂ y y ∈
+        (chartAt ℂ y).target ∩ (chartAt ℂ y).symm ⁻¹' U := by
+      refine ⟨mem_chart_target ℂ y, ?_⟩
+      rw [Set.mem_preimage, (chartAt ℂ y).left_inv (mem_chart_source ℂ y)]
+      exact hyU
+    obtain ⟨ρ, hρ, hρsub⟩ := Metric.isOpen_iff.mp hopen2 _ hmem2
+    have h0 : SubharmonicOn (fun _ : ℂ => (0 : ℝ)) (ball (chartAt ℂ y y) ρ) :=
+      HarmonicOnNhd.subharmonicOn fun z _ => harmonicAt_const 0
+    refine ⟨ρ, hρ, fun z hz => (hρsub hz).1, ?_⟩
+    exact transfer _ _ _ _ h0 subset_rfl fun z hz => (hf0 _ ((hρsub hz).2)).symm
+  /- ## Subharmonicity at a point transfers between the surface and a piece. -/
+  have msub_val : ∀ (P : Opens M) (f : M → ℝ) (g : ↥P → ℝ),
+      (∀ z : ↥P, f z = g z) →
+      ∀ z : ↥P, (MSubharmonicAt f (z : M) ↔ MSubharmonicAt g z) := by
+    intro P f g hfg z
+    have hnem : Nonempty ↥P := ⟨z⟩
+    set e' : OpenPartialHomeomorph M ℂ := chartAt ℂ (z : M) with he'
+    have hzsrc : (z : M) ∈ e'.source := mem_chart_source ℂ (z : M)
+    have hct : chartAt ℂ z = e'.subtypeRestr hnem := Opens.chartAt_eq
+    have hcenter : chartAt ℂ z z = e' (z : M) := by
+      rw [hct, e'.subtypeRestr_coe hnem]
+      rfl
+    have htgt : e' (z : M) ∈ (e'.subtypeRestr hnem).target :=
+      e'.map_subtype_source hnem hzsrc
+    have heqOn : Set.EqOn (⇑e'.symm)
+        (Subtype.val ∘ ⇑(e'.subtypeRestr hnem).symm)
+        (e'.subtypeRestr hnem).target := e'.subtypeRestr_symm_eqOn hnem
+    constructor
+    · rintro ⟨r, hr, hball, hsub⟩
+      have hopen2 : IsOpen ((e'.subtypeRestr hnem).target ∩ ball (e' (z : M)) r) :=
+        (e'.subtypeRestr hnem).open_target.inter isOpen_ball
+      have hmem2 : e' (z : M) ∈
+          (e'.subtypeRestr hnem).target ∩ ball (e' (z : M)) r :=
+        ⟨htgt, mem_ball_self hr⟩
+      obtain ⟨r', hr', hr'sub⟩ := Metric.isOpen_iff.mp hopen2 _ hmem2
+      refine ⟨r', hr', ?_, ?_⟩
+      · rw [hcenter, hct]
+        exact fun w hw => (hr'sub hw).1
+      · rw [hcenter, hct]
+        refine transfer _ _ _ _ hsub (fun w hw => (hr'sub hw).2) ?_
+        intro w hw
+        simp only [Function.comp_apply]
+        rw [← hfg ((e'.subtypeRestr hnem).symm w)]
+        exact congrArg f (heqOn (hr'sub hw).1)
+    · rintro ⟨r, hr, hball, hsub⟩
+      rw [hcenter, hct] at hball hsub
+      refine ⟨r, hr, hball.trans (e'.subtypeRestr_target_subset hnem), ?_⟩
+      refine transfer _ _ _ _ hsub subset_rfl ?_
+      intro w hw
+      simp only [Function.comp_apply]
+      rw [← hfg ((e'.subtypeRestr hnem).symm w)]
+      exact (congrArg f (heqOn (hball hw))).symm
+  /- ## The punctured filter of a piece maps to that of the surface. -/
+  have hmapval : ∀ (P : Opens M) (p : M) (hpP : p ∈ P),
+      Filter.map (Subtype.val : ↥P → M) (𝓝[≠] (⟨p, hpP⟩ : ↥P)) = 𝓝[≠] p := by
+    intro P p hpP
+    apply le_antisymm
+    · intro A hA
+      rw [Filter.mem_map]
+      rw [mem_nhdsWithin] at hA ⊢
+      obtain ⟨U, hUo, hUmem, hUsub⟩ := hA
+      refine ⟨Subtype.val ⁻¹' U, hUo.preimage continuous_subtype_val, hUmem, ?_⟩
+      rintro w ⟨hw1, hw2⟩
+      refine hUsub ⟨hw1, ?_⟩
+      intro hcon
+      rw [Set.mem_singleton_iff] at hcon
+      exact hw2 (by rw [Set.mem_singleton_iff]; exact Subtype.ext hcon)
+    · intro A hA
+      rw [Filter.mem_map] at hA
+      rw [mem_nhdsWithin] at hA ⊢
+      obtain ⟨U, hUo, hUmem, hUsub⟩ := hA
+      obtain ⟨U₀, hU₀o, hU₀eq⟩ := isOpen_induced_iff.mp hUo
+      refine ⟨U₀ ∩ (P : Set M), hU₀o.inter P.2, ⟨?_, hpP⟩, ?_⟩
+      · have h4 : (⟨p, hpP⟩ : ↥P) ∈ Subtype.val ⁻¹' U₀ := by
+          rw [hU₀eq]; exact hUmem
+        exact h4
+      · rintro y ⟨⟨hyU₀, hyP⟩, hyne⟩
+        have hz : (⟨y, hyP⟩ : ↥P) ∈ U ∩ {(⟨p, hpP⟩ : ↥P)}ᶜ := by
+          constructor
+          · have h5 : (⟨y, hyP⟩ : ↥P) ∈ Subtype.val ⁻¹' U₀ := hyU₀
+            rw [hU₀eq] at h5
+            exact h5
+          · intro hcon
+            rw [Set.mem_singleton_iff] at hcon
+            exact hyne
+              (by rw [Set.mem_singleton_iff]; exact congrArg Subtype.val hcon)
+        exact hUsub hz
+  /- ## The zero function belongs to the Green's family of a piece. -/
+  have hbaseP : ∀ (P : Opens M) (p : M) (hpP : p ∈ P),
+      (fun _ : ↥P => (0 : ℝ)) ∈ greenFamily (⟨p, hpP⟩ : ↥P) := by
+    intro P p hpP
+    haveI : Nonempty ↥P := ⟨⟨p, hpP⟩⟩
+    refine ⟨fun x _ => mharmonicAt_const.msubharmonicAt, continuousOn_const,
+      ⟨∅, isCompact_empty, Set.empty_ne_univ, fun x _ => rfl⟩, ⟨0, ?_⟩⟩
+    set q₀ : ↥P := ⟨p, hpP⟩ with hq₀
+    have hpc : ContinuousAt (poleCoord q₀) q₀ := by
+      have h1 : ContinuousAt (chartAt ℂ q₀) q₀ :=
+        (chartAt ℂ q₀).continuousAt (mem_chart_source ℂ q₀)
+      exact h1.sub continuousAt_const
+    have h0 : ‖poleCoord q₀ q₀‖ < 1 := by
+      simp [poleCoord]
+    have h5 := (hpc.norm).preimage_mem_nhds (Iio_mem_nhds h0)
+    filter_upwards [nhdsWithin_le_nhds h5] with x hx
+    have hx1 : ‖poleCoord q₀ x‖ < 1 := hx
+    have h6 : Real.log ‖poleCoord q₀ x‖ ≤ 0 :=
+      Real.log_nonpos (norm_nonneg _) hx1.le
+    simpa using h6
+  /- ## The zero function belongs to the Green's family of the surface. -/
+  have hbaseM : ∀ p : M, (fun _ : M => (0 : ℝ)) ∈ greenFamily p := by
+    intro p
+    haveI : Nonempty M := ⟨p⟩
+    refine ⟨fun x _ => mharmonicAt_const.msubharmonicAt, continuousOn_const,
+      ⟨∅, isCompact_empty, Set.empty_ne_univ, fun x _ => rfl⟩, ⟨0, ?_⟩⟩
+    have hpc : ContinuousAt (poleCoord p) p := by
+      have h1 : ContinuousAt (chartAt ℂ p) p :=
+        (chartAt ℂ p).continuousAt (mem_chart_source ℂ p)
+      exact h1.sub continuousAt_const
+    have h0 : ‖poleCoord p p‖ < 1 := by
+      simp [poleCoord]
+    have h5 := (hpc.norm).preimage_mem_nhds (Iio_mem_nhds h0)
+    filter_upwards [nhdsWithin_le_nhds h5] with x hx
+    have hx1 : ‖poleCoord p x‖ < 1 := hx
+    have h6 : Real.log ‖poleCoord p x‖ ≤ 0 :=
+      Real.log_nonpos (norm_nonneg _) hx1.le
+    simpa using h6
+  /- ## Boundedness of the piece family at every point off the pole. -/
+  have hEnvB : ∀ t (ht : 0 < t) (ht1 : t ≤ 1) (p : M)
+      (hpW : p ∈ (D₀.shrink t ht ht1).compl)
+      (z : ↥(D₀.shrink t ht ht1).compl), z ≠ ⟨p, hpW⟩ →
+      BddAbove ((fun v => v z) ''
+        greenFamily (⟨p, hpW⟩ : ↥(D₀.shrink t ht ht1).compl)) := by
+    intro t ht ht1 p hpW z hz
+    haveI : ConnectedSpace ↥(D₀.shrink t ht ht1).compl :=
+      isConnected_iff_connectedSpace.mp (isConnected_coordDisk_compl _)
+    haveI : NoncompactSpace ↥(D₀.shrink t ht ht1).compl :=
+      noncompactSpace_coordDisk_compl _
+    exact (mharmonicOn_greenEnvelope
+      (hasGreenFunction_coordDisk_compl _ p hpW)).2 z hz
+  /- ## Unfolding the piece Green's function. -/
+  have hPG : ∀ (P : Opens M) (p x : M) (hp' : p ∈ P) (hx' : x ∈ P),
+      pieceGreen P p x = greenEnvelope (⟨p, hp'⟩ : ↥P) ⟨x, hx'⟩ := by
+    intro P p x hp' hx'
+    simp only [pieceGreen]
+    rw [dif_pos (⟨hp', hx'⟩ : p ∈ P ∧ x ∈ P)]
+  /- ## Zero extension of a piece family member into the surface family. -/
+  have brickE : ∀ (P : Opens M), (P : Set M) ≠ Set.univ → ∀ (p : M) (hpP : p ∈ P)
+      (v : ↥P → ℝ), v ∈ greenFamily (⟨p, hpP⟩ : ↥P) →
+      ∃ w : M → ℝ, w ∈ greenFamily p ∧ (∀ z : ↥P, w z = v z) ∧
+        ∃ Kw : Set M, IsCompact Kw ∧ Kw ⊆ (P : Set M) ∧ ∀ y, y ∉ Kw → w y = 0 := by
+    intro P hPne p hpP v hv
+    obtain ⟨hvsub, hvcont, ⟨K, hKcomp, -, hKzero⟩, ⟨C, hC⟩⟩ := hv
+    set w : M → ℝ := fun y => if h : y ∈ P then v ⟨y, h⟩ else 0 with hwdef
+    have hwval : ∀ z : ↥P, w z = v z := by
+      intro z
+      simp only [hwdef]
+      rw [dif_pos z.2]
+    set Kw : Set M := Subtype.val '' K with hKwdef
+    have hKwcomp : IsCompact Kw := hKcomp.image continuous_subtype_val
+    have hKwsub : Kw ⊆ (P : Set M) := by
+      rintro y ⟨z, hz, rfl⟩
+      exact z.2
+    have hKwzero : ∀ y, y ∉ Kw → w y = 0 := by
+      intro y hy
+      by_cases hyP : y ∈ P
+      · simp only [hwdef]
+        rw [dif_pos hyP]
+        apply hKzero
+        intro hmem
+        exact hy ⟨⟨y, hyP⟩, hmem, rfl⟩
+      · simp only [hwdef]
+        rw [dif_neg hyP]
+    have hKwne : Kw ≠ Set.univ := by
+      intro hcon
+      apply hPne
+      apply Set.eq_univ_of_univ_subset
+      rw [← hcon]
+      exact hKwsub
+    have hKwcl : IsClosed Kw := hKwcomp.isClosed
+    have hwcont : ContinuousOn w {p}ᶜ := by
+      intro y hy
+      apply ContinuousAt.continuousWithinAt
+      by_cases hyP : y ∈ P
+      · have hoe : IsOpenEmbedding (Subtype.val : ↥P → M) :=
+          P.2.isOpenEmbedding_subtypeVal
+        have hnz : (⟨y, hyP⟩ : ↥P) ≠ ⟨p, hpP⟩ := fun hcon =>
+          (Set.mem_compl_singleton_iff.mp hy) (congrArg Subtype.val hcon)
+        have hvat : ContinuousAt v (⟨y, hyP⟩ : ↥P) :=
+          hvcont.continuousAt (isOpen_compl_singleton.mem_nhds
+            (Set.mem_compl_singleton_iff.mpr hnz))
+        have h1 : Tendsto (w ∘ Subtype.val) (𝓝 (⟨y, hyP⟩ : ↥P)) (𝓝 (w y)) := by
+          have h2 : w y = v ⟨y, hyP⟩ := hwval ⟨y, hyP⟩
+          rw [h2]
+          exact Filter.Tendsto.congr (fun u => (hwval u).symm) hvat
+        have h4 : Filter.map (Subtype.val : ↥P → M) (𝓝 (⟨y, hyP⟩ : ↥P)) =
+            𝓝 y := hoe.map_nhds_eq ⟨y, hyP⟩
+        have h5 : Tendsto w (𝓝 y) (𝓝 (w y)) := by
+          rw [← h4, Filter.tendsto_map'_iff]
+          exact h1
+        exact h5
+      · have hev : w =ᶠ[𝓝 y] fun _ => (0 : ℝ) := by
+          filter_upwards [hKwcl.isOpen_compl.mem_nhds
+            (fun hmem => hyP (hKwsub hmem))] with u hu
+          exact hKwzero u hu
+        exact continuousAt_const.congr_of_eventuallyEq hev
+    have hwsub : MSubharmonicOn w {p}ᶜ := by
+      intro y hy
+      by_cases hyP : y ∈ P
+      · have hnz : (⟨y, hyP⟩ : ↥P) ≠ ⟨p, hpP⟩ := fun hcon =>
+          (Set.mem_compl_singleton_iff.mp hy) (congrArg Subtype.val hcon)
+        exact (msub_val P w v hwval ⟨y, hyP⟩).mpr
+          (hvsub ⟨y, hyP⟩ (Set.mem_compl_singleton_iff.mpr hnz))
+      · exact msub_zero w Kwᶜ y hKwcl.isOpen_compl
+          (fun hmem => hyP (hKwsub hmem)) (fun z hz => hKwzero z hz)
+    have hwpole : ∃ C', ∀ᶠ y' in 𝓝[≠] p,
+        w y' + Real.log ‖poleCoord p y'‖ ≤ C' := by
+      refine ⟨C, ?_⟩
+      rw [← hmapval P p hpP, Filter.eventually_map]
+      filter_upwards [hC] with z hz
+      have hpc : poleCoord (⟨p, hpP⟩ : ↥P) z = poleCoord p (z : M) := rfl
+      rw [hwval z]
+      rw [← hpc]
+      exact hz
+    exact ⟨w, ⟨hwsub, hwcont, ⟨Kw, hKwcomp, hKwne, hKwzero⟩, hwpole⟩, hwval,
+      Kw, hKwcomp, hKwsub, hKwzero⟩
+  /- ## Restriction of a compactly supported surface member into a piece. -/
+  have brickR : ∀ (P : Opens M), NoncompactSpace ↥P → ∀ (p : M) (hpP : p ∈ P)
+      (w : M → ℝ) (Kw : Set M),
+      MSubharmonicOn w {p}ᶜ → ContinuousOn w {p}ᶜ →
+      IsCompact Kw → Kw ⊆ (P : Set M) → (∀ y, y ∉ Kw → w y = 0) →
+      (∃ C, ∀ᶠ y' in 𝓝[≠] p, w y' + Real.log ‖poleCoord p y'‖ ≤ C) →
+      (fun z : ↥P => w z) ∈ greenFamily (⟨p, hpP⟩ : ↥P) := by
+    intro P hnc p hpP w Kw hwsub hwcont hKwcomp hKwsub hKwzero hwpole
+    haveI := hnc
+    have hKpre : IsCompact (Subtype.val ⁻¹' Kw : Set ↥P) := by
+      haveI : CompactSpace ↥Kw := isCompact_iff_compactSpace.mp hKwcomp
+      have himgK : (Subtype.val ⁻¹' Kw : Set ↥P) =
+          (fun z : ↥Kw => (⟨z.1, hKwsub z.2⟩ : ↥P)) '' Set.univ := by
+        ext z
+        constructor
+        · intro hz
+          exact ⟨⟨z.1, hz⟩, Set.mem_univ _, rfl⟩
+        · rintro ⟨u, -, rfl⟩
+          exact u.2
+      rw [himgK]
+      exact isCompact_univ.image (continuous_subtype_val.subtype_mk _)
+    refine ⟨?_, ?_, ⟨Subtype.val ⁻¹' Kw, hKpre, ?_, fun z hz => hKwzero z hz⟩, ?_⟩
+    · intro z hz
+      have hzp : (z : M) ≠ p := fun hcon =>
+        (Set.mem_compl_singleton_iff.mp hz) (Subtype.ext hcon)
+      exact (msub_val P w _ (fun _ => rfl) z).mp
+        (hwsub z (Set.mem_compl_singleton_iff.mpr hzp))
+    · intro z hz
+      have hzp : (z : M) ≠ p := fun hcon =>
+        (Set.mem_compl_singleton_iff.mp hz) (Subtype.ext hcon)
+      have h1 : ContinuousAt w (z : M) :=
+        hwcont.continuousAt (isOpen_compl_singleton.mem_nhds hzp)
+      exact (h1.comp continuous_subtype_val.continuousAt).continuousWithinAt
+    · intro hcon
+      rw [hcon] at hKpre
+      exact NoncompactSpace.noncompact_univ hKpre
+    · obtain ⟨C, hC⟩ := hwpole
+      refine ⟨C, ?_⟩
+      have h2 : ∀ᶠ y' in Filter.map (Subtype.val : ↥P → M)
+          (𝓝[≠] (⟨p, hpP⟩ : ↥P)), w y' + Real.log ‖poleCoord p y'‖ ≤ C := by
+        rw [hmapval P p hpP]
+        exact hC
+      rw [Filter.eventually_map] at h2
+      filter_upwards [h2] with z hz
+      have hpc : poleCoord (⟨p, hpP⟩ : ↥P) z = poleCoord p (z : M) := rfl
+      rw [hpc]
+      exact hz
+  /- ## Nonnegativity of the piece Green's function. -/
+  have hPGnonneg : ∀ (p x : M), p ∉ D₀.closedCarrier → x ∉ D₀.closedCarrier →
+      x ≠ p → ∀ t (ht : 0 < t) (ht1 : t ≤ 1),
+      0 ≤ pieceGreen (D₀.shrink t ht ht1).compl p x := by
+    intro p x hp hx hxp t ht ht1
+    have hpW := hWmem t ht ht1 hp
+    have hxW := hWmem t ht ht1 hx
+    rw [hPG _ p x hpW hxW]
+    have hzx : (⟨x, hxW⟩ : ↥(D₀.shrink t ht ht1).compl) ≠ ⟨p, hpW⟩ :=
+      fun hcon => hxp (congrArg Subtype.val hcon)
+    simp only [greenEnvelope]
+    exact le_csSup (hEnvB t ht ht1 p hpW ⟨x, hxW⟩ hzx) ⟨_, hbaseP _ p hpW, rfl⟩
+  /- ## Monotonicity of the piece Green's function under shrinking. -/
+  have hPGmono : ∀ (p x : M), p ∉ D₀.closedCarrier → x ∉ D₀.closedCarrier →
+      x ≠ p → ∀ t t' (ht : 0 < t) (ht1 : t ≤ 1) (ht' : 0 < t')
+      (ht1' : t' ≤ 1), t' ≤ t →
+      pieceGreen (D₀.shrink t ht ht1).compl p x ≤
+        pieceGreen (D₀.shrink t' ht' ht1').compl p x := by
+    intro p x hp hx hxp t t' ht ht1 ht' ht1' htt
+    have hpW := hWmem t ht ht1 hp
+    have hxW := hWmem t ht ht1 hx
+    have hpW' := hWmem t' ht' ht1' hp
+    have hxW' := hWmem t' ht' ht1' hx
+    rw [hPG _ p x hpW hxW, hPG _ p x hpW' hxW']
+    simp only [greenEnvelope]
+    have hzx' : (⟨x, hxW'⟩ : ↥(D₀.shrink t' ht' ht1').compl) ≠ ⟨p, hpW'⟩ :=
+      fun hcon => hxp (congrArg Subtype.val hcon)
+    refine Real.sSup_le ?_ ?_
+    · rintro a ⟨v, hv, rfl⟩
+      obtain ⟨w, hwfam, hwval, Kw, hKwc, hKws, hKw0⟩ :=
+        brickE _ (hWne t ht ht1) p hpW v hv
+      have hwmem' : (fun z : ↥(D₀.shrink t' ht' ht1').compl => w z) ∈
+          greenFamily (⟨p, hpW'⟩ : ↥(D₀.shrink t' ht' ht1').compl) :=
+        brickR _ (noncompactSpace_coordDisk_compl _) p hpW' w Kw hwfam.1
+          hwfam.2.1 hKwc (hKws.trans (hWsub t t' ht ht1 ht' ht1' htt)) hKw0
+          hwfam.2.2.2
+      have h4 : v ⟨x, hxW⟩ = w x := (hwval ⟨x, hxW⟩).symm
+      exact (le_of_eq h4).trans
+        (le_csSup (hEnvB t' ht' ht1' p hpW' ⟨x, hxW'⟩ hzx') ⟨_, hwmem', rfl⟩)
+    · exact le_csSup (hEnvB t' ht' ht1' p hpW' ⟨x, hxW'⟩ hzx')
+        ⟨_, hbaseP _ p hpW', rfl⟩
+  /- ## Hyperbolic bound: the ambient envelope dominates every piece. -/
+  have hPGle : ∀ (p x : M), p ∉ D₀.closedCarrier → x ∉ D₀.closedCarrier →
+      BddAbove ((fun v => v x) '' greenFamily p) →
+      ∀ t (ht : 0 < t) (ht1 : t ≤ 1),
+      pieceGreen (D₀.shrink t ht ht1).compl p x ≤ greenEnvelope p x := by
+    intro p x hp hx hbdd t ht ht1
+    have hpW := hWmem t ht ht1 hp
+    have hxW := hWmem t ht ht1 hx
+    rw [hPG _ p x hpW hxW]
+    simp only [greenEnvelope]
+    refine Real.sSup_le ?_ ?_
+    · rintro a ⟨v, hv, rfl⟩
+      obtain ⟨w, hwfam, hwval, -⟩ := brickE _ (hWne t ht ht1) p hpW v hv
+      have h4 : v ⟨x, hxW⟩ = w x := (hwval ⟨x, hxW⟩).symm
+      exact (le_of_eq h4).trans (le_csSup hbdd ⟨w, hwfam, rfl⟩)
+    · exact le_csSup hbdd ⟨_, hbaseM p, rfl⟩
+  /- ## The monotone tail: a small-shrink bound propagates to all shrinks. -/
+  have tail : (∃ t₀ C₀, 0 < t₀ ∧ t₀ ≤ 1 ∧ ∀ t (ht : 0 < t) (ht1 : t ≤ 1),
+      t ≤ t₀ → |pieceGreen (D₀.shrink t ht ht1).compl p₁ p₂ -
+        pieceGreen (D₀.shrink t ht ht1).compl p₂ p₁| ≤ C₀) →
+      ∃ C, ∀ t (ht : 0 < t) (ht1 : t ≤ 1),
+        |pieceGreen (D₀.shrink t ht ht1).compl p₁ p₂ -
+          pieceGreen (D₀.shrink t ht ht1).compl p₂ p₁| ≤ C := by
+    rintro ⟨t₀, C₀, ht₀, ht₀1, hC₀⟩
+    refine ⟨max C₀ (pieceGreen (D₀.shrink t₀ ht₀ ht₀1).compl p₁ p₂ +
+      pieceGreen (D₀.shrink t₀ ht₀ ht₀1).compl p₂ p₁), fun t ht ht1 => ?_⟩
+    rcases le_total t t₀ with h | h
+    · exact (hC₀ t ht ht1 h).trans (le_max_left _ _)
+    · have m1 := hPGmono p₁ p₂ hp₁ hp₂ hne.symm t t₀ ht ht1 ht₀ ht₀1 h
+      have m2 := hPGmono p₂ p₁ hp₂ hp₁ hne t t₀ ht ht1 ht₀ ht₀1 h
+      have n1 := hPGnonneg p₁ p₂ hp₁ hp₂ hne.symm t ht ht1
+      have n2 := hPGnonneg p₂ p₁ hp₂ hp₁ hne t ht ht1
+      have n1' := hPGnonneg p₁ p₂ hp₁ hp₂ hne.symm t₀ ht₀ ht₀1
+      have n2' := hPGnonneg p₂ p₁ hp₂ hp₁ hne t₀ ht₀ ht₀1
+      refine le_trans ?_ (le_max_right _ _)
+      rw [abs_sub_le_iff]
+      constructor
+      · linarith
+      · linarith
+  /- ## Assembly: dichotomy on the ambient boundedness at the two poles. -/
+  by_cases hb₁ : BddAbove ((fun v => v p₂) '' greenFamily p₁)
+  · by_cases hb₂ : BddAbove ((fun v => v p₁) '' greenFamily p₂)
+    · refine ⟨greenEnvelope p₁ p₂ + greenEnvelope p₂ p₁, fun t ht ht1 => ?_⟩
+      have h1 := hPGle p₁ p₂ hp₁ hp₂ hb₁ t ht ht1
+      have h2 := hPGle p₂ p₁ hp₂ hp₁ hb₂ t ht ht1
+      have h3 := hPGnonneg p₁ p₂ hp₁ hp₂ hne.symm t ht ht1
+      have h4 := hPGnonneg p₂ p₁ hp₂ hp₁ hne t ht ht1
+      rw [abs_sub_le_iff]
+      constructor
+      · linarith
+      · linarith
+    · exact tail (hcross (Or.inr hb₂))
+  · exact tail (hcross (Or.inl hb₁))
 
 /-- **The shrink-uniform dipole bound**: away from two pole disks, the
 difference of the two piece Green's functions is bounded independently of the
@@ -1623,7 +2078,8 @@ theorem exists_bipolarGreen [SecondCountableTopology M] (D₀ : CoordDisk M)
         ∃ h : ℂ → ℝ, HarmonicOnNhd h (ball (chartAt ℂ p₂ p₂) r) ∧
           ∀ w ∈ ball (chartAt ℂ p₂ p₂) r \ {chartAt ℂ p₂ p₂},
             h w = G ((chartAt ℂ p₂).symm w) -
-              Real.log ‖w - chartAt ℂ p₂ p₂‖) := by
+              Real.log ‖w - chartAt ℂ p₂ p₂‖) ∧
+      (∃ C, ∃ V₁ ∈ 𝓝 p₁, ∃ V₂ ∈ 𝓝 p₂, ∀ x ∉ V₁ ∪ V₂, |G x| ≤ C) := by
   sorry
 
 /-- **The dipole map**: on a simply connected surface the bipolar Green's
@@ -1650,6 +2106,15 @@ extremal property of the piece Green's functions. -/
 theorem injective_bipolar_map [SimplyConnectedSpace M]
     [SecondCountableTopology M] (hnon : ∀ p₀ : M, ¬ HasGreenFunction p₀)
     {p₁ p₂ : M} (hne : p₁ ≠ p₂) {G : M → ℝ} {φ : M → ℂ̂}
+    (hpole₁ : ∃ r > 0, ball (chartAt ℂ p₁ p₁) r ⊆ (chartAt ℂ p₁).target ∧
+      ∃ h : ℂ → ℝ, HarmonicOnNhd h (ball (chartAt ℂ p₁ p₁) r) ∧
+        ∀ w ∈ ball (chartAt ℂ p₁ p₁) r \ {chartAt ℂ p₁ p₁},
+          h w = G ((chartAt ℂ p₁).symm w) + Real.log ‖w - chartAt ℂ p₁ p₁‖)
+    (hpole₂ : ∃ r > 0, ball (chartAt ℂ p₂ p₂) r ⊆ (chartAt ℂ p₂).target ∧
+      ∃ h : ℂ → ℝ, HarmonicOnNhd h (ball (chartAt ℂ p₂ p₂) r) ∧
+        ∀ w ∈ ball (chartAt ℂ p₂ p₂) r \ {chartAt ℂ p₂ p₂},
+          h w = G ((chartAt ℂ p₂).symm w) - Real.log ‖w - chartAt ℂ p₂ p₂‖)
+    (hbdd : ∃ C, ∃ V₁ ∈ 𝓝 p₁, ∃ V₂ ∈ 𝓝 p₂, ∀ x ∉ V₁ ∪ V₂, |G x| ≤ C)
     (hφ : ContMDiff 𝓘(ℂ) 𝓘(ℂ) ω φ) (h₁ : φ p₁ = ((0 : ℂ) : ℂ̂))
     (h₂ : φ p₂ = OnePoint.infty)
     (habs : ∀ x, x ≠ p₁ → x ≠ p₂ →
@@ -2780,6 +3245,385 @@ theorem exists_diffeomorph_opens_of_forall_not_hasGreenFunction
     [SimplyConnectedSpace M] [SecondCountableTopology M]
     (hnon : ∀ p₀ : M, ¬ HasGreenFunction p₀) :
     ∃ U : Opens ℂ̂, Nonempty (M ≃ₘ^ω⟮𝓘(ℂ), 𝓘(ℂ)⟯ ↥U) := by
-  sorry
+  classical
+  /- ## Two distinct points and a disk center, all in one chart ball. -/
+  obtain ⟨p₁⟩ : Nonempty M := inferInstance
+  have hp₁src : p₁ ∈ (chartAt ℂ p₁).source := mem_chart_source ℂ p₁
+  obtain ⟨r₀, hr₀, hball₀⟩ := Metric.isOpen_iff.mp (chartAt ℂ p₁).open_target
+    (chartAt ℂ p₁ p₁) ((chartAt ℂ p₁).map_source hp₁src)
+  have hmemt : ∀ t : ℝ, 0 < t → t < r₀ →
+      chartAt ℂ p₁ p₁ + (t : ℂ) ∈ (chartAt ℂ p₁).target := by
+    intro t ht0 htr
+    apply hball₀
+    rw [Metric.mem_ball, dist_eq_norm, add_sub_cancel_left, Complex.norm_real,
+      Real.norm_of_nonneg ht0.le]
+    exact htr
+  have h2mem : chartAt ℂ p₁ p₁ + ((r₀ / 2 : ℝ) : ℂ) ∈ (chartAt ℂ p₁).target :=
+    hmemt _ (by linarith) (by linarith)
+  have h4mem : chartAt ℂ p₁ p₁ + ((r₀ / 4 : ℝ) : ℂ) ∈ (chartAt ℂ p₁).target :=
+    hmemt _ (by linarith) (by linarith)
+  have hsymmne : ∀ t : ℝ, 0 < t → t < r₀ →
+      (chartAt ℂ p₁).symm (chartAt ℂ p₁ p₁ + (t : ℂ)) ≠ p₁ := by
+    intro t ht0 htr hcon
+    have h1 : chartAt ℂ p₁ ((chartAt ℂ p₁).symm (chartAt ℂ p₁ p₁ + (t : ℂ)))
+        = chartAt ℂ p₁ p₁ + (t : ℂ) := (chartAt ℂ p₁).right_inv (hmemt t ht0 htr)
+    rw [hcon] at h1
+    have h2 : chartAt ℂ p₁ p₁ + (t : ℂ) = chartAt ℂ p₁ p₁ + 0 := by
+      rw [add_zero]; exact h1.symm
+    have h3 : (t : ℂ) = 0 := add_left_cancel h2
+    rw [Complex.ofReal_eq_zero] at h3
+    exact ht0.ne' h3
+  set p₂ : M := (chartAt ℂ p₁).symm (chartAt ℂ p₁ p₁ + ((r₀ / 2 : ℝ) : ℂ)) with hp₂def
+  set q : M := (chartAt ℂ p₁).symm (chartAt ℂ p₁ p₁ + ((r₀ / 4 : ℝ) : ℂ)) with hqdef
+  have hp₁p₂ : p₁ ≠ p₂ := fun hcon =>
+    hsymmne (r₀ / 2) (by linarith) (by linarith) hcon.symm
+  have hp₁q : p₁ ≠ q := fun hcon =>
+    hsymmne (r₀ / 4) (by linarith) (by linarith) hcon.symm
+  have hp₂q : p₂ ≠ q := by
+    intro hcon
+    rw [hp₂def, hqdef] at hcon
+    have h1 := congrArg (⇑(chartAt ℂ p₁)) hcon
+    rw [(chartAt ℂ p₁).right_inv h2mem, (chartAt ℂ p₁).right_inv h4mem] at h1
+    have h2 : ((r₀ / 2 : ℝ) : ℂ) = ((r₀ / 4 : ℝ) : ℂ) := add_left_cancel h1
+    rw [Complex.ofReal_inj] at h2
+    linarith
+  /- ## The coordinate disk at `q` avoiding both poles. -/
+  set e₀ : OpenPartialHomeomorph M ℂ := chartAt ℂ q with he₀def
+  have hqsrc : q ∈ e₀.source := mem_chart_source ℂ q
+  have hUopen : IsOpen (e₀.target ∩ ⇑e₀.symm ⁻¹' ({p₁}ᶜ ∩ {p₂}ᶜ)) :=
+    e₀.isOpen_inter_preimage_symm (isOpen_compl_singleton.inter isOpen_compl_singleton)
+  have hqU : e₀ q ∈ e₀.target ∩ ⇑e₀.symm ⁻¹' ({p₁}ᶜ ∩ {p₂}ᶜ) := by
+    refine ⟨e₀.map_source hqsrc, ?_⟩
+    rw [Set.mem_preimage, e₀.left_inv hqsrc]
+    exact ⟨Set.mem_compl_singleton_iff.mpr hp₁q.symm,
+      Set.mem_compl_singleton_iff.mpr hp₂q.symm⟩
+  obtain ⟨εa, hεa, hballa⟩ := Metric.isOpen_iff.mp hUopen _ hqU
+  have hra0 : (0 : ℝ) < εa / 2 := half_pos hεa
+  have hrsub : closedBall (e₀ q) (εa / 2) ⊆ e₀.target ∩ ⇑e₀.symm ⁻¹' ({p₁}ᶜ ∩ {p₂}ᶜ) :=
+    (Metric.closedBall_subset_ball (half_lt_self hεa)).trans hballa
+  set D₀ : CoordDisk M := ⟨q, εa / 2, hra0, fun w hw => (hrsub hw).1⟩ with hD₀def
+  have hD₀car : D₀.closedCarrier = e₀.symm '' closedBall (e₀ q) (εa / 2) := rfl
+  have hD₀avoid : ∀ y ∈ D₀.closedCarrier, y ≠ p₁ ∧ y ≠ p₂ := by
+    rintro y ⟨w, hw, rfl⟩
+    have h2 := (hrsub hw).2
+    rw [Set.mem_preimage] at h2
+    exact ⟨Set.mem_compl_singleton_iff.mp h2.1, Set.mem_compl_singleton_iff.mp h2.2⟩
+  have hp₁D : p₁ ∉ D₀.closedCarrier := fun hmem => (hD₀avoid p₁ hmem).1 rfl
+  have hp₂D : p₂ ∉ D₀.closedCarrier := fun hmem => (hD₀avoid p₂ hmem).2 rfl
+  /- ## The bipolar Green's function and the injective dipole map. -/
+  obtain ⟨Gb, hGb, hpole₁, hpole₂, hbdd⟩ := exists_bipolarGreen D₀ hp₁D hp₂D hp₁p₂
+  obtain ⟨φ, hφ, hφ₁, hφ₂, habs⟩ := exists_bipolar_map hp₁p₂ hGb hpole₁ hpole₂
+  have hinj : Function.Injective φ :=
+    injective_bipolar_map hnon hp₁p₂ hpole₁ hpole₂ hbdd hφ hφ₁ hφ₂ habs
+  /- ## Plane-level helpers: an injective analytic map is locally open. -/
+  have keyPlane : ∀ (g : ℂ → ℂ) (T : Set ℂ), IsOpen T → (∀ w ∈ T, AnalyticAt ℂ g w) →
+      Set.InjOn g T → ∀ w ∈ T, 𝓝 (g w) ≤ Filter.map g (𝓝 w) := by
+    intro g T hTopen hgan hginjT w hw
+    rcases (hgan w hw).eventually_constant_or_nhds_le_map_nhds with hconst | hle
+    · exfalso
+      have h1 : ∀ᶠ w' in 𝓝[≠] w, g w' = g w ∧ w' ∈ T :=
+        (hconst.and (hTopen.eventually_mem hw)).filter_mono nhdsWithin_le_nhds
+      obtain ⟨w', ⟨hgw', hw'T⟩, hw'ne⟩ := (h1.and eventually_mem_nhdsWithin).exists
+      exact hw'ne (Set.mem_singleton_iff.mpr (hginjT hw'T hw hgw'))
+    · exact hle
+  have imgOpen : ∀ (g : ℂ → ℂ) (T : Set ℂ), IsOpen T → (∀ w ∈ T, AnalyticAt ℂ g w) →
+      Set.InjOn g T → ∀ S : Set ℂ, S ⊆ T → IsOpen S → IsOpen (g '' S) := by
+    intro g T hTopen hgan hginjT S hST hSopen
+    rw [isOpen_iff_mem_nhds]
+    rintro ζ ⟨w, hwS, rfl⟩
+    exact Filter.le_def.mp (keyPlane g T hTopen hgan hginjT w (hST hwS)) _
+      (Filter.image_mem_map (hSopen.mem_nhds hwS))
+  /- ## The dipole map is open: read it in charts around each point. -/
+  have hopenM : IsOpenMap φ := by
+    rw [isOpenMap_iff_nhds_le]
+    intro x
+    obtain ⟨χ, hxsrc, hχmax⟩ : ∃ χ : OpenPartialHomeomorph M ℂ,
+        x ∈ χ.source ∧ χ ∈ IsManifold.maximalAtlas 𝓘(ℂ) ω M :=
+      ⟨chartAt ℂ x, mem_chart_source ℂ x, IsManifold.chart_mem_maximalAtlas x⟩
+    obtain ⟨e, hφxsrc, hemax⟩ : ∃ e : OpenPartialHomeomorph ℂ̂ ℂ,
+        φ x ∈ e.source ∧ e ∈ IsManifold.maximalAtlas 𝓘(ℂ) ω ℂ̂ :=
+      ⟨chartAt ℂ (φ x), mem_chart_source ℂ (φ x),
+        IsManifold.chart_mem_maximalAtlas (φ x)⟩
+    have hTopen : IsOpen (χ.target ∩ ⇑χ.symm ⁻¹' (φ ⁻¹' e.source)) :=
+      χ.continuousOn_symm.isOpen_inter_preimage χ.open_target
+        (e.open_source.preimage hφ.continuous)
+    have hχxT : χ x ∈ χ.target ∩ ⇑χ.symm ⁻¹' (φ ⁻¹' e.source) := by
+      refine ⟨χ.map_source hxsrc, ?_⟩
+      rw [Set.mem_preimage, Set.mem_preimage, χ.left_inv hxsrc]
+      exact hφxsrc
+    have hgan : ∀ w ∈ χ.target ∩ ⇑χ.symm ⁻¹' (φ ⁻¹' e.source),
+        AnalyticAt ℂ (⇑e ∘ φ ∘ ⇑χ.symm) w := by
+      intro w hw
+      have hw2 : φ (χ.symm w) ∈ e.source := hw.2
+      have h1 : ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω (⇑χ.symm) w :=
+        contMDiffAt_symm_of_mem_maximalAtlas hχmax hw.1
+      have h2 : ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω φ (χ.symm w) := hφ.contMDiffAt
+      have h3 : ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω (⇑e) (φ (χ.symm w)) :=
+        contMDiffAt_of_mem_maximalAtlas hemax hw2
+      exact (contMDiffAt_iff_contDiffAt.mp
+        ((h3.comp (χ.symm w) h2).comp w h1)).analyticAt
+    have hginjT : Set.InjOn (⇑e ∘ φ ∘ ⇑χ.symm)
+        (χ.target ∩ ⇑χ.symm ⁻¹' (φ ⁻¹' e.source)) := by
+      intro w₁ h₁ w₂ h₂ hgw
+      have h₁2 : φ (χ.symm w₁) ∈ e.source := h₁.2
+      have h₂2 : φ (χ.symm w₂) ∈ e.source := h₂.2
+      have h3 : φ (χ.symm w₁) = φ (χ.symm w₂) := e.injOn h₁2 h₂2 hgw
+      have h4 : χ.symm w₁ = χ.symm w₂ := hinj h3
+      have h5 := congrArg (⇑χ) h4
+      rwa [χ.right_inv h₁.1, χ.right_inv h₂.1] at h5
+    have hle : 𝓝 ((⇑e ∘ φ ∘ ⇑χ.symm) (χ x)) ≤
+        Filter.map (⇑e ∘ φ ∘ ⇑χ.symm) (𝓝 (χ x)) :=
+      keyPlane _ _ hTopen hgan hginjT (χ x) hχxT
+    have hev : φ =ᶠ[𝓝 x] ⇑e.symm ∘ (⇑e ∘ φ ∘ ⇑χ.symm) ∘ ⇑χ := by
+      have hnb : χ.source ∩ φ ⁻¹' e.source ∈ 𝓝 x :=
+        (χ.open_source.inter (e.open_source.preimage hφ.continuous)).mem_nhds
+          ⟨hxsrc, hφxsrc⟩
+      filter_upwards [hnb] with y hy
+      have hy2 : φ y ∈ e.source := hy.2
+      simp only [Function.comp_apply, χ.left_inv hy.1]
+      exact (e.left_inv hy2).symm
+    have hgx : (⇑e ∘ φ ∘ ⇑χ.symm) (χ x) = e (φ x) := by
+      simp only [Function.comp_apply, χ.left_inv hxsrc]
+    have h6 : Filter.map φ (𝓝 x) =
+        Filter.map (⇑e.symm) (Filter.map (⇑e ∘ φ ∘ ⇑χ.symm) (𝓝 (χ x))) := by
+      rw [Filter.map_congr hev, ← χ.map_nhds_eq hxsrc, Filter.map_map, Filter.map_map]
+      rfl
+    have h7 : 𝓝 (φ x) = Filter.map (⇑e.symm) (𝓝 ((⇑e ∘ φ ∘ ⇑χ.symm) (χ x))) := by
+      rw [hgx, e.symm_map_nhds_eq hφxsrc]
+    rw [h6, h7]
+    exact Filter.map_mono hle
+  /- ## The image domain and the two structure maps. -/
+  let U : Opens ℂ̂ := ⟨Set.range φ, hopenM.isOpen_range⟩
+  have hF : ContMDiff 𝓘(ℂ) 𝓘(ℂ) ω
+      (fun x : M => (⟨φ x, Set.mem_range_self x⟩ : ↥U)) := by
+    intro x
+    have hcomp : ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω
+        (Subtype.val ∘ fun x : M => (⟨φ x, Set.mem_range_self x⟩ : ↥U)) x :=
+      hφ.contMDiffAt
+    rw [contMDiffAt_iff_target]
+    exact ⟨IsInducing.subtypeVal.continuousAt_iff.mpr hcomp.continuousAt,
+      (contMDiffAt_iff_target.mp hcomp).2⟩
+  /- ## Inverse smoothness: read the inverse through the sphere chart at the
+  image point and a surface chart at the preimage point, where it is the
+  local inverse of an injective analytic plane map. -/
+  have hGsm : ContMDiff 𝓘(ℂ) 𝓘(ℂ) ω (fun y : ↥U => Function.invFun φ (y : ℂ̂)) := by
+    intro y₀
+    obtain ⟨x₀, hφx₀⟩ : ∃ x, φ x = (y₀ : ℂ̂) := y₀.2
+    obtain ⟨χ, hx₀src, hχmax⟩ : ∃ χ : OpenPartialHomeomorph M ℂ,
+        x₀ ∈ χ.source ∧ χ ∈ IsManifold.maximalAtlas 𝓘(ℂ) ω M :=
+      ⟨chartAt ℂ x₀, mem_chart_source ℂ x₀, IsManifold.chart_mem_maximalAtlas x₀⟩
+    obtain ⟨e, hy₀esrc, hemax⟩ : ∃ e : OpenPartialHomeomorph ℂ̂ ℂ,
+        (y₀ : ℂ̂) ∈ e.source ∧ e ∈ IsManifold.maximalAtlas 𝓘(ℂ) ω ℂ̂ :=
+      ⟨chartAt ℂ ((y₀ : ℂ̂)), mem_chart_source ℂ ((y₀ : ℂ̂)),
+        IsManifold.chart_mem_maximalAtlas ((y₀ : ℂ̂))⟩
+    have hφx₀src : φ x₀ ∈ e.source := by rw [hφx₀]; exact hy₀esrc
+    have hTopen : IsOpen (χ.target ∩ ⇑χ.symm ⁻¹' (φ ⁻¹' e.source)) :=
+      χ.continuousOn_symm.isOpen_inter_preimage χ.open_target
+        (e.open_source.preimage hφ.continuous)
+    have hχx₀T : χ x₀ ∈ χ.target ∩ ⇑χ.symm ⁻¹' (φ ⁻¹' e.source) := by
+      refine ⟨χ.map_source hx₀src, ?_⟩
+      rw [Set.mem_preimage, Set.mem_preimage, χ.left_inv hx₀src]
+      exact hφx₀src
+    -- The chart reading of `φ` is analytic and injective near the base point.
+    have hgan : ∀ w ∈ χ.target ∩ ⇑χ.symm ⁻¹' (φ ⁻¹' e.source),
+        AnalyticAt ℂ (⇑e ∘ φ ∘ ⇑χ.symm) w := by
+      intro w hw
+      have hw2 : φ (χ.symm w) ∈ e.source := hw.2
+      have h1 : ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω (⇑χ.symm) w :=
+        contMDiffAt_symm_of_mem_maximalAtlas hχmax hw.1
+      have h2 : ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω φ (χ.symm w) := hφ.contMDiffAt
+      have h3 : ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω (⇑e) (φ (χ.symm w)) :=
+        contMDiffAt_of_mem_maximalAtlas hemax hw2
+      exact (contMDiffAt_iff_contDiffAt.mp
+        ((h3.comp (χ.symm w) h2).comp w h1)).analyticAt
+    have hginjT : Set.InjOn (⇑e ∘ φ ∘ ⇑χ.symm)
+        (χ.target ∩ ⇑χ.symm ⁻¹' (φ ⁻¹' e.source)) := by
+      intro w₁ h₁ w₂ h₂ hgw
+      have h₁2 : φ (χ.symm w₁) ∈ e.source := h₁.2
+      have h₂2 : φ (χ.symm w₂) ∈ e.source := h₂.2
+      have h3 : φ (χ.symm w₁) = φ (χ.symm w₂) := e.injOn h₁2 h₂2 hgw
+      have h4 : χ.symm w₁ = χ.symm w₂ := hinj h3
+      have h5 := congrArg (⇑χ) h4
+      rwa [χ.right_inv h₁.1, χ.right_inv h₂.1] at h5
+    obtain ⟨r, hr, hBsub⟩ := Metric.isOpen_iff.mp hTopen (χ x₀) hχx₀T
+    -- The inverse chart reading.
+    let η : ℂ → ℂ := fun ζ => χ (Function.invFun φ (e.symm ζ))
+    have hηg : ∀ w ∈ ball (χ x₀) r, η ((⇑e ∘ φ ∘ ⇑χ.symm) w) = w := by
+      intro w hwB
+      have hwT := hBsub hwB
+      have hwT2 : φ (χ.symm w) ∈ e.source := hwT.2
+      have h5 : Function.invFun φ (φ (χ.symm w)) = χ.symm w :=
+        Function.leftInverse_invFun hinj (χ.symm w)
+      change χ (Function.invFun φ (e.symm (e (φ (χ.symm w))))) = w
+      rw [e.left_inv hwT2, h5]
+      exact χ.right_inv hwT.1
+    -- The image `W` of the coordinate ball, an open plane neighborhood.
+    have hWopen : IsOpen ((⇑e ∘ φ ∘ ⇑χ.symm) '' ball (χ x₀) r) :=
+      imgOpen _ _ hTopen hgan hginjT _ hBsub isOpen_ball
+    have hy₀W : e (y₀ : ℂ̂) ∈ (⇑e ∘ φ ∘ ⇑χ.symm) '' ball (χ x₀) r := by
+      refine ⟨χ x₀, mem_ball_self hr, ?_⟩
+      simp only [Function.comp_apply]
+      rw [χ.left_inv hx₀src, hφx₀]
+    have himg : ∀ ζ ∈ (⇑e ∘ φ ∘ ⇑χ.symm) '' ball (χ x₀) r,
+        ∃ w ∈ ball (χ x₀) r, (⇑e ∘ φ ∘ ⇑χ.symm) w = ζ := by
+      rintro ζ ⟨w, hwB, rfl⟩
+      exact ⟨w, hwB, rfl⟩
+    have hgη : ∀ ζ ∈ (⇑e ∘ φ ∘ ⇑χ.symm) '' ball (χ x₀) r,
+        (⇑e ∘ φ ∘ ⇑χ.symm) (η ζ) = ζ := by
+      intro ζ hζ
+      obtain ⟨w, hwB, rfl⟩ := himg ζ hζ
+      rw [hηg w hwB]
+    have hηB : ∀ ζ ∈ (⇑e ∘ φ ∘ ⇑χ.symm) '' ball (χ x₀) r, η ζ ∈ ball (χ x₀) r := by
+      intro ζ hζ
+      obtain ⟨w, hwB, rfl⟩ := himg ζ hζ
+      rw [hηg w hwB]
+      exact hwB
+    -- Continuity of the inverse reading, from openness of the reading.
+    have hηc : ∀ ζ ∈ (⇑e ∘ φ ∘ ⇑χ.symm) '' ball (χ x₀) r, ContinuousAt η ζ := by
+      intro ζ hζ
+      obtain ⟨w, hwB, rfl⟩ := himg ζ hζ
+      have hgoal : Filter.Tendsto η (𝓝 ((⇑e ∘ φ ∘ ⇑χ.symm) w)) (𝓝 w) := by
+        rw [Filter.tendsto_def]
+        intro N hN
+        obtain ⟨N', hN'sub, hN'open, hwN'⟩ :=
+          _root_.mem_nhds_iff.mp (Filter.inter_mem hN (isOpen_ball.mem_nhds hwB))
+        have hsub' : N' ⊆ ball (χ x₀) r := fun z hz => (hN'sub hz).2
+        have hopenimg : IsOpen ((⇑e ∘ φ ∘ ⇑χ.symm) '' N') :=
+          imgOpen _ _ hTopen hgan hginjT _ (hsub'.trans hBsub) hN'open
+        have hgmem : (⇑e ∘ φ ∘ ⇑χ.symm) w ∈ (⇑e ∘ φ ∘ ⇑χ.symm) '' N' :=
+          ⟨w, hwN', rfl⟩
+        refine Filter.mem_of_superset (hopenimg.mem_nhds hgmem) ?_
+        rintro ζ' ⟨w', hw'N', rfl⟩
+        rw [Set.mem_preimage, hηg w' (hsub' hw'N')]
+        exact (hN'sub hw'N').1
+      have hηw : η ((⇑e ∘ φ ∘ ⇑χ.symm) w) = w := hηg w hwB
+      change Filter.Tendsto η (𝓝 ((⇑e ∘ φ ∘ ⇑χ.symm) w))
+        (𝓝 (η ((⇑e ∘ φ ∘ ⇑χ.symm) w)))
+      rw [hηw]
+      exact hgoal
+    -- Differentiability of the inverse reading at noncritical values.
+    have hd_nc : ∀ ζ ∈ (⇑e ∘ φ ∘ ⇑χ.symm) '' ball (χ x₀) r,
+        deriv (⇑e ∘ φ ∘ ⇑χ.symm) (η ζ) ≠ 0 → DifferentiableAt ℂ η ζ := by
+      intro ζ hζ hder
+      have hfd : HasDerivAt (⇑e ∘ φ ∘ ⇑χ.symm)
+          (deriv (⇑e ∘ φ ∘ ⇑χ.symm) (η ζ)) (η ζ) :=
+        ((hgan (η ζ) (hBsub (hηB ζ hζ))).differentiableAt).hasDerivAt
+      have hev : ∀ᶠ ζ' in 𝓝 ζ, (⇑e ∘ φ ∘ ⇑χ.symm) (η ζ') = ζ' := by
+        filter_upwards [hWopen.mem_nhds hζ] with ζ' hζ' using hgη ζ' hζ'
+      exact (HasDerivAt.of_local_left_inverse (hηc ζ hζ) hfd hder hev).differentiableAt
+    -- Critical points of the chart reading are isolated (injectivity).
+    have hganN : AnalyticOnNhd ℂ (⇑e ∘ φ ∘ ⇑χ.symm)
+        (χ.target ∩ ⇑χ.symm ⁻¹' (φ ⁻¹' e.source)) := fun w hw => hgan w hw
+    have hcrit : ∀ w ∈ χ.target ∩ ⇑χ.symm ⁻¹' (φ ⁻¹' e.source),
+        ∀ᶠ w' in 𝓝[≠] w, deriv (⇑e ∘ φ ∘ ⇑χ.symm) w' ≠ 0 := by
+      intro w hw
+      rcases (hganN.deriv w hw).eventually_eq_zero_or_eventually_ne_zero with h0 | hne
+      · exfalso
+        obtain ⟨ρ, hρ0, hballρ⟩ :=
+          Metric.eventually_nhds_iff_ball.mp (h0.and (hTopen.eventually_mem hw))
+        have hconst : ∀ w' ∈ ball w ρ,
+            (⇑e ∘ φ ∘ ⇑χ.symm) w' = (⇑e ∘ φ ∘ ⇑χ.symm) w := by
+          intro w' hw'
+          refine Convex.is_const_of_fderivWithin_eq_zero (convex_ball w ρ)
+            (fun u hu => ((hgan u (hballρ u hu).2).differentiableAt).differentiableWithinAt)
+            ?_ hw' (mem_ball_self hρ0)
+          intro u hu
+          rw [fderivWithin_of_isOpen isOpen_ball hu]
+          refine ContinuousLinearMap.ext_ring ?_
+          rw [fderiv_apply_one_eq_deriv, (hballρ u hu).1]
+          simp
+        have hmem : w + ((ρ / 2 : ℝ) : ℂ) ∈ ball w ρ := by
+          rw [Metric.mem_ball, dist_eq_norm, add_sub_cancel_left, Complex.norm_real,
+            Real.norm_eq_abs, abs_of_pos (by linarith)]
+          linarith
+        have heq2 : w + ((ρ / 2 : ℝ) : ℂ) = w :=
+          hginjT (hballρ _ hmem).2 hw (hconst _ hmem)
+        have hρ2 : ((ρ / 2 : ℝ) : ℂ) = 0 := by
+          have h4 : w + ((ρ / 2 : ℝ) : ℂ) = w + 0 := by rw [add_zero]; exact heq2
+          exact add_left_cancel h4
+        rw [Complex.ofReal_eq_zero] at hρ2
+        linarith
+      · exact hne
+    -- Differentiability everywhere on `W` (removable singularity at critical values).
+    have hdiff : ∀ ζ ∈ (⇑e ∘ φ ∘ ⇑χ.symm) '' ball (χ x₀) r,
+        DifferentiableAt ℂ η ζ := by
+      intro ζ hζ
+      by_cases hder : deriv (⇑e ∘ φ ∘ ⇑χ.symm) (η ζ) = 0
+      swap
+      · exact hd_nc ζ hζ hder
+      obtain ⟨ρ, hρ0, hballρ⟩ := Metric.eventually_nhds_iff_ball.mp
+        ((eventually_nhdsWithin_iff.mp (hcrit (η ζ) (hBsub (hηB ζ hζ)))).and
+          (isOpen_ball.eventually_mem (hηB ζ hζ)))
+      have hsub' : ball (η ζ) ρ ⊆ ball (χ x₀) r := fun z hz => (hballρ z hz).2
+      have hW'open : IsOpen ((⇑e ∘ φ ∘ ⇑χ.symm) '' ball (η ζ) ρ) :=
+        imgOpen _ _ hTopen hgan hginjT _ (hsub'.trans hBsub) isOpen_ball
+      have hζW' : ζ ∈ (⇑e ∘ φ ∘ ⇑χ.symm) '' ball (η ζ) ρ :=
+        ⟨η ζ, mem_ball_self hρ0, hgη ζ hζ⟩
+      have hW'W : (⇑e ∘ φ ∘ ⇑χ.symm) '' ball (η ζ) ρ ⊆
+          (⇑e ∘ φ ∘ ⇑χ.symm) '' ball (χ x₀) r :=
+        Set.image_mono hsub'
+      have hoff : DifferentiableOn ℂ η
+          (((⇑e ∘ φ ∘ ⇑χ.symm) '' ball (η ζ) ρ) \ {ζ}) := by
+        rintro ζ' ⟨hζ'W', hζ'ne⟩
+        obtain ⟨w', hw'ball, rfl⟩ := hζ'W'
+        refine (hd_nc _ (hW'W ⟨w', hw'ball, rfl⟩) ?_).differentiableWithinAt
+        rw [hηg w' (hsub' hw'ball)]
+        refine (hballρ w' hw'ball).1 ?_
+        intro hmem
+        apply hζ'ne
+        rw [Set.mem_singleton_iff] at hmem ⊢
+        rw [hmem]
+        exact hgη ζ hζ
+      have hW'diff : DifferentiableOn ℂ η ((⇑e ∘ φ ∘ ⇑χ.symm) '' ball (η ζ) ρ) :=
+        (Complex.differentiableOn_compl_singleton_and_continuousAt_iff
+          (hW'open.mem_nhds hζW')).mp ⟨hoff, hηc ζ hζ⟩
+      exact hW'diff.differentiableAt (hW'open.mem_nhds hζW')
+    -- The inverse reading is analytic at the base point; assemble the composite.
+    have hWdiff : DifferentiableOn ℂ η ((⇑e ∘ φ ∘ ⇑χ.symm) '' ball (χ x₀) r) :=
+      fun ζ hζ => (hdiff ζ hζ).differentiableWithinAt
+    have hηan : AnalyticAt ℂ η (e (y₀ : ℂ̂)) := (hWdiff.analyticOnNhd hWopen) _ hy₀W
+    have hval : ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω (Subtype.val : ↥U → ℂ̂) y₀ :=
+      contMDiff_subtype_val.contMDiffAt
+    have hesm : ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω (⇑e) ((y₀ : ℂ̂)) :=
+      contMDiffAt_of_mem_maximalAtlas hemax hy₀esrc
+    have hηsm : ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω η (e (y₀ : ℂ̂)) :=
+      contMDiffAt_iff_contDiffAt.mpr hηan.contDiffAt
+    have hχsymm : ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω (⇑χ.symm) (η (e (y₀ : ℂ̂))) :=
+      contMDiffAt_symm_of_mem_maximalAtlas hχmax (hBsub (hηB _ hy₀W)).1
+    have hcomp2 : ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω
+        ((⇑χ.symm ∘ η ∘ ⇑e) ∘ (Subtype.val : ↥U → ℂ̂)) y₀ :=
+      ContMDiffAt.comp y₀
+        (ContMDiffAt.comp ((y₀ : ℂ̂)) hχsymm
+          (ContMDiffAt.comp ((y₀ : ℂ̂)) hηsm hesm)) hval
+    refine hcomp2.congr_of_eventuallyEq ?_
+    have hSopen : IsOpen (e.source ∩ ⇑e ⁻¹' ((⇑e ∘ φ ∘ ⇑χ.symm) '' ball (χ x₀) r)) :=
+      e.continuousOn.isOpen_inter_preimage e.open_source hWopen
+    have hy₀S : (y₀ : ℂ̂) ∈
+        e.source ∩ ⇑e ⁻¹' ((⇑e ∘ φ ∘ ⇑χ.symm) '' ball (χ x₀) r) :=
+      ⟨hy₀esrc, hy₀W⟩
+    have hmemS : (Subtype.val : ↥U → ℂ̂) ⁻¹'
+        (e.source ∩ ⇑e ⁻¹' ((⇑e ∘ φ ∘ ⇑χ.symm) '' ball (χ x₀) r)) ∈ 𝓝 y₀ :=
+      (hSopen.preimage continuous_subtype_val).mem_nhds hy₀S
+    filter_upwards [hmemS] with y hy
+    obtain ⟨w, hwB, hgw⟩ := himg (e (y : ℂ̂)) hy.2
+    have hwT := hBsub hwB
+    have hwT2 : φ (χ.symm w) ∈ e.source := hwT.2
+    have h7 : (y : ℂ̂) = φ (χ.symm w) := by
+      have h8 := e.left_inv hy.1
+      rw [← hgw] at h8
+      have h9 : e.symm ((⇑e ∘ φ ∘ ⇑χ.symm) w) = φ (χ.symm w) := by
+        simp only [Function.comp_apply]
+        exact e.left_inv hwT2
+      rw [← h8]
+      exact h9
+    change Function.invFun φ (y : ℂ̂) = χ.symm (η (e (y : ℂ̂)))
+    rw [← hgw, hηg w hwB, h7, Function.leftInverse_invFun hinj (χ.symm w)]
+  exact ⟨U, ⟨{
+    toFun := fun x => ⟨φ x, Set.mem_range_self x⟩
+    invFun := fun y => Function.invFun φ (y : ℂ̂)
+    left_inv := fun x => Function.leftInverse_invFun hinj x
+    right_inv := fun y => Subtype.ext (Function.invFun_eq y.2)
+    contMDiff_toFun := hF
+    contMDiff_invFun := hGsm }⟩⟩
 
 end RiemannDynamics
