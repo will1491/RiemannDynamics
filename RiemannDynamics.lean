@@ -189,3 +189,7 @@ import RiemannDynamics.Sphere.SphericalMetric
 import RiemannDynamics.Uniformization.SphereManifold
 import RiemannDynamics.Uniformization.HolomorphicEquiv
 import RiemannDynamics.Uniformization.Trichotomy
+import RiemannDynamics.Uniformization.Perron.HarmonicTransfer
+import RiemannDynamics.Uniformization.Perron.SurfaceHarmonic
+import RiemannDynamics.Uniformization.Perron.GreensFunction
+import RiemannDynamics.Uniformization.Perron.BipolarGreen
