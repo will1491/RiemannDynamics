@@ -29,8 +29,8 @@ of `ℂ̂`.
 ## Main statements
 
 * `hasGreenFunction_coordDisk_compl` — every piece is hyperbolic;
-* `exists_pieceGreen_symm_bound` — the shrink-uniform cross-symmetry bound
-  (the symmetry wall of the classical dipole construction, isolated);
+* `exists_harnack_chain_const`, `exists_mharmonicOn_limit_of_locally_bounded`
+  — the symmetry-free Harnack chain and harmonic normal-families bricks;
 * `exists_bipolarGreen` — the dipole limit;
 * `exists_bipolar_map`, `injective_bipolar_map` — the meromorphic dipole map;
 * `not_bddAbove_greenFamily_of_compactSpace` — compact surfaces have no
@@ -1580,38 +1580,1234 @@ theorem hasGreenFunction_coordDisk_compl (D : CoordDisk M) (p : M)
       exact hkey
     exact le_trans hvx₀ (le_trans hmfin (le_max_left _ _))
 
-/-! ## The shrink-uniform bounds -/
+/-! ## Symmetry-free Harnack and normal-families infrastructure
 
-/-- **The irreducible core of the cross-symmetry wall**: under ambient
-non-hyperbolicity, the two cross values of the piece Green's functions differ
-by a constant for all sufficiently small shrink parameters. Classically this
-holds with constant zero, by the symmetry of the Green's function of each
-piece. -/
-theorem pieceGreen_cross_bound_core (D₀ : CoordDisk M) {p₁ p₂ : M}
+The dipole limit below is normalized at a third base point, so the classical
+cross-symmetry constant of the two piece Green's functions never enters: the
+shrink-uniform control comes from the Harnack chain bound alone, and the limit
+is extracted by the normal-families principle for harmonic functions. -/
+
+omit [IsManifold 𝓘(ℂ) ω M] in
+/-- The complement of two disjoint closed coordinate disks in a connected
+surface is connected. -/
+theorem isConnected_two_coordDisk_compl [T2Space M] [ConnectedSpace M]
+    (D₁ D₂ : CoordDisk M)
+    (hdisj : Disjoint D₁.closedCarrier D₂.closedCarrier) :
+    IsConnected ((D₁.closedCarrier ∪ D₂.closedCarrier)ᶜ : Set M) := by
+  classical
+  -- ## Generic plane bricks
+  -- The open chart annulus is connected, via polar coordinates.
+  have hann : ∀ (c : ℂ) (r R : ℝ), 0 < r → r < R →
+      IsConnected (ball c R \ closedBall c r) := by
+    intro c r R hr hrR
+    have hcont : Continuous fun p : ℝ × ℝ =>
+        c + (p.1 : ℂ) * Complex.exp ((p.2 : ℂ) * Complex.I) :=
+      continuous_const.add ((Complex.continuous_ofReal.comp continuous_fst).mul
+        (((Complex.continuous_ofReal.comp continuous_snd).mul continuous_const).cexp))
+    have himg : (fun p : ℝ × ℝ => c + (p.1 : ℂ) * Complex.exp ((p.2 : ℂ) * Complex.I)) ''
+        (Set.Ioo r R ×ˢ (Set.univ : Set ℝ)) = ball c R \ closedBall c r := by
+      apply Set.Subset.antisymm
+      · rintro w ⟨⟨t, θ⟩, ⟨⟨hrt, htR⟩, -⟩, hw⟩
+        rw [← hw]
+        change c + (t : ℂ) * Complex.exp ((θ : ℂ) * Complex.I) ∈ ball c R \ closedBall c r
+        have hd : dist (c + (t : ℂ) * Complex.exp ((θ : ℂ) * Complex.I)) c = t := by
+          rw [dist_eq_norm, add_sub_cancel_left, norm_mul, Complex.norm_exp_ofReal_mul_I,
+            mul_one, Complex.norm_real, Real.norm_of_nonneg (hr.le.trans hrt.le)]
+        refine ⟨?_, ?_⟩
+        · rw [mem_ball, hd]; exact htR
+        · intro hmem
+          rw [mem_closedBall, hd] at hmem
+          exact absurd hmem (not_le.2 hrt)
+      · rintro w ⟨hwb, hwc⟩
+        have hrt : r < ‖w - c‖ := by
+          rw [← dist_eq_norm]
+          exact not_le.1 fun h => hwc (mem_closedBall.2 h)
+        have htR : ‖w - c‖ < R := by rw [← dist_eq_norm]; exact mem_ball.1 hwb
+        refine ⟨(‖w - c‖, (w - c).arg), ⟨⟨hrt, htR⟩, Set.mem_univ _⟩, ?_⟩
+        change c + (‖w - c‖ : ℂ) * Complex.exp (((w - c).arg : ℂ) * Complex.I) = w
+        rw [Complex.norm_mul_exp_arg_mul_I]
+        ring
+    have hmid : (r + R) / 2 ∈ Set.Ioo r R := ⟨by linarith, by linarith⟩
+    rw [← himg]
+    exact ⟨Set.Nonempty.image _ ⟨((r + R) / 2, 0), hmid, Set.mem_univ _⟩,
+      (isPreconnected_Ioo.prod isPreconnected_univ).image _ hcont.continuousOn⟩
+  -- ## Per-disk collar data
+  -- For a disk `D` and an open superset `T` of its closed chart ball inside the
+  -- chart target, produce a collar radius `R` with the chart-ball neighborhood
+  -- `N` of the closed carrier, the compact `K ⊇ N`, and the connected annulus
+  -- `A = N ∖ closedCarrier`, all of whose points read back through the chart.
+  have collar : ∀ (D : CoordDisk M) (S : Set M), IsClosed S →
+      Disjoint D.closedCarrier S →
+      ∃ N K A : Set M, IsOpen N ∧ IsCompact K ∧ N ⊆ K ∧ K ∩ S = ∅ ∧
+        D.closedCarrier ⊆ N ∧ IsConnected A ∧ A = N \ D.closedCarrier ∧
+        A ∩ D.closedCarrier = ∅ := by
+    intro D S hScl hDS
+    set e : OpenPartialHomeomorph M ℂ := chartAt ℂ D.center
+    set c : ℂ := e D.center
+    set r : ℝ := D.radius
+    have hr : 0 < r := D.radius_pos
+    have hsub : closedBall c r ⊆ e.target := D.closedBall_subset
+    have hcarrier : D.closedCarrier = e.symm '' closedBall c r := rfl
+    -- The open target region avoiding `S`.
+    set T : Set ℂ := e.target ∩ e.symm ⁻¹' Sᶜ with hTdef
+    have hTopen : IsOpen T := e.isOpen_inter_preimage_symm hScl.isOpen_compl
+    have hTsub : closedBall c r ⊆ T := by
+      intro w hw
+      refine ⟨hsub hw, ?_⟩
+      rw [Set.mem_preimage]
+      have hmem : e.symm w ∈ D.closedCarrier := by
+        rw [hcarrier]
+        exact ⟨w, hw, rfl⟩
+      exact fun hS => Set.disjoint_left.1 hDS hmem hS
+    obtain ⟨δ, hδ0, hδsub⟩ :=
+      (isCompact_closedBall c r).exists_thickening_subset_open hTopen hTsub
+    set R : ℝ := δ + r with hRdef
+    have hrR : r < R := lt_add_of_pos_left r hδ0
+    have hballR : ball c R ⊆ T := by
+      rw [hRdef, ← thickening_closedBall hδ0 hr.le c]
+      exact hδsub
+    have hballtgt : ball c R ⊆ e.target := fun w hw => (hballR hw).1
+    -- The half-collar radius.
+    set Rh : ℝ := (r + R) / 2 with hRhdef
+    have hrRh : r < Rh := by rw [hRhdef]; linarith
+    have hRhR : Rh < R := by rw [hRhdef]; linarith
+    have hcbRh : closedBall c Rh ⊆ ball c R := closedBall_subset_ball hRhR
+    -- The chart-ball neighborhood, its compact closure disk, and the annulus.
+    set N : Set M := e.source ∩ e ⁻¹' ball c Rh with hNdef
+    set K : Set M := e.symm '' closedBall c Rh with hKdef
+    set A : Set M := e.symm '' (ball c Rh \ closedBall c r) with hAdef
+    have hNopen : IsOpen N := e.isOpen_inter_preimage isOpen_ball
+    have hKcomp : IsCompact K :=
+      (isCompact_closedBall c Rh).image_of_continuousOn
+        (e.continuousOn_symm.mono (hcbRh.trans hballtgt))
+    have hNK : N ⊆ K := by
+      rintro y ⟨hys, hyb⟩
+      exact ⟨e y, ball_subset_closedBall hyb, e.left_inv hys⟩
+    have hKS : K ∩ S = ∅ := by
+      rw [Set.eq_empty_iff_forall_notMem]
+      rintro y ⟨⟨w, hw, rfl⟩, hyS⟩
+      have h1 := (hballR (hcbRh hw)).2
+      rw [Set.mem_preimage] at h1
+      exact h1 hyS
+    have hcN : D.closedCarrier ⊆ N := by
+      intro x hx
+      rw [hcarrier] at hx
+      obtain ⟨w, hw, rfl⟩ := hx
+      have hwt : w ∈ e.target := hsub hw
+      refine ⟨e.map_target hwt, ?_⟩
+      rw [Set.mem_preimage, e.right_inv hwt]
+      exact mem_ball.2 (lt_of_le_of_lt (mem_closedBall.1 hw) hrRh)
+    have hAconn : IsConnected A := by
+      rw [hAdef]
+      exact (hann c r Rh hr hrRh).image _
+        (e.continuousOn_symm.mono fun w hw => (hcbRh.trans hballtgt)
+          (ball_subset_closedBall hw.1))
+    have hAeq : A = N \ D.closedCarrier := by
+      rw [hAdef, hNdef, hcarrier]
+      apply Set.Subset.antisymm
+      · rintro x ⟨w, ⟨hwb, hwc⟩, rfl⟩
+        have hwt : w ∈ e.target := (hcbRh.trans hballtgt) (ball_subset_closedBall hwb)
+        refine ⟨⟨e.map_target hwt, ?_⟩, ?_⟩
+        · rw [Set.mem_preimage, e.right_inv hwt]; exact hwb
+        · rintro ⟨w', hw', hw'e⟩
+          have hw't : w' ∈ e.target := hsub hw'
+          have h2 : e (e.symm w') = e (e.symm w) := by rw [hw'e]
+          rw [e.right_inv hw't, e.right_inv hwt] at h2
+          exact hwc (h2 ▸ hw')
+      · rintro x ⟨⟨hxsrc, hxb⟩, hxc⟩
+        rw [Set.mem_preimage] at hxb
+        refine ⟨e x, ⟨hxb, fun hmem => hxc ?_⟩, e.left_inv hxsrc⟩
+        exact ⟨e x, hmem, e.left_inv hxsrc⟩
+    have hAC : A ∩ D.closedCarrier = ∅ := by
+      rw [hAeq, Set.eq_empty_iff_forall_notMem]
+      rintro y ⟨⟨-, h2⟩, h3⟩
+      exact h2 h3
+    exact ⟨N, K, A, hNopen, hKcomp, hNK, hKS, hcN, hAconn, hAeq, hAC⟩
+  -- ## The two collars, the second avoiding the first
+  obtain ⟨N₁, K₁, A₁, hN₁o, hK₁c, hN₁K₁, hK₁C₂, hC₁N₁, hA₁conn, hA₁eq, hA₁C₁⟩ :=
+    collar D₁ D₂.closedCarrier D₂.isCompact_closedCarrier.isClosed hdisj
+  have hdisj₂ : Disjoint D₂.closedCarrier (D₁.closedCarrier ∪ K₁) := by
+    rw [Set.disjoint_union_right]
+    constructor
+    · exact hdisj.symm
+    · rw [Set.disjoint_left]
+      intro y hy₂ hyK₁
+      have : y ∈ K₁ ∩ D₂.closedCarrier := ⟨hyK₁, hy₂⟩
+      rw [hK₁C₂] at this
+      exact this
+  obtain ⟨N₂, K₂, A₂, hN₂o, hK₂c, hN₂K₂, hK₂C₁K₁, hC₂N₂, hA₂conn, hA₂eq, hA₂C₂⟩ :=
+    collar D₂ (D₁.closedCarrier ∪ K₁)
+      (D₁.isCompact_closedCarrier.isClosed.union hK₁c.isClosed) hdisj₂
+  -- Consequences of the avoidance choices.
+  have hN₁C₂ : N₁ ∩ D₂.closedCarrier = ∅ := by
+    rw [Set.eq_empty_iff_forall_notMem]
+    rintro y ⟨hyN, hyC⟩
+    have : y ∈ K₁ ∩ D₂.closedCarrier := ⟨hN₁K₁ hyN, hyC⟩
+    rw [hK₁C₂] at this
+    exact this
+  have hN₂C₁ : N₂ ∩ D₁.closedCarrier = ∅ := by
+    rw [Set.eq_empty_iff_forall_notMem]
+    rintro y ⟨hyN, hyC⟩
+    have : y ∈ K₂ ∩ (D₁.closedCarrier ∪ K₁) := ⟨hN₂K₂ hyN, Or.inl hyC⟩
+    rw [hK₂C₁K₁] at this
+    exact this
+  have hN₁N₂ : N₁ ∩ N₂ = ∅ := by
+    rw [Set.eq_empty_iff_forall_notMem]
+    rintro y ⟨hy₁, hy₂⟩
+    have : y ∈ K₂ ∩ (D₁.closedCarrier ∪ K₁) := ⟨hN₂K₂ hy₂, Or.inr (hN₁K₁ hy₁)⟩
+    rw [hK₂C₁K₁] at this
+    exact this
+  -- ## Assembly
+  set C : Set M := D₁.closedCarrier ∪ D₂.closedCarrier with hCdef
+  have hCcl : IsClosed C :=
+    (D₁.isCompact_closedCarrier.union D₂.isCompact_closedCarrier).isClosed
+  have hΩo : IsOpen (Cᶜ : Set M) := hCcl.isOpen_compl
+  -- The annuli sit inside the complement.
+  have hA₁Ω : A₁ ⊆ (Cᶜ : Set M) := by
+    intro y hy
+    rintro (h | h)
+    · rw [Set.eq_empty_iff_forall_notMem] at hA₁C₁
+      exact hA₁C₁ y ⟨hy, h⟩
+    · rw [Set.eq_empty_iff_forall_notMem] at hN₁C₂
+      rw [hA₁eq] at hy
+      exact hN₁C₂ y ⟨hy.1, h⟩
+  have hA₂Ω : A₂ ⊆ (Cᶜ : Set M) := by
+    intro y hy
+    rintro (h | h)
+    · rw [Set.eq_empty_iff_forall_notMem] at hN₂C₁
+      rw [hA₂eq] at hy
+      exact hN₂C₁ y ⟨hy.1, h⟩
+    · rw [Set.eq_empty_iff_forall_notMem] at hA₂C₂
+      exact hA₂C₂ y ⟨hy, h⟩
+  -- The collar neighborhoods meet the complement only in the annuli.
+  have hN₁Ω : N₁ ∩ (Cᶜ : Set M) ⊆ A₁ := by
+    rintro y ⟨hyN, hyΩ⟩
+    rw [hA₁eq]
+    exact ⟨hyN, fun h => hyΩ (Or.inl h)⟩
+  have hN₂Ω : N₂ ∩ (Cᶜ : Set M) ⊆ A₂ := by
+    rintro y ⟨hyN, hyΩ⟩
+    rw [hA₂eq]
+    exact ⟨hyN, fun h => hyΩ (Or.inr h)⟩
+  -- Nonemptiness of the complement.
+  have hne : ((Cᶜ : Set M)).Nonempty := by
+    obtain ⟨z, hz⟩ := hA₁conn.nonempty
+    exact ⟨z, hA₁Ω hz⟩
+  refine ⟨hne, ?_⟩
+  intro u v hu hv huv hsu hsv
+  by_contra hcon
+  rw [Set.not_nonempty_iff_eq_empty] at hcon
+  -- Restrict the separation to the open complement.
+  set u' : Set M := u ∩ Cᶜ with hu'def
+  set v' : Set M := v ∩ Cᶜ with hv'def
+  have hu'o : IsOpen u' := hu.inter hΩo
+  have hv'o : IsOpen v' := hv.inter hΩo
+  have hu'Ω : u' ⊆ (Cᶜ : Set M) := Set.inter_subset_right
+  have hv'Ω : v' ⊆ (Cᶜ : Set M) := Set.inter_subset_right
+  have hcov : (Cᶜ : Set M) ⊆ u' ∪ v' := by
+    intro z hz
+    rcases huv hz with h | h
+    · exact Or.inl ⟨h, hz⟩
+    · exact Or.inr ⟨h, hz⟩
+  have hu'v' : u' ∩ v' = ∅ := by
+    rw [Set.eq_empty_iff_forall_notMem]
+    rintro z ⟨⟨hzu, hzΩ⟩, hzv, -⟩
+    have : z ∈ Cᶜ ∩ (u ∩ v) := ⟨hzΩ, hzu, hzv⟩
+    rw [hcon] at this
+    exact this
+  have hu'ne : u'.Nonempty := by
+    obtain ⟨z, hz₁, hz₂⟩ := hsu
+    exact ⟨z, hz₂, hz₁⟩
+  have hv'ne : v'.Nonempty := by
+    obtain ⟨z, hz₁, hz₂⟩ := hsv
+    exact ⟨z, hz₂, hz₁⟩
+  -- Each connected annulus lies entirely on one side.
+  have hside : ∀ A : Set M, IsConnected A → A ⊆ Cᶜ → A ⊆ u' ∨ A ⊆ v' := by
+    intro A hAconn hAΩ
+    rcases Set.eq_empty_or_nonempty (A ∩ v') with hv0 | hv1
+    · left
+      intro z hz
+      rcases hcov (hAΩ hz) with h | h
+      · exact h
+      · exact absurd hv0 (Set.Nonempty.ne_empty ⟨z, hz, h⟩)
+    · rcases Set.eq_empty_or_nonempty (A ∩ u') with hu0 | hu1
+      · right
+        intro z hz
+        rcases hcov (hAΩ hz) with h | h
+        · exact absurd hu0 (Set.Nonempty.ne_empty ⟨z, hz, h⟩)
+        · exact h
+      · exfalso
+        obtain ⟨z, -, hzu, hzv⟩ := hAconn.2 u' v' hu'o hv'o
+          (fun z hz => hcov (hAΩ hz)) hu1 hv1
+        have : z ∈ u' ∩ v' := ⟨hzu, hzv⟩
+        rw [hu'v'] at this
+        exact this
+  -- The centers of the disks lie in the carriers, hence in the collars.
+  have hcen₁ : D₁.center ∈ N₁ := by
+    apply hC₁N₁
+    exact ⟨chartAt ℂ D₁.center D₁.center, mem_closedBall_self D₁.radius_pos.le,
+      (chartAt ℂ D₁.center).left_inv (mem_chart_source ℂ D₁.center)⟩
+  have hcen₂ : D₂.center ∈ N₂ := by
+    apply hC₂N₂
+    exact ⟨chartAt ℂ D₂.center D₂.center, mem_closedBall_self D₂.radius_pos.le,
+      (chartAt ℂ D₂.center).left_inv (mem_chart_source ℂ D₂.center)⟩
+  -- A two-open-set separation of the connected surface `M` is impossible.
+  have hsep : ∀ P Q : Set M, IsOpen P → IsOpen Q → Set.univ ⊆ P ∪ Q →
+      P ∩ Q = ∅ → P.Nonempty → Q.Nonempty → False := by
+    intro P Q hP hQ hPQ hdis hPne hQne
+    obtain ⟨zp, hzp⟩ := hPne
+    obtain ⟨zq, hzq⟩ := hQne
+    obtain ⟨z, -, hz⟩ := isPreconnected_univ P Q hP hQ hPQ
+      ⟨zp, Set.mem_univ zp, hzp⟩ ⟨zq, Set.mem_univ zq, hzq⟩
+    rw [hdis] at hz
+    exact hz
+  -- Case split on the sides of the two annuli.
+  rcases hside A₁ hA₁conn hA₁Ω with h₁u | h₁v <;>
+    rcases hside A₂ hA₂conn hA₂Ω with h₂u | h₂v
+  · -- both annuli on the `u'` side: `v'` separates from `u' ∪ N₁ ∪ N₂`
+    refine hsep (u' ∪ (N₁ ∪ N₂)) v' (hu'o.union (hN₁o.union hN₂o)) hv'o ?_ ?_ ?_ hv'ne
+    · intro z _
+      by_cases hzC : z ∈ C
+      · rcases hzC with h | h
+        · exact Or.inl (Or.inr (Or.inl (hC₁N₁ h)))
+        · exact Or.inl (Or.inr (Or.inr (hC₂N₂ h)))
+      · rcases hcov hzC with h | h
+        · exact Or.inl (Or.inl h)
+        · exact Or.inr h
+    · rw [Set.eq_empty_iff_forall_notMem]
+      rintro z ⟨(hzu | hzN | hzN), hzv⟩
+      · have : z ∈ u' ∩ v' := ⟨hzu, hzv⟩
+        rw [hu'v'] at this
+        exact this
+      · have hzA : z ∈ A₁ := hN₁Ω ⟨hzN, hv'Ω hzv⟩
+        have : z ∈ u' ∩ v' := ⟨h₁u hzA, hzv⟩
+        rw [hu'v'] at this
+        exact this
+      · have hzA : z ∈ A₂ := hN₂Ω ⟨hzN, hv'Ω hzv⟩
+        have : z ∈ u' ∩ v' := ⟨h₂u hzA, hzv⟩
+        rw [hu'v'] at this
+        exact this
+    · exact ⟨D₁.center, Or.inr (Or.inl hcen₁)⟩
+  · -- mixed: `u' ∪ N₁` against `v' ∪ N₂`
+    refine hsep (u' ∪ N₁) (v' ∪ N₂) (hu'o.union hN₁o) (hv'o.union hN₂o) ?_ ?_
+      ⟨D₁.center, Or.inr hcen₁⟩ ⟨D₂.center, Or.inr hcen₂⟩
+    · intro z _
+      by_cases hzC : z ∈ C
+      · rcases hzC with h | h
+        · exact Or.inl (Or.inr (hC₁N₁ h))
+        · exact Or.inr (Or.inr (hC₂N₂ h))
+      · rcases hcov hzC with h | h
+        · exact Or.inl (Or.inl h)
+        · exact Or.inr (Or.inl h)
+    · rw [Set.eq_empty_iff_forall_notMem]
+      rintro z ⟨hzP, hzQ⟩
+      have hzu' : z ∈ u' := by
+        rcases hzP with h | h
+        · exact h
+        · rcases hzQ with h' | h'
+          · exact h₁u (hN₁Ω ⟨h, hv'Ω h'⟩)
+          · have : z ∈ N₁ ∩ N₂ := ⟨h, h'⟩
+            rw [hN₁N₂] at this
+            exact absurd this (Set.notMem_empty z)
+      have hzv' : z ∈ v' := by
+        rcases hzQ with h | h
+        · exact h
+        · exact h₂v (hN₂Ω ⟨h, hu'Ω hzu'⟩)
+      have : z ∈ u' ∩ v' := ⟨hzu', hzv'⟩
+      rw [hu'v'] at this
+      exact this
+  · -- mixed: `u' ∪ N₂` against `v' ∪ N₁`
+    refine hsep (u' ∪ N₂) (v' ∪ N₁) (hu'o.union hN₂o) (hv'o.union hN₁o) ?_ ?_
+      ⟨D₂.center, Or.inr hcen₂⟩ ⟨D₁.center, Or.inr hcen₁⟩
+    · intro z _
+      by_cases hzC : z ∈ C
+      · rcases hzC with h | h
+        · exact Or.inr (Or.inr (hC₁N₁ h))
+        · exact Or.inl (Or.inr (hC₂N₂ h))
+      · rcases hcov hzC with h | h
+        · exact Or.inl (Or.inl h)
+        · exact Or.inr (Or.inl h)
+    · rw [Set.eq_empty_iff_forall_notMem]
+      rintro z ⟨hzP, hzQ⟩
+      have hzu' : z ∈ u' := by
+        rcases hzP with h | h
+        · exact h
+        · rcases hzQ with h' | h'
+          · exact h₂u (hN₂Ω ⟨h, hv'Ω h'⟩)
+          · have : z ∈ N₁ ∩ N₂ := ⟨h', h⟩
+            rw [hN₁N₂] at this
+            exact absurd this (Set.notMem_empty z)
+      have hzv' : z ∈ v' := by
+        rcases hzQ with h | h
+        · exact h
+        · exact h₁v (hN₁Ω ⟨h, hu'Ω hzu'⟩)
+      have : z ∈ u' ∩ v' := ⟨hzu', hzv'⟩
+      rw [hu'v'] at this
+      exact this
+  · -- both annuli on the `v'` side: `u'` separates from `v' ∪ N₁ ∪ N₂`
+    refine hsep u' (v' ∪ (N₁ ∪ N₂)) hu'o (hv'o.union (hN₁o.union hN₂o)) ?_ ?_
+      hu'ne ⟨D₁.center, Or.inr (Or.inl hcen₁)⟩
+    · intro z _
+      by_cases hzC : z ∈ C
+      · rcases hzC with h | h
+        · exact Or.inr (Or.inr (Or.inl (hC₁N₁ h)))
+        · exact Or.inr (Or.inr (Or.inr (hC₂N₂ h)))
+      · rcases hcov hzC with h | h
+        · exact Or.inl h
+        · exact Or.inr (Or.inl h)
+    · rw [Set.eq_empty_iff_forall_notMem]
+      rintro z ⟨hzu, (hzv | hzN | hzN)⟩
+      · have : z ∈ u' ∩ v' := ⟨hzu, hzv⟩
+        rw [hu'v'] at this
+        exact this
+      · have hzA : z ∈ A₁ := hN₁Ω ⟨hzN, hu'Ω hzu⟩
+        have : z ∈ u' ∩ v' := ⟨hzu, h₁v hzA⟩
+        rw [hu'v'] at this
+        exact this
+      · have hzA : z ∈ A₂ := hN₂Ω ⟨hzN, hu'Ω hzu⟩
+        have : z ∈ u' ∩ v' := ⟨hzu, h₂v hzA⟩
+        rw [hu'v'] at this
+        exact this
+
+omit [T2Space M] [ConnectedSpace M] in
+/-- **The Harnack chain bound**: on a connected open set, positive harmonic
+functions have uniformly comparable values on any compact subset, with a
+constant depending only on the compact and the domain. -/
+theorem exists_harnack_chain_const {Ω : Set M} (hΩ : IsOpen Ω)
+    (hΩc : IsPreconnected Ω) {K : Set M} (hK : IsCompact K) (hKΩ : K ⊆ Ω) :
+    ∃ C > 0, ∀ u : M → ℝ, MHarmonicOn u Ω → (∀ x ∈ Ω, 0 ≤ u x) →
+      ∀ x ∈ K, ∀ y ∈ K, u x ≤ C * u y := by
+  classical
+  rcases Set.eq_empty_or_nonempty K with hKe | ⟨k₀, hk₀⟩
+  · refine ⟨1, one_pos, fun u _ _ x hx => ?_⟩
+    rw [hKe] at hx
+    exact absurd hx (Set.notMem_empty x)
+  have hk₀Ω : k₀ ∈ Ω := hKΩ hk₀
+  -- Step 1: every point of `Ω` has an open Harnack neighbourhood inside `Ω` on
+  -- which all admissible functions are `9`-comparable, via the chart reading
+  -- and the plane Harnack inequality on a concentric chart ball.
+  have key : ∀ x : M, ∃ N : Set M, IsOpen N ∧ (x ∈ Ω → x ∈ N) ∧ N ⊆ Ω ∧
+      ∀ u : M → ℝ, MHarmonicOn u Ω → (∀ z ∈ Ω, 0 ≤ u z) →
+        ∀ a ∈ N, ∀ b ∈ N, u a ≤ 9 * u b := by
+    intro x
+    by_cases hx : x ∈ Ω
+    · set e := chartAt ℂ x with he
+      have hxsrc : x ∈ e.source := mem_chart_source ℂ x
+      have hopen : IsOpen (e.target ∩ e.symm ⁻¹' Ω) := e.isOpen_inter_preimage_symm hΩ
+      have hmem : e x ∈ e.target ∩ e.symm ⁻¹' Ω := by
+        refine ⟨e.map_source hxsrc, ?_⟩
+        rw [Set.mem_preimage, e.left_inv hxsrc]
+        exact hx
+      obtain ⟨ρ, hρpos, hρsub⟩ := Metric.isOpen_iff.1 hopen _ hmem
+      have hr0 : 0 < ρ / 2 := by linarith
+      have h2r : ball (e x) (2 * (ρ / 2)) ⊆ e.target ∩ e.symm ⁻¹' Ω := by
+        rw [show 2 * (ρ / 2) = ρ by ring]
+        exact hρsub
+      -- The chart reading of any admissible function is harmonic on the ball.
+      have htrans : ∀ u : M → ℝ, MHarmonicOn u Ω →
+          ∀ w ∈ ball (e x) (2 * (ρ / 2)), HarmonicAt (u ∘ e.symm) w := by
+        intro u hu w hw
+        have hwt : w ∈ e.target := (h2r hw).1
+        have hws : e.symm w ∈ Ω := (h2r hw).2
+        have hsrc : e.symm w ∈ e.source := e.map_target hwt
+        have h1 := (mharmonicAt_iff_of_mem_maximalAtlas
+          (IsManifold.chart_mem_maximalAtlas x) hsrc).1 (hu _ hws)
+        rwa [e.right_inv hwt] at h1
+      refine ⟨e.source ∩ e ⁻¹' ball (e x) (ρ / 2),
+        e.continuousOn.isOpen_inter_preimage e.open_source isOpen_ball,
+        fun _ => ⟨hxsrc, Set.mem_preimage.2 (mem_ball_self hr0)⟩, ?_, ?_⟩
+      · rintro a ⟨has, hab⟩
+        have h1 : e a ∈ ball (e x) (2 * (ρ / 2)) :=
+          ball_subset_ball (by linarith) (Set.mem_preimage.1 hab)
+        have h2 : e.symm (e a) ∈ Ω := (h2r h1).2
+        rwa [e.left_inv has] at h2
+      · intro u hu hupos a ha b hb
+        have hh : HarmonicOnNhd (u ∘ e.symm) (ball (e x) (2 * (ρ / 2))) :=
+          fun w hw => htrans u hu w hw
+        have hpos : ∀ z ∈ ball (e x) (2 * (ρ / 2)), 0 ≤ (u ∘ e.symm) z :=
+          fun z hz => hupos _ (h2r hz).2
+        obtain ⟨-, hup_a⟩ :=
+          harnack_inequality_ball hr0 hh hpos (e a) (Set.mem_preimage.1 ha.2)
+        obtain ⟨hlow_b, -⟩ :=
+          harnack_inequality_ball hr0 hh hpos (e b) (Set.mem_preimage.1 hb.2)
+        have hca : e.symm (e a) = a := e.left_inv ha.1
+        have hcb : e.symm (e b) = b := e.left_inv hb.1
+        have hcx : e.symm (e x) = x := e.left_inv hxsrc
+        simp only [Function.comp_apply, hca, hcb, hcx] at hup_a hlow_b
+        linarith
+    · exact ⟨∅, isOpen_empty, fun h => absurd h hx, Set.empty_subset _,
+        fun u _ _ a ha => absurd ha (Set.notMem_empty a)⟩
+  choose N hNopen hNmem hNsub hNkey using key
+  -- Step 2: two-sided comparability with the base point propagates between any
+  -- two points of a Harnack neighbourhood.
+  have prop : ∀ y ∈ Ω, ∀ p ∈ N y, ∀ q ∈ N y,
+      (∃ C, 0 < C ∧ ∀ u : M → ℝ, MHarmonicOn u Ω → (∀ z ∈ Ω, 0 ≤ u z) →
+        u q ≤ C * u k₀ ∧ u k₀ ≤ C * u q) →
+      ∃ C, 0 < C ∧ ∀ u : M → ℝ, MHarmonicOn u Ω → (∀ z ∈ Ω, 0 ≤ u z) →
+        u p ≤ C * u k₀ ∧ u k₀ ≤ C * u p := by
+    intro y hy p hp q hq hgq
+    obtain ⟨C, hC, hCb⟩ := hgq
+    refine ⟨9 * C, by linarith, fun u hu hup => ?_⟩
+    obtain ⟨h1, h2⟩ := hCb u hu hup
+    have h3 := hNkey y u hu hup p hp q hq
+    have h4 := hNkey y u hu hup q hq p hp
+    have h5 : C * u q ≤ C * (9 * u p) := mul_le_mul_of_nonneg_left h4 hC.le
+    exact ⟨by linarith, by linarith⟩
+  -- Step 3 (clopen argument): every point of the preconnected set `Ω` is
+  -- two-sidedly comparable to the base point.
+  have main : ∀ y ∈ Ω, ∃ C, 0 < C ∧ ∀ u : M → ℝ, MHarmonicOn u Ω →
+      (∀ z ∈ Ω, 0 ≤ u z) → u y ≤ C * u k₀ ∧ u k₀ ≤ C * u y := by
+    set S₁ : Set M := {z | z ∈ Ω ∧ ∃ C, 0 < C ∧ ∀ u : M → ℝ, MHarmonicOn u Ω →
+      (∀ w ∈ Ω, 0 ≤ u w) → u z ≤ C * u k₀ ∧ u k₀ ≤ C * u z} with hS₁def
+    set S₂ : Set M := {z | z ∈ Ω ∧ ¬∃ C, 0 < C ∧ ∀ u : M → ℝ, MHarmonicOn u Ω →
+      (∀ w ∈ Ω, 0 ≤ u w) → u z ≤ C * u k₀ ∧ u k₀ ≤ C * u z} with hS₂def
+    have hU₁o : IsOpen (⋃ y ∈ S₁, N y) := isOpen_biUnion fun y _ => hNopen y
+    have hU₂o : IsOpen (⋃ y ∈ S₂, N y) := isOpen_biUnion fun y _ => hNopen y
+    have hdisj : Disjoint (⋃ y ∈ S₁, N y) (⋃ y ∈ S₂, N y) := by
+      rw [Set.disjoint_left]
+      intro z hz₁ hz₂
+      obtain ⟨y₁, hy₁, hzy₁⟩ := Set.mem_iUnion₂.1 hz₁
+      obtain ⟨y₂, hy₂, hzy₂⟩ := Set.mem_iUnion₂.1 hz₂
+      obtain ⟨hy₁Ω, hy₁g⟩ := hy₁
+      obtain ⟨hy₂Ω, hy₂g⟩ := hy₂
+      have hzg := prop y₁ hy₁Ω z hzy₁ y₁ (hNmem y₁ hy₁Ω) hy₁g
+      exact hy₂g (prop y₂ hy₂Ω y₂ (hNmem y₂ hy₂Ω) z hzy₂ hzg)
+    have hcover : Ω ⊆ (⋃ y ∈ S₁, N y) ∪ ⋃ y ∈ S₂, N y := by
+      intro y hy
+      by_cases hgy : ∃ C, 0 < C ∧ ∀ u : M → ℝ, MHarmonicOn u Ω →
+          (∀ w ∈ Ω, 0 ≤ u w) → u y ≤ C * u k₀ ∧ u k₀ ≤ C * u y
+      · exact Or.inl (Set.mem_biUnion ⟨hy, hgy⟩ (hNmem y hy))
+      · exact Or.inr (Set.mem_biUnion ⟨hy, hgy⟩ (hNmem y hy))
+    have hne : (Ω ∩ ⋃ y ∈ S₁, N y).Nonempty := by
+      refine ⟨k₀, hk₀Ω, ?_⟩
+      have hk₀S : k₀ ∈ S₁ :=
+        ⟨hk₀Ω, 1, one_pos, fun u _ _ =>
+          ⟨le_of_eq (one_mul (u k₀)).symm, le_of_eq (one_mul (u k₀)).symm⟩⟩
+      exact Set.mem_biUnion hk₀S (hNmem k₀ hk₀Ω)
+    have hΩU₁ : Ω ⊆ ⋃ y ∈ S₁, N y :=
+      hΩc.subset_left_of_subset_union hU₁o hU₂o hdisj hcover hne
+    intro y hy
+    obtain ⟨y', hy', hyy'⟩ := Set.mem_iUnion₂.1 (hΩU₁ hy)
+    obtain ⟨hy'Ω, hy'g⟩ := hy'
+    exact prop y' hy'Ω y hyy' y' (hNmem y' hy'Ω) hy'g
+  -- Step 4: extract a uniform constant on the compact `K` from a finite
+  -- subcover by Harnack neighbourhoods.
+  choose! Cc hCpos hCbd using main
+  have hcov : K ⊆ ⋃ i : K, N (i : M) := fun z hz =>
+    Set.mem_iUnion.2 ⟨⟨z, hz⟩, hNmem z (hKΩ hz)⟩
+  obtain ⟨t, ht⟩ := hK.elim_finite_subcover (fun i : K => N (i : M))
+    (fun _ => hNopen _) hcov
+  have htne : t.Nonempty := by
+    obtain ⟨i, hit, -⟩ := Set.mem_iUnion₂.1 (ht hk₀)
+    exact ⟨i, hit⟩
+  set B : ℝ := t.sup' htne (fun i => Cc (i : M)) with hBdef
+  have hBle : ∀ i ∈ t, Cc (i : M) ≤ B :=
+    fun i hi => Finset.le_sup' (fun i : K => Cc (i : M)) hi
+  have hBpos : 0 < B := by
+    obtain ⟨i₀, hi₀⟩ := htne
+    exact lt_of_lt_of_le (hCpos _ (hKΩ i₀.2)) (hBle i₀ hi₀)
+  refine ⟨81 * B * B, mul_pos (mul_pos (by norm_num) hBpos) hBpos,
+    fun u hu hup x hx y hy => ?_⟩
+  obtain ⟨i, hit, hxi⟩ := Set.mem_iUnion₂.1 (ht hx)
+  obtain ⟨j, hjt, hyj⟩ := Set.mem_iUnion₂.1 (ht hy)
+  have hiΩ : (i : M) ∈ Ω := hKΩ i.2
+  have hjΩ : (j : M) ∈ Ω := hKΩ j.2
+  have h1 : u x ≤ 9 * u (i : M) := hNkey (i : M) u hu hup x hxi (i : M) (hNmem _ hiΩ)
+  have h2 : u (i : M) ≤ Cc (i : M) * u k₀ := (hCbd _ hiΩ u hu hup).1
+  have h3 : u k₀ ≤ Cc (j : M) * u (j : M) := (hCbd _ hjΩ u hu hup).2
+  have h4 : u (j : M) ≤ 9 * u y := hNkey (j : M) u hu hup (j : M) (hNmem _ hjΩ) y hyj
+  have hCi : 0 < Cc (i : M) := hCpos _ hiΩ
+  have hCj : 0 < Cc (j : M) := hCpos _ hjΩ
+  have hy0 : 0 ≤ u y := hup y (hKΩ hy)
+  have h5 : Cc (j : M) * u (j : M) ≤ Cc (j : M) * (9 * u y) :=
+    mul_le_mul_of_nonneg_left h4 hCj.le
+  have h6 : u k₀ ≤ 9 * Cc (j : M) * u y := by linarith
+  have h7 : Cc (i : M) * u k₀ ≤ Cc (i : M) * (9 * Cc (j : M) * u y) :=
+    mul_le_mul_of_nonneg_left h6 hCi.le
+  have h8 : Cc (i : M) * Cc (j : M) ≤ B * B :=
+    mul_le_mul (hBle i hit) (hBle j hjt) hCj.le hBpos.le
+  have h9 : Cc (i : M) * Cc (j : M) * u y ≤ B * B * u y :=
+    mul_le_mul_of_nonneg_right h8 hy0
+  nlinarith [h1, h2, h7, h9]
+
+-- The heartbeat limit is raised because four analytic bricks (chart transfer,
+-- Poisson-kernel Lipschitz bounds, diagonal extraction, limit harmonicity)
+-- elaborate within a single declaration; each individual step is fast.
+set_option maxHeartbeats 400000 in
+/-- **Normal families for harmonic functions**: a locally uniformly bounded
+sequence of harmonic functions on an open set of a second-countable surface
+has a subsequence converging locally uniformly to a harmonic function. -/
+theorem exists_mharmonicOn_limit_of_locally_bounded [SecondCountableTopology M]
+    {Ω : Set M} (hΩ : IsOpen Ω) {u : ℕ → M → ℝ}
+    (hu : ∀ n, MHarmonicOn (u n) Ω)
+    (hb : ∀ K, IsCompact K → K ⊆ Ω → ∃ B, ∀ n, ∀ x ∈ K, |u n x| ≤ B) :
+    ∃ φ : ℕ → ℕ, StrictMono φ ∧ ∃ G : M → ℝ, MHarmonicOn G Ω ∧
+      ∀ K, IsCompact K → K ⊆ Ω →
+        TendstoUniformlyOn (fun n => u (φ n)) G Filter.atTop K := by
+  classical
+  -- ### Brick 0: chart transfer.  The reading in the chart at `x` of any function
+  -- harmonic on `Ω` is harmonic at every plane point of the chart image of `Ω`.
+  have htransfer : ∀ (x : M) (v : M → ℝ), MHarmonicOn v Ω →
+      ∀ w ∈ (chartAt ℂ x).target ∩ (chartAt ℂ x).symm ⁻¹' Ω,
+        HarmonicAt (v ∘ (chartAt ℂ x).symm) w := by
+    intro x v hv w hw
+    obtain ⟨hwt, hwΩ⟩ := hw
+    have hwΩ' : (chartAt ℂ x).symm w ∈ Ω := hwΩ
+    have hyy : (chartAt ℂ x).symm w ∈ (chartAt ℂ ((chartAt ℂ x).symm w)).source :=
+      mem_chart_source ℂ ((chartAt ℂ x).symm w)
+    have htrans : AnalyticAt ℂ (⇑(chartAt ℂ ((chartAt ℂ x).symm w)) ∘ ⇑(chartAt ℂ x).symm) w := by
+      have h1 : ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω (⇑(chartAt ℂ x).symm) w :=
+        contMDiffAt_symm_of_mem_maximalAtlas (IsManifold.chart_mem_maximalAtlas x) hwt
+      have h2 : ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω (⇑(chartAt ℂ ((chartAt ℂ x).symm w)))
+          ((chartAt ℂ x).symm w) :=
+        contMDiffAt_of_mem_maximalAtlas
+          (IsManifold.chart_mem_maximalAtlas ((chartAt ℂ x).symm w)) hyy
+      exact (contMDiffAt_iff_contDiffAt.mp (h2.comp w h1)).analyticAt
+    have hmh : HarmonicAt (v ∘ ⇑(chartAt ℂ ((chartAt ℂ x).symm w)).symm)
+        ((⇑(chartAt ℂ ((chartAt ℂ x).symm w)) ∘ ⇑(chartAt ℂ x).symm) w) := hv _ hwΩ'
+    have hcomp := harmonicAt_comp_analyticAt hmh htrans
+    have hev : (v ∘ ⇑(chartAt ℂ ((chartAt ℂ x).symm w)).symm) ∘
+        (⇑(chartAt ℂ ((chartAt ℂ x).symm w)) ∘ ⇑(chartAt ℂ x).symm) =ᶠ[𝓝 w]
+        v ∘ ⇑(chartAt ℂ x).symm := by
+      have hS : IsOpen ((chartAt ℂ x).target ∩
+          ⇑(chartAt ℂ x).symm ⁻¹' (chartAt ℂ ((chartAt ℂ x).symm w)).source) :=
+        (chartAt ℂ x).continuousOn_symm.isOpen_inter_preimage (chartAt ℂ x).open_target
+          (chartAt ℂ ((chartAt ℂ x).symm w)).open_source
+      filter_upwards [hS.mem_nhds ⟨hwt, hyy⟩] with ζ hζ
+      simp only [Function.comp_apply]
+      rw [(chartAt ℂ ((chartAt ℂ x).symm w)).left_inv hζ.2]
+    exact (harmonicAt_congr_nhds hev).mp hcomp
+  -- ### Brick 1: the Poisson kernel is continuous on the circle, for interior points.
+  have hKcont : ∀ (c z : ℂ) (ρ : ℝ), z ∈ ball c ρ →
+      ContinuousOn (poissonKernel c z) (sphere c ρ) := by
+    intro c z ρ hz
+    rw [poissonKernel_eq_re_herglotzRieszKernel]
+    apply Complex.continuous_re.comp_continuousOn
+    rw [herglotzRieszKernel_fun_def]
+    apply ContinuousOn.div (by fun_prop) (by fun_prop)
+    intro w hw
+    have hwn : ‖w - c‖ = ρ := by rw [← dist_eq_norm]; simpa using (mem_sphere.1 hw)
+    have hzlt : ‖z - c‖ < ρ := by rw [← dist_eq_norm]; exact mem_ball.1 hz
+    intro hcontra
+    have hwz : w - c = z - c := by linear_combination (norm := ring_nf) hcontra
+    rw [hwz] at hwn
+    linarith
+  -- ### Brick 2: circle averages of uniformly close functions are close.
+  have havg_diff : ∀ (F g : ℂ → ℝ) (c : ℂ) (ρ A : ℝ), 0 < ρ →
+      ContinuousOn F (sphere c ρ) → ContinuousOn g (sphere c ρ) →
+      (∀ ζ ∈ sphere c ρ, |F ζ - g ζ| ≤ A) →
+      |Real.circleAverage F c ρ - Real.circleAverage g c ρ| ≤ A := by
+    intro F g c ρ A hρ hF hg hbd
+    have hFi : CircleIntegrable F c ρ := hF.circleIntegrable hρ.le
+    have hgi : CircleIntegrable g c ρ := hg.circleIntegrable hρ.le
+    have habsci : CircleIntegrable (fun ζ => |F ζ - g ζ|) c ρ :=
+      ((hF.sub hg).abs).circleIntegrable hρ.le
+    rw [← Real.circleAverage_fun_sub hFi hgi]
+    calc |Real.circleAverage (fun ζ => F ζ - g ζ) c ρ|
+        ≤ Real.circleAverage |fun ζ => F ζ - g ζ| c ρ :=
+          Real.abs_circleAverage_le_circleAverage_abs
+      _ ≤ A := by
+          apply Real.circleAverage_mono_on_of_le_circle habsci
+          intro ζ hζ
+          rw [abs_of_pos hρ] at hζ
+          exact hbd ζ hζ
+  -- ### Brick 3: interior Lipschitz bound for bounded harmonic functions on a disk,
+  -- from the Poisson representation and the kernel-difference estimate.
+  have hplaneLip : ∀ (c : ℂ) (ρ B : ℝ), 0 < ρ → 0 ≤ B → ∀ h : ℂ → ℝ,
+      HarmonicOnNhd h (closedBall c ρ) → (∀ ζ ∈ closedBall c ρ, |h ζ| ≤ B) →
+      ∀ z ∈ ball c (ρ / 2), ∀ w ∈ ball c (ρ / 2),
+        |h z - h w| ≤ 52 * B / ρ * ‖z - w‖ := by
+    intro c ρ B hρ hB h hh hbd z hz w hw
+    have hzball : z ∈ ball c ρ := ball_subset_ball (by linarith) hz
+    have hwball : w ∈ ball c ρ := ball_subset_ball (by linarith) hw
+    -- Poisson representations at the two points.
+    have hrz := hh.circleAverage_poissonKernel_smul hzball
+    have hrw := hh.circleAverage_poissonKernel_smul hwball
+    have hrz' : Real.circleAverage (fun ζ => poissonKernel c z ζ * h ζ) c ρ = h z := by
+      rw [← hrz]
+      apply Real.circleAverage_congr_sphere
+      intro ζ _
+      simp [smul_eq_mul]
+    have hrw' : Real.circleAverage (fun ζ => poissonKernel c w ζ * h ζ) c ρ = h w := by
+      rw [← hrw]
+      apply Real.circleAverage_congr_sphere
+      intro ζ _
+      simp [smul_eq_mul]
+    -- The kernel-difference bound on the circle.
+    have hker : ∀ ζ ∈ sphere c ρ,
+        |poissonKernel c z ζ - poissonKernel c w ζ| ≤ 52 / ρ * ‖z - w‖ := by
+      intro ζ hζ
+      have hζρ : ‖ζ - c‖ = ρ := by rw [← dist_eq_norm]; exact mem_sphere.1 hζ
+      have haz : ‖z - c‖ < ρ / 2 := by rw [← dist_eq_norm]; exact mem_ball.1 hz
+      have haw : ‖w - c‖ < ρ / 2 := by rw [← dist_eq_norm]; exact mem_ball.1 hw
+      have haz0 : 0 ≤ ‖z - c‖ := norm_nonneg _
+      have haw0 : 0 ≤ ‖w - c‖ := norm_nonneg _
+      have hd0 : 0 ≤ ‖z - w‖ := norm_nonneg _
+      -- distance bounds from the sphere to the interior points
+      have hDz_low : ρ / 2 ≤ ‖ζ - z‖ := by
+        have h1 : ‖ζ - c‖ - ‖z - c‖ ≤ ‖ζ - c - (z - c)‖ := norm_sub_norm_le _ _
+        have h2 : ζ - c - (z - c) = ζ - z := by ring
+        rw [h2] at h1
+        linarith
+      have hDw_low : ρ / 2 ≤ ‖ζ - w‖ := by
+        have h1 : ‖ζ - c‖ - ‖w - c‖ ≤ ‖ζ - c - (w - c)‖ := norm_sub_norm_le _ _
+        have h2 : ζ - c - (w - c) = ζ - w := by ring
+        rw [h2] at h1
+        linarith
+      have hDz_up : ‖ζ - z‖ ≤ 3 * ρ / 2 := by
+        have h1 : ‖ζ - z‖ ≤ ‖ζ - c‖ + ‖c - z‖ := by
+          have h2 : ζ - z = (ζ - c) + (c - z) := by ring
+          rw [h2]; exact norm_add_le _ _
+        have h3 : ‖c - z‖ = ‖z - c‖ := by rw [← neg_sub, norm_neg]
+        rw [h3] at h1
+        linarith
+      have hDw_up : ‖ζ - w‖ ≤ 3 * ρ / 2 := by
+        have h1 : ‖ζ - w‖ ≤ ‖ζ - c‖ + ‖c - w‖ := by
+          have h2 : ζ - w = (ζ - c) + (c - w) := by ring
+          rw [h2]; exact norm_add_le _ _
+        have h3 : ‖c - w‖ = ‖w - c‖ := by rw [← neg_sub, norm_neg]
+        rw [h3] at h1
+        linarith
+      have hZW : |‖ζ - w‖ - ‖ζ - z‖| ≤ ‖z - w‖ := by
+        have h1 := abs_norm_sub_norm_le (ζ - w) (ζ - z)
+        have h2 : ζ - w - (ζ - z) = z - w := by ring
+        rwa [h2] at h1
+      have hAZW : |‖w - c‖ - ‖z - c‖| ≤ ‖z - w‖ := by
+        have h1 := abs_norm_sub_norm_le (w - c) (z - c)
+        have h2 : w - c - (z - c) = w - z := by ring
+        rw [h2, norm_sub_rev w z] at h1
+        exact h1
+      have hDz0 : (0 : ℝ) < ‖ζ - z‖ := lt_of_lt_of_le (by linarith) hDz_low
+      have hDw0 : (0 : ℝ) < ‖ζ - w‖ := lt_of_lt_of_le (by linarith) hDw_low
+      -- the two kernels in explicit form
+      have hKz : poissonKernel c z ζ = (ρ ^ 2 - ‖z - c‖ ^ 2) / ‖ζ - z‖ ^ 2 := by
+        rw [poissonKernel_def, hζρ]
+        congr 2
+        rw [show ζ - c - (z - c) = ζ - z from by ring]
+      have hKw : poissonKernel c w ζ = (ρ ^ 2 - ‖w - c‖ ^ 2) / ‖ζ - w‖ ^ 2 := by
+        rw [poissonKernel_def, hζρ]
+        congr 2
+        rw [show ζ - c - (w - c) = ζ - w from by ring]
+      -- split the difference into two boundable pieces
+      have hsplit : (ρ ^ 2 - ‖z - c‖ ^ 2) / ‖ζ - z‖ ^ 2 - (ρ ^ 2 - ‖w - c‖ ^ 2) / ‖ζ - w‖ ^ 2
+          = (ρ ^ 2 - ‖z - c‖ ^ 2) * (‖ζ - w‖ ^ 2 - ‖ζ - z‖ ^ 2) / (‖ζ - z‖ ^ 2 * ‖ζ - w‖ ^ 2)
+            + (‖w - c‖ ^ 2 - ‖z - c‖ ^ 2) / ‖ζ - w‖ ^ 2 := by
+        field_simp
+        ring
+      have haz2 : ‖z - c‖ * ‖z - c‖ ≤ ρ / 2 * (ρ / 2) := mul_self_le_mul_self haz0 haz.le
+      have hDzsq : ρ / 2 * (ρ / 2) ≤ ‖ζ - z‖ * ‖ζ - z‖ :=
+        mul_self_le_mul_self (by positivity) hDz_low
+      have hDwsq : ρ / 2 * (ρ / 2) ≤ ‖ζ - w‖ * ‖ζ - w‖ :=
+        mul_self_le_mul_self (by positivity) hDw_low
+      have h1 : |(ρ ^ 2 - ‖z - c‖ ^ 2) * (‖ζ - w‖ ^ 2 - ‖ζ - z‖ ^ 2) /
+          (‖ζ - z‖ ^ 2 * ‖ζ - w‖ ^ 2)| ≤ 48 / ρ * ‖z - w‖ := by
+        rw [abs_div, abs_mul, abs_of_pos (by positivity : (0:ℝ) < ‖ζ - z‖ ^ 2 * ‖ζ - w‖ ^ 2)]
+        have e1 : |ρ ^ 2 - ‖z - c‖ ^ 2| ≤ ρ ^ 2 := by
+          rw [abs_of_nonneg (by linarith [haz2, sq_nonneg ρ])]
+          linarith [sq_nonneg ‖z - c‖]
+        have e2 : |‖ζ - w‖ ^ 2 - ‖ζ - z‖ ^ 2| ≤ 3 * ρ * ‖z - w‖ := by
+          have h3 : ‖ζ - w‖ ^ 2 - ‖ζ - z‖ ^ 2
+              = (‖ζ - w‖ - ‖ζ - z‖) * (‖ζ - w‖ + ‖ζ - z‖) := by ring
+          rw [h3, abs_mul, abs_of_nonneg (by linarith : (0:ℝ) ≤ ‖ζ - w‖ + ‖ζ - z‖)]
+          calc |‖ζ - w‖ - ‖ζ - z‖| * (‖ζ - w‖ + ‖ζ - z‖)
+              ≤ ‖z - w‖ * (3 * ρ) := by
+                apply mul_le_mul hZW (by linarith) (by linarith) hd0
+            _ = 3 * ρ * ‖z - w‖ := by ring
+        have e3 : ρ ^ 4 / 16 ≤ ‖ζ - z‖ ^ 2 * ‖ζ - w‖ ^ 2 := by
+          have e3a : ρ ^ 2 / 4 ≤ ‖ζ - z‖ ^ 2 := by linarith [hDzsq]
+          have e3b : ρ ^ 2 / 4 ≤ ‖ζ - w‖ ^ 2 := by linarith [hDwsq]
+          calc ρ ^ 4 / 16 = ρ ^ 2 / 4 * (ρ ^ 2 / 4) := by ring
+            _ ≤ ‖ζ - z‖ ^ 2 * ‖ζ - w‖ ^ 2 :=
+                mul_le_mul e3a e3b (by positivity) (by positivity)
+        calc |ρ ^ 2 - ‖z - c‖ ^ 2| * |‖ζ - w‖ ^ 2 - ‖ζ - z‖ ^ 2| /
+            (‖ζ - z‖ ^ 2 * ‖ζ - w‖ ^ 2)
+            ≤ ρ ^ 2 * (3 * ρ * ‖z - w‖) / (ρ ^ 4 / 16) := by
+              apply div_le_div₀ (by positivity)
+                (mul_le_mul e1 e2 (abs_nonneg _) (by positivity)) (by positivity) e3
+          _ = 48 / ρ * ‖z - w‖ := by
+              field_simp
+              ring
+      have h2 : |(‖w - c‖ ^ 2 - ‖z - c‖ ^ 2) / ‖ζ - w‖ ^ 2| ≤ 4 / ρ * ‖z - w‖ := by
+        rw [abs_div, abs_of_pos (by positivity : (0:ℝ) < ‖ζ - w‖ ^ 2)]
+        have e5 : |‖w - c‖ ^ 2 - ‖z - c‖ ^ 2| ≤ ρ * ‖z - w‖ := by
+          have h3 : ‖w - c‖ ^ 2 - ‖z - c‖ ^ 2
+              = (‖w - c‖ - ‖z - c‖) * (‖w - c‖ + ‖z - c‖) := by ring
+          rw [h3, abs_mul, abs_of_nonneg (by linarith : (0:ℝ) ≤ ‖w - c‖ + ‖z - c‖)]
+          calc |‖w - c‖ - ‖z - c‖| * (‖w - c‖ + ‖z - c‖)
+              ≤ ‖z - w‖ * ρ := by
+                apply mul_le_mul hAZW (by linarith) (by linarith) hd0
+            _ = ρ * ‖z - w‖ := by ring
+        have e6 : ρ ^ 2 / 4 ≤ ‖ζ - w‖ ^ 2 := by linarith [hDwsq]
+        calc |‖w - c‖ ^ 2 - ‖z - c‖ ^ 2| / ‖ζ - w‖ ^ 2
+            ≤ ρ * ‖z - w‖ / (ρ ^ 2 / 4) := by
+              apply div_le_div₀ (by positivity) e5 (by positivity) e6
+          _ = 4 / ρ * ‖z - w‖ := by
+              field_simp
+      calc |poissonKernel c z ζ - poissonKernel c w ζ|
+          = |(ρ ^ 2 - ‖z - c‖ ^ 2) * (‖ζ - w‖ ^ 2 - ‖ζ - z‖ ^ 2) /
+              (‖ζ - z‖ ^ 2 * ‖ζ - w‖ ^ 2)
+              + (‖w - c‖ ^ 2 - ‖z - c‖ ^ 2) / ‖ζ - w‖ ^ 2| := by
+            rw [hKz, hKw, hsplit]
+        _ ≤ |(ρ ^ 2 - ‖z - c‖ ^ 2) * (‖ζ - w‖ ^ 2 - ‖ζ - z‖ ^ 2) /
+              (‖ζ - z‖ ^ 2 * ‖ζ - w‖ ^ 2)|
+              + |(‖w - c‖ ^ 2 - ‖z - c‖ ^ 2) / ‖ζ - w‖ ^ 2| := abs_add_le _ _
+        _ ≤ 48 / ρ * ‖z - w‖ + 4 / ρ * ‖z - w‖ := add_le_add h1 h2
+        _ = 52 / ρ * ‖z - w‖ := by ring
+    -- assemble via the circle-average difference bound
+    have hhcont : ContinuousOn h (sphere c ρ) := hh.continuousOn.mono sphere_subset_closedBall
+    have hFzc : ContinuousOn (fun ζ => poissonKernel c z ζ * h ζ) (sphere c ρ) :=
+      (hKcont c z ρ hzball).mul hhcont
+    have hFwc : ContinuousOn (fun ζ => poissonKernel c w ζ * h ζ) (sphere c ρ) :=
+      (hKcont c w ρ hwball).mul hhcont
+    have hptbd : ∀ ζ ∈ sphere c ρ,
+        |poissonKernel c z ζ * h ζ - poissonKernel c w ζ * h ζ|
+          ≤ 52 / ρ * ‖z - w‖ * B := by
+      intro ζ hζ
+      have h1 : |poissonKernel c z ζ * h ζ - poissonKernel c w ζ * h ζ|
+          = |poissonKernel c z ζ - poissonKernel c w ζ| * |h ζ| := by
+        rw [← sub_mul, abs_mul]
+      rw [h1]
+      exact mul_le_mul (hker ζ hζ) (hbd ζ (sphere_subset_closedBall hζ)) (abs_nonneg _)
+        (by positivity)
+    have := havg_diff _ _ c ρ (52 / ρ * ‖z - w‖ * B) hρ hFzc hFwc hptbd
+    rw [hrz', hrw'] at this
+    calc |h z - h w| ≤ 52 / ρ * ‖z - w‖ * B := this
+      _ = 52 * B / ρ * ‖z - w‖ := by ring
+  -- ### Brick 4: chart-disk data at every point of `Ω`.
+  have hdata : ∀ x ∈ Ω, ∃ ρ : ℝ, 0 < ρ ∧
+      closedBall (chartAt ℂ x x) ρ ⊆ (chartAt ℂ x).target ∩ (chartAt ℂ x).symm ⁻¹' Ω := by
+    intro x hx
+    have hTopen : IsOpen ((chartAt ℂ x).target ∩ (chartAt ℂ x).symm ⁻¹' Ω) :=
+      (chartAt ℂ x).isOpen_inter_preimage_symm hΩ
+    have hcT : chartAt ℂ x x ∈ (chartAt ℂ x).target ∩ (chartAt ℂ x).symm ⁻¹' Ω := by
+      refine ⟨(chartAt ℂ x).map_source (mem_chart_source ℂ x), ?_⟩
+      rw [Set.mem_preimage, (chartAt ℂ x).left_inv (mem_chart_source ℂ x)]
+      exact hx
+    obtain ⟨ρ₀, hρ₀, hρ₀sub⟩ := Metric.isOpen_iff.1 hTopen _ hcT
+    exact ⟨ρ₀ / 2, by positivity,
+      (closedBall_subset_ball (by linarith)).trans hρ₀sub⟩
+  -- ### The empty case.
+  by_cases hne : Ω = ∅
+  · refine ⟨id, strictMono_id, 0, ?_, ?_⟩
+    · intro x hx
+      rw [hne] at hx
+      exact absurd hx (Set.notMem_empty x)
+    · intro K hK hKΩ
+      have hKe : K = ∅ := by
+        rw [hne] at hKΩ
+        exact Set.subset_eq_empty hKΩ rfl
+      rw [hKe]
+      exact tendstoUniformlyOn_empty
+  -- ### A dense sequence in `Ω`.
+  have hΩne : Ω.Nonempty := Set.nonempty_iff_ne_empty.2 hne
+  have : Nonempty ↥Ω := hΩne.to_subtype
+  obtain ⟨dd, hdd⟩ := TopologicalSpace.exists_dense_seq ↥Ω
+  have hdΩ : ∀ j : ℕ, (dd j : M) ∈ Ω := fun j => (dd j).2
+  have hdense : ∀ O : Set M, IsOpen O → (O ∩ Ω).Nonempty → ∃ j : ℕ, (dd j : M) ∈ O := by
+    intro O hO hOne
+    obtain ⟨y, hyO, hyΩ⟩ := hOne
+    have hpre : IsOpen ((↑) ⁻¹' O : Set ↥Ω) := hO.preimage continuous_subtype_val
+    have hprene : ((↑) ⁻¹' O : Set ↥Ω).Nonempty := ⟨⟨y, hyΩ⟩, hyO⟩
+    obtain ⟨j, hj⟩ := hdd.exists_mem_open hpre hprene
+    exact ⟨j, hj⟩
+  -- ### Diagonal extraction at the dense sequence, via compactness of a countable
+  -- product of intervals.
+  have hbdj : ∀ j : ℕ, ∃ B, ∀ n, |u n (dd j : M)| ≤ B := by
+    intro j
+    obtain ⟨B, hB⟩ := hb {(dd j : M)} isCompact_singleton
+      (Set.singleton_subset_iff.2 (hdΩ j))
+    exact ⟨B, fun n => hB n _ rfl⟩
+  choose Bd hBd using hbdj
+  have hScomp : IsCompact (Set.univ.pi fun j : ℕ => Set.Icc (-(Bd j)) (Bd j)) :=
+    isCompact_univ_pi fun j => isCompact_Icc
+  have hmemS : ∀ n, (fun j => u n (dd j : M)) ∈
+      Set.univ.pi fun j : ℕ => Set.Icc (-(Bd j)) (Bd j) := by
+    intro n
+    rw [Set.mem_univ_pi]
+    intro j
+    exact abs_le.1 (hBd j n)
+  obtain ⟨a, -, φ, hφmono, hφtend⟩ := hScomp.tendsto_subseq hmemS
+  have hconv : ∀ j : ℕ, Tendsto (fun n => u (φ n) (dd j : M)) atTop (𝓝 (a j)) :=
+    fun j => tendsto_pi_nhds.1 hφtend j
+  refine ⟨φ, hφmono, ?_⟩
+  -- ### The local uniform Cauchy property.
+  have hlocal : ∀ x ∈ Ω, ∃ V : Set M, IsOpen V ∧ x ∈ V ∧ V ⊆ Ω ∧
+      ∀ ε > 0, ∃ N : ℕ, ∀ m ≥ N, ∀ n ≥ N, ∀ y ∈ V,
+        |u (φ m) y - u (φ n) y| < ε := by
+    intro x hx
+    obtain ⟨ρ, hρ, hsub⟩ := hdata x hx
+    have hxsrc : x ∈ (chartAt ℂ x).source := mem_chart_source ℂ x
+    have hsubT : closedBall (chartAt ℂ x x) ρ ⊆ (chartAt ℂ x).target :=
+      hsub.trans Set.inter_subset_left
+    -- the compact read-back of the closed chart ball
+    have hKcomp : IsCompact ((chartAt ℂ x).symm '' closedBall (chartAt ℂ x x) ρ) :=
+      (isCompact_closedBall _ _).image_of_continuousOn
+        ((chartAt ℂ x).continuousOn_symm.mono hsubT)
+    have hKΩ : (chartAt ℂ x).symm '' closedBall (chartAt ℂ x x) ρ ⊆ Ω := by
+      rintro y ⟨ζ, hζ, rfl⟩
+      exact (hsub hζ).2
+    obtain ⟨B, hB⟩ := hb _ hKcomp hKΩ
+    have hxK : x ∈ (chartAt ℂ x).symm '' closedBall (chartAt ℂ x x) ρ :=
+      ⟨chartAt ℂ x x, mem_closedBall_self hρ.le, (chartAt ℂ x).left_inv hxsrc⟩
+    have hB0 : 0 ≤ B := le_trans (abs_nonneg _) (hB 0 x hxK)
+    -- readings are harmonic on a neighborhood of the closed ball and bounded by B
+    have hread : ∀ k : ℕ, HarmonicOnNhd (u k ∘ (chartAt ℂ x).symm)
+        (closedBall (chartAt ℂ x x) ρ) :=
+      fun k ζ hζ => htransfer x (u k) (hu k) ζ (hsub hζ)
+    have hbound : ∀ k : ℕ, ∀ ζ ∈ closedBall (chartAt ℂ x x) ρ,
+        |(u k ∘ (chartAt ℂ x).symm) ζ| ≤ B :=
+      fun k ζ hζ => hB k _ ⟨ζ, hζ, rfl⟩
+    -- the Lipschitz constant on the half ball
+    have hlip : ∀ k : ℕ, ∀ z ∈ ball (chartAt ℂ x x) (ρ / 2),
+        ∀ w ∈ ball (chartAt ℂ x x) (ρ / 2),
+        |u k ((chartAt ℂ x).symm z) - u k ((chartAt ℂ x).symm w)|
+          ≤ 52 * B / ρ * ‖z - w‖ :=
+      fun k z hz w hw =>
+        hplaneLip (chartAt ℂ x x) ρ B hρ hB0 (u k ∘ (chartAt ℂ x).symm)
+          (hread k) (hbound k) z hz w hw
+    -- the neighborhood
+    refine ⟨(chartAt ℂ x).source ∩ ⇑(chartAt ℂ x) ⁻¹' ball (chartAt ℂ x x) (ρ / 4),
+      (chartAt ℂ x).continuousOn.isOpen_inter_preimage (chartAt ℂ x).open_source
+        isOpen_ball,
+      ⟨hxsrc, Set.mem_preimage.2 (mem_ball_self (by positivity : (0:ℝ) < ρ / 4))⟩,
+      ?_, ?_⟩
+    · intro y hy
+      have h1 : chartAt ℂ x y ∈ closedBall (chartAt ℂ x x) ρ :=
+        ball_subset_closedBall (ball_subset_ball (by linarith) hy.2)
+      have h2 : (chartAt ℂ x).symm (chartAt ℂ x y) ∈ Ω := (hsub h1).2
+      rwa [(chartAt ℂ x).left_inv hy.1] at h2
+    · intro ε hε
+      set L : ℝ := 52 * B / ρ with hLdef
+      have hL0 : 0 ≤ L := by positivity
+      set δ : ℝ := ε / (4 * (L + 1)) with hδdef
+      have hδ0 : 0 < δ := by positivity
+      -- finite δ/2-net of the quarter ball
+      obtain ⟨t, -, htcover⟩ :=
+        (isCompact_closedBall (chartAt ℂ x x) (ρ / 4)).elim_nhds_subcover
+          (fun ζ => ball ζ (δ / 2)) (fun ζ _ => ball_mem_nhds ζ (by positivity))
+      -- representative points of the dense sequence in each net cell
+      have hchoice : ∀ ζ : ℂ, ∃ j : ℕ,
+          ((chartAt ℂ x).source ∩ ⇑(chartAt ℂ x) ⁻¹' ball (chartAt ℂ x x) (ρ / 4) ∩
+            ((chartAt ℂ x).source ∩ ⇑(chartAt ℂ x) ⁻¹' ball ζ (δ / 2))).Nonempty →
+          (dd j : M) ∈ (chartAt ℂ x).source ∩
+            ⇑(chartAt ℂ x) ⁻¹' ball (chartAt ℂ x x) (ρ / 4) ∩
+            ((chartAt ℂ x).source ∩ ⇑(chartAt ℂ x) ⁻¹' ball ζ (δ / 2)) := by
+        intro ζ
+        by_cases hne2 : ((chartAt ℂ x).source ∩
+            ⇑(chartAt ℂ x) ⁻¹' ball (chartAt ℂ x x) (ρ / 4) ∩
+            ((chartAt ℂ x).source ∩ ⇑(chartAt ℂ x) ⁻¹' ball ζ (δ / 2))).Nonempty
+        · have hWopen : IsOpen ((chartAt ℂ x).source ∩
+              ⇑(chartAt ℂ x) ⁻¹' ball (chartAt ℂ x x) (ρ / 4) ∩
+              ((chartAt ℂ x).source ∩ ⇑(chartAt ℂ x) ⁻¹' ball ζ (δ / 2))) :=
+            ((chartAt ℂ x).continuousOn.isOpen_inter_preimage (chartAt ℂ x).open_source
+                isOpen_ball).inter
+              ((chartAt ℂ x).continuousOn.isOpen_inter_preimage (chartAt ℂ x).open_source
+                isOpen_ball)
+          obtain ⟨y, hy⟩ := hne2
+          have hyΩ : y ∈ Ω := by
+            have h1 : chartAt ℂ x y ∈ closedBall (chartAt ℂ x x) ρ :=
+              ball_subset_closedBall (ball_subset_ball (by linarith) hy.1.2)
+            have h2 : (chartAt ℂ x).symm (chartAt ℂ x y) ∈ Ω := (hsub h1).2
+            rwa [(chartAt ℂ x).left_inv hy.1.1] at h2
+          obtain ⟨j, hj⟩ := hdense _ hWopen ⟨y, hy, hyΩ⟩
+          exact ⟨j, fun _ => hj⟩
+        · exact ⟨0, fun hcon => absurd hcon hne2⟩
+      choose jpt hjpt using hchoice
+      -- Cauchy thresholds at the finitely many representatives
+      have hCau : ∀ ζ : ℂ, ∃ N : ℕ, ∀ m ≥ N, ∀ n ≥ N,
+          |u (φ m) (dd (jpt ζ) : M) - u (φ n) (dd (jpt ζ) : M)| < ε / 3 := by
+        intro ζ
+        have hcs : CauchySeq (fun n => u (φ n) (dd (jpt ζ) : M)) :=
+          (hconv (jpt ζ)).cauchySeq
+        rw [Metric.cauchySeq_iff] at hcs
+        obtain ⟨N, hN⟩ := hcs (ε / 3) (by positivity)
+        exact ⟨N, fun m hm n hn => by
+          have := hN m hm n hn
+          rwa [Real.dist_eq] at this⟩
+      choose Nf hNf using hCau
+      refine ⟨t.sup Nf, ?_⟩
+      intro m hm n hn y hy
+      -- locate `y`'s chart image in the net
+      have hyQ : chartAt ℂ x y ∈ closedBall (chartAt ℂ x x) (ρ / 4) :=
+        ball_subset_closedBall hy.2
+      obtain ⟨ζ, hζt, hyζ⟩ := Set.mem_iUnion₂.1 (htcover hyQ)
+      have hWne : ((chartAt ℂ x).source ∩
+          ⇑(chartAt ℂ x) ⁻¹' ball (chartAt ℂ x x) (ρ / 4) ∩
+          ((chartAt ℂ x).source ∩ ⇑(chartAt ℂ x) ⁻¹' ball ζ (δ / 2))).Nonempty :=
+        ⟨y, hy, hy.1, hyζ⟩
+      have hdj := hjpt ζ hWne
+      -- chart images of the pair lie in the half ball, at distance < δ
+      have hey : chartAt ℂ x y ∈ ball (chartAt ℂ x x) (ρ / 2) :=
+        ball_subset_ball (by linarith) hy.2
+      have hedj : chartAt ℂ x (dd (jpt ζ) : M) ∈ ball (chartAt ℂ x x) (ρ / 2) :=
+        ball_subset_ball (by linarith) hdj.1.2
+      have hdist : ‖chartAt ℂ x y - chartAt ℂ x (dd (jpt ζ) : M)‖ < δ := by
+        rw [← dist_eq_norm]
+        calc dist (chartAt ℂ x y) (chartAt ℂ x (dd (jpt ζ) : M))
+            ≤ dist (chartAt ℂ x y) ζ + dist ζ (chartAt ℂ x (dd (jpt ζ) : M)) :=
+              dist_triangle _ _ _
+          _ < δ / 2 + δ / 2 := by
+              apply add_lt_add (mem_ball.1 hyζ)
+              rw [dist_comm]
+              exact mem_ball.1 hdj.2.2
+          _ = δ := by ring
+      -- three-epsilon assembly
+      have hyy : (chartAt ℂ x).symm (chartAt ℂ x y) = y := (chartAt ℂ x).left_inv hy.1
+      have hdd' : (chartAt ℂ x).symm (chartAt ℂ x (dd (jpt ζ) : M)) = (dd (jpt ζ) : M) :=
+        (chartAt ℂ x).left_inv hdj.1.1
+      have hlip_m : |u (φ m) y - u (φ m) (dd (jpt ζ) : M)| ≤ L * δ := by
+        have h1 := hlip (φ m) _ hey _ hedj
+        rw [hyy, hdd'] at h1
+        calc |u (φ m) y - u (φ m) (dd (jpt ζ) : M)|
+            ≤ L * ‖chartAt ℂ x y - chartAt ℂ x (dd (jpt ζ) : M)‖ := h1
+          _ ≤ L * δ := mul_le_mul_of_nonneg_left hdist.le hL0
+      have hlip_n : |u (φ n) y - u (φ n) (dd (jpt ζ) : M)| ≤ L * δ := by
+        have h1 := hlip (φ n) _ hey _ hedj
+        rw [hyy, hdd'] at h1
+        calc |u (φ n) y - u (φ n) (dd (jpt ζ) : M)|
+            ≤ L * ‖chartAt ℂ x y - chartAt ℂ x (dd (jpt ζ) : M)‖ := h1
+          _ ≤ L * δ := mul_le_mul_of_nonneg_left hdist.le hL0
+      have hmid : |u (φ m) (dd (jpt ζ) : M) - u (φ n) (dd (jpt ζ) : M)| < ε / 3 :=
+        hNf ζ m (le_trans (Finset.le_sup hζt) hm) n (le_trans (Finset.le_sup hζt) hn)
+      have hLδ : L * δ ≤ ε / 4 := by
+        rw [hδdef]
+        rw [div_eq_mul_inv, ← mul_assoc]
+        have h1 : L * ε * (4 * (L + 1))⁻¹ ≤ (L + 1) * ε * (4 * (L + 1))⁻¹ := by
+          apply mul_le_mul_of_nonneg_right _ (by positivity)
+          apply mul_le_mul_of_nonneg_right _ hε.le
+          linarith
+        calc L * ε * (4 * (L + 1))⁻¹ ≤ (L + 1) * ε * (4 * (L + 1))⁻¹ := h1
+          _ = ε / 4 := by
+            field_simp
+      have hlip_n' : |u (φ n) (dd (jpt ζ) : M) - u (φ n) y| ≤ L * δ := by
+        rw [abs_sub_comm]
+        exact hlip_n
+      have htri1 := abs_sub_le (u (φ m) y) (u (φ m) (dd (jpt ζ) : M)) (u (φ n) y)
+      have htri2 := abs_sub_le (u (φ m) (dd (jpt ζ) : M)) (u (φ n) (dd (jpt ζ) : M))
+        (u (φ n) y)
+      linarith [htri1, htri2, hlip_m, hlip_n', hmid, hLδ]
+  -- ### The pointwise limit function.
+  have hGex : ∀ y ∈ Ω, ∃ l : ℝ, Tendsto (fun n => u (φ n) y) atTop (𝓝 l) := by
+    intro y hy
+    obtain ⟨V, -, hyV, -, hVc⟩ := hlocal y hy
+    have hcs : CauchySeq (fun n => u (φ n) y) := by
+      rw [Metric.cauchySeq_iff]
+      intro ε hε
+      obtain ⟨N, hN⟩ := hVc ε hε
+      exact ⟨N, fun m hm n hn => by
+        rw [Real.dist_eq]
+        exact hN m hm n hn y hyV⟩
+    exact cauchySeq_tendsto_of_complete hcs
+  set G : M → ℝ := fun y =>
+    if h : ∃ l : ℝ, Tendsto (fun n => u (φ n) y) atTop (𝓝 l) then h.choose else 0
+    with hGdef
+  have hGtend : ∀ y ∈ Ω, Tendsto (fun n => u (φ n) y) atTop (𝓝 (G y)) := by
+    intro y hy
+    have h := hGex y hy
+    have hGy : G y = h.choose := by
+      rw [hGdef]
+      exact dif_pos h
+    rw [hGy]
+    exact h.choose_spec
+  -- ### Uniform convergence on each local piece.
+  have hVunif : ∀ V : Set M, V ⊆ Ω →
+      (∀ ε > 0, ∃ N : ℕ, ∀ m ≥ N, ∀ n ≥ N, ∀ y ∈ V,
+        |u (φ m) y - u (φ n) y| < ε) →
+      TendstoUniformlyOn (fun n => u (φ n)) G atTop V := by
+    intro V hVΩ hVc
+    rw [Metric.tendstoUniformlyOn_iff]
+    intro ε hε
+    obtain ⟨N, hN⟩ := hVc (ε / 2) (by positivity)
+    rw [Filter.eventually_atTop]
+    refine ⟨N, fun n hn y hy => ?_⟩
+    have h1 : Tendsto (fun m => dist (u (φ m) y) (u (φ n) y)) atTop
+        (𝓝 (dist (G y) (u (φ n) y))) :=
+      (hGtend y (hVΩ hy)).dist tendsto_const_nhds
+    have h2 : ∀ᶠ m in atTop, dist (u (φ m) y) (u (φ n) y) ≤ ε / 2 := by
+      rw [Filter.eventually_atTop]
+      exact ⟨N, fun m hm => by
+        rw [Real.dist_eq]
+        exact (hN m hm n hn y hy).le⟩
+    have h3 : dist (G y) (u (φ n) y) ≤ ε / 2 := le_of_tendsto h1 h2
+    linarith
+  -- ### Uniform convergence on compact subsets.
+  have hKunif : ∀ K, IsCompact K → K ⊆ Ω →
+      TendstoUniformlyOn (fun n => u (φ n)) G atTop K := by
+    intro K hK hKΩ
+    choose V hVopen hVmem hVsub hVc using hlocal
+    obtain ⟨t, hts⟩ := hK.elim_nhds_subcover' (fun x hx => V x (hKΩ hx))
+      (fun x hx => (hVopen x (hKΩ hx)).mem_nhds (hVmem x (hKΩ hx)))
+    rw [Metric.tendstoUniformlyOn_iff]
+    intro ε hε
+    have hev : ∀ᶠ n in atTop, ∀ z ∈ t,
+        ∀ y ∈ V (z : M) (hKΩ z.2), dist (G y) (u (φ n) y) < ε := by
+      rw [Filter.eventually_all_finset]
+      intro z hzt
+      have h1 := hVunif (V (z : M) (hKΩ z.2)) (hVsub (z : M) (hKΩ z.2))
+        (hVc (z : M) (hKΩ z.2))
+      rw [Metric.tendstoUniformlyOn_iff] at h1
+      exact h1 ε hε
+    filter_upwards [hev] with n hn y hyK
+    obtain ⟨z, hzt, hyV⟩ := Set.mem_iUnion₂.1 (hts hyK)
+    exact hn z hzt y hyV
+  -- ### Harmonicity of the limit, via the Poisson integral on chart disks.
+  refine ⟨G, ?_, hKunif⟩
+  intro x hx
+  obtain ⟨ρ, hρ, hsub⟩ := hdata x hx
+  have hxsrc : x ∈ (chartAt ℂ x).source := mem_chart_source ℂ x
+  have hsubT : closedBall (chartAt ℂ x x) ρ ⊆ (chartAt ℂ x).target :=
+    hsub.trans Set.inter_subset_left
+  have hKcomp : IsCompact ((chartAt ℂ x).symm '' closedBall (chartAt ℂ x x) ρ) :=
+    (isCompact_closedBall _ _).image_of_continuousOn
+      ((chartAt ℂ x).continuousOn_symm.mono hsubT)
+  have hKΩ : (chartAt ℂ x).symm '' closedBall (chartAt ℂ x x) ρ ⊆ Ω := by
+    rintro y ⟨ζ, hζ, rfl⟩
+    exact (hsub hζ).2
+  -- readings of the subsequence, harmonic on a neighborhood of the closed ball
+  have hread : ∀ n : ℕ, HarmonicOnNhd (u (φ n) ∘ (chartAt ℂ x).symm)
+      (closedBall (chartAt ℂ x x) ρ) :=
+    fun n ζ hζ => htransfer x (u (φ n)) (hu (φ n)) ζ (hsub hζ)
+  -- uniform convergence of the readings on the closed chart ball
+  have hunif : TendstoUniformlyOn (fun n => u (φ n) ∘ (chartAt ℂ x).symm)
+      (G ∘ (chartAt ℂ x).symm) atTop (closedBall (chartAt ℂ x x) ρ) := by
+    have h1 := (hKunif _ hKcomp hKΩ).comp (chartAt ℂ x).symm
+    exact h1.mono fun ζ hζ => ⟨ζ, hζ, rfl⟩
+  have hcont_n : ∀ n : ℕ, ContinuousOn (u (φ n) ∘ (chartAt ℂ x).symm)
+      (closedBall (chartAt ℂ x x) ρ) :=
+    fun n => (hread n).continuousOn
+  have hGcont : ContinuousOn (G ∘ (chartAt ℂ x).symm) (closedBall (chartAt ℂ x x) ρ) :=
+    hunif.continuousOn ((Filter.Eventually.of_forall hcont_n).frequently)
+  -- the limit satisfies the Poisson identity on the open ball
+  have hPI : ∀ z ∈ ball (chartAt ℂ x x) ρ,
+      (G ∘ (chartAt ℂ x).symm) z
+        = poissonIntegral (G ∘ (chartAt ℂ x).symm) (chartAt ℂ x x) ρ z := by
+    intro z hz
+    have haz : ‖z - chartAt ℂ x x‖ < ρ := by
+      rw [← dist_eq_norm]
+      exact mem_ball.1 hz
+    have haz0 : 0 ≤ ‖z - chartAt ℂ x x‖ := norm_nonneg _
+    set Kb : ℝ := (ρ + ‖z - chartAt ℂ x x‖) / (ρ - ‖z - chartAt ℂ x x‖) with hKbdef
+    have hKb0 : 0 ≤ Kb := div_nonneg (by linarith) (by linarith)
+    have hKbound : ∀ ζ ∈ sphere (chartAt ℂ x x) ρ, |poissonKernel (chartAt ℂ x x) z ζ| ≤ Kb := by
+      intro ζ hζ
+      have hup : poissonKernel (chartAt ℂ x x) z ζ ≤ Kb := by
+        rw [poissonKernel_eq_re_herglotzRieszKernel, Function.comp_apply,
+          herglotzRieszKernel_def]
+        exact re_herglotzRieszKernel_le hζ hz
+      have hlo : 0 ≤ poissonKernel (chartAt ℂ x x) z ζ := by
+        rw [poissonKernel_eq_re_herglotzRieszKernel, Function.comp_apply,
+          herglotzRieszKernel_def]
+        refine le_trans ?_ (le_re_herglotzRieszKernel hζ hz)
+        apply div_nonneg <;> linarith
+      rw [abs_of_nonneg hlo]
+      exact hup
+    -- reproducing identity along the sequence
+    have hrep : ∀ n : ℕ, (u (φ n) ∘ (chartAt ℂ x).symm) z
+        = poissonIntegral (u (φ n) ∘ (chartAt ℂ x).symm) (chartAt ℂ x x) ρ z := by
+      intro n
+      have h1 := (hread n).circleAverage_poissonKernel_smul hz
+      rw [← h1, poissonIntegral]
+      apply Real.circleAverage_congr_sphere
+      intro ζ _
+      simp [smul_eq_mul]
+    -- convergence of the Poisson integrals
+    have hlimPI : Tendsto
+        (fun n => poissonIntegral (u (φ n) ∘ (chartAt ℂ x).symm) (chartAt ℂ x x) ρ z)
+        atTop (𝓝 (poissonIntegral (G ∘ (chartAt ℂ x).symm) (chartAt ℂ x x) ρ z)) := by
+      rw [Metric.tendsto_atTop]
+      intro ε hε
+      have hsphunif := hunif.mono sphere_subset_closedBall
+      rw [Metric.tendstoUniformlyOn_iff] at hsphunif
+      have hev := hsphunif (ε / (2 * (Kb + 1))) (by positivity)
+      rw [Filter.eventually_atTop] at hev
+      obtain ⟨N, hN⟩ := hev
+      refine ⟨N, fun n hn => ?_⟩
+      rw [Real.dist_eq]
+      have hbd : ∀ ζ ∈ sphere (chartAt ℂ x x) ρ,
+          |poissonKernel (chartAt ℂ x x) z ζ * (u (φ n) ∘ (chartAt ℂ x).symm) ζ
+            - poissonKernel (chartAt ℂ x x) z ζ * (G ∘ (chartAt ℂ x).symm) ζ|
+            ≤ Kb * (ε / (2 * (Kb + 1))) := by
+        intro ζ hζ
+        have h1 : |poissonKernel (chartAt ℂ x x) z ζ * (u (φ n) ∘ (chartAt ℂ x).symm) ζ
+            - poissonKernel (chartAt ℂ x x) z ζ * (G ∘ (chartAt ℂ x).symm) ζ|
+            = |poissonKernel (chartAt ℂ x x) z ζ|
+              * |(u (φ n) ∘ (chartAt ℂ x).symm) ζ - (G ∘ (chartAt ℂ x).symm) ζ| := by
+          rw [← mul_sub, abs_mul]
+        rw [h1]
+        have h2 : |(u (φ n) ∘ (chartAt ℂ x).symm) ζ - (G ∘ (chartAt ℂ x).symm) ζ|
+            ≤ ε / (2 * (Kb + 1)) := by
+          have h3 := hN n hn ζ hζ
+          rw [Real.dist_eq, abs_sub_comm] at h3
+          exact h3.le
+        exact mul_le_mul (hKbound ζ hζ) h2 (abs_nonneg _) hKb0
+      have hcF : ContinuousOn
+          (fun ζ => poissonKernel (chartAt ℂ x x) z ζ * (u (φ n) ∘ (chartAt ℂ x).symm) ζ)
+          (sphere (chartAt ℂ x x) ρ) :=
+        (hKcont _ z ρ hz).mul ((hcont_n n).mono sphere_subset_closedBall)
+      have hcG : ContinuousOn
+          (fun ζ => poissonKernel (chartAt ℂ x x) z ζ * (G ∘ (chartAt ℂ x).symm) ζ)
+          (sphere (chartAt ℂ x x) ρ) :=
+        (hKcont _ z ρ hz).mul (hGcont.mono sphere_subset_closedBall)
+      have hkey := havg_diff _ _ (chartAt ℂ x x) ρ (Kb * (ε / (2 * (Kb + 1)))) hρ hcF hcG hbd
+      have hfin : Kb * (ε / (2 * (Kb + 1))) < ε := by
+        rw [div_eq_mul_inv]
+        have h4 : Kb * (ε * (2 * (Kb + 1))⁻¹) ≤ (Kb + 1) * (ε * (2 * (Kb + 1))⁻¹) := by
+          apply mul_le_mul_of_nonneg_right (by linarith) (by positivity)
+        have h5 : (Kb + 1) * (ε * (2 * (Kb + 1))⁻¹) = ε / 2 := by
+          field_simp
+        rw [h5] at h4
+        linarith
+      exact lt_of_le_of_lt hkey hfin
+    -- limits agree
+    have hGz : Tendsto
+        (fun n => poissonIntegral (u (φ n) ∘ (chartAt ℂ x).symm) (chartAt ℂ x x) ρ z)
+        atTop (𝓝 ((G ∘ (chartAt ℂ x).symm) z)) := by
+      have h1 := hunif.tendsto_at (ball_subset_closedBall hz)
+      exact h1.congr hrep
+    exact tendsto_nhds_unique hGz hlimPI
+  -- the Poisson integral of the limit data is harmonic on the ball
+  have hPharm : HarmonicOnNhd
+      (poissonIntegral (G ∘ (chartAt ℂ x).symm) (chartAt ℂ x x) ρ)
+      (ball (chartAt ℂ x x) ρ) :=
+    poissonIntegral_harmonicOn _ _ hρ (hGcont.mono sphere_subset_closedBall)
+  have hcball : chartAt ℂ x x ∈ ball (chartAt ℂ x x) ρ := mem_ball_self hρ
+  have hev : (G ∘ (chartAt ℂ x).symm)
+      =ᶠ[𝓝 (chartAt ℂ x x)] poissonIntegral (G ∘ (chartAt ℂ x).symm) (chartAt ℂ x x) ρ :=
+    eventuallyEq_of_mem (isOpen_ball.mem_nhds hcball) hPI
+  exact (harmonicAt_congr_nhds hev).mpr (hPharm _ hcball)
+
+
+/-! ## The bipolar Green's function and the dipole map -/
+
+/-- **The core of the classical cross-symmetry of Green's functions** (the
+sole remaining analytic wall of the dipole construction): under ambient
+non-hyperbolicity at the evaluation point, the two piece Green's functions
+differ there by a bounded amount for all sufficiently small shrink
+parameters. Classically this is the approximate symmetry of Green's
+functions — the matching of the Robin heights of the two poles along the
+exhaustion — provable by the surface Green identity or the universal-cover
+transfer, both beyond the present infrastructure. -/
+theorem pieceGreen_drift_bound_core (D₀ : CoordDisk M) {p₁ p₂ p₃ : M}
     (hp₁ : p₁ ∉ D₀.closedCarrier) (hp₂ : p₂ ∉ D₀.closedCarrier)
-    (hne : p₁ ≠ p₂)
-    (hnb : ¬ BddAbove ((fun v => v p₂) '' greenFamily p₁) ∨
-      ¬ BddAbove ((fun v => v p₁) '' greenFamily p₂)) :
+    (hp₃ : p₃ ∉ D₀.closedCarrier) (hne : p₁ ≠ p₂) (h₃₁ : p₃ ≠ p₁)
+    (h₃₂ : p₃ ≠ p₂)
+    (hnb : ¬ BddAbove ((fun v => v p₃) '' greenFamily p₁) ∨
+      ¬ BddAbove ((fun v => v p₃) '' greenFamily p₂)) :
     ∃ t₀ C₀, 0 < t₀ ∧ t₀ ≤ 1 ∧ ∀ t (ht : 0 < t) (ht1 : t ≤ 1), t ≤ t₀ →
-      |pieceGreen (D₀.shrink t ht ht1).compl p₁ p₂ -
-        pieceGreen (D₀.shrink t ht ht1).compl p₂ p₁| ≤ C₀ := by
+      |pieceGreen (D₀.shrink t ht ht1).compl p₁ p₃ -
+        pieceGreen (D₀.shrink t ht ht1).compl p₂ p₃| ≤ C₀ := by
   sorry
 
-/-- **The cross-symmetry bound** (the symmetry wall of the dipole
-construction): the two cross values of the piece Green's functions differ by
-a shrink-independent constant. -/
-theorem exists_pieceGreen_symm_bound (D₀ : CoordDisk M) {p₁ p₂ : M}
+/-- **The drift bound** (the irreducible core of the classical cross-symmetry
+of Green's functions, in its weakest sufficient form): the two piece Green's
+functions, evaluated at a fixed third base point, differ by a
+shrink-independent constant. -/
+theorem exists_pieceGreen_drift_bound (D₀ : CoordDisk M) {p₁ p₂ p₃ : M}
     (hp₁ : p₁ ∉ D₀.closedCarrier) (hp₂ : p₂ ∉ D₀.closedCarrier)
-    (hne : p₁ ≠ p₂) :
+    (hp₃ : p₃ ∉ D₀.closedCarrier) (hne : p₁ ≠ p₂) (h₃₁ : p₃ ≠ p₁)
+    (h₃₂ : p₃ ≠ p₂) :
     ∃ C, ∀ t (ht : 0 < t) (ht1 : t ≤ 1),
-      |pieceGreen (D₀.shrink t ht ht1).compl p₁ p₂ -
-        pieceGreen (D₀.shrink t ht ht1).compl p₂ p₁| ≤ C := by
-  have hcross : (¬ BddAbove ((fun v => v p₂) '' greenFamily p₁) ∨
-        ¬ BddAbove ((fun v => v p₁) '' greenFamily p₂)) →
-      ∃ t₀ C₀, 0 < t₀ ∧ t₀ ≤ 1 ∧ ∀ t (ht : 0 < t) (ht1 : t ≤ 1), t ≤ t₀ →
-        |pieceGreen (D₀.shrink t ht ht1).compl p₁ p₂ -
-          pieceGreen (D₀.shrink t ht ht1).compl p₂ p₁| ≤ C₀ :=
-    pieceGreen_cross_bound_core D₀ hp₁ hp₂ hne
+      |pieceGreen (D₀.shrink t ht ht1).compl p₁ p₃ -
+        pieceGreen (D₀.shrink t ht ht1).compl p₂ p₃| ≤ C := by
   classical
   /- ## Geometry of the shrinking disks. -/
   have hcarsub : ∀ t (ht : 0 < t) (ht1 : t ≤ 1),
@@ -2012,55 +3208,53 @@ theorem exists_pieceGreen_symm_bound (D₀ : CoordDisk M) {p₁ p₂ : M}
     · exact le_csSup hbdd ⟨_, hbaseM p, rfl⟩
   /- ## The monotone tail: a small-shrink bound propagates to all shrinks. -/
   have tail : (∃ t₀ C₀, 0 < t₀ ∧ t₀ ≤ 1 ∧ ∀ t (ht : 0 < t) (ht1 : t ≤ 1),
-      t ≤ t₀ → |pieceGreen (D₀.shrink t ht ht1).compl p₁ p₂ -
-        pieceGreen (D₀.shrink t ht ht1).compl p₂ p₁| ≤ C₀) →
+      t ≤ t₀ → |pieceGreen (D₀.shrink t ht ht1).compl p₁ p₃ -
+        pieceGreen (D₀.shrink t ht ht1).compl p₂ p₃| ≤ C₀) →
       ∃ C, ∀ t (ht : 0 < t) (ht1 : t ≤ 1),
-        |pieceGreen (D₀.shrink t ht ht1).compl p₁ p₂ -
-          pieceGreen (D₀.shrink t ht ht1).compl p₂ p₁| ≤ C := by
+        |pieceGreen (D₀.shrink t ht ht1).compl p₁ p₃ -
+          pieceGreen (D₀.shrink t ht ht1).compl p₂ p₃| ≤ C := by
     rintro ⟨t₀, C₀, ht₀, ht₀1, hC₀⟩
-    refine ⟨max C₀ (pieceGreen (D₀.shrink t₀ ht₀ ht₀1).compl p₁ p₂ +
-      pieceGreen (D₀.shrink t₀ ht₀ ht₀1).compl p₂ p₁), fun t ht ht1 => ?_⟩
+    refine ⟨max C₀ (pieceGreen (D₀.shrink t₀ ht₀ ht₀1).compl p₁ p₃ +
+      pieceGreen (D₀.shrink t₀ ht₀ ht₀1).compl p₂ p₃), fun t ht ht1 => ?_⟩
     rcases le_total t t₀ with h | h
     · exact (hC₀ t ht ht1 h).trans (le_max_left _ _)
-    · have m1 := hPGmono p₁ p₂ hp₁ hp₂ hne.symm t t₀ ht ht1 ht₀ ht₀1 h
-      have m2 := hPGmono p₂ p₁ hp₂ hp₁ hne t t₀ ht ht1 ht₀ ht₀1 h
-      have n1 := hPGnonneg p₁ p₂ hp₁ hp₂ hne.symm t ht ht1
-      have n2 := hPGnonneg p₂ p₁ hp₂ hp₁ hne t ht ht1
-      have n1' := hPGnonneg p₁ p₂ hp₁ hp₂ hne.symm t₀ ht₀ ht₀1
-      have n2' := hPGnonneg p₂ p₁ hp₂ hp₁ hne t₀ ht₀ ht₀1
+    · have m1 := hPGmono p₁ p₃ hp₁ hp₃ h₃₁ t t₀ ht ht1 ht₀ ht₀1 h
+      have m2 := hPGmono p₂ p₃ hp₂ hp₃ h₃₂ t t₀ ht ht1 ht₀ ht₀1 h
+      have n1 := hPGnonneg p₁ p₃ hp₁ hp₃ h₃₁ t ht ht1
+      have n2 := hPGnonneg p₂ p₃ hp₂ hp₃ h₃₂ t ht ht1
+      have n1' := hPGnonneg p₁ p₃ hp₁ hp₃ h₃₁ t₀ ht₀ ht₀1
+      have n2' := hPGnonneg p₂ p₃ hp₂ hp₃ h₃₂ t₀ ht₀ ht₀1
       refine le_trans ?_ (le_max_right _ _)
       rw [abs_sub_le_iff]
       constructor
       · linarith
       · linarith
-  /- ## Assembly: dichotomy on the ambient boundedness at the two poles. -/
-  by_cases hb₁ : BddAbove ((fun v => v p₂) '' greenFamily p₁)
-  · by_cases hb₂ : BddAbove ((fun v => v p₁) '' greenFamily p₂)
-    · refine ⟨greenEnvelope p₁ p₂ + greenEnvelope p₂ p₁, fun t ht ht1 => ?_⟩
-      have h1 := hPGle p₁ p₂ hp₁ hp₂ hb₁ t ht ht1
-      have h2 := hPGle p₂ p₁ hp₂ hp₁ hb₂ t ht ht1
-      have h3 := hPGnonneg p₁ p₂ hp₁ hp₂ hne.symm t ht ht1
-      have h4 := hPGnonneg p₂ p₁ hp₂ hp₁ hne t ht ht1
-      rw [abs_sub_le_iff]
-      constructor
-      · linarith
-      · linarith
-    · exact tail (hcross (Or.inr hb₂))
-  · exact tail (hcross (Or.inl hb₁))
-
-/-- **The shrink-uniform dipole bound**: away from two pole disks, the
-difference of the two piece Green's functions is bounded independently of the
-shrink parameter. -/
-theorem exists_uniform_bipolar_bound (D₀ : CoordDisk M) {p₁ p₂ : M}
-    (hp₁ : p₁ ∉ D₀.closedCarrier) (hp₂ : p₂ ∉ D₀.closedCarrier)
-    (hne : p₁ ≠ p₂) :
-    ∃ C, ∃ V₁ ∈ 𝓝 p₁, ∃ V₂ ∈ 𝓝 p₂, ∀ t (ht : 0 < t) (ht1 : t ≤ 1),
-      ∀ x ∈ ((D₀.shrink t ht ht1).compl : Set M) \ (V₁ ∪ V₂),
-        |pieceGreen (D₀.shrink t ht ht1).compl p₁ x -
-          pieceGreen (D₀.shrink t ht ht1).compl p₂ x| ≤ C := by
-  sorry
-
-/-! ## The bipolar Green's function and the dipole map -/
+  /- ## Assembly: dichotomy on the ambient boundedness at the base point. -/
+  by_cases hb : BddAbove ((fun v => v p₃) '' greenFamily p₁) ∧
+      BddAbove ((fun v => v p₃) '' greenFamily p₂)
+  · -- Ambient-hyperbolic regime: both piece families are dominated, at the
+    -- base point, by the corresponding ambient envelopes.
+    refine ⟨greenEnvelope p₁ p₃ + greenEnvelope p₂ p₃, fun t ht ht1 => ?_⟩
+    have h1 := hPGle p₁ p₃ hp₁ hp₃ hb.1 t ht ht1
+    have h2 := hPGle p₂ p₃ hp₂ hp₃ hb.2 t ht ht1
+    have h3 := hPGnonneg p₁ p₃ hp₁ hp₃ h₃₁ t ht ht1
+    have h4 := hPGnonneg p₂ p₃ hp₂ hp₃ h₃₂ t ht ht1
+    rw [abs_sub_le_iff]
+    constructor
+    · linarith
+    · linarith
+  · -- RESIDUAL CORE (the C-SYM wall): the ambient Perron family is unbounded
+    -- at `p₃` for at least one of the two poles (the non-hyperbolic regime,
+    -- covering compact `M` and ambient-parabolic noncompact `M`); both piece
+    -- Green's functions then increase to `+∞` at `p₃` along the exhaustion,
+    -- and the shrink-uniform boundedness of their difference for SMALL shrink
+    -- parameters is the genuine content of approximate Green symmetry
+    -- (`|M₁(t) − M₂(t)| = O(1)`, capacity additivity of the Robin heights).
+    -- No soft (Harnack/monotonicity/per-candidate) argument can close it; it
+    -- requires either a surface Green-identity (Stokes/flux on chart annuli)
+    -- or the universal-cover transfer.
+    exact tail (pieceGreen_drift_bound_core D₀ hp₁ hp₂ hp₃ hne h₃₁ h₃₂
+      (not_and_or.mp hb))
 
 /-- **The bipolar Green's function**: a dipole limit of the piece Green's
 function differences along the shrinking exhaustion — harmonic off the two
@@ -2079,7 +3273,8 @@ theorem exists_bipolarGreen [SecondCountableTopology M] (D₀ : CoordDisk M)
           ∀ w ∈ ball (chartAt ℂ p₂ p₂) r \ {chartAt ℂ p₂ p₂},
             h w = G ((chartAt ℂ p₂).symm w) -
               Real.log ‖w - chartAt ℂ p₂ p₂‖) ∧
-      (∃ C, ∃ V₁ ∈ 𝓝 p₁, ∃ V₂ ∈ 𝓝 p₂, ∀ x ∉ V₁ ∪ V₂, |G x| ≤ C) := by
+      (∃ C, ∃ V₁ ∈ 𝓝 p₁, ∃ V₂ ∈ 𝓝 p₂, IsCompact (closure V₁) ∧
+        IsCompact (closure V₂) ∧ ∀ x ∉ V₁ ∪ V₂, |G x| ≤ C) := by
   sorry
 
 /-- **The dipole map**: on a simply connected surface the bipolar Green's
@@ -2099,7 +3294,1685 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
       φ p₂ = OnePoint.infty ∧
       ∀ x, x ≠ p₁ → x ≠ p₂ →
         ∃ w : ℂ, φ x = (w : ℂ̂) ∧ ‖w‖ = Real.exp (-(G x)) := by
-  sorry
+  classical
+  -- ## §0 Plane bricks: punctured-ball connectivity and constant-ratio rigidity.
+  have hpunc : ∀ (c : ℂ) (r : ℝ), 0 < r → IsPreconnected (ball c r \ {c}) := by
+    intro c r hr
+    have hcont : Continuous fun p : ℝ × ℝ =>
+        c + (p.1 : ℂ) * Complex.exp ((p.2 : ℂ) * Complex.I) :=
+      continuous_const.add ((Complex.continuous_ofReal.comp continuous_fst).mul
+        (((Complex.continuous_ofReal.comp continuous_snd).mul continuous_const).cexp))
+    have himg : (fun p : ℝ × ℝ => c + (p.1 : ℂ) * Complex.exp ((p.2 : ℂ) * Complex.I)) ''
+        (Set.Ioo 0 r ×ˢ (Set.univ : Set ℝ)) = ball c r \ {c} := by
+      apply Set.Subset.antisymm
+      · rintro w ⟨⟨t, θ⟩, ⟨⟨ht0, htr⟩, -⟩, hw⟩
+        rw [← hw]
+        change c + (t : ℂ) * Complex.exp ((θ : ℂ) * Complex.I) ∈ ball c r \ {c}
+        have hd : dist (c + (t : ℂ) * Complex.exp ((θ : ℂ) * Complex.I)) c = t := by
+          rw [dist_eq_norm, add_sub_cancel_left, norm_mul, Complex.norm_exp_ofReal_mul_I,
+            mul_one, Complex.norm_real, Real.norm_of_nonneg ht0.le]
+        refine ⟨?_, ?_⟩
+        · rw [mem_ball, hd]; exact htr
+        · intro h
+          rw [Set.mem_singleton_iff] at h
+          rw [h, dist_self] at hd
+          exact ht0.ne hd
+      · rintro w ⟨hwb, hwc⟩
+        rw [Set.mem_singleton_iff] at hwc
+        have ht0 : 0 < ‖w - c‖ := norm_pos_iff.2 (sub_ne_zero_of_ne hwc)
+        have htr : ‖w - c‖ < r := by rw [← dist_eq_norm]; exact mem_ball.1 hwb
+        refine ⟨(‖w - c‖, (w - c).arg), ⟨⟨ht0, htr⟩, Set.mem_univ _⟩, ?_⟩
+        change c + (‖w - c‖ : ℂ) * Complex.exp (((w - c).arg : ℂ) * Complex.I) = w
+        rw [Complex.norm_mul_exp_arg_mul_I]
+        ring
+    rw [← himg]
+    exact (isPreconnected_Ioo.prod isPreconnected_univ).image _ hcont.continuousOn
+  have hcore : ∀ (f g : ℂ → ℂ) (z₀ : ℂ) (ρ : ℝ), 0 < ρ →
+      AnalyticOnNhd ℂ f (ball z₀ ρ) → AnalyticOnNhd ℂ g (ball z₀ ρ) →
+      (∀ w ∈ ball z₀ ρ, ‖f w‖ = ‖g w‖) →
+      (∀ w ∈ ball z₀ ρ, w ≠ z₀ → g w ≠ 0) →
+      ∃ c : ℂ, ‖c‖ = 1 ∧ Set.EqOn f (fun w => c * g w) (ball z₀ ρ) := by
+    intro f g z₀ ρ hρ hf hg hnorm hgne
+    set U : Set ℂ := ball z₀ ρ \ {z₀} with hU
+    have hUopen : IsOpen U := isOpen_ball.sdiff isClosed_singleton
+    have hUconn : IsPreconnected U := hpunc z₀ ρ hρ
+    set z₁ : ℂ := z₀ + ((ρ / 2 : ℝ) : ℂ) with hz₁
+    have hz₁U : z₁ ∈ U := by
+      constructor
+      · rw [mem_ball, dist_eq_norm, hz₁, add_sub_cancel_left, Complex.norm_real,
+          Real.norm_of_nonneg (by linarith)]
+        linarith
+      · intro h
+        rw [Set.mem_singleton_iff, hz₁, add_eq_left] at h
+        have h2 : (ρ / 2 : ℝ) = 0 := by exact_mod_cast h
+        linarith
+    have hgU : ∀ w ∈ U, g w ≠ 0 := fun w hw => hgne w hw.1 hw.2
+    have hr : AnalyticOnNhd ℂ (f / g) U := fun w hw =>
+      (hf w hw.1).div (hg w hw.1) (hgU w hw)
+    have hrnorm : ∀ w ∈ U, ‖(f / g) w‖ = 1 := by
+      intro w hw
+      rw [Pi.div_apply, norm_div, hnorm w hw.1,
+        div_self (norm_ne_zero_iff.mpr (hgU w hw))]
+    rcases (hr z₁ hz₁U).eventually_constant_or_nhds_le_map_nhds with hconst | hopen
+    · -- the ratio is constant on the punctured ball
+      have heq : Set.EqOn (f / g) (fun _ => (f / g) z₁) U :=
+        hr.eqOn_of_preconnected_of_eventuallyEq analyticOnNhd_const hUconn hz₁U hconst
+      refine ⟨(f / g) z₁, hrnorm z₁ hz₁U, ?_⟩
+      have hEqU : ∀ w ∈ U, f w = (f / g) z₁ * g w := by
+        intro w hw
+        have h1 := heq hw
+        rw [Pi.div_apply, div_eq_iff (hgU w hw)] at h1
+        exact h1
+      intro w hw
+      by_cases hwz : w = z₀
+      · have hz₀b : z₀ ∈ ball z₀ ρ := mem_ball_self hρ
+        have hfc : Filter.Tendsto f (𝓝[U] z₀) (𝓝 (f z₀)) :=
+          ((hf z₀ hz₀b).continuousAt).continuousWithinAt
+        have hgc : Filter.Tendsto (fun v => (f / g) z₁ * g v) (𝓝[U] z₀)
+            (𝓝 ((f / g) z₁ * g z₀)) :=
+          (continuousAt_const.mul (hg z₀ hz₀b).continuousAt).continuousWithinAt
+        haveI : (𝓝[U] z₀).NeBot := by
+          have h2 : U = {z₀}ᶜ ∩ ball z₀ ρ := by rw [hU, Set.diff_eq, Set.inter_comm]
+          rw [h2,
+            nhdsWithin_inter_of_mem' (nhdsWithin_le_nhds (isOpen_ball.mem_nhds hz₀b))]
+          exact Module.punctured_nhds_neBot ℝ ℂ z₀
+        have h5 : f =ᶠ[𝓝[U] z₀] fun v => (f / g) z₁ * g v :=
+          eventually_nhdsWithin_of_forall hEqU
+        have hcenter := tendsto_nhds_unique (hfc.congr' h5) hgc
+        rw [hwz]
+        exact hcenter
+      · exact hEqU w ⟨hw, hwz⟩
+    · -- open image: impossible for a map into the unit circle
+      exfalso
+      have hUnh : U ∈ 𝓝 z₁ := hUopen.mem_nhds hz₁U
+      have himg : (f / g) '' U ∈ 𝓝 ((f / g) z₁) := hopen (Filter.image_mem_map hUnh)
+      obtain ⟨δ, hδ0, hball⟩ := Metric.mem_nhds_iff.mp himg
+      have hwS : ((1 + δ / 2 : ℝ) : ℂ) * (f / g) z₁ ∈ ball ((f / g) z₁) δ := by
+        rw [mem_ball, dist_eq_norm]
+        have h1 : ((1 + δ / 2 : ℝ) : ℂ) * (f / g) z₁ - (f / g) z₁ =
+            ((δ / 2 : ℝ) : ℂ) * (f / g) z₁ := by
+          push_cast
+          ring
+        rw [h1, norm_mul, Complex.norm_real, hrnorm z₁ hz₁U, mul_one,
+          Real.norm_of_nonneg (by linarith)]
+        linarith
+      obtain ⟨u, huU, huw⟩ := hball hwS
+      have h6 : ‖(f / g) u‖ = 1 := hrnorm u huU
+      rw [huw, norm_mul, Complex.norm_real, hrnorm z₁ hz₁U, mul_one,
+        Real.norm_of_nonneg (by linarith)] at h6
+      linarith
+  -- ## §0b Sphere toolkit: charts, values, inverses, and Möbius scalings.
+  have hpolesopen : IsOpen ({p₁, p₂}ᶜ : Set M) := by
+    rw [isOpen_compl_iff, Set.insert_eq]
+    exact isClosed_singleton.union isClosed_singleton
+  have hpolemem : ∀ y : M, y ∈ ({p₁, p₂}ᶜ : Set M) ↔ y ≠ p₁ ∧ y ≠ p₂ := by
+    intro y
+    rw [Set.mem_compl_iff, Set.mem_insert_iff, Set.mem_singleton_iff]
+    tauto
+  have hfinrec : ∀ z : ℂ̂, z ≠ OnePoint.infty → z = ((sphereChartFinite z : ℂ) : ℂ̂) := by
+    intro z hz
+    cases z with
+    | infty => exact absurd rfl hz
+    | coe w => rw [sphereChartFinite_coe]
+  have hIapp_coe : ∀ w : ℂ, w ≠ 0 → sphereChartInfty ((w : ℂ̂)) = w⁻¹ := by
+    intro w hw
+    rw [sphereChartInfty_apply, inversionGL_smul_coe, if_neg hw, sphereChartFinite_coe]
+  have hIapp_infty : sphereChartInfty (OnePoint.infty : ℂ̂) = 0 := by
+    rw [sphereChartInfty_apply, inversionGL_smul_infty, sphereChartFinite_coe]
+  have hITmem : ∀ w : ℂ, w ∈ sphereChartInfty.target := by
+    intro w
+    have hz : (inversionGL • ((w : ℂ̂))) ∈ sphereChartInfty.source := by
+      rw [sphereChartInfty_source, inversionGL_smul_coe]
+      by_cases hw : w = 0
+      · rw [if_pos hw]
+        exact OnePoint.infty_ne_coe 0
+      · rw [if_neg hw]
+        intro hcon
+        exact hw (by simpa [inv_eq_zero] using OnePoint.coe_eq_coe.mp hcon)
+    have h2 : sphereChartInfty (inversionGL • ((w : ℂ̂))) = w := by
+      rw [sphereChartInfty_apply, inversionGL_smul_smul, sphereChartFinite_coe]
+    have h3 := sphereChartInfty.map_source hz
+    rwa [h2] at h3
+  have hISmem : ∀ z : ℂ̂, z ≠ ((0 : ℂ) : ℂ̂) → z ∈ sphereChartInfty.source := by
+    intro z hz
+    rw [sphereChartInfty_source]
+    exact hz
+  have hFmem : ∀ z : ℂ̂, z ≠ OnePoint.infty → z ∈ sphereChartFinite.source := by
+    intro z hz
+    rw [sphereChartFinite_source]
+    exact hz
+  have hatlasF : sphereChartFinite ∈ IsManifold.maximalAtlas 𝓘(ℂ) ω ℂ̂ :=
+    IsManifold.subset_maximalAtlas (Set.mem_insert _ _)
+  have hatlasI : sphereChartInfty ∈ IsManifold.maximalAtlas 𝓘(ℂ) ω ℂ̂ :=
+    IsManifold.subset_maximalAtlas (Set.mem_insert_of_mem _ rfl)
+  have hcoeSm : ∀ w : ℂ, ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω (fun v : ℂ => ((v : ℂ) : ℂ̂)) w := by
+    intro w
+    have h1 : ContMDiffOn 𝓘(ℂ) 𝓘(ℂ) ω sphereChartFinite.symm sphereChartFinite.target :=
+      contMDiffOn_symm_of_mem_maximalAtlas hatlasF
+    have h2 : sphereChartFinite.target ∈ 𝓝 w := by
+      rw [show sphereChartFinite.target = Set.univ from rfl]
+      exact Filter.univ_mem
+    refine (h1.contMDiffAt h2).congr_of_eventuallyEq ?_
+    exact Filter.Eventually.of_forall fun v => (sphereChartFinite_symm_apply v).symm
+  have hIsymmSm : ∀ w : ℂ, ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω sphereChartInfty.symm w := by
+    intro w
+    exact (contMDiffOn_symm_of_mem_maximalAtlas hatlasI).contMDiffAt
+      (sphereChartInfty.open_target.mem_nhds (hITmem w))
+  have hFSm : ∀ z : ℂ̂, z ≠ OnePoint.infty →
+      ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω sphereChartFinite z := by
+    intro z hz
+    exact (contMDiffOn_of_mem_maximalAtlas hatlasF).contMDiffAt
+      (sphereChartFinite.open_source.mem_nhds (hFmem z hz))
+  have hISm : ∀ z : ℂ̂, z ≠ ((0 : ℂ) : ℂ̂) →
+      ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω sphereChartInfty z := by
+    intro z hz
+    exact (contMDiffOn_of_mem_maximalAtlas hatlasI).contMDiffAt
+      (sphereChartInfty.open_source.mem_nhds (hISmem z hz))
+  have hmulCex : ∀ c : ℂ, c ≠ 0 → ∃ mc : ℂ̂ → ℂ̂, ContMDiff 𝓘(ℂ) 𝓘(ℂ) ω mc ∧
+      (∀ w : ℂ, mc ((w : ℂ̂)) = ((c * w : ℂ) : ℂ̂)) ∧
+      mc OnePoint.infty = OnePoint.infty := by
+    intro c hc
+    have hdet : (!![c, 0; 0, (1 : ℂ)]).det ≠ 0 := by
+      rw [Matrix.det_fin_two_of]
+      simpa using hc
+    obtain ⟨e, he⟩ := exists_glSMul_diffeomorph
+      (Matrix.GeneralLinearGroup.mkOfDetNeZero !![c, 0; 0, (1 : ℂ)] hdet)
+    refine ⟨fun z => Matrix.GeneralLinearGroup.mkOfDetNeZero !![c, 0; 0, (1 : ℂ)] hdet • z,
+      ?_, ?_, ?_⟩
+    · rw [← he]
+      exact e.contMDiff
+    · intro w
+      change Matrix.GeneralLinearGroup.mkOfDetNeZero !![c, 0; 0, (1 : ℂ)] hdet •
+        ((w : ℂ̂)) = ((c * w : ℂ) : ℂ̂)
+      rw [OnePoint.smul_some_eq_ite]
+      norm_num
+    · change Matrix.GeneralLinearGroup.mkOfDetNeZero !![c, 0; 0, (1 : ℂ)] hdet •
+        (OnePoint.infty : ℂ̂) = OnePoint.infty
+      rw [OnePoint.smul_infty_eq_ite]
+      norm_num
+  choose! mulC hmulCsm hmulCco hmulCinf using hmulCex
+  have hmulC1 : ∀ z : ℂ̂, mulC 1 z = z := by
+    intro z
+    cases z with
+    | infty => exact hmulCinf 1 one_ne_zero
+    | coe w => rw [hmulCco 1 one_ne_zero w, one_mul]
+  -- ## §1 The pointwise element predicate and its stability.
+  obtain ⟨Q, hQ⟩ : ∃ Q : (M → ℂ̂) → M → Prop, ∀ ψ x, Q ψ x ↔
+      (ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω ψ x ∧
+        (x ≠ p₁ → x ≠ p₂ → ∃ w : ℂ, ψ x = ((w : ℂ) : ℂ̂) ∧
+          ‖w‖ = Real.exp (-(G x))) ∧
+        (x = p₁ → ψ x = ((0 : ℂ) : ℂ̂)) ∧ (x = p₂ → ψ x = OnePoint.infty)) :=
+    ⟨_, fun _ _ => Iff.rfl⟩
+  have hfin : ∀ (ψ : M → ℂ̂) (y : M), Q ψ y → y ≠ p₂ → ψ y ≠ OnePoint.infty := by
+    intro ψ y hq hy2
+    rw [hQ] at hq
+    by_cases hy1 : y = p₁
+    · rw [hq.2.2.1 hy1]
+      exact OnePoint.coe_ne_infty 0
+    · obtain ⟨w, hw1, -⟩ := hq.2.1 hy1 hy2
+      rw [hw1]
+      exact OnePoint.coe_ne_infty w
+  have hne0 : ∀ (ψ : M → ℂ̂) (y : M), Q ψ y → y ≠ p₁ → ψ y ≠ ((0 : ℂ) : ℂ̂) := by
+    intro ψ y hq hy1
+    rw [hQ] at hq
+    by_cases hy2 : y = p₂
+    · rw [hq.2.2.2 hy2]
+      exact OnePoint.infty_ne_coe 0
+    · obtain ⟨w, hw1, hw2⟩ := hq.2.1 hy1 hy2
+      rw [hw1]
+      intro hcon
+      have hw0 : w = 0 := OnePoint.coe_eq_coe.mp hcon
+      rw [hw0, norm_zero] at hw2
+      exact absurd hw2.symm (ne_of_gt (Real.exp_pos _))
+  have hreadFin : ∀ (ψ : M → ℂ̂) (x₀ : M), ∀ z ∈ (chartAt ℂ x₀).target,
+      ψ ((chartAt ℂ x₀).symm z) ≠ OnePoint.infty →
+      ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω ψ ((chartAt ℂ x₀).symm z) →
+      AnalyticAt ℂ (fun w => sphereChartFinite (ψ ((chartAt ℂ x₀).symm w))) z := by
+    intro ψ x₀ z hz hnei hψ
+    have hsymm : ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω (chartAt ℂ x₀).symm z :=
+      contMDiffOn_chart_symm.contMDiffAt ((chartAt ℂ x₀).open_target.mem_nhds hz)
+    have hcomp : ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω
+        (fun w => sphereChartFinite (ψ ((chartAt ℂ x₀).symm w))) z :=
+      (hFSm _ hnei).comp z (hψ.comp z hsymm)
+    exact (contMDiffAt_iff_contDiffAt.mp hcomp).analyticAt
+  have hreadInf : ∀ (ψ : M → ℂ̂) (x₀ : M), ∀ z ∈ (chartAt ℂ x₀).target,
+      ψ ((chartAt ℂ x₀).symm z) ≠ ((0 : ℂ) : ℂ̂) →
+      ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω ψ ((chartAt ℂ x₀).symm z) →
+      AnalyticAt ℂ (fun w => sphereChartInfty (ψ ((chartAt ℂ x₀).symm w))) z := by
+    intro ψ x₀ z hz hnez hψ
+    have hsymm : ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω (chartAt ℂ x₀).symm z :=
+      contMDiffOn_chart_symm.contMDiffAt ((chartAt ℂ x₀).open_target.mem_nhds hz)
+    have hcomp : ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω
+        (fun w => sphereChartInfty (ψ ((chartAt ℂ x₀).symm w))) z :=
+      (hISm _ hnez).comp z (hψ.comp z hsymm)
+    exact (contMDiffAt_iff_contDiffAt.mp hcomp).analyticAt
+  have hQsmul : ∀ (c : ℂ), ‖c‖ = 1 → ∀ (ψ : M → ℂ̂) (y : M), Q ψ y →
+      Q (fun z => mulC c (ψ z)) y := by
+    intro c hc ψ y hq
+    have hc0 : c ≠ 0 := by
+      intro hcon
+      rw [hcon, norm_zero] at hc
+      exact one_ne_zero hc.symm
+    rw [hQ] at hq ⊢
+    obtain ⟨h1, h2, h3, h4⟩ := hq
+    refine ⟨((hmulCsm c hc0).contMDiffAt).comp y h1, ?_, ?_, ?_⟩
+    · intro hy1 hy2
+      obtain ⟨w, hw1, hw2⟩ := h2 hy1 hy2
+      refine ⟨c * w, ?_, ?_⟩
+      · rw [hw1]
+        exact hmulCco c hc0 w
+      · rw [norm_mul, hc, one_mul]
+        exact hw2
+    · intro hy
+      rw [h3 hy, hmulCco c hc0 0, mul_zero]
+    · intro hy
+      rw [h4 hy, hmulCinf c hc0]
+  have hEtrans : ∀ (ψ ψ' : M → ℂ̂) (x : M), (∀ᶠ y in 𝓝 x, Q ψ y) → ψ' =ᶠ[𝓝 x] ψ →
+      ∀ᶠ y in 𝓝 x, Q ψ' y := by
+    intro ψ ψ' x hE heq
+    obtain ⟨W, hWnh, hWeq⟩ := eventuallyEq_iff_exists_mem.mp heq
+    obtain ⟨W', hW'sub, hW'open, hxW'⟩ := mem_nhds_iff.mp hWnh
+    filter_upwards [hE, hW'open.mem_nhds hxW'] with y hy hyW'
+    rw [hQ] at hy ⊢
+    have heqy : ψ' =ᶠ[𝓝 y] ψ :=
+      eventuallyEq_of_mem (hW'open.mem_nhds hyW') (fun z hz => hWeq (hW'sub hz))
+    refine ⟨hy.1.congr_of_eventuallyEq heqy, fun h1 h2 => ?_, fun h => ?_, fun h => ?_⟩
+    · obtain ⟨w, hw1, hw2⟩ := hy.2.1 h1 h2
+      exact ⟨w, by rw [hWeq (hW'sub hyW')]; exact hw1, hw2⟩
+    · rw [hWeq (hW'sub hyW')]
+      exact hy.2.2.1 h
+    · rw [hWeq (hW'sub hyW')]
+      exact hy.2.2.2 h
+  -- ## §2 Existence of local elements: generic, zero-pole, and infinity-pole types.
+  have helt : ∀ x : M, ∃ ψ : M → ℂ̂, ∀ᶠ y in 𝓝 x, Q ψ y := by
+    intro x
+    by_cases hx1 : x = p₁
+    · -- the zero element `(z - c₁) e^{-F z}` read through the chart at `p₁`
+      subst hx1
+      obtain ⟨r, hr0, hrsub, h, hharm, hhval⟩ := hpole₁
+      set e := chartAt ℂ x with he
+      set c₁ : ℂ := e x with hc₁
+      have hxs : x ∈ e.source := mem_chart_source ℂ x
+      obtain ⟨F, hFa, hFre⟩ := hharm.exists_analyticOnNhd_ball_re_eq
+      refine ⟨fun y => (((e y - c₁) * Complex.exp (-F (e y)) : ℂ) : ℂ̂), ?_⟩
+      have hVopen : IsOpen (e.source ∩ e ⁻¹' ball c₁ r ∩ {p₂}ᶜ) :=
+        (e.continuousOn.isOpen_inter_preimage e.open_source isOpen_ball).inter
+          isOpen_compl_singleton
+      have hxV : x ∈ e.source ∩ e ⁻¹' ball c₁ r ∩ {p₂}ᶜ := by
+        refine ⟨⟨hxs, ?_⟩, hne⟩
+        rw [Set.mem_preimage, ← hc₁]
+        exact mem_ball_self hr0
+      filter_upwards [hVopen.mem_nhds hxV] with y hy
+      obtain ⟨⟨hys, hyb'⟩, hyp2⟩ := hy
+      have hyb : e y ∈ ball c₁ r := hyb'
+      have hyp2' : y ≠ p₂ := hyp2
+      rw [hQ]
+      refine ⟨?_, ?_, ?_, ?_⟩
+      · have houter : AnalyticAt ℂ (fun w : ℂ => (w - c₁) * Complex.exp (-F w)) (e y) := by
+          have h1 : AnalyticAt ℂ (fun w : ℂ => -F w) (e y) := (hFa _ hyb).neg
+          have h2 : AnalyticAt ℂ (Complex.exp ∘ fun w : ℂ => -F w) (e y) := h1.cexp
+          exact (analyticAt_id.sub analyticAt_const).mul h2
+        have h3 : ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω
+            (fun w : ℂ => (w - c₁) * Complex.exp (-F w)) (e y) :=
+          contMDiffAt_iff_contDiffAt.mpr houter.contDiffAt
+        have h4 : ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω e y :=
+          contMDiffOn_chart.contMDiffAt (e.open_source.mem_nhds hys)
+        exact (hcoeSm _).comp y (h3.comp y h4)
+      · intro hyp1 _
+        have hyc : e y ≠ c₁ := by
+          intro hcon
+          exact hyp1 (e.injOn hys hxs (by rw [hcon, hc₁]))
+        refine ⟨(e y - c₁) * Complex.exp (-F (e y)), rfl, ?_⟩
+        have hval : h (e y) = G y + Real.log ‖e y - c₁‖ := by
+          have h5 := hhval (e y) ⟨hyb, hyc⟩
+          rw [e.left_inv hys] at h5
+          exact h5
+        have hpos : 0 < ‖e y - c₁‖ := norm_pos_iff.mpr (sub_ne_zero.mpr hyc)
+        have hre0 : (F (e y)).re = h (e y) := hFre hyb
+        rw [norm_mul, Complex.norm_exp, Complex.neg_re, hre0, hval, neg_add,
+          Real.exp_add, Real.exp_neg (Real.log ‖e y - c₁‖), Real.exp_log hpos,
+          mul_comm, mul_assoc, inv_mul_cancel₀ (ne_of_gt hpos), mul_one]
+      · intro hyp
+        rw [hyp, ← hc₁, sub_self, zero_mul]
+      · intro hyp
+        exact absurd hyp hyp2'
+    by_cases hx2 : x = p₂
+    · -- the infinity element `1 / ((z - c₂) e^{f₂ z})` read through the chart at `p₂`
+      subst hx2
+      obtain ⟨r, hr0, hrsub, h, hharm, hhval⟩ := hpole₂
+      set e := chartAt ℂ x with he
+      set c₂ : ℂ := e x with hc₂
+      have hxs : x ∈ e.source := mem_chart_source ℂ x
+      obtain ⟨F, hFa, hFre⟩ := hharm.exists_analyticOnNhd_ball_re_eq
+      refine ⟨fun y => sphereChartInfty.symm ((e y - c₂) * Complex.exp (F (e y))), ?_⟩
+      have hVopen : IsOpen (e.source ∩ e ⁻¹' ball c₂ r ∩ {p₁}ᶜ) :=
+        (e.continuousOn.isOpen_inter_preimage e.open_source isOpen_ball).inter
+          isOpen_compl_singleton
+      have hxV : x ∈ e.source ∩ e ⁻¹' ball c₂ r ∩ {p₁}ᶜ := by
+        refine ⟨⟨hxs, ?_⟩, fun hcon => hne hcon.symm⟩
+        rw [Set.mem_preimage, ← hc₂]
+        exact mem_ball_self hr0
+      filter_upwards [hVopen.mem_nhds hxV] with y hy
+      obtain ⟨⟨hys, hyb'⟩, hyp1⟩ := hy
+      have hyb : e y ∈ ball c₂ r := hyb'
+      have hyp1' : y ≠ p₁ := hyp1
+      rw [hQ]
+      refine ⟨?_, ?_, ?_, ?_⟩
+      · have houter : AnalyticAt ℂ (fun w : ℂ => (w - c₂) * Complex.exp (F w)) (e y) := by
+          have h2 : AnalyticAt ℂ (Complex.exp ∘ F) (e y) := (hFa _ hyb).cexp
+          exact (analyticAt_id.sub analyticAt_const).mul h2
+        have h3 : ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω
+            (fun w : ℂ => (w - c₂) * Complex.exp (F w)) (e y) :=
+          contMDiffAt_iff_contDiffAt.mpr houter.contDiffAt
+        have h4 : ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω e y :=
+          contMDiffOn_chart.contMDiffAt (e.open_source.mem_nhds hys)
+        exact (hIsymmSm _).comp y (h3.comp y h4)
+      · intro _ hyp2
+        have hyc : e y ≠ c₂ := by
+          intro hcon
+          exact hyp2 (e.injOn hys hxs (by rw [hcon, hc₂]))
+        have hgne0 : (e y - c₂) * Complex.exp (F (e y)) ≠ 0 :=
+          mul_ne_zero (sub_ne_zero.mpr hyc) (Complex.exp_ne_zero _)
+        refine ⟨((e y - c₂) * Complex.exp (F (e y)))⁻¹, ?_, ?_⟩
+        · change sphereChartInfty.symm ((e y - c₂) * Complex.exp (F (e y))) = _
+          rw [sphereChartInfty_symm_apply, inversionGL_smul_coe, if_neg hgne0]
+        · have hval : h (e y) = G y - Real.log ‖e y - c₂‖ := by
+            have h5 := hhval (e y) ⟨hyb, hyc⟩
+            rw [e.left_inv hys] at h5
+            exact h5
+          have hpos : 0 < ‖e y - c₂‖ := norm_pos_iff.mpr (sub_ne_zero.mpr hyc)
+          have hre0 : (F (e y)).re = h (e y) := hFre hyb
+          rw [norm_inv, norm_mul, Complex.norm_exp, hre0, hval, Real.exp_sub,
+            Real.exp_log hpos, mul_comm, div_mul_cancel₀ _ (ne_of_gt hpos),
+            ← Real.exp_neg]
+      · intro hyp
+        exact absurd hyp hyp1'
+      · intro hyp
+        rw [hyp, ← hc₂, sub_self, zero_mul, sphereChartInfty_symm_apply,
+          inversionGL_smul_coe, if_pos rfl]
+    · -- the generic element `e^{-F}` from a chart-ball harmonic conjugate
+      set e := chartAt ℂ x with he
+      have hxs : x ∈ e.source := mem_chart_source ℂ x
+      have hSopen : IsOpen (e.target ∩ e.symm ⁻¹' ({p₁, p₂}ᶜ)) :=
+        e.isOpen_inter_preimage_symm hpolesopen
+      have hxS : e x ∈ e.target ∩ e.symm ⁻¹' ({p₁, p₂}ᶜ) := by
+        refine ⟨e.map_source hxs, ?_⟩
+        rw [Set.mem_preimage, e.left_inv hxs, hpolemem]
+        exact ⟨hx1, hx2⟩
+      obtain ⟨ρ, hρ0, hρsub⟩ := Metric.isOpen_iff.mp hSopen _ hxS
+      have hharm : HarmonicOnNhd (G ∘ e.symm) (ball (e x) ρ) := by
+        intro w hw
+        have hwt : w ∈ e.target := (hρsub hw).1
+        have hwp : e.symm w ∈ ({p₁, p₂}ᶜ : Set M) := (hρsub hw).2
+        have h1 : MHarmonicAt G (e.symm w) := hG _ hwp
+        have h2 := (mharmonicAt_iff_of_mem_maximalAtlas
+          (IsManifold.chart_mem_maximalAtlas x) (e.map_target hwt)).mp h1
+        rwa [e.right_inv hwt] at h2
+      obtain ⟨F, hFa, hFre⟩ := hharm.exists_analyticOnNhd_ball_re_eq
+      refine ⟨fun y => ((Complex.exp (-F (e y)) : ℂ) : ℂ̂), ?_⟩
+      have hVopen : IsOpen (e.source ∩ e ⁻¹' ball (e x) ρ) :=
+        e.continuousOn.isOpen_inter_preimage e.open_source isOpen_ball
+      have hxV : x ∈ e.source ∩ e ⁻¹' ball (e x) ρ :=
+        ⟨hxs, by rw [Set.mem_preimage]; exact mem_ball_self hρ0⟩
+      filter_upwards [hVopen.mem_nhds hxV] with y hy
+      obtain ⟨hys, hyb'⟩ := hy
+      have hyb : e y ∈ ball (e x) ρ := hyb'
+      have hyp : y ≠ p₁ ∧ y ≠ p₂ := by
+        have h1 := (hρsub hyb).2
+        rw [Set.mem_preimage, e.left_inv hys, hpolemem] at h1
+        exact h1
+      rw [hQ]
+      refine ⟨?_, fun _ _ => ?_, fun hcon => absurd hcon hyp.1,
+        fun hcon => absurd hcon hyp.2⟩
+      · have houter : AnalyticAt ℂ (fun w : ℂ => Complex.exp (-F w)) (e y) :=
+          ((hFa _ hyb).neg).cexp
+        have h3 : ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω (fun w : ℂ => Complex.exp (-F w)) (e y) :=
+          contMDiffAt_iff_contDiffAt.mpr houter.contDiffAt
+        have h4 : ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω e y :=
+          contMDiffOn_chart.contMDiffAt (e.open_source.mem_nhds hys)
+        exact (hcoeSm _).comp y (h3.comp y h4)
+      · refine ⟨Complex.exp (-F (e y)), rfl, ?_⟩
+        have hre0 : (F (e y)).re = (G ∘ e.symm) (e y) := hFre hyb
+        rw [Complex.norm_exp, Complex.neg_re, hre0]
+        simp only [Function.comp_apply, e.left_inv hys]
+  -- ## §3 Generic helpers: germ spreading, nearby non-pole points, path-continuity radii.
+  have hOpen : ∀ (f g : M → ℂ̂) (x : M), f =ᶠ[𝓝 x] g →
+      ∃ O : Set M, IsOpen O ∧ x ∈ O ∧ ∀ z ∈ O, f =ᶠ[𝓝 z] g := by
+    intro f g x heq
+    obtain ⟨S, hS, hSeq⟩ := eventuallyEq_iff_exists_mem.mp heq
+    obtain ⟨O, hOS, hO, hxO⟩ := mem_nhds_iff.mp hS
+    exact ⟨O, hO, hxO, fun z hz => (hSeq.mono hOS).eventuallyEq_of_mem (hO.mem_nhds hz)⟩
+  have hQopen : ∀ (ψ : M → ℂ̂) (x : M), (∀ᶠ y in 𝓝 x, Q ψ y) →
+      ∃ W : Set M, IsOpen W ∧ x ∈ W ∧ ∀ z ∈ W, Q ψ z ∧ ∀ᶠ y in 𝓝 z, Q ψ y := by
+    intro ψ x h
+    obtain ⟨S, hSnh, hSQ⟩ := eventually_iff_exists_mem.mp h
+    obtain ⟨W, hWS, hWo, hxW⟩ := mem_nhds_iff.mp hSnh
+    refine ⟨W, hWo, hxW, fun z hz => ⟨hSQ z (hWS hz), ?_⟩⟩
+    filter_upwards [hWo.mem_nhds hz] with y hy using hSQ y (hWS hy)
+  have hnear : ∀ (x : M) (O : Set M), IsOpen O → x ∈ O →
+      ∃ z ∈ O, z ≠ p₁ ∧ z ≠ p₂ := by
+    intro x O hO hxO
+    set e := chartAt ℂ x with he
+    have hxs : x ∈ e.source := mem_chart_source ℂ x
+    have hB : IsOpen (e.target ∩ e.symm ⁻¹' O) := e.isOpen_inter_preimage_symm hO
+    have hxB : e x ∈ e.target ∩ e.symm ⁻¹' O :=
+      ⟨e.map_source hxs, by rw [Set.mem_preimage, e.left_inv hxs]; exact hxO⟩
+    obtain ⟨r, hr0, hrsub⟩ := Metric.isOpen_iff.mp hB _ hxB
+    have hmem : ∀ t : ℝ, 0 ≤ t → t < 1 →
+        e x + ((t * r : ℝ) : ℂ) ∈ e.target ∩ e.symm ⁻¹' O := by
+      intro t ht0 ht1
+      refine hrsub ?_
+      rw [mem_ball, dist_eq_norm, add_sub_cancel_left, Complex.norm_real,
+        Real.norm_of_nonneg (by positivity)]
+      nlinarith
+    have hOmem : ∀ t : ℝ, 0 ≤ t → t < 1 → e.symm (e x + ((t * r : ℝ) : ℂ)) ∈ O := by
+      intro t ht0 ht1
+      have h5 := (hmem t ht0 ht1).2
+      rwa [Set.mem_preimage] at h5
+    have hinj : ∀ t s : ℝ, 0 ≤ t → t < 1 → 0 ≤ s → s < 1 →
+        e.symm (e x + ((t * r : ℝ) : ℂ)) = e.symm (e x + ((s * r : ℝ) : ℂ)) → t = s := by
+      intro t s ht0 ht1 hs0 hs1 heq
+      have hw1 : e x + ((t * r : ℝ) : ℂ) ∈ e.symm.source := by
+        rw [e.symm_source]
+        exact (hmem t ht0 ht1).1
+      have hw2 : e x + ((s * r : ℝ) : ℂ) ∈ e.symm.source := by
+        rw [e.symm_source]
+        exact (hmem s hs0 hs1).1
+      have h1 : e x + ((t * r : ℝ) : ℂ) = e x + ((s * r : ℝ) : ℂ) :=
+        e.symm.injOn hw1 hw2 heq
+      have h2 : ((t * r : ℝ) : ℂ) = ((s * r : ℝ) : ℂ) := add_left_cancel h1
+      have h3 : t * r = s * r := by exact_mod_cast h2
+      exact mul_right_cancel₀ (ne_of_gt hr0) h3
+    have hd01 : e.symm (e x + ((0 * r : ℝ) : ℂ)) ≠
+        e.symm (e x + ((1/2 * r : ℝ) : ℂ)) := by
+      intro hcon
+      have h5 := hinj 0 (1/2) le_rfl one_pos (by norm_num) (by norm_num) hcon
+      norm_num at h5
+    have hd02 : e.symm (e x + ((0 * r : ℝ) : ℂ)) ≠
+        e.symm (e x + ((1/4 * r : ℝ) : ℂ)) := by
+      intro hcon
+      have h5 := hinj 0 (1/4) le_rfl one_pos (by norm_num) (by norm_num) hcon
+      norm_num at h5
+    have hd12 : e.symm (e x + ((1/2 * r : ℝ) : ℂ)) ≠
+        e.symm (e x + ((1/4 * r : ℝ) : ℂ)) := by
+      intro hcon
+      have h5 := hinj (1/2) (1/4) (by norm_num) (by norm_num) (by norm_num)
+        (by norm_num) hcon
+      norm_num at h5
+    by_cases h01 : e.symm (e x + ((0 * r : ℝ) : ℂ)) ≠ p₁ ∧
+        e.symm (e x + ((0 * r : ℝ) : ℂ)) ≠ p₂
+    · exact ⟨_, hOmem 0 le_rfl one_pos, h01.1, h01.2⟩
+    by_cases h11 : e.symm (e x + ((1/2 * r : ℝ) : ℂ)) ≠ p₁ ∧
+        e.symm (e x + ((1/2 * r : ℝ) : ℂ)) ≠ p₂
+    · exact ⟨_, hOmem (1/2) (by norm_num) (by norm_num), h11.1, h11.2⟩
+    by_cases h21 : e.symm (e x + ((1/4 * r : ℝ) : ℂ)) ≠ p₁ ∧
+        e.symm (e x + ((1/4 * r : ℝ) : ℂ)) ≠ p₂
+    · exact ⟨_, hOmem (1/4) (by norm_num) (by norm_num), h21.1, h21.2⟩
+    exfalso
+    rw [not_and_or, not_not, not_not] at h01 h11 h21
+    rcases h01 with h0 | h0 <;> rcases h11 with h1 | h1 <;> rcases h21 with h2 | h2
+    all_goals first
+      | exact hd01 (h0.trans h1.symm)
+      | exact hd02 (h0.trans h2.symm)
+      | exact hd12 (h1.trans h2.symm)
+  have hγnb : ∀ (γ : ℝ → M) (S : Set ℝ) (b : ℝ), ContinuousOn γ S → b ∈ S →
+      ∀ O : Set M, IsOpen O → γ b ∈ O → ∃ δ > 0, ∀ u ∈ S, |u - b| < δ → γ u ∈ O := by
+    intro γ S b hγ hbS O hO hbO
+    have h1 : γ ⁻¹' O ∈ 𝓝[S] b :=
+      (hγ b hbS).preimage_mem_nhdsWithin (hO.mem_nhds hbO)
+    obtain ⟨δ, hδ0, hδ⟩ := mem_nhdsWithin_iff.mp h1
+    refine ⟨δ, hδ0, fun u huS hub => ?_⟩
+    exact hδ ⟨by rwa [mem_ball, Real.dist_eq], huS⟩
+  -- ## §4 Phase rigidity: two elements at a point differ by a unimodular Möbius
+  -- scaling near it, read through the finite chart away from `p₂` and through the
+  -- infinity chart at `p₂`.
+  have hrigid : ∀ (ψ ψ' : M → ℂ̂) (x : M), (∀ᶠ y in 𝓝 x, Q ψ y) →
+      (∀ᶠ y in 𝓝 x, Q ψ' y) →
+      ∃ c : ℂ, ‖c‖ = 1 ∧ ψ =ᶠ[𝓝 x] fun y => mulC c (ψ' y) := by
+    intro ψ ψ' x hψ hψ'
+    obtain ⟨W, hWnh, hWQ⟩ := eventually_iff_exists_mem.mp hψ
+    obtain ⟨W1, hW1W, hW1o, hxW1⟩ := mem_nhds_iff.mp hWnh
+    obtain ⟨W', hW'nh, hW'Q⟩ := eventually_iff_exists_mem.mp hψ'
+    obtain ⟨W1', hW1'W, hW1'o, hxW1'⟩ := mem_nhds_iff.mp hW'nh
+    set e := chartAt ℂ x with he
+    have hxs : x ∈ e.source := mem_chart_source ℂ x
+    by_cases hx2 : x = p₂
+    · -- at the infinity pole: invert the readings
+      have hT : IsOpen (e.target ∩ e.symm ⁻¹' (W1 ∩ W1' ∩ {p₁}ᶜ)) :=
+        e.isOpen_inter_preimage_symm ((hW1o.inter hW1'o).inter isOpen_compl_singleton)
+      have hxT : e x ∈ e.target ∩ e.symm ⁻¹' (W1 ∩ W1' ∩ {p₁}ᶜ) := by
+        refine ⟨e.map_source hxs, ?_⟩
+        rw [Set.mem_preimage, e.left_inv hxs]
+        exact ⟨⟨hxW1, hxW1'⟩, by rw [hx2]; exact fun hcon => hne hcon.symm⟩
+      obtain ⟨ρ, hρ0, hρsub⟩ := Metric.isOpen_iff.mp hT _ hxT
+      have hmem : ∀ w ∈ ball (e x) ρ, w ∈ e.target ∧ e.symm w ∈ W1 ∧
+          e.symm w ∈ W1' ∧ e.symm w ≠ p₁ := by
+        intro w hw
+        obtain ⟨h1, h2⟩ := hρsub hw
+        rw [Set.mem_preimage] at h2
+        exact ⟨h1, h2.1.1, h2.1.2, h2.2⟩
+      have hQmem : ∀ w ∈ ball (e x) ρ, Q ψ (e.symm w) ∧ Q ψ' (e.symm w) := by
+        intro w hw
+        exact ⟨hWQ _ (hW1W (hmem w hw).2.1), hW'Q _ (hW1'W (hmem w hw).2.2.1)⟩
+      have hcenter : ∀ w ∈ ball (e x) ρ, e.symm w = p₂ → w = e x := by
+        intro w hw hwp
+        have h9 : e.symm w = e.symm (e x) := by rw [hwp, ← hx2, e.left_inv hxs]
+        have hw1 : w ∈ e.symm.source := by
+          rw [e.symm_source]
+          exact (hmem w hw).1
+        have hw2 : e x ∈ e.symm.source := by
+          rw [e.symm_source]
+          exact e.map_source hxs
+        exact e.symm.injOn hw1 hw2 h9
+      have hfa : AnalyticOnNhd ℂ (fun z => sphereChartInfty (ψ (e.symm z)))
+          (ball (e x) ρ) := by
+        intro w hw
+        have h5 := (hQmem w hw).1
+        have h6 : ψ (e.symm w) ≠ ((0 : ℂ) : ℂ̂) :=
+          hne0 ψ (e.symm w) h5 (hmem w hw).2.2.2
+        rw [hQ] at h5
+        exact hreadInf ψ x w (hmem w hw).1 h6 h5.1
+      have hga : AnalyticOnNhd ℂ (fun z => sphereChartInfty (ψ' (e.symm z)))
+          (ball (e x) ρ) := by
+        intro w hw
+        have h5 := (hQmem w hw).2
+        have h6 : ψ' (e.symm w) ≠ ((0 : ℂ) : ℂ̂) :=
+          hne0 ψ' (e.symm w) h5 (hmem w hw).2.2.2
+        rw [hQ] at h5
+        exact hreadInf ψ' x w (hmem w hw).1 h6 h5.1
+      have hnorm : ∀ w ∈ ball (e x) ρ,
+          ‖(fun z => sphereChartInfty (ψ (e.symm z))) w‖ =
+          ‖(fun z => sphereChartInfty (ψ' (e.symm z))) w‖ := by
+        intro w hw
+        obtain ⟨h5, h5'⟩ := hQmem w hw
+        rw [hQ] at h5 h5'
+        change ‖sphereChartInfty (ψ (e.symm w))‖ = ‖sphereChartInfty (ψ' (e.symm w))‖
+        by_cases h6 : e.symm w = p₂
+        · rw [h5.2.2.2 h6, h5'.2.2.2 h6]
+        · obtain ⟨v, hv1, hv2⟩ := h5.2.1 (hmem w hw).2.2.2 h6
+          obtain ⟨v', hv'1, hv'2⟩ := h5'.2.1 (hmem w hw).2.2.2 h6
+          have hv0 : v ≠ 0 := by
+            intro hcon
+            rw [hcon, norm_zero] at hv2
+            exact absurd hv2.symm (ne_of_gt (Real.exp_pos _))
+          have hv'0 : v' ≠ 0 := by
+            intro hcon
+            rw [hcon, norm_zero] at hv'2
+            exact absurd hv'2.symm (ne_of_gt (Real.exp_pos _))
+          rw [hv1, hv'1, hIapp_coe v hv0, hIapp_coe v' hv'0, norm_inv, norm_inv,
+            hv2, hv'2]
+      have hgne : ∀ w ∈ ball (e x) ρ, w ≠ e x →
+          (fun z => sphereChartInfty (ψ' (e.symm z))) w ≠ 0 := by
+        intro w hw hwx
+        have h5' := (hQmem w hw).2
+        rw [hQ] at h5'
+        have h6 : e.symm w ≠ p₂ := fun hcon => hwx (hcenter w hw hcon)
+        obtain ⟨v', hv'1, hv'2⟩ := h5'.2.1 (hmem w hw).2.2.2 h6
+        have hv'0 : v' ≠ 0 := by
+          intro hcon
+          rw [hcon, norm_zero] at hv'2
+          exact absurd hv'2.symm (ne_of_gt (Real.exp_pos _))
+        change sphereChartInfty (ψ' (e.symm w)) ≠ 0
+        rw [hv'1, hIapp_coe v' hv'0]
+        exact inv_ne_zero hv'0
+      obtain ⟨cc, hcc1, hcceq⟩ := hcore _ _ (e x) ρ hρ0 hfa hga hnorm hgne
+      have hcc0 : cc ≠ 0 := by
+        intro hcon
+        rw [hcon, norm_zero] at hcc1
+        exact one_ne_zero hcc1.symm
+      refine ⟨cc⁻¹, by rw [norm_inv, hcc1, inv_one], ?_⟩
+      have hNo : IsOpen (e.source ∩ e ⁻¹' ball (e x) ρ) :=
+        e.continuousOn.isOpen_inter_preimage e.open_source isOpen_ball
+      have hxN : x ∈ e.source ∩ e ⁻¹' ball (e x) ρ :=
+        ⟨hxs, by rw [Set.mem_preimage]; exact mem_ball_self hρ0⟩
+      have hEq : Set.EqOn ψ (fun y => mulC cc⁻¹ (ψ' y))
+          (e.source ∩ e ⁻¹' ball (e x) ρ) := by
+        intro y hy
+        have h1 : sphereChartInfty (ψ (e.symm (e y))) =
+            cc * sphereChartInfty (ψ' (e.symm (e y))) := hcceq hy.2
+        rw [e.left_inv hy.1] at h1
+        have hyb : e y ∈ ball (e x) ρ := hy.2
+        obtain ⟨h5, h5'⟩ := hQmem (e y) hyb
+        rw [e.left_inv hy.1] at h5 h5'
+        have h7 : y ≠ p₁ := by
+          have h7' := (hmem (e y) hyb).2.2.2
+          rwa [e.left_inv hy.1] at h7'
+        rw [hQ] at h5 h5'
+        by_cases h6 : y = p₂
+        · change ψ y = mulC cc⁻¹ (ψ' y)
+          rw [h5.2.2.2 h6, h5'.2.2.2 h6, hmulCinf cc⁻¹ (inv_ne_zero hcc0)]
+        · obtain ⟨v, hv1, hv2⟩ := h5.2.1 h7 h6
+          obtain ⟨v', hv'1, hv'2⟩ := h5'.2.1 h7 h6
+          have hv0 : v ≠ 0 := by
+            intro hcon
+            rw [hcon, norm_zero] at hv2
+            exact absurd hv2.symm (ne_of_gt (Real.exp_pos _))
+          have hv'0 : v' ≠ 0 := by
+            intro hcon
+            rw [hcon, norm_zero] at hv'2
+            exact absurd hv'2.symm (ne_of_gt (Real.exp_pos _))
+          rw [hv1, hv'1, hIapp_coe v hv0, hIapp_coe v' hv'0] at h1
+          have h8 : v = cc⁻¹ * v' := by
+            have h9 : (v⁻¹)⁻¹ = (cc * v'⁻¹)⁻¹ := by rw [h1]
+            rw [inv_inv, mul_inv, inv_inv] at h9
+            exact h9
+          change ψ y = mulC cc⁻¹ (ψ' y)
+          rw [hv1, hv'1, hmulCco cc⁻¹ (inv_ne_zero hcc0) v', ← h8]
+      exact hEq.eventuallyEq_of_mem (hNo.mem_nhds hxN)
+    · -- away from the infinity pole: finite readings
+      set X : Set M := (if x = p₁ then Set.univ else {p₁}ᶜ) ∩ {p₂}ᶜ with hX
+      have hXo : IsOpen X := by
+        rw [hX]
+        refine IsOpen.inter ?_ isOpen_compl_singleton
+        split_ifs
+        exacts [isOpen_univ, isOpen_compl_singleton]
+      have hxX : x ∈ X := by
+        rw [hX]
+        refine ⟨?_, hx2⟩
+        split_ifs with hx1
+        exacts [Set.mem_univ x, hx1]
+      have hT : IsOpen (e.target ∩ e.symm ⁻¹' (W1 ∩ W1' ∩ X)) :=
+        e.isOpen_inter_preimage_symm ((hW1o.inter hW1'o).inter hXo)
+      have hxT : e x ∈ e.target ∩ e.symm ⁻¹' (W1 ∩ W1' ∩ X) := by
+        refine ⟨e.map_source hxs, ?_⟩
+        rw [Set.mem_preimage, e.left_inv hxs]
+        exact ⟨⟨hxW1, hxW1'⟩, hxX⟩
+      obtain ⟨ρ, hρ0, hρsub⟩ := Metric.isOpen_iff.mp hT _ hxT
+      have hmem : ∀ w ∈ ball (e x) ρ, w ∈ e.target ∧ e.symm w ∈ W1 ∧
+          e.symm w ∈ W1' ∧ e.symm w ≠ p₂ ∧ (x ≠ p₁ → e.symm w ≠ p₁) := by
+        intro w hw
+        obtain ⟨h1, h2⟩ := hρsub hw
+        rw [Set.mem_preimage] at h2
+        refine ⟨h1, h2.1.1, h2.1.2, ?_, ?_⟩
+        · have h3 := h2.2
+          rw [hX] at h3
+          exact h3.2
+        · intro hx1
+          have h3 := h2.2
+          rw [hX, if_neg hx1] at h3
+          exact h3.1
+      have hQmem : ∀ w ∈ ball (e x) ρ, Q ψ (e.symm w) ∧ Q ψ' (e.symm w) := by
+        intro w hw
+        exact ⟨hWQ _ (hW1W (hmem w hw).2.1), hW'Q _ (hW1'W (hmem w hw).2.2.1)⟩
+      have hcenter : ∀ w ∈ ball (e x) ρ, e.symm w = p₁ → x = p₁ → w = e x := by
+        intro w hw hwp hx1
+        have h9 : e.symm w = e.symm (e x) := by rw [hwp, ← hx1, e.left_inv hxs]
+        have hw1 : w ∈ e.symm.source := by
+          rw [e.symm_source]
+          exact (hmem w hw).1
+        have hw2 : e x ∈ e.symm.source := by
+          rw [e.symm_source]
+          exact e.map_source hxs
+        exact e.symm.injOn hw1 hw2 h9
+      have hfa : AnalyticOnNhd ℂ (fun z => sphereChartFinite (ψ (e.symm z)))
+          (ball (e x) ρ) := by
+        intro w hw
+        have h5 := (hQmem w hw).1
+        have h6 : ψ (e.symm w) ≠ OnePoint.infty :=
+          hfin ψ (e.symm w) h5 (hmem w hw).2.2.2.1
+        rw [hQ] at h5
+        exact hreadFin ψ x w (hmem w hw).1 h6 h5.1
+      have hga : AnalyticOnNhd ℂ (fun z => sphereChartFinite (ψ' (e.symm z)))
+          (ball (e x) ρ) := by
+        intro w hw
+        have h5 := (hQmem w hw).2
+        have h6 : ψ' (e.symm w) ≠ OnePoint.infty :=
+          hfin ψ' (e.symm w) h5 (hmem w hw).2.2.2.1
+        rw [hQ] at h5
+        exact hreadFin ψ' x w (hmem w hw).1 h6 h5.1
+      have hnorm : ∀ w ∈ ball (e x) ρ,
+          ‖(fun z => sphereChartFinite (ψ (e.symm z))) w‖ =
+          ‖(fun z => sphereChartFinite (ψ' (e.symm z))) w‖ := by
+        intro w hw
+        obtain ⟨h5, h5'⟩ := hQmem w hw
+        rw [hQ] at h5 h5'
+        change ‖sphereChartFinite (ψ (e.symm w))‖ = ‖sphereChartFinite (ψ' (e.symm w))‖
+        by_cases h6 : e.symm w = p₁
+        · rw [h5.2.2.1 h6, h5'.2.2.1 h6]
+        · obtain ⟨v, hv1, hv2⟩ := h5.2.1 h6 (hmem w hw).2.2.2.1
+          obtain ⟨v', hv'1, hv'2⟩ := h5'.2.1 h6 (hmem w hw).2.2.2.1
+          rw [hv1, hv'1, sphereChartFinite_coe, sphereChartFinite_coe, hv2, hv'2]
+      have hgne : ∀ w ∈ ball (e x) ρ, w ≠ e x →
+          (fun z => sphereChartFinite (ψ' (e.symm z))) w ≠ 0 := by
+        intro w hw hwx
+        have h5' := (hQmem w hw).2
+        rw [hQ] at h5'
+        have h6 : e.symm w ≠ p₁ := by
+          by_cases hx1 : x = p₁
+          · exact fun hcon => hwx (hcenter w hw hcon hx1)
+          · exact (hmem w hw).2.2.2.2 hx1
+        obtain ⟨v', hv'1, hv'2⟩ := h5'.2.1 h6 (hmem w hw).2.2.2.1
+        have hv'0 : v' ≠ 0 := by
+          intro hcon
+          rw [hcon, norm_zero] at hv'2
+          exact absurd hv'2.symm (ne_of_gt (Real.exp_pos _))
+        change sphereChartFinite (ψ' (e.symm w)) ≠ 0
+        rw [hv'1, sphereChartFinite_coe]
+        exact hv'0
+      obtain ⟨c, hc1, hceq⟩ := hcore _ _ (e x) ρ hρ0 hfa hga hnorm hgne
+      have hc0 : c ≠ 0 := by
+        intro hcon
+        rw [hcon, norm_zero] at hc1
+        exact one_ne_zero hc1.symm
+      refine ⟨c, hc1, ?_⟩
+      have hNo : IsOpen (e.source ∩ e ⁻¹' ball (e x) ρ) :=
+        e.continuousOn.isOpen_inter_preimage e.open_source isOpen_ball
+      have hxN : x ∈ e.source ∩ e ⁻¹' ball (e x) ρ :=
+        ⟨hxs, by rw [Set.mem_preimage]; exact mem_ball_self hρ0⟩
+      have hEq : Set.EqOn ψ (fun y => mulC c (ψ' y))
+          (e.source ∩ e ⁻¹' ball (e x) ρ) := by
+        intro y hy
+        have h1 : sphereChartFinite (ψ (e.symm (e y))) =
+            c * sphereChartFinite (ψ' (e.symm (e y))) := hceq hy.2
+        rw [e.left_inv hy.1] at h1
+        have hyb : e y ∈ ball (e x) ρ := hy.2
+        obtain ⟨h5, h5'⟩ := hQmem (e y) hyb
+        rw [e.left_inv hy.1] at h5 h5'
+        have h7 : y ≠ p₂ := by
+          have h7' := (hmem (e y) hyb).2.2.2.1
+          rwa [e.left_inv hy.1] at h7'
+        rw [hQ] at h5 h5'
+        by_cases h6 : y = p₁
+        · change ψ y = mulC c (ψ' y)
+          rw [h5.2.2.1 h6, h5'.2.2.1 h6, hmulCco c hc0 0, mul_zero]
+        · obtain ⟨v, hv1, hv2⟩ := h5.2.1 h6 h7
+          obtain ⟨v', hv'1, hv'2⟩ := h5'.2.1 h6 h7
+          rw [hv1, hv'1, sphereChartFinite_coe, sphereChartFinite_coe] at h1
+          change ψ y = mulC c (ψ' y)
+          rw [hv1, hv'1, hmulCco c hc0 v', h1]
+      exact hEq.eventuallyEq_of_mem (hNo.mem_nhds hxN)
+  -- ## §5 Germ agreement is closed among elements: cluster equality forces equality.
+  have hgermclosed : ∀ (ψ ψ' : M → ℂ̂) (x : M),
+      (∀ᶠ y in 𝓝 x, Q ψ y) → (∀ᶠ y in 𝓝 x, Q ψ' y) →
+      (∀ O : Set M, IsOpen O → x ∈ O → ∃ z ∈ O, ψ =ᶠ[𝓝 z] ψ') → ψ =ᶠ[𝓝 x] ψ' := by
+    intro ψ ψ' x hψ hψ' hclu
+    obtain ⟨c, hc1, hcev⟩ := hrigid ψ ψ' x hψ hψ'
+    have hc0 : c ≠ 0 := by
+      intro hcon
+      rw [hcon, norm_zero] at hc1
+      exact one_ne_zero hc1.symm
+    obtain ⟨O₀, hO₀o, hxO₀, hO₀⟩ := hOpen ψ (fun y => mulC c (ψ' y)) x hcev
+    obtain ⟨W', hW'nh, hW'Q⟩ := eventually_iff_exists_mem.mp hψ'
+    obtain ⟨W1, hW1W, hW1o, hxW1⟩ := mem_nhds_iff.mp hW'nh
+    obtain ⟨z, hz, hzeq⟩ := hclu (O₀ ∩ W1) (hO₀o.inter hW1o) ⟨hxO₀, hxW1⟩
+    obtain ⟨O₁, hO₁o, hzO₁, hO₁⟩ := hOpen ψ ψ' z hzeq
+    obtain ⟨w, hw, hwp1, hwp2⟩ := hnear z (O₀ ∩ W1 ∩ O₁)
+      ((hO₀o.inter hW1o).inter hO₁o) ⟨hz, hzO₁⟩
+    have h1 : ψ =ᶠ[𝓝 w] fun y => mulC c (ψ' y) := hO₀ w hw.1.1
+    have h2 : ψ =ᶠ[𝓝 w] ψ' := hO₁ w hw.2
+    have h3 : Q ψ' w := hW'Q w (hW1W hw.1.2)
+    rw [hQ] at h3
+    obtain ⟨v', hv'1, hv'2⟩ := h3.2.1 hwp1 hwp2
+    have hv'0 : v' ≠ 0 := by
+      intro hcon
+      rw [hcon, norm_zero] at hv'2
+      exact absurd hv'2.symm (ne_of_gt (Real.exp_pos _))
+    have h5 : ψ w = mulC c (ψ' w) := h1.eq_of_nhds
+    have h6 : ψ w = ψ' w := h2.eq_of_nhds
+    have h7 : c = 1 := by
+      rw [hv'1, hmulCco c hc0 v'] at h5
+      rw [hv'1] at h6
+      rw [h6] at h5
+      have h8 : v' = c * v' := OnePoint.coe_eq_coe.mp h5
+      have h9 : (1 : ℂ) * v' = c * v' := by
+        rw [one_mul]
+        exact h8
+      exact (mul_right_cancel₀ hv'0 h9).symm
+    have h9 : (fun y => mulC c (ψ' y)) =ᶠ[𝓝 x] ψ' := by
+      refine Filter.Eventually.of_forall fun y => ?_
+      change mulC c (ψ' y) = ψ' y
+      rw [h7, hmulC1]
+    exact hcev.trans h9
+  -- ## §6 The initial element and the continuation predicate.
+  obtain ⟨Ψ, hΨ⟩ := helt p₁
+  obtain ⟨IsCont, hIC⟩ : ∃ P : (ℝ → M) → ℝ → (ℝ → M → ℂ̂) → Prop, ∀ γ b Φ, P γ b Φ ↔
+      ((∀ t ∈ Set.Icc (0:ℝ) b, ∀ᶠ y in 𝓝 (γ t), Q (Φ t) y) ∧ Φ 0 =ᶠ[𝓝 p₁] Ψ ∧
+        ∀ t ∈ Set.Icc (0:ℝ) b, ∃ ε > 0, ∀ u ∈ Set.Icc (0:ℝ) b, |u - t| < ε →
+          Φ u =ᶠ[𝓝 (γ u)] Φ t) :=
+    ⟨_, fun _ _ _ => Iff.rfl⟩
+  -- ## §6b Real-interval induction: nonempty at the left end, closed from the left,
+  -- open to the right, forces membership of the right end.
+  have hind : ∀ (a b : ℝ) (A : Set ℝ), a ≤ b → (∀ x ∈ A, x ∈ Set.Icc a b) → a ∈ A →
+      (∀ c ∈ Set.Icc a b, (∀ δ > 0, ∃ x ∈ A, c - δ < x ∧ x ≤ c) → c ∈ A) →
+      (∀ c ∈ A, c < b → ∃ δ > 0, ∀ x ∈ Set.Icc a b, c ≤ x → x < c + δ → x ∈ A) →
+      b ∈ A := by
+    intro a b A hab hsub haA hclosed hopen
+    have hne : A.Nonempty := ⟨a, haA⟩
+    have hbdd : BddAbove A := ⟨b, fun x hx => (hsub x hx).2⟩
+    have hcIcc : sSup A ∈ Set.Icc a b :=
+      ⟨le_csSup hbdd haA, csSup_le hne fun x hx => (hsub x hx).2⟩
+    have hcA : sSup A ∈ A := by
+      refine hclosed _ hcIcc ?_
+      intro δ hδ0
+      obtain ⟨x, hxA, hxgt⟩ := exists_lt_of_lt_csSup hne
+        (by linarith : sSup A - δ < sSup A)
+      exact ⟨x, hxA, hxgt, le_csSup hbdd hxA⟩
+    rcases eq_or_lt_of_le hcIcc.2 with hcb | hcb
+    · exact hcb ▸ hcA
+    · exfalso
+      obtain ⟨δ, hδ0, hδA⟩ := hopen _ hcA hcb
+      have hx : min (sSup A + δ / 2) b ∈ A := by
+        refine hδA _ ⟨le_min (by linarith [hcIcc.1]) hab,
+          min_le_right _ _⟩ (le_min (by linarith) hcb.le) ?_
+        calc min (sSup A + δ / 2) b ≤ sSup A + δ / 2 := min_le_left _ _
+          _ < sSup A + δ := by linarith
+      have hle : min (sSup A + δ / 2) b ≤ sSup A := le_csSup hbdd hx
+      have hgt : sSup A < min (sSup A + δ / 2) b := lt_min (by linarith) hcb
+      linarith
+  -- ## §7 Existence of continuations.
+  have hexist : ∀ γ : ℝ → M, ContinuousOn γ (Set.Icc 0 1) → γ 0 = p₁ →
+      ∃ Φ, IsCont γ 1 Φ := by
+    intro γ hγ hγ0
+    -- one-step gluing: near any parameter c, a continuation up to a point near c
+    -- extends past c using the element at γ c and phase rigidity.
+    have hglue : ∀ c ∈ Set.Icc (0:ℝ) 1, ∃ δ > 0, ∀ a ∈ Set.Icc (0:ℝ) 1, |a - c| < δ →
+        (∃ Φ, IsCont γ a Φ) → ∀ b' ∈ Set.Icc (0:ℝ) 1, a ≤ b' → |b' - c| < δ →
+        ∃ Φ', IsCont γ b' Φ' := by
+      intro c hc
+      obtain ⟨ψ, hψev⟩ := helt (γ c)
+      obtain ⟨W, hWo, hWc, hWQ⟩ := hQopen ψ (γ c) hψev
+      obtain ⟨δ, hδ0, hδW⟩ := hγnb γ (Set.Icc 0 1) c hγ hc W hWo hWc
+      refine ⟨δ, hδ0, ?_⟩
+      rintro a ha hac ⟨Φ, hΦ⟩ b' hb' hab' hb'c
+      rw [hIC] at hΦ
+      obtain ⟨hΦa, hΦ0, hΦc⟩ := hΦ
+      have hγaW : γ a ∈ W := hδW a ha hac
+      obtain ⟨u₀, hu₀, hu₀ev⟩ := hrigid (Φ a) ψ (γ a)
+        (hΦa a ⟨ha.1, le_refl a⟩) (hWQ (γ a) hγaW).2
+      obtain ⟨Oa, hOao, hγaOa, hOa⟩ := hOpen (Φ a) (fun y => mulC u₀ (ψ y)) (γ a) hu₀ev
+      refine ⟨fun t => if t ≤ a then Φ t else fun y => mulC u₀ (ψ y), ?_⟩
+      rw [hIC]
+      refine ⟨?_, ?_, ?_⟩
+      · intro t ht
+        by_cases hta : t ≤ a
+        · rw [if_pos hta]
+          exact hΦa t ⟨ht.1, hta⟩
+        · rw [not_le] at hta
+          rw [if_neg (not_le.mpr hta)]
+          have htc : |t - c| < δ := by
+            rw [abs_sub_lt_iff] at hac hb'c ⊢
+            constructor
+            · linarith [ht.2, hb'c.1]
+            · linarith [hac.2]
+          have htW : γ t ∈ W := hδW t ⟨ht.1, ht.2.trans hb'.2⟩ htc
+          filter_upwards [(hWQ (γ t) htW).2] with y hy using hQsmul u₀ hu₀ ψ y hy
+      · rw [if_pos ha.1]
+        exact hΦ0
+      · intro t ht
+        rcases lt_trichotomy t a with hta | hta | hta
+        · obtain ⟨ε, hε0, hεp⟩ := hΦc t ⟨ht.1, hta.le⟩
+          refine ⟨min ε (a - t), lt_min hε0 (by linarith), ?_⟩
+          intro u hu huε
+          rw [lt_min_iff] at huε
+          have hua : u ≤ a := by
+            have h6 := abs_sub_lt_iff.mp huε.2
+            linarith [h6.1]
+          rw [if_pos hua, if_pos hta.le]
+          exact hεp u ⟨hu.1, hua⟩ huε.1
+        · obtain ⟨ε₁, hε₁0, hε₁p⟩ := hΦc a ⟨ha.1, le_refl a⟩
+          obtain ⟨δ₂, hδ₂0, hδ₂⟩ := hγnb γ (Set.Icc 0 1) a hγ ha Oa hOao hγaOa
+          refine ⟨min ε₁ δ₂, lt_min hε₁0 hδ₂0, ?_⟩
+          intro u hu huε
+          rw [lt_min_iff] at huε
+          have hut : |u - a| < ε₁ := by rw [← hta]; exact huε.1
+          have hut2 : |u - a| < δ₂ := by rw [← hta]; exact huε.2
+          by_cases hua : u ≤ a
+          · rw [if_pos hua, if_pos hta.le, hta]
+            exact hε₁p u ⟨hu.1, hua⟩ hut
+          · rw [not_le] at hua
+            rw [if_neg (not_le.mpr hua), if_pos hta.le, hta]
+            have h3 : γ u ∈ Oa := hδ₂ u ⟨hu.1, hu.2.trans hb'.2⟩ hut2
+            exact (hOa (γ u) h3).symm
+        · refine ⟨t - a, by linarith, ?_⟩
+          intro u hu huε
+          rw [abs_sub_lt_iff] at huε
+          have hua : a < u := by linarith [huε.2]
+          rw [if_neg (not_le.mpr hua), if_neg (not_le.mpr hta)]
+    have h1A : (1:ℝ) ∈ {b | b ∈ Set.Icc (0:ℝ) 1 ∧ ∃ Φ, IsCont γ b Φ} := by
+      refine hind 0 1 _ zero_le_one (fun x hx => hx.1) ⟨⟨le_refl 0, zero_le_one⟩, ?_⟩ ?_ ?_
+      · refine ⟨fun _ => Ψ, ?_⟩
+        rw [hIC]
+        refine ⟨?_, Filter.EventuallyEq.refl _ _, ?_⟩
+        · intro t ht
+          have ht0 : t = 0 := le_antisymm ht.2 ht.1
+          rw [ht0, hγ0]
+          exact hΨ
+        · intro t ht
+          exact ⟨1, one_pos, fun u hu _ => Filter.EventuallyEq.refl _ _⟩
+      · intro c hc hap
+        obtain ⟨δ, hδ0, hglued⟩ := hglue c hc
+        obtain ⟨x, hxA, hxgt, hxle⟩ := hap δ hδ0
+        refine ⟨hc, hglued x hxA.1 ?_ hxA.2 c hc hxle ?_⟩
+        · rw [abs_sub_lt_iff]
+          constructor <;> linarith
+        · rw [sub_self, abs_zero]
+          exact hδ0
+      · intro c hcA hclt
+        obtain ⟨δ, hδ0, hglued⟩ := hglue c hcA.1
+        refine ⟨δ, hδ0, ?_⟩
+        intro x hx hcx hxδ
+        refine ⟨hx, hglued c hcA.1 ?_ hcA.2 x hx hcx ?_⟩
+        · rw [sub_self, abs_zero]
+          exact hδ0
+        · rw [abs_sub_lt_iff]
+          constructor <;> linarith
+    exact h1A.2
+  -- ## §8 Uniqueness of continuations.
+  have huniq : ∀ γ : ℝ → M, ContinuousOn γ (Set.Icc 0 1) → γ 0 = p₁ →
+      ∀ Φ Φ', IsCont γ 1 Φ → IsCont γ 1 Φ' →
+      ∀ t ∈ Set.Icc (0:ℝ) 1, Φ t =ᶠ[𝓝 (γ t)] Φ' t := by
+    intro γ hγ hγ0 Φ Φ' hΦ hΦ'
+    rw [hIC] at hΦ hΦ'
+    obtain ⟨hΦa, hΦ0, hΦc⟩ := hΦ
+    obtain ⟨hΦ'a, hΦ'0, hΦ'c⟩ := hΦ'
+    have h1A : (1:ℝ) ∈ {b | b ∈ Set.Icc (0:ℝ) 1 ∧
+        ∀ t ∈ Set.Icc (0:ℝ) b, Φ t =ᶠ[𝓝 (γ t)] Φ' t} := by
+      refine hind 0 1 _ zero_le_one (fun x hx => hx.1) ⟨⟨le_refl 0, zero_le_one⟩, ?_⟩ ?_ ?_
+      · intro t ht
+        have ht0 : t = 0 := le_antisymm ht.2 ht.1
+        rw [ht0, hγ0]
+        exact hΦ0.trans hΦ'0.symm
+      · intro c hc hap
+        refine ⟨hc, ?_⟩
+        intro t ht
+        rcases eq_or_lt_of_le ht.2 with htc | htc
+        · -- t = c: germ closure via approximants
+          have htI : t ∈ Set.Icc (0:ℝ) 1 := ⟨ht.1, htc.le.trans hc.2⟩
+          refine hgermclosed (Φ t) (Φ' t) (γ t) (hΦa t htI) (hΦ'a t htI) ?_
+          intro O hOo hγtO
+          obtain ⟨δ₁, hδ₁0, hδ₁⟩ := hγnb γ (Set.Icc 0 1) t hγ htI O hOo hγtO
+          obtain ⟨ε₁, hε₁0, hε₁p⟩ := hΦc t htI
+          obtain ⟨ε₂, hε₂0, hε₂p⟩ := hΦ'c t htI
+          have hmin0 : 0 < min δ₁ (min ε₁ ε₂) := lt_min hδ₁0 (lt_min hε₁0 hε₂0)
+          obtain ⟨x, hxA, hxgt, hxle⟩ := hap (min δ₁ (min ε₁ ε₂)) hmin0
+          have hxd : |x - t| < min δ₁ (min ε₁ ε₂) := by
+            rw [abs_sub_lt_iff]
+            constructor <;> linarith
+          have hxI : x ∈ Set.Icc (0:ℝ) 1 := hxA.1
+          have hd1 : |x - t| < δ₁ := lt_of_lt_of_le hxd (min_le_left _ _)
+          have hd2 : |x - t| < ε₁ :=
+            lt_of_lt_of_le hxd ((min_le_right _ _).trans (min_le_left _ _))
+          have hd3 : |x - t| < ε₂ :=
+            lt_of_lt_of_le hxd ((min_le_right _ _).trans (min_le_right _ _))
+          refine ⟨γ x, hδ₁ x hxI hd1, ?_⟩
+          have e1 : Φ x =ᶠ[𝓝 (γ x)] Φ t := hε₁p x hxI hd2
+          have e2 : Φ' x =ᶠ[𝓝 (γ x)] Φ' t := hε₂p x hxI hd3
+          have e3 : Φ x =ᶠ[𝓝 (γ x)] Φ' x := hxA.2 x ⟨hxI.1, le_refl x⟩
+          exact e1.symm.trans (e3.trans e2)
+        · -- t < c: an approximant already covers t
+          obtain ⟨x, hxA, hxgt, hxle⟩ := hap (c - t) (by linarith)
+          exact hxA.2 t ⟨ht.1, by linarith⟩
+      · intro c hcA hclt
+        obtain ⟨ε₁, hε₁0, hε₁p⟩ := hΦc c hcA.1
+        obtain ⟨ε₂, hε₂0, hε₂p⟩ := hΦ'c c hcA.1
+        have hagr : Φ c =ᶠ[𝓝 (γ c)] Φ' c := hcA.2 c ⟨hcA.1.1, le_refl c⟩
+        obtain ⟨Oc, hOco, hγcOc, hOc⟩ := hOpen (Φ c) (Φ' c) (γ c) hagr
+        obtain ⟨δ₁, hδ₁0, hδ₁⟩ := hγnb γ (Set.Icc 0 1) c hγ hcA.1 Oc hOco hγcOc
+        have hmin0 : 0 < min δ₁ (min ε₁ ε₂) := lt_min hδ₁0 (lt_min hε₁0 hε₂0)
+        refine ⟨min δ₁ (min ε₁ ε₂), hmin0, ?_⟩
+        intro x hx hcx hxδ
+        refine ⟨hx, ?_⟩
+        intro t ht
+        by_cases htc : t ≤ c
+        · exact hcA.2 t ⟨ht.1, htc⟩
+        · rw [not_le] at htc
+          have htI : t ∈ Set.Icc (0:ℝ) 1 := ⟨ht.1, ht.2.trans hx.2⟩
+          have htd : |t - c| < min δ₁ (min ε₁ ε₂) := by
+            rw [abs_sub_lt_iff]
+            constructor
+            · linarith [ht.2]
+            · linarith
+          have hd1 : |t - c| < δ₁ := lt_of_lt_of_le htd (min_le_left _ _)
+          have hd2 : |t - c| < ε₁ :=
+            lt_of_lt_of_le htd ((min_le_right _ _).trans (min_le_left _ _))
+          have hd3 : |t - c| < ε₂ :=
+            lt_of_lt_of_le htd ((min_le_right _ _).trans (min_le_right _ _))
+          have e1 : Φ t =ᶠ[𝓝 (γ t)] Φ c := hε₁p t htI hd2
+          have e2 : Φ' t =ᶠ[𝓝 (γ t)] Φ' c := hε₂p t htI hd3
+          have e4 : Φ c =ᶠ[𝓝 (γ t)] Φ' c := hOc (γ t) (hδ₁ t htI hd1)
+          exact e1.trans (e4.trans e2.symm)
+    exact h1A.2
+  -- ## §8b Transport of germ equality along a path through common element territory.
+  have htransport : ∀ (ψ ψ' : M → ℂ̂) (ζ : ℝ → M) (a b : ℝ), a ≤ b →
+      ContinuousOn ζ (Set.Icc a b) →
+      (∀ σ ∈ Set.Icc a b, ∀ᶠ y in 𝓝 (ζ σ), Q ψ y) →
+      (∀ σ ∈ Set.Icc a b, ∀ᶠ y in 𝓝 (ζ σ), Q ψ' y) →
+      ψ =ᶠ[𝓝 (ζ a)] ψ' → ∀ σ ∈ Set.Icc a b, ψ =ᶠ[𝓝 (ζ σ)] ψ' := by
+    intro ψ ψ' ζ a b hab hζ hQ1 hQ2 heq0
+    have hbA : b ∈ {σ | σ ∈ Set.Icc a b ∧ ∀ τ ∈ Set.Icc a σ, ψ =ᶠ[𝓝 (ζ τ)] ψ'} := by
+      refine hind a b _ hab (fun x hx => hx.1) ⟨⟨le_refl a, hab⟩, ?_⟩ ?_ ?_
+      · intro τ hτ
+        have hτa : τ = a := le_antisymm hτ.2 hτ.1
+        rw [hτa]
+        exact heq0
+      · intro c hc hap
+        refine ⟨hc, ?_⟩
+        intro τ hτ
+        rcases eq_or_lt_of_le hτ.2 with hτc | hτc
+        · have hτI : τ ∈ Set.Icc a b := ⟨hτ.1, hτc.le.trans hc.2⟩
+          refine hgermclosed ψ ψ' (ζ τ) (hQ1 τ hτI) (hQ2 τ hτI) ?_
+          intro O hOo hζτO
+          obtain ⟨δ₁, hδ₁0, hδ₁⟩ := hγnb ζ (Set.Icc a b) τ hζ hτI O hOo hζτO
+          obtain ⟨x, hxA, hxgt, hxle⟩ := hap δ₁ hδ₁0
+          have hxd : |x - τ| < δ₁ := by
+            rw [abs_sub_lt_iff]
+            constructor <;> linarith
+          exact ⟨ζ x, hδ₁ x hxA.1 hxd, hxA.2 x ⟨hxA.1.1, le_refl x⟩⟩
+        · obtain ⟨x, hxA, hxgt, hxle⟩ := hap (c - τ) (by linarith)
+          exact hxA.2 τ ⟨hτ.1, by linarith⟩
+      · intro c hcA hclt
+        have hagr : ψ =ᶠ[𝓝 (ζ c)] ψ' := hcA.2 c ⟨hcA.1.1, le_refl c⟩
+        obtain ⟨Oc, hOco, hζcOc, hOc⟩ := hOpen ψ ψ' (ζ c) hagr
+        obtain ⟨δ₁, hδ₁0, hδ₁⟩ := hγnb ζ (Set.Icc a b) c hζ hcA.1 Oc hOco hζcOc
+        refine ⟨δ₁, hδ₁0, ?_⟩
+        intro x hx hcx hxδ
+        refine ⟨hx, ?_⟩
+        intro τ hτ
+        by_cases hτc : τ ≤ c
+        · exact hcA.2 τ ⟨hτ.1, hτc⟩
+        · rw [not_le] at hτc
+          have hτI : τ ∈ Set.Icc a b := ⟨hτ.1, hτ.2.trans hx.2⟩
+          have hτd : |τ - c| < δ₁ := by
+            rw [abs_sub_lt_iff]
+            constructor
+            · linarith [hτ.2]
+            · linarith
+          exact hOc (ζ τ) (hδ₁ τ hτI hτd)
+    exact fun σ hσ => hbA.2 σ hσ
+  -- ## §9 The adjacent-path lemma (fixed endpoints).
+  have hadj : ∀ (η : ℝ × ℝ → M), Continuous η → (∀ s ∈ Set.Icc (0:ℝ) 1, η (s, 0) = p₁) →
+      (∀ s ∈ Set.Icc (0:ℝ) 1, η (s, 1) = η (0, 1)) →
+      ∀ s₀ ∈ Set.Icc (0:ℝ) 1, ∀ Φ, IsCont (fun t => η (s₀, t)) 1 Φ →
+      ∃ ε > 0, ∀ s' ∈ Set.Icc (0:ℝ) 1, |s' - s₀| < ε →
+        ∃ Φ', IsCont (fun t => η (s', t)) 1 Φ' ∧ Φ' 1 =ᶠ[𝓝 (η (0, 1))] Φ 1 := by
+    intro η hη hη0 hη1 s₀ hs₀ Φ hΦ
+    rw [hIC] at hΦ
+    obtain ⟨hΦa, hΦ0, hΦc⟩ := hΦ
+    -- per-time data: an element window around the s₀-path with a stability radius
+    have hdata : ∀ t ∈ Set.Icc (0:ℝ) 1, ∃ d > 0, ∃ W : Set M, IsOpen W ∧
+        (∀ z ∈ W, Q (Φ t) z) ∧
+        (∀ p : ℝ × ℝ, |p.1 - s₀| < d → |p.2 - t| < d → η p ∈ W) ∧
+        (∀ u ∈ Set.Icc (0:ℝ) 1, |u - t| < d → Φ u =ᶠ[𝓝 (η (s₀, u))] Φ t) := by
+      intro t ht
+      obtain ⟨W, hWo, hWmem, hWall⟩ := hQopen (Φ t) (η (s₀, t)) (hΦa t ht)
+      obtain ⟨ε₁, hε₁0, hε₁p⟩ := hΦc t ht
+      have hpre : η ⁻¹' W ∈ 𝓝 (s₀, t) :=
+        hη.continuousAt.preimage_mem_nhds (hWo.mem_nhds hWmem)
+      obtain ⟨r, hr0, hrsub⟩ := Metric.mem_nhds_iff.mp hpre
+      refine ⟨min r ε₁, lt_min hr0 hε₁0, W, hWo, fun z hz => (hWall z hz).1, ?_, ?_⟩
+      · intro p hp1 hp2
+        apply hrsub
+        rw [mem_ball, Prod.dist_eq, Real.dist_eq, Real.dist_eq]
+        exact max_lt (lt_of_lt_of_le hp1 (min_le_left _ _))
+          (lt_of_lt_of_le hp2 (min_le_left _ _))
+      · intro u hu hud
+        exact hε₁p u hu (lt_of_lt_of_le hud (min_le_right _ _))
+    choose! dfun hd0 W hWo hWQ hWnear hloc using hdata
+    -- a uniform radius: cover [0,1] with half-windows, finite subcover, finite minimum
+    have hcover : Set.Icc (0:ℝ) 1 ⊆
+        ⋃ t : ↥(Set.Icc (0:ℝ) 1), ball (t : ℝ) (dfun (t : ℝ) / 2) := by
+      intro x hx
+      refine Set.mem_iUnion.mpr ⟨⟨x, hx⟩, mem_ball_self ?_⟩
+      have h1 := hd0 x hx
+      linarith
+    obtain ⟨T, hTcov⟩ := isCompact_Icc.elim_finite_subcover
+      (fun t : ↥(Set.Icc (0:ℝ) 1) => ball (t : ℝ) (dfun (t : ℝ) / 2))
+      (fun _ => isOpen_ball) hcover
+    have hTne : T.Nonempty := by
+      by_contra hemp
+      rw [Finset.not_nonempty_iff_eq_empty] at hemp
+      have h0 := hTcov (Set.left_mem_Icc.mpr zero_le_one)
+      rw [hemp] at h0
+      simp at h0
+    have hε0 : 0 < T.inf' hTne (fun t => dfun (t : ℝ) / 2) := by
+      rw [Finset.lt_inf'_iff]
+      intro t htT
+      have h1 := hd0 (t : ℝ) t.2
+      linarith
+    refine ⟨T.inf' hTne (fun t => dfun (t : ℝ) / 2), hε0, ?_⟩
+    intro s' hs' hss
+    -- the grid: N₀ with 1 / (N₀ + 1) below the uniform radius
+    obtain ⟨N₀, hN₀⟩ := exists_nat_one_div_lt hε0
+    -- interval assignment: each grid interval sits inside one data window
+    have hassign : ∀ i : ℕ, i ≤ N₀ → ∃ t ∈ Set.Icc (0:ℝ) 1,
+        (∀ u : ℝ, (i : ℝ) / ((N₀ : ℝ) + 1) ≤ u → u ≤ ((i : ℝ) + 1) / ((N₀ : ℝ) + 1) →
+          |u - t| < dfun t) ∧ |s' - s₀| < dfun t := by
+      intro i hi
+      have hgi : (i : ℝ) / ((N₀ : ℝ) + 1) ∈ Set.Icc (0:ℝ) 1 := by
+        constructor
+        · positivity
+        · rw [div_le_one (by positivity)]
+          have h1 : (i : ℝ) ≤ (N₀ : ℝ) := by exact_mod_cast hi
+          linarith
+      have hmem := hTcov hgi
+      rw [Set.mem_iUnion₂] at hmem
+      obtain ⟨t, htT, hgt⟩ := hmem
+      have hεle : T.inf' hTne (fun t => dfun (t : ℝ) / 2) ≤ dfun (t : ℝ) / 2 :=
+        Finset.inf'_le _ htT
+      have hdt0 : 0 < dfun (t : ℝ) := hd0 (t : ℝ) t.2
+      have hdist : |(i : ℝ) / ((N₀ : ℝ) + 1) - (t : ℝ)| < dfun (t : ℝ) / 2 := by
+        have h1 := mem_ball.mp hgt
+        rwa [Real.dist_eq] at h1
+      rw [abs_sub_lt_iff] at hdist
+      refine ⟨(t : ℝ), t.2, ?_, ?_⟩
+      · intro u hu1 hu2
+        have hstep : u - (i : ℝ) / ((N₀ : ℝ) + 1) ≤ 1 / ((N₀ : ℝ) + 1) := by
+          rw [add_div] at hu2
+          linarith
+        rw [abs_sub_lt_iff]
+        constructor
+        · linarith [hdist.1, hN₀, hεle]
+        · linarith [hdist.2, hu1]
+      · calc |s' - s₀| < T.inf' hTne (fun t => dfun (t : ℝ) / 2) := hss
+          _ ≤ dfun (t : ℝ) / 2 := hεle
+          _ < dfun (t : ℝ) := by linarith
+    choose! tc htcI htcwin htcs using hassign
+    -- segment membership and distance comparison
+    have hsegI : ∀ σ, min s₀ s' ≤ σ → σ ≤ max s₀ s' → σ ∈ Set.Icc (0:ℝ) 1 := by
+      intro σ h1 h2
+      constructor
+      · rcases le_total s₀ s' with h | h
+        · rw [min_eq_left h] at h1; linarith [hs₀.1]
+        · rw [min_eq_right h] at h1; linarith [hs'.1]
+      · rcases le_total s₀ s' with h | h
+        · rw [max_eq_right h] at h2; linarith [hs'.2]
+        · rw [max_eq_left h] at h2; linarith [hs₀.2]
+    have habs : ∀ σ, min s₀ s' ≤ σ → σ ≤ max s₀ s' → |σ - s₀| ≤ |s' - s₀| := by
+      intro σ h1 h2
+      rcases le_total s₀ s' with hle | hle
+      · rw [min_eq_left hle] at h1
+        rw [max_eq_right hle] at h2
+        rw [abs_of_nonneg (by linarith), abs_of_nonneg (by linarith)]
+        linarith
+      · rw [min_eq_right hle] at h1
+        rw [max_eq_left hle] at h2
+        rw [abs_of_nonpos (by linarith), abs_of_nonpos (by linarith)]
+        linarith
+    -- transport specialised to the σ-segment at a fixed height
+    have hseg : ∀ (u : ℝ) (ψ ψ' : M → ℂ̂),
+        (∀ σ, min s₀ s' ≤ σ → σ ≤ max s₀ s' → ∀ᶠ y in 𝓝 (η (σ, u)), Q ψ y) →
+        (∀ σ, min s₀ s' ≤ σ → σ ≤ max s₀ s' → ∀ᶠ y in 𝓝 (η (σ, u)), Q ψ' y) →
+        ψ =ᶠ[𝓝 (η (s₀, u))] ψ' → ψ =ᶠ[𝓝 (η (s', u))] ψ' := by
+      intro u ψ ψ' hq1 hq2 heq
+      rcases le_total s₀ s' with hle | hle
+      · have hcont1 : Continuous fun σ : ℝ => η (σ, u) :=
+          hη.comp (continuous_id.prodMk continuous_const)
+        exact htransport ψ ψ' (fun σ => η (σ, u)) s₀ s' hle hcont1.continuousOn
+          (fun σ hσ => hq1 σ (by rw [min_eq_left hle]; exact hσ.1)
+            (by rw [max_eq_right hle]; exact hσ.2))
+          (fun σ hσ => hq2 σ (by rw [min_eq_left hle]; exact hσ.1)
+            (by rw [max_eq_right hle]; exact hσ.2))
+          heq s' ⟨hle, le_refl s'⟩
+      · have hcont2 : Continuous fun σ : ℝ => η (s₀ + s' - σ, u) :=
+          hη.comp ((continuous_const.sub continuous_id).prodMk continuous_const)
+        have h1 := htransport ψ ψ' (fun σ => η (s₀ + s' - σ, u)) s' s₀ hle
+          hcont2.continuousOn
+          (fun σ hσ => hq1 (s₀ + s' - σ)
+            (by rw [min_eq_right hle]; linarith [hσ.2])
+            (by rw [max_eq_left hle]; linarith [hσ.1]))
+          (fun σ hσ => hq2 (s₀ + s' - σ)
+            (by rw [min_eq_right hle]; linarith [hσ.2])
+            (by rw [max_eq_left hle]; linarith [hσ.1]))
+          (by
+            have h2 : s₀ + s' - s' = s₀ := by ring
+            simpa [h2] using heq)
+          s₀ ⟨hle, le_refl s₀⟩
+        have h3 : s₀ + s' - s₀ = s' := by ring
+        simpa [h3] using h1
+    -- grid induction: continuation along the s'-path up to each grid point,
+    -- with the terminal germ locked to that of the s₀-continuation
+    have hkey : ∀ i : ℕ, i ≤ N₀ + 1 →
+        ∃ Φ', IsCont (fun t => η (s', t)) ((i : ℝ) / ((N₀ : ℝ) + 1)) Φ' ∧
+        ∀ ψtar : M → ℂ̂,
+          Φ ((i : ℝ) / ((N₀ : ℝ) + 1)) =ᶠ[𝓝 (η (s₀, (i : ℝ) / ((N₀ : ℝ) + 1)))] ψtar →
+          (∀ σ, min s₀ s' ≤ σ → σ ≤ max s₀ s' →
+            ∀ᶠ y in 𝓝 (η (σ, (i : ℝ) / ((N₀ : ℝ) + 1))), Q ψtar y) →
+          Φ' ((i : ℝ) / ((N₀ : ℝ) + 1)) =ᶠ[𝓝 (η (s', (i : ℝ) / ((N₀ : ℝ) + 1)))] ψtar := by
+      intro i
+      induction i with
+      | zero =>
+        intro _
+        have h00 : ((0 : ℕ) : ℝ) / ((N₀ : ℝ) + 1) = 0 := by norm_num
+        rw [h00]
+        have hp0' : η (s', 0) = p₁ := hη0 s' hs'
+        have hp0 : η (s₀, 0) = p₁ := hη0 s₀ hs₀
+        refine ⟨fun _ => Φ 0, ?_, ?_⟩
+        · rw [hIC]
+          refine ⟨?_, ?_, ?_⟩
+          · intro t ht
+            have ht0 : t = 0 := le_antisymm ht.2 ht.1
+            rw [ht0, hp0']
+            have h1 := hΦa 0 ⟨le_refl 0, zero_le_one⟩
+            rw [hp0] at h1
+            exact h1
+          · exact hΦ0
+          · intro t ht
+            exact ⟨1, one_pos, fun u hu _ => Filter.EventuallyEq.refl _ _⟩
+        · intro ψtar htar hQtar
+          rw [hp0] at htar
+          rw [hp0']
+          exact htar
+      | succ i ih =>
+        intro hi1
+        have hiN : i ≤ N₀ := Nat.succ_le_succ_iff.mp hi1
+        obtain ⟨Φ', hΦ'IC, hΦ'germ⟩ := ih (Nat.le_succ_of_le hiN)
+        have hcast : ((i + 1 : ℕ) : ℝ) = (i : ℝ) + 1 := by push_cast; ring
+        rw [hcast]
+        have hNR : (0:ℝ) < (N₀ : ℝ) + 1 := by positivity
+        have hgiI : (i : ℝ) / ((N₀ : ℝ) + 1) ∈ Set.Icc (0:ℝ) 1 := by
+          constructor
+          · positivity
+          · rw [div_le_one hNR]
+            have h1 : (i : ℝ) ≤ (N₀ : ℝ) := by exact_mod_cast hiN
+            linarith
+        have hgi1I : ((i : ℝ) + 1) / ((N₀ : ℝ) + 1) ∈ Set.Icc (0:ℝ) 1 := by
+          constructor
+          · positivity
+          · rw [div_le_one hNR]
+            have h1 : (i : ℝ) ≤ (N₀ : ℝ) := by exact_mod_cast hiN
+            linarith
+        have hgilt : (i : ℝ) / ((N₀ : ℝ) + 1) < ((i : ℝ) + 1) / ((N₀ : ℝ) + 1) := by
+          have h1 : ((i : ℝ) + 1) / ((N₀ : ℝ) + 1) - (i : ℝ) / ((N₀ : ℝ) + 1) =
+              1 / ((N₀ : ℝ) + 1) := by
+            rw [div_sub_div_same]
+            norm_num
+          have h2 : (0:ℝ) < 1 / ((N₀ : ℝ) + 1) := by positivity
+          linarith
+        -- window facts for interval i
+        have hIci : tc i ∈ Set.Icc (0:ℝ) 1 := htcI i hiN
+        have hwin := htcwin i hiN
+        have hswin : |s' - s₀| < dfun (tc i) := htcs i hiN
+        have hK1 : ∀ σ, min s₀ s' ≤ σ → σ ≤ max s₀ s' → ∀ u, (i : ℝ) / ((N₀ : ℝ) + 1) ≤ u →
+            u ≤ ((i : ℝ) + 1) / ((N₀ : ℝ) + 1) → η (σ, u) ∈ W (tc i) := by
+          intro σ h1 h2 u h3 h4
+          refine hWnear (tc i) hIci (σ, u) ?_ (hwin u h3 h4)
+          calc |σ - s₀| ≤ |s' - s₀| := habs σ h1 h2
+            _ < dfun (tc i) := hswin
+        have hK2 : ∀ u, (i : ℝ) / ((N₀ : ℝ) + 1) ≤ u → u ≤ ((i : ℝ) + 1) / ((N₀ : ℝ) + 1) →
+            u ∈ Set.Icc (0:ℝ) 1 → Φ u =ᶠ[𝓝 (η (s₀, u))] Φ (tc i) := by
+          intro u h1 h2 hu
+          exact hloc (tc i) hIci u hu (hwin u h1 h2)
+        -- junction germ at the grid point gi
+        have hjunc : Φ' ((i : ℝ) / ((N₀ : ℝ) + 1))
+            =ᶠ[𝓝 (η (s', (i : ℝ) / ((N₀ : ℝ) + 1)))] Φ (tc i) := by
+          refine hΦ'germ (Φ (tc i)) (hK2 _ (le_refl _) hgilt.le hgiI) ?_
+          intro σ hσ1 hσ2
+          have hmem : η (σ, (i : ℝ) / ((N₀ : ℝ) + 1)) ∈ W (tc i) :=
+            hK1 σ hσ1 hσ2 _ (le_refl _) hgilt.le
+          filter_upwards [(hWo (tc i) hIci).mem_nhds hmem] with y hy using
+            hWQ (tc i) hIci y hy
+        refine ⟨fun u => if u ≤ (i : ℝ) / ((N₀ : ℝ) + 1) then Φ' u else Φ (tc i), ?_, ?_⟩
+        · rw [hIC] at hΦ'IC ⊢
+          obtain ⟨hpa, hp0, hpc⟩ := hΦ'IC
+          refine ⟨?_, ?_, ?_⟩
+          · intro t ht
+            by_cases hta : t ≤ (i : ℝ) / ((N₀ : ℝ) + 1)
+            · rw [if_pos hta]
+              exact hpa t ⟨ht.1, hta⟩
+            · rw [not_le] at hta
+              rw [if_neg (not_le.mpr hta)]
+              have hmem : η (s', t) ∈ W (tc i) :=
+                hK1 s' (min_le_right _ _) (le_max_right _ _) t hta.le ht.2
+              filter_upwards [(hWo (tc i) hIci).mem_nhds hmem] with y hy using
+                hWQ (tc i) hIci y hy
+          · have hnn : (0:ℝ) ≤ (i : ℝ) / ((N₀ : ℝ) + 1) := by positivity
+            rw [if_pos hnn]
+            exact hp0
+          · intro t ht
+            rcases lt_trichotomy t ((i : ℝ) / ((N₀ : ℝ) + 1)) with hta | hta | hta
+            · obtain ⟨ε', hε'0, hε'p⟩ := hpc t ⟨ht.1, hta.le⟩
+              refine ⟨min ε' ((i : ℝ) / ((N₀ : ℝ) + 1) - t), lt_min hε'0 (by linarith), ?_⟩
+              intro u hu huε
+              rw [lt_min_iff] at huε
+              have hua : u ≤ (i : ℝ) / ((N₀ : ℝ) + 1) := by
+                have h6 := abs_sub_lt_iff.mp huε.2
+                linarith [h6.1]
+              rw [if_pos hua, if_pos hta.le]
+              exact hε'p u ⟨hu.1, hua⟩ huε.1
+            · rw [hta]
+              obtain ⟨ε', hε'0, hε'p⟩ := hpc ((i : ℝ) / ((N₀ : ℝ) + 1))
+                ⟨by positivity, le_refl _⟩
+              obtain ⟨O₂, hO₂o, hO₂mem, hO₂⟩ := hOpen _ _ _ hjunc
+              have hcont' : Continuous fun t : ℝ => η (s', t) :=
+                hη.comp (continuous_const.prodMk continuous_id)
+              obtain ⟨δ₂, hδ₂0, hδ₂⟩ := hγnb (fun t => η (s', t)) (Set.Icc 0 1)
+                ((i : ℝ) / ((N₀ : ℝ) + 1)) hcont'.continuousOn hgiI O₂ hO₂o hO₂mem
+              refine ⟨min ε' δ₂, lt_min hε'0 hδ₂0, ?_⟩
+              intro u hu huε
+              rw [lt_min_iff] at huε
+              have huI : u ∈ Set.Icc (0:ℝ) 1 := ⟨hu.1, hu.2.trans hgi1I.2⟩
+              by_cases hua : u ≤ (i : ℝ) / ((N₀ : ℝ) + 1)
+              · rw [if_pos hua, if_pos (le_refl _)]
+                exact hε'p u ⟨hu.1, hua⟩ huε.1
+              · rw [not_le] at hua
+                rw [if_neg (not_le.mpr hua), if_pos (le_refl _)]
+                have hmem2 : η (s', u) ∈ O₂ := hδ₂ u huI huε.2
+                exact (hO₂ (η (s', u)) hmem2).symm
+            · refine ⟨t - (i : ℝ) / ((N₀ : ℝ) + 1), by linarith, ?_⟩
+              intro u hu huε
+              rw [abs_sub_lt_iff] at huε
+              have hua : (i : ℝ) / ((N₀ : ℝ) + 1) < u := by linarith [huε.2]
+              rw [if_neg (not_le.mpr hua), if_neg (not_le.mpr hta)]
+        · intro ψtar htar hQtar
+          have hne1 : ¬(((i : ℝ) + 1) / ((N₀ : ℝ) + 1) ≤ (i : ℝ) / ((N₀ : ℝ) + 1)) :=
+            not_le.mpr hgilt
+          have hval : (fun u => if u ≤ (i : ℝ) / ((N₀ : ℝ) + 1) then Φ' u else Φ (tc i))
+              (((i : ℝ) + 1) / ((N₀ : ℝ) + 1)) = Φ (tc i) := if_neg hne1
+          rw [hval]
+          have h1 : Φ (tc i) =ᶠ[𝓝 (η (s₀, ((i : ℝ) + 1) / ((N₀ : ℝ) + 1)))] ψtar :=
+            (hK2 _ hgilt.le (le_refl _) hgi1I).symm.trans htar
+          refine hseg _ (Φ (tc i)) ψtar ?_ hQtar h1
+          intro σ hσ1 hσ2
+          have hmem : η (σ, ((i : ℝ) + 1) / ((N₀ : ℝ) + 1)) ∈ W (tc i) :=
+            hK1 σ hσ1 hσ2 _ hgilt.le (le_refl _)
+          filter_upwards [(hWo (tc i) hIci).mem_nhds hmem] with y hy using
+            hWQ (tc i) hIci y hy
+    -- conclude at the last grid point
+    obtain ⟨Φ', hΦ'IC, hΦ'germ⟩ := hkey (N₀ + 1) (le_refl _)
+    have hNN : ((N₀ + 1 : ℕ) : ℝ) / ((N₀ : ℝ) + 1) = 1 := by
+      push_cast
+      exact div_self (by positivity : (0:ℝ) < (N₀ : ℝ) + 1).ne'
+    rw [hNN] at hΦ'IC hΦ'germ
+    have hQ1seg : ∀ σ, min s₀ s' ≤ σ → σ ≤ max s₀ s' →
+        ∀ᶠ y in 𝓝 (η (σ, 1)), Q (Φ 1) y := by
+      intro σ hσ1 hσ2
+      have hσI : σ ∈ Set.Icc (0:ℝ) 1 := hsegI σ hσ1 hσ2
+      have h2 : η (σ, 1) = η (s₀, 1) := by rw [hη1 σ hσI, hη1 s₀ hs₀]
+      rw [h2]
+      exact hΦa 1 ⟨zero_le_one, le_refl 1⟩
+    have hfin := hΦ'germ (Φ 1) (Filter.EventuallyEq.refl _ _) hQ1seg
+    rw [hη1 s' hs'] at hfin
+    exact ⟨Φ', hΦ'IC, hfin⟩
+  -- ## §10 Homotopy invariance of the terminal germ.
+  have hhomo : ∀ (η : ℝ × ℝ → M), Continuous η → (∀ s ∈ Set.Icc (0:ℝ) 1, η (s, 0) = p₁) →
+      (∀ s ∈ Set.Icc (0:ℝ) 1, η (s, 1) = η (0, 1)) →
+      ∀ Φ₀ Φ₁, IsCont (fun t => η (0, t)) 1 Φ₀ → IsCont (fun t => η (1, t)) 1 Φ₁ →
+        Φ₁ 1 =ᶠ[𝓝 (η (0, 1))] Φ₀ 1 := by
+    intro η hη hη0 hη1 Φ₀ Φ₁ hΦ₀ hΦ₁
+    have h1A : (1:ℝ) ∈ {s | s ∈ Set.Icc (0:ℝ) 1 ∧ ∃ Φ, IsCont (fun t => η (s, t)) 1 Φ ∧
+        Φ 1 =ᶠ[𝓝 (η (0, 1))] Φ₀ 1} := by
+      refine hind 0 1 _ zero_le_one (fun x hx => hx.1)
+        ⟨⟨le_refl 0, zero_le_one⟩, Φ₀, hΦ₀, Filter.EventuallyEq.refl _ _⟩ ?_ ?_
+      · -- closed from the left: adjacency at the limit parameter
+        intro c hc hap
+        have hγc : ContinuousOn (fun t => η (c, t)) (Set.Icc 0 1) :=
+          (hη.comp (continuous_const.prodMk continuous_id)).continuousOn
+        obtain ⟨Φc, hΦc⟩ := hexist (fun t => η (c, t)) hγc (hη0 c hc)
+        obtain ⟨ε, hε0, hεadj⟩ := hadj η hη hη0 hη1 c hc Φc hΦc
+        obtain ⟨x, hxA, hxgt, hxle⟩ := hap ε hε0
+        obtain ⟨Φx, hΦx, hΦxeq⟩ := hxA.2
+        have hxd : |x - c| < ε := by
+          rw [abs_sub_lt_iff]
+          constructor <;> linarith
+        obtain ⟨Φ'x, hΦ'x, hΦ'xeq⟩ := hεadj x hxA.1 hxd
+        have huu := huniq (fun t => η (x, t))
+          ((hη.comp (continuous_const.prodMk continuous_id)).continuousOn)
+          (hη0 x hxA.1) Φx Φ'x hΦx hΦ'x 1 ⟨zero_le_one, le_refl 1⟩
+        have hpt : η (x, 1) = η (0, 1) := hη1 x hxA.1
+        have huu' : Φx 1 =ᶠ[𝓝 (η (0, 1))] Φ'x 1 := by
+          rw [← hpt]
+          exact huu
+        exact ⟨hc, Φc, hΦc, hΦ'xeq.symm.trans (huu'.symm.trans hΦxeq)⟩
+      · -- open to the right: adjacency from a member parameter
+        intro c hcA hclt
+        obtain ⟨Φc, hΦc, hΦceq⟩ := hcA.2
+        obtain ⟨ε, hε0, hεadj⟩ := hadj η hη hη0 hη1 c hcA.1 Φc hΦc
+        refine ⟨ε, hε0, ?_⟩
+        intro x hx hcx hxδ
+        have hxd : |x - c| < ε := by
+          rw [abs_sub_lt_iff]
+          constructor <;> linarith
+        obtain ⟨Φ'x, hΦ'x, hΦ'xeq⟩ := hεadj x hx hxd
+        exact ⟨hx, Φ'x, hΦ'x, hΦ'xeq.trans hΦceq⟩
+    obtain ⟨-, Φ, hΦ, hΦeq⟩ := h1A
+    have huu := huniq (fun t => η (1, t))
+      ((hη.comp (continuous_const.prodMk continuous_id)).continuousOn)
+      (hη0 1 ⟨zero_le_one, le_refl 1⟩) Φ₁ Φ hΦ₁ hΦ 1 ⟨zero_le_one, le_refl 1⟩
+    have hpt : η (1, 1) = η (0, 1) := hη1 1 ⟨zero_le_one, le_refl 1⟩
+    have huu' : Φ₁ 1 =ᶠ[𝓝 (η (0, 1))] Φ 1 := by
+      rw [← hpt]
+      exact huu
+    exact huu'.trans hΦeq
+  -- ## §11 Global assembly along paths.
+  have hsel : ∀ q : M,
+      ∃ Φ, IsCont (fun u => (PathConnectedSpace.somePath p₁ q).extend u) 1 Φ := by
+    intro q
+    refine hexist _ (Path.continuous_extend _).continuousOn ?_
+    exact Path.extend_zero _
+  choose ΦF hΦF using hsel
+  have hQq : ∀ q : M, Q (ΦF q 1) q ∧ ∀ᶠ y in 𝓝 q, Q (ΦF q 1) y := by
+    intro q
+    have h1 := ((hIC _ _ _).mp (hΦF q)).1 1 ⟨zero_le_one, le_refl 1⟩
+    rw [Path.extend_one] at h1
+    exact ⟨Eventually.self_of_nhds h1, h1⟩
+  -- local agreement: near any point, every chosen terminal element realises the
+  -- same germ, by comparing paths through a chart-ball concatenation.
+  have hlocal : ∀ q : M, ∃ B : Set M, IsOpen B ∧ q ∈ B ∧
+      ∀ q' ∈ B, ΦF q' 1 =ᶠ[𝓝 q'] ΦF q 1 := by
+    intro q
+    obtain ⟨W, hWo, hqW, hWall⟩ := hQopen (ΦF q 1) q (hQq q).2
+    have hqs : q ∈ (chartAt ℂ q).source := mem_chart_source ℂ q
+    have hT : IsOpen ((chartAt ℂ q).target ∩ (chartAt ℂ q).symm ⁻¹' W) :=
+      (chartAt ℂ q).isOpen_inter_preimage_symm hWo
+    have hqT : chartAt ℂ q q ∈ (chartAt ℂ q).target ∩ (chartAt ℂ q).symm ⁻¹' W := by
+      refine ⟨(chartAt ℂ q).map_source hqs, ?_⟩
+      rw [Set.mem_preimage, (chartAt ℂ q).left_inv hqs]
+      exact hqW
+    obtain ⟨r, hr0, hrsub⟩ := Metric.isOpen_iff.mp hT _ hqT
+    refine ⟨(chartAt ℂ q).source ∩ chartAt ℂ q ⁻¹' ball (chartAt ℂ q q) r,
+      (chartAt ℂ q).continuousOn.isOpen_inter_preimage (chartAt ℂ q).open_source
+        isOpen_ball,
+      ⟨hqs, by rw [Set.mem_preimage]; exact mem_ball_self hr0⟩, ?_⟩
+    intro q' hq'
+    have hq's : q' ∈ (chartAt ℂ q).source := hq'.1
+    have hq'b : chartAt ℂ q q' ∈ ball (chartAt ℂ q q) r := hq'.2
+    -- the straight chart segment from q to q' stays in the ball
+    have hsegmem : ∀ σ : ℝ, 0 ≤ σ → σ ≤ 1 →
+        (1 - (σ:ℂ)) * chartAt ℂ q q + (σ:ℂ) * chartAt ℂ q q' ∈
+          ball (chartAt ℂ q q) r := by
+      intro σ h0 h1
+      rw [mem_ball, dist_eq_norm]
+      have h2 : (1 - (σ:ℂ)) * chartAt ℂ q q + (σ:ℂ) * chartAt ℂ q q' -
+          chartAt ℂ q q = (σ:ℂ) * (chartAt ℂ q q' - chartAt ℂ q q) := by ring
+      have h3 : ‖chartAt ℂ q q' - chartAt ℂ q q‖ < r := by
+        have h4 := mem_ball.mp hq'b
+        rwa [dist_eq_norm] at h4
+      rw [h2, norm_mul, Complex.norm_real, Real.norm_of_nonneg h0]
+      calc σ * ‖chartAt ℂ q q' - chartAt ℂ q q‖ ≤
+          1 * ‖chartAt ℂ q q' - chartAt ℂ q q‖ :=
+            mul_le_mul_of_nonneg_right h1 (norm_nonneg _)
+        _ = ‖chartAt ℂ q q' - chartAt ℂ q q‖ := one_mul _
+        _ < r := h3
+    have hinner : Continuous fun σ : ℝ =>
+        (1 - (σ:ℂ)) * chartAt ℂ q q + (σ:ℂ) * chartAt ℂ q q' :=
+      ((continuous_const.sub Complex.continuous_ofReal).mul continuous_const).add
+        (Complex.continuous_ofReal.mul continuous_const)
+    have hρc : Continuous fun σ : unitInterval => (chartAt ℂ q).symm
+        ((1 - ((σ:ℝ):ℂ)) * chartAt ℂ q q + ((σ:ℝ):ℂ) * chartAt ℂ q q') := by
+      refine (chartAt ℂ q).continuousOn_symm.comp_continuous
+        (hinner.comp continuous_subtype_val) ?_
+      intro σ
+      exact (hrsub (hsegmem (σ:ℝ) σ.2.1 σ.2.2)).1
+    obtain ⟨ρpath, hρW⟩ : ∃ ρ : Path q q',
+        ∀ σ : ℝ, σ ∈ Set.Icc (0:ℝ) 1 → ρ.extend σ ∈ W := by
+      refine ⟨{ toFun := fun σ => (chartAt ℂ q).symm
+                  ((1 - ((σ:ℝ):ℂ)) * chartAt ℂ q q + ((σ:ℝ):ℂ) * chartAt ℂ q q'),
+                continuous_toFun := hρc,
+                source' := ?_,
+                target' := ?_ }, ?_⟩
+      · have h0 : (1 - (((0 : unitInterval) : ℝ) : ℂ)) * chartAt ℂ q q +
+            (((0 : unitInterval) : ℝ) : ℂ) * chartAt ℂ q q' = chartAt ℂ q q := by
+          norm_num
+        rw [h0]
+        exact (chartAt ℂ q).left_inv hqs
+      · have h1 : (1 - (((1 : unitInterval) : ℝ) : ℂ)) * chartAt ℂ q q +
+            (((1 : unitInterval) : ℝ) : ℂ) * chartAt ℂ q q' = chartAt ℂ q q' := by
+          norm_num
+        rw [h1]
+        exact (chartAt ℂ q).left_inv hq's
+      · intro σ hσ
+        rw [Path.extend_apply _ hσ]
+        change (chartAt ℂ q).symm ((1 - (σ:ℂ)) * chartAt ℂ q q +
+          (σ:ℂ) * chartAt ℂ q q') ∈ W
+        have h5 := (hrsub (hsegmem σ hσ.1 hσ.2)).2
+        rwa [Set.mem_preimage] at h5
+    -- the concatenated path realises the same terminal element as the base point
+    have htrans_le : ∀ u : ℝ, u ∈ Set.Icc (0:ℝ) 1 → u ≤ 1/2 →
+        ((PathConnectedSpace.somePath p₁ q).trans ρpath).extend u =
+          (PathConnectedSpace.somePath p₁ q).extend (2*u) := by
+      intro u hu hle
+      have h2u : (2*u : ℝ) ∈ Set.Icc (0:ℝ) 1 := ⟨by linarith [hu.1], by linarith⟩
+      rw [Path.extend_apply _ hu, Path.extend_apply _ h2u, Path.trans_apply]
+      have hcond : ((⟨u, hu⟩ : unitInterval) : ℝ) ≤ 1/2 := hle
+      rw [dif_pos hcond]
+    have htrans_gt : ∀ u : ℝ, u ∈ Set.Icc (0:ℝ) 1 → ¬(u ≤ 1/2) →
+        ((PathConnectedSpace.somePath p₁ q).trans ρpath).extend u =
+          ρpath.extend (2*u - 1) := by
+      intro u hu hgt
+      have h2u : (2*u - 1 : ℝ) ∈ Set.Icc (0:ℝ) 1 := by
+        constructor
+        · linarith [not_le.mp hgt]
+        · linarith [hu.2]
+      rw [Path.extend_apply _ hu, Path.extend_apply _ h2u, Path.trans_apply]
+      have hcond : ¬(((⟨u, hu⟩ : unitInterval) : ℝ) ≤ 1/2) := hgt
+      rw [dif_neg hcond]
+    -- glued continuation along the concatenated path
+    have hICτ : IsCont (fun u => ((PathConnectedSpace.somePath p₁ q).trans ρpath).extend u)
+        1 (fun u => if u ≤ 1/2 then ΦF q (2*u) else ΦF q 1) := by
+      obtain ⟨hΦqa, hΦq0, hΦqc⟩ := (hIC _ _ _).mp (hΦF q)
+      rw [hIC]
+      refine ⟨?_, ?_, ?_⟩
+      · intro t ht
+        by_cases hth : t ≤ 1/2
+        · rw [if_pos hth, htrans_le t ht hth]
+          exact hΦqa (2*t) ⟨by linarith [ht.1], by linarith⟩
+        · rw [if_neg hth, htrans_gt t ht hth]
+          have hmem : ρpath.extend (2*t - 1) ∈ W := by
+            refine hρW (2*t - 1) ⟨?_, ?_⟩
+            · linarith [not_le.mp hth]
+            · linarith [ht.2]
+          filter_upwards [hWo.mem_nhds hmem] with y hy using (hWall y hy).1
+      · have h012 : (0:ℝ) ≤ 1/2 := by norm_num
+        rw [if_pos h012]
+        have h20 : (2:ℝ) * 0 = 0 := by norm_num
+        rw [h20]
+        exact hΦq0
+      · intro t ht
+        rcases lt_trichotomy t (1/2 : ℝ) with hth | hth | hth
+        · obtain ⟨ε₁, hε₁0, hε₁p⟩ := hΦqc (2*t) ⟨by linarith [ht.1], by linarith⟩
+          refine ⟨min (ε₁/2) (1/2 - t), lt_min (by linarith) (by linarith), ?_⟩
+          intro u hu huε
+          rw [lt_min_iff] at huε
+          have huh : u ≤ 1/2 := by
+            have h6 := abs_sub_lt_iff.mp huε.2
+            linarith [h6.1]
+          have hu2 : |2*u - 2*t| < ε₁ := by
+            have h6 := abs_sub_lt_iff.mp huε.1
+            rw [abs_sub_lt_iff]
+            constructor <;> linarith [h6.1, h6.2]
+          rw [if_pos huh, if_pos hth.le, htrans_le u hu huh]
+          exact hε₁p (2*u) ⟨by linarith [hu.1], by linarith⟩ hu2
+        · obtain ⟨ε₁, hε₁0, hε₁p⟩ := hΦqc 1 ⟨zero_le_one, le_refl 1⟩
+          refine ⟨ε₁/2, by linarith, ?_⟩
+          intro u hu huε
+          have h2t : (2:ℝ)*t = 1 := by rw [hth]; norm_num
+          by_cases huh : u ≤ 1/2
+          · rw [if_pos huh, if_pos hth.le, h2t, htrans_le u hu huh]
+            have hu2 : |2*u - 1| < ε₁ := by
+              have h6 := abs_sub_lt_iff.mp huε
+              rw [abs_sub_lt_iff]
+              constructor <;> linarith [h6.1, h6.2]
+            exact hε₁p (2*u) ⟨by linarith [hu.1], by linarith⟩ hu2
+          · rw [if_neg huh, if_pos hth.le, h2t]
+        · refine ⟨t - 1/2, by linarith, ?_⟩
+          intro u hu huε
+          have huh : ¬(u ≤ 1/2) := by
+            rw [abs_sub_lt_iff] at huε
+            rw [not_le]
+            linarith [huε.2]
+          rw [if_neg huh, if_neg (not_le.mpr hth)]
+    -- the homotopy between the chosen path of q' and the concatenation
+    obtain ⟨H⟩ := SimplyConnectedSpace.paths_homotopic
+      (PathConnectedSpace.somePath p₁ q') ((PathConnectedSpace.somePath p₁ q).trans ρpath)
+    obtain ⟨η, hηeq⟩ : ∃ η' : ℝ × ℝ → M, η' = fun p =>
+        H (Set.projIcc 0 1 zero_le_one p.1, Set.projIcc 0 1 zero_le_one p.2) := ⟨_, rfl⟩
+    have happ : ∀ a b : ℝ, η (a, b) =
+        H (Set.projIcc 0 1 zero_le_one a, Set.projIcc 0 1 zero_le_one b) := by
+      intro a b
+      rw [hηeq]
+    have h0I : Set.projIcc (0:ℝ) 1 zero_le_one (0:ℝ) = (0 : unitInterval) := by
+      apply Subtype.ext
+      rw [Set.coe_projIcc]
+      have h1 : ((0 : unitInterval) : ℝ) = 0 := rfl
+      rw [h1]
+      norm_num
+    have h1I : Set.projIcc (0:ℝ) 1 zero_le_one (1:ℝ) = (1 : unitInterval) := by
+      apply Subtype.ext
+      rw [Set.coe_projIcc]
+      have h1 : ((1 : unitInterval) : ℝ) = 1 := rfl
+      rw [h1]
+      norm_num
+    have hηc : Continuous η := by
+      rw [hηeq]
+      exact H.continuous.comp ((continuous_projIcc.comp continuous_fst).prodMk
+        (continuous_projIcc.comp continuous_snd))
+    have hbdry0 : ∀ s ∈ Set.Icc (0:ℝ) 1, η (s, 0) = p₁ := by
+      intro s hs
+      rw [happ, h0I]
+      exact Path.Homotopy.source H _
+    have hbdry1 : ∀ s ∈ Set.Icc (0:ℝ) 1, η (s, 1) = η (0, 1) := by
+      intro s hs
+      rw [happ s 1, happ 0 1, h1I]
+      rw [Path.Homotopy.target, Path.Homotopy.target]
+    have hη01 : η (0, 1) = q' := by
+      rw [happ 0 1, h1I]
+      exact Path.Homotopy.target H _
+    have hpath0 : (fun t : ℝ => η (0, t)) =
+        (fun t : ℝ => (PathConnectedSpace.somePath p₁ q').extend t) := by
+      funext t
+      rw [happ, h0I]
+      exact ContinuousMap.HomotopyWith.apply_zero H (Set.projIcc 0 1 zero_le_one t)
+    have hpath1 : (fun t : ℝ => η (1, t)) =
+        (fun t : ℝ => ((PathConnectedSpace.somePath p₁ q).trans ρpath).extend t) := by
+      funext t
+      rw [happ, h1I]
+      exact ContinuousMap.HomotopyWith.apply_one H (Set.projIcc 0 1 zero_le_one t)
+    have hIC0 : IsCont (fun t => η (0, t)) 1 (ΦF q') := by
+      rw [hpath0]
+      exact hΦF q'
+    have hIC1 : IsCont (fun t => η (1, t)) 1
+        (fun u => if u ≤ 1/2 then ΦF q (2*u) else ΦF q 1) := by
+      rw [hpath1]
+      exact hICτ
+    have hfinal := hhomo η hηc hbdry0 hbdry1 (ΦF q')
+      (fun u => if u ≤ 1/2 then ΦF q (2*u) else ΦF q 1) hIC0 hIC1
+    rw [hη01] at hfinal
+    have hn12 : ¬((1:ℝ) ≤ 1/2) := by norm_num
+    have hval1 : (fun u => if u ≤ (1:ℝ)/2 then ΦF q (2*u) else ΦF q 1) 1 = ΦF q 1 :=
+      if_neg hn12
+    rw [hval1] at hfinal
+    exact hfinal.symm
+  -- the global map and its four properties
+  refine ⟨fun q => ΦF q 1 q, ?_, ?_, ?_, ?_⟩
+  · intro q
+    obtain ⟨B, hBo, hqB, hBloc⟩ := hlocal q
+    have h1 : ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω (ΦF q 1) q := by
+      have h2 := (hQq q).1
+      rw [hQ] at h2
+      exact h2.1
+    refine h1.congr_of_eventuallyEq ?_
+    filter_upwards [hBo.mem_nhds hqB] with q'' hq''
+    exact (hBloc q'' hq'').eq_of_nhds
+  · have h2 := (hQq p₁).1
+    rw [hQ] at h2
+    exact h2.2.2.1 rfl
+  · have h2 := (hQq p₂).1
+    rw [hQ] at h2
+    exact h2.2.2.2 rfl
+  · intro x hx1 hx2
+    have h2 := (hQq x).1
+    rw [hQ] at h2
+    exact h2.2.1 hx1 hx2
 
 /-- **Injectivity of the dipole map**, by the Blaschke comparison against the
 extremal property of the piece Green's functions. -/
@@ -2114,13 +4987,1087 @@ theorem injective_bipolar_map [SimplyConnectedSpace M]
       ∃ h : ℂ → ℝ, HarmonicOnNhd h (ball (chartAt ℂ p₂ p₂) r) ∧
         ∀ w ∈ ball (chartAt ℂ p₂ p₂) r \ {chartAt ℂ p₂ p₂},
           h w = G ((chartAt ℂ p₂).symm w) - Real.log ‖w - chartAt ℂ p₂ p₂‖)
-    (hbdd : ∃ C, ∃ V₁ ∈ 𝓝 p₁, ∃ V₂ ∈ 𝓝 p₂, ∀ x ∉ V₁ ∪ V₂, |G x| ≤ C)
+    (hbdd : ∃ C, ∃ V₁ ∈ 𝓝 p₁, ∃ V₂ ∈ 𝓝 p₂, IsCompact (closure V₁) ∧
+      IsCompact (closure V₂) ∧ ∀ x ∉ V₁ ∪ V₂, |G x| ≤ C)
     (hφ : ContMDiff 𝓘(ℂ) 𝓘(ℂ) ω φ) (h₁ : φ p₁ = ((0 : ℂ) : ℂ̂))
     (h₂ : φ p₂ = OnePoint.infty)
     (habs : ∀ x, x ≠ p₁ → x ≠ p₂ →
       ∃ w : ℂ, φ x = (w : ℂ̂) ∧ ‖w‖ = Real.exp (-(G x))) :
     Function.Injective φ := by
-  sorry
+  classical
+  /- ## Generic brick: `ContMDiffAt` from an analytic source-chart reading. -/
+  have hbuild : ∀ (f : M → ℂ) (x : M),
+      AnalyticAt ℂ (f ∘ ⇑(chartAt ℂ x).symm) (chartAt ℂ x x) →
+      ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω f x := by
+    intro f x hf
+    have hb1 : ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω (f ∘ ⇑(chartAt ℂ x).symm) (chartAt ℂ x x) :=
+      contMDiffAt_iff_contDiffAt.mpr hf.contDiffAt
+    have hb2 : ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω (⇑(chartAt ℂ x)) x :=
+      contMDiffAt_of_mem_maximalAtlas (IsManifold.chart_mem_maximalAtlas x)
+        (mem_chart_source ℂ x)
+    refine (hb1.comp x hb2).congr_of_eventuallyEq ?_
+    filter_upwards [(chartAt ℂ x).open_source.mem_nhds (mem_chart_source ℂ x)] with y hy
+    simp only [Function.comp_apply, (chartAt ℂ x).left_inv hy]
+  /- ## Generic brick: reading a sphere-valued map through a target chart. -/
+  have hread : ∀ f : M → ℂ̂, ContMDiff 𝓘(ℂ) 𝓘(ℂ) ω f →
+      ∀ e : OpenPartialHomeomorph ℂ̂ ℂ, e ∈ IsManifold.maximalAtlas 𝓘(ℂ) ω ℂ̂ →
+      ∀ (x : M) (w : ℂ), w ∈ (chartAt ℂ x).target →
+      f ((chartAt ℂ x).symm w) ∈ e.source →
+      AnalyticAt ℂ (fun v => e (f ((chartAt ℂ x).symm v))) w := by
+    intro f hf e hemax x w hw hsrc
+    have hr1 : ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω (⇑(chartAt ℂ x).symm) w :=
+      contMDiffAt_symm_of_mem_maximalAtlas (IsManifold.chart_mem_maximalAtlas x) hw
+    have hr3 : ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω (⇑e) (f ((chartAt ℂ x).symm w)) :=
+      contMDiffAt_of_mem_maximalAtlas hemax hsrc
+    exact (contMDiffAt_iff_contDiffAt.mp
+      ((hr3.comp _ hf.contMDiffAt).comp w hr1)).analyticAt
+  /- ## Sphere-chart bookkeeping. -/
+  have hfinmax : sphereChartFinite ∈ IsManifold.maximalAtlas 𝓘(ℂ) ω ℂ̂ :=
+    IsManifold.chart_mem_maximalAtlas ((0 : ℂ) : ℂ̂)
+  have hinfmax : sphereChartInfty ∈ IsManifold.maximalAtlas 𝓘(ℂ) ω ℂ̂ :=
+    IsManifold.chart_mem_maximalAtlas (OnePoint.infty : ℂ̂)
+  have hfinsrc : ∀ z : ℂ̂, z ≠ OnePoint.infty → z ∈ sphereChartFinite.source := by
+    intro z hz
+    rw [sphereChartFinite_source]
+    exact hz
+  have hinfsrc : ∀ z : ℂ̂, z ≠ ((0 : ℂ) : ℂ̂) → z ∈ sphereChartInfty.source := by
+    intro z hz
+    rw [sphereChartInfty_source]
+    exact hz
+  have hinfval : ∀ b : ℂ, b ≠ 0 → sphereChartInfty ((b : ℂ̂)) = b⁻¹ := by
+    intro b hb
+    rw [sphereChartInfty_apply, inversionGL_smul_coe, if_neg hb, sphereChartFinite_coe]
+  have hinfval0 : sphereChartInfty (OnePoint.infty : ℂ̂) = 0 := by
+    rw [sphereChartInfty_apply, inversionGL_smul_infty, sphereChartFinite_coe]
+  /- ## Plane-level transfer of subharmonicity along a pointwise equality. -/
+  have htransfer : ∀ (F₁ F₂ : ℂ → ℝ) (U W : Set ℂ), SubharmonicOn F₁ U → W ⊆ U →
+      Set.EqOn F₁ F₂ W → SubharmonicOn F₂ W := by
+    intro F₁ F₂ U W hF hWU hFG
+    refine ⟨(hF.1.mono hWU).congr hFG.symm, ?_⟩
+    intro c hc ρc hρc hb
+    have ht1 : F₂ c = F₁ c := (hFG hc).symm
+    have ht2 : Real.circleAverage F₁ c ρc = Real.circleAverage F₂ c ρc := by
+      apply Real.circleAverage_congr_sphere
+      intro z hz
+      rw [abs_of_pos hρc] at hz
+      exact hFG (hb (sphere_subset_closedBall hz))
+    rw [ht1, ← ht2]
+    exact hF.2 c (hWU hc) ρc hρc (hb.trans hWU)
+  /- ## Surface-level: subharmonicity at a point respects equality near the point. -/
+  have hcongM : ∀ (F₁ F₂ : M → ℝ) (x : M) (O : Set M), IsOpen O → x ∈ O →
+      Set.EqOn F₁ F₂ O → MSubharmonicAt F₁ x → MSubharmonicAt F₂ x := by
+    intro F₁ F₂ x O hO hxO hFG hF
+    obtain ⟨r, hr, -, hsub⟩ := hF
+    have hxsrc : x ∈ (chartAt ℂ x).source := mem_chart_source ℂ x
+    have hopen : IsOpen ((chartAt ℂ x).target ∩ (chartAt ℂ x).symm ⁻¹' O) :=
+      (chartAt ℂ x).isOpen_inter_preimage_symm hO
+    have hmem : chartAt ℂ x x ∈ (chartAt ℂ x).target ∩ (chartAt ℂ x).symm ⁻¹' O := by
+      refine ⟨(chartAt ℂ x).map_source hxsrc, ?_⟩
+      rw [Set.mem_preimage, (chartAt ℂ x).left_inv hxsrc]
+      exact hxO
+    obtain ⟨ρc, hρc, hρsubc⟩ := Metric.isOpen_iff.1 (isOpen_ball.inter hopen)
+      (chartAt ℂ x x) ⟨mem_ball_self hr, hmem⟩
+    refine ⟨ρc, hρc, fun w hw => ((hρsubc hw).2).1, ?_⟩
+    refine htransfer _ _ _ _ hsub (fun w hw => (hρsubc hw).1) ?_
+    intro w hw
+    exact hFG ((hρsubc hw).2).2
+  /- ## Sums of subharmonic functions are subharmonic. -/
+  have haddM : ∀ (F₁ F₂ : M → ℝ) (x : M), MSubharmonicAt F₁ x → MSubharmonicAt F₂ x →
+      MSubharmonicAt (fun y => F₁ y + F₂ y) x := by
+    intro F₁ F₂ x hF hG2
+    obtain ⟨r₁, hr₁, hb₁, hs₁⟩ := hF
+    obtain ⟨r₂, hr₂, -, hs₂⟩ := hG2
+    have hmono : ∀ (f : ℂ → ℝ) (U V : Set ℂ), SubharmonicOn f U → V ⊆ U →
+        SubharmonicOn f V := fun f U V hf hVU =>
+      ⟨hf.1.mono hVU, fun c hc ρc hρc hball => hf.2 c (hVU hc) ρc hρc (hball.trans hVU)⟩
+    have hs₁' := hmono _ _ _ hs₁ (ball_subset_ball (min_le_left r₁ r₂))
+    have hs₂' := hmono _ _ _ hs₂ (ball_subset_ball (min_le_right r₁ r₂))
+    refine ⟨min r₁ r₂, lt_min hr₁ hr₂,
+      (ball_subset_ball (min_le_left r₁ r₂)).trans hb₁, ?_, ?_⟩
+    · exact hs₁'.1.add hs₂'.1
+    · intro c hc ρc hρc hb
+      have hsph : sphere c ρc ⊆ ball (chartAt ℂ x x) (min r₁ r₂) :=
+        sphere_subset_closedBall.trans hb
+      have hci₁ : CircleIntegrable (F₁ ∘ (chartAt ℂ x).symm) c ρc :=
+        (hs₁'.1.mono hsph).circleIntegrable hρc.le
+      have hci₂ : CircleIntegrable (F₂ ∘ (chartAt ℂ x).symm) c ρc :=
+        (hs₂'.1.mono hsph).circleIntegrable hρc.le
+      have havg := Real.circleAverage_fun_add hci₁ hci₂
+      have hp₁' := hs₁'.2 c hc ρc hρc hb
+      have hp₂' := hs₂'.2 c hc ρc hρc hb
+      calc ((fun y => F₁ y + F₂ y) ∘ (chartAt ℂ x).symm) c
+          = (F₁ ∘ (chartAt ℂ x).symm) c + (F₂ ∘ (chartAt ℂ x).symm) c := rfl
+        _ ≤ Real.circleAverage (F₁ ∘ (chartAt ℂ x).symm) c ρc
+            + Real.circleAverage (F₂ ∘ (chartAt ℂ x).symm) c ρc := add_le_add hp₁' hp₂'
+        _ = Real.circleAverage
+            (fun w => (F₁ ∘ (chartAt ℂ x).symm) w + (F₂ ∘ (chartAt ℂ x).symm) w) c ρc :=
+            havg.symm
+        _ = Real.circleAverage ((fun y => F₁ y + F₂ y) ∘ (chartAt ℂ x).symm) c ρc := rfl
+  /- ## The log-modulus of a nonvanishing holomorphic function is harmonic. -/
+  have hlogM : ∀ Ψ : M → ℂ, (∀ y, ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω Ψ y) → ∀ x : M, Ψ x ≠ 0 →
+      MHarmonicAt (fun y => Real.log ‖Ψ y‖) x := by
+    intro Ψ hΨm x hx
+    have hl1 : ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω (chartAt ℂ x).symm (chartAt ℂ x x) :=
+      contMDiffAt_symm_of_mem_maximalAtlas (IsManifold.chart_mem_maximalAtlas x)
+        (mem_chart_target ℂ x)
+    have hl2 := (hΨm ((chartAt ℂ x).symm (chartAt ℂ x x))).comp (chartAt ℂ x x) hl1
+    have hl3 : AnalyticAt ℂ (Ψ ∘ (chartAt ℂ x).symm) (chartAt ℂ x x) :=
+      (contMDiffAt_iff_contDiffAt.mp hl2).analyticAt
+    have hl4 : (Ψ ∘ (chartAt ℂ x).symm) (chartAt ℂ x x) ≠ 0 := by
+      simp only [Function.comp_apply, (chartAt ℂ x).left_inv (mem_chart_source ℂ x)]
+      exact hx
+    exact hl3.harmonicAt_log_norm hl4
+  /- ## The chart reading of a holomorphic function is analytic at the center. -/
+  have hreadM : ∀ Ψ : M → ℂ, (∀ y, ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω Ψ y) → ∀ x : M,
+      AnalyticAt ℂ (Ψ ∘ (chartAt ℂ x).symm) (chartAt ℂ x x) := by
+    intro Ψ hΨm x
+    have hm1 : ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω (chartAt ℂ x).symm (chartAt ℂ x x) :=
+      contMDiffAt_symm_of_mem_maximalAtlas (IsManifold.chart_mem_maximalAtlas x)
+        (mem_chart_target ℂ x)
+    have hm2 := (hΨm ((chartAt ℂ x).symm (chartAt ℂ x x))).comp (chartAt ℂ x x) hm1
+    exact (contMDiffAt_iff_contDiffAt.mp hm2).analyticAt
+  /- ## The singleton `{0}` is not open in the plane. -/
+  have hnotopen0 : ¬ IsOpen ({(0 : ℂ)} : Set ℂ) := by
+    intro hcon
+    obtain ⟨ε, hε, hball⟩ := Metric.isOpen_iff.mp hcon 0 rfl
+    have hn1 : (↑(ε / 2) : ℂ) ∈ ball (0 : ℂ) ε := by
+      rw [mem_ball, dist_zero_right, Complex.norm_real, Real.norm_eq_abs,
+        abs_of_pos (by linarith)]
+      linarith
+    have hn2 := hball hn1
+    rw [Set.mem_singleton_iff, Complex.ofReal_eq_zero] at hn2
+    linarith
+  /- ## Zeros of a nonconstant holomorphic function are isolated. -/
+  have hisoM : ∀ Ψ : M → ℂ, (∀ y, ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω Ψ y) → (∃ y₀, Ψ y₀ ≠ 0) →
+      ∀ z : M, Ψ z = 0 → ∀ᶠ y in 𝓝[≠] z, Ψ y ≠ 0 := by
+    intro Ψ hΨm hex z hz
+    obtain ⟨y₀, hy₀⟩ := hex
+    have hzsrc : z ∈ (chartAt ℂ z).source := mem_chart_source ℂ z
+    rcases (hreadM Ψ hΨm z).eventually_eq_zero_or_eventually_ne_zero with hcase | hcase
+    · exfalso
+      have hop : IsOpenMap Ψ := by
+        refine isOpenMap_of_contMDiff_of_not_const (fun y => hΨm y) ?_
+        rintro ⟨c, hc⟩
+        rw [hc z] at hz
+        rw [hc y₀, hz] at hy₀
+        exact hy₀ rfl
+      have hi2 : ∀ᶠ y in 𝓝 z, Ψ y = 0 := by
+        have hc : ContinuousAt (chartAt ℂ z) z := (chartAt ℂ z).continuousAt hzsrc
+        filter_upwards [hc.eventually hcase,
+          (chartAt ℂ z).open_source.mem_nhds hzsrc] with y h1y hsy
+        have hyy : Ψ ((chartAt ℂ z).symm (chartAt ℂ z y)) = 0 := h1y
+        rwa [(chartAt ℂ z).left_inv hsy] at hyy
+      obtain ⟨O, hOsub, hOopen, hzO⟩ := _root_.mem_nhds_iff.mp hi2
+      have himg : Ψ '' O = {0} := by
+        apply Set.Subset.antisymm
+        · rintro w ⟨y, hy, rfl⟩
+          exact hOsub hy
+        · rintro w hw
+          rw [Set.mem_singleton_iff] at hw
+          exact ⟨z, hzO, by rw [hw, hz]⟩
+      have hi3 := hop O hOopen
+      rw [himg] at hi3
+      exact hnotopen0 hi3
+    · have htend : Tendsto (chartAt ℂ z) (𝓝[≠] z) (𝓝[≠] (chartAt ℂ z z)) := by
+        rw [tendsto_nhdsWithin_iff]
+        constructor
+        · exact ((chartAt ℂ z).continuousAt hzsrc).tendsto.mono_left nhdsWithin_le_nhds
+        · filter_upwards [nhdsWithin_le_nhds ((chartAt ℂ z).open_source.mem_nhds hzsrc),
+            self_mem_nhdsWithin] with y hys hyz
+          intro hcon
+          rw [Set.mem_singleton_iff] at hcon
+          exact hyz ((chartAt ℂ z).injOn hys hzsrc hcon)
+      filter_upwards [htend.eventually hcase,
+        nhdsWithin_le_nhds ((chartAt ℂ z).open_source.mem_nhds hzsrc)] with y h1 hys
+      intro hcon
+      apply h1
+      have hyy : Ψ ((chartAt ℂ z).symm (chartAt ℂ z y)) = 0 := by
+        rw [(chartAt ℂ z).left_inv hys]
+        exact hcon
+      exact hyy
+  /- ## dslope toolkit: evaluation, punctured differentiability, nonvanishing. -/
+  have hdslope_eval : ∀ (F : ℂ → ℂ) (c w : ℂ), F c = 0 → w ≠ c →
+      dslope F c w = F w / (w - c) := by
+    intro F c w hFc hwc
+    rw [dslope_of_ne F hwc, slope_def_field, hFc, sub_zero]
+  have hdslope_diff : ∀ (F : ℂ → ℂ) (c w : ℂ), F c = 0 → w ≠ c → AnalyticAt ℂ F w →
+      DifferentiableAt ℂ (dslope F c) w := by
+    intro F c w hFc hwc hFan
+    have hEq : (fun v => F v / (v - c)) =ᶠ[𝓝 w] dslope F c := by
+      filter_upwards [isOpen_compl_singleton.mem_nhds
+        (Set.mem_compl_singleton_iff.mpr hwc)] with v hv
+      have hvc : v ≠ c := Set.mem_compl_singleton_iff.mp hv
+      rw [dslope_of_ne F hvc, slope_def_field, hFc, sub_zero]
+    have hq : DifferentiableAt ℂ (fun v => F v / (v - c)) w :=
+      DifferentiableAt.div hFan.differentiableAt
+        (differentiableAt_id.sub (differentiableAt_const c)) (sub_ne_zero_of_ne hwc)
+    exact hq.congr_of_eventuallyEq hEq.symm
+  have hdslope_ne : ∀ (F : ℂ → ℂ) (c w : ℂ), F c = 0 → w ≠ c → F w ≠ 0 →
+      dslope F c w ≠ 0 := by
+    intro F c w hFc hwc hFw
+    rw [hdslope_eval F c w hFc hwc]
+    exact div_ne_zero hFw (sub_ne_zero_of_ne hwc)
+  /- ## A zero whose modulus is exactly first order has nonzero derivative. -/
+  have hderiv_ne : ∀ (F : ℂ → ℂ) (c : ℂ) (rF : ℝ) (hF : ℂ → ℝ), 0 < rF → F c = 0 →
+      (∀ w ∈ ball c rF, AnalyticAt ℂ F w) → ContinuousAt hF c →
+      (∀ w ∈ ball c rF, w ≠ c → ‖F w‖ = Real.exp (hF w) * ‖w - c‖) →
+      deriv F c ≠ 0 := by
+    intro F c rF hF hrF hFc hFan hhc hFnorm hd0
+    have hdiff : DifferentiableAt ℂ F c := (hFan c (mem_ball_self hrF)).differentiableAt
+    have hcont : ContinuousAt (dslope F c) c := continuousAt_dslope_same.mpr hdiff
+    have hT1 : Tendsto (fun w => ‖dslope F c w‖) (𝓝[≠] c) (𝓝 0) := by
+      have hu1 : Tendsto (dslope F c) (𝓝 c) (𝓝 (dslope F c c)) := hcont
+      rw [dslope_same, hd0] at hu1
+      have hu2 := hu1.norm
+      rw [norm_zero] at hu2
+      exact hu2.mono_left nhdsWithin_le_nhds
+    have hT2 : Tendsto (fun w => Real.exp (hF w)) (𝓝[≠] c) (𝓝 (Real.exp (hF c))) :=
+      Filter.Tendsto.mono_left (Real.continuous_exp.continuousAt.comp hhc)
+        nhdsWithin_le_nhds
+    have hEq : (fun w => ‖dslope F c w‖) =ᶠ[𝓝[≠] c] fun w => Real.exp (hF w) := by
+      filter_upwards [nhdsWithin_le_nhds (ball_mem_nhds c hrF), self_mem_nhdsWithin]
+        with w hwb hwm
+      have hwc : w ≠ c := Set.mem_compl_singleton_iff.mp hwm
+      rw [dslope_of_ne F hwc, slope_def_field, hFc, sub_zero, norm_div,
+        hFnorm w hwb hwc, mul_div_assoc,
+        div_self (norm_ne_zero_iff.mpr (sub_ne_zero_of_ne hwc)), mul_one]
+    have hun := tendsto_nhds_unique (hT1.congr' hEq) hT2
+    exact (Real.exp_pos (hF c)).ne' hun.symm
+  /- ## The special values `0` and `∞` are attained only at the poles. -/
+  have hzero : ∀ x : M, φ x = ((0 : ℂ) : ℂ̂) → x = p₁ := by
+    intro x hx
+    by_contra hxp₁
+    by_cases hxp₂ : x = p₂
+    · rw [hxp₂, h₂] at hx
+      exact OnePoint.infty_ne_coe 0 hx
+    · obtain ⟨w, hw, hwn⟩ := habs x hxp₁ hxp₂
+      rw [hx] at hw
+      have hw0 : (0 : ℂ) = w := OnePoint.coe_eq_coe.mp hw
+      rw [← hw0, norm_zero] at hwn
+      exact (Real.exp_pos _).ne' hwn.symm
+  have hinfty : ∀ x : M, φ x = OnePoint.infty → x = p₂ := by
+    intro x hx
+    by_contra hxp₂
+    by_cases hxp₁ : x = p₁
+    · rw [hxp₁, h₁] at hx
+      exact OnePoint.coe_ne_infty 0 hx
+    · obtain ⟨w, hw, -⟩ := habs x hxp₁ hxp₂
+      rw [hx] at hw
+      exact OnePoint.infty_ne_coe w hw
+  /- ## Fix a collision and dispose of the pole values. -/
+  intro q q' hcol
+  by_contra hqq'
+  by_cases hq0 : φ q = ((0 : ℂ) : ℂ̂)
+  · have hcz : φ q' = ((0 : ℂ) : ℂ̂) := by rw [← hcol]; exact hq0
+    exact hqq' ((hzero q hq0).trans (hzero q' hcz).symm)
+  by_cases hqi : φ q = OnePoint.infty
+  · have hci : φ q' = OnePoint.infty := by rw [← hcol]; exact hqi
+    exact hqq' ((hinfty q hqi).trans (hinfty q' hci).symm)
+  have hqp₁ : q ≠ p₁ := fun h => hq0 (by rw [h, h₁])
+  have hqp₂ : q ≠ p₂ := fun h => hqi (by rw [h, h₂])
+  obtain ⟨w₀, hφq, hw₀n⟩ := habs q hqp₁ hqp₂
+  have hw₀0 : w₀ ≠ 0 := by
+    intro h
+    rw [h, norm_zero] at hw₀n
+    exact (Real.exp_pos _).ne' hw₀n.symm
+  have hφq' : φ q' = (w₀ : ℂ̂) := by rw [← hcol]; exact hφq
+  have hq'p₁ : q' ≠ p₁ := by
+    intro h
+    rw [h, h₁] at hφq'
+    exact hw₀0 (OnePoint.coe_eq_coe.mp hφq'.symm)
+  have hq'p₂ : q' ≠ p₂ := by
+    intro h
+    rw [h, h₂] at hφq'
+    exact OnePoint.infty_ne_coe w₀ hφq'
+  /- ## A fresh coordinate disk centered at `p₁` avoiding `q'` and `p₂`. -/
+  set e₀ : OpenPartialHomeomorph M ℂ := chartAt ℂ p₁ with he₀def
+  have hp₁src : p₁ ∈ e₀.source := mem_chart_source ℂ p₁
+  have hUopen : IsOpen (e₀.target ∩ ⇑e₀.symm ⁻¹' ({q'}ᶜ ∩ {p₂}ᶜ)) :=
+    e₀.isOpen_inter_preimage_symm (isOpen_compl_singleton.inter isOpen_compl_singleton)
+  have hp₁U : e₀ p₁ ∈ e₀.target ∩ ⇑e₀.symm ⁻¹' ({q'}ᶜ ∩ {p₂}ᶜ) := by
+    refine ⟨e₀.map_source hp₁src, ?_⟩
+    rw [Set.mem_preimage, e₀.left_inv hp₁src]
+    exact ⟨Set.mem_compl_singleton_iff.mpr hq'p₁.symm,
+      Set.mem_compl_singleton_iff.mpr hne⟩
+  obtain ⟨εa, hεa, hballa⟩ := Metric.isOpen_iff.mp hUopen _ hp₁U
+  have hra0 : (0 : ℝ) < εa / 2 := half_pos hεa
+  have hrsub : closedBall (e₀ p₁) (εa / 2) ⊆ e₀.target ∩ ⇑e₀.symm ⁻¹' ({q'}ᶜ ∩ {p₂}ᶜ) :=
+    (Metric.closedBall_subset_ball (half_lt_self hεa)).trans hballa
+  set D₀ : CoordDisk M := ⟨p₁, εa / 2, hra0, fun w hw => (hrsub hw).1⟩ with hD₀def
+  have hD₀avoid : ∀ y ∈ D₀.closedCarrier, y ≠ q' ∧ y ≠ p₂ := by
+    rintro y ⟨w, hw, rfl⟩
+    have hav := (hrsub hw).2
+    rw [Set.mem_preimage] at hav
+    exact ⟨Set.mem_compl_singleton_iff.mp hav.1, Set.mem_compl_singleton_iff.mp hav.2⟩
+  have hq'D : q' ∉ D₀.closedCarrier := fun hmem => (hD₀avoid q' hmem).1 rfl
+  have hp₂D : p₂ ∉ D₀.closedCarrier := fun hmem => (hD₀avoid p₂ hmem).2 rfl
+  /- ## The second dipole at the pole pair `(q', p₂)`. -/
+  obtain ⟨G', hG'h, hpole₁', hpole₂', hbdd'⟩ := exists_bipolarGreen D₀ hq'D hp₂D hq'p₂
+  obtain ⟨φ', hφ', hφ'z, hφ'i, habs'⟩ := exists_bipolar_map hq'p₂ hG'h hpole₁' hpole₂'
+  have hinfty' : ∀ x : M, φ' x = OnePoint.infty → x = p₂ := by
+    intro x hx
+    by_contra hxp₂
+    by_cases hxq' : x = q'
+    · rw [hxq', hφ'z] at hx
+      exact OnePoint.coe_ne_infty 0 hx
+    · obtain ⟨u, hu, -⟩ := habs' x hxq' hxp₂
+      rw [hx] at hu
+      exact OnePoint.infty_ne_coe u hu
+  have hφdat : ∀ x : M, x ≠ p₁ → x ≠ p₂ → ∃ u : ℂ, φ x = (u : ℂ̂) ∧ u ≠ 0 ∧
+      ‖u‖ = Real.exp (-(G x)) := by
+    intro x hx1 hx2
+    obtain ⟨u, hu, hun⟩ := habs x hx1 hx2
+    refine ⟨u, hu, ?_, hun⟩
+    intro h
+    rw [h, norm_zero] at hun
+    exact (Real.exp_pos _).ne' hun.symm
+  have hφ'dat : ∀ x : M, x ≠ q' → x ≠ p₂ → ∃ u : ℂ, φ' x = (u : ℂ̂) ∧ u ≠ 0 ∧
+      ‖u‖ = Real.exp (-(G' x)) := by
+    intro x hx1 hx2
+    obtain ⟨u, hu, hun⟩ := habs' x hx1 hx2
+    refine ⟨u, hu, ?_, hun⟩
+    intro h
+    rw [h, norm_zero] at hun
+    exact (Real.exp_pos _).ne' hun.symm
+  /- ## Chart notation at the two singular points of the ratio. -/
+  set χ₁ : OpenPartialHomeomorph M ℂ := chartAt ℂ q' with hχ₁def
+  have hq'src : q' ∈ χ₁.source := mem_chart_source ℂ q'
+  set c₁ : ℂ := χ₁ q' with hc₁def
+  have hsymmc₁ : χ₁.symm c₁ = q' := χ₁.left_inv hq'src
+  set χ₂ : OpenPartialHomeomorph M ℂ := chartAt ℂ p₂ with hχ₂def
+  have hp₂src : p₂ ∈ χ₂.source := mem_chart_source ℂ p₂
+  set c₂ : ℂ := χ₂ p₂ with hc₂def
+  have hsymmc₂ : χ₂.symm c₂ = p₂ := χ₂.left_inv hp₂src
+  obtain ⟨r₁, hr₁pos, hr₁sub, ηq, hηqharm, hηqval⟩ := hpole₁'
+  obtain ⟨s₁, hs₁pos, hs₁sub, ηp, hηpharm, hηpval⟩ := hpole₂
+  /- ## The finite-part ratio `H = (φ − w₀)/φ'` with its removable values. -/
+  obtain ⟨g, hgdef⟩ : ∃ f : ℂ → ℂ,
+      f = fun w => sphereChartFinite (φ (χ₁.symm w)) - w₀ := ⟨_, rfl⟩
+  obtain ⟨g', hg'def⟩ : ∃ f : ℂ → ℂ,
+      f = fun w => sphereChartFinite (φ' (χ₁.symm w)) := ⟨_, rfl⟩
+  obtain ⟨ρ, hρdef⟩ : ∃ f : ℂ → ℂ,
+      f = fun w => sphereChartInfty (φ (χ₂.symm w)) := ⟨_, rfl⟩
+  obtain ⟨ρ', hρ'def⟩ : ∃ f : ℂ → ℂ,
+      f = fun w => sphereChartInfty (φ' (χ₂.symm w)) := ⟨_, rfl⟩
+  obtain ⟨H, hHdef⟩ : ∃ Hf : M → ℂ, Hf = fun x =>
+      if x = q' then dslope g c₁ c₁ / dslope g' c₁ c₁
+      else if x = p₂ then dslope ρ' c₂ c₂ / dslope ρ c₂ c₂
+      else (sphereChartFinite (φ x) - w₀) / sphereChartFinite (φ' x) := ⟨_, rfl⟩
+  /- ## The two decisive values of `H`. -/
+  have hHq : H q = 0 := by
+    simp only [hHdef]
+    rw [if_neg hqq', if_neg hqp₂, hφq, sphereChartFinite_coe, sub_self, zero_div]
+  have hHp₁ : H p₁ ≠ 0 := by
+    obtain ⟨u', hu', hu'0, -⟩ := hφ'dat p₁ (Ne.symm hq'p₁) hne
+    simp only [hHdef]
+    rw [if_neg (Ne.symm hq'p₁), if_neg hne, h₁, sphereChartFinite_coe, hu',
+      sphereChartFinite_coe, zero_sub]
+    exact div_ne_zero (neg_ne_zero.mpr hw₀0) hu'0
+  /- ## Holomorphy of `H` away from the two singular points. -/
+  have hHsm_gen : ∀ x : M, x ≠ q' → x ≠ p₂ → ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω H x := by
+    intro x hx1 hx2
+    have hxsrc : x ∈ (chartAt ℂ x).source := mem_chart_source ℂ x
+    have hφfin : φ x ≠ OnePoint.infty := fun h => hx2 (hinfty x h)
+    have hφ'fin : φ' x ≠ OnePoint.infty := fun h => hx2 (hinfty' x h)
+    obtain ⟨u', hu', hu'0, -⟩ := hφ'dat x hx1 hx2
+    have hT : IsOpen ((chartAt ℂ x).target ∩ ⇑(chartAt ℂ x).symm ⁻¹'
+        ((φ ⁻¹' sphereChartFinite.source ∩ φ' ⁻¹' sphereChartFinite.source) ∩
+          ({q'}ᶜ ∩ {p₂}ᶜ))) :=
+      (chartAt ℂ x).isOpen_inter_preimage_symm
+        (((sphereChartFinite.open_source.preimage hφ.continuous).inter
+          (sphereChartFinite.open_source.preimage hφ'.continuous)).inter
+          (isOpen_compl_singleton.inter isOpen_compl_singleton))
+    have hxT : chartAt ℂ x x ∈ (chartAt ℂ x).target ∩ ⇑(chartAt ℂ x).symm ⁻¹'
+        ((φ ⁻¹' sphereChartFinite.source ∩ φ' ⁻¹' sphereChartFinite.source) ∩
+          ({q'}ᶜ ∩ {p₂}ᶜ)) := by
+      refine ⟨(chartAt ℂ x).map_source hxsrc, ?_⟩
+      rw [Set.mem_preimage, (chartAt ℂ x).left_inv hxsrc]
+      exact ⟨⟨hfinsrc _ hφfin, hfinsrc _ hφ'fin⟩,
+        Set.mem_compl_singleton_iff.mpr hx1, Set.mem_compl_singleton_iff.mpr hx2⟩
+    obtain ⟨R₀, hR₀def⟩ : ∃ f : ℂ → ℂ, f = fun v =>
+        (sphereChartFinite (φ ((chartAt ℂ x).symm v)) - w₀) /
+          sphereChartFinite (φ' ((chartAt ℂ x).symm v)) := ⟨_, rfl⟩
+    have hnum : AnalyticAt ℂ (fun v => sphereChartFinite (φ ((chartAt ℂ x).symm v)))
+        (chartAt ℂ x x) :=
+      hread φ hφ sphereChartFinite hfinmax x _ ((chartAt ℂ x).map_source hxsrc)
+        (by rw [(chartAt ℂ x).left_inv hxsrc]; exact hfinsrc _ hφfin)
+    have hden : AnalyticAt ℂ (fun v => sphereChartFinite (φ' ((chartAt ℂ x).symm v)))
+        (chartAt ℂ x x) :=
+      hread φ' hφ' sphereChartFinite hfinmax x _ ((chartAt ℂ x).map_source hxsrc)
+        (by rw [(chartAt ℂ x).left_inv hxsrc]; exact hfinsrc _ hφ'fin)
+    have hden0 : sphereChartFinite (φ' ((chartAt ℂ x).symm (chartAt ℂ x x))) ≠ 0 := by
+      rw [(chartAt ℂ x).left_inv hxsrc, hu', sphereChartFinite_coe]
+      exact hu'0
+    have hR₀an : AnalyticAt ℂ R₀ (chartAt ℂ x x) := by
+      rw [hR₀def]
+      exact (hnum.sub analyticAt_const).div hden hden0
+    have hHeq : R₀ =ᶠ[𝓝 (chartAt ℂ x x)] H ∘ ⇑(chartAt ℂ x).symm := by
+      filter_upwards [hT.mem_nhds hxT] with v hv
+      have he1 : (chartAt ℂ x).symm v ≠ q' := Set.mem_compl_singleton_iff.mp hv.2.2.1
+      have he2 : (chartAt ℂ x).symm v ≠ p₂ := Set.mem_compl_singleton_iff.mp hv.2.2.2
+      simp only [hR₀def, Function.comp_apply, hHdef]
+      rw [if_neg he1, if_neg he2]
+    exact hbuild H x (hR₀an.congr hHeq)
+  /- ## Holomorphy of `H` at `q'` (zero-over-zero removable singularity). -/
+  have hHsm_q' : ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω H q' := by
+    have hOq' : IsOpen (χ₁.target ∩ ⇑χ₁.symm ⁻¹'
+        ((φ ⁻¹' sphereChartFinite.source ∩ φ' ⁻¹' sphereChartFinite.source) ∩
+          {p₂}ᶜ)) :=
+      χ₁.isOpen_inter_preimage_symm
+        (((sphereChartFinite.open_source.preimage hφ.continuous).inter
+          (sphereChartFinite.open_source.preimage hφ'.continuous)).inter
+          isOpen_compl_singleton)
+    have hc₁mem : c₁ ∈ χ₁.target ∩ ⇑χ₁.symm ⁻¹'
+        ((φ ⁻¹' sphereChartFinite.source ∩ φ' ⁻¹' sphereChartFinite.source) ∩
+          {p₂}ᶜ) := by
+      refine ⟨χ₁.map_source hq'src, ?_⟩
+      rw [Set.mem_preimage, hsymmc₁]
+      refine ⟨⟨hfinsrc _ ?_, hfinsrc _ ?_⟩, Set.mem_compl_singleton_iff.mpr hq'p₂⟩
+      · rw [hφq']
+        exact OnePoint.coe_ne_infty w₀
+      · rw [hφ'z]
+        exact OnePoint.coe_ne_infty 0
+    obtain ⟨r₂, hr₂pos, hr₂sub⟩ := Metric.isOpen_iff.mp hOq' _ hc₁mem
+    set r : ℝ := min r₁ r₂ with hrdef
+    have hr : 0 < r := lt_min hr₁pos hr₂pos
+    have hrb₁ : ball c₁ r ⊆ ball c₁ r₁ := ball_subset_ball (min_le_left _ _)
+    have hrb₂ : ball c₁ r ⊆ χ₁.target ∩ ⇑χ₁.symm ⁻¹'
+        ((φ ⁻¹' sphereChartFinite.source ∩ φ' ⁻¹' sphereChartFinite.source) ∩
+          {p₂}ᶜ) := (ball_subset_ball (min_le_right _ _)).trans hr₂sub
+    have hgan : ∀ w ∈ ball c₁ r, AnalyticAt ℂ g w := by
+      intro w hw
+      have h1 := hread φ hφ sphereChartFinite hfinmax q' w (hrb₂ hw).1 (hrb₂ hw).2.1.1
+      simp only [hgdef]
+      exact h1.sub analyticAt_const
+    have hg'an : ∀ w ∈ ball c₁ r, AnalyticAt ℂ g' w := by
+      intro w hw
+      have h1 := hread φ' hφ' sphereChartFinite hfinmax q' w (hrb₂ hw).1 (hrb₂ hw).2.1.2
+      simp only [hg'def]
+      exact h1
+    have hg0 : g c₁ = 0 := by
+      simp only [hgdef]
+      rw [hsymmc₁, hφq', sphereChartFinite_coe, sub_self]
+    have hg'0 : g' c₁ = 0 := by
+      simp only [hg'def]
+      rw [hsymmc₁, hφ'z, sphereChartFinite_coe]
+    have hsymm_ne₁ : ∀ w ∈ ball c₁ r, w ≠ c₁ → χ₁.symm w ≠ q' := by
+      intro w hw hwc h
+      have hwt : w ∈ χ₁.target := (hrb₂ hw).1
+      have h2 : χ₁ (χ₁.symm w) = w := χ₁.right_inv hwt
+      rw [h] at h2
+      exact hwc h2.symm
+    have hg'dat : ∀ w ∈ ball c₁ r, w ≠ c₁ →
+        g' w ≠ 0 ∧ ‖g' w‖ = Real.exp (-(ηq w)) * ‖w - c₁‖ := by
+      intro w hw hwc
+      have hnq' : χ₁.symm w ≠ q' := hsymm_ne₁ w hw hwc
+      have hnp₂ : χ₁.symm w ≠ p₂ := Set.mem_compl_singleton_iff.mp (hrb₂ hw).2.2
+      obtain ⟨u, hu, hu0, hun⟩ := hφ'dat (χ₁.symm w) hnq' hnp₂
+      have hval : g' w = u := by
+        simp only [hg'def]
+        rw [hu, sphereChartFinite_coe]
+      have hballm : w ∈ ball c₁ r₁ \ {c₁} :=
+        ⟨hrb₁ hw, fun h => hwc (Set.mem_singleton_iff.mp h)⟩
+      have hη := hηqval w hballm
+      have hGval : -(G' (χ₁.symm w)) = -(ηq w) + Real.log ‖w - c₁‖ := by linarith
+      have hpos : 0 < ‖w - c₁‖ := norm_pos_iff.mpr (sub_ne_zero_of_ne hwc)
+      refine ⟨by rw [hval]; exact hu0, ?_⟩
+      rw [hval, hun, hGval, Real.exp_add, Real.exp_log hpos]
+    have hg'deriv : deriv g' c₁ ≠ 0 := by
+      refine hderiv_ne g' c₁ r (fun w => -(ηq w)) hr hg'0 hg'an ?_
+        (fun w hw hwc => (hg'dat w hw hwc).2)
+      exact (hηqharm c₁ (mem_ball_self hr₁pos)).1.continuousAt.neg
+    obtain ⟨A₁, hA₁def⟩ : ∃ f : ℂ → ℂ,
+        f = fun w => dslope g c₁ w / dslope g' c₁ w := ⟨_, rfl⟩
+    have hA₁cont : ContinuousAt A₁ c₁ := by
+      have hc1 : ContinuousAt (dslope g c₁) c₁ :=
+        continuousAt_dslope_same.mpr (hgan c₁ (mem_ball_self hr)).differentiableAt
+      have hc2 : ContinuousAt (dslope g' c₁) c₁ :=
+        continuousAt_dslope_same.mpr (hg'an c₁ (mem_ball_self hr)).differentiableAt
+      have hc3 : dslope g' c₁ c₁ ≠ 0 := by
+        rw [dslope_same]
+        exact hg'deriv
+      simp only [hA₁def]
+      exact hc1.div hc2 hc3
+    have hA₁diff : ∀ᶠ w in 𝓝[≠] c₁, DifferentiableAt ℂ A₁ w := by
+      filter_upwards [nhdsWithin_le_nhds (ball_mem_nhds c₁ hr), self_mem_nhdsWithin]
+        with w hwb hwm
+      have hwc : w ≠ c₁ := Set.mem_compl_singleton_iff.mp hwm
+      have hd1 := hdslope_diff g c₁ w hg0 hwc (hgan w hwb)
+      have hd2 := hdslope_diff g' c₁ w hg'0 hwc (hg'an w hwb)
+      have hd3 : dslope g' c₁ w ≠ 0 :=
+        hdslope_ne g' c₁ w hg'0 hwc (hg'dat w hwb hwc).1
+      simp only [hA₁def]
+      exact hd1.div hd2 hd3
+    have hA₁an : AnalyticAt ℂ A₁ c₁ :=
+      Complex.analyticAt_of_differentiable_on_punctured_nhds_of_continuousAt
+        hA₁diff hA₁cont
+    have hHq'eq : A₁ =ᶠ[𝓝 c₁] H ∘ ⇑χ₁.symm := by
+      filter_upwards [ball_mem_nhds c₁ hr] with w hwb
+      by_cases hwc : w = c₁
+      · subst hwc
+        simp only [hA₁def, Function.comp_apply]
+        rw [hsymmc₁]
+        simp only [hHdef]
+        rw [if_pos trivial]
+      · have hnq' : χ₁.symm w ≠ q' := hsymm_ne₁ w hwb hwc
+        have hnp₂ : χ₁.symm w ≠ p₂ := Set.mem_compl_singleton_iff.mp (hrb₂ hwb).2.2
+        simp only [hA₁def, Function.comp_apply, hHdef]
+        rw [if_neg hnq', if_neg hnp₂, hdslope_eval g c₁ w hg0 hwc,
+          hdslope_eval g' c₁ w hg'0 hwc,
+          div_div_div_cancel_right₀ (sub_ne_zero_of_ne hwc)]
+        simp only [hgdef, hg'def]
+    exact hbuild H q' (hA₁an.congr hHq'eq)
+  /- ## Holomorphy of `H` at `p₂` (pole-over-pole removable singularity). -/
+  have hHsm_p₂ : ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω H p₂ := by
+    have hOp₂ : IsOpen (χ₂.target ∩ ⇑χ₂.symm ⁻¹'
+        ((φ ⁻¹' sphereChartInfty.source ∩ φ' ⁻¹' sphereChartInfty.source) ∩
+          ({p₁}ᶜ ∩ {q'}ᶜ))) :=
+      χ₂.isOpen_inter_preimage_symm
+        (((sphereChartInfty.open_source.preimage hφ.continuous).inter
+          (sphereChartInfty.open_source.preimage hφ'.continuous)).inter
+          (isOpen_compl_singleton.inter isOpen_compl_singleton))
+    have hc₂mem : c₂ ∈ χ₂.target ∩ ⇑χ₂.symm ⁻¹'
+        ((φ ⁻¹' sphereChartInfty.source ∩ φ' ⁻¹' sphereChartInfty.source) ∩
+          ({p₁}ᶜ ∩ {q'}ᶜ)) := by
+      refine ⟨χ₂.map_source hp₂src, ?_⟩
+      rw [Set.mem_preimage, hsymmc₂]
+      refine ⟨⟨hinfsrc _ ?_, hinfsrc _ ?_⟩, Set.mem_compl_singleton_iff.mpr hne.symm,
+        Set.mem_compl_singleton_iff.mpr (Ne.symm hq'p₂)⟩
+      · rw [h₂]
+        exact OnePoint.infty_ne_coe 0
+      · rw [hφ'i]
+        exact OnePoint.infty_ne_coe 0
+    obtain ⟨s₂, hs₂pos, hs₂sub⟩ := Metric.isOpen_iff.mp hOp₂ _ hc₂mem
+    set s : ℝ := min s₁ s₂ with hsdef
+    have hs : 0 < s := lt_min hs₁pos hs₂pos
+    have hsb₁ : ball c₂ s ⊆ ball c₂ s₁ := ball_subset_ball (min_le_left _ _)
+    have hsb₂ : ball c₂ s ⊆ χ₂.target ∩ ⇑χ₂.symm ⁻¹'
+        ((φ ⁻¹' sphereChartInfty.source ∩ φ' ⁻¹' sphereChartInfty.source) ∩
+          ({p₁}ᶜ ∩ {q'}ᶜ)) := (ball_subset_ball (min_le_right _ _)).trans hs₂sub
+    have hρan : ∀ w ∈ ball c₂ s, AnalyticAt ℂ ρ w := by
+      intro w hw
+      have h1 := hread φ hφ sphereChartInfty hinfmax p₂ w (hsb₂ hw).1 (hsb₂ hw).2.1.1
+      simp only [hρdef]
+      exact h1
+    have hρ'an : ∀ w ∈ ball c₂ s, AnalyticAt ℂ ρ' w := by
+      intro w hw
+      have h1 := hread φ' hφ' sphereChartInfty hinfmax p₂ w (hsb₂ hw).1 (hsb₂ hw).2.1.2
+      simp only [hρ'def]
+      exact h1
+    have hρ0 : ρ c₂ = 0 := by
+      simp only [hρdef]
+      rw [hsymmc₂, h₂, hinfval0]
+    have hρ'0 : ρ' c₂ = 0 := by
+      simp only [hρ'def]
+      rw [hsymmc₂, hφ'i, hinfval0]
+    have hsymm_ne₂ : ∀ w ∈ ball c₂ s, w ≠ c₂ → χ₂.symm w ≠ p₂ := by
+      intro w hw hwc h
+      have hwt : w ∈ χ₂.target := (hsb₂ hw).1
+      have h2 : χ₂ (χ₂.symm w) = w := χ₂.right_inv hwt
+      rw [h] at h2
+      exact hwc h2.symm
+    have hρdat : ∀ w ∈ ball c₂ s, w ≠ c₂ →
+        ρ w ≠ 0 ∧ ‖ρ w‖ = Real.exp (ηp w) * ‖w - c₂‖ := by
+      intro w hw hwc
+      have hnp₁ : χ₂.symm w ≠ p₁ := Set.mem_compl_singleton_iff.mp (hsb₂ hw).2.2.1
+      have hnp₂ : χ₂.symm w ≠ p₂ := hsymm_ne₂ w hw hwc
+      obtain ⟨u, hu, hu0, hun⟩ := hφdat (χ₂.symm w) hnp₁ hnp₂
+      have hval : ρ w = u⁻¹ := by
+        simp only [hρdef]
+        rw [hu, hinfval u hu0]
+      have hballm : w ∈ ball c₂ s₁ \ {c₂} :=
+        ⟨hsb₁ hw, fun h => hwc (Set.mem_singleton_iff.mp h)⟩
+      have hη := hηpval w hballm
+      have hpos : 0 < ‖w - c₂‖ := norm_pos_iff.mpr (sub_ne_zero_of_ne hwc)
+      have hGx : G (χ₂.symm w) = ηp w + Real.log ‖w - c₂‖ := by linarith
+      refine ⟨by rw [hval]; exact inv_ne_zero hu0, ?_⟩
+      rw [hval, norm_inv, hun, ← Real.exp_neg, neg_neg, hGx, Real.exp_add,
+        Real.exp_log hpos]
+    have hρderiv : deriv ρ c₂ ≠ 0 := by
+      refine hderiv_ne ρ c₂ s ηp hs hρ0 hρan ?_ (fun w hw hwc => (hρdat w hw hwc).2)
+      exact (hηpharm c₂ (mem_ball_self hs₁pos)).1.continuousAt
+    obtain ⟨A₂, hA₂def⟩ : ∃ f : ℂ → ℂ,
+        f = fun w => dslope ρ' c₂ w / dslope ρ c₂ w * (1 - w₀ * ρ w) := ⟨_, rfl⟩
+    have hA₂cont : ContinuousAt A₂ c₂ := by
+      have hc1 : ContinuousAt (dslope ρ' c₂) c₂ :=
+        continuousAt_dslope_same.mpr (hρ'an c₂ (mem_ball_self hs)).differentiableAt
+      have hc2 : ContinuousAt (dslope ρ c₂) c₂ :=
+        continuousAt_dslope_same.mpr (hρan c₂ (mem_ball_self hs)).differentiableAt
+      have hc3 : dslope ρ c₂ c₂ ≠ 0 := by
+        rw [dslope_same]
+        exact hρderiv
+      have hc4 : ContinuousAt (fun w => 1 - w₀ * ρ w) c₂ :=
+        continuousAt_const.sub
+          (continuousAt_const.mul (hρan c₂ (mem_ball_self hs)).continuousAt)
+      simp only [hA₂def]
+      exact (hc1.div hc2 hc3).mul hc4
+    have hA₂diff : ∀ᶠ w in 𝓝[≠] c₂, DifferentiableAt ℂ A₂ w := by
+      filter_upwards [nhdsWithin_le_nhds (ball_mem_nhds c₂ hs), self_mem_nhdsWithin]
+        with w hwb hwm
+      have hwc : w ≠ c₂ := Set.mem_compl_singleton_iff.mp hwm
+      have hd1 := hdslope_diff ρ' c₂ w hρ'0 hwc (hρ'an w hwb)
+      have hd2 := hdslope_diff ρ c₂ w hρ0 hwc (hρan w hwb)
+      have hd3 : dslope ρ c₂ w ≠ 0 :=
+        hdslope_ne ρ c₂ w hρ0 hwc (hρdat w hwb hwc).1
+      have hd4 : DifferentiableAt ℂ (fun v => 1 - w₀ * ρ v) w :=
+        (differentiableAt_const _).sub
+          ((differentiableAt_const _).mul (hρan w hwb).differentiableAt)
+      simp only [hA₂def]
+      exact (hd1.div hd2 hd3).mul hd4
+    have hA₂an : AnalyticAt ℂ A₂ c₂ :=
+      Complex.analyticAt_of_differentiable_on_punctured_nhds_of_continuousAt
+        hA₂diff hA₂cont
+    have hHp₂eq : A₂ =ᶠ[𝓝 c₂] H ∘ ⇑χ₂.symm := by
+      filter_upwards [ball_mem_nhds c₂ hs] with w hwb
+      by_cases hwc : w = c₂
+      · subst hwc
+        simp only [hA₂def, Function.comp_apply]
+        rw [hρ0, mul_zero, sub_zero, mul_one, hsymmc₂]
+        simp only [hHdef]
+        rw [if_neg (Ne.symm hq'p₂), if_pos trivial]
+      · have hnp₂ : χ₂.symm w ≠ p₂ := hsymm_ne₂ w hwb hwc
+        have hnq' : χ₂.symm w ≠ q' := Set.mem_compl_singleton_iff.mp (hsb₂ hwb).2.2.2
+        have hnp₁ : χ₂.symm w ≠ p₁ := Set.mem_compl_singleton_iff.mp (hsb₂ hwb).2.2.1
+        obtain ⟨u, hu, hu0, -⟩ := hφdat (χ₂.symm w) hnp₁ hnp₂
+        obtain ⟨u', hu', hu'0, -⟩ := hφ'dat (χ₂.symm w) hnq' hnp₂
+        have hρw : ρ w = u⁻¹ := by
+          simp only [hρdef]
+          rw [hu, hinfval u hu0]
+        have hρ'w : ρ' w = u'⁻¹ := by
+          simp only [hρ'def]
+          rw [hu', hinfval u' hu'0]
+        simp only [hA₂def, Function.comp_apply, hHdef]
+        rw [if_neg hnq', if_neg hnp₂, hu, hu', sphereChartFinite_coe,
+          sphereChartFinite_coe, hdslope_eval ρ' c₂ w hρ'0 hwc,
+          hdslope_eval ρ c₂ w hρ0 hwc,
+          div_div_div_cancel_right₀ (sub_ne_zero_of_ne hwc), hρw, hρ'w]
+        field_simp
+    exact hbuild H p₂ (hA₂an.congr hHp₂eq)
+  have hHsm : ContMDiff 𝓘(ℂ) 𝓘(ℂ) ω H := by
+    intro x
+    by_cases hx1 : x = q'
+    · subst hx1
+      exact hHsm_q'
+    by_cases hx2 : x = p₂
+    · subst hx2
+      exact hHsm_p₂
+    exact hHsm_gen x hx1 hx2
+  /- ## Endgame case split on compactness of the surface. -/
+  by_cases hcpt : CompactSpace M
+  · -- Compact: a nonconstant holomorphic function has clopen plane image.
+    haveI := hcpt
+    have hnc : ¬ ∃ cc : ℂ, ∀ x : M, H x = cc := by
+      rintro ⟨cc, hcc⟩
+      apply hHp₁
+      rw [hcc p₁, ← hcc q]
+      exact hHq
+    have hopen : IsOpenMap H := isOpenMap_of_contMDiff_of_not_const hHsm hnc
+    have hclopen : IsClopen (Set.range H) :=
+      ⟨(isCompact_range hHsm.continuous).isClosed, hopen.isOpen_range⟩
+    have hrange : Set.range H = Set.univ :=
+      hclopen.eq_univ ⟨H q, Set.mem_range_self q⟩
+    obtain ⟨CB, hCB⟩ := isBounded_iff_forall_norm_le.mp
+      (isCompact_range hHsm.continuous).isBounded
+    have hmem : ((max CB 0 + 1 : ℝ) : ℂ) ∈ Set.range H := by
+      rw [hrange]
+      exact Set.mem_univ _
+    have hle := hCB _ hmem
+    have h0C : (0 : ℝ) ≤ max CB 0 := le_max_right CB 0
+    rw [Complex.norm_real, Real.norm_eq_abs, abs_of_pos (by linarith)] at hle
+    have hCle : CB ≤ max CB 0 := le_max_left CB 0
+    linarith
+  · -- Noncompact: the bounded-ratio comparison forces a Green's function at `q`.
+    haveI hncM : NoncompactSpace M := not_compactSpace_iff.mp hcpt
+    /- ## The per-candidate Blaschke-type comparison at the pole `q`. -/
+    have MAIN : ∀ Ψ : M → ℂ, (∀ y, ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω Ψ y) →
+        (∀ y, ‖Ψ y‖ < 1) → Ψ q = 0 → (∃ y₀, Ψ y₀ ≠ 0) →
+        ∀ x, x ≠ q → BddAbove ((fun v => v x) '' greenFamily q) := by
+      intro Ψ hΨm hΨlt hΨq hΨex
+      have hΨc : Continuous Ψ := continuous_iff_continuousAt.mpr fun y => (hΨm y).continuousAt
+      have hqsrc : q ∈ (chartAt ℂ q).source := mem_chart_source ℂ q
+      have hcq : (chartAt ℂ q).symm (chartAt ℂ q q) = q := (chartAt ℂ q).left_inv hqsrc
+      -- Punctured-neighborhood nonvanishing at the pole, in the chart.
+      have hisoq := hisoM Ψ hΨm hΨex q hΨq
+      obtain ⟨W0, hW0sub, hW0open, hqW0⟩ :=
+        _root_.mem_nhds_iff.mp (eventually_nhdsWithin_iff.mp hisoq)
+      -- A chart ball around the pole inside the chart target whose pullback lies in `W0`.
+      have hopen1 : IsOpen ((chartAt ℂ q).target ∩ (chartAt ℂ q).symm ⁻¹' W0) :=
+        (chartAt ℂ q).isOpen_inter_preimage_symm hW0open
+      have hmem1 : chartAt ℂ q q ∈ (chartAt ℂ q).target ∩ (chartAt ℂ q).symm ⁻¹' W0 := by
+        refine ⟨(chartAt ℂ q).map_source hqsrc, ?_⟩
+        rw [Set.mem_preimage, hcq]
+        exact hqW0
+      obtain ⟨rr, hrr, hrrsub⟩ := Metric.isOpen_iff.1 hopen1 (chartAt ℂ q q) hmem1
+      -- The small pole disk `V'` and its compact closure barrel `K'`.
+      have hrr2 : 0 < rr / 2 := by linarith
+      have hcbsub : closedBall (chartAt ℂ q q) (rr / 2) ⊆
+          (chartAt ℂ q).target ∩ (chartAt ℂ q).symm ⁻¹' W0 :=
+        (Metric.closedBall_subset_ball (by linarith)).trans hrrsub
+      obtain ⟨V', hV'def⟩ : ∃ S : Set M,
+          S = (chartAt ℂ q).source ∩ chartAt ℂ q ⁻¹' ball (chartAt ℂ q q) (rr / 2) := ⟨_, rfl⟩
+      have hV'open : IsOpen V' := by
+        rw [hV'def]
+        exact (chartAt ℂ q).continuousOn.isOpen_inter_preimage (chartAt ℂ q).open_source
+          isOpen_ball
+      have hqV' : q ∈ V' := by
+        rw [hV'def]
+        exact ⟨hqsrc, by rw [Set.mem_preimage]; exact mem_ball_self hrr2⟩
+      -- Nonvanishing of `Ψ` on the punctured pole disk (pullback of `W0`).
+      have hV'ne : ∀ y ∈ V', y ≠ q → Ψ y ≠ 0 := by
+        intro y hy hyq
+        rw [hV'def] at hy
+        have h1 : chartAt ℂ q y ∈ ball (chartAt ℂ q q) rr :=
+          ball_subset_ball (by linarith) hy.2
+        have h2 : (chartAt ℂ q).symm (chartAt ℂ q y) ∈ W0 := (hrrsub h1).2
+        rw [(chartAt ℂ q).left_inv hy.1] at h2
+        exact hW0sub h2 hyq
+      -- The compact barrel and the boundary sphere.
+      obtain ⟨K', hK'def⟩ : ∃ S : Set M,
+          S = (chartAt ℂ q).symm '' closedBall (chartAt ℂ q q) (rr / 2) := ⟨_, rfl⟩
+      have hK'cp : IsCompact K' := by
+        rw [hK'def]
+        exact (isCompact_closedBall _ _).image_of_continuousOn
+          ((chartAt ℂ q).continuousOn_symm.mono (hcbsub.trans Set.inter_subset_left))
+      have hV'K' : V' ⊆ K' := by
+        intro y hy
+        rw [hV'def] at hy
+        rw [hK'def]
+        exact ⟨chartAt ℂ q y, ball_subset_closedBall hy.2, (chartAt ℂ q).left_inv hy.1⟩
+      have hclosV' : closure V' ⊆ K' :=
+        closure_minimal hV'K' hK'cp.isClosed
+      -- Points of the barrel off the disk sit on the boundary sphere, where `Ψ ≠ 0`.
+      have hK'edge : ∀ y ∈ K', y ∉ V' →
+          y ∈ (chartAt ℂ q).symm '' sphere (chartAt ℂ q q) (rr / 2) := by
+        intro y hy hyV'
+        rw [hK'def] at hy
+        obtain ⟨w, hw, rfl⟩ := hy
+        have hwt : w ∈ (chartAt ℂ q).target := (hcbsub hw).1
+        have hysrc : (chartAt ℂ q).symm w ∈ (chartAt ℂ q).source := (chartAt ℂ q).map_target hwt
+        have hwch : chartAt ℂ q ((chartAt ℂ q).symm w) = w := (chartAt ℂ q).right_inv hwt
+        have hnb : w ∉ ball (chartAt ℂ q q) (rr / 2) := by
+          intro hwb
+          apply hyV'
+          rw [hV'def]
+          exact ⟨hysrc, by rw [Set.mem_preimage, hwch]; exact hwb⟩
+        have hd : dist w (chartAt ℂ q q) = rr / 2 := by
+          have h1 := mem_closedBall.1 hw
+          have h2 : ¬ dist w (chartAt ℂ q q) < rr / 2 := fun h => hnb (mem_ball.2 h)
+          linarith [not_lt.mp h2]
+        exact ⟨w, mem_sphere.2 hd, rfl⟩
+      have hedge_ne : ∀ y ∈ (chartAt ℂ q).symm '' sphere (chartAt ℂ q q) (rr / 2), Ψ y ≠ 0 := by
+        rintro y ⟨w, hw, rfl⟩
+        have hwb : w ∈ ball (chartAt ℂ q q) rr := by
+          rw [mem_ball]
+          rw [mem_sphere.1 hw]
+          linarith
+        have hwt : w ∈ (chartAt ℂ q).target := (hrrsub hwb).1
+        have hW0mem : (chartAt ℂ q).symm w ∈ W0 := (hrrsub hwb).2
+        have hyne : (chartAt ℂ q).symm w ≠ q := by
+          intro hcon
+          have h1 : chartAt ℂ q ((chartAt ℂ q).symm w) = w := (chartAt ℂ q).right_inv hwt
+          rw [hcon] at h1
+          have h2 : dist w (chartAt ℂ q q) = rr / 2 := mem_sphere.1 hw
+          rw [← h1, dist_self] at h2
+          linarith
+        exact hW0sub hW0mem hyne
+      -- The minimum of `‖Ψ‖` on the boundary sphere is positive.
+      have hS'cp : IsCompact ((chartAt ℂ q).symm '' sphere (chartAt ℂ q q) (rr / 2)) := by
+        refine (isCompact_sphere _ _).image_of_continuousOn ?_
+        refine (chartAt ℂ q).continuousOn_symm.mono ?_
+        refine (sphere_subset_closedBall.trans ?_)
+        exact hcbsub.trans Set.inter_subset_left
+      have hS'ne : ((chartAt ℂ q).symm '' sphere (chartAt ℂ q q) (rr / 2)).Nonempty :=
+        Set.Nonempty.image _ (NormedSpace.sphere_nonempty.2 hrr2.le)
+      obtain ⟨ym, hymS, hymmin⟩ := hS'cp.exists_isMinOn hS'ne (hΨc.norm.continuousOn)
+      have hm0 : 0 < ‖Ψ ym‖ := norm_pos_iff.2 (hedge_ne ym hymS)
+      -- The truncated pole-adapted logarithm family.
+      obtain ⟨Λ, hΛdef⟩ : ∃ Λ : ℝ → M → ℝ, Λ = fun N x =>
+          if x ∈ V' then Real.log ‖Ψ x‖
+          else if Ψ x = 0 then -N else max (Real.log ‖Ψ x‖) (-N) := ⟨_, rfl⟩
+      have hΛ1 : ∀ N (x : M), x ∈ V' → Λ N x = Real.log ‖Ψ x‖ := by
+        intro N x hx
+        simp only [hΛdef]
+        exact if_pos hx
+      have hΛ2 : ∀ N (x : M), x ∉ V' → Ψ x = 0 → Λ N x = -N := by
+        intro N x hx hx0
+        simp only [hΛdef]
+        rw [if_neg hx, if_pos hx0]
+      have hΛ3 : ∀ N (x : M), x ∉ V' → Ψ x ≠ 0 → Λ N x = max (Real.log ‖Ψ x‖) (-N) := by
+        intro N x hx hx0
+        simp only [hΛdef]
+        rw [if_neg hx, if_neg hx0]
+      -- The truncation is nonpositive.
+      have hΛle : ∀ N, 0 < N → ∀ x : M, Λ N x ≤ 0 := by
+        intro N hN x
+        by_cases hx : x ∈ V'
+        · rw [hΛ1 N x hx]
+          exact Real.log_nonpos (norm_nonneg _) (hΨlt x).le
+        · by_cases hx0 : Ψ x = 0
+          · rw [hΛ2 N x hx hx0]; linarith
+          · rw [hΛ3 N x hx hx0]
+            refine max_le ?_ (by linarith)
+            exact Real.log_nonpos (norm_nonneg _) (hΨlt x).le
+      -- Subharmonicity of the truncation off the pole, for large truncation levels.
+      have hΛsub : ∀ N, -Real.log (‖Ψ ym‖ / 2) ≤ N → ∀ x : M, x ≠ q →
+          MSubharmonicAt (Λ N) x := by
+        intro N hN x hxq
+        by_cases hxV' : x ∈ V'
+        · -- near the pole: the truncation is the genuine `log‖Ψ‖`, harmonic there
+          have hO : IsOpen (V' ∩ {q}ᶜ) := hV'open.inter isOpen_compl_singleton
+          have hxO : x ∈ V' ∩ {q}ᶜ := ⟨hxV', hxq⟩
+          have hEq : Set.EqOn (fun y => Real.log ‖Ψ y‖) (Λ N) (V' ∩ {q}ᶜ) := by
+            intro y hy
+            exact (hΛ1 N y hy.1).symm
+          exact hcongM _ _ x _ hO hxO hEq
+            ((hlogM Ψ hΨm x (hV'ne x hxV' hxq)).msubharmonicAt)
+        · by_cases hxm : ‖Ψ ym‖ / 2 < ‖Ψ x‖
+          · -- moderate modulus: the truncation agrees with the genuine `log‖Ψ‖`
+            have hO : IsOpen {y : M | ‖Ψ ym‖ / 2 < ‖Ψ y‖} :=
+              isOpen_lt continuous_const hΨc.norm
+            have hEq : Set.EqOn (fun y => Real.log ‖Ψ y‖) (Λ N)
+                {y : M | ‖Ψ ym‖ / 2 < ‖Ψ y‖} := by
+              intro y hy
+              have hy' : ‖Ψ ym‖ / 2 < ‖Ψ y‖ := hy
+              by_cases hyV' : y ∈ V'
+              · exact (hΛ1 N y hyV').symm
+              · have hy0 : Ψ y ≠ 0 := by
+                  intro hcon
+                  rw [hcon, norm_zero] at hy'
+                  linarith
+                rw [hΛ3 N y hyV' hy0]
+                have h1 : -N ≤ Real.log ‖Ψ y‖ := by
+                  have h2 : Real.log (‖Ψ ym‖ / 2) ≤ Real.log ‖Ψ y‖ :=
+                    Real.log_le_log (by linarith) hy'.le
+                  linarith
+                exact (max_eq_left h1).symm
+            have hx0 : Ψ x ≠ 0 := by
+              intro hcon
+              rw [hcon, norm_zero] at hxm
+              linarith
+            exact hcongM _ _ x _ hO hxm hEq ((hlogM Ψ hΨm x hx0).msubharmonicAt)
+          · -- small modulus away from the pole disk: use the plain truncated form
+            have hxK' : x ∉ closure V' := by
+              intro hcon
+              by_cases hxV2 : x ∈ V'
+              · exact hxV' hxV2
+              · have h1 := hK'edge x (hclosV' hcon) hxV2
+                have h4 : ‖Ψ ym‖ ≤ ‖Ψ x‖ := hymmin h1
+                have h5 : 0 < ‖Ψ ym‖ := hm0
+                linarith [not_lt.mp hxm]
+            have hOc : IsOpen ((closure V')ᶜ : Set M) := isClosed_closure.isOpen_compl
+            by_cases hx0 : Ψ x = 0
+            · -- constant `−N` near a zero of `Ψ`
+              have hO : IsOpen ((closure V')ᶜ ∩ Ψ ⁻¹' ball 0 (Real.exp (-N))) :=
+                hOc.inter (isOpen_ball.preimage hΨc)
+              have hxO : x ∈ (closure V')ᶜ ∩ Ψ ⁻¹' ball 0 (Real.exp (-N)) := by
+                refine ⟨hxK', ?_⟩
+                rw [Set.mem_preimage, hx0]
+                exact mem_ball_self (Real.exp_pos _)
+              have hEq : Set.EqOn (fun _ : M => (-N : ℝ)) (Λ N)
+                  ((closure V')ᶜ ∩ Ψ ⁻¹' ball 0 (Real.exp (-N))) := by
+                rintro y ⟨hy1, hy2⟩
+                have hyV' : y ∉ V' := fun hcon => hy1 (subset_closure hcon)
+                by_cases hy0 : Ψ y = 0
+                · exact (hΛ2 N y hyV' hy0).symm
+                · rw [Set.mem_preimage, mem_ball_zero_iff] at hy2
+                  have h2 : Real.log ‖Ψ y‖ ≤ -N := by
+                    have h3 := Real.log_lt_log (norm_pos_iff.mpr hy0) hy2
+                    rw [Real.log_exp] at h3
+                    exact h3.le
+                  rw [hΛ3 N y hyV' hy0]
+                  exact (max_eq_right h2).symm
+              exact hcongM _ _ x _ hO hxO hEq
+                ((mharmonicAt_const (x := x) (a := (-N : ℝ))).msubharmonicAt)
+            · -- the max of the harmonic `log‖Ψ‖` and the constant `−N`
+              have hO : IsOpen ((closure V')ᶜ ∩ Ψ ⁻¹' {(0 : ℂ)}ᶜ) :=
+                hOc.inter (isOpen_compl_singleton.preimage hΨc)
+              have hxO : x ∈ (closure V')ᶜ ∩ Ψ ⁻¹' {(0 : ℂ)}ᶜ := ⟨hxK', hx0⟩
+              have hEq : Set.EqOn (fun y => max (Real.log ‖Ψ y‖) (-N)) (Λ N)
+                  ((closure V')ᶜ ∩ Ψ ⁻¹' {(0 : ℂ)}ᶜ) := by
+                rintro y ⟨hy1, hy2⟩
+                have hyV' : y ∉ V' := fun hcon => hy1 (subset_closure hcon)
+                exact (hΛ3 N y hyV' hy2).symm
+              have hmax : MSubharmonicAt (fun y => max (Real.log ‖Ψ y‖) (-N)) x :=
+                MSubharmonicAt.max ((hlogM Ψ hΨm x hx0).msubharmonicAt)
+                  ((mharmonicAt_const (x := x) (a := (-N : ℝ))).msubharmonicAt)
+              exact hcongM _ _ x _ hO hxO hEq hmax
+      -- The chart map sends the punctured filter at `q` into the punctured filter at `c_q`.
+      have htendq : Tendsto (chartAt ℂ q) (𝓝[≠] q) (𝓝[≠] (chartAt ℂ q q)) := by
+        rw [tendsto_nhdsWithin_iff]
+        constructor
+        · exact ((chartAt ℂ q).continuousAt hqsrc).tendsto.mono_left nhdsWithin_le_nhds
+        · filter_upwards [nhdsWithin_le_nhds ((chartAt ℂ q).open_source.mem_nhds hqsrc),
+            self_mem_nhdsWithin] with y hys hyq
+          intro hcon
+          rw [Set.mem_singleton_iff] at hcon
+          exact hyq ((chartAt ℂ q).injOn hys hqsrc hcon)
+      -- First-order vanishing of `Ψ` at the pole: `log‖Ψ‖ ≤ C + log‖poleCoord‖` nearby.
+      have hslope : ∃ Cs : ℝ, ∀ᶠ x in 𝓝[≠] q,
+          Real.log ‖Ψ x‖ ≤ Cs + Real.log ‖poleCoord q x‖ := by
+        have hgan : AnalyticAt ℂ (Ψ ∘ (chartAt ℂ q).symm) (chartAt ℂ q q) := hreadM Ψ hΨm q
+        have hg0 : (Ψ ∘ (chartAt ℂ q).symm) (chartAt ℂ q q) = 0 := by
+          simp only [Function.comp_apply, hcq]
+          exact hΨq
+        have hd : HasDerivAt (Ψ ∘ (chartAt ℂ q).symm)
+            (deriv (Ψ ∘ (chartAt ℂ q).symm) (chartAt ℂ q q)) (chartAt ℂ q q) :=
+          hgan.differentiableAt.hasDerivAt
+        have hsl := hasDerivAt_iff_tendsto_slope.mp hd
+        have hd1 : (0 : ℝ) ≤ ‖deriv (Ψ ∘ (chartAt ℂ q).symm) (chartAt ℂ q q)‖ :=
+          norm_nonneg _
+        have hbnd : ∀ᶠ w in 𝓝[≠] (chartAt ℂ q q),
+            ‖slope (Ψ ∘ (chartAt ℂ q).symm) (chartAt ℂ q q) w‖
+              < ‖deriv (Ψ ∘ (chartAt ℂ q).symm) (chartAt ℂ q q)‖ + 1 :=
+          hsl.norm.eventually_lt_const (by linarith)
+        refine ⟨Real.log (‖deriv (Ψ ∘ (chartAt ℂ q).symm) (chartAt ℂ q q)‖ + 1), ?_⟩
+        filter_upwards [htendq.eventually hbnd,
+          nhdsWithin_le_nhds ((chartAt ℂ q).open_source.mem_nhds hqsrc),
+          self_mem_nhdsWithin, hisoq] with x hx hxs hxq hx0
+        have hxcne : chartAt ℂ q x ≠ chartAt ℂ q q := by
+          intro hcon
+          exact hxq ((chartAt ℂ q).injOn hxs hqsrc hcon)
+        have hslval : slope (Ψ ∘ (chartAt ℂ q).symm) (chartAt ℂ q q) (chartAt ℂ q x)
+            = Ψ x / (chartAt ℂ q x - chartAt ℂ q q) := by
+          rw [slope_def_field, hg0, sub_zero]
+          congr 1
+          simp only [Function.comp_apply, (chartAt ℂ q).left_inv hxs]
+        have hx' := hx
+        rw [hslval] at hx'
+        have hpne : chartAt ℂ q x - chartAt ℂ q q ≠ 0 := sub_ne_zero_of_ne hxcne
+        have hΨbound : ‖Ψ x‖ ≤ (‖deriv (Ψ ∘ (chartAt ℂ q).symm) (chartAt ℂ q q)‖ + 1)
+            * ‖chartAt ℂ q x - chartAt ℂ q q‖ := by
+          rw [norm_div] at hx'
+          have h2 : 0 < ‖chartAt ℂ q x - chartAt ℂ q q‖ := norm_pos_iff.mpr hpne
+          rw [div_lt_iff₀ h2] at hx'
+          exact hx'.le
+        have h3 : Real.log ‖Ψ x‖ ≤
+            Real.log ((‖deriv (Ψ ∘ (chartAt ℂ q).symm) (chartAt ℂ q q)‖ + 1)
+              * ‖chartAt ℂ q x - chartAt ℂ q q‖) :=
+          Real.log_le_log (norm_pos_iff.mpr hx0) hΨbound
+        rw [Real.log_mul (by positivity) (norm_ne_zero_iff.mpr hpne)] at h3
+        exact h3
+      obtain ⟨Cs, hCs⟩ := hslope
+      -- The per-candidate comparison via the puncture-tolerant maximum principle.
+      have key : ∀ N, -Real.log (‖Ψ ym‖ / 2) ≤ N → 0 < N →
+          ∀ v ∈ greenFamily q, ∀ x, x ≠ q → v x + Λ N x ≤ 0 := by
+        intro N hN0 hNpos v hv x hx
+        obtain ⟨hvsub, -, ⟨K, hKcp, -, hK0⟩, C, hC⟩ := hv
+        have h1 : MSubharmonicOn (fun y => v y + Λ N y) {q}ᶜ :=
+          fun y hy => haddM v (Λ N) y (hvsub y hy) (hΛsub N hN0 y hy)
+        have h2 : ∃ K' : Set M, IsCompact K' ∧ ∀ y ∉ K', v y + Λ N y ≤ 0 :=
+          ⟨K, hKcp, fun y hy => by rw [hK0 y hy, zero_add]; exact hΛle N hNpos y⟩
+        have h3 : ∃ C', ∀ᶠ y in 𝓝[≠] q, v y + Λ N y ≤ C' := by
+          refine ⟨C + Cs, ?_⟩
+          have hV'mem : ∀ᶠ y in 𝓝[≠] q, y ∈ V' :=
+            nhdsWithin_le_nhds (hV'open.mem_nhds hqV')
+          filter_upwards [hC, hCs, hV'mem] with y h1y h2y h3y
+          rw [hΛ1 N y h3y]
+          linarith
+        exact msubharmonic_le_zero_of_puncture h1 h2 h3 x hx
+      -- Boundedness of the family at every point off the pole.
+      intro x hx
+      refine ⟨-Λ (max (-Real.log (‖Ψ ym‖ / 2)) 1) x, ?_⟩
+      rintro t ⟨v, hv, rfl⟩
+      have h1 := key (max (-Real.log (‖Ψ ym‖ / 2)) 1) (le_max_left _ _)
+        (lt_of_lt_of_le one_pos (le_max_right _ _)) v hv x hx
+      have h2 : (fun v : M → ℝ => v x) v = v x := rfl
+      rw [h2]
+      linarith
+    /- ## A global bound on `H`: off the compact closures by the two modulus
+    bounds, on them by continuity. -/
+    obtain ⟨CG, V₁, hV₁n, V₂, hV₂n, hV₁c, hV₂c, hGb⟩ := hbdd
+    obtain ⟨CG', V₁', hV₁'n, V₂', hV₂'n, hV₁'c, hV₂'c, hG'b⟩ := hbdd'
+    have hKBcp : IsCompact ((closure V₁ ∪ closure V₂) ∪ (closure V₁' ∪ closure V₂')) :=
+      (hV₁c.union hV₂c).union (hV₁'c.union hV₂'c)
+    obtain ⟨B₁, hB₁⟩ := hKBcp.exists_bound_of_continuousOn hHsm.continuous.continuousOn
+    have hoff : ∀ x : M, x ∉ (closure V₁ ∪ closure V₂) ∪ (closure V₁' ∪ closure V₂') →
+        ‖H x‖ ≤ (Real.exp CG + ‖w₀‖) * Real.exp CG' := by
+      intro x hx
+      have hx1 : x ∉ V₁ ∪ V₂ := by
+        intro hmem
+        apply hx
+        rcases hmem with hm | hm
+        · exact Or.inl (Or.inl (subset_closure hm))
+        · exact Or.inl (Or.inr (subset_closure hm))
+      have hx2 : x ∉ V₁' ∪ V₂' := by
+        intro hmem
+        apply hx
+        rcases hmem with hm | hm
+        · exact Or.inr (Or.inl (subset_closure hm))
+        · exact Or.inr (Or.inr (subset_closure hm))
+      have hxp₁ : x ≠ p₁ := by
+        rintro rfl
+        exact hx1 (Or.inl (mem_of_mem_nhds hV₁n))
+      have hxp₂ : x ≠ p₂ := by
+        rintro rfl
+        exact hx1 (Or.inr (mem_of_mem_nhds hV₂n))
+      have hxq' : x ≠ q' := by
+        rintro rfl
+        exact hx2 (Or.inl (mem_of_mem_nhds hV₁'n))
+      obtain ⟨u, hu, hu0, hun⟩ := hφdat x hxp₁ hxp₂
+      obtain ⟨u', hu', hu'0, hu'n⟩ := hφ'dat x hxq' hxp₂
+      have hHval : H x = (u - w₀) / u' := by
+        simp only [hHdef]
+        rw [if_neg hxq', if_neg hxp₂, hu, hu', sphereChartFinite_coe,
+          sphereChartFinite_coe]
+      have hGx := hGb x hx1
+      have hG'x := hG'b x hx2
+      have hb1 : ‖u‖ ≤ Real.exp CG := by
+        rw [hun]
+        apply Real.exp_le_exp.mpr
+        have habsle := abs_le.mp hGx
+        linarith [habsle.1]
+      have hb2 : Real.exp (-CG') ≤ ‖u'‖ := by
+        rw [hu'n]
+        apply Real.exp_le_exp.mpr
+        have habsle := abs_le.mp hG'x
+        linarith [habsle.2]
+      have hb3 : ‖u - w₀‖ ≤ Real.exp CG + ‖w₀‖ :=
+        (norm_sub_le _ _).trans (by linarith [norm_nonneg w₀])
+      rw [hHval, norm_div]
+      calc ‖u - w₀‖ / ‖u'‖ ≤ (Real.exp CG + ‖w₀‖) / Real.exp (-CG') :=
+            div_le_div₀ (by positivity) hb3 (Real.exp_pos _) hb2
+        _ = (Real.exp CG + ‖w₀‖) * Real.exp CG' := by
+            rw [Real.exp_neg, div_eq_mul_inv, inv_inv]
+    set B : ℝ := max B₁ ((Real.exp CG + ‖w₀‖) * Real.exp CG') with hBdef
+    have hB : ∀ x : M, ‖H x‖ ≤ B := by
+      intro x
+      by_cases hx : x ∈ (closure V₁ ∪ closure V₂) ∪ (closure V₁' ∪ closure V₂')
+      · exact (hB₁ x hx).trans (le_max_left _ _)
+      · exact (hoff x hx).trans (le_max_right _ _)
+    have hB0 : (0 : ℝ) ≤ B := le_trans (norm_nonneg (H q)) (hB q)
+    have hD0 : (0 : ℝ) < 2 * B + 1 := by linarith
+    have hDC0 : ((2 * B + 1 : ℝ) : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr hD0.ne'
+    /- ## The normalized transplant `Ψ = (H − H q)/(2B + 1)`. -/
+    obtain ⟨Ψ, hΨdef⟩ : ∃ f : M → ℂ,
+        f = fun x => (H x - H q) / ((2 * B + 1 : ℝ) : ℂ) := ⟨_, rfl⟩
+    have hΨm : ∀ y, ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω Ψ y := by
+      intro y
+      apply hbuild
+      have hm1 : AnalyticAt ℂ (H ∘ ⇑(chartAt ℂ y).symm) (chartAt ℂ y y) :=
+        hreadM H (fun z => hHsm z) y
+      have hm2 : AnalyticAt ℂ
+          (fun w => (H ((chartAt ℂ y).symm w) - H q) / ((2 * B + 1 : ℝ) : ℂ))
+          (chartAt ℂ y y) := (hm1.sub analyticAt_const).div analyticAt_const hDC0
+      rw [hΨdef]
+      exact hm2
+    have hΨlt : ∀ y, ‖Ψ y‖ < 1 := by
+      intro y
+      simp only [hΨdef]
+      rw [norm_div, Complex.norm_real, Real.norm_eq_abs, abs_of_pos hD0,
+        div_lt_one hD0]
+      have hb1 := hB y
+      have hb2 := hB q
+      have hb3 := norm_sub_le (H y) (H q)
+      linarith
+    have hΨq : Ψ q = 0 := by
+      simp only [hΨdef]
+      rw [sub_self, zero_div]
+    have hΨex : ∃ y₀, Ψ y₀ ≠ 0 := by
+      refine ⟨p₁, ?_⟩
+      simp only [hΨdef]
+      rw [hHq, sub_zero]
+      exact div_ne_zero hHp₁ hDC0
+    exact hnon q ⟨p₁, Ne.symm hqp₁, MAIN Ψ hΨm hΨlt hΨq hΨex p₁ (Ne.symm hqp₁)⟩
 
 /-! ## The compact case and the non-hyperbolic assembly -/
 
