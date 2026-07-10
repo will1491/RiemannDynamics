@@ -221,9 +221,11 @@ theorem nonempty_diffeomorph_of_injOn_differentiableOn (U V : Opens ℂ)
     have hxV : f ↑x ∈ (V : Set ℂ) := hfV ↑x x.2
     have key : ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω
         (fun x' : ↥U =>
-          if h : f ↑x' ∈ (V : Set ℂ) then (⟨f ↑x', h⟩ : ↥V) else ⟨f ↑x, hxV⟩) x := by
+          if h : f ↑x' ∈ (V : Set ℂ) then (⟨f ↑x', h⟩ : ↥V)
+          else ⟨f ↑x, hxV⟩) x := by
       refine contMDiffAt_subtype_iff.mpr (bridge V
-        (fun z => if h : f z ∈ (V : Set ℂ) then (⟨f z, h⟩ : ↥V) else ⟨f ↑x, hxV⟩) ↑x ?_)
+        (fun z =>
+          if h : f z ∈ (V : Set ℂ) then (⟨f z, h⟩ : ↥V) else ⟨f ↑x, hxV⟩) ↑x ?_)
       refine (hAn ↑x x.2).congr ?_
       filter_upwards [hUo.mem_nhds x.2] with p hp
       rw [dif_pos (hfV p hp)]
@@ -233,9 +235,11 @@ theorem nonempty_diffeomorph_of_injOn_differentiableOn (U V : Opens ℂ)
     have hyU : g ↑y ∈ (U : Set ℂ) := hgU ↑y y.2
     have key : ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω
         (fun y' : ↥V =>
-          if h : g ↑y' ∈ (U : Set ℂ) then (⟨g ↑y', h⟩ : ↥U) else ⟨g ↑y, hyU⟩) y := by
+          if h : g ↑y' ∈ (U : Set ℂ) then (⟨g ↑y', h⟩ : ↥U)
+          else ⟨g ↑y, hyU⟩) y := by
       refine contMDiffAt_subtype_iff.mpr (bridge U
-        (fun w => if h : g w ∈ (U : Set ℂ) then (⟨g w, h⟩ : ↥U) else ⟨g ↑y, hyU⟩) ↑y ?_)
+        (fun w =>
+          if h : g w ∈ (U : Set ℂ) then (⟨g w, h⟩ : ↥U) else ⟨g ↑y, hyU⟩) ↑y ?_)
       refine (hgAn ↑y y.2).congr ?_
       filter_upwards [hVo.mem_nhds y.2] with p hp
       rw [dif_pos (hgU p hp)]
@@ -247,7 +251,8 @@ biholomorphism. -/
 theorem exists_glSMul_diffeomorph (g : GL (Fin 2) ℂ) :
     ∃ e : ℂ̂ ≃ₘ^ω⟮𝓘(ℂ), 𝓘(ℂ)⟯ ℂ̂, ⇑e = (g • ·) := by
   classical
-  -- Chart bookkeeping: the chart at a finite point is the finite chart, at `∞` the infinity chart.
+  -- Chart bookkeeping: the chart at a finite point is the finite chart, at `∞` the infinity
+  -- chart.
   have hchart_coe : ∀ w : ℂ, chartAt ℂ ((w : ℂ̂)) = sphereChartFinite := fun _ => rfl
   have hchart_infty : chartAt ℂ (∞ : ℂ̂) = sphereChartInfty := rfl
   have hinv0 : inversionGL • ((0 : ℂ) : ℂ̂) = (∞ : ℂ̂) := by
@@ -354,7 +359,8 @@ theorem exists_glSMul_diffeomorph (g : GL (Fin 2) ℂ) :
       simp only [Function.comp_apply, sphereChartInfty_symm_apply, inversionGL_smul_smul,
         sphereChartFinite_coe, id_eq]
   -- Step (C): every element factors through the two special cases.
-  have hsmooth : ∀ u : GL (Fin 2) ℂ, ContMDiff 𝓘(ℂ) 𝓘(ℂ) ω (fun z : ℂ̂ => u • z) := by
+  have hsmooth : ∀ u : GL (Fin 2) ℂ,
+      ContMDiff 𝓘(ℂ) 𝓘(ℂ) ω (fun z : ℂ̂ => u • z) := by
     intro u
     by_cases hc : (u : Matrix (Fin 2) (Fin 2) ℂ) 1 0 = 0
     · exact haff u hc
@@ -456,14 +462,16 @@ theorem exists_diffeomorph_opens_planar (U : Opens ℂ̂)
     intro z
     rw [sphereChartFinite_source]
     exact fun h => hU (h ▸ z.2)
-  let V : Opens ℂ := ⟨((↑) : ℂ → ℂ̂) ⁻¹' U, U.isOpen.preimage OnePoint.continuous_coe⟩
+  let V : Opens ℂ :=
+    ⟨((↑) : ℂ → ℂ̂) ⁻¹' U, U.isOpen.preimage OnePoint.continuous_coe⟩
   refine ⟨V, ?_, ?_⟩
   · -- The image of `V` under the coercion recovers `U`.
     change ((↑) : ℂ → ℂ̂) '' (((↑) : ℂ → ℂ̂) ⁻¹' ↑U) = ↑U
     rw [Set.image_preimage_eq_inter_range]
     exact Set.inter_eq_left.mpr fun z hz => hfin z hz
   · -- The finite chart maps points of `U` into `V`.
-    have hmemV : ∀ z : ↥U, ((sphereChartFinite (z : ℂ̂) : ℂ) : ℂ̂) ∈ (U : Set ℂ̂) := by
+    have hmemV : ∀ z : ↥U,
+        ((sphereChartFinite (z : ℂ̂) : ℂ) : ℂ̂) ∈ (U : Set ℂ̂) := by
       intro z
       obtain ⟨w, hw⟩ := hfin z.1 z.2
       rw [← hw, sphereChartFinite_coe, hw]

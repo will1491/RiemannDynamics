@@ -236,7 +236,8 @@ theorem msubharmonic_le_zero_of_puncture [ConnectedSpace M]
   /- ## Constancy propagation on a preconnected open set from an interior
   maximum (clopen argument). -/
   have propagate : ∀ (Ω : Set M) (w : M → ℝ) (xm : M), IsOpen Ω → IsPreconnected Ω →
-      xm ∈ Ω → MSubharmonicOn w Ω → (∀ x ∈ Ω, w x ≤ w xm) → ∀ x ∈ Ω, w x = w xm := by
+      xm ∈ Ω → MSubharmonicOn w Ω → (∀ x ∈ Ω, w x ≤ w xm) → ∀ x ∈ Ω, w x = w
+          xm := by
     intro Ω w xm hΩo hΩc hxm hwsub hmax
     have hso : IsOpen {x | x ∈ Ω ∧ w x = w xm} := by
       rw [isOpen_iff_mem_nhds]
@@ -373,7 +374,8 @@ theorem msubharmonic_le_zero_of_puncture [ConnectedSpace M]
     rw [hcon] at hyne
     exact hyne hz₀.symm
   -- The pole bound, read on the surface.
-  have hCbound : ∀ y, y ∈ e.source → e y ∈ closedBall z₀ r → y ≠ p₀ → v y ≤ C := by
+  have hCbound : ∀ y, y ∈ e.source → e y ∈ closedBall z₀ r → y ≠ p₀ → v y ≤
+      C := by
     intro y hys hyball hyne
     have h3 : e y ∈ e.symm ⁻¹' N := (hrsub hyball).2
     have h4 : y ∈ N := by rwa [Set.mem_preimage, e.left_inv hys] at h3
@@ -1784,7 +1786,8 @@ theorem exists_harmonic_pole_extension [T2Space M] [ConnectedSpace M] [Noncompac
       rw [max_eq_left (by linarith)]
       linarith
   -- ### Members lie below the envelope.
-  have hmem_le : ∀ v ∈ greenFamily p₀, ∀ x : M, x ≠ p₀ → v x ≤ greenEnvelope p₀ x :=
+  have hmem_le : ∀ v ∈ greenFamily p₀, ∀ x : M, x ≠ p₀ → v x ≤ greenEnvelope p₀ x
+      :=
     fun v hv x hx => le_csSup (hGbdd x hx) ⟨v, hv, rfl⟩
   -- ### The half-radius disc.
   set s : ℝ := r / 2 with hs
@@ -2208,7 +2211,8 @@ theorem exists_green_map [T2Space M] [SimplyConnectedSpace M] [NoncompactSpace M
   -- ## §1 The pointwise element predicate and its stability.
   obtain ⟨Q, hQ⟩ : ∃ Q : (M → ℂ) → M → Prop, ∀ ψ x, Q ψ x ↔
       (ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω ψ x ∧
-        (x ≠ p₀ → ‖ψ x‖ = Real.exp (-(greenEnvelope p₀ x))) ∧ (x = p₀ → ψ x = 0)) :=
+        (x ≠ p₀ → ‖ψ x‖ = Real.exp (-(greenEnvelope p₀ x))) ∧ (x = p₀ → ψ x =
+            0)) :=
     ⟨_, fun _ _ => Iff.rfl⟩
   have hread : ∀ (ψ : M → ℂ) (x₀ : M) (z : ℂ), z ∈ (chartAt ℂ x₀).target →
       ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω ψ ((chartAt ℂ x₀).symm z) →
@@ -2229,7 +2233,8 @@ theorem exists_green_map [T2Space M] [SimplyConnectedSpace M] [NoncompactSpace M
     · rw [norm_mul, hc, one_mul]
       exact h2 hy
     · rw [h3 hy, mul_zero]
-  have hEtrans : ∀ (ψ ψ' : M → ℂ) (x : M), (∀ᶠ y in 𝓝 x, Q ψ y) → ψ' =ᶠ[𝓝 x] ψ →
+  have hEtrans : ∀ (ψ ψ' : M → ℂ) (x : M), (∀ᶠ y in 𝓝 x, Q ψ y) → ψ' =ᶠ[𝓝 x]
+      ψ →
       ∀ᶠ y in 𝓝 x, Q ψ' y := by
     intro ψ ψ' x hE heq
     obtain ⟨W, hWnh, hWeq⟩ := eventuallyEq_iff_exists_mem.mp heq
@@ -2339,7 +2344,8 @@ theorem exists_green_map [T2Space M] [SimplyConnectedSpace M] [NoncompactSpace M
     obtain ⟨O, hOS, hO, hxO⟩ := mem_nhds_iff.mp hS
     exact ⟨O, hO, hxO, fun z hz => (hSeq.mono hOS).eventuallyEq_of_mem (hO.mem_nhds hz)⟩
   have hQopen : ∀ (ψ : M → ℂ) (x : M), (∀ᶠ y in 𝓝 x, Q ψ y) →
-      ∃ W : Set M, IsOpen W ∧ x ∈ W ∧ ∀ z ∈ W, Q ψ z ∧ ∀ᶠ y in 𝓝 z, Q ψ y := by
+      ∃ W : Set M, IsOpen W ∧ x ∈ W ∧ ∀ z ∈ W, Q ψ z ∧ ∀ᶠ y in 𝓝 z, Q ψ
+          y := by
     intro ψ x h
     obtain ⟨S, hSnh, hSQ⟩ := eventually_iff_exists_mem.mp h
     obtain ⟨W, hWS, hWo, hxW⟩ := mem_nhds_iff.mp hSnh
@@ -2370,7 +2376,8 @@ theorem exists_green_map [T2Space M] [SimplyConnectedSpace M] [NoncompactSpace M
       linarith
     · exact ⟨x, hxO, hx⟩
   have hγnb : ∀ (γ : ℝ → M) (S : Set ℝ) (b : ℝ), ContinuousOn γ S → b ∈ S →
-      ∀ O : Set M, IsOpen O → γ b ∈ O → ∃ δ > 0, ∀ u ∈ S, |u - b| < δ → γ u ∈ O := by
+      ∀ O : Set M, IsOpen O → γ b ∈ O → ∃ δ > 0, ∀ u ∈ S, |u - b| < δ → γ u ∈
+          O := by
     intro γ S b hγ hbS O hO hbO
     have h1 : γ ⁻¹' O ∈ 𝓝[S] b :=
       (hγ b hbS).preimage_mem_nhdsWithin (hO.mem_nhds hbO)
@@ -2378,7 +2385,8 @@ theorem exists_green_map [T2Space M] [SimplyConnectedSpace M] [NoncompactSpace M
     refine ⟨δ, hδ0, fun u huS hub => ?_⟩
     exact hδ ⟨by rwa [mem_ball, Real.dist_eq], huS⟩
   -- ## §4 Phase rigidity: two elements at a point differ by a unimodular constant near it.
-  have hrigid : ∀ (ψ ψ' : M → ℂ) (x : M), (∀ᶠ y in 𝓝 x, Q ψ y) → (∀ᶠ y in 𝓝 x, Q ψ' y) →
+  have hrigid : ∀ (ψ ψ' : M → ℂ) (x : M), (∀ᶠ y in 𝓝 x, Q ψ y) → (∀ᶠ y in 𝓝
+      x, Q ψ' y) →
       ∃ c : ℂ, ‖c‖ = 1 ∧ ψ =ᶠ[𝓝 x] fun y => c * ψ' y := by
     intro ψ ψ' x hψ hψ'
     obtain ⟨W, hWnh, hWQ⟩ := eventually_iff_exists_mem.mp hψ
@@ -2447,7 +2455,8 @@ theorem exists_green_map [T2Space M] [SimplyConnectedSpace M] [NoncompactSpace M
       rw [Function.comp_apply] at h8
       rw [h8, norm_zero] at h7
       exact absurd h7.symm (ne_of_gt (Real.exp_pos _))
-    obtain ⟨c, hc1, hceq⟩ := hcore (ψ ∘ e.symm) (ψ' ∘ e.symm) (e x) ρ hρ0 hfa hga hnorm hgne
+    obtain ⟨c, hc1, hceq⟩ := hcore (ψ ∘ e.symm) (ψ' ∘ e.symm) (e x) ρ hρ0 hfa hga hnorm
+        hgne
     refine ⟨c, hc1, ?_⟩
     have hNo : IsOpen (e.source ∩ e ⁻¹' ball (e x) ρ) :=
       e.continuousOn.isOpen_inter_preimage e.open_source isOpen_ball
@@ -2462,7 +2471,8 @@ theorem exists_green_map [T2Space M] [SimplyConnectedSpace M] [NoncompactSpace M
   -- ## §5 Germ agreement is closed among elements: cluster equality forces equality.
   have hgermclosed : ∀ (ψ ψ' : M → ℂ) (x : M),
       (∀ᶠ y in 𝓝 x, Q ψ y) → (∀ᶠ y in 𝓝 x, Q ψ' y) →
-      (∀ O : Set M, IsOpen O → x ∈ O → ∃ z ∈ O, ψ =ᶠ[𝓝 z] ψ') → ψ =ᶠ[𝓝 x] ψ' := by
+      (∀ O : Set M, IsOpen O → x ∈ O → ∃ z ∈ O, ψ =ᶠ[𝓝 z] ψ') → ψ =ᶠ[𝓝 x]
+          ψ' := by
     intro ψ ψ' x hψ hψ' hclu
     obtain ⟨c, hc1, hcev⟩ := hrigid ψ ψ' x hψ hψ'
     obtain ⟨O₀, hO₀o, hxO₀, hO₀⟩ := hOpen ψ (fun y => c * ψ' y) x hcev
@@ -2493,16 +2503,20 @@ theorem exists_green_map [T2Space M] [SimplyConnectedSpace M] [NoncompactSpace M
     exact hcev.trans h9
   -- ## §6 The initial element and the continuation predicate.
   obtain ⟨Ψ, hΨ⟩ := helt p₀
-  obtain ⟨IsCont, hIC⟩ : ∃ P : (ℝ → M) → ℝ → (ℝ → M → ℂ) → Prop, ∀ γ b Φ, P γ b Φ ↔
-      ((∀ t ∈ Set.Icc (0:ℝ) b, ∀ᶠ y in 𝓝 (γ t), Q (Φ t) y) ∧ Φ 0 =ᶠ[𝓝 p₀] Ψ ∧
+  obtain ⟨IsCont, hIC⟩ : ∃ P : (ℝ → M) → ℝ → (ℝ → M → ℂ) → Prop, ∀ γ b
+      Φ, P γ b Φ ↔
+      ((∀ t ∈ Set.Icc (0:ℝ) b, ∀ᶠ y in 𝓝 (γ t), Q (Φ t) y) ∧ Φ 0 =ᶠ[𝓝 p₀]
+          Ψ ∧
         ∀ t ∈ Set.Icc (0:ℝ) b, ∃ ε > 0, ∀ u ∈ Set.Icc (0:ℝ) b, |u - t| < ε →
           Φ u =ᶠ[𝓝 (γ u)] Φ t) :=
     ⟨_, fun _ _ _ => Iff.rfl⟩
   -- ## §6b Real-interval induction: nonempty at the left end, closed from the left,
   -- open to the right, forces membership of the right end.
-  have hind : ∀ (a b : ℝ) (A : Set ℝ), a ≤ b → (∀ x ∈ A, x ∈ Set.Icc a b) → a ∈ A →
+  have hind : ∀ (a b : ℝ) (A : Set ℝ), a ≤ b → (∀ x ∈ A, x ∈ Set.Icc a b) → a ∈
+      A →
       (∀ c ∈ Set.Icc a b, (∀ δ > 0, ∃ x ∈ A, c - δ < x ∧ x ≤ c) → c ∈ A) →
-      (∀ c ∈ A, c < b → ∃ δ > 0, ∀ x ∈ Set.Icc a b, c ≤ x → x < c + δ → x ∈ A) →
+      (∀ c ∈ A, c < b → ∃ δ > 0, ∀ x ∈ Set.Icc a b, c ≤ x → x < c + δ → x ∈ A)
+          →
       b ∈ A := by
     intro a b A hab hsub haA hclosed hopen
     have hne : A.Nonempty := ⟨a, haA⟩
@@ -2533,7 +2547,8 @@ theorem exists_green_map [T2Space M] [SimplyConnectedSpace M] [NoncompactSpace M
     intro γ hγ hγ0
     -- one-step gluing: near any parameter c, a continuation up to a point near c
     -- extends past c using the element at γ c and phase rigidity.
-    have hglue : ∀ c ∈ Set.Icc (0:ℝ) 1, ∃ δ > 0, ∀ a ∈ Set.Icc (0:ℝ) 1, |a - c| < δ →
+    have hglue : ∀ c ∈ Set.Icc (0:ℝ) 1, ∃ δ > 0, ∀ a ∈ Set.Icc (0:ℝ) 1, |a - c| < δ
+        →
         (∃ Φ, IsCont γ a Φ) → ∀ b' ∈ Set.Icc (0:ℝ) 1, a ≤ b' → |b' - c| < δ →
         ∃ Φ', IsCont γ b' Φ' := by
       intro c hc
@@ -2707,7 +2722,8 @@ theorem exists_green_map [T2Space M] [SimplyConnectedSpace M] [NoncompactSpace M
       (∀ σ ∈ Set.Icc a b, ∀ᶠ y in 𝓝 (ζ σ), Q ψ' y) →
       ψ =ᶠ[𝓝 (ζ a)] ψ' → ∀ σ ∈ Set.Icc a b, ψ =ᶠ[𝓝 (ζ σ)] ψ' := by
     intro ψ ψ' ζ a b hab hζ hQ1 hQ2 heq0
-    have hbA : b ∈ {σ | σ ∈ Set.Icc a b ∧ ∀ τ ∈ Set.Icc a σ, ψ =ᶠ[𝓝 (ζ τ)] ψ'} := by
+    have hbA : b ∈ {σ | σ ∈ Set.Icc a b ∧ ∀ τ ∈ Set.Icc a σ, ψ =ᶠ[𝓝 (ζ τ)]
+        ψ'} := by
       refine hind a b _ hab (fun x hx => hx.1) ⟨⟨le_refl a, hab⟩, ?_⟩ ?_ ?_
       · intro τ hτ
         have hτa : τ = a := le_antisymm hτ.2 hτ.1
@@ -2748,7 +2764,8 @@ theorem exists_green_map [T2Space M] [SimplyConnectedSpace M] [NoncompactSpace M
           exact hOc (ζ τ) (hδ₁ τ hτI hτd)
     exact fun σ hσ => hbA.2 σ hσ
   -- ## §9 The adjacent-path lemma (fixed endpoints).
-  have hadj : ∀ (η : ℝ × ℝ → M), Continuous η → (∀ s ∈ Set.Icc (0:ℝ) 1, η (s, 0) = p₀) →
+  have hadj : ∀ (η : ℝ × ℝ → M), Continuous η → (∀ s ∈ Set.Icc (0:ℝ) 1, η (s, 0)
+      = p₀) →
       (∀ s ∈ Set.Icc (0:ℝ) 1, η (s, 1) = η (0, 1)) →
       ∀ s₀ ∈ Set.Icc (0:ℝ) 1, ∀ Φ, IsCont (fun t => η (s₀, t)) 1 Φ →
       ∃ ε > 0, ∀ s' ∈ Set.Icc (0:ℝ) 1, |s' - s₀| < ε →
@@ -2803,7 +2820,8 @@ theorem exists_green_map [T2Space M] [SimplyConnectedSpace M] [NoncompactSpace M
     obtain ⟨N₀, hN₀⟩ := exists_nat_one_div_lt hε0
     -- interval assignment: each grid interval sits inside one data window
     have hassign : ∀ i : ℕ, i ≤ N₀ → ∃ t ∈ Set.Icc (0:ℝ) 1,
-        (∀ u : ℝ, (i : ℝ) / ((N₀ : ℝ) + 1) ≤ u → u ≤ ((i : ℝ) + 1) / ((N₀ : ℝ) + 1) →
+        (∀ u : ℝ, (i : ℝ) / ((N₀ : ℝ) + 1) ≤ u → u ≤ ((i : ℝ) + 1) / ((N₀ : ℝ)
+            + 1) →
           |u - t| < dfun t) ∧ |s' - s₀| < dfun t := by
       intro i hi
       have hgi : (i : ℝ) / ((N₀ : ℝ) + 1) ∈ Set.Icc (0:ℝ) 1 := by
@@ -2836,7 +2854,8 @@ theorem exists_green_map [T2Space M] [SimplyConnectedSpace M] [NoncompactSpace M
           _ < dfun (t : ℝ) := by linarith
     choose! tc htcI htcwin htcs using hassign
     -- segment membership and distance comparison
-    have hsegI : ∀ σ, min s₀ s' ≤ σ → σ ≤ max s₀ s' → σ ∈ Set.Icc (0:ℝ) 1 := by
+    have hsegI : ∀ σ, min s₀ s' ≤ σ → σ ≤ max s₀ s' → σ ∈ Set.Icc (0:ℝ)
+        1 := by
       intro σ h1 h2
       constructor
       · rcases le_total s₀ s' with h | h
@@ -2845,7 +2864,8 @@ theorem exists_green_map [T2Space M] [SimplyConnectedSpace M] [NoncompactSpace M
       · rcases le_total s₀ s' with h | h
         · rw [max_eq_right h] at h2; linarith [hs'.2]
         · rw [max_eq_left h] at h2; linarith [hs₀.2]
-    have habs : ∀ σ, min s₀ s' ≤ σ → σ ≤ max s₀ s' → |σ - s₀| ≤ |s' - s₀| := by
+    have habs : ∀ σ, min s₀ s' ≤ σ → σ ≤ max s₀ s' → |σ - s₀| ≤ |s' -
+        s₀| := by
       intro σ h1 h2
       rcases le_total s₀ s' with hle | hle
       · rw [min_eq_left hle] at h1
@@ -2858,8 +2878,10 @@ theorem exists_green_map [T2Space M] [SimplyConnectedSpace M] [NoncompactSpace M
         linarith
     -- transport specialised to the σ-segment at a fixed height
     have hseg : ∀ (u : ℝ) (ψ ψ' : M → ℂ),
-        (∀ σ, min s₀ s' ≤ σ → σ ≤ max s₀ s' → ∀ᶠ y in 𝓝 (η (σ, u)), Q ψ y) →
-        (∀ σ, min s₀ s' ≤ σ → σ ≤ max s₀ s' → ∀ᶠ y in 𝓝 (η (σ, u)), Q ψ' y) →
+        (∀ σ, min s₀ s' ≤ σ → σ ≤ max s₀ s' → ∀ᶠ y in 𝓝 (η (σ, u)), Q ψ
+            y) →
+        (∀ σ, min s₀ s' ≤ σ → σ ≤ max s₀ s' → ∀ᶠ y in 𝓝 (η (σ, u)), Q ψ'
+            y) →
         ψ =ᶠ[𝓝 (η (s₀, u))] ψ' → ψ =ᶠ[𝓝 (η (s', u))] ψ' := by
       intro u ψ ψ' hq1 hq2 heq
       rcases le_total s₀ s' with hle | hle
@@ -2892,10 +2914,12 @@ theorem exists_green_map [T2Space M] [SimplyConnectedSpace M] [NoncompactSpace M
     have hkey : ∀ i : ℕ, i ≤ N₀ + 1 →
         ∃ Φ', IsCont (fun t => η (s', t)) ((i : ℝ) / ((N₀ : ℝ) + 1)) Φ' ∧
         ∀ ψtar : M → ℂ,
-          Φ ((i : ℝ) / ((N₀ : ℝ) + 1)) =ᶠ[𝓝 (η (s₀, (i : ℝ) / ((N₀ : ℝ) + 1)))] ψtar →
+          Φ ((i : ℝ) / ((N₀ : ℝ) + 1)) =ᶠ[𝓝 (η (s₀, (i : ℝ) / ((N₀ : ℝ) + 1)))]
+              ψtar →
           (∀ σ, min s₀ s' ≤ σ → σ ≤ max s₀ s' →
             ∀ᶠ y in 𝓝 (η (σ, (i : ℝ) / ((N₀ : ℝ) + 1))), Q ψtar y) →
-          Φ' ((i : ℝ) / ((N₀ : ℝ) + 1)) =ᶠ[𝓝 (η (s', (i : ℝ) / ((N₀ : ℝ) + 1)))] ψtar := by
+          Φ' ((i : ℝ) / ((N₀ : ℝ) + 1)) =ᶠ[𝓝 (η (s', (i : ℝ) / ((N₀ : ℝ) + 1)))]
+              ψtar := by
       intro i
       induction i with
       | zero =>
@@ -2950,13 +2974,15 @@ theorem exists_green_map [T2Space M] [SimplyConnectedSpace M] [NoncompactSpace M
         have hIci : tc i ∈ Set.Icc (0:ℝ) 1 := htcI i hiN
         have hwin := htcwin i hiN
         have hswin : |s' - s₀| < dfun (tc i) := htcs i hiN
-        have hK1 : ∀ σ, min s₀ s' ≤ σ → σ ≤ max s₀ s' → ∀ u, (i : ℝ) / ((N₀ : ℝ) + 1) ≤ u →
+        have hK1 : ∀ σ, min s₀ s' ≤ σ → σ ≤ max s₀ s' → ∀ u, (i : ℝ) / ((N₀ :
+            ℝ) + 1) ≤ u →
             u ≤ ((i : ℝ) + 1) / ((N₀ : ℝ) + 1) → η (σ, u) ∈ W (tc i) := by
           intro σ h1 h2 u h3 h4
           refine hWnear (tc i) hIci (σ, u) ?_ (hwin u h3 h4)
           calc |σ - s₀| ≤ |s' - s₀| := habs σ h1 h2
             _ < dfun (tc i) := hswin
-        have hK2 : ∀ u, (i : ℝ) / ((N₀ : ℝ) + 1) ≤ u → u ≤ ((i : ℝ) + 1) / ((N₀ : ℝ) + 1) →
+        have hK2 : ∀ u, (i : ℝ) / ((N₀ : ℝ) + 1) ≤ u → u ≤ ((i : ℝ) + 1) / ((N₀ :
+            ℝ) + 1) →
             u ∈ Set.Icc (0:ℝ) 1 → Φ u =ᶠ[𝓝 (η (s₀, u))] Φ (tc i) := by
           intro u h1 h2 hu
           exact hloc (tc i) hIci u hu (hwin u h1 h2)
@@ -2969,7 +2995,8 @@ theorem exists_green_map [T2Space M] [SimplyConnectedSpace M] [NoncompactSpace M
             hK1 σ hσ1 hσ2 _ (le_refl _) hgilt.le
           filter_upwards [(hWo (tc i) hIci).mem_nhds hmem] with y hy using
             hWQ (tc i) hIci y hy
-        refine ⟨fun u => if u ≤ (i : ℝ) / ((N₀ : ℝ) + 1) then Φ' u else Φ (tc i), ?_, ?_⟩
+        refine ⟨fun u => if u ≤ (i : ℝ) / ((N₀ : ℝ) + 1) then Φ' u else Φ (tc i), ?_,
+            ?_⟩
         · rw [hIC] at hΦ'IC ⊢
           obtain ⟨hpa, hp0, hpc⟩ := hΦ'IC
           refine ⟨?_, ?_, ?_⟩
@@ -2989,7 +3016,8 @@ theorem exists_green_map [T2Space M] [SimplyConnectedSpace M] [NoncompactSpace M
           · intro t ht
             rcases lt_trichotomy t ((i : ℝ) / ((N₀ : ℝ) + 1)) with hta | hta | hta
             · obtain ⟨ε', hε'0, hε'p⟩ := hpc t ⟨ht.1, hta.le⟩
-              refine ⟨min ε' ((i : ℝ) / ((N₀ : ℝ) + 1) - t), lt_min hε'0 (by linarith), ?_⟩
+              refine ⟨min ε' ((i : ℝ) / ((N₀ : ℝ) + 1) - t), lt_min hε'0 (by linarith),
+                  ?_⟩
               intro u hu huε
               rw [lt_min_iff] at huε
               have hua : u ≤ (i : ℝ) / ((N₀ : ℝ) + 1) := by
@@ -3052,12 +3080,15 @@ theorem exists_green_map [T2Space M] [SimplyConnectedSpace M] [NoncompactSpace M
     rw [hη1 s' hs'] at hfin
     exact ⟨Φ', hΦ'IC, hfin⟩
   -- ## §10 Homotopy invariance of the terminal germ.
-  have hhomo : ∀ (η : ℝ × ℝ → M), Continuous η → (∀ s ∈ Set.Icc (0:ℝ) 1, η (s, 0) = p₀) →
+  have hhomo : ∀ (η : ℝ × ℝ → M), Continuous η → (∀ s ∈ Set.Icc (0:ℝ) 1, η (s,
+      0) = p₀) →
       (∀ s ∈ Set.Icc (0:ℝ) 1, η (s, 1) = η (0, 1)) →
-      ∀ Φ₀ Φ₁, IsCont (fun t => η (0, t)) 1 Φ₀ → IsCont (fun t => η (1, t)) 1 Φ₁ →
+      ∀ Φ₀ Φ₁, IsCont (fun t => η (0, t)) 1 Φ₀ → IsCont (fun t => η (1, t)) 1 Φ₁
+          →
         Φ₁ 1 =ᶠ[𝓝 (η (0, 1))] Φ₀ 1 := by
     intro η hη hη0 hη1 Φ₀ Φ₁ hΦ₀ hΦ₁
-    have h1A : (1:ℝ) ∈ {s | s ∈ Set.Icc (0:ℝ) 1 ∧ ∃ Φ, IsCont (fun t => η (s, t)) 1 Φ ∧
+    have h1A : (1:ℝ) ∈ {s | s ∈ Set.Icc (0:ℝ) 1 ∧ ∃ Φ, IsCont (fun t => η (s, t)) 1 Φ
+        ∧
         Φ 1 =ᶠ[𝓝 (η (0, 1))] Φ₀ 1} := by
       refine hind 0 1 _ zero_le_one (fun x hx => hx.1)
         ⟨⟨le_refl 0, zero_le_one⟩, Φ₀, hΦ₀, Filter.EventuallyEq.refl _ _⟩ ?_ ?_
@@ -3439,7 +3470,8 @@ theorem injective_green_map [T2Space M] [SimplyConnectedSpace M] [NoncompactSpac
             havg.symm
         _ = Real.circleAverage ((fun y => F y + G y) ∘ (chartAt ℂ x).symm) c ρ := rfl
   -- The logarithm of the modulus of a nonvanishing holomorphic function is harmonic.
-  have hlogM : ∀ Ψ : M → ℂ, (∀ y, ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω Ψ y) → ∀ x : M, Ψ x ≠ 0 →
+  have hlogM : ∀ Ψ : M → ℂ, (∀ y, ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω Ψ y) → ∀ x : M,
+      Ψ x ≠ 0 →
       MHarmonicAt (fun y => Real.log ‖Ψ y‖) x := by
     intro Ψ hΨm x hx
     have h1 : ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω (chartAt ℂ x).symm (chartAt ℂ x x) :=
@@ -3473,7 +3505,8 @@ theorem injective_green_map [T2Space M] [SimplyConnectedSpace M] [NoncompactSpac
     rw [Set.mem_singleton_iff, Complex.ofReal_eq_zero] at h2
     linarith
   -- Zeros of a nonconstant holomorphic function on the surface are isolated.
-  have hisoM : ∀ Ψ : M → ℂ, (∀ y, ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω Ψ y) → (∃ y₀, Ψ y₀ ≠ 0) →
+  have hisoM : ∀ Ψ : M → ℂ, (∀ y, ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω Ψ y) → (∃ y₀,
+      Ψ y₀ ≠ 0) →
       ∀ z : M, Ψ z = 0 → ∀ᶠ y in 𝓝[≠] z, Ψ y ≠ 0 := by
     intro Ψ hΨm hex z hz
     obtain ⟨y₀, hy₀⟩ := hex
@@ -3559,12 +3592,14 @@ theorem injective_green_map [T2Space M] [SimplyConnectedSpace M] [NoncompactSpac
   -- Plane propagation: a nonpositive subharmonic function vanishing at one point of a
   -- preconnected open set vanishes identically.
   have hprop : ∀ (S : Set ℂ) (F : ℂ → ℝ), IsOpen S → IsPreconnected S →
-      SubharmonicOn F S → (∀ w ∈ S, F w ≤ 0) → ∀ w₀ ∈ S, F w₀ = 0 → ∀ w ∈ S, F w = 0 := by
+      SubharmonicOn F S → (∀ w ∈ S, F w ≤ 0) → ∀ w₀ ∈ S, F w₀ = 0 → ∀ w ∈ S,
+          F w = 0 := by
     intro S F hSopen hSpre hFsub hFle w₀ hw₀ hFw₀
     have hu : IsOpen {w : ℂ | ∀ᶠ z in 𝓝 w, F z = 0} := isOpen_setOf_eventually_nhds
     have hv : IsOpen (S ∩ F ⁻¹' {(0 : ℝ)}ᶜ) :=
       hFsub.1.isOpen_inter_preimage hSopen isOpen_compl_singleton
-    have hdisj : Disjoint {w : ℂ | ∀ᶠ z in 𝓝 w, F z = 0} (S ∩ F ⁻¹' {(0 : ℝ)}ᶜ) := by
+    have hdisj : Disjoint {w : ℂ | ∀ᶠ z in 𝓝 w, F z = 0} (S ∩ F ⁻¹' {(0 :
+        ℝ)}ᶜ) := by
       rw [Set.disjoint_left]
       rintro w hw ⟨-, hw2⟩
       exact hw2 hw.self_of_nhds
@@ -3576,7 +3611,8 @@ theorem injective_green_map [T2Space M] [SimplyConnectedSpace M] [NoncompactSpac
         exact hFle z hz
       filter_upwards [SubharmonicOn.eventually_eq_of_le hSopen hFsub hw hmax] with z hz
       rw [hz, hFw]
-    have hcover : S ⊆ {w : ℂ | ∀ᶠ z in 𝓝 w, F z = 0} ∪ (S ∩ F ⁻¹' {(0 : ℝ)}ᶜ) := by
+    have hcover : S ⊆ {w : ℂ | ∀ᶠ z in 𝓝 w, F z = 0} ∪ (S ∩ F ⁻¹' {(0 :
+        ℝ)}ᶜ) := by
       intro w hw
       by_cases hFw : F w = 0
       · exact Or.inl (hzero_mem w hw hFw)
@@ -3615,13 +3651,15 @@ theorem injective_green_map [T2Space M] [SimplyConnectedSpace M] [NoncompactSpac
       (∀ y, ‖f y‖ < 1) → ‖b‖ < 1 → ∀ y : M,
       (1 - (starRingEnd ℂ) b * f y ≠ 0) ∧
       ‖(f y - b) / (1 - (starRingEnd ℂ) b * f y)‖ < 1 ∧
-      ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω (fun x => (f x - b) / (1 - (starRingEnd ℂ) b * f x)) y := by
+      ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω (fun x => (f x - b) / (1 - (starRingEnd ℂ) b * f x))
+          y := by
     intro f b hfm hflt hb y
     have hden : ∀ x : M, 1 - (starRingEnd ℂ) b * f x ≠ 0 := by
       intro x h
       have h1 : ‖(starRingEnd ℂ) b * f x‖ < 1 := by
         rw [norm_mul, Complex.norm_conj]
-        calc ‖b‖ * ‖f x‖ ≤ ‖b‖ * 1 := mul_le_mul_of_nonneg_left (hflt x).le (norm_nonneg b)
+        calc ‖b‖ * ‖f x‖ ≤ ‖b‖ * 1 :=
+              mul_le_mul_of_nonneg_left (hflt x).le (norm_nonneg b)
           _ = ‖b‖ := mul_one _
           _ < 1 := hb
       rw [← sub_eq_zero.mp h, norm_one] at h1
@@ -3680,7 +3718,8 @@ theorem injective_green_map [T2Space M] [SimplyConnectedSpace M] [NoncompactSpac
         (chartAt ℂ q).target ∩ (chartAt ℂ q).symm ⁻¹' W0 :=
       (Metric.closedBall_subset_ball (by linarith)).trans hρsub
     obtain ⟨V', hV'def⟩ : ∃ S : Set M,
-        S = (chartAt ℂ q).source ∩ chartAt ℂ q ⁻¹' ball (chartAt ℂ q q) (ρ / 2) := ⟨_, rfl⟩
+        S = (chartAt ℂ q).source ∩ chartAt ℂ q ⁻¹' ball (chartAt ℂ q q) (ρ / 2) := ⟨_,
+            rfl⟩
     have hV'open : IsOpen V' := by
       rw [hV'def]
       exact (chartAt ℂ q).continuousOn.isOpen_inter_preimage (chartAt ℂ q).open_source
@@ -3718,7 +3757,8 @@ theorem injective_green_map [T2Space M] [SimplyConnectedSpace M] [NoncompactSpac
       rw [hK'def] at hy
       obtain ⟨w, hw, rfl⟩ := hy
       have hwt : w ∈ (chartAt ℂ q).target := (hcbsub hw).1
-      have hysrc : (chartAt ℂ q).symm w ∈ (chartAt ℂ q).source := (chartAt ℂ q).map_target hwt
+      have hysrc : (chartAt ℂ q).symm w ∈ (chartAt ℂ q).source := (chartAt ℂ q).map_target
+          hwt
       have hwch : chartAt ℂ q ((chartAt ℂ q).symm w) = w := (chartAt ℂ q).right_inv hwt
       have hnb : w ∉ ball (chartAt ℂ q q) (ρ / 2) := by
         intro hwb
@@ -3730,7 +3770,8 @@ theorem injective_green_map [T2Space M] [SimplyConnectedSpace M] [NoncompactSpac
         have h2 : ¬ dist w (chartAt ℂ q q) < ρ / 2 := fun h => hnb (mem_ball.2 h)
         linarith [not_lt.mp h2]
       exact ⟨w, mem_sphere.2 hd, rfl⟩
-    have hedge_ne : ∀ y ∈ (chartAt ℂ q).symm '' sphere (chartAt ℂ q q) (ρ / 2), Ψ y ≠ 0 := by
+    have hedge_ne : ∀ y ∈ (chartAt ℂ q).symm '' sphere (chartAt ℂ q q) (ρ / 2), Ψ y ≠
+        0 := by
       rintro y ⟨w, hw, rfl⟩
       have hwb : w ∈ ball (chartAt ℂ q q) ρ := by
         rw [mem_ball]
@@ -3768,7 +3809,8 @@ theorem injective_green_map [T2Space M] [SimplyConnectedSpace M] [NoncompactSpac
       intro N x hx hx0
       simp only [hΛdef]
       rw [if_neg hx, if_pos hx0]
-    have hΛ3 : ∀ N (x : M), x ∉ V' → Ψ x ≠ 0 → Λ N x = max (Real.log ‖Ψ x‖) (-N) := by
+    have hΛ3 : ∀ N (x : M), x ∉ V' → Ψ x ≠ 0 → Λ N x = max (Real.log ‖Ψ x‖)
+        (-N) := by
       intro N x hx hx0
       simp only [hΛdef]
       rw [if_neg hx, if_neg hx0]
@@ -3909,7 +3951,8 @@ theorem injective_green_map [T2Space M] [SimplyConnectedSpace M] [NoncompactSpac
       have hx' := hx
       rw [hslval] at hx'
       have hpne : chartAt ℂ q x - chartAt ℂ q q ≠ 0 := sub_ne_zero_of_ne hxcne
-      have hΨbound : ‖Ψ x‖ ≤ (‖deriv (Ψ ∘ (chartAt ℂ q).symm) (chartAt ℂ q q)‖ + 1)
+      have hΨbound : ‖Ψ x‖ ≤ (‖deriv (Ψ ∘ (chartAt ℂ q).symm) (chartAt ℂ q q)‖ +
+          1)
           * ‖chartAt ℂ q x - chartAt ℂ q q‖ := by
         rw [norm_div] at hx'
         have h2 : 0 < ‖chartAt ℂ q x - chartAt ℂ q q‖ := norm_pos_iff.mpr hpne
@@ -4125,7 +4168,8 @@ theorem injective_green_map [T2Space M] [SimplyConnectedSpace M] [NoncompactSpac
         (eventually_nhdsWithin_iff.mp (hisoM ψ hψm ⟨p₀, hψp₀ne⟩ x hx0))
       have hopen1 : IsOpen ((chartAt ℂ x).target ∩ (chartAt ℂ x).symm ⁻¹' W1) :=
         (chartAt ℂ x).isOpen_inter_preimage_symm hW1open
-      have hmem1 : chartAt ℂ x x ∈ (chartAt ℂ x).target ∩ (chartAt ℂ x).symm ⁻¹' W1 := by
+      have hmem1 : chartAt ℂ x x ∈ (chartAt ℂ x).target ∩ (chartAt ℂ x).symm ⁻¹'
+          W1 := by
         refine ⟨(chartAt ℂ x).map_source hxsrc, ?_⟩
         rw [Set.mem_preimage, (chartAt ℂ x).left_inv hxsrc]
         exact hxW1
@@ -4284,7 +4328,8 @@ theorem exists_diffeomorph_opens_complex_of_injective [ConnectedSpace M]
   classical
   -- `M` has at least two points: pull two points of a chart target back to `M`.
   obtain ⟨p⟩ : Nonempty M := inferInstance
-  obtain ⟨r₀, hr₀, hball₀⟩ := Metric.isOpen_iff.mp (chartAt ℂ p).open_target (chartAt ℂ p p)
+  obtain ⟨r₀, hr₀, hball₀⟩ := Metric.isOpen_iff.mp (chartAt ℂ p).open_target (chartAt
+      ℂ p p)
     ((chartAt ℂ p).map_source (mem_chart_source ℂ p))
   have hcmem : chartAt ℂ p p + ((r₀ / 2 : ℝ) : ℂ) ∈ (chartAt ℂ p).target := by
     apply hball₀
@@ -4379,7 +4424,8 @@ theorem exists_diffeomorph_opens_complex_of_injective [ConnectedSpace M]
         have hsub' : N' ⊆ φ.target := fun z hz => hBsub (hN'sub hz).2
         have hopenimg : IsOpen (f '' (⇑φ.symm '' N')) :=
           hopen _ (φ.isOpen_image_symm_of_subset_target hN'open hsub')
-        have hgmem : f (φ.symm w) ∈ f '' (⇑φ.symm '' N') := ⟨φ.symm w, ⟨w, hwN', rfl⟩, rfl⟩
+        have hgmem : f (φ.symm w) ∈ f '' (⇑φ.symm '' N') := ⟨φ.symm w, ⟨w, hwN', rfl⟩,
+            rfl⟩
         refine Filter.mem_of_superset (hopenimg.mem_nhds hgmem) ?_
         rintro ζ' ⟨x', ⟨w', hw'N', rfl⟩, rfl⟩
         rw [Set.mem_preimage, hηg w' (hN'sub hw'N').2]
@@ -4399,7 +4445,8 @@ theorem exists_diffeomorph_opens_complex_of_injective [ConnectedSpace M]
       exact (HasDerivAt.of_local_left_inverse (hηc ζ hζ) hfd hder hev).differentiableAt
     -- Critical points of the chart reading are isolated (injectivity).
     have hganN : AnalyticOnNhd ℂ (f ∘ ⇑φ.symm) φ.target := fun w hw => hgan w hw
-    have hcrit : ∀ w ∈ φ.target, ∀ᶠ w' in 𝓝[≠] w, deriv (f ∘ ⇑φ.symm) w' ≠ 0 := by
+    have hcrit : ∀ w ∈ φ.target, ∀ᶠ w' in 𝓝[≠] w, deriv (f ∘ ⇑φ.symm) w' ≠
+        0 := by
       intro w hw
       rcases (hganN.deriv w hw).eventually_eq_zero_or_eventually_ne_zero with h0 | hne
       · exfalso
@@ -4441,13 +4488,15 @@ theorem exists_diffeomorph_opens_complex_of_injective [ConnectedSpace M]
         hopen _ (φ.isOpen_image_symm_of_subset_target isOpen_ball hsub')
       have hζW' : ζ ∈ f '' (⇑φ.symm '' ball (η ζ) ρ) :=
         ⟨φ.symm (η ζ), ⟨η ζ, mem_ball_self hρ0, rfl⟩, hgη ζ hζ⟩
-      have hW'W : f '' (⇑φ.symm '' ball (η ζ) ρ) ⊆ f '' (⇑φ.symm '' ball (φ x₀) r) := by
+      have hW'W : f '' (⇑φ.symm '' ball (η ζ) ρ) ⊆ f '' (⇑φ.symm '' ball (φ x₀)
+          r) := by
         rintro ζ' ⟨x', ⟨w', hw', rfl⟩, rfl⟩
         exact ⟨φ.symm w', ⟨w', (hballρ w' hw').2, rfl⟩, rfl⟩
       have hoff : DifferentiableOn ℂ η (f '' (⇑φ.symm '' ball (η ζ) ρ) \ {ζ}) := by
         rintro ζ' ⟨hζ'W', hζ'ne⟩
         obtain ⟨x', ⟨w', hw'ball, rfl⟩, rfl⟩ := hζ'W'
-        refine (hd_nc _ (hW'W ⟨φ.symm w', ⟨w', hw'ball, rfl⟩, rfl⟩) ?_).differentiableWithinAt
+        refine (hd_nc _ (hW'W ⟨φ.symm w', ⟨w', hw'ball, rfl⟩, rfl⟩)
+            ?_).differentiableWithinAt
         rw [hηg w' (hballρ w' hw'ball).2]
         refine (hballρ w' hw'ball).1 ?_
         intro hmem
@@ -4469,10 +4518,12 @@ theorem exists_diffeomorph_opens_complex_of_injective [ConnectedSpace M]
       contMDiffAt_iff_contDiffAt.mpr hηan.contDiffAt
     have hφsymm : ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω (⇑φ.symm) (η (y₀ : ℂ)) :=
       contMDiffAt_symm_of_mem_maximalAtlas hmax (hBsub (hηB _ hy₀W))
-    have hcomp2 : ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω ((⇑φ.symm ∘ η) ∘ (Subtype.val : ↥U → ℂ)) y₀ :=
+    have hcomp2 : ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω ((⇑φ.symm ∘ η) ∘ (Subtype.val : ↥U
+        → ℂ)) y₀ :=
       ContMDiffAt.comp y₀ (ContMDiffAt.comp ((y₀ : ℂ)) hφsymm hηsm) hval
     refine hcomp2.congr_of_eventuallyEq ?_
-    have hmemW : (Subtype.val : ↥U → ℂ) ⁻¹' (f '' (⇑φ.symm '' ball (φ x₀) r)) ∈ 𝓝 y₀ :=
+    have hmemW : (Subtype.val : ↥U → ℂ) ⁻¹' (f '' (⇑φ.symm '' ball (φ x₀) r)) ∈
+        𝓝 y₀ :=
       (hWopen.preimage continuous_subtype_val).mem_nhds hy₀W
     filter_upwards [hmemW] with y hy
     obtain ⟨x, ⟨w, hwB, rfl⟩, hfy⟩ := hy
@@ -4507,7 +4558,8 @@ theorem exists_diffeomorph_opens_of_hasGreenFunction [T2Space M] [SimplyConnecte
   obtain ⟨W, hWimg, ⟨e₂⟩⟩ := exists_diffeomorph_opens_planar V hinfty
   have hWU : W = U := by
     apply Opens.ext
-    have himg : ((↑) : ℂ → ℂ̂) '' (W : Set ℂ) = ((↑) : ℂ → ℂ̂) '' (U : Set ℂ) :=
+    have himg : ((↑) : ℂ → ℂ̂) '' (W : Set ℂ) = ((↑) : ℂ → ℂ̂) '' (U : Set ℂ)
+        :=
       hWimg
     exact Set.image_injective.mpr OnePoint.coe_injective himg
   subst hWU

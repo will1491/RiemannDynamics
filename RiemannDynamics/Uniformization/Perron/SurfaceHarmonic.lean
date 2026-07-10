@@ -71,7 +71,8 @@ theorem mharmonicAt_iff_of_mem_maximalAtlas {u : M → ℝ} {x : M}
     MHarmonicAt u x ↔ HarmonicAt (u ∘ e.symm) (e x) := by
   -- Generic one-directional transfer between two charts of the maximal atlas.
   have key : ∀ f g : OpenPartialHomeomorph M ℂ,
-      f ∈ IsManifold.maximalAtlas 𝓘(ℂ) ω M → g ∈ IsManifold.maximalAtlas 𝓘(ℂ) ω M →
+      f ∈ IsManifold.maximalAtlas 𝓘(ℂ) ω M →
+      g ∈ IsManifold.maximalAtlas 𝓘(ℂ) ω M →
       x ∈ f.source → x ∈ g.source →
       HarmonicAt (u ∘ f.symm) (f x) → HarmonicAt (u ∘ g.symm) (g x) := by
     intro f g hf hg hxf hxg hH
@@ -138,7 +139,8 @@ theorem msubharmonicAt_iff_of_mem_maximalAtlas {v : M → ℝ} {x : M}
     exact hF.2 c (hWU hc) ρ hρ (hb.trans hWU)
   -- Generic one-directional transfer between two charts of the maximal atlas.
   have key : ∀ f g : OpenPartialHomeomorph M ℂ,
-      f ∈ IsManifold.maximalAtlas 𝓘(ℂ) ω M → g ∈ IsManifold.maximalAtlas 𝓘(ℂ) ω M →
+      f ∈ IsManifold.maximalAtlas 𝓘(ℂ) ω M →
+      g ∈ IsManifold.maximalAtlas 𝓘(ℂ) ω M →
       x ∈ f.source → x ∈ g.source →
       (∃ r > 0, ball (f x) r ⊆ f.target ∧ SubharmonicOn (v ∘ f.symm) (ball (f x) r)) →
       ∃ r > 0, ball (g x) r ⊆ g.target ∧ SubharmonicOn (v ∘ g.symm) (ball (g x) r) := by
@@ -172,7 +174,8 @@ theorem msubharmonicAt_iff_of_mem_maximalAtlas {v : M → ℝ} {x : M}
     have hsub' : SubharmonicOn (v ∘ ↑f.symm) (ball (f x) r ∩ (g.symm ≫ₕ f).target) :=
       transfer _ _ _ _ hsub Set.inter_subset_left (fun _ _ => rfl)
     have hcomp : SubharmonicOn ((v ∘ ↑f.symm) ∘ ↑(g.symm ≫ₕ f))
-        ((g.symm ≫ₕ f).source ∩ ↑(g.symm ≫ₕ f) ⁻¹' (ball (f x) r ∩ (g.symm ≫ₕ f).target)) :=
+        ((g.symm ≫ₕ f).source ∩
+          ↑(g.symm ≫ₕ f) ⁻¹' (ball (f x) r ∩ (g.symm ≫ₕ f).target)) :=
       subharmonicOn_comp_biholo (g.symm ≫ₕ f) (hcd1.differentiableOn (by simp))
         (hcd2.differentiableOn (by simp)) hsub' Set.inter_subset_right
     -- The transported domain is an open neighbourhood of `g x`; shrink to a ball.
@@ -252,7 +255,8 @@ theorem MSubharmonicAt.max {v w : M → ℝ} {x : M} (hv : MSubharmonicAt v x)
     (hw : MSubharmonicAt w x) : MSubharmonicAt (fun y => max (v y) (w y)) x := by
   obtain ⟨r₁, hr₁, hsub₁, hsh₁⟩ := hv
   obtain ⟨r₂, hr₂, -, hsh₂⟩ := hw
-  have hmono : ∀ (f : ℂ → ℝ) (U V : Set ℂ), SubharmonicOn f U → V ⊆ U → SubharmonicOn f V :=
+  have hmono : ∀ (f : ℂ → ℝ) (U V : Set ℂ),
+      SubharmonicOn f U → V ⊆ U → SubharmonicOn f V :=
     fun f U V hf hVU =>
       ⟨hf.1.mono hVU, fun c hc ρ hρ hball => hf.2 c (hVU hc) ρ hρ (hball.trans hVU)⟩
   refine ⟨min r₁ r₂, lt_min hr₁ hr₂,
@@ -434,7 +438,8 @@ theorem mharmonicOn_of_monotone_tendsto {s : Set M} (hs : IsOpen s)
       Function.comp_id, Function.id_comp, Set.preimage_id, Set.range_id,
       Set.inter_univ] at hprop
     -- `w` lies in the source of the transition map.
-    have hwτ : w ∈ ((chartAt ℂ x).symm ≫ₕ chartAt ℂ ((chartAt ℂ x).symm w)).source := by
+    have hwτ :
+        w ∈ ((chartAt ℂ x).symm ≫ₕ chartAt ℂ ((chartAt ℂ x).symm w)).source := by
       rw [OpenPartialHomeomorph.trans_source, (chartAt ℂ x).symm_source]
       exact ⟨hwt, by rw [Set.mem_preimage]; exact mem_chart_source ℂ _⟩
     -- The transition map is analytic at `w`.
