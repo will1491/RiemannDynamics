@@ -189,6 +189,8 @@ import RiemannDynamics.Sphere.SphericalMetric
 import RiemannDynamics.Uniformization.SphereManifold
 import RiemannDynamics.Uniformization.HolomorphicEquiv
 import RiemannDynamics.Uniformization.Trichotomy
+import RiemannDynamics.Uniformization.Fuchsian
+import RiemannDynamics.Uniformization.HyperbolicSurface
 import RiemannDynamics.Uniformization.Perron.HarmonicTransfer
 import RiemannDynamics.Uniformization.Perron.Myrberg
 import RiemannDynamics.Uniformization.Perron.PathCover
