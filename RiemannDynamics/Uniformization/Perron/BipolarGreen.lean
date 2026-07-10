@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Will (Ziang) Li
 -/
 import RiemannDynamics.Uniformization.Perron.GreensFunction
+import RiemannDynamics.Uniformization.Perron.Myrberg
 
 /-!
 # The bipolar Green's function and the non-hyperbolic embedding

@@ -190,6 +190,9 @@ import RiemannDynamics.Uniformization.SphereManifold
 import RiemannDynamics.Uniformization.HolomorphicEquiv
 import RiemannDynamics.Uniformization.Trichotomy
 import RiemannDynamics.Uniformization.Perron.HarmonicTransfer
+import RiemannDynamics.Uniformization.Perron.Myrberg
+import RiemannDynamics.Uniformization.Perron.PathCover
 import RiemannDynamics.Uniformization.Perron.SurfaceHarmonic
+import RiemannDynamics.Uniformization.Perron.GreenSymmetry
 import RiemannDynamics.Uniformization.Perron.GreensFunction
 import RiemannDynamics.Uniformization.Perron.BipolarGreen
