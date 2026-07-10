@@ -570,38 +570,491 @@ theorem exists_pathCover_openPartialHomeomorph (pc : PathCover x₀) :
       if h : (y : M) ∈ V then ⟨(y : M), pc.cls.trans ⟦lin pc.pt hpcV (y : M) h⟧⟩ else pc
     rw [dif_pos y.2]
 
+omit [ChartedSpace ℂ M] in
 /-- **The path cover is path connected** when the base is connected: the
 canonical lift of a representing path joins the basepoint class to any
 point. -/
 theorem pathConnectedSpace_pathCover [ConnectedSpace M] :
     PathConnectedSpace (PathCover x₀) := by
-  sorry
+  classical
+  -- Two paths tracing `γ.extend` along real reparametrizations with common endpoints are
+  -- homotopic: the straight-line homotopy in the parameter.
+  have hkey : ∀ {a b c d : M} (γ' : Path c d) (p q : Path a b) (f g : I → ℝ),
+      Continuous f → Continuous g → f 0 = g 0 → f 1 = g 1 →
+      (∀ u, p u = γ'.extend (f u)) → (∀ u, q u = γ'.extend (g u)) →
+      (⟦p⟧ : Path.Homotopic.Quotient a b) = ⟦q⟧ := by
+    intro a b c d γ' p q f g hf hg h0 h1 hp hq
+    refine Quotient.sound ⟨⟨⟨⟨fun st =>
+      γ'.extend ((1 - (st.1 : ℝ)) * f st.2 + (st.1 : ℝ) * g st.2), ?_⟩, ?_, ?_⟩, ?_⟩⟩
+    · exact γ'.continuous_extend.comp
+        (((continuous_const.sub (continuous_subtype_val.comp continuous_fst)).mul
+          (hf.comp continuous_snd)).add
+          ((continuous_subtype_val.comp continuous_fst).mul (hg.comp continuous_snd)))
+    · intro u
+      change γ'.extend ((1 - ((0 : I) : ℝ)) * f u + ((0 : I) : ℝ) * g u) = p u
+      rw [hp u, show ((1 - ((0 : I) : ℝ)) * f u + ((0 : I) : ℝ) * g u) = f u by norm_num]
+    · intro u
+      change γ'.extend ((1 - ((1 : I) : ℝ)) * f u + ((1 : I) : ℝ) * g u) = q u
+      rw [hq u, show ((1 - ((1 : I) : ℝ)) * f u + ((1 : I) : ℝ) * g u) = g u by norm_num]
+    · intro s u hu
+      rcases hu with h0' | h1'
+      · rw [h0']
+        change γ'.extend ((1 - (s : ℝ)) * f 0 + (s : ℝ) * g 0) = p 0
+        rw [hp 0, ← h0, show ((1 - (s : ℝ)) * f 0 + (s : ℝ) * f 0) = f 0 by ring]
+      · rw [Set.mem_singleton_iff] at h1'
+        rw [h1']
+        change γ'.extend ((1 - (s : ℝ)) * f 1 + (s : ℝ) * g 1) = p 1
+        rw [hp 1, ← h1, show ((1 - (s : ℝ)) * f 1 + (s : ℝ) * f 1) = f 1 by ring]
+  -- Equality of cover points across an equality of endpoints, through `Path.cast`.
+  have hPC : ∀ {a b : M} (h : a = b) (p : Path x₀ a),
+      (⟨a, ⟦p⟧⟩ : PathCover x₀) = ⟨b, ⟦p.cast rfl h.symm⟧⟩ := by
+    rintro a b rfl p
+    rfl
+  -- Concatenation of homotopy classes of paths.
+  have hq1 : ∀ {a b c : M} (p : Path a b) (q : Path b c),
+      Path.Homotopic.Quotient.trans ⟦p⟧ ⟦q⟧ =
+        (⟦p.trans q⟧ : Path.Homotopic.Quotient a c) := by
+    intros
+    rfl
+  -- Every point of the cover is joined to the basepoint class by the canonical lift.
+  have hjoin : ∀ pc : PathCover x₀, Joined (pathCoverBase x₀) pc := by
+    rintro ⟨y, cls⟩
+    obtain ⟨γ, rfl⟩ := Quotient.exists_rep cls
+    -- The initial segments of `γ`, reparametrized to full paths.
+    obtain ⟨sp, hspfun⟩ : ∃ sp : ∀ t : I, Path x₀ (γ t),
+        ∀ t u, (sp t) u = γ.extend ((u : ℝ) * (t : ℝ)) := by
+      refine ⟨fun t => ⟨⟨fun u => γ.extend ((u : ℝ) * (t : ℝ)),
+        γ.continuous_extend.comp (continuous_subtype_val.mul continuous_const)⟩, ?_, ?_⟩,
+        fun t u => rfl⟩
+      · change γ.extend (((0 : I) : ℝ) * (t : ℝ)) = x₀
+        norm_num
+      · change γ.extend (((1 : I) : ℝ) * (t : ℝ)) = γ t
+        rw [show (((1 : I) : ℝ) * (t : ℝ)) = (t : ℝ) by norm_num]
+        exact γ.extend_extends' t
+    -- Continuity of the canonical lift into the sheet topology.
+    have hLcont : Continuous fun t : I => (⟨γ t, ⟦sp t⟧⟩ : PathCover x₀) := by
+      refine continuous_generateFrom_iff.mpr ?_
+      rintro s ⟨pc, U, hUopen, -, rfl⟩
+      rw [isOpen_iff_forall_mem_open]
+      intro t₀ ht₀
+      obtain ⟨η₀, hη₀, hcls₀⟩ := ht₀
+      have hcls₀' : (⟦sp t₀⟧ : Path.Homotopic.Quotient x₀ (γ t₀)) =
+          pc.cls.trans ⟦η₀⟧ := hcls₀
+      have hγt₀U : γ t₀ ∈ U := by
+        have h := hη₀ 1
+        rw [η₀.target] at h
+        exact h
+      have hJopen : IsOpen {u : I | γ u ∈ U} := hUopen.preimage γ.continuous
+      obtain ⟨δ, hδ0, hδball⟩ := Metric.isOpen_iff.mp hJopen t₀ hγt₀U
+      refine ⟨Metric.ball t₀ δ, ?_, Metric.isOpen_ball, Metric.mem_ball_self hδ0⟩
+      intro t ht
+      -- The parameter segment from `t₀` to `t` stays in the unit interval and in the ball.
+      have hseg : ∀ u : I,
+          ((1 - (u : ℝ)) * (t₀ : ℝ) + (u : ℝ) * (t : ℝ)) ∈ Set.Icc (0 : ℝ) 1 := by
+        intro u
+        constructor
+        · nlinarith [t₀.2.1, t.2.1, u.2.1, u.2.2]
+        · nlinarith [t₀.2.2, t.2.2, u.2.1, u.2.2]
+      have hsegBall : ∀ u : I,
+          (⟨(1 - (u : ℝ)) * (t₀ : ℝ) + (u : ℝ) * (t : ℝ), hseg u⟩ : I) ∈
+            Metric.ball t₀ δ := by
+        intro u
+        rw [Metric.mem_ball, Subtype.dist_eq, Real.dist_eq]
+        have htd : |(t : ℝ) - (t₀ : ℝ)| < δ := by
+          have h := ht
+          rw [Metric.mem_ball, Subtype.dist_eq, Real.dist_eq] at h
+          exact h
+        have hd : |((1 - (u : ℝ)) * (t₀ : ℝ) + (u : ℝ) * (t : ℝ) : ℝ) - (t₀ : ℝ)| =
+            (u : ℝ) * |(t : ℝ) - (t₀ : ℝ)| := by
+          rw [show ((1 - (u : ℝ)) * (t₀ : ℝ) + (u : ℝ) * (t : ℝ) - (t₀ : ℝ) : ℝ) =
+            (u : ℝ) * ((t : ℝ) - (t₀ : ℝ)) by ring, abs_mul, abs_of_nonneg u.2.1]
+        change |((1 - (u : ℝ)) * (t₀ : ℝ) + (u : ℝ) * (t : ℝ) : ℝ) - (t₀ : ℝ)| < δ
+        rw [hd]
+        have habs : (0 : ℝ) ≤ |(t : ℝ) - (t₀ : ℝ)| := abs_nonneg _
+        nlinarith [u.2.1, u.2.2]
+      have hsegU : ∀ u : I,
+          γ.extend ((1 - (u : ℝ)) * (t₀ : ℝ) + (u : ℝ) * (t : ℝ)) ∈ U := by
+        intro u
+        have hmem := hδball (hsegBall u)
+        have hx : γ.extend ((1 - (u : ℝ)) * (t₀ : ℝ) + (u : ℝ) * (t : ℝ)) =
+            γ (⟨(1 - (u : ℝ)) * (t₀ : ℝ) + (u : ℝ) * (t : ℝ), hseg u⟩ : I) :=
+          γ.extend_extends'
+            (⟨(1 - (u : ℝ)) * (t₀ : ℝ) + (u : ℝ) * (t : ℝ), hseg u⟩ : I)
+        rw [hx]
+        exact hmem
+      -- The chart-free connector along `γ` from `γ t₀` to `γ t`.
+      obtain ⟨c, hcfun⟩ : ∃ c : Path (γ t₀) (γ t),
+          ∀ u, c u = γ.extend ((1 - (u : ℝ)) * (t₀ : ℝ) + (u : ℝ) * (t : ℝ)) := by
+        refine ⟨⟨⟨fun u => γ.extend ((1 - (u : ℝ)) * (t₀ : ℝ) + (u : ℝ) * (t : ℝ)),
+          γ.continuous_extend.comp
+            (((continuous_const.sub continuous_subtype_val).mul continuous_const).add
+              (continuous_subtype_val.mul continuous_const))⟩, ?_, ?_⟩, fun u => rfl⟩
+        · change γ.extend
+              ((1 - ((0 : I) : ℝ)) * (t₀ : ℝ) + ((0 : I) : ℝ) * (t : ℝ)) = γ t₀
+          rw [show ((1 - ((0 : I) : ℝ)) * (t₀ : ℝ) + ((0 : I) : ℝ) * (t : ℝ)) =
+            (t₀ : ℝ) by norm_num]
+          exact γ.extend_extends' t₀
+        · change γ.extend
+              ((1 - ((1 : I) : ℝ)) * (t₀ : ℝ) + ((1 : I) : ℝ) * (t : ℝ)) = γ t
+          rw [show ((1 - ((1 : I) : ℝ)) * (t₀ : ℝ) + ((1 : I) : ℝ) * (t : ℝ)) =
+            (t : ℝ) by norm_num]
+          exact γ.extend_extends' t
+      -- The concatenated witness runs inside `U`.
+      have htmem : ∀ u, (η₀.trans c) u ∈ U := by
+        intro u
+        have h := Set.mem_range_self (f := ⇑(η₀.trans c)) u
+        rw [Path.trans_range] at h
+        rcases h with ⟨v, hv⟩ | ⟨v, hv⟩
+        · exact hv ▸ hη₀ v
+        · have hcv : c v ∈ U := by
+            rw [hcfun v]
+            exact hsegU v
+          exact hv ▸ hcv
+      -- The class of `sp t` is the class of `sp t₀` continued by the connector.
+      have hclseq : (⟦sp t⟧ : Path.Homotopic.Quotient x₀ (γ t)) =
+          ⟦(sp t₀).trans c⟧ := by
+        refine hkey γ (sp t) ((sp t₀).trans c) (fun u => (u : ℝ) * (t : ℝ))
+          (fun u => if (u : ℝ) ≤ 1 / 2 then 2 * (u : ℝ) * (t₀ : ℝ)
+            else (1 - (2 * (u : ℝ) - 1)) * (t₀ : ℝ) + (2 * (u : ℝ) - 1) * (t : ℝ))
+          (continuous_subtype_val.mul continuous_const) ?_ ?_ ?_ (fun u => hspfun t u) ?_
+        · refine Continuous.if_le ?_ ?_ continuous_subtype_val continuous_const ?_
+          · exact (continuous_const.mul continuous_subtype_val).mul continuous_const
+          · exact ((continuous_const.sub ((continuous_const.mul continuous_subtype_val).sub
+              continuous_const)).mul continuous_const).add
+              (((continuous_const.mul continuous_subtype_val).sub continuous_const).mul
+                continuous_const)
+          · intro u hu
+            rw [hu]
+            norm_num
+        · norm_num
+        · norm_num
+        · intro u
+          rw [Path.trans_apply]
+          split_ifs with h
+          · rw [hspfun t₀]
+            change γ.extend (2 * (u : ℝ) * (t₀ : ℝ)) =
+              γ.extend (if (u : ℝ) ≤ 1 / 2 then 2 * (u : ℝ) * (t₀ : ℝ)
+                else (1 - (2 * (u : ℝ) - 1)) * (t₀ : ℝ) + (2 * (u : ℝ) - 1) * (t : ℝ))
+            rw [if_pos h]
+          · rw [hcfun]
+            change γ.extend
+                ((1 - (2 * (u : ℝ) - 1)) * (t₀ : ℝ) + (2 * (u : ℝ) - 1) * (t : ℝ)) =
+              γ.extend (if (u : ℝ) ≤ 1 / 2 then 2 * (u : ℝ) * (t₀ : ℝ)
+                else (1 - (2 * (u : ℝ) - 1)) * (t₀ : ℝ) + (2 * (u : ℝ) - 1) * (t : ℝ))
+            rw [if_neg h]
+      refine ⟨η₀.trans c, htmem, ?_⟩
+      have hfin : (⟦sp t⟧ : Path.Homotopic.Quotient x₀ (γ t)) =
+          pc.cls.trans ⟦η₀.trans c⟧ := by
+        rw [hclseq, ← hq1 (sp t₀) c, hcls₀', Path.Homotopic.Quotient.trans_assoc, hq1]
+      exact hfin
+    -- Endpoint identifications of the canonical lift.
+    have hL0 : (⟨γ 0, ⟦sp 0⟧⟩ : PathCover x₀) = pathCoverBase x₀ := by
+      rw [hPC γ.source (sp 0)]
+      have hpath : (sp 0).cast rfl γ.source.symm = Path.refl x₀ := by
+        ext u
+        change (sp 0) u = x₀
+        rw [hspfun 0 u]
+        norm_num
+      rw [hpath]
+      rfl
+    have hL1 : (⟨γ 1, ⟦sp 1⟧⟩ : PathCover x₀) = ⟨y, ⟦γ⟧⟩ := by
+      rw [hPC γ.target (sp 1)]
+      have hpath : (sp 1).cast rfl γ.target.symm = γ := by
+        ext u
+        change (sp 1) u = γ u
+        rw [hspfun 1 u, show ((u : ℝ) * ((1 : I) : ℝ)) = (u : ℝ) by norm_num]
+        exact γ.extend_extends' u
+      rw [hpath]
+    exact ⟨⟨⟨fun t => (⟨γ t, ⟦sp t⟧⟩ : PathCover x₀), hLcont⟩, hL0, hL1⟩⟩
+  exact ⟨⟨pathCoverBase x₀⟩, fun pc qc => (hjoin pc).symm.trans (hjoin qc)⟩
 
 /-- **The path cover is simply connected**: a loop upstairs projects to a
 loop whose class fixes the fiber, so it is null homotopic downstairs, and the
 homotopy lifts. -/
 theorem simplyConnectedSpace_pathCover [ConnectedSpace M] :
     SimplyConnectedSpace (PathCover x₀) := by
-  sorry
+  classical
+  have hcov := pathCoverProj_isCoveringMap x₀
+  have hcont : Continuous (pathCoverProj x₀) := hcov.continuous
+  -- Two paths tracing `γ'.extend` along real reparametrizations with common endpoints are
+  -- homotopic: the straight-line homotopy in the parameter.
+  have hkey : ∀ {a b c d : M} (γ' : Path c d) (p q : Path a b) (f g : I → ℝ),
+      Continuous f → Continuous g → f 0 = g 0 → f 1 = g 1 →
+      (∀ u, p u = γ'.extend (f u)) → (∀ u, q u = γ'.extend (g u)) →
+      (⟦p⟧ : Path.Homotopic.Quotient a b) = ⟦q⟧ := by
+    intro a b c d γ' p q f g hf hg h0 h1 hp hq
+    refine Quotient.sound ⟨⟨⟨⟨fun st =>
+      γ'.extend ((1 - (st.1 : ℝ)) * f st.2 + (st.1 : ℝ) * g st.2), ?_⟩, ?_, ?_⟩, ?_⟩⟩
+    · exact γ'.continuous_extend.comp
+        (((continuous_const.sub (continuous_subtype_val.comp continuous_fst)).mul
+          (hf.comp continuous_snd)).add
+          ((continuous_subtype_val.comp continuous_fst).mul (hg.comp continuous_snd)))
+    · intro u
+      change γ'.extend ((1 - ((0 : I) : ℝ)) * f u + ((0 : I) : ℝ) * g u) = p u
+      rw [hp u, show ((1 - ((0 : I) : ℝ)) * f u + ((0 : I) : ℝ) * g u) = f u by norm_num]
+    · intro u
+      change γ'.extend ((1 - ((1 : I) : ℝ)) * f u + ((1 : I) : ℝ) * g u) = q u
+      rw [hq u, show ((1 - ((1 : I) : ℝ)) * f u + ((1 : I) : ℝ) * g u) = g u by norm_num]
+    · intro s u hu
+      rcases hu with h0' | h1'
+      · rw [h0']
+        change γ'.extend ((1 - (s : ℝ)) * f 0 + (s : ℝ) * g 0) = p 0
+        rw [hp 0, ← h0, show ((1 - (s : ℝ)) * f 0 + (s : ℝ) * f 0) = f 0 by ring]
+      · rw [Set.mem_singleton_iff] at h1'
+        rw [h1']
+        change γ'.extend ((1 - (s : ℝ)) * f 1 + (s : ℝ) * g 1) = p 1
+        rw [hp 1, ← h1, show ((1 - (s : ℝ)) * f 1 + (s : ℝ) * f 1) = f 1 by ring]
+  -- Concatenation of homotopy classes of paths.
+  have hq1 : ∀ {a b c : M} (p : Path a b) (q : Path b c),
+      Path.Homotopic.Quotient.trans ⟦p⟧ ⟦q⟧ =
+        (⟦p.trans q⟧ : Path.Homotopic.Quotient a c) := by
+    intros
+    rfl
+  -- Rebasing a cover point along an equality of endpoints, through the class cast.
+  have hcast : ∀ {z z' : M} (h : z' = z) (c : Path.Homotopic.Quotient x₀ z),
+      (⟨z, c⟩ : PathCover x₀) = ⟨z', c.cast rfl h⟩ := by
+    rintro z z' rfl c
+    rw [Path.Homotopic.Quotient.cast_rfl_rfl]
+  -- The endpoint cast distributes over concatenation.
+  have hqct : ∀ {v w w' : M} (h : w' = w) (d₁ : Path.Homotopic.Quotient x₀ v)
+      (e : Path.Homotopic.Quotient v w),
+      d₁.trans (e.cast rfl h) = (d₁.trans e).cast rfl h := by
+    rintro v w w' rfl d₁ e
+    rw [Path.Homotopic.Quotient.cast_rfl_rfl, Path.Homotopic.Quotient.cast_rfl_rfl]
+  -- Left cancellation of a fixed class in concatenations.
+  have hcancel : ∀ {z y : M} (w : Path.Homotopic.Quotient x₀ z)
+      (u v : Path.Homotopic.Quotient z y), w.trans u = w.trans v → u = v := by
+    intro z y w u v h
+    have h2 := congrArg (Path.Homotopic.Quotient.trans w.symm) h
+    rw [← Path.Homotopic.Quotient.trans_assoc, ← Path.Homotopic.Quotient.trans_assoc,
+      Path.Homotopic.Quotient.symm_trans, Path.Homotopic.Quotient.refl_trans,
+      Path.Homotopic.Quotient.refl_trans] at h2
+    exact h2
+  -- **Monodromy formula**: a continuous lift of a path downstairs which starts at a given
+  -- cover point ends at the continuation of its class by the class of the path.
+  have hmono : ∀ {a b : M} (γ : Path a b) (Λ : I → PathCover x₀), Continuous Λ →
+      (∀ t, pathCoverProj x₀ (Λ t) = γ t) → ∀ d : Path.Homotopic.Quotient x₀ a,
+      Λ 0 = ⟨a, d⟩ → Λ 1 = ⟨b, d.trans ⟦γ⟧⟩ := by
+    intro a b γ Λ hΛcont hlift d hΛ0
+    -- The initial segments of `γ`, reparametrized to full paths.
+    obtain ⟨sp, hspfun⟩ : ∃ sp : ∀ t : I, Path a (γ t),
+        ∀ t u, (sp t) u = γ.extend ((u : ℝ) * (t : ℝ)) := by
+      refine ⟨fun t => ⟨⟨fun u => γ.extend ((u : ℝ) * (t : ℝ)),
+        γ.continuous_extend.comp (continuous_subtype_val.mul continuous_const)⟩, ?_, ?_⟩,
+        fun t u => rfl⟩
+      · change γ.extend (((0 : I) : ℝ) * (t : ℝ)) = a
+        norm_num
+      · change γ.extend (((1 : I) : ℝ) * (t : ℝ)) = γ t
+        rw [show (((1 : I) : ℝ) * (t : ℝ)) = (t : ℝ) by norm_num]
+        exact γ.extend_extends' t
+    -- Continuity of the canonical lift into the sheet topology.
+    have hLcont : Continuous fun t : I => (⟨γ t, d.trans ⟦sp t⟧⟩ : PathCover x₀) := by
+      refine continuous_generateFrom_iff.mpr ?_
+      rintro s ⟨rc, U, hUopen, -, rfl⟩
+      rw [isOpen_iff_forall_mem_open]
+      intro t₀ ht₀
+      obtain ⟨η₀, hη₀, hcls₀⟩ := ht₀
+      have hcls₀' : d.trans (⟦sp t₀⟧ : Path.Homotopic.Quotient a (γ t₀)) =
+          rc.cls.trans ⟦η₀⟧ := hcls₀
+      have hγt₀U : γ t₀ ∈ U := by
+        have h := hη₀ 1
+        rw [η₀.target] at h
+        exact h
+      have hJopen : IsOpen {u : I | γ u ∈ U} := hUopen.preimage γ.continuous
+      obtain ⟨δ, hδ0, hδball⟩ := Metric.isOpen_iff.mp hJopen t₀ hγt₀U
+      refine ⟨Metric.ball t₀ δ, ?_, Metric.isOpen_ball, Metric.mem_ball_self hδ0⟩
+      intro t ht
+      -- The parameter segment from `t₀` to `t` stays in the unit interval and in the ball.
+      have hseg : ∀ u : I,
+          ((1 - (u : ℝ)) * (t₀ : ℝ) + (u : ℝ) * (t : ℝ)) ∈ Set.Icc (0 : ℝ) 1 := by
+        intro u
+        constructor
+        · nlinarith [t₀.2.1, t.2.1, u.2.1, u.2.2]
+        · nlinarith [t₀.2.2, t.2.2, u.2.1, u.2.2]
+      have hsegBall : ∀ u : I,
+          (⟨(1 - (u : ℝ)) * (t₀ : ℝ) + (u : ℝ) * (t : ℝ), hseg u⟩ : I) ∈
+            Metric.ball t₀ δ := by
+        intro u
+        rw [Metric.mem_ball, Subtype.dist_eq, Real.dist_eq]
+        have htd : |(t : ℝ) - (t₀ : ℝ)| < δ := by
+          have h := ht
+          rw [Metric.mem_ball, Subtype.dist_eq, Real.dist_eq] at h
+          exact h
+        have hd : |((1 - (u : ℝ)) * (t₀ : ℝ) + (u : ℝ) * (t : ℝ) : ℝ) - (t₀ : ℝ)| =
+            (u : ℝ) * |(t : ℝ) - (t₀ : ℝ)| := by
+          rw [show ((1 - (u : ℝ)) * (t₀ : ℝ) + (u : ℝ) * (t : ℝ) - (t₀ : ℝ) : ℝ) =
+            (u : ℝ) * ((t : ℝ) - (t₀ : ℝ)) by ring, abs_mul, abs_of_nonneg u.2.1]
+        change |((1 - (u : ℝ)) * (t₀ : ℝ) + (u : ℝ) * (t : ℝ) : ℝ) - (t₀ : ℝ)| < δ
+        rw [hd]
+        have habs : (0 : ℝ) ≤ |(t : ℝ) - (t₀ : ℝ)| := abs_nonneg _
+        nlinarith [u.2.1, u.2.2]
+      have hsegU : ∀ u : I,
+          γ.extend ((1 - (u : ℝ)) * (t₀ : ℝ) + (u : ℝ) * (t : ℝ)) ∈ U := by
+        intro u
+        have hmem := hδball (hsegBall u)
+        have hx : γ.extend ((1 - (u : ℝ)) * (t₀ : ℝ) + (u : ℝ) * (t : ℝ)) =
+            γ (⟨(1 - (u : ℝ)) * (t₀ : ℝ) + (u : ℝ) * (t : ℝ), hseg u⟩ : I) :=
+          γ.extend_extends'
+            (⟨(1 - (u : ℝ)) * (t₀ : ℝ) + (u : ℝ) * (t : ℝ), hseg u⟩ : I)
+        rw [hx]
+        exact hmem
+      -- The connector along `γ` from `γ t₀` to `γ t`.
+      obtain ⟨c, hcfun⟩ : ∃ c : Path (γ t₀) (γ t),
+          ∀ u, c u = γ.extend ((1 - (u : ℝ)) * (t₀ : ℝ) + (u : ℝ) * (t : ℝ)) := by
+        refine ⟨⟨⟨fun u => γ.extend ((1 - (u : ℝ)) * (t₀ : ℝ) + (u : ℝ) * (t : ℝ)),
+          γ.continuous_extend.comp
+            (((continuous_const.sub continuous_subtype_val).mul continuous_const).add
+              (continuous_subtype_val.mul continuous_const))⟩, ?_, ?_⟩, fun u => rfl⟩
+        · change γ.extend
+              ((1 - ((0 : I) : ℝ)) * (t₀ : ℝ) + ((0 : I) : ℝ) * (t : ℝ)) = γ t₀
+          rw [show ((1 - ((0 : I) : ℝ)) * (t₀ : ℝ) + ((0 : I) : ℝ) * (t : ℝ)) =
+            (t₀ : ℝ) by norm_num]
+          exact γ.extend_extends' t₀
+        · change γ.extend
+              ((1 - ((1 : I) : ℝ)) * (t₀ : ℝ) + ((1 : I) : ℝ) * (t : ℝ)) = γ t
+          rw [show ((1 - ((1 : I) : ℝ)) * (t₀ : ℝ) + ((1 : I) : ℝ) * (t : ℝ)) =
+            (t : ℝ) by norm_num]
+          exact γ.extend_extends' t
+      -- The concatenated witness runs inside `U`.
+      have htmem : ∀ u, (η₀.trans c) u ∈ U := by
+        intro u
+        have h := Set.mem_range_self (f := ⇑(η₀.trans c)) u
+        rw [Path.trans_range] at h
+        rcases h with ⟨v, hv⟩ | ⟨v, hv⟩
+        · exact hv ▸ hη₀ v
+        · have hcv : c v ∈ U := by
+            rw [hcfun v]
+            exact hsegU v
+          exact hv ▸ hcv
+      -- The class of `sp t` is the class of `sp t₀` continued by the connector.
+      have hclseq : (⟦sp t⟧ : Path.Homotopic.Quotient a (γ t)) =
+          ⟦(sp t₀).trans c⟧ := by
+        refine hkey γ (sp t) ((sp t₀).trans c) (fun u => (u : ℝ) * (t : ℝ))
+          (fun u => if (u : ℝ) ≤ 1 / 2 then 2 * (u : ℝ) * (t₀ : ℝ)
+            else (1 - (2 * (u : ℝ) - 1)) * (t₀ : ℝ) + (2 * (u : ℝ) - 1) * (t : ℝ))
+          (continuous_subtype_val.mul continuous_const) ?_ ?_ ?_ (fun u => hspfun t u) ?_
+        · refine Continuous.if_le ?_ ?_ continuous_subtype_val continuous_const ?_
+          · exact (continuous_const.mul continuous_subtype_val).mul continuous_const
+          · exact ((continuous_const.sub ((continuous_const.mul continuous_subtype_val).sub
+              continuous_const)).mul continuous_const).add
+              (((continuous_const.mul continuous_subtype_val).sub continuous_const).mul
+                continuous_const)
+          · intro u hu
+            rw [hu]
+            norm_num
+        · norm_num
+        · norm_num
+        · intro u
+          rw [Path.trans_apply]
+          split_ifs with h
+          · rw [hspfun t₀]
+            change γ.extend (2 * (u : ℝ) * (t₀ : ℝ)) =
+              γ.extend (if (u : ℝ) ≤ 1 / 2 then 2 * (u : ℝ) * (t₀ : ℝ)
+                else (1 - (2 * (u : ℝ) - 1)) * (t₀ : ℝ) + (2 * (u : ℝ) - 1) * (t : ℝ))
+            rw [if_pos h]
+          · rw [hcfun]
+            change γ.extend
+                ((1 - (2 * (u : ℝ) - 1)) * (t₀ : ℝ) + (2 * (u : ℝ) - 1) * (t : ℝ)) =
+              γ.extend (if (u : ℝ) ≤ 1 / 2 then 2 * (u : ℝ) * (t₀ : ℝ)
+                else (1 - (2 * (u : ℝ) - 1)) * (t₀ : ℝ) + (2 * (u : ℝ) - 1) * (t : ℝ))
+            rw [if_neg h]
+      refine ⟨η₀.trans c, htmem, ?_⟩
+      have hfin : d.trans (⟦sp t⟧ : Path.Homotopic.Quotient a (γ t)) =
+          rc.cls.trans ⟦η₀.trans c⟧ := by
+        rw [hclseq, ← hq1 (sp t₀) c, ← Path.Homotopic.Quotient.trans_assoc, hcls₀',
+          Path.Homotopic.Quotient.trans_assoc, hq1]
+      exact hfin
+    -- The lift agrees with the canonical lift by uniqueness of lifts.
+    have hLeq : Λ = fun t : I => (⟨γ t, d.trans ⟦sp t⟧⟩ : PathCover x₀) := by
+      refine hcov.eq_of_comp_eq hΛcont hLcont ?_ 0 ?_
+      · funext t
+        exact hlift t
+      · rw [hΛ0]
+        have hsp0 : sp 0 = (Path.refl a).cast rfl γ.source := by
+          ext u
+          rw [hspfun 0 u]
+          change γ.extend ((u : ℝ) * ((0 : I) : ℝ)) = a
+          rw [show ((u : ℝ) * ((0 : I) : ℝ)) = 0 by norm_num]
+          exact γ.extend_zero
+        rw [hsp0]
+        have h1 : (⟦(Path.refl a).cast rfl γ.source⟧ :
+            Path.Homotopic.Quotient a (γ 0)) =
+            (Path.Homotopic.Quotient.refl a).cast rfl γ.source := rfl
+        rw [h1, hqct γ.source d (Path.Homotopic.Quotient.refl a),
+          Path.Homotopic.Quotient.trans_refl]
+        exact hcast γ.source d
+    -- Read off the endpoint of the canonical lift.
+    have hL1 : Λ 1 = ⟨γ 1, d.trans ⟦sp 1⟧⟩ := congrFun hLeq 1
+    have hsp1 : sp 1 = γ.cast rfl γ.target := by
+      ext u
+      rw [hspfun 1 u]
+      change γ.extend ((u : ℝ) * ((1 : I) : ℝ)) = γ u
+      rw [show ((u : ℝ) * ((1 : I) : ℝ)) = (u : ℝ) by norm_num]
+      exact γ.extend_extends' u
+    rw [hL1, hsp1]
+    have h2 : (⟦γ.cast rfl γ.target⟧ : Path.Homotopic.Quotient a (γ 1)) =
+        Path.Homotopic.Quotient.cast ⟦γ⟧ rfl γ.target := rfl
+    rw [h2, hqct γ.target d ⟦γ⟧]
+    exact (hcast γ.target (d.trans ⟦γ⟧)).symm
+  -- Assemble simple connectivity: path connectivity plus uniqueness of path classes,
+  -- the latter through injectivity of the covering projection on class sets.
+  rw [simply_connected_iff_paths_homotopic]
+  refine ⟨pathConnectedSpace_pathCover x₀, fun pc qc => ⟨fun c₁ c₂ => ?_⟩⟩
+  refine hcov.injective_path_homotopic_map pc qc ?_
+  change Path.Homotopic.Quotient.map c₁ ⟨pathCoverProj x₀, hcov.continuous⟩ =
+    Path.Homotopic.Quotient.map c₂ ⟨pathCoverProj x₀, hcov.continuous⟩
+  induction c₁ using Path.Homotopic.Quotient.ind with | mk P₁ =>
+  induction c₂ using Path.Homotopic.Quotient.ind with | mk P₂ =>
+  have h₁ := hmono (P₁.map hcont) ⇑P₁ P₁.continuous (fun t => rfl) pc.cls P₁.source
+  have h₂ := hmono (P₂.map hcont) ⇑P₂ P₂.continuous (fun t => rfl) pc.cls P₂.source
+  have e₁ : qc = ⟨pathCoverProj x₀ qc, pc.cls.trans ⟦P₁.map hcont⟧⟩ :=
+    P₁.target.symm.trans h₁
+  have e₂ : qc = ⟨pathCoverProj x₀ qc, pc.cls.trans ⟦P₂.map hcont⟧⟩ :=
+    P₂.target.symm.trans h₂
+  have e₃ := e₁.symm.trans e₂
+  have e₄ : pc.cls.trans (⟦P₁.map hcont⟧ :
+      Path.Homotopic.Quotient (pathCoverProj x₀ pc) (pathCoverProj x₀ qc)) =
+      pc.cls.trans ⟦P₂.map hcont⟧ := by
+    injection e₃
+  exact hcancel pc.cls _ _ e₄
 
 /-- **The path cover is Hausdorff** over a Hausdorff base: distinct points of
 one fiber lie in disjoint sheets, and points of distinct fibers are separated
 through the base. -/
 theorem t2space_pathCover [T2Space M] : T2Space (PathCover x₀) := by
-  sorry
+  have hcov := pathCoverProj_isCoveringMap x₀
+  refine ⟨fun pc qc hne => ?_⟩
+  by_cases hp : pathCoverProj x₀ pc = pathCoverProj x₀ qc
+  · exact hcov.isSeparatedMap pc qc hp hne
+  · obtain ⟨u, v, hu, hv, hxu, hyv, huv⟩ := t2_separation hp
+    exact ⟨pathCoverProj x₀ ⁻¹' u, pathCoverProj x₀ ⁻¹' v, hu.preimage hcov.continuous,
+      hv.preimage hcov.continuous, hxu, hyv, huv.preimage _⟩
 
 /-- **The path cover of a noncompact connected base is noncompact**: the
 projection is a continuous surjection. -/
 theorem noncompactSpace_pathCover [ConnectedSpace M] [NoncompactSpace M] :
     NoncompactSpace (PathCover x₀) := by
-  sorry
+  have hcov := pathCoverProj_isCoveringMap x₀
+  haveI : LocPathConnectedSpace M := ChartedSpace.locPathConnectedSpace ℂ M
+  haveI : PathConnectedSpace M := PathConnectedSpace.of_locPathConnectedSpace
+  have hsurj : Function.Surjective (pathCoverProj x₀) := fun y =>
+    ⟨⟨y, ⟦PathConnectedSpace.somePath x₀ y⟧⟩, rfl⟩
+  refine ⟨fun hcomp => ?_⟩
+  have himg : IsCompact (pathCoverProj x₀ '' Set.univ) := hcomp.image hcov.continuous
+  rw [Set.image_univ, hsurj.range_eq] at himg
+  exact noncompact_univ M himg
 
 /-- **Fibers meet compact sets in finite sets**: fibers of the covering
 projection are closed and discrete over a Hausdorff base. -/
 theorem finite_fiber_inter_compact [T2Space M] {K : Set (PathCover x₀)}
     (hK : IsCompact K) (y : M) :
     (pathCoverProj x₀ ⁻¹' {y} ∩ K).Finite := by
-  sorry
+  have hcov := pathCoverProj_isCoveringMap x₀
+  have hdisc : IsDiscrete (pathCoverProj x₀ ⁻¹' {y}) :=
+    isDiscrete_iff_discreteTopology.mpr (hcov y).discreteTopology_fiber
+  have hclosed : IsClosed (pathCoverProj x₀ ⁻¹' {y}) :=
+    isClosed_singleton.preimage hcov.continuous
+  exact (hK.inter_left hclosed).finite (hdisc.mono Set.inter_subset_left)
 
 /-- The charted-space structure of the path cover: the projection restricted
 to a sheet, followed by a chart of the base. -/
@@ -625,7 +1078,67 @@ variable [IsManifold 𝓘(ℂ) ω M]
 /-- **The path cover is an analytic surface**: transition maps factor through
 transition maps of the base. -/
 theorem isManifold_pathCover : IsManifold 𝓘(ℂ) ω (PathCover x₀) := by
-  sorry
+  -- Transitions between two proj-restricting charts composed with base charts equal, on their
+  -- source, the base transition; the groupoid membership transfers along the EqOnSource.
+  have key : ∀ (E E' : OpenPartialHomeomorph (PathCover x₀) M)
+      (φ φ' : OpenPartialHomeomorph M ℂ), φ ∈ atlas ℂ M → φ' ∈ atlas ℂ M →
+      (∀ qc ∈ E.source, E qc = pathCoverProj x₀ qc) →
+      (∀ qc ∈ E'.source, E' qc = pathCoverProj x₀ qc) →
+      (E ≫ₕ φ).symm ≫ₕ (E' ≫ₕ φ') ∈ contDiffGroupoid ω 𝓘(ℂ) := by
+    intro E E' φ φ' hφ hφ' hE hE'
+    have hfacts : ∀ z ∈ ((E ≫ₕ φ).symm ≫ₕ (E' ≫ₕ φ')).source,
+        z ∈ φ.target ∧ φ.symm z ∈ φ'.source ∧ E' (E.symm (φ.symm z)) = φ.symm z := by
+      intro z hz
+      rw [OpenPartialHomeomorph.trans_source] at hz
+      obtain ⟨hz1, hz2⟩ := hz
+      have hz1' : z ∈ φ.target ∧ φ.symm z ∈ E.target := by
+        rw [OpenPartialHomeomorph.symm_source, OpenPartialHomeomorph.trans_target] at hz1
+        exact ⟨hz1.1, hz1.2⟩
+      rw [Set.mem_preimage, OpenPartialHomeomorph.trans_source] at hz2
+      have ha : E.symm (φ.symm z) ∈ E'.source := hz2.1
+      have hb : E' (E.symm (φ.symm z)) ∈ φ'.source := hz2.2
+      have hqs : E.symm (φ.symm z) ∈ E.source := E.map_target hz1'.2
+      have hkey : E' (E.symm (φ.symm z)) = φ.symm z := by
+        rw [hE' _ ha, ← hE _ hqs, E.right_inv hz1'.2]
+      refine ⟨hz1'.1, ?_, hkey⟩
+      rw [← hkey]
+      exact hb
+    have hopen : IsOpen ((E ≫ₕ φ).symm ≫ₕ (E' ≫ₕ φ')).source :=
+      ((E ≫ₕ φ).symm ≫ₕ (E' ≫ₕ φ')).open_source
+    have hTmem : φ.symm ≫ₕ φ' ∈ contDiffGroupoid ω 𝓘(ℂ) :=
+      (contDiffGroupoid ω 𝓘(ℂ)).compatible hφ hφ'
+    refine (contDiffGroupoid ω 𝓘(ℂ)).mem_of_eqOnSource
+      (closedUnderRestriction' hTmem hopen) ⟨?_, ?_⟩
+    · rw [(φ.symm ≫ₕ φ').restr_source' _ hopen]
+      refine (Set.inter_eq_self_of_subset_right ?_).symm
+      intro z hz
+      obtain ⟨h1, h2, -⟩ := hfacts z hz
+      rw [OpenPartialHomeomorph.trans_source]
+      exact ⟨h1, h2⟩
+    · intro z hz
+      obtain ⟨-, -, hkey⟩ := hfacts z hz
+      exact congrArg (⇑φ') hkey
+  have hmem : ∀ c : OpenPartialHomeomorph (PathCover x₀) ℂ,
+      c ∈ atlas ℂ (PathCover x₀) → ∃ pc : PathCover x₀,
+        c = Classical.choose (exists_pathCover_openPartialHomeomorph x₀ pc) ≫ₕ
+          chartAt ℂ (pathCoverProj x₀ pc) := by
+    intro c hc
+    have hc' : c ∈ ⋃ pc : PathCover x₀,
+        ({Classical.choose (exists_pathCover_openPartialHomeomorph x₀ pc) ≫ₕ
+          chartAt ℂ (pathCoverProj x₀ pc)} :
+          Set (OpenPartialHomeomorph (PathCover x₀) ℂ)) := hc
+    exact Set.mem_iUnion.mp hc'
+  have hgr : HasGroupoid (PathCover x₀) (contDiffGroupoid ω 𝓘(ℂ)) := by
+    constructor
+    intro e e' he he'
+    obtain ⟨pc, rfl⟩ := hmem e he
+    obtain ⟨pc', rfl⟩ := hmem e' he'
+    obtain ⟨-, hEproj, -⟩ :=
+      Classical.choose_spec (exists_pathCover_openPartialHomeomorph x₀ pc)
+    obtain ⟨-, hE'proj, -⟩ :=
+      Classical.choose_spec (exists_pathCover_openPartialHomeomorph x₀ pc')
+    exact key _ _ _ _ (chart_mem_atlas ℂ _) (chart_mem_atlas ℂ _) hEproj hE'proj
+  exact IsManifold.mk' 𝓘(ℂ) ω (PathCover x₀) (gr := hgr)
 
 instance : IsManifold 𝓘(ℂ) ω (PathCover x₀) := isManifold_pathCover x₀
 
@@ -638,7 +1151,26 @@ theorem exists_charts_pathCoverProj_comm (pc : PathCover x₀) :
         pc ∈ e.source ∧ pathCoverProj x₀ pc ∈ f.source ∧
         (∀ qc ∈ e.source, pathCoverProj x₀ qc ∈ f.source) ∧
         ∀ qc ∈ e.source, f (pathCoverProj x₀ qc) = e qc := by
-  sorry
+  obtain ⟨-, hproj, -⟩ :=
+    Classical.choose_spec (exists_pathCover_openPartialHomeomorph x₀ pc)
+  have hsrc : ∀ qc ∈ (chartAt ℂ pc).source,
+      qc ∈ (Classical.choose (exists_pathCover_openPartialHomeomorph x₀ pc)).source ∧
+        Classical.choose (exists_pathCover_openPartialHomeomorph x₀ pc) qc ∈
+          (chartAt ℂ (pathCoverProj x₀ pc)).source := by
+    intro qc hq
+    have hq' : qc ∈ (Classical.choose (exists_pathCover_openPartialHomeomorph x₀ pc) ≫ₕ
+        chartAt ℂ (pathCoverProj x₀ pc)).source := hq
+    rw [OpenPartialHomeomorph.trans_source] at hq'
+    exact ⟨hq'.1, hq'.2⟩
+  refine ⟨chartAt ℂ pc, IsManifold.chart_mem_maximalAtlas pc,
+    chartAt ℂ (pathCoverProj x₀ pc), IsManifold.chart_mem_maximalAtlas _,
+    mem_chart_source ℂ pc, mem_chart_source ℂ _, fun qc hq => ?_, fun qc hq => ?_⟩
+  · obtain ⟨h1, h2⟩ := hsrc qc hq
+    rw [← hproj qc h1]
+    exact h2
+  · obtain ⟨h1, h2⟩ := hsrc qc hq
+    rw [← hproj qc h1]
+    rfl
 
 /-- **Deck transformations are biholomorphisms**: precomposition by a loop
 class is an analytic diffeomorphism of the cover commuting with the
@@ -646,13 +1178,127 @@ projection. -/
 theorem exists_pathCoverDeck_diffeomorph (γ : Path.Homotopic.Quotient x₀ x₀) :
     ∃ e : PathCover x₀ ≃ₘ^ω⟮𝓘(ℂ), 𝓘(ℂ)⟯ PathCover x₀,
       ∀ pc, e pc = pathCoverDeck x₀ γ pc := by
-  sorry
+  classical
+  -- Composition and identity laws for the deck action.
+  have hcomp : ∀ (δ δ' : Path.Homotopic.Quotient x₀ x₀) (pc : PathCover x₀),
+      pathCoverDeck x₀ δ (pathCoverDeck x₀ δ' pc) =
+        pathCoverDeck x₀ (Path.Homotopic.Quotient.trans δ δ') pc := fun δ δ' pc =>
+    congrArg (PathCover.mk pc.pt) (Path.Homotopic.Quotient.trans_assoc δ δ' pc.cls).symm
+  have hdeck_refl : ∀ pc : PathCover x₀,
+      pathCoverDeck x₀ (Path.Homotopic.Quotient.refl x₀) pc = pc := by
+    intro pc
+    obtain ⟨pt, cls⟩ := pc
+    exact congrArg (PathCover.mk pt) (Path.Homotopic.Quotient.refl_trans cls)
+  -- Every deck transformation is continuous: preimages of sheets are sheets.
+  have hcont : ∀ δ : Path.Homotopic.Quotient x₀ x₀, Continuous (pathCoverDeck x₀ δ) := by
+    intro δ
+    refine continuous_generateFrom_iff.mpr ?_
+    rintro s ⟨pc, U, hUopen, hpcU, rfl⟩
+    have hpre : pathCoverDeck x₀ δ ⁻¹' pathCoverSheet x₀ pc U =
+        pathCoverSheet x₀ ⟨pc.pt, Path.Homotopic.Quotient.trans
+          (Path.Homotopic.Quotient.symm δ) pc.cls⟩ U := by
+      ext qc
+      constructor
+      · rintro ⟨η, hη, hcls⟩
+        have hcls' : Path.Homotopic.Quotient.trans δ qc.cls = Path.Homotopic.Quotient.trans
+            pc.cls (⟦η⟧ : Path.Homotopic.Quotient pc.pt qc.pt) := hcls
+        refine ⟨η, hη, ?_⟩
+        have hgoal : qc.cls = Path.Homotopic.Quotient.trans (Path.Homotopic.Quotient.trans
+            (Path.Homotopic.Quotient.symm δ) pc.cls)
+            (⟦η⟧ : Path.Homotopic.Quotient pc.pt qc.pt) := by
+          rw [Path.Homotopic.Quotient.trans_assoc, ← hcls',
+            ← Path.Homotopic.Quotient.trans_assoc, Path.Homotopic.Quotient.symm_trans,
+            Path.Homotopic.Quotient.refl_trans]
+        exact hgoal
+      · rintro ⟨η, hη, hcls⟩
+        have hcls' : qc.cls = Path.Homotopic.Quotient.trans (Path.Homotopic.Quotient.trans
+            (Path.Homotopic.Quotient.symm δ) pc.cls)
+            (⟦η⟧ : Path.Homotopic.Quotient pc.pt qc.pt) := hcls
+        refine ⟨η, hη, ?_⟩
+        have hgoal : Path.Homotopic.Quotient.trans δ qc.cls = Path.Homotopic.Quotient.trans
+            pc.cls (⟦η⟧ : Path.Homotopic.Quotient pc.pt qc.pt) := by
+          rw [hcls', ← Path.Homotopic.Quotient.trans_assoc,
+            ← Path.Homotopic.Quotient.trans_assoc, Path.Homotopic.Quotient.trans_symm,
+            Path.Homotopic.Quotient.refl_trans]
+        exact hgoal
+    rw [hpre]
+    exact isOpen_generateFrom_of_mem
+      ⟨⟨pc.pt, Path.Homotopic.Quotient.trans (Path.Homotopic.Quotient.symm δ) pc.cls⟩, U,
+        hUopen, hpcU, rfl⟩
+  -- Every deck transformation is analytic: through the commuting charts it reads
+  -- as a transition map of the base.
+  have hsmooth : ∀ δ : Path.Homotopic.Quotient x₀ x₀,
+      ContMDiff 𝓘(ℂ) 𝓘(ℂ) ω (pathCoverDeck x₀ δ) := by
+    intro δ pc
+    obtain ⟨e₁, he₁, f₁, hf₁, hpc₁, hprojpc₁, hall₁, hcomm₁⟩ :=
+      exists_charts_pathCoverProj_comm x₀ pc
+    obtain ⟨e₂, he₂, f₂, hf₂, hpc₂, hproj₂, -, hcomm₂⟩ :=
+      exists_charts_pathCoverProj_comm x₀ (pathCoverDeck x₀ δ pc)
+    have hA : ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω e₁ pc := contMDiffAt_of_mem_maximalAtlas he₁ hpc₁
+    have he₁pc : e₁ pc ∈ f₁.target := by
+      rw [← hcomm₁ pc hpc₁]
+      exact f₁.map_source hprojpc₁
+    have hB : ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω f₁.symm (e₁ pc) :=
+      contMDiffAt_symm_of_mem_maximalAtlas hf₁ he₁pc
+    have hp2 : f₁.symm (e₁ pc) = pathCoverProj x₀ pc := by
+      rw [← hcomm₁ pc hpc₁]
+      exact f₁.left_inv hprojpc₁
+    have hC : ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω f₂ (f₁.symm (e₁ pc)) := by
+      rw [hp2]
+      exact contMDiffAt_of_mem_maximalAtlas hf₂ hproj₂
+    have hf₂proj : f₂ (f₁.symm (e₁ pc)) ∈ e₂.target := by
+      rw [hp2]
+      have h2 : f₂ (pathCoverProj x₀ pc) = e₂ (pathCoverDeck x₀ δ pc) :=
+        hcomm₂ (pathCoverDeck x₀ δ pc) hpc₂
+      rw [h2]
+      exact e₂.map_source hpc₂
+    have hD : ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω e₂.symm (f₂ (f₁.symm (e₁ pc))) :=
+      contMDiffAt_symm_of_mem_maximalAtlas he₂ hf₂proj
+    have hF : ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω
+        (fun qc : PathCover x₀ => e₂.symm (f₂ (f₁.symm (e₁ qc)))) pc :=
+      hD.comp pc (hC.comp pc (hB.comp pc hA))
+    have hSopen : IsOpen (e₁.source ∩ pathCoverDeck x₀ δ ⁻¹' e₂.source) :=
+      e₁.open_source.inter (e₂.open_source.preimage (hcont δ))
+    refine hF.congr_of_eventuallyEq
+      (Filter.eventuallyEq_of_mem (hSopen.mem_nhds ⟨hpc₁, hpc₂⟩) ?_)
+    intro qc hqc
+    have h1 : f₁.symm (e₁ qc) = pathCoverProj x₀ qc := by
+      rw [← hcomm₁ qc hqc.1]
+      exact f₁.left_inv (hall₁ qc hqc.1)
+    have h2 : f₂ (pathCoverProj x₀ qc) = e₂ (pathCoverDeck x₀ δ qc) :=
+      hcomm₂ (pathCoverDeck x₀ δ qc) hqc.2
+    change pathCoverDeck x₀ δ qc = e₂.symm (f₂ (f₁.symm (e₁ qc)))
+    rw [h1, h2]
+    exact (e₂.left_inv hqc.2).symm
+  refine ⟨{ toFun := pathCoverDeck x₀ γ
+            invFun := pathCoverDeck x₀ (Path.Homotopic.Quotient.symm γ)
+            left_inv := ?_
+            right_inv := ?_
+            contMDiff_toFun := hsmooth γ
+            contMDiff_invFun := hsmooth (Path.Homotopic.Quotient.symm γ) },
+    fun pc => rfl⟩
+  · intro pc
+    rw [hcomp, Path.Homotopic.Quotient.symm_trans]
+    exact hdeck_refl pc
+  · intro pc
+    rw [hcomp, Path.Homotopic.Quotient.trans_symm]
+    exact hdeck_refl pc
 
+omit [ChartedSpace ℂ M] [IsManifold 𝓘(ℂ) ω M] in
 /-- **The deck action is transitive on fibers**: two path classes with the
 same endpoint differ by precomposition with a loop class at the basepoint. -/
 theorem pathCoverDeck_transitive (pc qc : PathCover x₀)
     (h : pathCoverProj x₀ pc = pathCoverProj x₀ qc) :
     ∃ γ : Path.Homotopic.Quotient x₀ x₀, pathCoverDeck x₀ γ pc = qc := by
-  sorry
+  obtain ⟨pt₁, c₁⟩ := pc
+  obtain ⟨pt₂, c₂⟩ := qc
+  have h' : pt₁ = pt₂ := h
+  subst h'
+  refine ⟨Path.Homotopic.Quotient.trans c₂ (Path.Homotopic.Quotient.symm c₁), ?_⟩
+  have hkey : Path.Homotopic.Quotient.trans
+      (Path.Homotopic.Quotient.trans c₂ (Path.Homotopic.Quotient.symm c₁)) c₁ = c₂ := by
+    rw [Path.Homotopic.Quotient.trans_assoc, Path.Homotopic.Quotient.symm_trans,
+      Path.Homotopic.Quotient.trans_refl]
+  exact congrArg (PathCover.mk pt₁) hkey
 
 end RiemannDynamics
