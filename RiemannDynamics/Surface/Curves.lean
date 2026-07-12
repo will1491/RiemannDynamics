@@ -17,14 +17,26 @@ quotients by reparametrization and orientation reversal at once.
 
 A multicurve is a finite family of disjoint, pairwise non-isotopic essential
 simple closed curves. A mapping class is reducible when some representative
-preserves a nonempty multicurve up to isotopy and permutation, periodic when
-it has finite order, and pseudo-Anosov when it is neither.
+preserves a nonempty multicurve up to isotopy and permutation, and periodic
+when it has finite order. The Nielsen–Thurston classification identifies the
+classes that are neither periodic nor reducible as the pseudo-Anosov ones,
+where pseudo-Anosov is the dynamical property of a representative — an
+invariant transverse measured-foliation pair stretched by a factor `λ > 1` —
+not the negation itself.
 
 The Dehn twist about a curve is supported on an embedded annulus
 neighborhood: transport the model twist `(z, t) ↦ (z · exp (2πt), t)` of
 `Circle × I` through the annulus embedding and extend by the identity; the
 model twist is the identity on both boundary circles, so the extension is
 continuous.
+
+The twist is indexed by the parametrized annulus, not by the curve alone:
+precomposing the annulus with the reflection `(z, t) ↦ (z, 1 − t)` conjugates
+the model twist to its inverse, so the two transverse orientations of an
+annulus about the same curve produce mutually inverse mapping classes.
+Selecting the positive twist determined by the curve requires an annulus
+embedding compatible with the surface orientation together with uniqueness of
+the annulus up to ambient isotopy; neither is imposed here.
 -/
 
 open Complex Metric Set Topology Filter TopologicalSpace unitInterval
@@ -299,18 +311,14 @@ def IsPeriodic {S : Type*} [TopologicalSpace S] [CompactSpace S] [T2Space S]
     (φ : MappingClassGroup S) : Prop :=
   ∃ n : ℕ, 0 < n ∧ φ ^ n = 1
 
-/-- A mapping class is pseudo-Anosov when it is neither periodic nor
-reducible. -/
-def IsPseudoAnosov {S : Type*} [TopologicalSpace S] [CompactSpace S]
-    [T2Space S] [ChartedSpace ℂ S] [Fact (HasOrientedAtlas S)]
-    (φ : MappingClassGroup S) : Prop :=
-  ¬ IsPeriodic φ ∧ ¬ IsReducible φ
-
 /-! ## Annulus neighborhoods and Dehn twists -/
 
 /-- An embedded annulus neighborhood of a simple closed curve: an injective
 continuous map of `Circle × I` whose middle circle is the curve, whose open
-part has open image, and whose range is proper. -/
+part has open image, and whose range is proper. No compatibility with a
+surface orientation is imposed: precomposing with the reflection
+`(z, t) ↦ (z, 1 − t)` yields another annulus neighborhood of the same curve
+with the opposite transverse orientation. -/
 structure AnnulusNbhd {S : Type*} [TopologicalSpace S]
     (c : SimpleClosedCurve S) where
   /-- The annulus parametrization. -/
@@ -674,7 +682,12 @@ theorem dehnTwist_orientationPreserving {S : Type*} [TopologicalSpace S]
     · rw [Set.mem_preimage, Homeomorph.toOpenPartialHomeomorph_apply, h2]
       exact h1.1
 
-/-- The mapping class of the Dehn twist about an annulus neighborhood. -/
+/-- The mapping class of the Dehn twist about a parametrized annulus
+neighborhood. The class depends on the parametrization up to inversion:
+precomposing the annulus with the reflection `(z, t) ↦ (z, 1 − t)` conjugates
+the model twist to its inverse and hence inverts the class, so this is a
+signed twist attached to the annulus, not canonically the positive twist
+about the underlying curve. -/
 noncomputable def dehnTwistClass {S : Type*} [TopologicalSpace S]
     [CompactSpace S] [T2Space S] [ChartedSpace ℂ S] [ConnectedSpace S]
     [Fact (HasOrientedAtlas S)] {c : SimpleClosedCurve S}
