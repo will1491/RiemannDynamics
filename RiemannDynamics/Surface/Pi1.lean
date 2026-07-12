@@ -18,11 +18,10 @@ model is this presented group,
 
 `Nonempty (FundamentalGroup (GenusSurface g) (basePoint g) ≃* surfaceGroup g)`,
 
-is the polygon case of the Seifert–van Kampen theorem and is not stated
-here: with the current infrastructure it would require either the universal
-`4g`-gon tiling (the Poincaré polygon theorem) together with a deck-group
-bridge, or edge-path combinatorics on the polygon complex. This file only
-pins the group-theoretic interface.
+is the polygon case of the Seifert–van Kampen theorem. Establishing it
+requires either the universal `4g`-gon tiling (the Poincaré polygon theorem)
+together with a deck-group bridge, or edge-path combinatorics on the polygon
+complex.
 -/
 
 open Set

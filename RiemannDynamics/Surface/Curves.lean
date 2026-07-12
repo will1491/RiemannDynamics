@@ -61,21 +61,15 @@ theorem SimpleClosedCurve.isEmbedding {S : Type*} [TopologicalSpace S]
     [T2Space S] (c : SimpleClosedCurve S) : IsEmbedding c.toFun := by
   exact (c.toFun.continuous.isClosedEmbedding c.inj).isEmbedding
 
-/- C-2b -/
-
 /-- The image of a simple closed curve is compact. -/
 theorem SimpleClosedCurve.isCompact_range {S : Type*} [TopologicalSpace S]
     (c : SimpleClosedCurve S) : IsCompact c.range := by
   exact _root_.isCompact_range c.toFun.continuous
 
-/- C-2c -/
-
 /-- The image of a simple closed curve in a Hausdorff space is closed. -/
 theorem SimpleClosedCurve.isClosed_range {S : Type*} [TopologicalSpace S]
     [T2Space S] (c : SimpleClosedCurve S) : IsClosed c.range := by
   exact c.isCompact_range.isClosed
-
-/- C-3 -/
 
 /-- A simple closed curve is essential when it is not freely null-homotopic:
 no homotopy from its parametrization to any constant map exists. -/
@@ -99,8 +93,6 @@ theorem isEssential_congr_const {S : Type*} [TopologicalSpace S]
       map_one_left := fun _ => (PathConnectedSpace.somePath q p).target }
   exact h.false (H.trans hK)
 
-/- C-4a -/
-
 /-- The image of a simple closed curve under a self-homeomorphism. -/
 def _root_.Homeomorph.mapSCC {S : Type*} [TopologicalSpace S] (f : S ≃ₜ S)
     (c : SimpleClosedCurve S) : SimpleClosedCurve S :=
@@ -110,8 +102,6 @@ def _root_.Homeomorph.mapSCC {S : Type*} [TopologicalSpace S] (f : S ≃ₜ S)
 theorem range_mapSCC {S : Type*} [TopologicalSpace S] (f : S ≃ₜ S)
     (c : SimpleClosedCurve S) : (f.mapSCC c).range = f '' c.range := by
   exact Set.range_comp ⇑f ⇑c.toFun
-
-/- C-4b -/
 
 /-- Essentiality is preserved by self-homeomorphisms: compose a
 null-homotopy with the inverse. -/
@@ -128,8 +118,6 @@ theorem SimpleClosedCurve.IsEssential.mapSCC {S : Type*} [TopologicalSpace S]
   have e2 : f.symm.toCM.comp (ContinuousMap.const Circle p) =
       ContinuousMap.const Circle (f.symm p) := rfl
   exact (hc (f.symm p)).false (H2.cast e1 e2)
-
-/- C-5 -/
 
 /-! ## Curve isotopy and multicurves -/
 
@@ -161,8 +149,6 @@ theorem sccIsotopic_equivalence (S : Type*) [TopologicalSpace S]
     refine ⟨g * f, IsIsotopicToId.mul hg hf, ?_⟩
     have hcoe : ⇑(g * f) = ⇑g ∘ ⇑f := rfl
     rw [hcoe, Set.image_comp, hfi, hgi]
-
-/- C-8a -/
 
 /-- A multicurve: a finite family of essential, pairwise disjoint, pairwise
 non-isotopic simple closed curves. -/
@@ -200,16 +186,12 @@ theorem SCCIsotopic.map {S : Type*} [TopologicalSpace S] [CompactSpace S]
   rw [hcoe, Set.image_comp, Set.image_comp, ← Set.image_comp ⇑f.symm ⇑f,
     Homeomorph.symm_comp_self, Set.image_id, hki]
 
-/- C-8b -/
-
 /-- An isotopically trivial homeomorphism carries every curve to an isotopic
 curve. -/
 theorem SCCIsotopic.of_isIsotopicToId {S : Type*} [TopologicalSpace S]
     {f : S ≃ₜ S} (hf : IsIsotopicToId f) (c : SimpleClosedCurve S) :
     SCCIsotopic c (f.mapSCC c) := by
   exact ⟨f, hf, (range_mapSCC f c).symm⟩
-
-/- C-7a -/
 
 /-- Images of distinct components of a multicurve under a self-homeomorphism
 remain disjoint. -/
@@ -218,8 +200,6 @@ theorem mapMulticurve_disjoint {S : Type*} [TopologicalSpace S] (f : S ≃ₜ S)
     Disjoint (f.mapSCC (M.c i)).range (f.mapSCC (M.c j)).range := by
   rw [range_mapSCC, range_mapSCC]
   exact (Set.disjoint_image_iff f.injective).mpr (M.disjoint i j hij)
-
-/- C-7b -/
 
 /-- Images of distinct components of a multicurve under a self-homeomorphism
 remain non-isotopic. -/
@@ -235,8 +215,6 @@ theorem mapMulticurve_nonisotopic {S : Type*} [TopologicalSpace S]
   have h2 := SCCIsotopic.map f⁻¹ hcon
   simp only [hcan] at h2
   exact M.nonisotopic i j hij h2
-
-/- C-9a -/
 
 /-- The image of a multicurve under a self-homeomorphism. -/
 def _root_.Homeomorph.mapMulticurve {S : Type*} [TopologicalSpace S]
@@ -292,8 +270,6 @@ theorem isReducibleRep_congr {S : Type*} [TopologicalSpace S] [CompactSpace S]
   · refine key f' f ?_
     have h2 := IsIsotopicToId.inv h
     rwa [mul_inv_rev, inv_inv] at h2
-
-/- C-9b -/
 
 /-- A mapping class is reducible when some representative is. -/
 def IsReducible {S : Type*} [TopologicalSpace S] [CompactSpace S] [T2Space S]
@@ -433,8 +409,6 @@ theorem AnnulusNbhd.shrink {S : Type*} [TopologicalSpace S]
       linarith
     · exact rfl
 
-/- C-12: twistCore_boundary -/
-
 /-- The model Dehn twist of the annulus `Circle × I`:
 `(z, t) ↦ (z · exp (2πt), t)`. -/
 noncomputable def twistCore : (Circle × I) ≃ₜ (Circle × I) where
@@ -455,8 +429,6 @@ theorem twistCore_boundary (zt : Circle × I)
     · rw [h, mul_one, Circle.exp_two_pi]
   change (zt.1 * Circle.exp (2 * Real.pi * (zt.2 : ℝ)), zt.2) = zt
   rw [hexp, mul_one]
-
-/- C-12: dehnTwistFun_boundary -/
 
 /-- The annulus parametrization as a homeomorphism onto its range: a
 continuous injection from a compact space into a Hausdorff space. -/
@@ -506,8 +478,6 @@ theorem dehnTwistFun_boundary {S : Type*} [TopologicalSpace S] [T2Space S]
   change dehnTwistFun A (A.e (z, t)) = A.e (z, t)
   rw [hbranch, hEsymm, htw]
   exact rfl
-
-/- C-12: continuous_dehnTwistFun -/
 
 /-- The Dehn twist map is continuous: the surface is covered by the closed
 annulus and the closure of its complement; the frontier of the annulus lies
@@ -564,8 +534,6 @@ theorem continuous_dehnTwistFun {S : Type*} [TopologicalSpace S]
   rw [hcover] at hu
   exact continuousOn_univ.mp hu
 
-/- C-12: dehnTwist_leftInverse -/
-
 /-- The inverse Dehn twist map undoes the Dehn twist map. -/
 theorem dehnTwist_leftInverse {S : Type*} [TopologicalSpace S] [T2Space S]
     {c : SimpleClosedCurve S} (A : AnnulusNbhd c) :
@@ -590,8 +558,6 @@ theorem dehnTwist_leftInverse {S : Type*} [TopologicalSpace S] [T2Space S]
   · have h1 : dehnTwistFun A p = p := dif_neg hmem
     rw [h1]
     exact dif_neg hmem
-
-/- C-12: dehnTwist_rightInverse -/
 
 /-- The Dehn twist map undoes the inverse Dehn twist map. -/
 theorem dehnTwist_rightInverse {S : Type*} [TopologicalSpace S] [T2Space S]
@@ -618,8 +584,6 @@ theorem dehnTwist_rightInverse {S : Type*} [TopologicalSpace S] [T2Space S]
     rw [h1]
     exact dif_neg hmem
 
-/- C-12: dehnTwist_apply_of_notMem -/
-
 /-- The Dehn twist about an annulus neighborhood, as a self-homeomorphism of
 a compact Hausdorff surface. -/
 noncomputable def dehnTwist {S : Type*} [TopologicalSpace S] [CompactSpace S]
@@ -636,8 +600,6 @@ theorem dehnTwist_apply_of_notMem {S : Type*} [TopologicalSpace S]
     dehnTwist A p = p := by
   exact dif_neg hp
 
-/- C-12: dehnTwist_support -/
-
 /-- The support of the Dehn twist lies in its annulus. -/
 theorem dehnTwist_support {S : Type*} [TopologicalSpace S] [CompactSpace S]
     [T2Space S] {c : SimpleClosedCurve S} (A : AnnulusNbhd c) :
@@ -645,8 +607,6 @@ theorem dehnTwist_support {S : Type*} [TopologicalSpace S] [CompactSpace S]
   intro p hne
   by_contra hp
   exact hne (dehnTwist_apply_of_notMem A hp)
-
-/- C-13: dehnTwist_orientationPreserving -/
 
 /-- The Dehn twist preserves orientation: it is the identity near a point
 outside the annulus, and orientation-preservation at one point propagates
@@ -714,8 +674,6 @@ theorem dehnTwist_orientationPreserving {S : Type*} [TopologicalSpace S]
     · rw [Set.mem_preimage, Homeomorph.toOpenPartialHomeomorph_apply, h2]
       exact h1.1
 
-/- C-14a: dehnTwist_transport -/
-
 /-- The mapping class of the Dehn twist about an annulus neighborhood. -/
 noncomputable def dehnTwistClass {S : Type*} [TopologicalSpace S]
     [CompactSpace S] [T2Space S] [ChartedSpace ℂ S] [ConnectedSpace S]
@@ -764,8 +722,6 @@ theorem dehnTwist_transport {S : Type*} [TopologicalSpace S] [CompactSpace S]
     have hL : dehnTwist A' p = p := dehnTwist_apply_of_notMem A' hmem
     have hR : (f * dehnTwist A * f⁻¹) p = f (dehnTwist A (f.symm p)) := rfl
     rw [hL, hR, dehnTwist_apply_of_notMem A hmem2, f.apply_symm_apply]
-
-/- C-14a: dehnTwistClass_transport -/
 
 /-- Isotopic annuli give equal Dehn twist classes: transporting the annulus
 by an isotopically trivial homeomorphism conjugates the twist by an element
