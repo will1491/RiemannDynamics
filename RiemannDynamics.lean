@@ -198,3 +198,9 @@ import RiemannDynamics.Uniformization.Perron.SurfaceHarmonic
 import RiemannDynamics.Uniformization.Perron.GreenSymmetry
 import RiemannDynamics.Uniformization.Perron.GreensFunction
 import RiemannDynamics.Uniformization.Perron.BipolarGreen
+
+import RiemannDynamics.Surface.Curves
+import RiemannDynamics.Surface.GenusSurface
+import RiemannDynamics.Surface.MappingClassGroup
+import RiemannDynamics.Surface.Orientation
+import RiemannDynamics.Surface.Pi1
