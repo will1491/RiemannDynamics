@@ -672,6 +672,7 @@ noncomputable def systole : Teich Γ₀ → ℝ :=
   SeparationQuotient.lift systoleRep systoleRep_congr
 
 /-- The systole of a class is the systole of any representative. -/
+@[simp]
 theorem systole_mk (x : TeichRep Γ₀) : systole (Teich.mk x) = systoleRep x := rfl
 
 /-- The `ε`-**thick part** of Teichmüller space: classes of systole at least `ε`. -/

@@ -22,8 +22,8 @@ open scoped Manifold ContDiff
 namespace RiemannDynamics
 
 /-- The Fuchsian uniformization of a compact connected hyperbolic Riemann surface, packaged
-as an abstract base: a Fuchsian group acting freely on the upper half plane with compact
-orbit space. -/
+as an abstract base: a Fuchsian group whose elements with a fixed point act trivially on the
+upper half plane, with compact orbit space. -/
 theorem fuchsianBase_of_isHyperbolic (X : Type*) [TopologicalSpace X] [ChartedSpace ℂ X]
     [IsManifold 𝓘(ℂ) ω X] [T2Space X] [ConnectedSpace X] [CompactSpace X]
     (hX : IsHyperbolic X) :
