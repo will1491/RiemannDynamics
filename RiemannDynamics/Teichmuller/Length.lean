@@ -497,21 +497,33 @@ noncomputable def systoleRep (x : TeichRep Γ₀) : ℝ :=
 
 /-- The systole is nonnegative: translation lengths are. -/
 theorem systoleRep_nonneg (x : TeichRep Γ₀) : 0 ≤ systoleRep x := by
-  sorry
+  unfold systoleRep
+  exact Real.iInf_nonneg fun γ => translationLength_nonneg γ.1
 
 /-- The systole bounds the translation length of every nontrivially-acting group element
 from below. -/
 theorem systoleRep_le (x : TeichRep Γ₀) {γ : Matrix.SpecialLinearGroup (Fin 2) ℝ}
     (hγ : γ ∈ x.group) (hnt : actsNontrivially γ) :
     systoleRep x ≤ translationLength γ := by
-  sorry
+  unfold systoleRep
+  have hbdd : BddBelow (Set.range fun γ : {γ : Matrix.SpecialLinearGroup (Fin 2) ℝ //
+      γ ∈ x.group ∧ actsNontrivially γ} => translationLength γ.1) := by
+    refine ⟨0, ?_⟩
+    rintro v ⟨δ, rfl⟩
+    exact translationLength_nonneg δ.1
+  exact ciInf_le hbdd ⟨γ, hγ, hnt⟩
 
-/-- A nonnegative uniform lower bound on the translation lengths of nontrivially-acting
-group elements bounds the systole from below. -/
-theorem le_systoleRep (x : TeichRep Γ₀) {ε : ℝ} (h0 : 0 ≤ ε)
+/-- A uniform lower bound on the translation lengths of nontrivially-acting group elements
+bounds the systole from below, provided some group element acts nontrivially. -/
+theorem le_systoleRep (x : TeichRep Γ₀) {ε : ℝ}
+    (hne : ∃ γ ∈ x.group, actsNontrivially γ)
     (h : ∀ γ ∈ x.group, actsNontrivially γ → ε ≤ translationLength γ) :
     ε ≤ systoleRep x := by
-  sorry
+  obtain ⟨γ₀, hγ₀, hnt₀⟩ := hne
+  haveI : Nonempty {γ : Matrix.SpecialLinearGroup (Fin 2) ℝ //
+      γ ∈ x.group ∧ actsNontrivially γ} := ⟨⟨γ₀, hγ₀, hnt₀⟩⟩
+  unfold systoleRep
+  exact le_ciInf fun γ => h γ.1 γ.2.1 γ.2.2
 
 /-- **Trace gap**: in a group of systole at least `ε > 0`, every nontrivially-acting element
 is hyperbolic with `|tr| ≥ 2 cosh (ε/2)`. -/
@@ -520,7 +532,35 @@ theorem trace_gap_of_systole {x : TeichRep Γ₀} {ε : ℝ} (hε : 0 < ε)
     (hγ : γ ∈ x.group) (hnt : actsNontrivially γ) :
     2 * Real.cosh (ε / 2) ≤ |Matrix.trace (γ : Matrix (Fin 2) (Fin 2) ℝ)| ∧
       (γ : Matrix (Fin 2) (Fin 2) ℝ).IsHyperbolic := by
-  sorry
+  have hlen : ε ≤ translationLength γ := hsys.trans (systoleRep_le x hγ hnt)
+  unfold translationLength at hlen
+  set M := max 1 (|Matrix.trace ((γ : Matrix (Fin 2) (Fin 2) ℝ))| / 2) with hM
+  have hM1 : (1:ℝ) ≤ M := le_max_left _ _
+  have harc : ε / 2 ≤ Real.arcosh M := by linarith
+  have hcosh : Real.cosh (ε / 2) ≤ M := by
+    have h : Real.cosh (ε / 2) ≤ Real.cosh (Real.arcosh M) := by
+      rw [Real.cosh_le_cosh, abs_of_nonneg (by linarith : (0:ℝ) ≤ ε / 2),
+        abs_of_nonneg (Real.arcosh_nonneg hM1)]
+      exact harc
+    rwa [Real.cosh_arcosh hM1] at h
+  have h1c : (1:ℝ) < Real.cosh (ε / 2) :=
+    Real.one_lt_cosh.mpr (by positivity : (0:ℝ) < ε / 2).ne'
+  have htr2 : 1 < |Matrix.trace ((γ : Matrix (Fin 2) (Fin 2) ℝ))| / 2 := by
+    rcases le_or_gt (|Matrix.trace ((γ : Matrix (Fin 2) (Fin 2) ℝ))| / 2) 1 with hle | hlt
+    · exfalso
+      rw [hM, max_eq_left hle] at hcosh
+      linarith
+    · exact hlt
+  rw [hM, max_eq_right htr2.le] at hcosh
+  refine ⟨by linarith, ?_⟩
+  have hdet : ((γ : Matrix (Fin 2) (Fin 2) ℝ)).det = 1 := Matrix.SpecialLinearGroup.det_coe γ
+  unfold Matrix.IsHyperbolic
+  rw [Matrix.discr_fin_two, hdet]
+  have h2 : 2 < |Matrix.trace ((γ : Matrix (Fin 2) (Fin 2) ℝ))| := by linarith
+  nlinarith [sq_abs (Matrix.trace ((γ : Matrix (Fin 2) (Fin 2) ℝ))),
+    abs_nonneg (Matrix.trace ((γ : Matrix (Fin 2) (Fin 2) ℝ))),
+    mul_pos (by linarith : (0:ℝ) < |Matrix.trace ((γ : Matrix (Fin 2) (Fin 2) ℝ))| - 2)
+      (by linarith : (0:ℝ) < |Matrix.trace ((γ : Matrix (Fin 2) (Fin 2) ℝ))| + 2)]
 
 /-! ## Hyperbolic area of balls -/
 
@@ -528,19 +568,73 @@ theorem trace_gap_of_systole {x : TeichRep Γ₀} {ε : ℝ} (hε : 0 < ε)
 the hyperbolic measure is positive on the open embedding into the plane. -/
 theorem volume_ball_pos (τ : UpperHalfPlane) {r : ℝ} (hr : 0 < r) :
     0 < volume (Metric.ball τ r) := by
-  sorry
+  rw [UpperHalfPlane.volume_eq_lintegral]
+  set S : Set ℂ := UpperHalfPlane.coe '' Metric.ball τ r with hS
+  set T : Set ℂ := S ∩ {z : ℂ | z.im < τ.im + 1} with hT
+  have hSopen : IsOpen S :=
+    UpperHalfPlane.isOpenEmbedding_coe.isOpenMap _ Metric.isOpen_ball
+  have hTopen : IsOpen T :=
+    hSopen.inter (isOpen_lt Complex.continuous_im continuous_const)
+  have hτS : ((τ : ℂ)) ∈ S := ⟨τ, Metric.mem_ball_self hr, rfl⟩
+  have hτT : ((τ : ℂ)) ∈ T := by
+    refine ⟨hτS, ?_⟩
+    simp only [Set.mem_setOf_eq, UpperHalfPlane.coe_im]
+    linarith
+  have hSim : ∀ z ∈ S, 0 < z.im := by
+    rintro z ⟨σ, -, rfl⟩
+    rw [UpperHalfPlane.coe_im]
+    exact σ.im_pos
+  set c : NNReal := ‖τ.im + 1‖₊ with hc
+  have him : (0:ℝ) < τ.im := τ.im_pos
+  have hcpos : 0 < c := nnnorm_pos.mpr (by positivity : (0:ℝ) < τ.im + 1).ne'
+  have hbound : ∀ z ∈ T, (((1 / c) ^ 2 : NNReal) : ℝ≥0∞) ≤ ((1 / ‖z.im‖₊) ^ 2 : NNReal) := by
+    intro z hz
+    obtain ⟨hzS, hzc⟩ := hz
+    have h0 : 0 < z.im := hSim z hzS
+    have hzc' : z.im < τ.im + 1 := hzc
+    rw [ENNReal.coe_le_coe]
+    have h1 : ‖z.im‖₊ ≤ c := by
+      rw [← NNReal.coe_le_coe]
+      simp only [hc, coe_nnnorm, Real.norm_eq_abs]
+      rw [abs_of_pos h0, abs_of_pos (by positivity : (0:ℝ) < τ.im + 1)]
+      exact hzc'.le
+    exact pow_le_pow_left₀ (zero_le _)
+      (one_div_le_one_div_of_le (nnnorm_pos.mpr h0.ne') h1) 2
+  have hmeasN : Measurable fun z : ℂ => ((1 / ‖z.im‖₊) ^ 2 : NNReal) := by
+    simp only [one_div]
+    exact (Complex.measurable_im.nnnorm.inv).pow_const 2
+  have hmeas : Measurable fun z : ℂ => (((1 / ‖z.im‖₊) ^ 2 : NNReal) : ℝ≥0∞) :=
+    measurable_coe_nnreal_ennreal.comp hmeasN
+  have hchain : ((((1 / c) ^ 2 : NNReal)) : ℝ≥0∞) * volume T
+      ≤ ∫⁻ z in S, (((1 / ‖z.im‖₊) ^ 2 : NNReal) : ℝ≥0∞) := by
+    calc ((((1 / c) ^ 2 : NNReal)) : ℝ≥0∞) * volume T
+        = ∫⁻ _ in T, ((((1 / c) ^ 2 : NNReal)) : ℝ≥0∞) := (setLIntegral_const T _).symm
+      _ ≤ ∫⁻ z in T, (((1 / ‖z.im‖₊) ^ 2 : NNReal) : ℝ≥0∞) := setLIntegral_mono hmeas hbound
+      _ ≤ ∫⁻ z in S, (((1 / ‖z.im‖₊) ^ 2 : NNReal) : ℝ≥0∞) :=
+          lintegral_mono_set Set.inter_subset_left
+  refine lt_of_lt_of_le ?_ hchain
+  refine ENNReal.mul_pos ?_ ?_
+  · exact (ENNReal.coe_ne_zero.mpr (pow_ne_zero 2 (one_div_ne_zero hcpos.ne')))
+  · exact (hTopen.measure_pos volume ⟨(τ : ℂ), hτT⟩).ne'
 
 /-- The hyperbolic volume of balls is `SL(2, ℝ)`-invariant: the action is isometric and
 measure preserving. -/
 theorem volume_ball_smul (g : Matrix.SpecialLinearGroup (Fin 2) ℝ) (τ : UpperHalfPlane)
     (r : ℝ) : volume (Metric.ball (g • τ) r) = volume (Metric.ball τ r) := by
-  sorry
+  have himg : (fun σ : UpperHalfPlane => (Matrix.SpecialLinearGroup.mapGL ℝ g) • σ) ''
+      Metric.ball τ r = Metric.ball (g • τ) r := (IsometryEquiv.constSMul g).image_ball τ r
+  rw [← himg]
+  exact measure_smul volume (Matrix.SpecialLinearGroup.mapGL ℝ g) (Metric.ball τ r)
 
 /-- Transitivity of the `SL(2, ℝ)`-action on the upper half plane: `x + i y` is the image of
 `i` under `!![√y, x/√y; 0, 1/√y]`. -/
 theorem exists_smul_I_eq (τ : UpperHalfPlane) :
     ∃ g : Matrix.SpecialLinearGroup (Fin 2) ℝ, g • UpperHalfPlane.I = τ := by
-  sorry
+  refine ⟨affineSL2 τ.im τ.re τ.im_pos, ?_⟩
+  apply UpperHalfPlane.ext
+  rw [coe_smul_eq_moebiusMap, UpperHalfPlane.coe_I, moebiusMap_affineSL2]
+  rw [← Complex.re_add_im (τ : ℂ), UpperHalfPlane.coe_re, UpperHalfPlane.coe_im]
+  ring
 
 /-- The hyperbolic volume of a ball of radius `r` about `i`, hence about any point. -/
 noncomputable def upperBallVolume (r : ℝ) : ℝ≥0∞ :=
@@ -548,12 +642,15 @@ noncomputable def upperBallVolume (r : ℝ) : ℝ≥0∞ :=
 
 /-- Balls of positive radius have positive hyperbolic volume. -/
 theorem upperBallVolume_pos {r : ℝ} (hr : 0 < r) : 0 < upperBallVolume r := by
-  sorry
+  unfold upperBallVolume
+  exact volume_ball_pos UpperHalfPlane.I hr
 
 /-- All balls of radius `r` in the upper half plane have volume `upperBallVolume r`. -/
 theorem volume_ball_eq_upperBallVolume (τ : UpperHalfPlane) (r : ℝ) :
     volume (Metric.ball τ r) = upperBallVolume r := by
-  sorry
+  obtain ⟨g, hg⟩ := exists_smul_I_eq τ
+  unfold upperBallVolume
+  rw [← hg, volume_ball_smul]
 
 /-! ## Descent to Teichmüller space and the thick part -/
 
@@ -561,15 +658,21 @@ theorem volume_ball_eq_upperBallVolume (τ : UpperHalfPlane) (r : ℝ) :
 equal systoles. -/
 theorem systoleRep_congr :
     ∀ x y : TeichRep Γ₀, Inseparable x y → systoleRep x = systoleRep y := by
-  sorry
+  intro x y hxy
+  have hw : ∀ t : ℝ, x.w t = y.w t := inseparable_iff_boundary_eq.mp hxy
+  have hb : x.boundary = y.boundary := funext fun t => by
+    simp only [TeichRep.boundary]
+    rw [hw t]
+  have hg : x.group = y.group := TeichRep.group_eq_of_boundary_eq hb
+  unfold systoleRep
+  rw [hg]
 
 /-- The systole as a function on Teichmüller space. -/
 noncomputable def systole : Teich Γ₀ → ℝ :=
   SeparationQuotient.lift systoleRep systoleRep_congr
 
 /-- The systole of a class is the systole of any representative. -/
-theorem systole_mk (x : TeichRep Γ₀) : systole (Teich.mk x) = systoleRep x := by
-  sorry
+theorem systole_mk (x : TeichRep Γ₀) : systole (Teich.mk x) = systoleRep x := rfl
 
 /-- The `ε`-**thick part** of Teichmüller space: classes of systole at least `ε`. -/
 def ThickPart (Γ₀ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)) (ε : ℝ) :

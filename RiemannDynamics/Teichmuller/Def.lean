@@ -426,14 +426,24 @@ the invariance clause of the representative. -/
 theorem TeichRep.mem_group_of (x : TeichRep Γ₀)
     {γ : Matrix.SpecialLinearGroup (Fin 2) ℝ} (hγ : γ ∈ Γ₀) :
     ∃ W ∈ x.group, ∀ᵐ z : ℂ, x.w (moebiusMap γ z) = moebiusMap W (x.w z) := by
-  sorry
+  obtain ⟨W, hW⟩ := exists_sl2_equivariant x.w_isQCAnalytic x.w_zero x.w_one x.w_conj γ
+    (x.inv γ hγ)
+  have haePole : ∀ᵐ z : ℂ, moebiusDenom γ z ≠ 0 := by
+    rw [ae_iff]
+    simp only [ne_eq, not_not]
+    exact volume_moebiusDenom_zero γ
+  have hae : ∀ᵐ z : ℂ, x.w (moebiusMap γ z) = moebiusMap W (x.w z) := by
+    filter_upwards [haePole] with z hz
+    exact hW z hz
+  exact ⟨W, mem_fuchsianImage_of_equivariant x.w_injective hγ hae, hae⟩
 
 /-- The conjugated group is Fuchsian. -/
 theorem TeichRep.isFuchsian_group (hΓ₀ : IsFuchsianGroup Γ₀)
     (hfree : ∀ γ : Γ₀, (∃ τ : UpperHalfPlane, γ • τ = τ) →
       ∀ τ' : UpperHalfPlane, γ • τ' = τ')
     (x : TeichRep Γ₀) : IsFuchsianGroup x.group := by
-  sorry
+  have _ := hfree
+  exact fuchsianImage_isFuchsianGroup hΓ₀ x.w_isQCAnalytic x.w_zero x.w_one x.w_conj x.inv
 
 /-- Freeness of the conjugated group: elements with a fixed point act as the identity. -/
 theorem TeichRep.group_free
@@ -442,14 +452,14 @@ theorem TeichRep.group_free
     (x : TeichRep Γ₀) :
     ∀ W : x.group, (∃ τ : UpperHalfPlane, W • τ = τ) →
       ∀ τ' : UpperHalfPlane, W • τ' = τ' := by
-  sorry
+  exact fuchsianImage_free hfree x.w_isQCAnalytic x.w_zero x.w_one x.w_conj x.inv
 
 /-- Cocompactness of the conjugated group. -/
 theorem TeichRep.group_cocompact
     (hcc : CompactSpace (Quotient (MulAction.orbitRel Γ₀ UpperHalfPlane)))
     (x : TeichRep Γ₀) :
     CompactSpace (Quotient (MulAction.orbitRel x.group UpperHalfPlane)) := by
-  sorry
+  exact fuchsianImage_cocompact hcc x.w_isQCAnalytic x.w_zero x.w_one x.w_conj x.inv
 
 /-- Membership in the conjugated group is detected on the real line: `W ∈ x.group` iff the
 conjugation identity holds at every non-pole real point for some `γ ∈ Γ₀`. -/
@@ -457,11 +467,247 @@ theorem TeichRep.mem_group_iff_boundary (x : TeichRep Γ₀)
     (W : Matrix.SpecialLinearGroup (Fin 2) ℝ) :
     W ∈ x.group ↔ ∃ γ ∈ Γ₀, ∀ t : ℝ, moebiusDenom γ (t : ℂ) ≠ 0 →
       x.w (moebiusMap γ (t : ℂ)) = moebiusMap W (x.w (t : ℂ)) := by
-  sorry
+  have hfc : Continuous x.w := x.w_isQCAnalytic.1.1.continuous
+  have him0 : ∀ z : ℂ, 0 < z.im → (x.w z).im ≠ 0 := by
+    rcases x.w_halfPlane_dichotomy with ⟨hpos, _⟩ | ⟨hneg, _⟩
+    · exact fun z hz => ne_of_gt (hpos z hz)
+    · exact fun z hz => ne_of_lt (hneg z hz)
+  constructor
+  · intro hW
+    have hmem : W ∈ fuchsianImageCarrier Γ₀ x.w := hW
+    obtain ⟨γ, hγ, hae⟩ := hmem
+    refine ⟨γ, hγ, ?_⟩
+    intro t ht
+    -- the a.e. conjugation identity upgrades to everywhere on the open upper half plane
+    have hupg : ∀ z : ℂ, 0 < z.im → x.w (moebiusMap γ z) = moebiusMap W (x.w z) := by
+      intro z hz
+      have hUopen : IsOpen {w : ℂ | 0 < w.im} :=
+        isOpen_lt continuous_const Complex.continuous_im
+      have h1 : ContinuousOn (fun w => x.w (moebiusMap γ w)) {w : ℂ | 0 < w.im} := by
+        intro w hw
+        have hd := moebiusDenom_ne_zero_of_im_ne_zero γ (ne_of_gt hw)
+        exact (hfc.continuousAt.comp
+          (hasDerivAt_moebiusMap γ hd).continuousAt).continuousWithinAt
+      have h2 : ContinuousOn (fun w => moebiusMap W (x.w w)) {w : ℂ | 0 < w.im} := by
+        intro w hw
+        have hd := moebiusDenom_ne_zero_of_im_ne_zero W (him0 w hw)
+        exact ((hasDerivAt_moebiusMap W hd).continuousAt.comp
+          hfc.continuousAt).continuousWithinAt
+      have heq : Set.EqOn (fun w => x.w (moebiusMap γ w)) (fun w => moebiusMap W (x.w w))
+          {w : ℂ | 0 < w.im} := by
+        refine Measure.eqOn_of_ae_eq (ae_restrict_of_ae hae) h1 h2 ?_
+        rw [hUopen.interior_eq]
+        exact subset_closure
+      exact heq hz
+    -- the real point lies in the closure of the upper half plane
+    have hTcl : (t : ℂ) ∈ closure {z : ℂ | 0 < z.im} := by
+      rw [Metric.mem_closure_iff]
+      intro ε hε
+      refine ⟨(t : ℂ) + Complex.I * ((ε / 2 : ℝ) : ℂ), ?_, ?_⟩
+      · simp only [Set.mem_setOf_eq, Complex.add_im, Complex.mul_im, Complex.I_re,
+          Complex.I_im, Complex.ofReal_re, Complex.ofReal_im, one_mul, zero_add, mul_zero]
+        linarith
+      · rw [dist_eq_norm]
+        have hsub : (t : ℂ) - ((t : ℂ) + Complex.I * ((ε / 2 : ℝ) : ℂ))
+            = -(Complex.I * ((ε / 2 : ℝ) : ℂ)) := by ring
+        rw [hsub, norm_neg, norm_mul, Complex.norm_I, one_mul, Complex.norm_real,
+          Real.norm_eq_abs, abs_of_pos (by linarith)]
+        linarith
+    have hNB : (nhdsWithin (t : ℂ) {z : ℂ | 0 < z.im}).NeBot :=
+      mem_closure_iff_nhdsWithin_neBot.mp hTcl
+    haveI := hNB
+    have hLc : ContinuousAt (fun z : ℂ => x.w (moebiusMap γ z)) (t : ℂ) :=
+      hfc.continuousAt.comp (hasDerivAt_moebiusMap γ ht).continuousAt
+    have hL : Filter.Tendsto (fun z : ℂ => x.w (moebiusMap γ z))
+        (nhdsWithin (t : ℂ) {z : ℂ | 0 < z.im}) (nhds (x.w (moebiusMap γ (t : ℂ)))) :=
+      hLc.continuousWithinAt
+    have hEq : (fun z : ℂ => x.w (moebiusMap γ z))
+        =ᶠ[nhdsWithin (t : ℂ) {z : ℂ | 0 < z.im}] fun z : ℂ => moebiusMap W (x.w z) :=
+      eventually_nhdsWithin_of_forall fun z hz => hupg z hz
+    have hR : Filter.Tendsto (fun z : ℂ => moebiusMap W (x.w z))
+        (nhdsWithin (t : ℂ) {z : ℂ | 0 < z.im}) (nhds (x.w (moebiusMap γ (t : ℂ)))) :=
+      Filter.Tendsto.congr' hEq hL
+    -- the image of the real point avoids the pole of `W`
+    have hWden : moebiusDenom W (x.w (t : ℂ)) ≠ 0 := by
+      intro h0
+      have hdenC : Continuous (moebiusDenom W) := by
+        unfold moebiusDenom
+        fun_prop
+      have hden0 : Filter.Tendsto (fun z : ℂ => moebiusDenom W (x.w z))
+          (nhdsWithin (t : ℂ) {z : ℂ | 0 < z.im}) (nhds 0) := by
+        have hc : Continuous fun z : ℂ => moebiusDenom W (x.w z) := hdenC.comp hfc
+        have ht0 : Filter.Tendsto (fun z : ℂ => moebiusDenom W (x.w z))
+            (nhdsWithin (t : ℂ) {z : ℂ | 0 < z.im})
+            (nhds (moebiusDenom W (x.w (t : ℂ)))) :=
+          (hc.tendsto (t : ℂ)).mono_left nhdsWithin_le_nhds
+        rwa [h0] at ht0
+      have hnumC : Continuous fun z : ℂ => (W 0 0 : ℂ) * x.w z + (W 0 1 : ℂ) :=
+        (continuous_const.mul hfc).add continuous_const
+      have hnum : Filter.Tendsto (fun z : ℂ => (W 0 0 : ℂ) * x.w z + (W 0 1 : ℂ))
+          (nhdsWithin (t : ℂ) {z : ℂ | 0 < z.im})
+          (nhds ((W 0 0 : ℂ) * x.w (t : ℂ) + (W 0 1 : ℂ))) :=
+        (hnumC.tendsto (t : ℂ)).mono_left nhdsWithin_le_nhds
+      have hEq2 : (fun z : ℂ => moebiusMap W (x.w z) * moebiusDenom W (x.w z))
+          =ᶠ[nhdsWithin (t : ℂ) {z : ℂ | 0 < z.im}]
+            fun z : ℂ => (W 0 0 : ℂ) * x.w z + (W 0 1 : ℂ) :=
+        eventually_nhdsWithin_of_forall fun z hz => by
+          have hdz : moebiusDenom W (x.w z) ≠ 0 :=
+            moebiusDenom_ne_zero_of_im_ne_zero W (him0 z hz)
+          simp only [moebiusMap]
+          exact div_mul_cancel₀ _ hdz
+      have hnum' : Filter.Tendsto (fun z : ℂ => (W 0 0 : ℂ) * x.w z + (W 0 1 : ℂ))
+          (nhdsWithin (t : ℂ) {z : ℂ | 0 < z.im})
+          (nhds (x.w (moebiusMap γ (t : ℂ)) * 0)) :=
+        Filter.Tendsto.congr' hEq2 (hR.mul hden0)
+      have hlim := tendsto_nhds_unique hnum hnum'
+      rw [mul_zero] at hlim
+      have hdet : W 0 0 * W 1 1 - W 0 1 * W 1 0 = 1 := by
+        have h := Matrix.SpecialLinearGroup.det_coe W
+        rwa [Matrix.det_fin_two] at h
+      have hdetC : (W 0 0 : ℂ) * (W 1 1 : ℂ) - (W 0 1 : ℂ) * (W 1 0 : ℂ) = 1 := by
+        exact_mod_cast hdet
+      have h0' : (W 1 0 : ℂ) * x.w (t : ℂ) + (W 1 1 : ℂ) = 0 := h0
+      have hcontra : (1 : ℂ) = 0 := by
+        linear_combination (W 0 0 : ℂ) * h0' - (W 1 0 : ℂ) * hlim - hdetC
+      exact one_ne_zero hcontra
+    -- pass to the limit from the upper half plane
+    have hRc : ContinuousAt (fun z : ℂ => moebiusMap W (x.w z)) (t : ℂ) :=
+      (hasDerivAt_moebiusMap W hWden).continuousAt.comp hfc.continuousAt
+    have hR2 : Filter.Tendsto (fun z : ℂ => moebiusMap W (x.w z))
+        (nhdsWithin (t : ℂ) {z : ℂ | 0 < z.im}) (nhds (moebiusMap W (x.w (t : ℂ)))) :=
+      hRc.continuousWithinAt
+    exact tendsto_nhds_unique hR hR2
+  · rintro ⟨γ, hγ, hbd⟩
+    obtain ⟨W', hW'⟩ := exists_sl2_equivariant x.w_isQCAnalytic x.w_zero x.w_one x.w_conj γ
+      (x.inv γ hγ)
+    have haePole : ∀ᵐ z : ℂ, moebiusDenom γ z ≠ 0 := by
+      rw [ae_iff]
+      simp only [ne_eq, not_not]
+      exact volume_moebiusDenom_zero γ
+    have haeW' : ∀ᵐ z : ℂ, x.w (moebiusMap γ z) = moebiusMap W' (x.w z) := by
+      filter_upwards [haePole] with z hz
+      exact hW' z hz
+    have hW'mem : W' ∈ x.group :=
+      mem_fuchsianImage_of_equivariant x.w_injective hγ haeW'
+    -- the pole set of a real Möbius map is a subsingleton
+    have hpoleSub : ∀ V : Matrix.SpecialLinearGroup (Fin 2) ℝ,
+        Set.Subsingleton {u : ℂ | moebiusDenom V u = 0} := by
+      intro V w₁ hw₁ w₂ hw₂
+      have h₁' : (V 1 0 : ℂ) * w₁ + (V 1 1 : ℂ) = 0 := hw₁
+      have h₂' : (V 1 0 : ℂ) * w₂ + (V 1 1 : ℂ) = 0 := hw₂
+      by_cases hc : V 1 0 = 0
+      · exfalso
+        have hdet : V 0 0 * V 1 1 - V 0 1 * V 1 0 = 1 := by
+          have h := Matrix.SpecialLinearGroup.det_coe V
+          rwa [Matrix.det_fin_two] at h
+        have hcC : ((V 1 0 : ℝ) : ℂ) = 0 := by rw [hc, Complex.ofReal_zero]
+        rw [hcC, zero_mul, zero_add] at h₁'
+        have hd : V 1 1 = 0 := by exact_mod_cast h₁'
+        rw [hc, hd] at hdet
+        simp at hdet
+      · have hcC : ((V 1 0 : ℝ) : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr hc
+        have hmul : (V 1 0 : ℂ) * w₁ = (V 1 0 : ℂ) * w₂ := by
+          linear_combination h₁' - h₂'
+        exact mul_left_cancel₀ hcC hmul
+    have hwinj : Function.Injective fun s : ℝ => x.w (s : ℂ) := by
+      intro s₁ s₂ hs
+      exact Complex.ofReal_injective (x.w_injective hs)
+    -- at most three real points are excluded; pick three good ones
+    have hB1 : ({s : ℝ | moebiusDenom γ (s : ℂ) = 0}).Finite :=
+      Set.Subsingleton.finite ((hpoleSub γ).preimage Complex.ofReal_injective)
+    have hB2 : ({s : ℝ | moebiusDenom W (x.w (s : ℂ)) = 0}).Finite :=
+      Set.Subsingleton.finite ((hpoleSub W).preimage hwinj)
+    have hB3 : ({s : ℝ | moebiusDenom W' (x.w (s : ℂ)) = 0}).Finite :=
+      Set.Subsingleton.finite ((hpoleSub W').preimage hwinj)
+    have hBfin : ({s : ℝ | moebiusDenom γ (s : ℂ) = 0}
+        ∪ {s : ℝ | moebiusDenom W (x.w (s : ℂ)) = 0}
+        ∪ {s : ℝ | moebiusDenom W' (x.w (s : ℂ)) = 0}).Finite :=
+      (hB1.union hB2).union hB3
+    have hsplit : ∀ s : ℝ, s ∈ ({s : ℝ | moebiusDenom γ (s : ℂ) = 0}
+        ∪ {s : ℝ | moebiusDenom W (x.w (s : ℂ)) = 0}
+        ∪ {s : ℝ | moebiusDenom W' (x.w (s : ℂ)) = 0})ᶜ →
+        moebiusDenom γ (s : ℂ) ≠ 0 ∧ moebiusDenom W (x.w (s : ℂ)) ≠ 0
+          ∧ moebiusDenom W' (x.w (s : ℂ)) ≠ 0 := by
+      intro s hs
+      simp only [Set.mem_compl_iff, Set.mem_union, Set.mem_setOf_eq, not_or] at hs
+      exact ⟨hs.1.1, hs.1.2, hs.2⟩
+    have hBc := hBfin.infinite_compl
+    obtain ⟨t₁, ht₁⟩ := hBc.nonempty
+    obtain ⟨t₂, ht₂⟩ := (hBc.diff (Set.finite_singleton t₁)).nonempty
+    obtain ⟨t₃, ht₃⟩ := (hBc.diff ((Set.finite_singleton t₂).insert t₁)).nonempty
+    obtain ⟨hd1, hdW1, hdW'1⟩ := hsplit t₁ ht₁
+    obtain ⟨hd2, hdW2, hdW'2⟩ := hsplit t₂ ht₂.1
+    obtain ⟨hd3, hdW3, hdW'3⟩ := hsplit t₃ ht₃.1
+    have ht21 : t₂ ≠ t₁ := fun hEq => ht₂.2 hEq
+    have ht31 : t₃ ≠ t₁ := fun hEq => ht₃.2 (Set.mem_insert_iff.mpr (Or.inl hEq))
+    have ht32 : t₃ ≠ t₂ := fun hEq => ht₃.2 (Set.mem_insert_iff.mpr (Or.inr hEq))
+    have hz12 : x.w (t₁ : ℂ) ≠ x.w (t₂ : ℂ) := fun hEq =>
+      ht21 (Complex.ofReal_injective (x.w_injective hEq)).symm
+    have hz13 : x.w (t₁ : ℂ) ≠ x.w (t₃ : ℂ) := fun hEq =>
+      ht31 (Complex.ofReal_injective (x.w_injective hEq)).symm
+    have hz23 : x.w (t₂ : ℂ) ≠ x.w (t₃ : ℂ) := fun hEq =>
+      ht32 (Complex.ofReal_injective (x.w_injective hEq)).symm
+    have hVden : ∀ z ∈ ({x.w (t₁ : ℂ), x.w (t₂ : ℂ), x.w (t₃ : ℂ)} : Set ℂ),
+        moebiusDenom W z ≠ 0 := by
+      intro z hz
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+      rcases hz with rfl | rfl | rfl
+      · exact hdW1
+      · exact hdW2
+      · exact hdW3
+    have hW'den : ∀ z ∈ ({x.w (t₁ : ℂ), x.w (t₂ : ℂ), x.w (t₃ : ℂ)} : Set ℂ),
+        moebiusDenom W' z ≠ 0 := by
+      intro z hz
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+      rcases hz with rfl | rfl | rfl
+      · exact hdW'1
+      · exact hdW'2
+      · exact hdW'3
+    have hagree : ∀ z ∈ ({x.w (t₁ : ℂ), x.w (t₂ : ℂ), x.w (t₃ : ℂ)} : Set ℂ),
+        moebiusMap W z = moebiusMap W' z := by
+      have hkey : ∀ s : ℝ, moebiusDenom γ (s : ℂ) ≠ 0 →
+          moebiusMap W (x.w (s : ℂ)) = moebiusMap W' (x.w (s : ℂ)) := by
+        intro s hd
+        rw [← hbd s hd]
+        exact hW' (s : ℂ) hd
+      intro z hz
+      simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hz
+      rcases hz with rfl | rfl | rfl
+      · exact hkey t₁ hd1
+      · exact hkey t₂ hd2
+      · exact hkey t₃ hd3
+    rcases moebius_ext_three hz12 hz13 hz23 hVden hW'den hagree with heq | hneg
+    · have hWW' : W = W' := Subtype.ext heq
+      rw [hWW']
+      exact hW'mem
+    · exact neg_mem_fuchsianImage x.w_injective hW'mem hneg
 
 /-- Representatives with the same boundary map have the same conjugated group. -/
 theorem TeichRep.group_eq_of_boundary_eq {x y : TeichRep Γ₀}
     (h : x.boundary = y.boundary) : x.group = y.group := by
-  sorry
+  have hwr : ∀ t : ℝ, x.w (t : ℂ) = y.w (t : ℂ) := by
+    intro t
+    rw [x.w_ofReal t, y.w_ofReal t, h]
+  have htrans : ∀ u v : TeichRep Γ₀, (∀ t : ℝ, u.w (t : ℂ) = v.w (t : ℂ)) →
+      ∀ W γ : Matrix.SpecialLinearGroup (Fin 2) ℝ,
+        (∀ t : ℝ, moebiusDenom γ (t : ℂ) ≠ 0 →
+          u.w (moebiusMap γ (t : ℂ)) = moebiusMap W (u.w (t : ℂ))) →
+        ∀ t : ℝ, moebiusDenom γ (t : ℂ) ≠ 0 →
+          v.w (moebiusMap γ (t : ℂ)) = moebiusMap W (v.w (t : ℂ)) := by
+    intro u v huv W γ hbd t ht
+    have him : (moebiusMap γ (t : ℂ)).im = 0 :=
+      moebiusMap_im_eq_zero γ (by simp) ht
+    have hreal : (((moebiusMap γ (t : ℂ)).re : ℝ) : ℂ) = moebiusMap γ (t : ℂ) :=
+      Complex.ext (by simp) (by simp [him])
+    have h1 : v.w (moebiusMap γ (t : ℂ)) = u.w (moebiusMap γ (t : ℂ)) := by
+      rw [← hreal, huv (moebiusMap γ (t : ℂ)).re]
+    rw [h1, hbd t ht, huv t]
+  ext W
+  rw [TeichRep.mem_group_iff_boundary x W, TeichRep.mem_group_iff_boundary y W]
+  constructor
+  · rintro ⟨γ, hγ, hbd⟩
+    exact ⟨γ, hγ, htrans x y hwr W γ hbd⟩
+  · rintro ⟨γ, hγ, hbd⟩
+    exact ⟨γ, hγ, htrans y x (fun t => (hwr t).symm) W γ hbd⟩
 
 end RiemannDynamics

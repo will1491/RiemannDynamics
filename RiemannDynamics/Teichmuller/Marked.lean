@@ -32,6 +32,7 @@ theorem fuchsianBase_of_isHyperbolic (X : Type*) [TopologicalSpace X] [ChartedSp
       (∀ γ : Γ₀, (∃ τ : UpperHalfPlane, γ • τ = τ) →
         ∀ τ' : UpperHalfPlane, γ • τ' = τ') ∧
       CompactSpace (Quotient (MulAction.orbitRel Γ₀ UpperHalfPlane)) := by
-  sorry
+  obtain ⟨Γ, π, hΓ, hfree, -, -, -, -, ⟨e⟩⟩ := exists_fuchsian_model hX
+  exact ⟨Γ, hΓ, hfree, e.compactSpace⟩
 
 end RiemannDynamics
