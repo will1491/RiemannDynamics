@@ -105,9 +105,9 @@ times the source connecting-family modulus. The image family joins the image inn
 source ring is transported to an admissible density for the image family with energy inflated by at
 most the dilatation factor `K`. -/
 theorem ring_image_modulus_le {f : ℂ → ℂ} {K : ℝ} (hf : IsQCGeometric f K)
-    (hdil : ∀ᵐ z : ℂ,
+    (_hdil : ∀ᵐ z : ℂ,
       ‖ContinuousLinearMap.inverse (fderiv ℝ f z)‖ ^ 2 * (fderiv ℝ f z).det ≤ K)
-    {z₀ : ℂ} {r R : ℝ} (hr : 0 < r) (hrR : r < R) :
+    {z₀ : ℂ} {r R : ℝ} (_hr : 0 < r) (_hrR : r < R) :
     curveModulus (connectingCurveFamily (f '' innerCircle z₀ r) (f '' outerCircle z₀ R)
         (f '' RoundAnnulus z₀ r R))
       ≤ ENNReal.ofReal K * curveModulus (connectingCurveFamily (innerCircle z₀ r)

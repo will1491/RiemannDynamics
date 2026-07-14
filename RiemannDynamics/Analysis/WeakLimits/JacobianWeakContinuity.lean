@@ -392,7 +392,7 @@ Obtained from `integral_jacobian_smul_eq` by mollification: the mollifications `
 in `L²_loc`; the quadratic left-hand side and the bilinear right-hand side both pass to
 the limit. -/
 theorem integral_jacobianWeak_smul_eq (hfcont : Continuous f)
-    (hdiff : ∀ᵐ z, DifferentiableAt ℝ f z) (hW12 : MemW12loc f)
+    (_hdiff : ∀ᵐ z, DifferentiableAt ℝ f z) (_hW12 : MemW12loc f)
     {gx gy : ℂ → ℂ} (hg : HasWeakGradient gx gy f Set.univ)
     (hgx : MemLpLocOn gx 2 Set.univ) (hgy : MemLpLocOn gy 2 Set.univ)
     (hφ : ContDiff ℝ ∞ φ) (hφc : HasCompactSupport φ) :

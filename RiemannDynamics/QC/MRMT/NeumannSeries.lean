@@ -47,7 +47,7 @@ membership feeding the fixed-point equation: the Beltrami coefficient itself is 
 inhomogeneity of the singular integral equation, and its essential boundedness
 together with compact vanishing puts it in `Lᵖ(ℂ)`. -/
 theorem memLp_of_eLpNormEssSup_ne_top_of_support {μ : ℂ → ℂ} {p : ℝ≥0∞} {R : ℝ}
-    (hp : p ≠ ⊤) (hμmeas : Measurable μ) (hμfin : eLpNormEssSup μ volume ≠ ⊤)
+    (_hp : p ≠ ⊤) (hμmeas : Measurable μ) (hμfin : eLpNormEssSup μ volume ≠ ⊤)
     (hsupp : ∀ z : ℂ, R < ‖z‖ → μ z = 0) :
     MemLp μ p volume := by
   -- `μ` coincides with its indicator on the closed ball of radius `R`.

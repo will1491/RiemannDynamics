@@ -62,7 +62,7 @@ structure of `f`. Split `S = (S ∩ D) ∪ (S ∩ Dᶜ)` along the differentiabi
   `w ∉ D`.
 This uses only the forward map's almost-everywhere nondegeneracy and the
 inverse-relation; it never assumes Lusin-N for `g`. -/
-theorem geometric_inverse_conditionN {f : ℂ → ℂ} {K : ℝ} (hf : IsQCGeometric f K)
+theorem geometric_inverse_conditionN {f : ℂ → ℂ} {K : ℝ} (_hf : IsQCGeometric f K)
     (hhomeo : IsHomeomorph f)
     (hae_diff : ∀ᵐ z : ℂ, DifferentiableAt ℝ f z)
     (hae_det : ∀ᵐ z : ℂ, 0 < (fderiv ℝ f z).det) :

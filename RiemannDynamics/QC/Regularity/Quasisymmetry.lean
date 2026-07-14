@@ -589,7 +589,7 @@ theorem chain_dist_le {f : ℂ → ℂ} {K : ℝ} (hf : IsQCGeometric f K) {p q 
 /-- Auxiliary for `exists_uniform_modulus` under `1 ≤ K` (equivalently, `Nonempty ι`). -/
 theorem exists_uniform_modulus_aux {ι : Type*} [Nonempty ι] {f : ι → ℂ → ℂ} {K : ℝ}
     (hfK : ∀ i, IsQCGeometric (f i) K) {S : Set ℂ} (hS : IsCompact S)
-    {p q : ℂ} (hp : p ∈ S) (hq : q ∈ S) (hpq : p ≠ q) {M : ℝ}
+    {p q : ℂ} (hp : p ∈ S) (_hq : q ∈ S) (hpq : p ≠ q) {M : ℝ}
     (hub : ∀ i, dist (f i p) (f i q) ≤ M) (hK1 : 1 ≤ K) :
     ∃ ω₀ : ℝ → ℝ, (∀ t, 0 ≤ ω₀ t) ∧ Tendsto ω₀ (𝓝[>] (0 : ℝ)) (𝓝 0) ∧
       ∀ (i : ι), ∀ x₀ ∈ S, ∀ x ∈ S, dist (f i x₀) (f i x) ≤ ω₀ (dist x₀ x) := by
@@ -738,7 +738,7 @@ all `x₀, x ∈ S`. This is the uniform diameter bound `C* = (1 + κ)^m · M ·
 (`chain_dist_le`), independent of `i`. -/
 theorem exists_uniform_image_bound {ι : Type*} {f : ι → ℂ → ℂ} {K : ℝ}
     (hfK : ∀ i, IsQCGeometric (f i) K) {S : Set ℂ} (hS : IsCompact S)
-    {p q : ℂ} (hp : p ∈ S) (hq : q ∈ S) (hpq : p ≠ q) {M : ℝ}
+    {p q : ℂ} (_hp : p ∈ S) (_hq : q ∈ S) (hpq : p ≠ q) {M : ℝ}
     (hub : ∀ i, dist (f i p) (f i q) ≤ M) :
     ∃ C : ℝ, ∀ (i : ι), ∀ x₀ ∈ S, ∀ x ∈ S, dist (f i x₀) (f i x) ≤ C := by
   classical
