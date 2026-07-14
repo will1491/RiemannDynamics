@@ -176,12 +176,12 @@ theorem mrmt_holomorphic_dependence_principal (b : BeltramiCoeff) {R : ℝ}
     have htμmeas : Measurable tμ := measurable_const.mul b.measurable
     have htμsupp : ∀ z : ℂ, R < ‖z‖ → tμ z = 0 := by
       intro z hz
-      show t * b.μ z = 0
+      change t * b.μ z = 0
       rw [hsupp z hz, mul_zero]
     have hesstμ : eLpNormEssSup tμ volume = ENNReal.ofReal (‖t‖ * b.normInf) := by
       have hsmul : tμ = t • b.μ := by
         funext z
-        show t * b.μ z = (t • b.μ) z
+        change t * b.μ z = (t • b.μ) z
         rw [Pi.smul_apply, smul_eq_mul]
       calc eLpNormEssSup tμ volume
           = eLpNormEssSup (t • b.μ) volume := by rw [hsmul]
@@ -209,14 +209,14 @@ theorem mrmt_holomorphic_dependence_principal (b : BeltramiCoeff) {R : ℝ}
     have hh'Lp : MemLp h' p volume := hLp.ae_eq haeeq
     have hh'supp : ∀ z : ℂ, R < ‖z‖ → h' z = 0 := by
       intro z hz
-      show tμ z * beurling h z + tμ z = 0
+      change tμ z * beurling h z + tμ z = 0
       rw [htμsupp z hz, zero_mul, zero_add]
     have hL2h' : MemLp h' 2 volume := hL2 h' hh'Lp hh'supp
     have hL2h : MemLp h 2 volume := hL2h'.ae_eq hh'ae
     have hSeq : beurling h =ᵐ[volume] beurling h' := beurling_congr_ae hL2h hL2h' haeeq
     have heq' : h' =ᵐ[volume] fun z => tμ z * beurling h' z + tμ z := by
       filter_upwards [hSeq] with z hz
-      show tμ z * beurling h z + tμ z = tμ z * beurling h' z + tμ z
+      change tμ z * beurling h z + tμ z = tμ z * beurling h' z + tμ z
       rw [hz]
     -- The principal-solution bundle.
     have hprin : IsPrincipalSolution (b.scale t ht) (fun z => z + cauchyTransform h' z) :=
@@ -227,7 +227,7 @@ theorem mrmt_holomorphic_dependence_principal (b : BeltramiCoeff) {R : ℝ}
     have hg_zero : g 0 = b.μ := Function.iterate_zero_apply T b.μ
     have hg_succ : ∀ n : ℕ, g (n + 1) = fun w => b.μ w * beurling (g n) w := by
       intro n
-      show T^[n + 1] b.μ = fun w => b.μ w * beurling (T^[n] b.μ) w
+      change T^[n + 1] b.μ = fun w => b.μ w * beurling (T^[n] b.μ) w
       rw [Function.iterate_succ_apply']
     have hgsupp : ∀ n : ℕ, ∀ z : ℂ, R < ‖z‖ → g n z = 0 := by
       intro n
@@ -282,16 +282,16 @@ theorem mrmt_holomorphic_dependence_principal (b : BeltramiCoeff) {R : ℝ}
     set s : ℕ → ℂ → ℂ := fun n z => ∑ m ∈ Finset.range n, t ^ (m + 1) * g m z with hs_def
     have hs_zero : ∀ z : ℂ, s 0 z = 0 := by
       intro z
-      show ∑ m ∈ Finset.range 0, t ^ (m + 1) * g m z = 0
+      change ∑ m ∈ Finset.range 0, t ^ (m + 1) * g m z = 0
       rw [Finset.sum_range_zero]
     have hs_succ : ∀ (n : ℕ) (z : ℂ), s (n + 1) z = s n z + t ^ (n + 1) * g n z := by
       intro n z
-      show ∑ m ∈ Finset.range (n + 1), t ^ (m + 1) * g m z
+      change ∑ m ∈ Finset.range (n + 1), t ^ (m + 1) * g m z
           = ∑ m ∈ Finset.range n, t ^ (m + 1) * g m z + t ^ (n + 1) * g n z
       rw [Finset.sum_range_succ]
     have hssupp : ∀ n : ℕ, ∀ z : ℂ, R < ‖z‖ → s n z = 0 := by
       intro n z hz
-      show ∑ m ∈ Finset.range n, t ^ (m + 1) * g m z = 0
+      change ∑ m ∈ Finset.range n, t ^ (m + 1) * g m z = 0
       refine Finset.sum_eq_zero fun m _ => ?_
       rw [hgsupp m z hz, mul_zero]
     have hsLp : ∀ n : ℕ, MemLp (s n) p volume := fun n =>
@@ -328,7 +328,7 @@ theorem mrmt_holomorphic_dependence_principal (b : BeltramiCoeff) {R : ℝ}
       filter_upwards [hSsum n] with z hz
       show s (n + 1) z = tμ z * beurling (s n) z + tμ z
       rw [hz]
-      show ∑ m ∈ Finset.range (n + 1), t ^ (m + 1) * g m z
+      change ∑ m ∈ Finset.range (n + 1), t ^ (m + 1) * g m z
           = t * b.μ z * (∑ m ∈ Finset.range n, t ^ (m + 1) * beurling (g m) z) + t * b.μ z
       rw [Finset.sum_range_succ', Finset.mul_sum]
       congr 1
@@ -423,21 +423,21 @@ theorem mrmt_holomorphic_dependence_principal (b : BeltramiCoeff) {R : ℝ}
       have hsdiv : (fun ζ => s n ζ / (ζ - z))
           = fun ζ => ∑ m ∈ Finset.range n, t ^ (m + 1) * (g m ζ / (ζ - z)) := by
         funext ζ
-        show (∑ m ∈ Finset.range n, t ^ (m + 1) * g m ζ) / (ζ - z) = _
+        change (∑ m ∈ Finset.range n, t ^ (m + 1) * g m ζ) / (ζ - z) = _
         rw [Finset.sum_div]
         exact Finset.sum_congr rfl fun m _ => mul_div_assoc _ _ _
-      show -(1 / (Real.pi : ℂ)) * ∫ ζ, s n ζ / (ζ - z)
+      change -(1 / (Real.pi : ℂ)) * ∫ ζ, s n ζ / (ζ - z)
           = ∑ m ∈ Finset.range n, t ^ (m + 1) * cauchyTransform (g m) z
       rw [hsdiv, integral_finset_sum _ (fun m _ => (hint m).const_mul (t ^ (m + 1))),
         Finset.mul_sum]
       refine Finset.sum_congr rfl fun m _ => ?_
-      show -(1 / (Real.pi : ℂ)) * ∫ ζ, t ^ (m + 1) * (g m ζ / (ζ - z))
+      change -(1 / (Real.pi : ℂ)) * ∫ ζ, t ^ (m + 1) * (g m ζ / (ζ - z))
           = t ^ (m + 1) * cauchyTransform (g m) z
       have hcm : ∫ ζ, t ^ (m + 1) * (g m ζ / (ζ - z))
           = t ^ (m + 1) * ∫ ζ, g m ζ / (ζ - z) :=
         integral_const_mul _ _
       rw [hcm]
-      show -(1 / (Real.pi : ℂ)) * (t ^ (m + 1) * ∫ ζ, g m ζ / (ζ - z))
+      change -(1 / (Real.pi : ℂ)) * (t ^ (m + 1) * ∫ ζ, g m ζ / (ζ - z))
           = t ^ (m + 1) * (-(1 / (Real.pi : ℂ)) * ∫ ζ, g m ζ / (ζ - z))
       ring
     -- The Cauchy transform of the error field.
@@ -452,7 +452,7 @@ theorem mrmt_holomorphic_dependence_principal (b : BeltramiCoeff) {R : ℝ}
           = fun ζ => h' ζ / (ζ - z) - s n ζ / (ζ - z) := by
         funext ζ
         rw [sub_div]
-      show -(1 / (Real.pi : ℂ)) * (∫ ζ, h' ζ / (ζ - z))
+      change -(1 / (Real.pi : ℂ)) * (∫ ζ, h' ζ / (ζ - z))
             - -(1 / (Real.pi : ℂ)) * (∫ ζ, s n ζ / (ζ - z))
           = -(1 / (Real.pi : ℂ)) * ∫ ζ, (h' ζ - s n ζ) / (ζ - z)
       rw [hdiv, integral_sub hinth hints]
@@ -510,7 +510,7 @@ theorem mrmt_holomorphic_dependence_principal (b : BeltramiCoeff) {R : ℝ}
       simpa using hgeo
     have htsum : ∑' n : ℕ, t ^ (n + 1) * cauchyTransform (g n) z = cauchyTransform h' z :=
       tendsto_nhds_unique hsummable.hasSum.tendsto_sum_nat htend
-    show z + cauchyTransform h' z
+    change z + cauchyTransform h' z
         = z + ∑' n : ℕ, t ^ (n + 1) * cauchyTransform (g n) z
     rw [htsum]
   -- Chunk C2 (transplanted): the uniform geometric bound on the series
@@ -542,7 +542,7 @@ theorem mrmt_holomorphic_dependence_principal (b : BeltramiCoeff) {R : ℝ}
     have hg_zero : g 0 = b.μ := Function.iterate_zero_apply T b.μ
     have hg_succ : ∀ n : ℕ, g (n + 1) = fun w => b.μ w * beurling (g n) w := by
       intro n
-      show T^[n + 1] b.μ = fun w => b.μ w * beurling (T^[n] b.μ) w
+      change T^[n + 1] b.μ = fun w => b.μ w * beurling (T^[n] b.μ) w
       rw [Function.iterate_succ_apply']
     -- Support of the iterates.
     have hgsupp : ∀ n : ℕ, ∀ z : ℂ, R < ‖z‖ → g n z = 0 := by
@@ -661,7 +661,7 @@ theorem mrmt_holomorphic_dependence_principal (b : BeltramiCoeff) {R : ℝ}
     have hfun : (fun z => z + ∑' n : ℕ,
         t ^ (n + 1) * cauchyTransform ((fun v w => b.μ w * beurling v w)^[n] b.μ) z) = f :=
       funext fun z => (hfEq z).symm
-    show IsPrincipalSolution (b.scale t ht) fun z => z + ∑' n : ℕ,
+    change IsPrincipalSolution (b.scale t ht) fun z => z + ∑' n : ℕ,
       t ^ (n + 1) * cauchyTransform ((fun v w => b.μ w * beurling v w)^[n] b.μ) z
     rw [hfun]
     exact hfPS

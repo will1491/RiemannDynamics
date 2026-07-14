@@ -222,8 +222,11 @@ theorem finrank_sectionSpaceCarrier (r : RationalData) :
 The two generic transport rules feeding the holomorphy of the deformation
 field. Both stay in the conformally invariant class `HasL2WeakDzbar`. -/
 
-open scoped ContDiff ENNReal in
 set_option maxHeartbeats 400000 in
+-- The weak-Dzbar product rule elaborates as one large declaration: a dozen nested
+-- `have` sub-lemmas (local integrability, the Leibniz identity, L²_loc closure)
+-- exhaust the default heartbeat budget but finish well within twice it.
+open scoped ContDiff ENNReal in
 /-- **Product rule with a holomorphic factor.** If `F` is holomorphic on the
 open set `Ω` and `v` has weak `∂̄`-derivative `μ` (with `L²_loc` gradient) on
 `Ω`, then `F·v` has weak `∂̄`-derivative `F·μ` on `Ω` — `∂̄(Fv) = F·∂̄v` since
@@ -259,7 +262,8 @@ theorem hasL2WeakDzbar_holomorphic_mul {Ω : Set ℂ} (hΩ : IsOpen Ω)
       intro hmz; apply hz; simp [hmz]
     exact (integrableOn_iff_integrable_of_support_subset hsupp).mp hon
   have d4_locInt_mul : ∀ {Ω : Set ℂ} (hΩ : IsOpen Ω) {m h : ℂ → ℂ}
-    (hm : ContinuousOn m Ω) (hh : LocallyIntegrableOn h Ω), LocallyIntegrableOn (fun z => m z * h z) Ω := by
+    (hm : ContinuousOn m Ω) (hh : LocallyIntegrableOn h Ω),
+      LocallyIntegrableOn (fun z => m z * h z) Ω := by
     intro Ω hΩ m h hm hh
     rw [MeasureTheory.locallyIntegrableOn_iff hΩ.isLocallyClosed]
     intro k hk hkc
@@ -268,7 +272,8 @@ theorem hasL2WeakDzbar_holomorphic_mul {Ω : Set ℂ} (hΩ : IsOpen Ω)
     {F v : ℂ → ℂ} (hF : DifferentiableOn ℂ F Ω)
     (hvloc : LocallyIntegrableOn v Ω)
     (e : ℂ) {gv : ℂ → ℂ} (hgv : HasWeakDirDeriv e gv v Ω)
-    (hgvloc : LocallyIntegrableOn gv Ω), HasWeakDirDeriv e (fun z => F z * gv z + (deriv F z * e) * v z)
+    (hgvloc : LocallyIntegrableOn gv Ω),
+      HasWeakDirDeriv e (fun z => F z * gv z + (deriv F z * e) * v z)
       (fun z => F z * v z) Ω := by
     intro Ω hΩ F v hF hvloc e gv hgv hgvloc
     -- Analyticity package for the holomorphic factor.
@@ -476,8 +481,7 @@ theorem hasL2WeakDzbar_holomorphic_mul {Ω : Set ℂ} (hΩ : IsOpen Ω)
     (hfts : tsupport f ⊆ Ω) (hgts : tsupport g ⊆ Ω)
     (hfcs : HasCompactSupport f) (hgcs : HasCompactSupport g)
     (h : HasWeakDirDeriv e g f Ω), HasWeakDirDeriv e g f Set.univ := by
-    intro Ω hΩ e f g hfts hgts hfcs hgcs h
-    intro φ hφ hcs _
+    intro Ω hΩ e f g hfts hgts hfcs hgcs h φ hφ hcs _
     change ∫ z, ((fderiv ℝ φ z) e) • f z = - ∫ z, φ z • g z
     -- Compact set carrying both supports, and two nested compact collars in `Ω`.
     set Kfg : Set ℂ := tsupport f ∪ tsupport g with hKfg
@@ -542,7 +546,8 @@ theorem hasL2WeakDzbar_holomorphic_mul {Ω : Set ℂ} (hΩ : IsOpen Ω)
     rw [← hLHS, ← hRHS]
     exact hfΦ
   have d8_young : ∀ (ρ : ℂ → ℝ) (g : ℂ → ℂ) (hρmem : MemLp ρ 1 volume)
-    (hgmem : MemLp g 1 volume), eLpNorm (MeasureTheory.convolution ρ g (ContinuousLinearMap.lsmul ℝ ℝ) volume) 1 volume
+    (hgmem : MemLp g 1 volume),
+      eLpNorm (MeasureTheory.convolution ρ g (ContinuousLinearMap.lsmul ℝ ℝ) volume) 1 volume
       ≤ eLpNorm ρ 1 volume * eLpNorm g 1 volume := by
     intro ρ g hρmem hgmem
     set L : ℝ →L[ℝ] ℂ →L[ℝ] ℂ := ContinuousLinearMap.lsmul ℝ ℝ with hL
@@ -580,7 +585,8 @@ theorem hasL2WeakDzbar_holomorphic_mul {Ω : Set ℂ} (hΩ : IsOpen Ω)
           rw [lintegral_mul_const'' _ hρsm.enorm]
       _ = eLpNorm ρ 1 volume * eLpNorm g 1 volume := by
           rw [eLpNorm_one_eq_lintegral_enorm, eLpNorm_one_eq_lintegral_enorm]
-  have d9_bump_mass : ∀ (b : ContDiffBump (0 : ℂ)), eLpNorm (b.normed (volume : Measure ℂ)) 1 volume = 1 := by
+  have d9_bump_mass : ∀ (b : ContDiffBump (0 : ℂ)),
+      eLpNorm (b.normed (volume : Measure ℂ)) 1 volume = 1 := by
     intro b
     rw [eLpNorm_one_eq_lintegral_enorm]
     have hnn : ∀ t, 0 ≤ b.normed (volume : Measure ℂ) t := b.nonneg_normed
@@ -815,8 +821,7 @@ theorem hasL2WeakDzbar_holomorphic_mul {Ω : Set ℂ} (hΩ : IsOpen Ω)
     exact MemLp.ae_eq hvu huK
   have d10_memLp_mul : ∀ {Ω : Set ℂ} {m g : ℂ → ℂ}
     (hm : ContinuousOn m Ω) (hg : MemLpLocOn g 2 Ω), MemLpLocOn (fun z => m z * g z) 2 Ω := by
-    intro Ω m g hm hg
-    intro K hK hKc
+    intro Ω m g hm hg K hK hKc
     obtain ⟨Cb, hCb⟩ := hKc.exists_bound_of_continuousOn (hm.mono hK)
     refine MemLp.of_le_mul (c := Cb) (hg K hK hKc)
       (((hm.mono hK).aestronglyMeasurable hKc.measurableSet).mul (hg K hK hKc).1) ?_
@@ -847,8 +852,11 @@ theorem hasL2WeakDzbar_holomorphic_mul {Ω : Set ℂ} (hΩ : IsOpen Ω)
     have h := hz hzΩ
     linear_combination (F z) * h + (deriv F z * v z) * Complex.I_mul_I
 
-open scoped ContDiff ENNReal in
 set_option maxHeartbeats 400000 in
+-- The weak-Dzbar chain rule elaborates as one large declaration: many nested `have`
+-- sub-lemmas (Wirtinger apply, Jacobian determinant, conformal L²_loc closure under
+-- composition) exhaust the default heartbeat budget but finish within twice it.
+open scoped ContDiff ENNReal in
 /-- **Chain rule under a holomorphic map.** If `φ` is holomorphic on the open
 set `Ω` and `v` is continuous with weak `∂̄`-derivative `μ` (and `L²_loc`
 gradient) on all of `ℂ`, then `v ∘ φ` has weak `∂̄`-derivative
@@ -894,7 +902,8 @@ theorem hasL2WeakDzbar_comp_holomorphic {Ω : Set ℂ} (hΩ : IsOpen Ω)
   have e2_conj_eq : ∀ (ζ : ℂ), (starRingEnd ℂ) ζ = (ζ.re : ℂ) - (ζ.im : ℂ) * Complex.I := by
     intro ζ
     apply Complex.ext <;> simp
-  have e1_wirtinger_apply : ∀ (L : ℂ →L[ℝ] ℂ) (ζ : ℂ), L ζ = (1 / 2 : ℂ) * (L 1 - Complex.I * L Complex.I) * ζ
+  have e1_wirtinger_apply : ∀ (L : ℂ →L[ℝ] ℂ) (ζ : ℂ),
+      L ζ = (1 / 2 : ℂ) * (L 1 - Complex.I * L Complex.I) * ζ
         + (1 / 2 : ℂ) * (L 1 + Complex.I * L Complex.I) * ((starRingEnd ℂ) ζ) := by
     intro L ζ
     have hdec : ζ = ζ.re • (1 : ℂ) + ζ.im • Complex.I := by
@@ -920,7 +929,7 @@ theorem hasL2WeakDzbar_comp_holomorphic {Ω : Set ℂ} (hΩ : IsOpen Ω)
     rw [show Complex.basisOneI 0 = 1 by simp [Complex.coe_basisOneI],
       show Complex.basisOneI 1 = Complex.I by simp [Complex.coe_basisOneI]]
     simp only [Complex.coe_basisOneI_repr]
-    show (c * 1).re * (c * Complex.I).im - (c * Complex.I).re * (c * 1).im
+    change (c * 1).re * (c * Complex.I).im - (c * Complex.I).re * (c * 1).im
         = Complex.normSq c
     simp [Complex.mul_re, Complex.mul_im, Complex.normSq_apply]
   have e4_inj_ball : ∀ {f : ℂ → ℂ} {a c : ℂ}
@@ -932,8 +941,7 @@ theorem hasL2WeakDzbar_comp_holomorphic {Ω : Set ℂ} (hΩ : IsOpen Ω)
     exact ⟨r, hr, fun x hx y hy hxy => by rw [← hleft x hx, ← hleft y hy, hxy]⟩
   have e5_fderiv_apply : ∀ {Ω : Set ℂ} (hΩ : IsOpen Ω) {φ : ℂ → ℂ}
     (hφ : DifferentiableOn ℂ φ Ω), ∀ z ∈ Ω, ∀ e : ℂ, (fderiv ℝ φ z) e = deriv φ z * e := by
-    intro Ω hΩ φ hφ
-    intro z hz e
+    intro Ω hΩ φ hφ z hz e
     have hdC : DifferentiableAt ℂ φ z := hφ.differentiableAt (hΩ.mem_nhds hz)
     obtain ⟨hr, hCR⟩ := differentiableAt_complex_iff_differentiableAt_real.mp hdC
     have h1 : (fderiv ℝ φ z) 1 = deriv φ z := by
@@ -953,9 +961,9 @@ theorem hasL2WeakDzbar_comp_holomorphic {Ω : Set ℂ} (hΩ : IsOpen Ω)
           simp only [Complex.real_smul]
           linear_combination (deriv φ z) * (Complex.re_add_im e)
   have e6_hasFDerivWithinAt : ∀ {Ω : Set ℂ} (hΩ : IsOpen Ω) {φ : ℂ → ℂ}
-    (hφ : DifferentiableOn ℂ φ Ω) {s : Set ℂ} (hs : s ⊆ Ω), ∀ z ∈ s, HasFDerivWithinAt φ (ContinuousLinearMap.mul ℝ ℂ (deriv φ z)) s z := by
-    intro Ω hΩ φ hφ s hs
-    intro z hz
+    (hφ : DifferentiableOn ℂ φ Ω) {s : Set ℂ} (hs : s ⊆ Ω),
+      ∀ z ∈ s, HasFDerivWithinAt φ (ContinuousLinearMap.mul ℝ ℂ (deriv φ z)) s z := by
+    intro Ω hΩ φ hφ s hs z hz
     have hdC : DifferentiableAt ℂ φ z := hφ.differentiableAt (hΩ.mem_nhds (hs hz))
     have hdR : DifferentiableAt ℝ φ z :=
       (differentiableAt_complex_iff_differentiableAt_real.mp hdC).1
@@ -1085,7 +1093,7 @@ theorem hasL2WeakDzbar_comp_holomorphic {Ω : Set ℂ} (hΩ : IsOpen Ω)
     have hRsub : R ⊆ ((Polynomial.X ^ m - Polynomial.C (w - φ p) :
         Polynomial ℂ).roots.toFinset : Set ℂ) := by
       intro ζ hζ
-      simp only [Finset.coe_sort_coe, Multiset.mem_toFinset, Finset.mem_coe]
+      simp only [Multiset.mem_toFinset, Finset.mem_coe]
       rw [Polynomial.mem_roots hpoly_ne]
       simp only [Polynomial.IsRoot, Polynomial.eval_sub, Polynomial.eval_pow,
         Polynomial.eval_X, Polynomial.eval_C]
@@ -1118,7 +1126,8 @@ theorem hasL2WeakDzbar_comp_holomorphic {Ω : Set ℂ} (hΩ : IsOpen Ω)
       _ ≤ R.ncard := Set.ncard_le_ncard himg hRfin
       _ ≤ m := hRcard
   have b00_ncard_biUnion_le : ∀ {ι : Type} [DecidableEq ι] (t : Finset ι)
-    (S : ι → Set ℂ) (hfin : ∀ i, (S i).Finite), (⋃ i ∈ t, S i).Finite ∧ (⋃ i ∈ t, S i).ncard ≤ ∑ i ∈ t, (S i).ncard := by
+    (S : ι → Set ℂ) (hfin : ∀ i, (S i).Finite),
+      (⋃ i ∈ t, S i).Finite ∧ (⋃ i ∈ t, S i).ncard ≤ ∑ i ∈ t, (S i).ncard := by
     intro ι _inst t S hfin
     classical
     induction t using Finset.induction with
@@ -1149,7 +1158,7 @@ theorem hasL2WeakDzbar_comp_holomorphic {Ω : Set ℂ} (hΩ : IsOpen Ω)
       rw [Metric.mem_nhds_iff]
       refine ⟨r, hr, ?_⟩
       intro y hy
-      show ∀ᶠ w in 𝓝 y, φ w = φ y
+      change ∀ᶠ w in 𝓝 y, φ w = φ y
       rw [Metric.eventually_nhds_iff_ball]
       obtain ⟨r', hr', hsub⟩ : ∃ r' > 0, Metric.ball y r' ⊆ Metric.ball z r :=
         ⟨r - dist y z, by simp [Metric.mem_ball.mp hy],
@@ -1200,7 +1209,8 @@ theorem hasL2WeakDzbar_comp_holomorphic {Ω : Set ℂ} (hΩ : IsOpen Ω)
       _ ≤ ∑ i ∈ t, ({x ∈ Metric.ball (i : ℂ) (r i) | φ x = w}).ncard := hUcard
       _ ≤ ∑ i ∈ t, m i := Finset.sum_le_sum (fun i _ => (hm i w).2)
   have b_cv : ∀ {Ω : Set ℂ} (hΩ : IsOpen Ω) {φ : ℂ → ℂ}
-    (hφ : DifferentiableOn ℂ φ Ω) {K : Set ℂ} (hKΩ : K ⊆ Ω) (hKc : IsCompact K), ∃ N : ℕ, ∀ q : ℂ → ℂ, Measurable q →
+    (hφ : DifferentiableOn ℂ φ Ω) {K : Set ℂ} (hKΩ : K ⊆ Ω) (hKc : IsCompact K),
+      ∃ N : ℕ, ∀ q : ℂ → ℂ, Measurable q →
       (∫⁻ z in K, ‖q (φ z)‖ₑ ^ (2 : ℕ) * ‖deriv φ z‖ₑ ^ (2 : ℕ) ∂volume)
         ≤ N * ∫⁻ w in φ '' K, ‖q w‖ₑ ^ (2 : ℕ) ∂volume := by
     intro Ω hΩ φ hφ K hKΩ hKc
@@ -1411,15 +1421,16 @@ theorem hasL2WeakDzbar_comp_holomorphic {Ω : Set ℂ} (hΩ : IsOpen Ω)
           intro w
           dsimp only
           rw [ENNReal.tsum_mul_right]
-          exact le_trans (mul_le_mul_right' (hcount w) (G w)) (le_of_eq (by ring))
+          exact le_trans (mul_le_mul_left (hcount w) (G w)) (le_of_eq (by ring))
       _ = N * ∫⁻ w in φ '' K, G w ∂volume := by
           rw [← lintegral_indicator hKimg.measurableSet]
           rw [← lintegral_const_mul (N : ℝ≥0∞) (hGmeas.indicator hKimg.measurableSet)]
           apply lintegral_congr
           intro w
-          by_cases hw : w ∈ φ '' K <;> simp [hw, mul_assoc]
+          by_cases hw : w ∈ φ '' K <;> simp [hw]
   have c_preimage_null : ∀ {Ω : Set ℂ} (hΩ : IsOpen Ω) {φ : ℂ → ℂ}
-    (hφ : DifferentiableOn ℂ φ Ω) {E : Set ℂ} (hE : volume E = 0), ∀ᵐ z ∂(volume : Measure ℂ), z ∈ Ω → deriv φ z ≠ 0 → φ z ∉ E := by
+    (hφ : DifferentiableOn ℂ φ Ω) {E : Set ℂ} (hE : volume E = 0),
+      ∀ᵐ z ∂(volume : Measure ℂ), z ∈ Ω → deriv φ z ≠ 0 → φ z ∉ E := by
     intro Ω hΩ φ hφ E hE
     classical
     obtain ⟨E', hEE', hE'meas, hE'null⟩ := exists_measurable_superset_of_null hE
@@ -1529,7 +1540,8 @@ theorem hasL2WeakDzbar_comp_holomorphic {Ω : Set ℂ} (hΩ : IsOpen Ω)
       rcases mul_eq_zero.mp h0 with h | h
       · exact h
       · exact absurd h hd_ne)
-  have p_conv2 : ∀ (h : ℂ → ℂ) (μ : Measure ℂ), eLpNorm h 2 μ = (∫⁻ z, ‖h z‖ₑ ^ (2 : ℕ) ∂μ) ^ (1 / 2 : ℝ) := by
+  have p_conv2 : ∀ (h : ℂ → ℂ) (μ : Measure ℂ),
+      eLpNorm h 2 μ = (∫⁻ z, ‖h z‖ₑ ^ (2 : ℕ) ∂μ) ^ (1 / 2 : ℝ) := by
     intro h μ
     rw [MeasureTheory.eLpNorm_eq_lintegral_rpow_enorm_toReal (by norm_num) (by norm_num)]
     have h2 : ((2 : ℝ≥0∞)).toReal = (2 : ℝ) := by norm_num
@@ -1543,7 +1555,8 @@ theorem hasL2WeakDzbar_comp_holomorphic {Ω : Set ℂ} (hΩ : IsOpen Ω)
     intro X
     rw [← ENNReal.rpow_natCast (X ^ (1 / 2 : ℝ)) 2, ← ENNReal.rpow_mul]
     norm_num
-  have p_fin : ∀ {h : ℂ → ℂ} {μ : Measure ℂ} (hh : MemLp h 2 μ), (∫⁻ z, ‖h z‖ₑ ^ (2 : ℕ) ∂μ) < ⊤ := by
+  have p_fin : ∀ {h : ℂ → ℂ} {μ : Measure ℂ} (hh : MemLp h 2 μ),
+      (∫⁻ z, ‖h z‖ₑ ^ (2 : ℕ) ∂μ) < ⊤ := by
     intro h μ hh
     have h1 := hh.2
     rw [p_conv2] at h1
@@ -1744,7 +1757,7 @@ theorem hasL2WeakDzbar_comp_holomorphic {Ω : Set ℂ} (hΩ : IsOpen Ω)
       simpa [hbumps] using h2
     have hrout1 : ∀ n, (bumps n).rOut ≤ 1 := by
       intro n
-      show 2 / ((n : ℝ) + 2) ≤ 1
+      change 2 / ((n : ℝ) + 2) ≤ 1
       rw [div_le_one (by positivity)]
       have : (0 : ℝ) ≤ (n : ℝ) := Nat.cast_nonneg n
       linarith
@@ -1784,8 +1797,7 @@ theorem hasL2WeakDzbar_comp_holomorphic {Ω : Set ℂ} (hΩ : IsOpen Ω)
         hvn_fd1 n (φ z), hvn_fdI n (φ z)]
     -- Smoothness of the composition and the classical weak derivative.
     have hcomp_cd : ∀ n, ContDiffOn ℝ 1 (fun y => vn n (φ y)) Ω := by
-      intro n
-      intro z hz
+      intro n z hz
       have h1 : ContDiffAt ℝ 1 φ z := (hφAtR z hz).contDiffAt
       have h2 : ContDiffAt ℝ 1 (vn n) (φ z) :=
         ((hvn_cd n).of_le (by exact_mod_cast le_top)).contDiffAt
@@ -2000,7 +2012,7 @@ theorem hasL2WeakDzbar_comp_holomorphic {Ω : Set ℂ} (hΩ : IsOpen Ω)
         intro z hz
         by_contra hzn
         apply hz
-        show ψ z • Ge z = 0
+        change ψ z • Ge z = 0
         rw [image_eq_zero_of_notMem_tsupport hzn]
         simp
       rw [← integrableOn_iff_integrable_of_support_subset hsupp]
@@ -2144,7 +2156,7 @@ theorem hasL2WeakDzbar_comp_holomorphic {Ω : Set ℂ} (hΩ : IsOpen Ω)
         _ ≤ ENNReal.ofReal Cψ * ‖e‖ₑ
             * ((((N : ℝ≥0∞) * Xn n) ^ (1 / 2 : ℝ)) * (volume (tsupport ψ)) ^ (1 / 2 : ℝ)
               + (((N : ℝ≥0∞) * Yn n) ^ (1 / 2 : ℝ)) * (volume (tsupport ψ)) ^ (1 / 2 : ℝ)) := by
-            apply mul_le_mul_left'
+            apply mul_le_mul_right
             have hax : AEMeasurable (fun z => ‖cx n (φ z) - gx (φ z)‖ₑ * ‖deriv φ z‖ₑ)
                 (volume.restrict (tsupport ψ)) := by
               have h := (((hcx_cont n).measurable.sub hgx_meas).comp_aemeasurable
@@ -2393,7 +2405,7 @@ vector field with weak `∂̄`-derivative `μ` and `μ` is `f`-invariant, then
 `δv` is holomorphic on the complement of the pole set: its weak `∂̄` is
 `f′·μ − (μ∘f)·conj(f′)`, which vanishes a.e. by the invariance law, and the
 open-set Weyl lemma upgrades this to holomorphy. -/
-theorem differentiableOn_deltaField {r : RationalData} (hd : 1 ≤ r.degree)
+theorem differentiableOn_deltaField {r : RationalData} (_hd : 1 ≤ r.degree)
     {v μ : ℂ → ℂ} (hv : IsSphereVectorField v)
     (hgrad : HasL2WeakDzbar v μ Set.univ)
     (hinv : IsInvariantBeltrami r μ) :
@@ -2527,7 +2539,7 @@ theorem deltaField_pole_bound {r : RationalData} (hd : 1 ≤ r.degree)
     {v μ : ℂ → ℂ} (hv : IsSphereVectorField v)
     (hgrad : HasL2WeakDzbar v μ Set.univ)
     (hinv : IsInvariantBeltrami r μ)
-    (hb : eLpNormEssSup μ volume < ⊤)
+    (_hb : eLpNormEssSup μ volume < ⊤)
     {p : ℂ} (hp : r.denReduced.eval p = 0) :
     ∃ (W : Set ℂ) (h : ℂ → ℂ), IsOpen W ∧ p ∈ W ∧
       DifferentiableOn ℂ h W ∧
@@ -2692,9 +2704,9 @@ large. This is exactly the numerator-degree bound `natDegree A ≤ 2d` of the
 section-space representation. -/
 theorem deltaField_growth_at_infty {r : RationalData} (hd : 1 ≤ r.degree)
     {v μ : ℂ → ℂ} (hv : IsSphereVectorField v)
-    (hgrad : HasL2WeakDzbar v μ Set.univ)
-    (hinv : IsInvariantBeltrami r μ)
-    (hb : eLpNormEssSup μ volume < ⊤) :
+    (_hgrad : HasL2WeakDzbar v μ Set.univ)
+    (_hinv : IsInvariantBeltrami r μ)
+    (_hb : eLpNormEssSup μ volume < ⊤) :
     ∃ C R : ℝ, ∀ z : ℂ, R < ‖z‖ →
       ‖(r.denReduced.eval z) ^ 2 * deltaField r v z‖
         ≤ C * ‖z‖ ^ (2 * r.degree) := by
@@ -3102,7 +3114,7 @@ theorem exists_sectionSpace_rep_of_pole_growth {r : RationalData} {g : ℂ → �
         Filter.eventually_mem_set.mpr self_mem_nhdsWithin
       filter_upwards [hWev, hne] with z hzW hzp
       have hzp' : z - p ≠ 0 := sub_ne_zero.mpr hzp
-      show (r.denReduced.eval z) ^ 2 * g z = (Q₁.eval z) ^ 2 * h z
+      change (r.denReduced.eval z) ^ 2 * g z = (Q₁.eval z) ^ 2 * h z
       rw [hgeq z hzW hzp, hevalfact z]
       have hpow : ((z - p) ^ k) ^ 2 = (z - p) ^ (2 * k) := by
         rw [← pow_mul, mul_comm]
@@ -3192,7 +3204,7 @@ theorem exists_sectionSpace_rep_of_pole_growth {r : RationalData} {g : ℂ → �
   · exact mem_sectionSpaceCarrier_iff.mpr ⟨A, hAdeg, rfl⟩
   · intro z hz
     have hQz : (r.denReduced.eval z) ^ 2 ≠ 0 := pow_ne_zero 2 hz
-    show g z = A.eval z / (r.denReduced.eval z) ^ 2
+    change g z = A.eval z / (r.denReduced.eval z) ^ 2
     rw [← hEA z, hEF z hz]
     exact (mul_div_cancel_left₀ _ hQz).symm
 
@@ -3319,7 +3331,7 @@ theorem deltaField_zero_iterate {r : RationalData} {v : ℂ → ℂ}
         have hg2 : HasDerivAt (fun x : ℂ => chartFiniteMap (r.toSphereMap ((x : ℂ̂))))
             (fderivRational r u)
             ((fun x : ℂ => chartFiniteMap (r.toSphereMap^[k] ((x : ℂ̂)))) w) := by
-          show HasDerivAt _ _ (chartFiniteMap (r.toSphereMap^[k] ((w : ℂ̂))))
+          change HasDerivAt _ _ (chartFiniteMap (r.toSphereMap^[k] ((w : ℂ̂))))
           rw [hhw]
           exact hg
         have hcomp := HasDerivAt.comp w hg2 hD
@@ -3398,7 +3410,7 @@ theorem sphereField_eq_zero_on_juliaSet_of_deltaField_eq_zero
             _ = r.toSphereMap^[n] p := by rw [Nat.sub_add_cancel hjn.le]
             _ = p := hper'
         refine ⟨(n - j % n) % n₀, Nat.mod_lt _ hn₀pos, ?_⟩
-        show r.toSphereMap^[(n - j % n) % n₀] (∞ : ℂ̂) = p
+        change r.toSphereMap^[(n - j % n) % n₀] (∞ : ℂ̂) = p
         rw [hinfper'.iterate_mod_apply]
         exact hp_orbit
       exact Set.Finite.subset ((Set.finite_Iio n₀).image _) hBsub

@@ -598,11 +598,11 @@ theorem mrmt_exists (b : BeltramiCoeff) :
   set gs : ℕ → ℂ → ℂ := fun n z => (f0 n 1 - f0 n 0)⁻¹ * (f0 n z - f0 n 0) with hgs_def
   have hgs0 : ∀ n, gs n 0 = 0 := by
     intro n
-    show (f0 n 1 - f0 n 0)⁻¹ * (f0 n 0 - f0 n 0) = 0
+    change (f0 n 1 - f0 n 0)⁻¹ * (f0 n 0 - f0 n 0) = 0
     rw [sub_self, mul_zero]
   have hgs1 : ∀ n, gs n 1 = 1 := by
     intro n
-    show (f0 n 1 - f0 n 0)⁻¹ * (f0 n 1 - f0 n 0) = 1
+    change (f0 n 1 - f0 n 0)⁻¹ * (f0 n 1 - f0 n 0) = 1
     exact inv_mul_cancel₀ (hd_ne n)
   -- § 3. Affine post-composition preserves the analytic package (same coefficient).
   have haffine : ∀ (F : ℂ → ℂ) (bF : BeltramiCoeff) (a c : ℂ), a ≠ 0 →
@@ -879,12 +879,12 @@ theorem mrmt_exists (b : BeltramiCoeff) :
           rw [partialX_def, partialY_def]
           simp only [dzbar, dz] at hbz
           linear_combination (2 : ℂ) * hbz
-        show partialX (gs m) z * ψ₁ z + partialY (gs m) z * ψ₂ z = 0
+        change partialX (gs m) z * ψ₁ z + partialY (gs m) z * ψ₂ z = 0
         simp only [hψ₁_def, hψ₂_def]
         linear_combination ((φt z : ℂ)) * hXY0
       · -- outside the support the test factor vanishes.
         have hz0 : φt z = 0 := image_eq_zero_of_notMem_tsupport hz
-        show partialX (gs m) z * ψ₁ z + partialY (gs m) z * ψ₂ z = 0
+        change partialX (gs m) z * ψ₁ z + partialY (gs m) z * ψ₂ z = 0
         simp [hψ₁_def, hψ₂_def, hz0]
     -- the limit of an eventually-zero sequence is zero.
     have h0 : (∫ z, u z * ψ₁ z) + ∫ z, v z * ψ₂ z = 0 :=

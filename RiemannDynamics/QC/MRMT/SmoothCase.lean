@@ -3185,7 +3185,7 @@ theorem IsPrincipalSolution.inverse_principalSolution_of_contDiff
         rw [dz_add hidd hPd, (hdzid w).1, dz, hx', hy']
         linear_combination (-(1 / 2 : ℂ)
           * (beurling (fun x => dzbar g x) w - dzbar g w)) * Complex.I_mul_I
-      show dzbar g w = μν w * beurling (fun x => dzbar g x) w + μν w
+      change dzbar g w = μν w * beurling (fun x => dzbar g x) w + μν w
       rw [hbeltg w, hdzg_ae]
       ring
     exact ⟨4, (fun w => dzbar g w), R₂, hp4, hp4', hg_mem, hg_van, heq_g, hrepr_g⟩
@@ -3924,7 +3924,7 @@ theorem lp_fixedPoint_beltrami_stability {μ₁ μ₂ h₁ h₂ : ℂ → ℂ}
     (hp : 2 < p) (hp' : p ≠ ⊤)
     (hμ₁ : Measurable μ₁) (hμ₂ : Measurable μ₂)
     (hk₁ : eLpNormEssSup μ₁ volume ≤ ENNReal.ofReal k)
-    (hk₂ : eLpNormEssSup μ₂ volume ≤ ENNReal.ofReal k)
+    (_hk₂ : eLpNormEssSup μ₂ volume ≤ ENNReal.ofReal k)
     (hCb : IsCalderonZygmundBound beurling p C)
     (hk0 : 0 ≤ k) (hcontr : k * C < 1)
     (hh₁ : MemLp h₁ p volume) (hh₂ : MemLp h₂ p volume)
@@ -3961,7 +3961,7 @@ theorem lp_fixedPoint_beltrami_stability {μ₁ μ₂ h₁ h₂ : ℂ → ℂ}
     have e₁' : h₁ z = μ₁ z * beurling h₁ z + μ₁ z := e₁
     have e₂' : h₂ z = μ₂ z * beurling h₂ z + μ₂ z := e₂
     have eb' : beurling (fun w => h₁ w - h₂ w) z = beurling h₁ z - beurling h₂ z := eb
-    show h₁ z - h₂ z
+    change h₁ z - h₂ z
       = μ₁ z * beurling (fun w => h₁ w - h₂ w) z + (μ₁ z - μ₂ z) * (1 + beurling h₂ z)
     rw [e₁', e₂', eb']
     ring
