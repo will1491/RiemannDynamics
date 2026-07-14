@@ -4365,7 +4365,8 @@ theorem locallyLipschitzOn_windowedTruncIntegrand {u : ℂ → ℝ} {U : Set ℂ
     have hLpos : LipschitzOnWith K1 (fun w : ℂ => (u (Complex.exp w) - δ)⁺) s1 := by
       have := lipschitzWith_posPart.comp_lipschitzOnWith hL1
       rwa [one_mul] at this
-    -- factor 2: `Re (expGrad u) = (fderiv ℝ u ∘ exp) applied to exp` is `C¹`, hence locally Lipschitz
+    -- factor 2: `Re (expGrad u) = (fderiv ℝ u ∘ exp) applied to exp` is `C¹`,
+    -- hence locally Lipschitz
     have hueq : (fun w : ℂ => (expGrad u w).re)
         = fun w : ℂ => (fderiv ℝ u (Complex.exp w)) (Complex.exp w) := by
       funext w; rw [expGrad, fderiv_eq_re_gradC_mul]

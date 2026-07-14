@@ -803,8 +803,8 @@ theorem lintegral_polarization_energy (ρ : ℂ → ℝ≥0∞) (hρ : Measurabl
 
 /-! ### The single polarization `polarizeDensity ρ` and its exact energy-neutrality
 
-The polarization primitive `lintegral_polarization_energy` pairs the *two* densities
-`max (ρ, ρ∘reflectIm)` and `min (ρ, ρ∘reflectIm)`. The **polarized density** `polarizeDensity ρ` glues them
+The polarization primitive `lintegral_polarization_energy` pairs the *two* densities `max (ρ,
+ρ∘reflectIm)` and `min (ρ, ρ∘reflectIm)`. The **polarized density** `polarizeDensity ρ` glues them
 into a single density: `max` on the closed upper half-plane `{0 ≤ im}` and `min` on the open lower
 half-plane `{im < 0}`. This is the two-point rearrangement of `ρ` across the real axis — the basic
 move whose iterated/circular limit is the Grötzsch/Teichmüller symmetrization.
@@ -893,7 +893,8 @@ noncomputable def polarizeDensity (ρ : ℂ → ℝ≥0∞) : ℂ → ℝ≥0∞
   fun z => if 0 ≤ z.im then max (ρ z) (ρ (reflectIm z)) else min (ρ z) (ρ (reflectIm z))
 
 /-- The polarized density is measurable. -/
-theorem measurable_polarize {ρ : ℂ → ℝ≥0∞} (hρ : Measurable ρ) : Measurable (polarizeDensity ρ) := by
+theorem measurable_polarize {ρ : ℂ → ℝ≥0∞} (hρ : Measurable ρ) :
+    Measurable (polarizeDensity ρ) := by
   have hρr : Measurable (fun z => ρ (reflectIm z)) := hρ.comp measurable_reflectIm
   unfold polarizeDensity
   exact Measurable.ite (measurableSet_le measurable_const Complex.measurable_im)
@@ -904,9 +905,9 @@ polarization-modulus monotonicity). The polarized density redistributes the `ρ`
 reflection pair `{z, reflectIm z}` without changing the total area energy. This is the genuine,
 fully-proven rearrangement brick: the half-plane localization of `lintegral_polarization_energy`.
 
-In particular `polarizeDensity ρ` competes for `curveModulus` at **no greater energy cost** than `ρ`; the
-remaining content of polarization-modulus monotonicity is purely the admissibility/family transfer,
-the genuine Mathlib-absent symmetrization step. -/
+In particular `polarizeDensity ρ` competes for `curveModulus` at **no greater energy cost** than
+`ρ`; the remaining content of polarization-modulus monotonicity is purely the admissibility/family
+transfer, the genuine Mathlib-absent symmetrization step. -/
 theorem lintegral_polarize_sq {ρ : ℂ → ℝ≥0∞} (hρ : Measurable ρ) :
     ∫⁻ z, (polarizeDensity ρ z) ^ 2 = ∫⁻ z, (ρ z) ^ 2 := by
   have hρr : Measurable (fun z => ρ (reflectIm z)) := hρ.comp measurable_reflectIm
@@ -949,8 +950,8 @@ theorem lintegral_polarize_sq {ρ : ℂ → ℝ≥0∞} (hρ : Measurable ρ) :
   exact (ENNReal.mul_left_inj (by norm_num) (by norm_num)).mp key
 
 /-- **Polarization preserves admissibility of the energy bound** (immediate corollary of energy
-neutrality): if `ρ` already meets a target energy `E`, so does `polarizeDensity ρ` (with equality in fact).
-This is the `≤` form used by `curveModulus` infimum estimates. -/
+neutrality): if `ρ` already meets a target energy `E`, so does `polarizeDensity ρ` (with equality
+in fact). This is the `≤` form used by `curveModulus` infimum estimates. -/
 theorem lintegral_polarize_sq_le {ρ : ℂ → ℝ≥0∞} (hρ : Measurable ρ) :
     ∫⁻ z, (polarizeDensity ρ z) ^ 2 ≤ ∫⁻ z, (ρ z) ^ 2 :=
   (lintegral_polarize_sq hρ).le
@@ -967,22 +968,23 @@ axiom-clean, configuration-independent facts:
    anticonformal specialization of conformal invariance (no Jacobian, exact arc-length), proven via
    the transfer density `ρ ↦ ρ∘σ` in both directions. It is the symmetrization congruence brick.
 
-2. **The energy-tight admissibility interface** (`curveModulus_polarize_le_of_admissible_transfer`):
-   *whenever* the polarized density `polarizeDensity ρ` of every `Γ`-admissible `ρ` is admissible for the
-   polarized family `Γ'`, then `curveModulus Γ' ≤ curveModulus Γ`. This is exactly the
-   `curveModulus Γ' ≤ ∫(polarizeDensity ρ)² = ∫ρ²` chain, with the *genuine* symmetrization content —
-   the admissibility/folding transfer — as an explicit, satisfiable hypothesis. The transfer is
-   genuinely intricate in general (a
-   lower-half-plane curve sees `polarizeDensity ρ = min ≤ ρ`, so admissibility genuinely requires folding
-   the curve across the axis — the Mathlib-absent Steiner/circular symmetrization step), and the
-   interface lemma is precisely where that step plugs in.
+2. **The energy-tight admissibility interface**
+   (`curveModulus_polarize_le_of_admissible_transfer`): *whenever* the polarized density
+   `polarizeDensity ρ` of every `Γ`-admissible `ρ` is admissible for the polarized family `Γ'`,
+   then `curveModulus Γ' ≤ curveModulus Γ`. This is exactly the `curveModulus Γ' ≤
+   ∫(polarizeDensity ρ)² = ∫ρ²` chain, with the *genuine* symmetrization content — the
+   admissibility/folding transfer — as an explicit, satisfiable hypothesis. The transfer is
+   genuinely intricate in general (a lower-half-plane curve sees `polarizeDensity ρ = min ≤ ρ`, so
+   admissibility genuinely requires folding the curve across the axis — the Mathlib-absent
+   Steiner/circular symmetrization step), and the interface lemma is precisely where that step
+   plugs in.
 
 The interface is **not vacuous**: `isAdmissibleDensity_polarize_of_upperHalf` discharges the
 transfer hypothesis outright for any family living in the closed upper half-plane (there
-`polarizeDensity ρ ≥ ρ` along every curve), and `isAdmissibleDensity_max_of_symm` proves the companion
-`max`-density transfer for the symmetric family `Γ ∪ σ·Γ`. The energy half plus the congruence half
-are the reusable, unambiguous parts; the *general* folding transfer (the round-annulus extremality)
-remains the genuine Mathlib-absent node. -/
+`polarizeDensity ρ ≥ ρ` along every curve), and `isAdmissibleDensity_max_of_symm` proves the
+companion `max`-density transfer for the symmetric family `Γ ∪ σ·Γ`. The energy half plus the
+congruence half are the reusable, unambiguous parts; the *general* folding transfer (the
+round-annulus extremality) remains the genuine Mathlib-absent node. -/
 
 /-- **Arc-length line integral is monotone in the density.** If `ρ ≤ σ` pointwise then the
 arc-length integral against `ρ` is at most that against `σ`, for any curve. -/
@@ -1091,20 +1093,22 @@ theorem curveModulus_reflectIm (Γ : Set (ℝ → ℂ)) :
     _ ≤ curveModulus ((fun γ : ℝ → ℂ => fun s => reflectIm (γ s)) '' Γ) := hkey _
 
 /-- **Polarization-modulus monotonicity (the energy-tight interface).** If the polarized density
-`polarizeDensity ρ` of *every* density `ρ` admissible for `Γ` is admissible for the polarized family `Γ'`,
-then polarizing does not increase the modulus: `curveModulus Γ' ≤ curveModulus Γ`.
+`polarizeDensity ρ` of *every* density `ρ` admissible for `Γ` is admissible for the polarized
+family `Γ'`, then polarizing does not increase the modulus: `curveModulus Γ' ≤ curveModulus Γ`.
 
 This is the exact monotonicity statement of single polarization, with the genuine symmetrization
-content — the admissibility/folding transfer — as the explicit hypothesis `htransfer`. The
-proof is purely the energy-tightness `curveModulus Γ' ≤ ∫ (polarizeDensity ρ)² = ∫ ρ²` (each `polarizeDensity ρ`
-competes in the infimum for `Γ'`, at energy exactly `∫ ρ²` by `lintegral_polarize_sq`), taken over
-all `Γ`-admissible `ρ`. The hypothesis `htransfer` is genuine and satisfiable — see
-`isAdmissibleDensity_polarize_of_upperHalf` for a family where it holds outright — and is exactly
-the Steiner/circular-symmetrization step (a lower-half-plane curve has `polarizeDensity ρ = min ≤ ρ`, so
-the transfer genuinely requires folding the curve across the real axis). -/
+content — the admissibility/folding transfer — as the explicit hypothesis `htransfer`. The proof is
+purely the energy-tightness `curveModulus Γ' ≤ ∫ (polarizeDensity ρ)² = ∫ ρ²` (each
+`polarizeDensity ρ` competes in the infimum for `Γ'`, at energy exactly `∫ ρ²` by
+`lintegral_polarize_sq`), taken over all `Γ`-admissible `ρ`. The hypothesis `htransfer` is genuine
+and satisfiable — see `isAdmissibleDensity_polarize_of_upperHalf` for a family where it holds
+outright — and is exactly the Steiner/circular-symmetrization step (a lower-half-plane curve has
+`polarizeDensity ρ = min ≤ ρ`, so the transfer genuinely requires folding the curve across the real
+axis). -/
 theorem curveModulus_polarize_le_of_admissible_transfer
     {Γ Γ' : Set (ℝ → ℂ)}
-    (htransfer : ∀ ρ : ℂ → ℝ≥0∞, IsAdmissibleDensity ρ Γ → IsAdmissibleDensity (polarizeDensity ρ) Γ') :
+    (htransfer : ∀ ρ : ℂ → ℝ≥0∞,
+      IsAdmissibleDensity ρ Γ → IsAdmissibleDensity (polarizeDensity ρ) Γ') :
     curveModulus Γ' ≤ curveModulus Γ := by
   refine le_iInf₂ (fun ρ hρ => ?_)
   have hρmeas := hρ.1
@@ -1112,11 +1116,12 @@ theorem curveModulus_polarize_le_of_admissible_transfer
   calc curveModulus Γ' ≤ ∫⁻ z, (polarizeDensity ρ z) ^ 2 := iInf₂_le (polarizeDensity ρ) hpadm
     _ = ∫⁻ z, (ρ z) ^ 2 := lintegral_polarize_sq hρmeas
 
-/-- **The transfer hypothesis is discharged for upper-half-plane families** (a concrete, satisfiable
-instance of `curveModulus_polarize_le_of_admissible_transfer`'s hypothesis). If every curve of `Γ`
-stays in the closed upper half-plane `{0 ≤ im}` on `[0,1]`, then `polarizeDensity ρ` is admissible for `Γ`
-whenever `ρ` is: there `polarizeDensity ρ = max (ρ, ρ∘σ) ≥ ρ` pointwise along the curve, so the arc-length
-integral only grows. This witnesses that the interface hypothesis is genuine (not vacuous). -/
+/-- **The transfer hypothesis is discharged for upper-half-plane families** (a concrete,
+satisfiable instance of `curveModulus_polarize_le_of_admissible_transfer`'s hypothesis). If every
+curve of `Γ` stays in the closed upper half-plane `{0 ≤ im}` on `[0,1]`, then `polarizeDensity ρ`
+is admissible for `Γ` whenever `ρ` is: there `polarizeDensity ρ = max (ρ, ρ∘σ) ≥ ρ` pointwise along
+the curve, so the arc-length integral only grows. This witnesses that the interface hypothesis is
+genuine (not vacuous). -/
 theorem isAdmissibleDensity_polarize_of_upperHalf {ρ : ℂ → ℝ≥0∞} {Γ : Set (ℝ → ℂ)}
     (hΓ : ∀ γ ∈ Γ, ∀ t ∈ Set.Icc (0 : ℝ) 1, 0 ≤ (γ t).im)
     (hρ : IsAdmissibleDensity ρ Γ) :
@@ -1543,8 +1548,9 @@ theorem radialInvLength_integral {C D c0 c1 : ℝ} (_hC : 0 < C) (hcD : 0 < c0 +
 
 The polarization interface `curveModulus_polarize_le_of_admissible_transfer` has an exact planar
 analogue for the **circular rearrangement** `circRearrange p σ` (built in
-`RiemannDynamics.Analysis.Symmetrization.CircularRearrangement`). Circular rearrangement is the genuine planar
-symmetrization move whose iterated/limit form is the Grötzsch/Teichmüller symmetrization, and its
+`RiemannDynamics.Analysis.Symmetrization.CircularRearrangement`). Circular rearrangement is the
+genuine planar symmetrization move whose iterated/limit form is the Grötzsch/Teichmüller
+symmetrization, and its
 energy-neutrality brick `lintegral_circRearrange_sq` (`∫ (circRearrange p σ)² = ∫ σ²`) is fully
 proven and axiom-clean. As with polarization, the *only* remaining symmetrization content is the
 admissibility/folding transfer, carried below by the explicit hypothesis `htransfer`. -/

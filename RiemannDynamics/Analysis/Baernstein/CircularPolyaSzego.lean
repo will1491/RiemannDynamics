@@ -38,9 +38,10 @@ and integral-preservation lemmas).
 The star-function route converts the *energy* inequality `D(u★) ≤ D(u)` into a *subharmonicity*
 statement about `u★` — a shape the project's continuous sub-mean-value subharmonic layer
 (`RiemannDynamics.SubharmonicOn` and its max / maximum-principle / Poisson-modification API in
-`Analysis/Potential/Subharmonic.lean`) is built to express. Crucially `u★` is assembled from circle integrals
-of the *harmonic* (hence smooth) ring potential, so it avoids the missing gradient regularity of the
-raw circular rearrangement `circSymm` that obstructs the polarization and coarea routes.
+`Analysis/Potential/Subharmonic.lean`) is built to express. Crucially `u★` is assembled from
+circle integrals of the *harmonic* (hence smooth) ring potential, so it avoids the missing
+gradient regularity of the raw circular rearrangement `circSymm` that obstructs the
+polarization and coarea routes.
 
 ## Main definitions
 
@@ -468,7 +469,7 @@ the centered arc of half-aperture `θ ≤ π = (2π)/2`. The pointwise bound `pr
 transfers to the rearrangement (its super-level set above `ofReal M` is empty, so the distribution
 function there vanishes, forcing the rearrangement `≤ ofReal M` by the fundamental relation), so the
 star value is `≤ ofReal M * volume (Icc 0 (2π)) < ⊤`. -/
-theorem starFunction_lt_top {p : ℂ} {u : ℂ → ℝ} {r θ : ℝ} (hθ0 : 0 ≤ θ) (hθπ : θ ≤ π)
+theorem starFunction_lt_top {p : ℂ} {u : ℂ → ℝ} {r θ : ℝ} (_hθ0 : 0 ≤ θ) (_hθπ : θ ≤ π)
     (hbdd : ∃ M : ℝ, ∀ φ : ℝ, u (p + (r : ℂ) * Complex.exp (φ * Complex.I)) ≤ M) :
     starFunction p u r θ < ⊤ := by
   obtain ⟨M, hM⟩ := hbdd
@@ -1079,7 +1080,7 @@ theorem arcIntegral_le_starFunction {p : ℂ} {u : ℂ → ℝ} {E : Set ℝ} {w
       rw [hsplit, Complex.exp_add]
       congr 2
       · rw [← Complex.ofReal_exp]
-      · push_cast; ring
+      · push_cast; ring_nf
     rw [lintegral_congr_ae (Filter.Eventually.of_forall hpt)]
     have hkey := hmp.setLIntegral_comp_preimage_emb (measurableEmbedding_addRight (w.im + π)) g
       ((fun φ : ℝ => φ + (w.im + π)) '' E)
@@ -1230,7 +1231,7 @@ theorem arcIntegral_eq_starPlane_extremal {p : ℂ} {u : ℂ → ℝ} {rI rO : �
       rw [hsplit, Complex.exp_add]
       congr 2
       · rw [← Complex.ofReal_exp]
-      · push_cast; ring
+      · push_cast; ring_nf
     rw [lintegral_congr_ae (Filter.Eventually.of_forall hpt)]
     have hmp : MeasurePreserving (fun φ : ℝ => φ + (w₀.im + π)) volume volume :=
       measurePreserving_add_right volume (w₀.im + π)
@@ -1360,7 +1361,7 @@ theorem arcIntegral_le_starFunction_window {p : ℂ} {u : ℂ → ℝ} {E : Set 
       rw [hsplit, Complex.exp_add]
       congr 2
       · rw [← Complex.ofReal_exp]
-      · push_cast; ring
+      · push_cast; ring_nf
     rw [lintegral_congr_ae (Filter.Eventually.of_forall hpt)]
     have hmp : MeasurePreserving (fun φ : ℝ => φ + (w.im + π)) volume volume :=
       measurePreserving_add_right volume (w.im + π)

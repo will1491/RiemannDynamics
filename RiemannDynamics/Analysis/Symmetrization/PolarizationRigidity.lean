@@ -298,7 +298,7 @@ theorem ae_circle_fixed_of_polarizeDir_fixed (θ : ℝ) (v : ℂ → ℝ) (hv : 
 reflection across `θ`, then a.e. on the peak side `sin (φ − θ) ≥ 0` its mirror value is `≤` its
 value. (The converse needs `g` to be `2π`-periodic, which is not assumed; only this direction is
 consumed by the rigidity argument.) -/
-theorem angReflect_fixed_order (θ : ℝ) (g : ℝ → ℝ) (hg : Measurable g)
+theorem angReflect_fixed_order (θ : ℝ) (g : ℝ → ℝ) (_hg : Measurable g)
     (hfix : angReflect θ g =ᵐ[volume.restrict (Ioo (-π) π)] g) :
     ∀ᵐ φ ∂(volume.restrict (Ioo (-π) π)),
       0 ≤ Real.sin (φ - θ) → g (2 * θ - φ) ≤ g φ := by
@@ -312,7 +312,7 @@ theorem angReflect_fixed_order (θ : ℝ) (g : ℝ → ℝ) (hg : Measurable g)
 super-level sets agree a.e. for every threshold in a countable dense set of levels are a.e. equal on
 `s`. Reduces a function equality to a family of super-level-set equalities. -/
 theorem ae_eq_of_superlevel_ae_eq {s : Set ℝ} (hs : MeasurableSet s)
-    {f h : ℝ → ℝ≥0∞} (hf : Measurable f) (hh : Measurable h)
+    {f h : ℝ → ℝ≥0∞} (_hf : Measurable f) (_hh : Measurable h)
     {L : Set ℝ≥0∞} (hLcount : L.Countable) (hLdense : Dense L)
     (hlev : ∀ t ∈ L, {x ∈ s | t < f x} =ᵐ[volume] {x ∈ s | t < h x}) :
     f =ᵐ[volume.restrict s] h := by

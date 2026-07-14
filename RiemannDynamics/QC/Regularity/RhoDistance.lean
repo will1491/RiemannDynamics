@@ -952,7 +952,7 @@ weak-gradient bound.
 `ρ` is a.e. finite along the segment, and `ρ` is measurable. This is the unbounded-density analogue
 of `arcLengthLineIntegral_segment_toReal`: the length integrand is `ρ · ‖h u‖ = ρ · h`, and the
 change of variables `s = t h` turns the `[0,1]`-parametrisation into the `[0,h]` line integral. -/
-private theorem arcLength_segment_eq_intervalIntegral {ρ : ℂ → ℝ≥0∞} (hρmeas : Measurable ρ)
+private theorem arcLength_segment_eq_intervalIntegral {ρ : ℂ → ℝ≥0∞} (_hρmeas : Measurable ρ)
     {z u : ℂ} (hu : ‖u‖ = 1) {h : ℝ} (hh : 0 < h)
     (hII : IntervalIntegrable (fun s : ℝ => (ρ (z + s • u)).toReal) volume 0 h)
     (hfin : ∀ᵐ s : ℝ, ρ (z + s • u) ≠ ⊤) :
