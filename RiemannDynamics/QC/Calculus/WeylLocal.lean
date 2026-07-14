@@ -241,7 +241,7 @@ theorem weyl_lemma_on {V : Set ℂ} {f gx gy : ℂ → ℂ} (hV : IsOpen V)
           = - ∫ u, ((fderiv ℝ φt u) v) • f u := by
         rw [← MeasureTheory.integral_neg]
         refine MeasureTheory.integral_congr_ae (Filter.Eventually.of_forall (fun u => ?_))
-        show ((fderiv ℝ (ρ n) (z - u)) v) • f u = -(((fderiv ℝ φt u) v) • f u)
+        change ((fderiv ℝ (ρ n) (z - u)) v) • f u = -(((fderiv ℝ φt u) v) • f u)
         rw [hφt_fderiv u v, Complex.real_smul, Complex.real_smul]
         push_cast
         ring
@@ -278,13 +278,13 @@ theorem weyl_lemma_on {V : Set ℂ} {f gx gy : ℂ → ℂ} (hV : IsOpen V)
       filter_upwards [hcomb] with u hu
       by_cases huT : u ∈ tsupport φt
       · have h5 := hu (hφt_tsuppV huT)
-        show φt u • gx u + Complex.I * (φt u • gy u) = 0
+        change φt u • gx u + Complex.I * (φt u • gy u) = 0
         rw [Complex.real_smul, Complex.real_smul]
         calc ((φt u : ℝ) : ℂ) * gx u + Complex.I * (((φt u : ℝ) : ℂ) * gy u)
             = ((φt u : ℝ) : ℂ) * (gx u + Complex.I * gy u) := by ring
           _ = 0 := by rw [h5, mul_zero]
       · have h6 : φt u = 0 := image_eq_zero_of_notMem_tsupport huT
-        show φt u • gx u + Complex.I * (φt u • gy u) = 0
+        change φt u • gx u + Complex.I * (φt u • gy u) = 0
         rw [h6]
         simp
     have hEq2 : (∫ u, φt u • gx u) + Complex.I * ∫ u, φt u • gy u = 0 := by
@@ -507,7 +507,7 @@ theorem weyl_lemma_on_of_test {V : Set ℂ} {f : ℂ → ℂ} (hV : IsOpen V)
         rw [Function.mem_support]
         intro h0
         apply hu
-        show ((ρ n (z - u) : ℝ) : ℂ) = 0
+        change ((ρ n (z - u) : ℝ) : ℂ) = 0
         rw [h0, Complex.ofReal_zero]
       simp only [hρdef] at h2
       rw [(φB n).support_normed_eq] at h2

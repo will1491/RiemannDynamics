@@ -271,7 +271,7 @@ theorem dbarSolver_add {μ σ : ℂ → ℂ}
           = fun ζ : ℂ => f ζ / (ζ - w) + g ζ / (ζ - w) from
         funext fun ζ => add_div (f ζ) (g ζ) (ζ - w)]
       exact integral_add (hf w) (hg w)
-    show -(1 / (Real.pi : ℂ)) * ∫ ζ, (f ζ + g ζ) / (ζ - w)
+    change -(1 / (Real.pi : ℂ)) * ∫ ζ, (f ζ + g ζ) / (ζ - w)
         = -(1 / (Real.pi : ℂ)) * (∫ ζ, f ζ / (ζ - w))
           + -(1 / (Real.pi : ℂ)) * ∫ ζ, g ζ / (ζ - w)
     rw [h1]
@@ -301,7 +301,7 @@ theorem dbarSolver_smul (c : ℂ) (μ : ℂ → ℂ) :
   have hP : ∀ (h : ℂ → ℂ) (z : ℂ),
       cauchyTransform (fun ζ => c * h ζ) z = c * cauchyTransform h z := by
     intro h z
-    show -(1 / (Real.pi : ℂ)) * ∫ ζ, c * h ζ / (ζ - z)
+    change -(1 / (Real.pi : ℂ)) * ∫ ζ, c * h ζ / (ζ - z)
         = c * (-(1 / (Real.pi : ℂ)) * ∫ ζ, h ζ / (ζ - z))
     have h1 : ∫ (ζ : ℂ), c * (h ζ / (ζ - z)) = c * ∫ (ζ : ℂ), h ζ / (ζ - z) :=
       integral_const_mul c (fun ζ : ℂ => h ζ / (ζ - z))
@@ -486,7 +486,7 @@ theorem isSphereVectorField_dbarSolver {μ : ℂ → ℂ}
           exact Filter.tendsto_sup.mpr ⟨hpure, hpunc⟩
         have hv0 : (0:ℂ) ^ 2 * cauchyTransform (inftyChartCoeff μ) (0:ℂ)⁻¹ = 0 := by
           simp
-        show Tendsto (fun z : ℂ => z ^ 2 * cauchyTransform (inftyChartCoeff μ) z⁻¹)
+        change Tendsto (fun z : ℂ => z ^ 2 * cauchyTransform (inftyChartCoeff μ) z⁻¹)
           (𝓝 (0:ℂ)) (𝓝 ((0:ℂ) ^ 2 * cauchyTransform (inftyChartCoeff μ) (0:ℂ)⁻¹))
         rw [hv0]
         exact hgoal
@@ -516,6 +516,8 @@ theorem isSphereVectorField_dbarSolver {μ : ℂ → ℂ}
     exact hEq w hw
 
 set_option maxHeartbeats 400000 in
+-- The chart-transport `∂̄` lemma elaborates as one large declaration whose nested
+-- weak-derivative and `L²_loc` `have` chains exceed the default heartbeat budget.
 /-- **Chart transport of weak `∂̄`-data under the inversion `z ↦ 1/z`.**
 Let `Ω ⊆ ℂ ∖ {0}` be open and let `u` be continuous with weak `∂̄`-derivative
 `ν` (and `L²_loc` gradient) on the inverted set `(·⁻¹) '' Ω`. Then the
@@ -1428,6 +1430,8 @@ theorem hasL2WeakDzbar_inversion_transport {Ω : Set ℂ} (hΩ : IsOpen Ω)
     linear_combination (A z - z ^ 2 / (starRingEnd ℂ z) ^ 2 * ν z⁻¹) * Complex.I_mul_I
 
 set_option maxHeartbeats 400000 in
+-- The solver-correctness proof elaborates as one large declaration whose near/far
+-- weak-derivative `have` chains exceed the default heartbeat budget.
 /-- **The solver solves.** `dbarSolver μ` has weak `∂̄`-derivative `μ` on all
 of `ℂ`, with locally square-integrable weak gradient. The near piece is
 `hasWeakGradient_cauchyTransform` (whose witnesses are Beurling transforms,

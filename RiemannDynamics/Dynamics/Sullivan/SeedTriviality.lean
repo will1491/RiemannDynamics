@@ -127,7 +127,7 @@ theorem seedSolution_continuous (a : ℂ) {ρ : ℝ} (hρ : 0 < ρ) (k : ℕ) :
     linear_combination h1
   -- glue the branches with `continuous_if`
   classical
-  show Continuous fun z : ℂ =>
+  change Continuous fun z : ℂ =>
     open Classical in
     if z ∈ Metric.ball a ρ
       then (starRingEnd ℂ (z - a)) ^ (k + 1)
@@ -564,7 +564,7 @@ theorem hasL2WeakDzbar_seedSolution (a : ℂ) {ρ : ℝ} (hρ : 0 < ρ) (k : ℕ
         Complex.isOpen_slitPlane.preimage
           ((continuous_id.sub continuous_const).div_const (z₀ - a))
       refine hopen.mem_nhds ?_
-      show (z₀ - a) / (z₀ - a) ∈ Complex.slitPlane
+      change (z₀ - a) / (z₀ - a) ∈ Complex.slitPlane
       rw [div_self hz₀a]
       exact Complex.one_mem_slitPlane
     have heq : (fun z => seedSolution a ρ k z - cauchyTransform (seedBasis a ρ k) z)
@@ -587,7 +587,7 @@ theorem hasL2WeakDzbar_seedSolution (a : ℂ) {ρ : ℝ} (hρ : 0 < ρ) (k : ℕ
           Complex.exp_log hne]
         field_simp
         ring
-      show seedSolution a ρ k z - cauchyTransform (seedBasis a ρ k) z
+      change seedSolution a ρ k z - cauchyTransform (seedBasis a ρ k) z
           = seedSolution a ρ k (a + ↑ρ * Complex.exp (Complex.I * _))
             - cauchyTransform (seedBasis a ρ k) (a + ↑ρ * Complex.exp (Complex.I * _))
       rw [hchart]
@@ -812,7 +812,7 @@ theorem eqOn_zero_of_forall_frontier_tendsto_zero {V : Set ℂ} (hV : IsOpen V)
   have hmaxV : IsMaxOn (norm ∘ F) V z₁ := by
     rw [isMaxOn_iff]
     intro w hw
-    show ‖F w‖ ≤ ‖F z₁‖
+    change ‖F w‖ ≤ ‖F z₁‖
     by_cases hwK : w ∈ K
     · exact isMaxOn_iff.mp hz₁max w hwK
     · have hlt : ‖F w‖ < ε := by
@@ -1030,7 +1030,7 @@ theorem coeffs_eq_zero_of_negPowerCombo_extends {a : ℂ} {ρ : ℝ} (hρ : 0 < 
         · exact core i fun k hk => ih k (by omega)
         · exact ih i h2
     funext i
-    show c i = 0
+    change c i = 0
     exact H K i (by omega)
   intro j hzero
   -- Value at `a` of the polynomial `ψ z = Σ cₖ ρ^{2(k+1)} (z-a)^{j-k}`.

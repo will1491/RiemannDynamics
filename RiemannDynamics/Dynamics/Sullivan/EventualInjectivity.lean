@@ -81,7 +81,7 @@ some index on, every orbit component avoids `∞` and contains no critical
 point of `f`. -/
 theorem exists_avoidance_index {f : ℂ̂ → ℂ̂}
     (hf : IsRational f) (hd : 2 ≤ degreeOfRational f)
-    {U : Set ℂ̂} (hU : IsFatouComponent f U) (hW : IsWandering f U) :
+    {U : Set ℂ̂} (_hU : IsFatouComponent f U) (hW : IsWandering f U) :
     ∃ N : ℕ, ∀ n : ℕ,
       ∞ ∉ fcOrbit f U (N + n) ∧
       ∀ z : ℂ, ((z : ℂ̂) ∈ fcOrbit f U (N + n)) →
@@ -118,7 +118,7 @@ theorem exists_avoidance_index {f : ℂ̂ → ℂ̂}
     intro m hm
     have hm' : (fcOrbit f U m ∩ B).Nonempty := by rw [hSdef] at hm; exact hm
     rw [hgdef]
-    show (if h : (fcOrbit f U m ∩ B).Nonempty then h.choose else ∞)
+    change (if h : (fcOrbit f U m ∩ B).Nonempty then h.choose else ∞)
         ∈ fcOrbit f U m ∩ B
     rw [dif_pos hm']
     exact hm'.choose_spec
@@ -381,7 +381,7 @@ theorem exists_fiberCount {f : ℂ̂ → ℂ̂}
         OnePoint.coe_eq_coe.mp hfx
       rw [div_eq_iff hden] at hdiv
       refine ⟨x, ?_, rfl⟩
-      show (r.numReduced - Polynomial.C y * r.denReduced).eval x = 0
+      change (r.numReduced - Polynomial.C y * r.denReduced).eval x = 0
       rw [Polynomial.eval_sub, Polynomial.eval_mul, Polynomial.eval_C, hdiv, sub_self]
     exact ((Polynomial.finite_setOf_isRoot hq).image _).subset hsub
   -- Local injectivity: near each finite non-critical point `f` is injective
@@ -551,7 +551,7 @@ theorem exists_fiberCount {f : ℂ̂ → ℂ̂}
         split_ifs with h12
         · trivial
         · refine ⟨⟨haVr x₁ hx₁, haVr x₂ hx₂⟩, ?_⟩
-          show gr x₁ a - gr x₂ a ∉ ({(0 : ℂ)} : Set ℂ)
+          change gr x₁ a - gr x₂ a ∉ ({(0 : ℂ)} : Set ℂ)
           rw [hgar x₁ hx₁, hgar x₂ hx₂]
           exact fun h0 => h12 (sub_eq_zero.mp h0)
       · exact mem_interior_iff_mem_nhds.mpr hNnhds
@@ -758,7 +758,7 @@ theorem simplyConnectedSpace_of_unbounded_components {T : Set ℂ}
 avoiding `∞`, disconnectedness of the sphere complement is equivalent to the
 existence of a bounded complementary component of its finite part. -/
 theorem exists_bounded_component_of_not_isConnected_compl {U : Set ℂ̂}
-    (hU : IsOpen U) (hUne : U.Nonempty) (hinf : ∞ ∉ U)
+    (hU : IsOpen U) (_hUne : U.Nonempty) (hinf : ∞ ∉ U)
     (hnc : ¬IsConnected (Uᶜ : Set ℂ̂)) :
     ∃ z : ℂ, ((z : ℂ̂) ∉ U) ∧
       Bornology.IsBounded
@@ -884,7 +884,7 @@ theorem fiberCount_eq_one_of_simplyConnected {f : ℂ̂ → ℂ̂}
           have htpos : (0 : ℝ) < (t : ℝ) := lt_of_le_of_ne t.2.1 (Ne.symm htz)
           have h1 : (1 : ℝ) ≤ ((t : ℝ))⁻¹ := (one_le_inv₀ htpos).mpr t.2.2
           refine Or.inl ⟨_, ?_, rfl⟩
-          show R < ‖((((t : ℝ)⁻¹ : ℝ) : ℂ) * a : ℂ)‖
+          change R < ‖((((t : ℝ)⁻¹ : ℝ) : ℂ) * a : ℂ)‖
           rw [hval t]
           calc R < ‖a‖ := haR'
             _ ≤ ((t : ℝ))⁻¹ * ‖a‖ := le_mul_of_one_le_left (norm_nonneg a) h1
@@ -902,7 +902,7 @@ theorem fiberCount_eq_one_of_simplyConnected {f : ℂ̂ → ℂ̂}
           by_cases ht₀ : (t₀ : ℝ) = 0
           · have h0eq : γf t₀ = ∞ := by
               rw [hγfval t₀, if_pos ht₀]
-            show Filter.Tendsto γf (𝓝 t₀) (𝓝 (γf t₀))
+            change Filter.Tendsto γf (𝓝 t₀) (𝓝 (γf t₀))
             rw [h0eq, OnePoint.hasBasis_nhds_infty.tendsto_right_iff]
             rintro s' ⟨-, hscpt'⟩
             obtain ⟨m, hm⟩ := hscpt'.isBounded.subset_closedBall 0
@@ -945,16 +945,16 @@ theorem fiberCount_eq_one_of_simplyConnected {f : ℂ̂ → ℂ̂}
             rw [hγfval tt, if_neg htt]
             rfl
         refine ⟨⟨⟨γf, hcont⟩, ?_, ?_⟩, ?_⟩
-        · show γf 0 = ∞
+        · change γf 0 = ∞
           rw [hγfval 0]
           exact if_pos rfl
-        · show γf 1 = ((a : ℂ̂))
+        · change γf 1 = ((a : ℂ̂))
           rw [hγfval 1,
             if_neg (by exact one_ne_zero : ((1 : unitInterval) : ℝ) ≠ 0)]
-          show ((((1 : ℝ)⁻¹ : ℝ) : ℂ) * a : ℂ̂) = (a : ℂ̂)
+          change ((((1 : ℝ)⁻¹ : ℝ) : ℂ) * a : ℂ̂) = (a : ℂ̂)
           norm_num
         · intro t
-          show γf t ∈ _
+          change γf t ∈ _
           by_cases htz : (t : ℝ) = 0
           · rw [hγfval t, if_pos htz]
             exact Or.inr rfl
@@ -1065,7 +1065,7 @@ theorem fiberCount_eq_one_of_simplyConnected {f : ℂ̂ → ℂ̂}
         OnePoint.coe_eq_coe.mp hfx
       rw [div_eq_iff hden] at hdiv
       refine ⟨x, ?_, rfl⟩
-      show (r.numReduced - Polynomial.C y * r.denReduced).eval x = 0
+      change (r.numReduced - Polynomial.C y * r.denReduced).eval x = 0
       rw [Polynomial.eval_sub, Polynomial.eval_mul, Polynomial.eval_C, hdiv, sub_self]
     exact ((Polynomial.finite_setOf_isRoot hq).image _).subset hsub
   -- local injectivity near each finite non-critical point
@@ -1249,7 +1249,7 @@ theorem fiberCount_eq_one_of_simplyConnected {f : ℂ̂ → ℂ̂}
       ⟨u₀, hu₀S⟩ ?_
     · rw [← Function.comp_assoc, hσlift, ContinuousMap.coe_id,
         Function.id_comp, Function.comp_id]
-    · show σ (F ⟨u₀, hu₀S⟩) = ⟨u₀, hu₀S⟩
+    · change σ (F ⟨u₀, hu₀S⟩) = ⟨u₀, hu₀S⟩
       rw [hbase, hσ0]
   have hFinj : Function.Injective F := by
     intro u₁ u₂ h12
@@ -1267,7 +1267,7 @@ theorem fiberCount_eq_one_of_simplyConnected {f : ℂ̂ → ℂ̂}
       have hFeq : F ⟨v, hvS⟩ = F ⟨u₀, hu₀S⟩ := by
         apply Subtype.ext
         rw [hFval, hFval]
-        show f v = f u₀
+        change f v = f u₀
         rw [hvf', hu₀f]
       have := hFinj hFeq
       exact congrArg Subtype.val this
@@ -1522,7 +1522,7 @@ instance instLocPathConnectedSphere : LocPathConnectedSpace ℂ̂ := by
         have htpos : (0 : ℝ) < (t : ℝ) := lt_of_le_of_ne t.2.1 (Ne.symm htz)
         have h1 : (1 : ℝ) ≤ ((t : ℝ))⁻¹ := (one_le_inv₀ htpos).mpr t.2.2
         refine Or.inl ⟨_, ?_, rfl⟩
-        show R < ‖((((t : ℝ)⁻¹ : ℝ) : ℂ) * a : ℂ)‖
+        change R < ‖((((t : ℝ)⁻¹ : ℝ) : ℂ) * a : ℂ)‖
         rw [hval t]
         calc R < ‖a‖ := haR'
           _ ≤ ((t : ℝ))⁻¹ * ‖a‖ := le_mul_of_one_le_left (norm_nonneg a) h1
@@ -1540,7 +1540,7 @@ instance instLocPathConnectedSphere : LocPathConnectedSpace ℂ̂ := by
         by_cases ht₀ : (t₀ : ℝ) = 0
         · have h0eq : γf t₀ = ∞ := by
             rw [hγfval t₀, if_pos ht₀]
-          show Filter.Tendsto γf (𝓝 t₀) (𝓝 (γf t₀))
+          change Filter.Tendsto γf (𝓝 t₀) (𝓝 (γf t₀))
           rw [h0eq, OnePoint.hasBasis_nhds_infty.tendsto_right_iff]
           rintro s' ⟨-, hscpt'⟩
           obtain ⟨m, hm⟩ := hscpt'.isBounded.subset_closedBall 0
@@ -1583,16 +1583,16 @@ instance instLocPathConnectedSphere : LocPathConnectedSpace ℂ̂ := by
           rw [hγfval tt, if_neg htt]
           rfl
       refine ⟨⟨⟨γf, hcont⟩, ?_, ?_⟩, ?_⟩
-      · show γf 0 = ∞
+      · change γf 0 = ∞
         rw [hγfval 0]
         exact if_pos rfl
-      · show γf 1 = ((a : ℂ̂))
+      · change γf 1 = ((a : ℂ̂))
         rw [hγfval 1,
           if_neg (by exact one_ne_zero : ((1 : unitInterval) : ℝ) ≠ 0)]
-        show ((((1 : ℝ)⁻¹ : ℝ) : ℂ) * a : ℂ̂) = (a : ℂ̂)
+        change ((((1 : ℝ)⁻¹ : ℝ) : ℂ) * a : ℂ̂) = (a : ℂ̂)
         norm_num
       · intro t
-        show γf t ∈ _
+        change γf t ∈ _
         by_cases htz : (t : ℝ) = 0
         · rw [hγfval t, if_pos htz]
           exact Or.inr rfl
@@ -2303,7 +2303,7 @@ theorem exists_pushed_curve {f : ℂ̂ → ℂ̂}
           intro t
           have h1 : f^[m + 1] ((γ t : ℂ̂)) = f (f^[m] ((γ t : ℂ̂))) :=
             Function.iterate_succ_apply' f m _
-          show f^[m + 1] ((γ t : ℂ̂)) ∈ fcOrbit f U (N₀ + m + 1)
+          change f^[m + 1] ((γ t : ℂ̂)) ∈ fcOrbit f U (N₀ + m + 1)
           rw [h1, ← fcOrbit_image_eq hf hd1 hU (N₀ + m)]
           exact ⟨_, hsph t, rfl⟩
         have hcoe : ∀ t : unitInterval,
@@ -2317,7 +2317,7 @@ theorem exists_pushed_curve {f : ℂ̂ → ℂ̂}
         · intro t
           rw [hΓ'val t, hcoe t, ← Function.iterate_succ_apply' f m]
         · intro t
-          show ((Γ' t : ℂ̂)) ∈ fcOrbit f U (N₀ + m + 1)
+          change ((Γ' t : ℂ̂)) ∈ fcOrbit f U (N₀ + m + 1)
           exact hΓ'mem t
   obtain ⟨Γ, hΓval, -, -⟩ := hpush m
   exact ⟨Γ, hΓval⟩
@@ -2449,7 +2449,7 @@ theorem isChartNullHomotopyIn_of_step {f : ℂ̂ → ℂ̂}
         OnePoint.coe_eq_coe.mp hfx
       rw [div_eq_iff hden] at hdiv
       refine ⟨x, ?_, rfl⟩
-      show (r.numReduced - Polynomial.C y * r.denReduced).eval x = 0
+      change (r.numReduced - Polynomial.C y * r.denReduced).eval x = 0
       rw [Polynomial.eval_sub, Polynomial.eval_mul, Polynomial.eval_C, hdiv, sub_self]
     exact ((Polynomial.finite_setOf_isRoot hq).image _).subset hsub
   -- local injectivity near each finite non-critical point
@@ -2678,7 +2678,7 @@ theorem isChartNullHomotopyIn_of_step {f : ℂ̂ → ℂ̂}
       refine hcov.eq_of_comp_eq ?_ continuous_const ?_ 0 (hzero 0)
       · exact Ht.continuous.comp (continuous_id.prodMk continuous_const)
       · funext t
-        show F (Ht (t, 0)) = F (γs 0)
+        change F (Ht (t, 0)) = F (γs 0)
         rw [hlifts (t, 0)]
         apply Subtype.ext
         rw [hHsval (t, 0), hFval, hγsval 0, (hHtr t).1, hΓsph 0]
@@ -2689,7 +2689,7 @@ theorem isChartNullHomotopyIn_of_step {f : ℂ̂ → ℂ̂}
       refine hcov.eq_of_comp_eq ?_ continuous_const ?_ 0 ((hzero 1).trans hγscl)
       · exact Ht.continuous.comp (continuous_id.prodMk continuous_const)
       · funext t
-        show F (Ht (t, 1)) = F (γs 0)
+        change F (Ht (t, 1)) = F (γs 0)
         rw [hlifts (t, 1)]
         apply Subtype.ext
         rw [hHsval (t, 1), hFval, hγsval 0, (hHtr t).2, hΓsph 0]
@@ -2701,7 +2701,7 @@ theorem isChartNullHomotopyIn_of_step {f : ℂ̂ → ℂ̂}
       refine hcov.eq_of_comp_eq ?_ continuous_const ?_ 0 (hside0 1)
       · exact Ht.continuous.comp (continuous_const.prodMk continuous_id)
       · funext s
-        show F (Ht (1, s)) = F (γs 0)
+        change F (Ht (1, s)) = F (γs 0)
         rw [hlifts (1, s)]
         apply Subtype.ext
         rw [hHsval (1, s), hFval, hγsval 0, hHs1 s, hΓsph 0]
@@ -2720,34 +2720,34 @@ theorem isChartNullHomotopyIn_of_step {f : ℂ̂ → ℂ̂}
     have h1 : ContinuousAt (fun q : unitInterval × unitInterval => ((Ht q : ℂ̂))) p :=
       (continuous_subtype_val.comp Ht.continuous).continuousAt
     have h2 : ((Ht p : ℂ̂)) ≠ ∞ := fun h => hinf (h ▸ (Ht p).2)
-    show ContinuousAt (chartFiniteMap ∘ fun q : unitInterval × unitInterval => ((Ht q : ℂ̂))) p
+    change ContinuousAt (chartFiniteMap ∘ fun q : unitInterval × unitInterval => ((Ht q : ℂ̂))) p
     exact ContinuousAt.comp (x := p)
       (f := fun q : unitInterval × unitInterval => ((Ht q : ℂ̂)))
       (g := chartFiniteMap) (hchart _ h2) h1
-  show ∃ Hd : C(unitInterval × unitInterval, ℂ),
+  change ∃ Hd : C(unitInterval × unitInterval, ℂ),
       (∀ s : unitInterval, Hd (0, s) = γ s) ∧
       (∀ s : unitInterval, Hd (1, s) = γ 0) ∧
       (∀ t : unitInterval, Hd (t, 0) = γ 0 ∧ Hd (t, 1) = γ 0) ∧
       (∀ p : unitInterval × unitInterval, Hd p ∈ {w : ℂ | ((w : ℂ̂)) ∈ S})
   refine ⟨⟨fun p => chartFiniteMap ((Ht p : ℂ̂)), hHdcont⟩, ?_, ?_, ?_, ?_⟩
   · intro s
-    show chartFiniteMap ((Ht (0, s) : ℂ̂)) = γ s
+    change chartFiniteMap ((Ht (0, s) : ℂ̂)) = γ s
     rw [hzero s, hγsval s]
     exact cf _
   · intro s
-    show chartFiniteMap ((Ht (1, s) : ℂ̂)) = γ 0
+    change chartFiniteMap ((Ht (1, s) : ℂ̂)) = γ 0
     rw [htop s, hγsval 0]
     exact cf _
   · intro t
     constructor
-    · show chartFiniteMap ((Ht (t, 0) : ℂ̂)) = γ 0
+    · change chartFiniteMap ((Ht (t, 0) : ℂ̂)) = γ 0
       rw [hside0 t, hγsval 0]
       exact cf _
-    · show chartFiniteMap ((Ht (t, 1) : ℂ̂)) = γ 0
+    · change chartFiniteMap ((Ht (t, 1) : ℂ̂)) = γ 0
       rw [hside1 t, hγsval 0]
       exact cf _
   · intro p
-    show (((chartFiniteMap ((Ht p : ℂ̂))) : ℂ̂)) ∈ S
+    change (((chartFiniteMap ((Ht p : ℂ̂))) : ℂ̂)) ∈ S
     rw [hScoe _ (Ht p).2]
     exact (Ht p).2
 
@@ -2821,7 +2821,7 @@ theorem windingNumber_eq_zero_of_fill_avoids_julia {f : ℂ̂ → ℂ̂}
     exact (hUinf_open.isClosed_compl).preimage OnePoint.continuous_coe
   have htrK : ∀ t : unitInterval, Γ t ∈ K := by
     intro t
-    show ((Γ t : ℂ̂)) ∉ Uinf
+    change ((Γ t : ℂ̂)) ∉ Uinf
     intro hmem
     exact hUinf_sub hmem ⟨t, rfl⟩
   have hKne : K.Nonempty := ⟨Γ 0, htrK 0⟩
@@ -2973,7 +2973,7 @@ theorem windingNumber_eq_zero_of_fill_avoids_julia {f : ℂ̂ → ℂ̂}
       refine ⟨y, ?_, hy⟩
       apply hM
       apply hAC
-      show ((y : ℂ̂)) ∈ p.extend '' Set.Ico 0 (sInf S)
+      change ((y : ℂ̂)) ∈ p.extend '' Set.Ico 0 (sInf S)
       rw [← hy] at hx
       exact hx
     have hinfcl : (∞ : ℂ̂) ∈ closure (p.extend '' Set.Ico 0 (sInf S)) := by
@@ -3433,7 +3433,7 @@ theorem eventually_constant_limit_of_wandering {f : ℂ̂ → ℂ̂}
               intro h0
               rw [hval, h0] at hz
               have h2 : dist (∞ : ℂ̂) (((0 : ℂ)) : ℂ̂) = 2 := by
-                show (2 : ℝ) / Real.sqrt (1 + ‖(0 : ℂ)‖ ^ 2) = 2
+                change (2 : ℝ) / Real.sqrt (1 + ‖(0 : ℂ)‖ ^ 2) = 2
                 simp
               rw [h2] at hz
               linarith
@@ -3671,7 +3671,6 @@ theorem eventually_constant_limit_of_wandering {f : ℂ̂ → ℂ̂}
           · rw [hcir_apply]
             have harg : (2 * Real.pi * (θ / (2 * Real.pi)) : ℝ) = θ := by
               field_simp
-
             rw [show ((⟨θ / (2 * Real.pi), _⟩ : I) : ℝ) = θ / (2 * Real.pi) from rfl,
               harg]
             linear_combination hval
@@ -3738,7 +3737,7 @@ theorem eventually_constant_limit_of_wandering {f : ℂ̂ → ℂ̂}
             (shiftedCurve cir p₀) := by
           intro t
           have h2 : shiftedCurve cir p₀ t = cir t - p₀ := rfl
-          show Complex.exp (((Real.log r : ℝ) : ℂ) +
+          change Complex.exp (((Real.log r : ℝ) : ℂ) +
             (((2 * Real.pi * (t : ℝ) : ℝ)) : ℂ) * Complex.I) = _
           rw [Complex.exp_add, h2, hcir_apply]
           have h1 : Complex.exp (((Real.log r : ℝ)) : ℂ) = ((r : ℝ) : ℂ) := by
@@ -3751,7 +3750,7 @@ theorem eventually_constant_limit_of_wandering {f : ℂ̂ → ℂ̂}
             (⟨fun t : I => ((Real.log r : ℝ) : ℂ) +
             (((2 * Real.pi * (t : ℝ) : ℝ)) : ℂ) * Complex.I, hLcont⟩ : C(I, ℂ)) 0 =
             2 * (Real.pi : ℂ) * Complex.I := by
-          show (((Real.log r : ℝ) : ℂ) + (((2 * Real.pi * ((1 : I) : ℝ) : ℝ)) : ℂ) *
+          change (((Real.log r : ℝ) : ℂ) + (((2 * Real.pi * ((1 : I) : ℝ) : ℝ)) : ℂ) *
             Complex.I) - (((Real.log r : ℝ) : ℂ) +
             (((2 * Real.pi * ((0 : I) : ℝ) : ℝ)) : ℂ) * Complex.I) = _
           rw [show ((1 : I) : ℝ) = 1 from rfl, show ((0 : I) : ℝ) = 0 from rfl]
@@ -3782,10 +3781,10 @@ theorem eventually_constant_limit_of_wandering {f : ℂ̂ → ℂ̂}
           nlinarith [norm_nonneg (ζ - p₀), abs_nonneg θ]
         have hζC : ζ ∈ (fun θ : ℝ => p₀ + (θ : ℂ) * (ζ - p₀)) '' Set.Icc 0 1 :=
           ⟨1, ⟨zero_le_one, le_refl 1⟩,
-            by show p₀ + ((1 : ℝ) : ℂ) * (ζ - p₀) = ζ; push_cast; ring⟩
+            by change p₀ + ((1 : ℝ) : ℂ) * (ζ - p₀) = ζ; push_cast; ring⟩
         have hp₀C : p₀ ∈ (fun θ : ℝ => p₀ + (θ : ℂ) * (ζ - p₀)) '' Set.Icc 0 1 :=
           ⟨0, ⟨le_refl 0, zero_le_one⟩,
-            by show p₀ + ((0 : ℝ) : ℂ) * (ζ - p₀) = p₀; push_cast; ring⟩
+            by change p₀ + ((0 : ℝ) : ℂ) * (ζ - p₀) = p₀; push_cast; ring⟩
         rw [windingNumber_eq_of_preconnected hcir_cl hC hdisj hζC hp₀C]
         exact hwind_center
       have hwind_out : ∀ ζ : ℂ, r < dist ζ p₀ → windingNumber cir ζ = 0 := by
@@ -3910,17 +3909,17 @@ theorem eventually_constant_limit_of_wandering {f : ℂ̂ → ℂ̂}
                 fun ζ => windingNumber cir ζ).sum := by
           intro q hq
           have hcl₁ : (shiftedCurve Γ q) 0 = (shiftedCurve Γ q) 1 := by
-            show Γ 0 - q = Γ 1 - q
+            change Γ 0 - q = Γ 1 - q
             rw [hΓcl]
           have h₁ : ∀ t : I, (shiftedCurve Γ q) t ≠ 0 := by
             intro t
-            show Γ t - q ≠ 0
+            change Γ t - q ≠ 0
             exact sub_ne_zero.mpr (hq t)
           have hcl₂ : (⟨fun t => B.eval (cir t),
               B.continuous.comp cir.continuous⟩ : C(I, ℂ)) 0 =
               (⟨fun t => B.eval (cir t),
               B.continuous.comp cir.continuous⟩ : C(I, ℂ)) 1 := by
-            show B.eval (cir 0) = B.eval (cir 1)
+            change B.eval (cir 0) = B.eval (cir 1)
             rw [hcir_cl]
           have h₂ : ∀ t : I, (⟨fun t => B.eval (cir t),
               B.continuous.comp cir.continuous⟩ : C(I, ℂ)) t ≠ 0 := hBcirc_ne
@@ -3933,7 +3932,7 @@ theorem eventually_constant_limit_of_wandering {f : ℂ̂ → ℂ̂}
               shiftedCurve Γ q * ⟨fun t => B.eval (cir t),
                 B.continuous.comp cir.continuous⟩ := by
             ext t
-            show (A - Polynomial.C q * B).eval (cir t) =
+            change (A - Polynomial.C q * B).eval (cir t) =
               (Γ t - q) * B.eval (cir t)
             exact hTeval q t
           rw [← hpoly_wind (A - Polynomial.C q * B) (hTcirc_ne q hq), hprodeq,
@@ -3955,7 +3954,7 @@ theorem eventually_constant_limit_of_wandering {f : ℂ̂ → ℂ̂}
           have hmem : p₀ ∈ (A - Polynomial.C q₀ * B).roots := by
             rw [Polynomial.mem_roots']
             refine ⟨hTne q₀ hq₀ne, ?_⟩
-            show (A - Polynomial.C q₀ * B).eval p₀ = 0
+            change (A - Polynomial.C q₀ * B).eval p₀ = 0
             simp only [Polynomial.eval_sub, Polynomial.eval_mul,
               Polynomial.eval_C]
             rw [hq₀def, div_mul_cancel₀ _ (hBne p₀ hp₀cb), sub_self]
@@ -3989,11 +3988,11 @@ theorem eventually_constant_limit_of_wandering {f : ℂ̂ → ℂ̂}
           have hq₁C : χ c ∈
               (fun θ : ℝ => χ c + (θ : ℂ) * (q₀ - χ c)) '' Set.Icc 0 1 :=
             ⟨0, ⟨le_refl 0, zero_le_one⟩,
-              by show χ c + ((0 : ℝ) : ℂ) * (q₀ - χ c) = χ c; push_cast; ring⟩
+              by change χ c + ((0 : ℝ) : ℂ) * (q₀ - χ c) = χ c; push_cast; ring⟩
           have hq₂C : q₀ ∈
               (fun θ : ℝ => χ c + (θ : ℂ) * (q₀ - χ c)) '' Set.Icc 0 1 :=
             ⟨1, ⟨zero_le_one, le_refl 1⟩,
-              by show χ c + ((1 : ℝ) : ℂ) * (q₀ - χ c) = q₀; push_cast; ring⟩
+              by change χ c + ((1 : ℝ) : ℂ) * (q₀ - χ c) = q₀; push_cast; ring⟩
           exact windingNumber_eq_of_preconnected hΓcl hC hdisj hq₁C hq₂C
         -- a root of `A - χ c · B` inside the open disk
         obtain ⟨ζ, hζroot, hζin⟩ : ∃ ζ ∈ (A - Polynomial.C (χ c) * B).roots,
@@ -4153,6 +4152,8 @@ theorem eventually_constant_limit_of_wandering {f : ℂ̂ → ℂ̂}
     x (mem_connectedComponentIn hx) y hyV
 
 set_option maxHeartbeats 400000 in
+-- The collapse/confinement contradiction elaborates as one large declaration whose
+-- nested winding-growth and continuum `have` chains exceed the default budget.
 /-- **Collapse and confinement contradiction.** Unbounded winding growth of
 the iterated image curves about Julia-meeting continua is impossible:
 normality of the iterates on the loop's compact trace makes subsequential
@@ -4389,12 +4390,12 @@ theorem not_winding_growth {f : ℂ̂ → ℂ̂}
             refine ⟨(‖z - mid‖, (‖z - mid‖ : ℂ)⁻¹ * (z - mid)), ⟨hz, ?_⟩, ?_⟩
             · rw [norm_mul, norm_inv, Complex.norm_real, Real.norm_eq_abs,
                 abs_of_pos hzpos, inv_mul_cancel₀ hzpos.ne']
-            · show mid + (‖z - mid‖ : ℂ) * ((‖z - mid‖ : ℂ)⁻¹ * (z - mid)) = z
+            · change mid + (‖z - mid‖ : ℂ) * ((‖z - mid‖ : ℂ)⁻¹ * (z - mid)) = z
               rw [← mul_assoc, mul_inv_cancel₀ hzne, one_mul]
               ring
           · rintro ⟨⟨t, u⟩, ⟨ht, hu⟩, rfl⟩
             have htpos : 0 < t := lt_of_le_of_lt (Real.sqrt_nonneg _) ht
-            show Real.sqrt ρ < ‖mid + (t : ℂ) * u - mid‖
+            change Real.sqrt ρ < ‖mid + (t : ℂ) * u - mid‖
             rw [add_sub_cancel_left, norm_mul, Complex.norm_real, Real.norm_eq_abs,
               abs_of_pos htpos, hu, mul_one]
             exact ht
@@ -4994,7 +4995,7 @@ theorem not_winding_growth {f : ℂ̂ → ℂ̂}
       -- the base component wanders
       have hWand : IsWandering f (fcOrbit f U N₀) := by
         intro i j hij
-        show Disjoint (fcOrbit f (fcOrbit f U N₀) i) (fcOrbit f (fcOrbit f U N₀) j)
+        change Disjoint (fcOrbit f (fcOrbit f U N₀) i) (fcOrbit f (fcOrbit f U N₀) j)
         rw [← fcOrbit_add N₀ i hf hd1 hU, ← fcOrbit_add N₀ j hf hd1 hU]
         exact hW (by omega)
       have hconst := eventually_constant_limit_of_wandering hf hd hVfc hWand hφmono
@@ -5310,6 +5311,8 @@ theorem not_winding_growth {f : ℂ̂ → ℂ̂}
     exact hζJ hζF
 
 set_option maxHeartbeats 400000 in
+-- This enclosure-impossibility proof elaborates as one large declaration whose nested
+-- winding/enclosure `have` chains exceed the default heartbeat budget.
 /-- **Cofinally enclosed Julia points are impossible.** If the forward
 readings of a fixed chart loop enclose Julia points — points off the
 `∞`-component of the sphere complement of the trace — at arbitrarily late
@@ -5484,12 +5487,12 @@ theorem false_of_fill_meets_julia_cofinally {f : ℂ̂ → ℂ̂}
             refine ⟨(‖z - mid‖, (‖z - mid‖ : ℂ)⁻¹ * (z - mid)), ⟨hz, ?_⟩, ?_⟩
             · rw [norm_mul, norm_inv, Complex.norm_real, Real.norm_eq_abs,
                 abs_of_pos hzpos, inv_mul_cancel₀ hzpos.ne']
-            · show mid + (‖z - mid‖ : ℂ) * ((‖z - mid‖ : ℂ)⁻¹ * (z - mid)) = z
+            · change mid + (‖z - mid‖ : ℂ) * ((‖z - mid‖ : ℂ)⁻¹ * (z - mid)) = z
               rw [← mul_assoc, mul_inv_cancel₀ hzne, one_mul]
               ring
           · rintro ⟨⟨t, u⟩, ⟨ht, hu⟩, rfl⟩
             have htpos : 0 < t := lt_of_le_of_lt (Real.sqrt_nonneg _) ht
-            show Real.sqrt ρ < ‖mid + (t : ℂ) * u - mid‖
+            change Real.sqrt ρ < ‖mid + (t : ℂ) * u - mid‖
             rw [add_sub_cancel_left, norm_mul, Complex.norm_real, Real.norm_eq_abs,
               abs_of_pos htpos, hu, mul_one]
             exact ht
@@ -6001,7 +6004,7 @@ theorem false_of_fill_meets_julia_cofinally {f : ℂ̂ → ℂ̂}
     -- the base component wanders
     have hWand : IsWandering f (fcOrbit f U N₀) := by
       intro i j hij
-      show Disjoint (fcOrbit f (fcOrbit f U N₀) i) (fcOrbit f (fcOrbit f U N₀) j)
+      change Disjoint (fcOrbit f (fcOrbit f U N₀) i) (fcOrbit f (fcOrbit f U N₀) j)
       rw [← fcOrbit_add N₀ i hf hd1 hU, ← fcOrbit_add N₀ j hf hd1 hU]
       exact hW (by omega)
     have hconst := eventually_constant_limit_of_wandering hf hd hVfc hWand hφmono

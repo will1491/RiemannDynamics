@@ -173,7 +173,7 @@ theorem iterDeriv_eq_deriv_iterate (r : RationalData) (m : ℕ) (z : ℂ)
         have hg2 : HasDerivAt (fun x : ℂ => chartFiniteMap (r.toSphereMap ((x : ℂ̂))))
             (fderivRational r u)
             ((fun x : ℂ => chartFiniteMap (r.toSphereMap^[k] ((x : ℂ̂)))) w) := by
-          show HasDerivAt _ _ (chartFiniteMap (r.toSphereMap^[k] ((w : ℂ̂))))
+          change HasDerivAt _ _ (chartFiniteMap (r.toSphereMap^[k] ((w : ℂ̂))))
           rw [hhw]
           exact hg
         have hcomp := HasDerivAt.comp w hg2 hk
@@ -381,7 +381,7 @@ theorem spreadCoeff_aemeasurable {r : RationalData} (hd : 1 ≤ r.degree)
     (hinf : ∀ n : ℕ, ∞ ∉ fcOrbit r.toSphereMap U n)
     (hcrit : ∀ z : ℂ, ((z : ℂ̂) ∈ U) → ∀ n : ℕ, iterDeriv r n z ≠ 0)
     (hS : ∀ z ∈ S, ((z : ℂ̂) ∈ U)) (hSm : MeasurableSet S)
-    (hσ : ∀ z : ℂ, z ∉ S → σ z = 0) (hσm : Measurable σ) :
+    (_hσ : ∀ z : ℂ, z ∉ S → σ z = 0) (hσm : Measurable σ) :
     AEMeasurable (spreadCoeff r S σ) volume := by
   classical
   -- the map is rational of degree ≥ 1, hence open
@@ -638,7 +638,7 @@ theorem spreadCoeff_aemeasurable {r : RationalData} (hd : 1 ≤ r.degree)
         have hfin : r.toSphereMap^[n] ((y : ℂ̂)) ≠ ∞ := hfinU y hyUf n
         have hzfin : r.toSphereMap^[m] ((z : ℂ̂)) ≠ ∞ := by rw [hw]; exact hfin
         refine ⟨hzfin, ⟨⟨y, hyUf⟩, hyS, ?_⟩⟩
-        show F n y = F m z
+        change F n y = F m z
         rw [hFdef n y, hFdef m z, hw]
       · rintro ⟨hzfin, u, huS, hu⟩
         refine ⟨(u : ℂ), huS, ?_⟩
@@ -659,7 +659,7 @@ theorem spreadCoeff_aemeasurable {r : RationalData} (hd : 1 ≤ r.degree)
     constructor
     · rintro ⟨⟨m, n, y⟩, hyS, hw⟩
       refine ⟨Nat.pair m n, ?_⟩
-      show z ∈ A (Nat.unpair (Nat.pair m n)).1 (Nat.unpair (Nat.pair m n)).2
+      change z ∈ A (Nat.unpair (Nat.pair m n)).1 (Nat.unpair (Nat.pair m n)).2
       simp only [Nat.unpair_pair]
       exact ⟨y, hyS, hw⟩
     · rintro ⟨k, y, hyS, hw⟩
@@ -679,7 +679,7 @@ theorem spreadCoeff_aemeasurable {r : RationalData} (hd : 1 ≤ r.degree)
         = spreadTwist r (Nat.unpair k).1 (Nat.unpair k).2 z y * σ y :=
       hval z y (Nat.unpair k).1 (Nat.unpair k).2 hyS hw
     have hFeqz : F (Nat.unpair k).1 z = Uf.restrict (F (Nat.unpair k).2) ⟨y, hyUf⟩ := by
-      show F (Nat.unpair k).1 z = F (Nat.unpair k).2 y
+      change F (Nat.unpair k).1 z = F (Nat.unpair k).2 y
       rw [hFdef _ z, hFdef _ y, hw]
     have h2 := hHs (Nat.unpair k).2 ⟨y, hyUf⟩
     rw [h1]
@@ -743,12 +743,12 @@ which pull null sets back to null sets; hence
 theorem spreadCoeff_eLpNormEssSup_le {r : RationalData} (hd : 1 ≤ r.degree)
     {U : Set ℂ̂} {S : Set ℂ} {σ : ℂ → ℂ}
     (hU : IsFatouComponent r.toSphereMap U)
-    (hW : IsWandering r.toSphereMap U)
-    (hinj : ∀ n : ℕ, Set.InjOn (r.toSphereMap^[n]) U)
+    (_hW : IsWandering r.toSphereMap U)
+    (_hinj : ∀ n : ℕ, Set.InjOn (r.toSphereMap^[n]) U)
     (hinf : ∀ n : ℕ, ∞ ∉ fcOrbit r.toSphereMap U n)
-    (hcrit : ∀ z : ℂ, ((z : ℂ̂) ∈ U) → ∀ n : ℕ, iterDeriv r n z ≠ 0)
-    (hS : ∀ z ∈ S, ((z : ℂ̂) ∈ U)) (hSm : MeasurableSet S)
-    (hσ : ∀ z : ℂ, z ∉ S → σ z = 0) (hσm : Measurable σ) :
+    (_hcrit : ∀ z : ℂ, ((z : ℂ̂) ∈ U) → ∀ n : ℕ, iterDeriv r n z ≠ 0)
+    (hS : ∀ z ∈ S, ((z : ℂ̂) ∈ U)) (_hSm : MeasurableSet S)
+    (_hσ : ∀ z : ℂ, z ∉ S → σ z = 0) (_hσm : Measurable σ) :
     eLpNormEssSup (spreadCoeff r S σ) volume
       ≤ eLpNormEssSup σ volume := by
   classical
@@ -1063,8 +1063,8 @@ theorem isInvariantBeltrami_spreadCoeff {r : RationalData} (hd : 1 ≤ r.degree)
     (hinj : ∀ n : ℕ, Set.InjOn (r.toSphereMap^[n]) U)
     (hinf : ∀ n : ℕ, ∞ ∉ fcOrbit r.toSphereMap U n)
     (hcrit : ∀ z : ℂ, ((z : ℂ̂) ∈ U) → ∀ n : ℕ, iterDeriv r n z ≠ 0)
-    (hS : ∀ z ∈ S, ((z : ℂ̂) ∈ U)) (hSm : MeasurableSet S)
-    (hσ : ∀ z : ℂ, z ∉ S → σ z = 0) (hσm : Measurable σ) :
+    (hS : ∀ z ∈ S, ((z : ℂ̂) ∈ U)) (_hSm : MeasurableSet S)
+    (_hσ : ∀ z : ℂ, z ∉ S → σ z = 0) (_hσm : Measurable σ) :
     IsInvariantBeltrami r (spreadCoeff r S σ) := by
   -- the map is rational of degree ≥ 1, hence open
   have hfr : IsRational r.toSphereMap := ⟨r, rfl⟩
