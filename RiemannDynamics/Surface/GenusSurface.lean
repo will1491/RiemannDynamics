@@ -3561,10 +3561,10 @@ theorem vertexChart_injOn (g : ℕ) [NeZero g] :
     have hWz' : W' = 0 := hvertcase c' W' φ' hW0' hWlt' hφ0' hφπ' p' hp'
     rw [hzero hWz, hzero' hWz']
 
+set_option maxHeartbeats 400000 in
 -- The saturation argument covers 4g corner charts with three kinds of ball
 -- estimates; the resulting single proof term is large, so we raise the
 -- heartbeat limit.
-set_option maxHeartbeats 400000 in
 /-- Openness of the vertex chart inverse: the union of the log-polar corner
 neighborhoods is saturated and open in the disc. -/
 theorem vertexChart_isOpen_image (g : ℕ) [NeZero g] :
@@ -5440,10 +5440,10 @@ theorem pairingRoot_vertexSlot (g : ℕ) [NeZero g] (m : ℕ)
   push_cast
   ring
 
+set_option maxHeartbeats 400000 in
 -- The single proof elaborates the full 3-family × 3-family transition case analysis
 -- (interior/edge/vertex charts, with the two-sided ray analysis of the vertex chart);
 -- the default 200000 heartbeats are exhausted during the final case dispatch.
-set_option maxHeartbeats 400000 in
 /-- Every transition map of the genus-surface atlas is analytic with
 nonvanishing derivative on its source: each overlap component carries a
 single formula `id`, `u ↦ ω/u`, or `u ↦ A · exp (± i u^(2g))`. -/
@@ -7114,7 +7114,6 @@ theorem transition_analyticAt (g : ℕ) [NeZero g] :
             rw [hPnorm, Real.exp_le_one_iff]
             linarith [hsign_at jv u hidxu]
           rw [hsym', hEFin k' _ hle, hVsym, hψvj u hidxu]
-
     · -- off the rays: the sector formula, possibly post-composed with the pairing
       have hPlt : ‖polyVertex g
           ((vertexSlot g ((vertexSectorIndex g z : ℕ) : ZMod (4 * g))).val : ℤ)

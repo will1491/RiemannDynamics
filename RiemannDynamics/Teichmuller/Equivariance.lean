@@ -283,10 +283,10 @@ homeomorphism, quasiconformal with the pulled-back coefficient. -/
 noncomputable def inversionTransport (h : ℂ → ℂ) (z : ℂ) : ℂ :=
   if z = 0 then 0 else (h (-1 / z) - h 0)⁻¹
 
+set_option maxHeartbeats 400000 in
 -- Heartbeat budget doubled: the probe's homeomorphism block, the Wirtinger chain-rule
 -- block, the conformal weak chain rule and the image-area energy bound all elaborate
 -- inside one declaration.
-set_option maxHeartbeats 400000 in
 /-- The inversion transport of a quasiconformal map is quasiconformal, with a coefficient of
 no larger essential supremum satisfying the pullback law
 `μ_G(z) z̄² = μ_h(-1/z) z²` almost everywhere. -/
@@ -983,10 +983,10 @@ theorem bruhat_factorization (γ : Matrix.SpecialLinearGroup (Fin 2) ℝ) (hc : 
     · simp [inversionSL2, Matrix.mul_apply, Fin.sum_univ_two]
     · simp [inversionSL2, Matrix.mul_apply, Fin.sum_univ_two]
 
+set_option maxHeartbeats 400000 in
 -- Heartbeat budget doubled: the Bruhat assembly elaborates the affine pullback bookkeeping,
 -- the inversion-transport consumer, the uniqueness renormalization and the sign analysis
 -- inside one declaration.
-set_option maxHeartbeats 400000 in
 /-- Equivariance in the generic Bruhat case: if the lower-left entry of `γ` does not vanish
 and the coefficient of the normalized symmetric solution `f` is `γ`-invariant, then
 `f ∘ γ = W ∘ f` off the pole of `γ` for an explicit `W ∈ SL(2, ℝ)`. -/
@@ -1254,8 +1254,9 @@ theorem exists_sl2_equivariant_of_lowerLeft_ne_zero {f : ℂ → ℂ} {b : Beltr
   set u₂ : ℂ := c₂ * Complex.I + d₂ with hu₂def
   have hu₂im : u₂.im = A₂ 0 0 ^ 2 := by
     rw [hu₂def, hc₂def, hd₂def]
-    simp [Complex.add_im, Complex.mul_im, Complex.ofReal_re, Complex.ofReal_im,
-      Complex.I_im, Complex.I_re]
+    simp only [Fin.isValue, Complex.ofReal_pow, Complex.ofReal_mul, Complex.add_im, Complex.mul_im,
+      Complex.I_im, mul_one, Complex.I_re, mul_zero, add_zero, Complex.ofReal_re, Complex.ofReal_im,
+      zero_mul]
     rw [← Complex.ofReal_pow, Complex.ofReal_re]
   have hu₂pos : 0 < u₂.im := by
     rw [hu₂im]
@@ -1270,7 +1271,8 @@ theorem exists_sl2_equivariant_of_lowerLeft_ne_zero {f : ℂ → ℂ} {b : Beltr
   have hd₁im : ∀ ζ : ℂ, (c₁ * ζ + d₁).im = A₁ 0 0 ^ 2 * ζ.im := by
     intro ζ
     rw [hc₁def, hd₁def]
-    simp [Complex.add_im, Complex.mul_im, Complex.ofReal_re, Complex.ofReal_im]
+    simp only [Fin.isValue, Complex.ofReal_pow, Complex.ofReal_mul, Complex.add_im, Complex.mul_im,
+      Complex.ofReal_re, Complex.ofReal_im, mul_zero, zero_mul, add_zero]
     rw [← Complex.ofReal_pow, Complex.ofReal_re, Complex.ofReal_im, zero_mul, add_zero]
   have hfd₁im : (f d₁).im = 0 := by
     rw [hd₁def]

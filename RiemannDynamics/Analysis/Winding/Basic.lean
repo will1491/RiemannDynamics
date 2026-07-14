@@ -64,7 +64,7 @@ theorem exists_isLogLiftOf (γ : C(I, ℂ)) (hγ : ∀ t : I, γ t ≠ 0) :
     have h4 : (Circle.exp (θ t) : ℂ) = γ t / (‖γ t‖ : ℂ) :=
       congrArg (fun z : Circle => (z : ℂ)) h3
     rw [Circle.coe_exp] at h4
-    show Complex.exp ((Real.log ‖γ t‖ : ℂ) + (θ t : ℂ) * Complex.I) = γ t
+    change Complex.exp ((Real.log ‖γ t‖ : ℂ) + (θ t : ℂ) * Complex.I) = γ t
     rw [Complex.exp_add, h4, ← Complex.ofReal_exp, Real.exp_log (norm_pos_iff.mpr (hγ t)),
       mul_comm, div_mul_cancel₀ _ (hden t)]
 
@@ -571,7 +571,7 @@ theorem windingNumber_eq_of_homotopicRel {γ₁ γ₂ : C(I, ℂ)} {q : ℂ}
       rintro ⟨s, t⟩ ⟨hs, -⟩
       rw [Set.mem_singleton_iff] at hs
       subst hs
-      show ‖H (s, t) - G s t‖ < ‖G s t₀ - q‖
+      change ‖H (s, t) - G s t‖ < ‖G s t₀ - q‖
       rw [← hGapp s t, sub_self, norm_zero]
       exact hε
     obtain ⟨V, W, hVopen, -, hV, hW, hVW⟩ :=
@@ -876,10 +876,10 @@ theorem isOpen_windingRegion {γ : C(I, ℂ)} (hcl : γ 0 = γ 1) :
       exact hball (by rw [← ht]; exact hsegball θ hθ) ⟨t, rfl⟩
     have hyC : y ∈ (fun θ : ℝ => q + (θ : ℂ) * (y - q)) '' Set.Icc 0 1 :=
       ⟨1, ⟨zero_le_one, le_refl 1⟩,
-        by show q + ((1 : ℝ) : ℂ) * (y - q) = y; push_cast; ring⟩
+        by change q + ((1 : ℝ) : ℂ) * (y - q) = y; push_cast; ring⟩
     have hqC : q ∈ (fun θ : ℝ => q + (θ : ℂ) * (y - q)) '' Set.Icc 0 1 :=
       ⟨0, ⟨le_refl 0, zero_le_one⟩,
-        by show q + ((0 : ℝ) : ℂ) * (y - q) = q; push_cast; ring⟩
+        by change q + ((0 : ℝ) : ℂ) * (y - q) = q; push_cast; ring⟩
     exact windingNumber_eq_of_preconnected hcl hC hdisjC hyC hqC
   exact ⟨r, hr, fun x hx => ⟨hball hx, fun h0 => hw ((key x hx).symm.trans h0)⟩⟩
 
@@ -933,10 +933,10 @@ theorem frontier_windingRegion_subset {γ : C(I, ℂ)} (hcl : γ 0 = γ 1) :
       exact hball (by rw [← ht]; exact hsegball θ hθ) ⟨t, rfl⟩
     have hyC : y ∈ (fun θ : ℝ => x + (θ : ℂ) * (y - x)) '' Set.Icc 0 1 :=
       ⟨1, ⟨zero_le_one, le_refl 1⟩,
-        by show x + ((1 : ℝ) : ℂ) * (y - x) = y; push_cast; ring⟩
+        by change x + ((1 : ℝ) : ℂ) * (y - x) = y; push_cast; ring⟩
     have hxC : x ∈ (fun θ : ℝ => x + (θ : ℂ) * (y - x)) '' Set.Icc 0 1 :=
       ⟨0, ⟨le_refl 0, zero_le_one⟩,
-        by show x + ((0 : ℝ) : ℂ) * (y - x) = x; push_cast; ring⟩
+        by change x + ((0 : ℝ) : ℂ) * (y - x) = x; push_cast; ring⟩
     exact windingNumber_eq_of_preconnected hcl hC hdisjC hyC hxC
   rw [← closure_diff_interior] at hx
   obtain ⟨hxcl, hxni⟩ := hx
@@ -1115,7 +1115,7 @@ theorem windingNumber_polynomial_comp (p : Polynomial ℂ) (hp : p ≠ 0)
             ring }
     have hH : ∀ (t s : I), H (t, s) ≠ (0 : ℂ) := by
       intro t s
-      show q.eval _ ≠ 0
+      change q.eval _ ≠ 0
       exact hqne _
     rw [windingNumber_eq_of_homotopicRel hclq H hH]
     exact windingNumber_const _ 0 (hqne (γ 0))

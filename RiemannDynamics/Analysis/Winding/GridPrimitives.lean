@@ -50,7 +50,7 @@ def GridAdj (p q : ℤ × ℤ) : Prop :=
 
 /-- A grid path: a list of pairwise-consecutively adjacent lattice indices. -/
 def IsGridPath (L : List (ℤ × ℤ)) : Prop :=
-  L.Chain' GridAdj
+  L.IsChain GridAdj
 
 /-- The integral of `f` along the `δ`-realization of a grid path. -/
 noncomputable def gridPathIntegral (f : ℂ → ℂ) (δ : ℝ) :
@@ -140,7 +140,7 @@ theorem gridLoopCurve_closed {δ : ℝ} {L : List (ℤ × ℤ)}
   rw [h0, h1, ← hp]
 
 /-- The realization's range is the grid-path trace. -/
-theorem range_gridLoopCurve {δ : ℝ} (hδ : 0 < δ) {L : List (ℤ × ℤ)}
+theorem range_gridLoopCurve {δ : ℝ} (_hδ : 0 < δ) {L : List (ℤ × ℤ)}
     (hL : IsGridPath L) (hne : L ≠ []) :
     Set.range (gridLoopCurve δ L) = gridPathTrace δ L := by
   obtain ⟨p, L', rfl⟩ := List.exists_cons_of_ne_nil hne
@@ -149,7 +149,7 @@ theorem range_gridLoopCurve {δ : ℝ} (hδ : 0 < δ) {L : List (ℤ × ℤ)}
     have h1 : ⇑(segmentPath a b)
         = (fun θ : ℝ => a + θ • (b - a)) ∘ ((↑) : I → ℝ) := by
       funext t
-      show a + ((t : ℝ) : ℂ) * (b - a) = a + (t : ℝ) • (b - a)
+      change a + ((t : ℝ) : ℂ) * (b - a) = a + (t : ℝ) • (b - a)
       rw [Complex.real_smul]
     rw [h1, Set.range_comp, Subtype.range_coe]
     exact (segment_eq_image' ℝ a b).symm
@@ -158,16 +158,18 @@ theorem range_gridLoopCurve {δ : ℝ} (hδ : 0 < δ) {L : List (ℤ × ℤ)}
     intro r M
     induction M generalizing r with
     | nil =>
-      show Set.range (Path.refl (gridPoint δ r)) = ({gridPoint δ r} : Set ℂ)
+      change Set.range (Path.refl (gridPoint δ r)) = ({gridPoint δ r} : Set ℂ)
       exact Path.refl_range
     | cons q M ih =>
-      show Set.range ((segmentPath (gridPoint δ r) (gridPoint δ q)).trans
+      change Set.range ((segmentPath (gridPoint δ r) (gridPoint δ q)).trans
           (gridPathRealize δ q M)) = _
       rw [Path.trans_range, hseg, ih]
       rfl
   exact key p L'
 
 set_option maxHeartbeats 400000 in
+-- The edge-counting identity elaborates as one large declaration whose nested
+-- winding-weighted-sum `have` chains exceed the default heartbeat budget.
 /-- **Edge-counting identity.** The integral of any function along a closed
 grid loop equals the winding-weighted sum of square-boundary integrals over
 the squares of nonzero winding: on both sides the coefficient of each
@@ -313,7 +315,7 @@ theorem gridPathIntegral_eq_sum_windings (f : ℂ → ℂ) {δ : ℝ} (hδ : 0 <
       cases M with
       | nil => simp [gridPathIntegral]
       | cons q M' =>
-        show segmentIntegral f (gridPoint δ p) (gridPoint δ q) +
+        change segmentIntegral f (gridPoint δ p) (gridPoint δ q) +
             gridPathIntegral f δ (q :: M') = _
         rw [ih]
         simp only [List.tail_cons, List.zip_cons_cons, List.map_cons,
@@ -382,7 +384,7 @@ theorem gridPathIntegral_eq_sum_windings (f : ℂ → ℂ) {δ : ℝ} (hδ : 0 <
       linear_combination (δ * (i : ℝ)) * huv
     have him : x.im = δ * j := by
       rw [← hxe, hsegim, hgim, hgim]
-      show u * (δ * (j : ℝ)) + v * (δ * (j : ℝ)) = δ * j
+      change u * (δ * (j : ℝ)) + v * (δ * (j : ℝ)) = δ * j
       linear_combination (δ * (j : ℝ)) * huv
     refine ⟨him, ?_, ?_⟩
     · rw [hre]
@@ -401,7 +403,7 @@ theorem gridPathIntegral_eq_sum_windings (f : ℂ → ℂ) {δ : ℝ} (hδ : 0 <
       linear_combination (δ * (j : ℝ)) * huv
     have hre : x.re = δ * i := by
       rw [← hxe, hsegre, hgre, hgre]
-      show u * (δ * (i : ℝ)) + v * (δ * (i : ℝ)) = δ * i
+      change u * (δ * (i : ℝ)) + v * (δ * (i : ℝ)) = δ * i
       linear_combination (δ * (i : ℝ)) * huv
     refine ⟨hre, ?_, ?_⟩
     · rw [him]
@@ -451,7 +453,7 @@ theorem gridPathIntegral_eq_sum_windings (f : ℂ → ℂ) {δ : ℝ} (hδ : 0 <
       segmentPath a b s ∈ segment ℝ a b := by
     intro a b s
     refine ⟨1 - (s : ℝ), (s : ℝ), by linarith [s.2.2], s.2.1, by ring, ?_⟩
-    show (1 - (s : ℝ)) • a + (s : ℝ) • b = a + ((s : ℝ) : ℂ) * (b - a)
+    change (1 - (s : ℝ)) • a + (s : ℝ) • b = a + ((s : ℝ) : ℂ) * (b - a)
     rw [Complex.real_smul, Complex.real_smul]
     push_cast
     ring
@@ -483,18 +485,18 @@ theorem gridPathIntegral_eq_sum_windings (f : ℂ → ℂ) {δ : ℝ} (hδ : 0 <
     refine ⟨⟨fun s => Complex.log ((segmentPath a b s - q) / (a - q)) +
       Complex.log (a - q), hgcont'⟩, ?_, ?_, ?_⟩
     · intro s
-      show Complex.exp (Complex.log ((segmentPath a b s - q) / (a - q)) +
+      change Complex.exp (Complex.log ((segmentPath a b s - q) / (a - q)) +
         Complex.log (a - q)) = _
       rw [Complex.exp_add, Complex.exp_log haq,
         Complex.exp_log (Complex.slitPlane_ne_zero (hgmem s)),
         div_mul_cancel₀ _ haq]
-    · show (Complex.log ((segmentPath a b 1 - q) / (a - q)) +
+    · change (Complex.log ((segmentPath a b 1 - q) / (a - q)) +
         Complex.log (a - q)) - (Complex.log ((segmentPath a b 0 - q) /
           (a - q)) + Complex.log (a - q)) = _
       rw [(segmentPath a b).source, (segmentPath a b).target,
         div_self haq, Complex.log_one]
       ring
-    · show Complex.exp (Complex.log ((segmentPath a b 1 - q) / (a - q)) +
+    · change Complex.exp (Complex.log ((segmentPath a b 1 - q) / (a - q)) +
         Complex.log (a - q)) = _
       rw [(segmentPath a b).target, Complex.exp_add, Complex.exp_log haq]
       have hbq : b - q ≠ 0 :=
@@ -519,7 +521,7 @@ theorem gridPathIntegral_eq_sum_windings (f : ℂ → ℂ) {δ : ℝ} (hδ : 0 <
         simp only [shiftedCurve, ContinuousMap.sub_apply,
           ContinuousMap.const_apply, Path.coe_toContinuousMap]
         rw [Complex.exp_log (sub_ne_zero.mpr (Ne.symm hqp))]
-        show gridPoint δ p - q = (Path.refl (gridPoint δ p)) t - q
+        change gridPoint δ p - q = (Path.refl (gridPoint δ p)) t - q
         simp
       · simp
     | cons r M ih =>
@@ -564,7 +566,7 @@ theorem gridPathIntegral_eq_sum_windings (f : ℂ → ℂ) {δ : ℝ} (hδ : 0 <
       · intro t
         simp only [shiftedCurve, ContinuousMap.sub_apply,
           ContinuousMap.const_apply, Path.coe_toContinuousMap]
-        show Complex.exp _ =
+        change Complex.exp _ =
           ((segmentPath (gridPoint δ p) (gridPoint δ r)).trans
             (gridPathRealize δ r M)) t - q
         rw [Path.trans_apply, Path.trans_apply]
@@ -652,7 +654,7 @@ theorem gridPathIntegral_eq_sum_windings (f : ℂ → ℂ) {δ : ℝ} (hδ : 0 <
       have hz : ((x :: y :: M').zip (y :: M')) =
           (x, y) :: ((y :: M').zip M') := rfl
       rw [hz, List.map_cons, List.sum_cons, ih y]
-      show G y - G x + (G (gridLast y M') - G y) =
+      change G y - G x + (G (gridLast y M') - G y) =
         G (gridLast x (y :: M')) - G x
       have hgl : gridLast x (y :: M') = gridLast y M' := rfl
       rw [hgl]
@@ -667,7 +669,7 @@ theorem gridPathIntegral_eq_sum_windings (f : ℂ → ℂ) {δ : ℝ} (hδ : 0 <
       rw [List.head?_cons, hlastq] at h2
       exact Option.some.inj h2
     rw [hprs_def]
-    show (((p :: L').zip L').map (fun e => G e.2 - G e.1)).sum = 0
+    change (((p :: L').zip L').map (fun e => G e.2 - G e.1)).sum = 0
     rw [h, ← hp, sub_self]
   -- signed traversal indicator of a canonical directed edge
   set ind : (ℤ × ℤ) × (ℤ × ℤ) → (ℤ × ℤ) × (ℤ × ℤ) → ℤ := fun E e =>
@@ -816,32 +818,32 @@ theorem gridPathIntegral_eq_sum_windings (f : ℂ → ℂ) {δ : ℝ} (hδ : 0 <
     have hDcan : inc (t₀, h₀) cp - inc (t₀, h₀) cm - (G h₀ - G t₀) =
         2 * Real.pi * Complex.I := by
       have h1 : inc (t₀, h₀) cp = Complex.log Complex.I := by
-        show Complex.log ((gridPoint δ h₀ - cp) / (gridPoint δ t₀ - cp)) = _
+        change Complex.log ((gridPoint δ h₀ - cp) / (gridPoint δ t₀ - cp)) = _
         rw [hdivI _ _ hAcp hr1]
       have h2 : inc (t₀, h₀) cm = Complex.log (-Complex.I) := by
-        show Complex.log ((gridPoint δ h₀ - cm) / (gridPoint δ t₀ - cm)) = _
+        change Complex.log ((gridPoint δ h₀ - cm) / (gridPoint δ t₀ - cm)) = _
         rw [hdivnI _ _ hAcm hr2]
       have h3 : G t₀ = Complex.log Complex.I := by
-        show Complex.log ((gridPoint δ t₀ - cp) / (gridPoint δ t₀ - cm)) = _
+        change Complex.log ((gridPoint δ t₀ - cp) / (gridPoint δ t₀ - cm)) = _
         rw [hdivI _ _ hAcm hr3]
       have h4 : G h₀ = Complex.log (-Complex.I) := by
-        show Complex.log ((gridPoint δ h₀ - cp) / (gridPoint δ h₀ - cm)) = _
+        change Complex.log ((gridPoint δ h₀ - cp) / (gridPoint δ h₀ - cm)) = _
         rw [hdivnI _ _ hBcm hr4]
       rw [h1, h2, h3, h4, Complex.log_I, Complex.log_neg_I]
       ring
     have hDswap : inc (h₀, t₀) cp - inc (h₀, t₀) cm - (G t₀ - G h₀) =
         -(2 * Real.pi * Complex.I) := by
       have h1 : inc (h₀, t₀) cp = Complex.log (-Complex.I) := by
-        show Complex.log ((gridPoint δ t₀ - cp) / (gridPoint δ h₀ - cp)) = _
+        change Complex.log ((gridPoint δ t₀ - cp) / (gridPoint δ h₀ - cp)) = _
         rw [hdivI' _ _ hAcp hr1]
       have h2 : inc (h₀, t₀) cm = Complex.log Complex.I := by
-        show Complex.log ((gridPoint δ t₀ - cm) / (gridPoint δ h₀ - cm)) = _
+        change Complex.log ((gridPoint δ t₀ - cm) / (gridPoint δ h₀ - cm)) = _
         rw [hdivnI' _ _ hAcm hr2]
       have h3 : G t₀ = Complex.log Complex.I := by
-        show Complex.log ((gridPoint δ t₀ - cp) / (gridPoint δ t₀ - cm)) = _
+        change Complex.log ((gridPoint δ t₀ - cp) / (gridPoint δ t₀ - cm)) = _
         rw [hdivI _ _ hAcm hr3]
       have h4 : G h₀ = Complex.log (-Complex.I) := by
-        show Complex.log ((gridPoint δ h₀ - cp) / (gridPoint δ h₀ - cm)) = _
+        change Complex.log ((gridPoint δ h₀ - cp) / (gridPoint δ h₀ - cm)) = _
         rw [hdivnI _ _ hBcm hr4]
       rw [h1, h2, h3, h4, Complex.log_I, Complex.log_neg_I]
       ring
@@ -864,7 +866,7 @@ theorem gridPathIntegral_eq_sum_windings (f : ℂ → ℂ) {δ : ℝ} (hδ : 0 <
         have hival : ind (t₀, h₀) (t₀, h₀) = 1 := by
           simp [hind_def]
         rw [hival]
-        show inc (t₀, h₀) cp - inc (t₀, h₀) cm - (G h₀ - G t₀) =
+        change inc (t₀, h₀) cp - inc (t₀, h₀) cm - (G h₀ - G t₀) =
           2 * Real.pi * Complex.I * ((1 : ℤ) : ℂ)
         rw [hDcan, Int.cast_one, mul_one]
       · by_cases hswap : e = (h₀, t₀)
@@ -876,7 +878,7 @@ theorem gridPathIntegral_eq_sum_windings (f : ℂ → ℂ) {δ : ℝ} (hδ : 0 <
             rw [if_neg hne2]
             simp
           rw [hival]
-          show inc (h₀, t₀) cp - inc (h₀, t₀) cm - (G t₀ - G h₀) =
+          change inc (h₀, t₀) cp - inc (h₀, t₀) cm - (G t₀ - G h₀) =
             2 * Real.pi * Complex.I * ((-1 : ℤ) : ℂ)
           rw [hDswap]
           push_cast
@@ -924,7 +926,7 @@ theorem gridPathIntegral_eq_sum_windings (f : ℂ → ℂ) {δ : ℝ} (hδ : 0 <
       hcen_re _
     have haim : (gridSquareCenter δ (v.1, v.2 - 1)).im = δ * v.2 - δ / 2 := by
       rw [hcen_im]
-      show δ * ((v.2 - 1 : ℤ) : ℝ) + δ / 2 = δ * v.2 - δ / 2
+      change δ * ((v.2 - 1 : ℤ) : ℝ) + δ / 2 = δ * v.2 - δ / 2
       push_cast
       ring
     refine ⟨?_, ?_, ?_⟩
@@ -946,7 +948,7 @@ theorem gridPathIntegral_eq_sum_windings (f : ℂ → ℂ) {δ : ℝ} (hδ : 0 <
     obtain ⟨u, u', hu, hu', huu, hye⟩ := hy
     have hbre : (gridSquareCenter δ (v.1 - 1, v.2)).re = δ * v.1 - δ / 2 := by
       rw [hcen_re]
-      show δ * ((v.1 - 1 : ℤ) : ℝ) + δ / 2 = δ * v.1 - δ / 2
+      change δ * ((v.1 - 1 : ℤ) : ℝ) + δ / 2 = δ * v.1 - δ / 2
       push_cast
       ring
     have hbim : (gridSquareCenter δ (v.1 - 1, v.2)).im = δ * v.2 + δ / 2 :=
@@ -1265,7 +1267,7 @@ theorem gridPathIntegral_eq_sum_windings (f : ℂ → ℂ) {δ : ℝ} (hδ : 0 <
   have hbdry : ∀ p : ℤ × ℤ, gridSquareBoundaryIntegral f δ p =
       segR p + segU (p.1 + 1, p.2) - segR (p.1, p.2 + 1) - segU p := by
     intro p
-    show segmentIntegral f (gridPoint δ p) (gridPoint δ (p.1 + 1, p.2)) +
+    change segmentIntegral f (gridPoint δ p) (gridPoint δ (p.1 + 1, p.2)) +
         (segmentIntegral f (gridPoint δ (p.1 + 1, p.2))
           (gridPoint δ (p.1 + 1, p.2 + 1)) +
           (segmentIntegral f (gridPoint δ (p.1 + 1, p.2 + 1))
@@ -1595,7 +1597,7 @@ complementary point in the closed square would belong to a bounded pocket of
 the winding region, whose frontier lies on the loop trace — but the trace is
 in `T`, so the unbounded component through that point cannot escape. -/
 theorem gridSquare_subset_of_windingNumber_ne_zero {T : Set ℂ}
-    (hT : IsOpen T)
+    (_hT : IsOpen T)
     (hcompl : ∀ z ∉ T, ¬Bornology.IsBounded (connectedComponentIn Tᶜ z))
     {δ : ℝ} (hδ : 0 < δ) {L : List (ℤ × ℤ)} (hL : IsGridPath L)
     (hne : L ≠ []) (hcl : L.head? = L.getLast?)
@@ -2031,7 +2033,7 @@ theorem exists_gridPath_join {T : Set ℂ} (hT : IsOpen T)
         refine ⟨(p.1 - 1, p.2) :: L, ?_, ?_, ?_⟩
         · exact List.isChain_cons_cons.mpr ⟨hadjHL p, hc⟩
         · rw [List.getLast?_cons_cons, hl]
-          show some (p.1 - 1 + (d + 1), p.2) = some (p.1 + d, p.2)
+          change some (p.1 - 1 + (d + 1), p.2) = some (p.1 + d, p.2)
           rw [show p.1 - 1 + (d + 1) = p.1 + d from by ring]
         · intro v hv
           rcases List.mem_cons.mp hv with rfl | hv'
@@ -2045,7 +2047,7 @@ theorem exists_gridPath_join {T : Set ℂ} (hT : IsOpen T)
         refine ⟨(p.1 + 1, p.2) :: L, ?_, ?_, ?_⟩
         · exact List.isChain_cons_cons.mpr ⟨hadjHR p, hc⟩
         · rw [List.getLast?_cons_cons, hl]
-          show some (p.1 + 1 + (d - 1), p.2) = some (p.1 + d, p.2)
+          change some (p.1 + 1 + (d - 1), p.2) = some (p.1 + d, p.2)
           rw [show p.1 + 1 + (d - 1) = p.1 + d from by ring]
         · intro v hv
           rcases List.mem_cons.mp hv with rfl | hv'
@@ -2077,7 +2079,7 @@ theorem exists_gridPath_join {T : Set ℂ} (hT : IsOpen T)
         refine ⟨(p.1, p.2 - 1) :: L, ?_, ?_, ?_⟩
         · exact List.isChain_cons_cons.mpr ⟨hadjVD p, hc⟩
         · rw [List.getLast?_cons_cons, hl]
-          show some (p.1, p.2 - 1 + (d + 1)) = some (p.1, p.2 + d)
+          change some (p.1, p.2 - 1 + (d + 1)) = some (p.1, p.2 + d)
           rw [show p.2 - 1 + (d + 1) = p.2 + d from by ring]
         · intro v hv
           rcases List.mem_cons.mp hv with rfl | hv'
@@ -2091,7 +2093,7 @@ theorem exists_gridPath_join {T : Set ℂ} (hT : IsOpen T)
         refine ⟨(p.1, p.2 + 1) :: L, ?_, ?_, ?_⟩
         · exact List.isChain_cons_cons.mpr ⟨hadjVU p, hc⟩
         · rw [List.getLast?_cons_cons, hl]
-          show some (p.1, p.2 + 1 + (d - 1)) = some (p.1, p.2 + d)
+          change some (p.1, p.2 + 1 + (d - 1)) = some (p.1, p.2 + d)
           rw [show p.2 + 1 + (d - 1) = p.2 + d from by ring]
         · intro v hv
           rcases List.mem_cons.mp hv with rfl | hv'
@@ -2139,7 +2141,7 @@ theorem exists_gridPath_join {T : Set ℂ} (hT : IsOpen T)
     · rw [← List.cons_append]
       have h := hglueLast (p :: L₁) L₂ (p.1 + (q.1 - p.1), p.2) _ hl₁ hl₂
       rw [h]
-      show some (p.1 + (q.1 - p.1), p.2 + (q.2 - p.2)) = some q
+      change some (p.1 + (q.1 - p.1), p.2 + (q.2 - p.2)) = some q
       rw [show p.1 + (q.1 - p.1) = q.1 from by ring, show p.2 + (q.2 - p.2) = q.2 from by ring]
     · intro v hv
       rw [← List.cons_append] at hv
@@ -2288,7 +2290,7 @@ theorem exists_gridPath_join {T : Set ℂ} (hT : IsOpen T)
   let τ : ℕ → I := fun k => Set.projIcc 0 1 zero_le_one ((k : ℝ) / (N : ℝ))
   have hτ : ∀ k : ℕ, k ≤ N → ((τ k : ℝ)) = (k : ℝ) / (N : ℝ) := by
     intro k hk
-    show ((Set.projIcc (0 : ℝ) 1 zero_le_one ((k : ℝ) / (N : ℝ)) : Set.Icc (0 : ℝ) 1) : ℝ) =
+    change ((Set.projIcc (0 : ℝ) 1 zero_le_one ((k : ℝ) / (N : ℝ)) : Set.Icc (0 : ℝ) 1) : ℝ) =
       (k : ℝ) / (N : ℝ)
     rw [Set.projIcc_of_mem zero_le_one (hmem k hk)]
   let zf : ℕ → ℂ := fun k => γ (τ k)
@@ -2299,7 +2301,7 @@ theorem exists_gridPath_join {T : Set ℂ} (hT : IsOpen T)
       apply Subtype.ext
       rw [hτ 0 (Nat.zero_le N)]
       simp
-    show γ (τ 0) = a
+    change γ (τ 0) = a
     rw [h0]
     exact γ.source
   have hzN : zf N = b := by
@@ -2307,7 +2309,7 @@ theorem exists_gridPath_join {T : Set ℂ} (hT : IsOpen T)
       apply Subtype.ext
       rw [hτ N le_rfl, div_self (ne_of_gt hNpos)]
       simp
-    show γ (τ N) = b
+    change γ (τ N) = b
     rw [h1]
     exact γ.target
   have hstep : ∀ k : ℕ, k < N → ‖zf (k + 1) - zf k‖ ≤ δ := by
@@ -2410,6 +2412,8 @@ theorem exists_gridPath_join {T : Set ℂ} (hT : IsOpen T)
     rwa [hzN] at h
 
 set_option maxHeartbeats 400000 in
+-- This essential-loop separation proof elaborates as one large declaration whose
+-- nested winding / complementary-component `have` chains exceed the default budget.
 /-- **Essential loops around separated compact complementary pieces.** If a
 compact piece `A` of the closed complement of an open set `T` is metrically
 separated from the rest of the complement, then some closed curve in `T`
@@ -2722,7 +2726,7 @@ theorem exists_gridLoop_winding_ne_zero {T : Set ℂ} (hT : IsOpen T)
     obtain ⟨u, v, hu, hv, huv, hwe⟩ := hw
     have him : w.im = δ * q.2 := by
       rw [← hwe, hsegim, hgim, hgim]
-      show u * (δ * (q.2 : ℝ)) + v * (δ * (q.2 : ℝ)) = δ * q.2
+      change u * (δ * (q.2 : ℝ)) + v * (δ * (q.2 : ℝ)) = δ * q.2
       have : u * (δ * (q.2 : ℝ)) + v * (δ * (q.2 : ℝ)) =
           (u + v) * (δ * q.2) := by ring
       rw [this, huv, one_mul]
@@ -2734,7 +2738,7 @@ theorem exists_gridLoop_winding_ne_zero {T : Set ℂ} (hT : IsOpen T)
     obtain ⟨u, v, hu, hv, huv, hwe⟩ := hw
     have hre : w.re = δ * q.1 := by
       rw [← hwe, hsegre, hgre, hgre]
-      show u * (δ * (q.1 : ℝ)) + v * (δ * (q.1 : ℝ)) = δ * q.1
+      change u * (δ * (q.1 : ℝ)) + v * (δ * (q.1 : ℝ)) = δ * q.1
       have : u * (δ * (q.1 : ℝ)) + v * (δ * (q.1 : ℝ)) =
           (u + v) * (δ * q.1) := by ring
       rw [this, huv, one_mul]
@@ -3096,7 +3100,7 @@ theorem exists_gridLoop_winding_ne_zero {T : Set ℂ} (hT : IsOpen T)
       linear_combination (δ * (i : ℝ)) * huv
     have him : w.im = δ * j := by
       rw [← hwe, hsegim, hgim, hgim]
-      show u * (δ * (j : ℝ)) + v * (δ * (j : ℝ)) = δ * j
+      change u * (δ * (j : ℝ)) + v * (δ * (j : ℝ)) = δ * j
       linear_combination (δ * (j : ℝ)) * huv
     refine ⟨him, ?_, ?_⟩
     · rw [hre]
@@ -3115,7 +3119,7 @@ theorem exists_gridLoop_winding_ne_zero {T : Set ℂ} (hT : IsOpen T)
       linear_combination (δ * (j : ℝ)) * huv
     have hre : w.re = δ * i := by
       rw [← hwe, hsegre, hgre, hgre]
-      show u * (δ * (i : ℝ)) + v * (δ * (i : ℝ)) = δ * i
+      change u * (δ * (i : ℝ)) + v * (δ * (i : ℝ)) = δ * i
       linear_combination (δ * (i : ℝ)) * huv
     refine ⟨hre, ?_, ?_⟩
     · rw [him]
@@ -3246,7 +3250,7 @@ theorem exists_gridLoop_winding_ne_zero {T : Set ℂ} (hT : IsOpen T)
     intro a b s
     clear * -
     refine ⟨1 - (s : ℝ), (s : ℝ), by linarith [s.2.2], s.2.1, by ring, ?_⟩
-    show (1 - (s : ℝ)) • a + (s : ℝ) • b = a + ((s : ℝ) : ℂ) * (b - a)
+    change (1 - (s : ℝ)) • a + (s : ℝ) • b = a + ((s : ℝ) : ℂ) * (b - a)
     rw [Complex.real_smul, Complex.real_smul]
     push_cast
     ring
@@ -3280,18 +3284,18 @@ theorem exists_gridLoop_winding_ne_zero {T : Set ℂ} (hT : IsOpen T)
     refine ⟨⟨fun s => Complex.log ((segmentPath a b s - q) / (a - q)) +
       Complex.log (a - q), hfcont⟩, ?_, ?_, ?_⟩
     · intro s
-      show Complex.exp (Complex.log ((segmentPath a b s - q) / (a - q)) +
+      change Complex.exp (Complex.log ((segmentPath a b s - q) / (a - q)) +
         Complex.log (a - q)) = _
       rw [Complex.exp_add, Complex.exp_log haq,
         Complex.exp_log (Complex.slitPlane_ne_zero (hgmem s)),
         div_mul_cancel₀ _ haq]
-    · show (Complex.log ((segmentPath a b 1 - q) / (a - q)) +
+    · change (Complex.log ((segmentPath a b 1 - q) / (a - q)) +
         Complex.log (a - q)) - (Complex.log ((segmentPath a b 0 - q) /
           (a - q)) + Complex.log (a - q)) = _
       rw [(segmentPath a b).source, (segmentPath a b).target,
         div_self haq, Complex.log_one]
       ring
-    · show Complex.exp (Complex.log ((segmentPath a b 1 - q) / (a - q)) +
+    · change Complex.exp (Complex.log ((segmentPath a b 1 - q) / (a - q)) +
         Complex.log (a - q)) = _
       rw [(segmentPath a b).target, Complex.exp_add, Complex.exp_log haq]
       have hbq : b - q ≠ 0 :=
@@ -3318,7 +3322,7 @@ theorem exists_gridLoop_winding_ne_zero {T : Set ℂ} (hT : IsOpen T)
         simp only [shiftedCurve, ContinuousMap.sub_apply,
           ContinuousMap.const_apply, Path.coe_toContinuousMap]
         rw [Complex.exp_log (sub_ne_zero.mpr (Ne.symm hqp))]
-        show gridPoint δ p - q = (Path.refl (gridPoint δ p)) t - q
+        change gridPoint δ p - q = (Path.refl (gridPoint δ p)) t - q
         simp
       · simp
     | cons r M ih =>
@@ -3364,7 +3368,7 @@ theorem exists_gridLoop_winding_ne_zero {T : Set ℂ} (hT : IsOpen T)
       · intro t
         simp only [shiftedCurve, ContinuousMap.sub_apply,
           ContinuousMap.const_apply, Path.coe_toContinuousMap]
-        show Complex.exp _ =
+        change Complex.exp _ =
           ((segmentPath (gridPoint δ p) (gridPoint δ r)).trans
             (gridPathRealize δ r M)) t - q
         rw [Path.trans_apply, Path.trans_apply]
@@ -3417,7 +3421,7 @@ theorem exists_gridLoop_winding_ne_zero {T : Set ℂ} (hT : IsOpen T)
     [p, (p.1 + 1, p.2), (p.1 + 1, p.2 + 1), (p.1, p.2 + 1), p] with hsqB_def
   have hsqB_path : ∀ p, IsGridPath (sqB p) := by
     intro p
-    show List.IsChain GridAdj _
+    change List.IsChain GridAdj _
     simp only [hsqB_def]
     refine List.isChain_cons_cons.mpr ⟨?_, List.isChain_cons_cons.mpr ⟨?_,
       List.isChain_cons_cons.mpr ⟨?_, List.isChain_cons_cons.mpr ⟨?_,
@@ -4366,6 +4370,8 @@ theorem exists_gridLoop_winding_ne_zero {T : Set ℂ} (hT : IsOpen T)
     exact hC_ne hli.symm
 
 set_option maxHeartbeats 400000 in
+-- The primitive-existence proof elaborates as one large declaration whose nested
+-- path-independence and grid-integral `have` chains exceed the default budget.
 /-- **Primitives exist on domains with no bounded complementary
 components.** The grid integral from a basepoint is path-independent by the
 vanishing of grid-loop integrals, defines a function on each component, and
@@ -4527,7 +4533,7 @@ theorem has_primitives_of_unbounded_components {T : Set ℂ} (hT : IsOpen T)
       have hbj : b = j := by simpa using hh2
       subst hbj
       refine ⟨?_, ?_, ?_⟩
-      · show List.IsChain GridAdj (L₁ ++ (b :: t).tail)
+      · change List.IsChain GridAdj (L₁ ++ (b :: t).tail)
         rw [List.tail_cons, List.isChain_append]
         refine ⟨h1, (List.isChain_cons.mp h2).2, ?_⟩
         intro x hx y hy
@@ -4599,7 +4605,7 @@ theorem has_primitives_of_unbounded_components {T : Set ℂ} (hT : IsOpen T)
           have hy'' : (x + 1, j) = y' := by simpa using hy'
           subst hy''
           refine Or.inr ⟨?_, rfl⟩
-          show (x - (x + 1)).natAbs = 1
+          change (x - (x + 1)).natAbs = 1
           omega
         · rw [hlast_cons _ _ (hheadne L' _ hh')]
           exact hl'
@@ -4616,7 +4622,7 @@ theorem has_primitives_of_unbounded_components {T : Set ℂ} (hT : IsOpen T)
           have hy'' : (x - 1, j) = y' := by simpa using hy'
           subst hy''
           refine Or.inr ⟨?_, rfl⟩
-          show (x - (x - 1)).natAbs = 1
+          change (x - (x - 1)).natAbs = 1
           omega
         · rw [hlast_cons _ _ (hheadne L' _ hh')]
           exact hl'
@@ -4652,7 +4658,7 @@ theorem has_primitives_of_unbounded_components {T : Set ℂ} (hT : IsOpen T)
           have hy'' : (i, x + 1) = y' := by simpa using hy'
           subst hy''
           refine Or.inl ⟨rfl, ?_⟩
-          show (x - (x + 1)).natAbs = 1
+          change (x - (x + 1)).natAbs = 1
           omega
         · rw [hlast_cons _ _ (hheadne L' _ hh')]
           exact hl'
@@ -4669,7 +4675,7 @@ theorem has_primitives_of_unbounded_components {T : Set ℂ} (hT : IsOpen T)
           have hy'' : (i, x - 1) = y' := by simpa using hy'
           subst hy''
           refine Or.inl ⟨rfl, ?_⟩
-          show (x - (x - 1)).natAbs = 1
+          change (x - (x - 1)).natAbs = 1
           omega
         · rw [hlast_cons _ _ (hheadne L' _ hh')]
           exact hl'
@@ -4889,13 +4895,13 @@ theorem has_primitives_of_unbounded_components {T : Set ℂ} (hT : IsOpen T)
       cases rest with
       | nil =>
         rw [hrefL_single]
-        show {gridPoint (δ/2) (2*p.1, 2*p.2)} = {gridPoint δ p}
+        change {gridPoint (δ/2) (2*p.1, 2*p.2)} = {gridPoint δ p}
         rw [hgp2]
       | cons q t =>
         obtain ⟨M, hM⟩ := hrefL_head_cons q t
         rw [hrefL_cons, hM]
         rw [hM] at ih
-        show segment ℝ (gridPoint (δ/2) (2*p.1, 2*p.2))
+        change segment ℝ (gridPoint (δ/2) (2*p.1, 2*p.2))
             (gridPoint (δ/2) (p.1+q.1, p.2+q.2)) ∪
           (segment ℝ (gridPoint (δ/2) (p.1+q.1, p.2+q.2))
             (gridPoint (δ/2) (2*q.1, 2*q.2)) ∪
@@ -4923,7 +4929,7 @@ theorem has_primitives_of_unbounded_components {T : Set ℂ} (hT : IsOpen T)
         have hih := ih hsub_tail
         rw [hM] at hih
         rw [hrefL_cons, hM]
-        show segmentIntegral f (gridPoint (δ/2) (2*p.1, 2*p.2))
+        change segmentIntegral f (gridPoint (δ/2) (2*p.1, 2*p.2))
             (gridPoint (δ/2) (p.1+q.1, p.2+q.2)) +
           (segmentIntegral f (gridPoint (δ/2) (p.1+q.1, p.2+q.2))
             (gridPoint (δ/2) (2*q.1, 2*q.2)) +
@@ -5067,7 +5073,7 @@ theorem has_primitives_of_unbounded_components {T : Set ℂ} (hT : IsOpen T)
             rwa [List.getLast?_cons_cons] at hlast
           have ihv := ih hlast'
           simp only [List.cons_append] at ihv ⊢
-          show segment ℝ (gridPoint δ x) (gridPoint δ y) ∪
+          change segment ℝ (gridPoint δ x) (gridPoint δ y) ∪
               gridPathTrace δ (y :: L ++ (b :: t).tail) ⊆ _
           apply Set.union_subset
           · intro w hw
@@ -5091,7 +5097,7 @@ theorem has_primitives_of_unbounded_components {T : Set ℂ} (hT : IsOpen T)
       cases rest with
       | nil =>
         have hpq : x = q := by simpa using hl
-        show (0 : ℂ) = _
+        change (0 : ℂ) = _
         rw [← hxp, ← hpq]
         ring
       | cons y L' =>
@@ -5102,7 +5108,7 @@ theorem has_primitives_of_unbounded_components {T : Set ℂ} (hT : IsOpen T)
         have htr_tail : gridPathTrace δ (y :: L') ⊆ O :=
           fun w hw => htr (Set.mem_union_right _ hw)
         have ihv := ih y q rfl hl' htr_tail
-        show segmentIntegral f (gridPoint δ x) (gridPoint δ y) +
+        change segmentIntegral f (gridPoint δ x) (gridPoint δ y) +
             gridPathIntegral f δ (y :: L') = _
         rw [ihv, hFTC F O hO hOT hF _ _ htr_seg, ← hxp]
         ring
@@ -5120,7 +5126,7 @@ theorem has_primitives_of_unbounded_components {T : Set ℂ} (hT : IsOpen T)
       | nil =>
         have haj : a = j := by simpa using hj
         subst haj
-        show segment ℝ (gridPoint δ a) (gridPoint δ x) ∪ {gridPoint δ x} =
+        change segment ℝ (gridPoint δ a) (gridPoint δ x) ∪ {gridPoint δ x} =
           {gridPoint δ a} ∪ segment ℝ (gridPoint δ a) (gridPoint δ x)
         apply Set.Subset.antisymm
         · apply Set.union_subset
@@ -5137,7 +5143,7 @@ theorem has_primitives_of_unbounded_components {T : Set ℂ} (hT : IsOpen T)
         have hj' : (c :: t).getLast? = some j := by
           rwa [List.getLast?_cons_cons] at hj
         have ihv := ih j x hj'
-        show segment ℝ (gridPoint δ a) (gridPoint δ c) ∪
+        change segment ℝ (gridPoint δ a) (gridPoint δ c) ∪
             gridPathTrace δ (c :: (t ++ [x])) = _
         have : gridPathTrace δ (c :: (t ++ [x])) =
             gridPathTrace δ (c :: t) ∪ segment ℝ (gridPoint δ j) (gridPoint δ x) := ihv
@@ -5159,7 +5165,7 @@ theorem has_primitives_of_unbounded_components {T : Set ℂ} (hT : IsOpen T)
           rw [List.getLast?_reverse]
           rfl
         rw [hrw, htrace_snoc δ _ q p hlast, ih]
-        show gridPathTrace δ (q :: t) ∪ segment ℝ (gridPoint δ q) (gridPoint δ p) =
+        change gridPathTrace δ (q :: t) ∪ segment ℝ (gridPoint δ q) (gridPoint δ p) =
           segment ℝ (gridPoint δ p) (gridPoint δ q) ∪ gridPathTrace δ (q :: t)
         rw [segment_symm, Set.union_comm]
   -- Adjacency is symmetric; grid paths reverse.
@@ -5376,7 +5382,7 @@ theorem has_primitives_of_unbounded_components {T : Set ℂ} (hT : IsOpen T)
       have := hWzero
       rw [hWint] at this
       linear_combination this
-    show segmentIntegral f b (gridPoint δ p) + gridPathIntegral f δ L +
+    change segmentIntegral f b (gridPoint δ p) + gridPathIntegral f δ L +
         segmentIntegral f (gridPoint δ q) z =
       segmentIntegral f b (gridPoint δ p') + gridPathIntegral f δ L' +
         segmentIntegral f (gridPoint δ q') z
@@ -5533,7 +5539,7 @@ theorem has_primitives_of_unbounded_components {T : Set ℂ} (hT : IsOpen T)
       rw [he] at hx
       calc dist x z < 100 * (δ/2) := hx
         _ ≤ 100 * δ := by linarith
-    · show segmentIntegral f b (gridPoint ((2:ℝ)⁻¹ ^ (k+1)) p'') +
+    · change segmentIntegral f b (gridPoint ((2:ℝ)⁻¹ ^ (k+1)) p'') +
           gridPathIntegral f ((2:ℝ)⁻¹ ^ (k+1)) W +
           segmentIntegral f (gridPoint ((2:ℝ)⁻¹ ^ (k+1)) q'') z =
         segmentIntegral f b (gridPoint δ p) + gridPathIntegral f δ L +
@@ -5729,7 +5735,7 @@ theorem has_primitives_of_unbounded_components {T : Set ℂ} (hT : IsOpen T)
           gridPathIntegral f δ L + gridPathIntegral f δ B :=
         happend δ L B q hl hBh
       rw [hgw, hgz₀]
-      show segmentIntegral f (base w) (gridPoint δ p) +
+      change segmentIntegral f (base w) (gridPoint δ p) +
           gridPathIntegral f δ (L ++ B.tail) +
           segmentIntegral f (gridPoint δ qw) w =
         F w + (segmentIntegral f (base z₀) (gridPoint δ p) +

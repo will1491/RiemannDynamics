@@ -1601,7 +1601,7 @@ is extracted by the normal-families principle for harmonic functions. -/
 omit [IsManifold 𝓘(ℂ) ω M] in
 /-- The complement of two disjoint closed coordinate disks in a connected
 surface is connected. -/
-theorem isConnected_two_coordDisk_compl [T2Space M] [ConnectedSpace M]
+theorem isConnected_two_coordDisk_compl
     (D₁ D₂ : CoordDisk M)
     (hdisj : Disjoint D₁.closedCarrier D₂.closedCarrier) :
     IsConnected ((D₁.closedCarrier ∪ D₂.closedCarrier)ᶜ : Set M) := by
@@ -2143,10 +2143,11 @@ theorem exists_harnack_chain_const {Ω : Set M} (hΩ : IsOpen Ω)
     mul_le_mul_of_nonneg_right h8 hy0
   nlinarith [h1, h2, h7, h9]
 
+set_option maxHeartbeats 400000 in
 -- The heartbeat limit is raised because four analytic bricks (chart transfer,
 -- Poisson-kernel Lipschitz bounds, diagonal extraction, limit harmonicity)
 -- elaborate within a single declaration; each individual step is fast.
-set_option maxHeartbeats 400000 in
+omit [T2Space M] [ConnectedSpace M] in
 /-- **Normal families for harmonic functions**: a locally uniformly bounded
 sequence of harmonic functions on an open set of a second-countable surface
 has a subsequence converging locally uniformly to a harmonic function. -/
@@ -8962,6 +8963,7 @@ theorem exists_bipolarGreen [SecondCountableTopology M] (D₀ : CoordDisk M)
       apply le_of_tendsto (hℓtend x hxp1 hxp2 hxc).abs
       exact Filter.Eventually.of_forall fun n => hGB (φ n) x hx1 hx2
 
+omit [ConnectedSpace M] in
 /-- **The dipole map**: on a simply connected surface the bipolar Green's
 function integrates to a holomorphic map to the sphere with a simple zero at
 `p₁` and a pole at `p₂`, of modulus `e^{−G}` elsewhere. -/

@@ -95,10 +95,10 @@ volume of hyperbolic balls. -/
 noncomputable def mumfordDensityBound (A : ℝ≥0∞) (ε : ℝ) : ℝ :=
   (2 * A / upperBallVolume (ε / 8)).toReal * (ε / 4) + 2 * (ε / 4)
 
+set_option maxHeartbeats 400000 in
 -- The packing proof is a single large elaboration (an IVT chain, a two-to-one covering count
 -- and a `tsum`/`lintegral` exchange over the subgroup index); its typeclass work exceeds the
 -- default heartbeat budget while completing well within twice that budget.
-set_option maxHeartbeats 400000 in
 /-- **Packing bound**: under a systole gap and an area bound, every orbit is
 `mumfordDensityBound A ε`-dense in the upper half plane. A chain of points on the segment
 from `τ` to `σ` at prescribed distances from the orbit carries disjoint balls of radius
