@@ -192,6 +192,8 @@ import RiemannDynamics.Uniformization.HolomorphicEquiv
 import RiemannDynamics.Uniformization.Trichotomy
 import RiemannDynamics.Uniformization.Fuchsian
 import RiemannDynamics.Uniformization.HyperbolicSurface
+import RiemannDynamics.Uniformization.CoverCountable
+import RiemannDynamics.Uniformization.GenusHyperbolic
 import RiemannDynamics.Uniformization.Perron.HarmonicTransfer
 import RiemannDynamics.Uniformization.Perron.Myrberg
 import RiemannDynamics.Uniformization.Perron.PathCover
@@ -205,11 +207,14 @@ import RiemannDynamics.Surface.GenusSurface
 import RiemannDynamics.Surface.MappingClassGroup
 import RiemannDynamics.Surface.Orientation
 import RiemannDynamics.Surface.Pi1
+import RiemannDynamics.Surface.WindingFunctionals
 
 import RiemannDynamics.Teichmuller.Beltrami
+import RiemannDynamics.Teichmuller.Covolume
 import RiemannDynamics.Teichmuller.Def
 import RiemannDynamics.Teichmuller.Equivariance
 import RiemannDynamics.Teichmuller.Length
+import RiemannDynamics.Teichmuller.Limit
 import RiemannDynamics.Teichmuller.Marked
 import RiemannDynamics.Teichmuller.Metric
 import RiemannDynamics.Teichmuller.ModAction

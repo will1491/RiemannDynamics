@@ -5,13 +5,14 @@ import Mathlib.Topology.MetricSpace.IsometricSMul
 /-!
 # The moduli group and its isometric action on Teichmüller space
 
-The moduli group `modGroup Γ₀` consists of the normalized symmetric quasiconformal
-self-homeomorphisms of the plane compatible with `Γ₀` on both sides (`F ∘ γ = γ' ∘ F` a.e.
-with `γ, γ'` running through `Γ₀`). It acts on `Teich Γ₀` by pulling back representatives
-along the inverse, `F • [x] = [x.pull F⁻¹]`, where the pulled representative is characterized
-by `(x.pull F).w = x.w ∘ F`. The action is isometric: candidate maps for a pair of pulled
-representatives are literally the candidates for the original pair, reindexed along the real
-line. The orbit space is the moduli space `Moduli Γ₀`.
+The moduli group `modGroup Γ₀` consists of the symmetric quasiconformal self-homeomorphisms
+of the plane compatible with `Γ₀` on both sides (`F ∘ γ = γ' ∘ F` a.e. with `γ, γ'` running
+through `Γ₀`). It acts on `Teich Γ₀` by pulling back representatives along the inverse,
+`F • [x] = [x.pull F⁻¹]`, where the pulled representative is characterized by the
+renormalization `(x.pull F).w = ((x.w ∘ F) − x.w (F 0)) / (x.w (F 1) − x.w (F 0))`, which
+fixes `0` and `1`. The action is isometric: candidate maps for a pair of pulled
+representatives are the candidates for the original pair conjugated by real affine maps and
+reindexed along the real line. The orbit space is the moduli space `Moduli Γ₀`.
 -/
 
 open MeasureTheory
@@ -23,21 +24,19 @@ variable {Γ₀ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
 
 /-! ## The moduli group -/
 
-/-- The carrier of the moduli group: quasiconformal, conjugation-symmetric, normalized plane
+/-- The carrier of the moduli group: quasiconformal, conjugation-symmetric plane
 homeomorphisms compatible with `Γ₀` on both sides. -/
 def modGroupCarrier (Γ₀ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)) :
     Set (ℂ ≃ₜ ℂ) :=
   {F | (∃ K : ℝ, IsQCGeometric (⇑F) K)
     ∧ (∀ z : ℂ, F (starRingEnd ℂ z) = starRingEnd ℂ (F z))
-    ∧ F 0 = 0 ∧ F 1 = 1
     ∧ (∀ γ ∈ Γ₀, ∃ γ' ∈ Γ₀, ∀ᵐ z : ℂ, F (moebiusMap γ z) = moebiusMap γ' (F z))
     ∧ (∀ γ' ∈ Γ₀, ∃ γ ∈ Γ₀, ∀ᵐ z : ℂ, F (moebiusMap γ z) = moebiusMap γ' (F z))}
 
 /-- The identity homeomorphism belongs to the moduli carrier. -/
 theorem one_mem_modGroupCarrier (Γ₀ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)) :
     (1 : ℂ ≃ₜ ℂ) ∈ modGroupCarrier Γ₀ := by
-  refine ⟨⟨BeltramiCoeff.zero.K, isQCAnalytic_id.isQCGeometric_K⟩, fun z => rfl, rfl, rfl,
-    ?_, ?_⟩
+  refine ⟨⟨BeltramiCoeff.zero.K, isQCAnalytic_id.isQCGeometric_K⟩, fun z => rfl, ?_, ?_⟩
   · exact fun γ hγ => ⟨γ, hγ, Filter.Eventually.of_forall fun z => rfl⟩
   · exact fun γ' hγ' => ⟨γ', hγ', Filter.Eventually.of_forall fun z => rfl⟩
 
@@ -46,8 +45,8 @@ compatibility clauses chain, pulling null sets back through Möbius maps and qua
 inverses. -/
 theorem mul_mem_modGroupCarrier {F G : ℂ ≃ₜ ℂ} (hF : F ∈ modGroupCarrier Γ₀)
     (hG : G ∈ modGroupCarrier Γ₀) : F * G ∈ modGroupCarrier Γ₀ := by
-  obtain ⟨⟨KF, hKF⟩, hsymF, hF0, hF1, hF5, hF6⟩ := hF
-  obtain ⟨⟨KG, hKG⟩, hsymG, hG0, hG1, hG5, hG6⟩ := hG
+  obtain ⟨⟨KF, hKF⟩, hsymF, hF5, hF6⟩ := hF
+  obtain ⟨⟨KG, hKG⟩, hsymG, hG5, hG6⟩ := hG
   -- preimages of null sets under `G` are null, through the quasiconformal inverse
   have hGpre : ∀ N : Set ℂ, volume N = 0 → volume (⇑G ⁻¹' N) = 0 := by
     intro N hN
@@ -66,16 +65,12 @@ theorem mul_mem_modGroupCarrier {F G : ℂ ≃ₜ ℂ} (hF : F ∈ modGroupCarri
         have happ := (IsHomeomorph.homeomorph (⇑G) hKG.2.1.isHomeomorph).symm_apply_apply w
         rwa [IsHomeomorph.homeomorph_apply] at happ
     rwa [hset] at h
-  refine ⟨⟨KF * KG, hKF.comp hKG⟩, ?_, ?_, ?_, ?_, ?_⟩
+  refine ⟨⟨KF * KG, hKF.comp hKG⟩, ?_, ?_, ?_⟩
   · intro z
     calc (F * G) (starRingEnd ℂ z) = F (G (starRingEnd ℂ z)) := rfl
       _ = F (starRingEnd ℂ (G z)) := by rw [hsymG z]
       _ = starRingEnd ℂ (F (G z)) := hsymF (G z)
       _ = starRingEnd ℂ ((F * G) z) := rfl
-  · calc (F * G) 0 = F (G 0) := rfl
-      _ = 0 := by rw [hG0, hF0]
-  · calc (F * G) 1 = F (G 1) := rfl
-      _ = 1 := by rw [hG1, hF1]
   · intro γ hγ
     obtain ⟨γ', hγ'm, hae1⟩ := hG5 γ hγ
     obtain ⟨γ'', hγ''m, hae2⟩ := hF5 γ' hγ'm
@@ -104,14 +99,14 @@ theorem mul_mem_modGroupCarrier {F G : ℂ ≃ₜ ℂ} (hF : F ∈ modGroupCarri
 /-- The moduli carrier is closed under inversion: the two-sided compatibility clauses swap. -/
 theorem inv_mem_modGroupCarrier {F : ℂ ≃ₜ ℂ} (hF : F ∈ modGroupCarrier Γ₀) :
     F⁻¹ ∈ modGroupCarrier Γ₀ := by
-  obtain ⟨⟨K, hK⟩, hsymF, hF0, hF1, hF5, hF6⟩ := hF
+  obtain ⟨⟨K, hK⟩, hsymF, hF5, hF6⟩ := hF
   -- images of null sets under `F` are null: the forward Lusin condition (N)
   have hFimg : ∀ N : Set ℂ, volume N = 0 → ∀ᵐ w : ℂ, w ∉ ⇑F '' N := by
     intro N hN
     rw [ae_iff]
     refine measure_mono_null (fun w hw => ?_) (hK.lusinN N hN)
     simpa using hw
-  refine ⟨⟨K, ?_⟩, ?_, ?_, ?_, ?_, ?_⟩
+  refine ⟨⟨K, ?_⟩, ?_, ?_, ?_⟩
   · have hfun : ⇑(F⁻¹) = ⇑(IsHomeomorph.homeomorph (⇑F) hK.2.1.isHomeomorph).symm := by
       funext w
       have h1 := (IsHomeomorph.homeomorph (⇑F) hK.2.1.isHomeomorph).apply_symm_apply w
@@ -125,10 +120,6 @@ theorem inv_mem_modGroupCarrier {F : ℂ ≃ₜ ℂ} (hF : F ∈ modGroupCarrier
     simp only [Homeomorph.inv_apply]
     apply F.injective
     rw [F.apply_symm_apply, hsymF (F.symm z), F.apply_symm_apply]
-  · simp only [Homeomorph.inv_apply]
-    exact F.symm_apply_eq.mpr hF0.symm
-  · simp only [Homeomorph.inv_apply]
-    exact F.symm_apply_eq.mpr hF1.symm
   · intro γ hγ
     obtain ⟨δ, hδm, hae⟩ := hF6 γ hγ
     refine ⟨δ, hδm, ?_⟩
@@ -154,9 +145,8 @@ theorem inv_mem_modGroupCarrier {F : ℂ ≃ₜ ℂ} (hF : F ∈ modGroupCarrier
     simp only [Homeomorph.inv_apply]
     rw [← hzid, F.symm_apply_apply]
 
-/-- The **moduli group** over the base `Γ₀`: normalized symmetric quasiconformal plane
-homeomorphisms compatible with `Γ₀` on both sides, a subgroup of the group of plane
-self-homeomorphisms. -/
+/-- The **moduli group** over the base `Γ₀`: symmetric quasiconformal plane homeomorphisms
+compatible with `Γ₀` on both sides, a subgroup of the group of plane self-homeomorphisms. -/
 def modGroup (Γ₀ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)) :
     Subgroup (ℂ ≃ₜ ℂ) where
   carrier := modGroupCarrier Γ₀
@@ -174,7 +164,7 @@ theorem modGroup_equivariant_offPole {F : ℂ ≃ₜ ℂ} (hF : F ∈ modGroup �
     {γ γ' : Matrix.SpecialLinearGroup (Fin 2) ℝ}
     (hae : ∀ᵐ z : ℂ, F (moebiusMap γ z) = moebiusMap γ' (F z)) :
     ∀ z : ℂ, moebiusDenom γ z ≠ 0 → F (moebiusMap γ z) = moebiusMap γ' (F z) := by
-  obtain ⟨⟨K, hK⟩, -, -, -, -, -⟩ := hF
+  obtain ⟨⟨K, hK⟩, -, -, -⟩ := hF
   have hFc : Continuous (⇑F) := hK.2.1.isHomeomorph.continuous
   have hdet' : (γ' 0 0 : ℂ) * (γ' 1 1 : ℂ) - (γ' 0 1 : ℂ) * (γ' 1 0 : ℂ) = 1 := by
     have h := Matrix.SpecialLinearGroup.det_coe γ'
@@ -249,17 +239,26 @@ theorem modGroup_real_im {F : ℂ ≃ₜ ℂ} (hF : F ∈ modGroup Γ₀) (t : �
     (F (t : ℂ)).im = 0 := by
   exact realLine_im_eq_zero hF.2.1 t
 
-/-- The real trace of a moduli-group element is strictly increasing. -/
+/-- The real trace of a moduli-group element is strictly monotone in one of the two
+directions: it is a continuous injection of the real line into itself. -/
 theorem modGroup_real_strictMono {F : ℂ ≃ₜ ℂ} (hF : F ∈ modGroup Γ₀) :
-    StrictMono fun t : ℝ => (F (t : ℂ)).re := by
-  obtain ⟨⟨K, hK⟩, hsymF, hF0, hF1, -, -⟩ := hF
-  obtain ⟨b, -, hFb⟩ := isQCAnalytic_of_isQCGeometric hK.1 hK
-  exact realLine_strictMono hFb hF0 hF1 hsymF
+    StrictMono (fun t : ℝ => (F (t : ℂ)).re)
+      ∨ StrictAnti (fun t : ℝ => (F (t : ℂ)).re) := by
+  have hcont : Continuous fun t : ℝ => (F (t : ℂ)).re :=
+    Complex.continuous_re.comp (F.continuous.comp Complex.continuous_ofReal)
+  have hinj : Function.Injective fun t : ℝ => (F (t : ℂ)).re := by
+    intro s t hst
+    have him : (F (s : ℂ)).im = (F (t : ℂ)).im := by
+      rw [modGroup_real_im hF s, modGroup_real_im hF t]
+    have hre : (F (s : ℂ)).re = (F (t : ℂ)).re := hst
+    have hFeq : F (s : ℂ) = F (t : ℂ) := Complex.ext hre him
+    exact_mod_cast F.injective hFeq
+  exact hcont.strictMono_of_inj hinj
 
 /-- The real trace of a moduli-group element is onto the real line. -/
 theorem modGroup_real_surjective {F : ℂ ≃ₜ ℂ} (hF : F ∈ modGroup Γ₀) :
     Function.Surjective fun t : ℝ => (F (t : ℂ)).re := by
-  obtain ⟨⟨K, hK⟩, hsymF, hF0, hF1, -, -⟩ := hF
+  obtain ⟨⟨K, hK⟩, hsymF, -, -⟩ := hF
   obtain ⟨b, -, hFb⟩ := isQCAnalytic_of_isQCGeometric hK.1 hK
   intro s
   obtain ⟨z, hz⟩ := hFb.1.1.bijective.surjective ((s : ℝ) : ℂ)
@@ -502,7 +501,7 @@ representative: symmetric by the symmetry clauses, invariant by the compatibilit
 the equivariance of `x.w`. -/
 theorem exists_pull_rep (x : TeichRep Γ₀) (F : ℂ ≃ₜ ℂ) (hF : F ∈ modGroup Γ₀) :
     ∃ y : TeichRep Γ₀, IsQCAnalytic (x.w ∘ ⇑F) y.b := by
-  obtain ⟨⟨K, hK⟩, hsymF, hF0, hF1, hF5, hF6⟩ := hF
+  obtain ⟨⟨K, hK⟩, hsymF, hF5, hF6⟩ := hF
   obtain ⟨bF, -, hFqc⟩ := isQCAnalytic_of_isQCGeometric hK.1 hK
   obtain ⟨bc, -, hbc⟩ := exists_isQCAnalytic_comp x.w_isQCAnalytic hFqc
   -- symmetry: `conj ∘ (w ∘ F) ∘ conj = w ∘ F`, so the coefficient equals its reflection a.e.
@@ -565,18 +564,31 @@ theorem TeichRep.pull_isQCAnalytic (x : TeichRep Γ₀) (F : ℂ ≃ₜ ℂ)
     (hF : F ∈ modGroup Γ₀) : IsQCAnalytic (x.w ∘ ⇑F) (x.pull F hF).b :=
   (exists_pull_rep x F hF).choose_spec
 
-/-- The normalized solution of the pulled representative is `x.w ∘ F`: the composition is
-quasiconformal with the pulled coefficient and fixes `0` and `1`. -/
-theorem TeichRep.pull_w (x : TeichRep Γ₀) (F : ℂ ≃ₜ ℂ) (hF : F ∈ modGroup Γ₀) :
-    (x.pull F hF).w = x.w ∘ ⇑F := by
-  have hqc := x.pull_isQCAnalytic F hF
-  have h0 : (x.w ∘ ⇑F) 0 = 0 := by
-    simp only [Function.comp_apply]
-    rw [hF.2.2.1, x.w_zero]
-  have h1 : (x.w ∘ ⇑F) 1 = 1 := by
-    simp only [Function.comp_apply]
-    rw [hF.2.2.2.1, x.w_one]
-  exact ((x.pull F hF).w_unique hqc h0 h1).symm
+/-- The normalized solution of the pulled representative renormalizes `x.w ∘ F` by the real
+affine map matching its values at `0` and `1`: the renormalized composite is quasiconformal
+with the pulled coefficient, and it fixes `0` and `1`. The denominator is a nonzero real
+number, as `x.w ∘ F` is injective and carries the real line into itself. -/
+theorem TeichRep.pull_w' (x : TeichRep Γ₀) (F : ℂ ≃ₜ ℂ) (hF : F ∈ modGroup Γ₀) :
+    (x.pull F hF).w
+      = fun z => (x.w (F z) - x.w (F 0)) / (x.w (F 1) - x.w (F 0)) := by
+  have hden : x.w (F 1) - x.w (F 0) ≠ 0 :=
+    sub_ne_zero.mpr fun hcon => one_ne_zero (F.injective (x.w_injective hcon))
+  have haff : IsQCAnalytic (fun z => (x.w (F 1) - x.w (F 0))⁻¹ * (x.w ∘ ⇑F) z
+      + -((x.w (F 1) - x.w (F 0))⁻¹ * x.w (F 0))) (x.pull F hF).b :=
+    (x.pull_isQCAnalytic F hF).affine_postcomp (inv_ne_zero hden)
+      (-((x.w (F 1) - x.w (F 0))⁻¹ * x.w (F 0)))
+  have hfun : (fun z => (x.w (F 1) - x.w (F 0))⁻¹ * (x.w ∘ ⇑F) z
+        + -((x.w (F 1) - x.w (F 0))⁻¹ * x.w (F 0)))
+      = fun z => (x.w (F z) - x.w (F 0)) / (x.w (F 1) - x.w (F 0)) := by
+    funext z
+    simp only [Function.comp_apply, div_eq_mul_inv]
+    ring
+  rw [hfun] at haff
+  have h0 : (fun z => (x.w (F z) - x.w (F 0)) / (x.w (F 1) - x.w (F 0))) 0 = 0 := by
+    simp only [sub_self, zero_div]
+  have h1 : (fun z => (x.w (F z) - x.w (F 0)) / (x.w (F 1) - x.w (F 0))) 1 = 1 :=
+    div_self hden
+  exact ((x.pull F hF).w_unique haff h0 h1).symm
 
 /-! ## The action on Teichmüller space -/
 
@@ -588,15 +600,23 @@ theorem pull_mk_congr (F : ℂ ≃ₜ ℂ) (hF : F ∈ modGroup Γ₀) :
         = SeparationQuotient.mk (y.pull F hF) := by
   intro x y hxy
   have hb : ∀ t : ℝ, x.w t = y.w t := inseparable_iff_boundary_eq.mp hxy
+  have hreal : ∀ s : ℝ, x.w (F (s : ℂ)) = y.w (F (s : ℂ)) := by
+    intro s
+    have him : (F (s : ℂ)).im = 0 := modGroup_real_im hF s
+    have heq : (((F (s : ℂ)).re : ℝ) : ℂ) = F (s : ℂ) :=
+      Complex.ext (by simp) (by simp [him])
+    rw [← heq]
+    exact hb ((F (s : ℂ)).re)
+  have h0 : x.w (F 0) = y.w (F 0) := by
+    have h := hreal 0
+    rwa [Complex.ofReal_zero] at h
+  have h1 : x.w (F 1) = y.w (F 1) := by
+    have h := hreal 1
+    rwa [Complex.ofReal_one] at h
   rw [Teich.mk_eq_mk_iff_boundary]
   intro t
-  rw [x.pull_w F hF, y.pull_w F hF]
-  simp only [Function.comp_apply]
-  have him : (F (t : ℂ)).im = 0 := modGroup_real_im hF t
-  have heq : (((F (t : ℂ)).re : ℝ) : ℂ) = F (t : ℂ) :=
-    Complex.ext (by simp) (by simp [him])
-  rw [← heq]
-  exact hb ((F (t : ℂ)).re)
+  rw [x.pull_w' F hF, y.pull_w' F hF]
+  simp only [hreal t, h0, h1]
 
 /-- The left action of the moduli group on Teichmüller space: `F` acts by pulling back
 representatives along `F⁻¹`. -/
@@ -606,18 +626,19 @@ noncomputable def Teich.modSMul (F : modGroup Γ₀) (ξ : Teich Γ₀) : Teich 
       (SeparationQuotient.mk (x.pull (↑(F⁻¹)) (F⁻¹).2) : Teich Γ₀))
     (pull_mk_congr (↑(F⁻¹)) (F⁻¹).2) ξ
 
-/-- The identity of the moduli group acts trivially: `x.w ∘ id = x.w`. -/
+/-- The identity of the moduli group acts trivially: the renormalization of `x.w` at its
+values `x.w 0 = 0` and `x.w 1 = 1` is `x.w` itself. -/
 theorem Teich.modSMul_one (ξ : Teich Γ₀) : Teich.modSMul 1 ξ = ξ := by
   obtain ⟨x, rfl⟩ := SeparationQuotient.surjective_mk ξ
   unfold Teich.modSMul
   rw [SeparationQuotient.lift_mk]
   refine Teich.mk_eq_mk_iff_boundary.mpr fun t => ?_
-  rw [TeichRep.pull_w]
-  simp only [Function.comp_apply]
-  have h1 : (↑((1 : modGroup Γ₀)⁻¹) : ℂ ≃ₜ ℂ) (t : ℂ) = (t : ℂ) := by
+  rw [TeichRep.pull_w']
+  have h1 : ∀ z : ℂ, (↑((1 : modGroup Γ₀)⁻¹) : ℂ ≃ₜ ℂ) z = z := by
+    intro z
     rw [inv_one]
     rfl
-  rw [h1]
+  simp only [h1, x.w_zero, x.w_one, sub_zero, div_one]
 
 /-- Pull-by-inverse is a left action: `(F G)⁻¹ = G⁻¹ F⁻¹` composes contravariantly with the
 contravariant pullback. -/
@@ -627,13 +648,25 @@ theorem Teich.modSMul_mul (F G : modGroup Γ₀) (ξ : Teich Γ₀) :
   unfold Teich.modSMul
   rw [SeparationQuotient.lift_mk, SeparationQuotient.lift_mk, SeparationQuotient.lift_mk]
   refine Teich.mk_eq_mk_iff_boundary.mpr fun t => ?_
-  rw [TeichRep.pull_w, TeichRep.pull_w, TeichRep.pull_w]
-  simp only [Function.comp_apply]
-  have h1 : (↑((F * G)⁻¹) : ℂ ≃ₜ ℂ) (t : ℂ)
-      = (↑(G⁻¹) : ℂ ≃ₜ ℂ) ((↑(F⁻¹) : ℂ ≃ₜ ℂ) (t : ℂ)) := by
+  rw [TeichRep.pull_w', TeichRep.pull_w', TeichRep.pull_w']
+  have h1 : ∀ z : ℂ, (↑((F * G)⁻¹) : ℂ ≃ₜ ℂ) z
+      = (↑(G⁻¹) : ℂ ≃ₜ ℂ) ((↑(F⁻¹) : ℂ ≃ₜ ℂ) z) := by
+    intro z
     rw [mul_inv_rev]
     rfl
-  rw [h1]
+  simp only [h1]
+  have hxinj := x.w_injective
+  have hqp : x.w ((↑(G⁻¹) : ℂ ≃ₜ ℂ) 1) - x.w ((↑(G⁻¹) : ℂ ≃ₜ ℂ) 0) ≠ 0 := by
+    refine sub_ne_zero.mpr fun hcon => ?_
+    exact one_ne_zero ((↑(G⁻¹) : ℂ ≃ₜ ℂ).injective (hxinj hcon))
+  have hcb : x.w ((↑(G⁻¹) : ℂ ≃ₜ ℂ) ((↑(F⁻¹) : ℂ ≃ₜ ℂ) 1))
+      - x.w ((↑(G⁻¹) : ℂ ≃ₜ ℂ) ((↑(F⁻¹) : ℂ ≃ₜ ℂ) 0)) ≠ 0 := by
+    refine sub_ne_zero.mpr fun hcon => ?_
+    exact one_ne_zero
+      ((↑(F⁻¹) : ℂ ≃ₜ ℂ).injective ((↑(G⁻¹) : ℂ ≃ₜ ℂ).injective (hxinj hcon)))
+  rw [div_sub_div_same, div_sub_div_same, sub_sub_sub_cancel_right,
+    sub_sub_sub_cancel_right, div_div_div_cancel_right₀]
+  exact hqp
 
 /-- The moduli group acts on Teichmüller space. -/
 noncomputable instance : MulAction (modGroup Γ₀) (Teich Γ₀) where
@@ -649,33 +682,64 @@ theorem Teich.smul_mk (F : modGroup Γ₀) (x : TeichRep Γ₀) :
 /-! ## Isometry of the action -/
 
 /-- Pulling back both representatives along a moduli-group element does not change the
-dilatation set: candidates are reindexed along the real line by the boundary values of `F`. -/
+dilatation set: candidates are conjugated by the real affine renormalizations of the two
+pullbacks and reindexed along the real line by the boundary values of `F`; real affine
+conjugation preserves the dilatation. -/
 theorem dilatationSet_pull (F : ℂ ≃ₜ ℂ) (hF : F ∈ modGroup Γ₀) (x y : TeichRep Γ₀) :
     dilatationSet (x.pull F hF) (y.pull F hF) = dilatationSet x y := by
-  have hreal : ∀ t : ℝ, (((F (t : ℂ)).re : ℝ) : ℂ) = F (t : ℂ) := by
-    intro t
-    have him : (F (t : ℂ)).im = 0 := modGroup_real_im hF t
-    exact Complex.ext (by simp) (by simp [him])
+  have hdenx : x.w (F 1) - x.w (F 0) ≠ 0 :=
+    sub_ne_zero.mpr fun hcon => one_ne_zero (F.injective (x.w_injective hcon))
+  have hdeny : y.w (F 1) - y.w (F 0) ≠ 0 :=
+    sub_ne_zero.mpr fun hcon => one_ne_zero (F.injective (y.w_injective hcon))
+  have hpwx := TeichRep.pull_w' x F hF
+  have hpwy := TeichRep.pull_w' y F hF
+  have hFr : ∀ t : ℝ, (((F (t : ℂ)).re : ℝ) : ℂ) = F (t : ℂ) := fun t =>
+    Complex.ext (by simp) (by simp [modGroup_real_im hF t])
+  have haff : ∀ u c d : ℂ, d⁻¹ * u + -(d⁻¹ * c) = (u - c) / d := by
+    intro u c d
+    rw [div_eq_mul_inv]
+    ring
+  have hinvaff : ∀ u c d : ℂ, d ≠ 0 → d * ((u - c) / d) + c = u := by
+    intro u c d hd
+    field_simp
+    ring
   ext K
+  simp only [dilatationSet, Set.mem_setOf_eq]
   constructor
-  · rintro ⟨G, hG, hb⟩
-    refine ⟨G, hG, fun s => ?_⟩
-    obtain ⟨t, ht⟩ := modGroup_real_surjective hF s
-    have ht' : (F (t : ℂ)).re = s := ht
-    have hFt : F (t : ℂ) = ((s : ℝ) : ℂ) := by
-      rw [← ht']
-      exact (hreal t).symm
-    have hbt := hb t
-    rw [x.pull_w F hF, y.pull_w F hF] at hbt
-    simp only [Function.comp_apply] at hbt
-    rw [hFt] at hbt
-    exact hbt
-  · rintro ⟨G, hG, hb⟩
-    refine ⟨G, hG, fun t => ?_⟩
-    rw [x.pull_w F hF, y.pull_w F hF]
-    simp only [Function.comp_apply]
-    rw [← hreal t]
-    exact hb ((F (t : ℂ)).re)
+  · rintro ⟨G, hG, hGb⟩
+    refine ⟨affineMap (x.w (F 1) - x.w (F 0)) (x.w (F 0)) ∘ (G ∘ affineMap
+        (y.w (F 1) - y.w (F 0))⁻¹ (-((y.w (F 1) - y.w (F 0))⁻¹ * y.w (F 0)))),
+      isQCGeometric_affine_comp (isQCGeometric_comp_affine hG (inv_ne_zero hdeny) _) hdenx,
+      fun t => ?_⟩
+    obtain ⟨s, hs0⟩ := modGroup_real_surjective hF t
+    have hs : (F (s : ℂ)).re = t := hs0
+    have hFs : F (s : ℂ) = (t : ℂ) := by rw [← hFr s, hs]
+    rw [← hFs]
+    simp only [Function.comp_apply, affineMap_apply]
+    rw [haff (y.w (F (s : ℂ))) (y.w (F 0)) (y.w (F 1) - y.w (F 0))]
+    have hpy : (y.pull F hF).w (s : ℂ)
+        = (y.w (F (s : ℂ)) - y.w (F 0)) / (y.w (F 1) - y.w (F 0)) := congrFun hpwy (s : ℂ)
+    have hpx : (x.pull F hF).w (s : ℂ)
+        = (x.w (F (s : ℂ)) - x.w (F 0)) / (x.w (F 1) - x.w (F 0)) := congrFun hpwx (s : ℂ)
+    rw [← hpy, hGb s, hpx]
+    exact hinvaff (x.w (F (s : ℂ))) (x.w (F 0)) (x.w (F 1) - x.w (F 0)) hdenx
+  · rintro ⟨G, hG, hGb⟩
+    refine ⟨affineMap (x.w (F 1) - x.w (F 0))⁻¹ (-((x.w (F 1) - x.w (F 0))⁻¹ * x.w (F 0)))
+        ∘ (G ∘ affineMap (y.w (F 1) - y.w (F 0)) (y.w (F 0))),
+      isQCGeometric_affine_comp (isQCGeometric_comp_affine hG hdeny _) (inv_ne_zero hdenx),
+      fun t => ?_⟩
+    have hpy : (y.pull F hF).w (t : ℂ)
+        = (y.w (F (t : ℂ)) - y.w (F 0)) / (y.w (F 1) - y.w (F 0)) := congrFun hpwy (t : ℂ)
+    have hpx : (x.pull F hF).w (t : ℂ)
+        = (x.w (F (t : ℂ)) - x.w (F 0)) / (x.w (F 1) - x.w (F 0)) := congrFun hpwx (t : ℂ)
+    rw [hpy, hpx]
+    simp only [Function.comp_apply, affineMap_apply]
+    rw [hinvaff (y.w (F (t : ℂ))) (y.w (F 0)) (y.w (F 1) - y.w (F 0)) hdeny]
+    have hGF : G (y.w (F (t : ℂ))) = x.w (F (t : ℂ)) := by
+      rw [← hFr t]
+      exact hGb ((F (t : ℂ)).re)
+    rw [hGF]
+    exact haff (x.w (F (t : ℂ))) (x.w (F 0)) (x.w (F 1) - x.w (F 0))
 
 /-- Each moduli-group element acts isometrically on Teichmüller space. -/
 theorem Teich.isometry_smul_mod (F : modGroup Γ₀) :

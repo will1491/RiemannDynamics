@@ -5,8 +5,9 @@ import Mathlib.MeasureTheory.Group.FundamentalDomain
 # The Mumford compactness criterion: generator subconvergence
 
 For a sequence of Teichmüller representatives whose Fuchsian groups have systole at least
-`ε > 0` and admit fundamental domains of hyperbolic area at most `A < ∞`, finite generating
-tuples subconverge after conjugation to a tuple generating a Fuchsian group in which every
+`ε > 0` and admit measurable covering sets of hyperbolic volume at most `A < ∞`, finite
+generating tuples subconverge after conjugation to a tuple generating a Fuchsian group in
+which every
 nontrivially-acting element keeps the trace gap `|tr| ≥ 2 cosh (ε/2)`, acts freely, and which
 is properly discontinuous (`mumford_generator_subconvergence`).
 
@@ -33,12 +34,13 @@ variable {Γ₀ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
 
 /-! ## The area hypothesis -/
 
-/-- A Fuchsian group **has area bound `A`** when it admits a measurable fundamental domain in
-the upper half plane of hyperbolic volume at most `A`. For the Fuchsian model of a compact
-genus-`g` surface the Gauss–Bonnet value is `A = 4π(g−1)`. -/
+/-- A Fuchsian group **has area bound `A`** when some measurable set of hyperbolic volume at
+most `A` meets almost every orbit: `F` is a measurable covering set for the action, so the
+group's covolume is at most `A`. For the Fuchsian model of a compact genus-`g` surface the
+Gauss–Bonnet value is `A = 4π(g−1)`. -/
 def HasAreaBound (Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)) (A : ℝ≥0∞) : Prop :=
   ∃ F : Set UpperHalfPlane, MeasurableSet F ∧
-    MeasureTheory.IsFundamentalDomain Γ F MeasureTheory.volume ∧ volume F ≤ A
+    (∀ᵐ τ ∂volume, ∃ γ : Γ, γ • τ ∈ F) ∧ volume F ≤ A
 
 /-! ## Countability, injectivity radius, packing -/
 
@@ -102,7 +104,8 @@ set_option maxHeartbeats 400000 in
 /-- **Packing bound**: under a systole gap and an area bound, every orbit is
 `mumfordDensityBound A ε`-dense in the upper half plane. A chain of points on the segment
 from `τ` to `σ` at prescribed distances from the orbit carries disjoint balls of radius
-`ε/8`, whose translates pack the fundamental domain, bounding the chain length. -/
+`ε/8`, whose translates pack the covering set with multiplicity two, bounding the chain
+length. -/
 theorem orbit_infDist_le_of_hasAreaBound
     {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)} (hΓ : IsFuchsianGroup Γ)
     {ε : ℝ} (hε : 0 < ε)
@@ -119,7 +122,7 @@ theorem orbit_infDist_le_of_hasAreaBound
   haveI : Countable Γ := IsFuchsianGroup.countable hΓ
   by_contra hcon
   have hD : mumfordDensityBound A ε < Metric.infDist σ (MulAction.orbit Γ τ) := not_le.mp hcon
-  obtain ⟨F, hFmeas, hFdom, hFvol⟩ := harea
+  obtain ⟨F, hFmeas, hFcov, hFvol⟩ := harea
   obtain ⟨O, hOdef⟩ : ∃ O : Set UpperHalfPlane, O = MulAction.orbit Γ τ := ⟨_, rfl⟩
   rw [← hOdef] at hD
   have hτO : τ ∈ O := by
@@ -389,9 +392,33 @@ theorem orbit_infDist_le_of_hasAreaBound
           = ∑' _η : ↥Γ, (0 : ℝ≥0∞) := tsum_congr hzero
         _ = 0 := tsum_zero
         _ ≤ (2 : ℝ≥0∞) := zero_le _
-  -- mass count: the region packs into two copies of the fundamental domain
+  -- mass count: the region packs into two copies of the covering set
   have hcount : volume t ≤ 2 * volume F := by
-    calc volume t = ∑' η : ↥Γ, volume (η • t ∩ F) := hFdom.measure_eq_tsum t
+    have hae : ∀ᵐ τ : UpperHalfPlane, τ ∈ ⋃ η : ↥Γ, η • F := by
+      filter_upwards [hFcov] with τ hτ
+      obtain ⟨γ, hγ⟩ := hτ
+      exact Set.mem_iUnion.mpr ⟨γ⁻¹, Set.mem_smul_set.mpr ⟨γ • τ, hγ, inv_smul_smul γ τ⟩⟩
+    have hUc : volume ((⋃ η : ↥Γ, η • F)ᶜ) = 0 := by
+      rw [ae_iff] at hae
+      exact hae
+    have hdiff : volume (t \ ⋃ η : ↥Γ, η • F) = 0 :=
+      measure_mono_null (fun x hx => hx.2) hUc
+    have hle1 : volume t ≤ ∑' η : ↥Γ, volume (t ∩ η • F) := by
+      have h1 : volume t ≤ volume (t ∩ ⋃ η : ↥Γ, η • F) + volume (t \ ⋃ η : ↥Γ, η • F) :=
+        measure_le_inter_add_diff volume t _
+      rw [hdiff, add_zero] at h1
+      refine h1.trans ?_
+      rw [Set.inter_iUnion]
+      exact measure_iUnion_le _
+    have hswap : ∀ η : ↥Γ, volume (t ∩ η • F) = volume (η⁻¹ • t ∩ F) := by
+      intro η
+      have h1 : η⁻¹ • (t ∩ η • F) = η⁻¹ • t ∩ F := by
+        rw [Set.smul_set_inter, inv_smul_smul]
+      rw [← h1, measure_smul]
+    calc volume t ≤ ∑' η : ↥Γ, volume (t ∩ η • F) := hle1
+      _ = ∑' η : ↥Γ, volume (η⁻¹ • t ∩ F) := tsum_congr hswap
+      _ = ∑' η : ↥Γ, volume (η • t ∩ F) :=
+          (Equiv.inv ↥Γ).tsum_eq fun η => volume (η • t ∩ F)
       _ = ∑' η : ↥Γ, ∫⁻ x in F, (η • t).indicator (1 : UpperHalfPlane → ℝ≥0∞) x := by
           refine tsum_congr fun η => ?_
           rw [← lintegral_indicator hFmeas, Set.indicator_indicator, Set.inter_comm F,
