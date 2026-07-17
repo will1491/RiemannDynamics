@@ -413,6 +413,13 @@ theorem TeichRep.w_halfPlane_dichotomy (x : TeichRep Γ₀) :
       linarith
     · exact ⟨z, hpos, rfl⟩
 
+/-- The normalized solution preserves the upper half plane: the strictly increasing
+boundary map together with the almost-everywhere positive Jacobian selects the preserving
+branch of the half-plane dichotomy. -/
+theorem TeichRep.w_mapsTo_upper (x : TeichRep Γ₀) :
+    ∀ z : ℂ, 0 < z.im → 0 < (x.w z).im := by
+  sorry
+
 /-! ## The conjugated Fuchsian group -/
 
 /-- The Fuchsian group of a Teichmüller representative: the image of `Γ₀` under conjugation

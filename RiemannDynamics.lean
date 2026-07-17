@@ -212,10 +212,13 @@ import RiemannDynamics.Surface.WindingFunctionals
 import RiemannDynamics.Teichmuller.Beltrami
 import RiemannDynamics.Teichmuller.Covolume
 import RiemannDynamics.Teichmuller.Def
+import RiemannDynamics.Teichmuller.Dirichlet
 import RiemannDynamics.Teichmuller.Equivariance
+import RiemannDynamics.Teichmuller.Interpolate
 import RiemannDynamics.Teichmuller.Length
 import RiemannDynamics.Teichmuller.Limit
 import RiemannDynamics.Teichmuller.Marked
 import RiemannDynamics.Teichmuller.Metric
 import RiemannDynamics.Teichmuller.ModAction
 import RiemannDynamics.Teichmuller.Mumford
+import RiemannDynamics.Teichmuller.UpperQC
