@@ -1,4 +1,5 @@
 import RiemannDynamics.Teichmuller.Equivariance
+import RiemannDynamics.Surface.Orientation
 
 /-!
 # Teichmüller representatives over an abstract Fuchsian base
@@ -418,7 +419,345 @@ boundary map together with the almost-everywhere positive Jacobian selects the p
 branch of the half-plane dichotomy. -/
 theorem TeichRep.w_mapsTo_upper (x : TeichRep Γ₀) :
     ∀ z : ℂ, 0 < z.im → 0 < (x.w z).im := by
-  sorry
+  rcases x.w_halfPlane_dichotomy with ⟨hpos, -⟩ | ⟨hneg, -⟩
+  · exact hpos
+  · exfalso
+    have hOP : OrientationPreservingHomeo x.w := x.w_isQCAnalytic.1
+    have hhom : IsHomeomorph x.w := hOP.1
+    have hcont : Continuous x.w := hhom.continuous
+    have hinj : Function.Injective x.w := hhom.injective
+    -- the lower half plane goes up
+    have hneg' : ∀ z : ℂ, z.im < 0 → 0 < (x.w z).im := by
+      intro z hz
+      have h1 : 0 < (starRingEnd ℂ z).im := by
+        rw [Complex.conj_im]
+        linarith
+      have h2 : (x.w (starRingEnd ℂ z)).im < 0 := hneg _ h1
+      rw [x.w_conj z, Complex.conj_im] at h2
+      linarith
+    -- winding-number extensionality helper
+    have hwn_ext : ∀ (A B : C(unitInterval, ℂ)) (q : ℂ), (∀ t, A t = B t) →
+        windingNumber A q = windingNumber B q := by
+      intro A B q hAB
+      rw [ContinuousMap.ext hAB]
+    -- the packaged homeomorphism and its plane chart
+    set W : ℂ ≃ₜ ℂ := hhom.homeomorph x.w
+    set E : OpenPartialHomeomorph ℂ ℂ := W.toOpenPartialHomeomorph
+    have hEsrc : E.source = Set.univ := Homeomorph.toOpenPartialHomeomorph_source W
+    -- the self-charted plane has an oriented atlas
+    have hatlas : HasOrientedAtlas ℂ := by
+      intro e1 he1 e2 he2 z hz
+      rw [chartedSpaceSelf_atlas] at he1 he2
+      subst he1
+      subst he2
+      have hEq : Set.EqOn
+          ((OpenPartialHomeomorph.refl ℂ).symm.trans (OpenPartialHomeomorph.refl ℂ)) id
+          Set.univ := fun w _ => rfl
+      have hsrc : ((OpenPartialHomeomorph.refl ℂ).symm.trans
+          (OpenPartialHomeomorph.refl ℂ)).source = Set.univ := by
+        simp
+      exact isOrientationPreservingAt_id hEq isOpen_univ (Set.mem_univ z)
+        (fun w _ => by rw [hsrc]; trivial)
+    -- source of the chart representatives
+    have hhsrc : ∀ p : ℂ, (homeoChartRep W p).source = Set.univ := by
+      intro p
+      unfold homeoChartRep
+      rw [chartAt_self_eq]
+      simp [Homeomorph.toOpenPartialHomeomorph_source]
+    -- a point of differentiability with positive Jacobian
+    obtain ⟨z₀, hdet⟩ := hOP.2.exists
+    have hdiff : DifferentiableAt ℝ x.w z₀ := by
+      by_contra hnd
+      rw [fderiv_zero_of_not_differentiableAt hnd] at hdet
+      simp [ContinuousLinearMap.det] at hdet
+    -- a positive radius whose image circle admits a `+2πi` logarithm lift
+    have hev := (windingOne_iff_det_pos hcont hdiff (ne_of_gt hdet)).mpr hdet
+    have hev' : ∀ᶠ r : ℝ in nhdsWithin 0 (Set.Ioi 0),
+        ((∃ L : ℝ → ℂ, Continuous L ∧
+          (∀ θ : ℝ, Complex.exp (L θ)
+            = x.w (z₀ + (r : ℂ) * Complex.exp ((θ : ℂ) * Complex.I)) - x.w z₀) ∧
+          L (2 * Real.pi) - L 0 = 2 * (Real.pi : ℂ) * Complex.I) ∧ 0 < r) :=
+      hev.and (eventually_mem_nhdsWithin.mono fun r hr => hr)
+    obtain ⟨r₀, ⟨L₀, hL₀c, hL₀e, hL₀incr⟩, hr₀pos⟩ := hev'.exists
+    -- the image circle of radius `r₀` about `z₀` as a loop
+    have hγ₀cont : Continuous fun t : unitInterval => x.w (circleLoop z₀ r₀ t) :=
+      hcont.comp (circleLoop z₀ r₀).continuous
+    set γ₀ : C(unitInterval, ℂ) :=
+      ⟨fun t => x.w (circleLoop z₀ r₀ t), hγ₀cont⟩
+    have hcircν : ∀ t : unitInterval, circleLoop z₀ r₀ t
+        = z₀ + (r₀ : ℝ) * Complex.exp (2 * Real.pi * Complex.I * (t : ℝ)) := fun t => rfl
+    have hγ₀cl : γ₀ 0 = γ₀ 1 := by
+      change x.w (circleLoop z₀ r₀ 0) = x.w (circleLoop z₀ r₀ 1)
+      rw [hcircν 0, hcircν 1]
+      norm_num [Complex.exp_two_pi_mul_I]
+    have hγ₀ne : ∀ t : unitInterval, γ₀ t ≠ x.w z₀ := by
+      intro t heq
+      have h1 : circleLoop z₀ r₀ t = z₀ := hinj heq
+      rw [hcircν t] at h1
+      have h2 : (r₀ : ℂ) * Complex.exp (2 * Real.pi * Complex.I * (t : ℝ)) = 0 := by
+        linear_combination h1
+      rcases mul_eq_zero.mp h2 with h3 | h3
+      · exact (ne_of_gt hr₀pos) (Complex.ofReal_eq_zero.mp h3)
+      · exact Complex.exp_ne_zero _ h3
+    -- the `[0, 2π]` lift reparametrized over the unit interval
+    have hMcont : Continuous fun t : unitInterval => L₀ (2 * Real.pi * (t : ℝ)) :=
+      hL₀c.comp (continuous_const.mul continuous_subtype_val)
+    set M : C(unitInterval, ℂ) :=
+      ⟨fun t => L₀ (2 * Real.pi * (t : ℝ)), hMcont⟩
+    have hM : IsLogLiftOf M (shiftedCurve γ₀ (x.w z₀)) := by
+      intro t
+      have hs : shiftedCurve γ₀ (x.w z₀) t = γ₀ t - x.w z₀ := by
+        simp [shiftedCurve]
+      change Complex.exp (L₀ (2 * Real.pi * (t : ℝ))) = shiftedCurve γ₀ (x.w z₀) t
+      rw [hs, hL₀e (2 * Real.pi * (t : ℝ))]
+      have harg : ((2 * Real.pi * (t : ℝ) : ℝ) : ℂ) * Complex.I
+          = 2 * Real.pi * Complex.I * ((t : ℝ) : ℂ) := by
+        push_cast
+        ring
+      have hpt : z₀ + (r₀ : ℂ) * Complex.exp (((2 * Real.pi * (t : ℝ) : ℝ) : ℂ) * Complex.I)
+          = circleLoop z₀ r₀ t := by
+        rw [hcircν t, harg]
+      rw [hpt]
+      rfl
+    -- the winding number of the image circle about the image centre is one
+    have hspec₀ := windingNumber_spec hγ₀cl hγ₀ne hM
+    have hM1 : M 1 = L₀ (2 * Real.pi) := by
+      change L₀ (2 * Real.pi * (((1 : unitInterval) : ℝ))) = L₀ (2 * Real.pi)
+      norm_num
+    have hM0 : M 0 = L₀ 0 := by
+      change L₀ (2 * Real.pi * (((0 : unitInterval) : ℝ))) = L₀ 0
+      norm_num
+    rw [hM1, hM0, hL₀incr] at hspec₀
+    have hwn₀ : windingNumber γ₀ (x.w z₀) = 1 := by
+      have h2ne : (2 * (Real.pi : ℂ) * Complex.I) ≠ 0 := by
+        simp [Real.pi_ne_zero, Complex.I_ne_zero]
+      have h3 : ((windingNumber γ₀ (x.w z₀) : ℤ) : ℂ) = 1 := by
+        field_simp at hspec₀
+        exact_mod_cast hspec₀.symm
+      exact_mod_cast h3
+    -- orientation preservation at `z₀`, hence at the chart representative
+    have hsub₀ : Metric.closedBall z₀ r₀ ⊆ E.source := by
+      rw [hEsrc]
+      exact Set.subset_univ _
+    have hOPz₀ : IsOrientationPreservingAt E z₀ := by
+      refine ⟨r₀, hr₀pos, hsub₀, ?_⟩
+      unfold windingDegreeAt
+      exact Eq.trans (hwn_ext _ γ₀ (x.w z₀) fun t => rfl) hwn₀
+    have hchart : IsOrientationPreservingAt (homeoChartRep W z₀) (chartAt ℂ z₀ z₀) := by
+      have hEq : Set.EqOn (⇑E) (⇑(homeoChartRep W z₀)) Set.univ := fun w _ => rfl
+      exact (isOrientationPreservingAt_congr hEq isOpen_univ (Set.mem_univ z₀)
+        (fun w _ => by rw [hEsrc]; trivial)
+        (fun w _ => by rw [hhsrc z₀]; trivial)).mp hOPz₀
+    -- global propagation to the origin
+    have hglob := isOrientationPreserving_of_isOrientationPreservingAt_point hatlas W z₀ hchart
+    have h0 : IsOrientationPreservingAt E 0 := by
+      have hEq : Set.EqOn (⇑(homeoChartRep W 0)) (⇑E) Set.univ := fun w _ => rfl
+      exact (isOrientationPreservingAt_congr hEq isOpen_univ (Set.mem_univ 0)
+        (fun w _ => by rw [hhsrc 0]; trivial)
+        (fun w _ => by rw [hEsrc]; trivial)).mp (hglob 0)
+    -- the unit circle about the origin
+    have hγcont : Continuous fun t : unitInterval => x.w (circleLoop 0 1 t) :=
+      hcont.comp (circleLoop 0 1).continuous
+    set γ : C(unitInterval, ℂ) := ⟨fun t => x.w (circleLoop 0 1 t), hγcont⟩
+    have hcirc : ∀ t : unitInterval, circleLoop 0 1 t
+        = Complex.exp (2 * Real.pi * Complex.I * (t : ℝ)) := by
+      intro t
+      have h : circleLoop 0 1 t
+          = 0 + ((1 : ℝ) : ℂ) * Complex.exp (2 * Real.pi * Complex.I * (t : ℝ)) := rfl
+      rw [h]
+      norm_num
+    have him : ∀ t : unitInterval,
+        (circleLoop 0 1 t).im = Real.sin (2 * Real.pi * (t : ℝ)) := by
+      intro t
+      have harg : 2 * (Real.pi : ℂ) * Complex.I * ((t : ℝ) : ℂ)
+          = ((2 * Real.pi * (t : ℝ) : ℝ) : ℂ) * Complex.I := by
+        push_cast
+        ring
+      rw [hcirc t, harg, Complex.exp_ofReal_mul_I_im]
+    have hc0 : circleLoop 0 1 0 = 1 := by
+      rw [hcirc 0]
+      norm_num
+    have hc1 : circleLoop 0 1 1 = 1 := by
+      rw [hcirc 1]
+      have h1 : (((1 : unitInterval) : ℝ) : ℂ) = 1 := by norm_num
+      rw [h1, mul_one, Complex.exp_two_pi_mul_I]
+    have hγcl : γ 0 = γ 1 := by
+      change x.w (circleLoop 0 1 0) = x.w (circleLoop 0 1 1)
+      rw [hc0, hc1]
+    have hγne : ∀ t : unitInterval, γ t ≠ 0 := by
+      intro t heq
+      have h0' : x.w (circleLoop 0 1 t) = x.w 0 := by
+        change x.w (circleLoop 0 1 t) = _ at heq
+        rw [heq, x.w_zero]
+      have h1 := hinj h0'
+      rw [hcirc t] at h1
+      exact Complex.exp_ne_zero _ h1
+    -- the winding number of the image unit circle about the origin is one
+    have hsub1 : Metric.closedBall (0 : ℂ) 1 ⊆ E.source := by
+      rw [hEsrc]
+      exact Set.subset_univ _
+    have hdeg1 := ((isOrientationPreservingAt_iff_forall E 0).mp h0).2 1 one_pos hsub1
+    have hwn1 : windingNumber γ (x.w 0) = 1 := by
+      rw [← hdeg1]
+      unfold windingDegreeAt
+      exact (hwn_ext _ γ (x.w 0) fun t => rfl).symm
+    rw [x.w_zero] at hwn1
+    -- logarithm lift of the image unit circle
+    have hδ : ∀ t : unitInterval, shiftedCurve γ 0 t ≠ 0 := by
+      intro t
+      have hs : shiftedCurve γ 0 t = γ t - 0 := by
+        simp [shiftedCurve]
+      rw [hs, sub_zero]
+      exact hγne t
+    obtain ⟨L, hL⟩ := exists_isLogLiftOf (shiftedCurve γ 0) hδ
+    have hLt : ∀ t : unitInterval, Complex.exp (L t) = γ t := by
+      intro t
+      rw [hL t]
+      simp [shiftedCurve]
+    have him_eq : ∀ t : unitInterval,
+        (γ t).im = Real.exp ((L t).re) * Real.sin ((L t).im) := by
+      intro t
+      rw [← hLt t, Complex.exp_im]
+    -- the lift starts on `2πiℤ` since the curve starts at `1`
+    have hγ0 : γ 0 = 1 := by
+      change x.w (circleLoop 0 1 0) = 1
+      rw [hc0]
+      exact x.w_one
+    have hexpL0 : Complex.exp (L 0) = 1 := (hLt 0).trans hγ0
+    obtain ⟨k, hk⟩ := Complex.exp_eq_one_iff.mp hexpL0
+    have hL0im : (L 0).im = 2 * Real.pi * (k : ℝ) := by
+      rw [hk]
+      simp [Complex.mul_im, Complex.mul_re]
+      ring
+    -- the lift increment is `+2πi`
+    have hspecγ := windingNumber_spec hγcl hγne hL
+    rw [hwn1] at hspecγ
+    have hL1im : (L 1).im = 2 * Real.pi * (k : ℝ) + 2 * Real.pi := by
+      have h := congrArg Complex.im hspecγ
+      simp [Complex.sub_im, Complex.mul_im, Complex.mul_re] at h
+      linarith [hL0im, h]
+    -- the imaginary part of the lift as a real function
+    set φ : ℝ → ℝ := fun s => (L (Set.projIcc (0 : ℝ) 1 zero_le_one s)).im with hφdef
+    have hφcont : Continuous φ :=
+      Complex.continuous_im.comp (L.continuous.comp continuous_projIcc)
+    have hφIcc : ∀ s (hs : s ∈ Set.Icc (0 : ℝ) 1), φ s = (L ⟨s, hs⟩).im := by
+      intro s hs
+      simp only [hφdef]
+      rw [Set.projIcc_of_mem]
+    have hφ0 : φ 0 = 2 * Real.pi * (k : ℝ) := by
+      rw [hφIcc 0 ⟨le_rfl, zero_le_one⟩]
+      exact hL0im
+    have hφ1 : φ 1 = 2 * Real.pi * (k : ℝ) + 2 * Real.pi := by
+      rw [hφIcc 1 ⟨zero_le_one, le_rfl⟩]
+      exact hL1im
+    have hπ := Real.pi_pos
+    -- first intermediate value: the argument passes through `2πk + π`
+    have hmid1 : 2 * Real.pi * (k : ℝ) + Real.pi ∈ Set.Icc (φ 0) (φ 1) := by
+      rw [hφ0, hφ1]
+      constructor <;> linarith
+    obtain ⟨s, hsmem, hφs⟩ :=
+      intermediate_value_Icc zero_le_one hφcont.continuousOn hmid1
+    have hs0 : 0 < s := by
+      rcases lt_or_eq_of_le hsmem.1 with h | h
+      · exact h
+      · exfalso
+        rw [← h] at hφs
+        rw [hφ0] at hφs
+        linarith
+    have hs1 : s < 1 := by
+      rcases lt_or_eq_of_le hsmem.2 with h | h
+      · exact h
+      · exfalso
+        rw [h] at hφs
+        rw [hφ1] at hφs
+        linarith
+    have hsIcc : s ∈ Set.Icc (0 : ℝ) 1 := hsmem
+    -- at that parameter the image point is real
+    have hLsim : (L ⟨s, hsIcc⟩).im = 2 * Real.pi * (k : ℝ) + Real.pi :=
+      (hφIcc s hsIcc).symm.trans hφs
+    have hsin0 : Real.sin (2 * Real.pi * (k : ℝ) + Real.pi) = 0 := by
+      rw [add_comm, mul_comm (2 * Real.pi) (k : ℝ)]
+      rw [show (k : ℝ) * (2 * Real.pi) = (k : ℤ) * (2 * Real.pi) by norm_num]
+      rw [Real.sin_add_int_mul_two_pi, Real.sin_pi]
+    have hγsim : (γ ⟨s, hsIcc⟩).im = 0 := by
+      rw [him_eq ⟨s, hsIcc⟩, hLsim, hsin0, mul_zero]
+    -- the circle parameter is forced to `1/2`
+    have hs_half : s = 1 / 2 := by
+      rcases lt_trichotomy (Real.sin (2 * Real.pi * s)) 0 with hlt | heq0 | hgt
+      · exfalso
+        have h1 : (circleLoop 0 1 ⟨s, hsIcc⟩).im < 0 := by
+          rw [him ⟨s, hsIcc⟩]
+          exact hlt
+        have h2 := hneg' _ h1
+        have h3 : 0 < (γ ⟨s, hsIcc⟩).im := h2
+        linarith [hγsim]
+      · obtain ⟨n, hn⟩ := Real.sin_eq_zero_iff.mp heq0
+        have hn' : (n : ℝ) * Real.pi = 2 * s * Real.pi := by
+          rw [hn]
+          ring
+        have hn2 : (n : ℝ) = 2 * s := mul_right_cancel₀ (ne_of_gt hπ) hn'
+        have hb1 : (0 : ℝ) < (n : ℝ) := by
+          rw [hn2]
+          linarith
+        have hb2 : (n : ℝ) < 2 := by
+          rw [hn2]
+          linarith
+        have hi1 : (0 : ℤ) < n := by exact_mod_cast hb1
+        have hi2 : n < 2 := by exact_mod_cast hb2
+        have hn1 : n = 1 := by omega
+        rw [hn1] at hn2
+        norm_num at hn2
+        linarith
+      · exfalso
+        have h1 : 0 < (circleLoop 0 1 ⟨s, hsIcc⟩).im := by
+          rw [him ⟨s, hsIcc⟩]
+          exact hgt
+        have h2 := hneg _ h1
+        have h3 : (γ ⟨s, hsIcc⟩).im < 0 := h2
+        linarith [hγsim]
+    -- second intermediate value: the argument passes through `2πk + π/2` before `1/2`
+    have hφhalf : φ (1 / 2) = 2 * Real.pi * (k : ℝ) + Real.pi := by
+      rw [← hs_half]
+      exact hφs
+    have hmid2 : 2 * Real.pi * (k : ℝ) + Real.pi / 2 ∈ Set.Icc (φ 0) (φ (1 / 2)) := by
+      rw [hφ0, hφhalf]
+      constructor <;> linarith
+    obtain ⟨s', hs'mem, hφs'⟩ :=
+      intermediate_value_Icc (by norm_num : (0 : ℝ) ≤ 1 / 2) hφcont.continuousOn hmid2
+    have hs'0 : 0 < s' := by
+      rcases lt_or_eq_of_le hs'mem.1 with h | h
+      · exact h
+      · exfalso
+        rw [← h] at hφs'
+        rw [hφ0] at hφs'
+        linarith
+    have hs'half : s' < 1 / 2 := by
+      rcases lt_or_eq_of_le hs'mem.2 with h | h
+      · exact h
+      · exfalso
+        rw [h] at hφs'
+        rw [hφhalf] at hφs'
+        linarith
+    have hs'Icc : s' ∈ Set.Icc (0 : ℝ) 1 := ⟨hs'mem.1, by linarith⟩
+    have hLs'im : (L ⟨s', hs'Icc⟩).im = 2 * Real.pi * (k : ℝ) + Real.pi / 2 := by
+      have h := hφIcc s' hs'Icc
+      rw [← h]
+      exact hφs'
+    have hsin1 : Real.sin (2 * Real.pi * (k : ℝ) + Real.pi / 2) = 1 := by
+      rw [add_comm, mul_comm (2 * Real.pi) (k : ℝ)]
+      rw [show (k : ℝ) * (2 * Real.pi) = (k : ℤ) * (2 * Real.pi) by norm_num]
+      rw [Real.sin_add_int_mul_two_pi, Real.sin_pi_div_two]
+    -- the contradiction: the image of an upper point has positive imaginary part
+    have h1 : 0 < (circleLoop 0 1 ⟨s', hs'Icc⟩).im := by
+      rw [him ⟨s', hs'Icc⟩]
+      exact Real.sin_pos_of_pos_of_lt_pi (by positivity) (by nlinarith)
+    have h2 := hneg _ h1
+    have h3 : (γ ⟨s', hs'Icc⟩).im < 0 := h2
+    have h4 : (γ ⟨s', hs'Icc⟩).im = Real.exp ((L ⟨s', hs'Icc⟩).re) := by
+      rw [him_eq ⟨s', hs'Icc⟩, hLs'im, hsin1, mul_one]
+    have h5 := Real.exp_pos ((L ⟨s', hs'Icc⟩).re)
+    rw [h4] at h3
+    linarith
 
 /-! ## The conjugated Fuchsian group -/
 
