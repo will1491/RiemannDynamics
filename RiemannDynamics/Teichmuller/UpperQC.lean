@@ -136,7 +136,11 @@ theorem exists_equivariant_upper_conjugacy_K_to_one
     ∀ κ : ℝ, 0 < κ → ∀ᶠ n in Filter.atTop, ∃ h hinv : ℂ → ℂ,
       IsQCUpper h hinv κ ∧
       ∀ i, ∀ z : ℂ, 0 < z.im → h (moebiusMap (ρ i) z) = moebiusMap (gens n i) (h z) := by
-  sorry
+  intro κ hκ
+  filter_upwards [exists_developed_interpolation hε Γ hΓ hgap gens hmem ρ hlim hgapρ hccρ κ hκ]
+    with n hn
+  obtain ⟨h, hinv, him, hinvim, hleft, hright, hcont, hinvcont, hSob, hjac, hbelt, hgen⟩ := hn
+  exact ⟨h, hinv, ⟨him, hinvim, hleft, hright, hcont, hinvcont, hSob, hjac, hbelt⟩, hgen⟩
 
 /-! ## The factorization lemma -/
 
@@ -466,6 +470,8 @@ theorem mollify_L2_loc {h : ℂ → ℂ} (hm : Measurable h) (h2 : MemLpLocOn h 
 
 -- Elaborating the `L¹`-error assembly in one declaration needs the raised budget.
 set_option maxHeartbeats 400000 in
+-- The abstract pairing-limit argument chains dominated convergence through the pairing;
+-- the single-declaration elaboration exceeds the default heartbeat budget.
 /-- Stage B2a′ (abstract pairing limit): if `QE m → qe` in `L¹` of the compact support of
 the real test weight `φ`, the frames `U m, V m` are uniformly bounded and converge
 pointwise to `u, v`, then the paired integrals converge. -/
@@ -741,9 +747,12 @@ theorem pairing_tendsto
           funext z
           ring
         rw [h1, MeasureTheory.integral_const_mul]
+
 -- The two nested dominated-convergence passes and the `L¹`-error assembly make this a
 -- long single elaboration; the raised budget is required.
 set_option maxHeartbeats 400000 in
+-- The smooth-composite weak chain rule elaborates a long mollification chain;
+-- the single-declaration elaboration exceeds the default heartbeat budget.
 /-- Stage B2a (X6): weak chain rule for the composition of a smooth compactly supported
 map with a plane quasiconformal map. The weak directional derivative of `G ∘ q` is the
 chain-rule pairing of the classical differential of `G` along `q` with the weak
@@ -1117,6 +1126,8 @@ theorem cov_pairing_bound
 
 -- The `L²`-error assembly and the finiteness bookkeeping need the raised budget.
 set_option maxHeartbeats 400000 in
+-- The frame-convergence limit interchanges two L2 limits against test pairings;
+-- the single-declaration elaboration exceeds the default heartbeat budget.
 /-- Stage B2c (X7): if the frames `GX n, GY n` converge in `L²(ℂ)` to `gX, gY` and are
 bounded, the paired integrals against the composed frames converge, by the
 change-of-variables estimate. -/
@@ -1158,7 +1169,7 @@ theorem pairing_tendsto_L2
   -- The square-integral norms in `eLpNorm` form.
   have hel : ∀ h : ℂ → ℂ, ((∫⁻ z, ‖h z‖ₑ ^ (2 : ℕ)) ^ (1/2 : ℝ)) = eLpNorm h 2 volume := by
     intro h
-    rw [MeasureTheory.eLpNorm_eq_lintegral_rpow_enorm (by norm_num) (by norm_num)]
+    rw [MeasureTheory.eLpNorm_eq_lintegral_rpow_enorm_toReal (by norm_num) (by norm_num)]
     have h2 : ((2 : ℝ≥0∞)).toReal = (2 : ℝ) := by norm_num
     rw [h2]
     congr 1
@@ -1264,8 +1275,8 @@ theorem pairing_tendsto_L2
         (dY := fun p => GY n p - gY p) hq hen hqem hae hSm hφzero hMφ
         ((hGXc n).measurable.sub hgXm) ((hGYc n).measurable.sub hgYm)) ?_
       rw [hbounddef]
-      refine mul_le_mul_left' ?_ _
-      refine mul_le_mul_right' ?_ _
+      refine mul_le_mul_right ?_ _
+      refine mul_le_mul_left ?_ _
       refine add_le_add ?_ ?_
       · rw [hel (fun p => GX n p - gX p)]
       · rw [hel (fun p => GY n p - gY p)]
@@ -1318,7 +1329,6 @@ theorem pairing_tendsto_L2
       (Filter.Eventually.of_forall fun n => zero_le _)
       (Filter.Eventually.of_forall hchain)
   have htr := (ENNReal.tendsto_toReal (by norm_num : (0:ℝ≥0∞) ≠ ⊤)).comp hzero
-  simp only [ENNReal.toReal_ofReal_eq_iff] at htr
   refine Filter.Tendsto.congr ?_ htr
   intro n
   exact ENNReal.toReal_ofReal (norm_nonneg _)
@@ -1326,6 +1336,8 @@ theorem pairing_tendsto_L2
 -- Instantiating the two abstract limit lemmas over the mollified frames is a heavy
 -- elaboration; the raised budget is required.
 set_option maxHeartbeats 400000 in
+-- The weak chain rule assembles the three mollification stages in one declaration;
+-- the single-declaration elaboration exceeds the default heartbeat budget.
 /-- Stage B2 (X6–X8): weak chain rule for the composition of a compactly supported
 continuous `W^{1,2}` function with a plane quasiconformal map, in the directions `1, I`. -/
 theorem hasWeakDirDeriv_comp_qc
@@ -1553,6 +1565,8 @@ theorem hasWeakDirDeriv_comp_qc
 -- The cutoff transfer to the plane lemma and the covering assembly are one long
 -- elaboration; the raised budget is required.
 set_option maxHeartbeats 400000 in
+-- The classical-derivative bridge runs a Lebesgue-point argument over the open set;
+-- the single-declaration elaboration exceeds the default heartbeat budget.
 /-- Stage C ([BRIDGE]): on an open set, the classical directional derivative of an
 almost-everywhere differentiable function agrees almost everywhere with any locally
 integrable weak directional derivative, by cutoff transfer to the plane statement. -/
@@ -1889,6 +1903,8 @@ theorem fderiv_ae_eq_weakDirDeriv_on
 -- The localized integration-by-parts assembly is one long elaboration; the raised
 -- budget is required.
 set_option maxHeartbeats 400000 in
+-- The cutoff package discharges support, smoothness, and derivative bounds together;
+-- the single-declaration elaboration exceeds the default heartbeat budget.
 /-- Stage D1: the cutoff package. For a smooth compactly supported cutoff `χ` with
 support in the open set `Ω`, the localization `χ • v` of a function with weak
 directional derivative `g` on `Ω` has the Leibniz combination as a weak directional
@@ -2311,6 +2327,8 @@ theorem wirtinger_cancel
 -- Assembling the composite through the abstract bricks over a per-point ball is a heavy
 -- elaboration; the raised budget is required.
 set_option maxHeartbeats 400000 in
+-- The transition-map analysis composes the chain rule with the Weyl lemma input;
+-- the single-declaration elaboration exceeds the default heartbeat budget.
 /-- Stage D ([CHAIN]+[WEYL]): the transition map `v ∘ u.w⁻¹` of two solutions of the same
 Beltrami equation on the upper half plane is holomorphic there, provided the normalized
 plane solution preserves the upper half plane. -/
@@ -2321,7 +2339,7 @@ theorem composite_holomorphic
       dzbar v z = u.b.μ z * dz v z)
     (hpos : ∀ z : ℂ, 0 < z.im → 0 < (u.w z).im)
     {uinv : ℂ → ℂ} (huinvc : Continuous uinv)
-    (hui1 : ∀ z, uinv (u.w z) = z) (hui2 : ∀ z, u.w (uinv z) = z) :
+    (_hui1 : ∀ z, uinv (u.w z) = z) (hui2 : ∀ z, u.w (uinv z) = z) :
     DifferentiableOn ℂ (fun w => v (uinv w)) {z : ℂ | 0 < z.im} := by
   classical
   haveI : NormSMulClass ℝ ℂ := NormedSpace.toNormSMulClass
@@ -2732,7 +2750,7 @@ theorem composite_holomorphic
     exact Φ3.le_one
   have hel2 : ∀ h : ℂ → ℂ, ((∫⁻ z, ‖h z‖ₑ ^ (2 : ℕ)) ^ (1/2 : ℝ)) = eLpNorm h 2 volume := by
     intro h
-    rw [MeasureTheory.eLpNorm_eq_lintegral_rpow_enorm (by norm_num) (by norm_num)]
+    rw [MeasureTheory.eLpNorm_eq_lintegral_rpow_enorm_toReal (by norm_num) (by norm_num)]
     have h2 : ((2 : ℝ≥0∞)).toReal = (2 : ℝ) := by norm_num
     rw [h2]
     congr 1
@@ -2902,6 +2920,8 @@ theorem composite_holomorphic
 -- The removable-singularity inverse-holomorphy transcription and the manifold
 -- plumbing are one long elaboration; the raised budget is required.
 set_option maxHeartbeats 400000 in
+-- The Moebius classification splits into affine and inversion branches with long algebra;
+-- the single-declaration elaboration exceeds the default heartbeat budget.
 /-- Stage E ([MÖBIUS]): a holomorphic homeomorphism of the upper half plane is a real
 Möbius map, through the Cayley transform and the classification of disc automorphisms. -/
 theorem holo_upper_selfmap_moebius
@@ -3191,6 +3211,8 @@ theorem holo_upper_selfmap_moebius
 -- The gauge bookkeeping for the half-disc contour is one long elaboration; the raised
 -- budget is required.
 set_option maxHeartbeats 400000 in
+-- The radial contour parameterization carries explicit trigonometric estimates;
+-- the single-declaration elaboration exceeds the default heartbeat budget.
 /-- Stage F1 ([HALF] contour): the radial parameterization of the boundary of the upper
 half-disc `{‖z‖ ≤ R} ∩ {im ≥ 0}` from an interior point `z₀`, via the Minkowski gauge:
 a positive continuous radial function landing on the frontier, uniquely determined by
@@ -3377,7 +3399,7 @@ theorem halfdisc_radial (z₀ : ℂ) (hz₀ : 0 < z₀.im) (R : ℝ) (hR : ‖z�
     intro w hw hnot
     refine le_antisymm (gauge_le_one_of_mem hw) ?_
     by_contra hlt
-    push_neg at hlt
+    push Not at hlt
     exact hnot (hsub ((gauge_lt_one_iff_mem_interior hconv hB₀nhds).mp hlt))
   -- The radial function.
   refine ⟨fun ϑ => (gauge B₀ (Complex.exp (ϑ * Complex.I)))⁻¹, ?_, ?_, ?_, ?_⟩
@@ -3424,7 +3446,7 @@ theorem halfdisc_radial (z₀ : ℂ) (hz₀ : 0 < z₀.im) (R : ℝ) (hR : ‖z�
     rw [hsm]
     refine ⟨hmem.1, hmem.2, ?_⟩
     by_contra hor
-    push_neg at hor
+    push Not at hor
     exact hnotstrict ⟨lt_of_le_of_ne hmem.1 hor.1, lt_of_le_of_ne hmem.2 (Ne.symm hor.2)⟩
   · intro ϑ t ht htle htim hnot
     have hmem : (t : ℝ) • Complex.exp (ϑ * Complex.I) ∈ B₀ := by
@@ -3545,11 +3567,13 @@ theorem disc_const {f : ℝ → ℂ} {a b : ℝ} (hab : a ≤ b)
 
 -- The crossing-window geometry is one long elaboration; the raised budget is required.
 set_option maxHeartbeats 400000 in
+-- The window-selection argument iterates the contour estimate through a bisection;
+-- the single-declaration elaboration exceeds the default heartbeat budget.
 /-- Stage F3 ([HALF] window): the half-disc radial contour passes through a prescribed
 real frontier point at a unique angle in `(π, 2π)`, and near that angle the contour is
 real with strictly increasing real part. -/
 theorem halfdisc_window (z₀ : ℂ) (hz₀ : 0 < z₀.im) (R : ℝ)
-    (rad : ℝ → ℝ) (hradpos : ∀ ϑ : ℝ, 0 < rad ϑ)
+    (rad : ℝ → ℝ) (_hradpos : ∀ ϑ : ℝ, 0 < rad ϑ)
     (hraduniq : ∀ (ϑ t : ℝ), 0 < t →
       ‖z₀ + (t : ℂ) * Complex.exp (ϑ * Complex.I)‖ ≤ R →
       0 ≤ (z₀ + (t : ℂ) * Complex.exp (ϑ * Complex.I)).im →
@@ -3798,7 +3822,6 @@ theorem halfdisc_window (z₀ : ℂ) (hz₀ : 0 < z₀.im) (R : ℝ)
       linarith
     · rw [hϑplusdef]
       linarith
-
   have hϑminus0' : 0 < ϑminus := by
     rw [hϑminusdef]
     linarith [hϑstarmem.1, Real.pi_pos, hεle1]
@@ -3808,7 +3831,6 @@ theorem halfdisc_window (z₀ : ℂ) (hz₀ : 0 < z₀.im) (R : ℝ)
   have hpolar' : q - z₀ = ((‖q - z₀‖ : ℝ) : ℂ) * Complex.exp ((ϑstar : ℂ) * Complex.I) := by
     rw [← htstardef]
     exact hpolar
-
   -- Packaging.
   refine ⟨ϑstar, ϑminus, ϑplus, hϑstarmem, ⟨hϑminus0', ?_, ?_, hϑplus2π'⟩,
     hradstar, ?_, hpolar', ?_, ?_⟩
@@ -3905,6 +3927,8 @@ theorem log_branch_minus {w : ℂ} (hw : w ≠ 0) (him : w.im < 0) :
 -- The winding computation around the half-disc contour is one long elaboration; the
 -- raised budget is required.
 set_option maxHeartbeats 400000 in
+-- The half-plane preservation proof assembles the contour, window, and winding stages;
+-- the single-declaration elaboration exceeds the default heartbeat budget.
 /-- Stage F ([HALF]): the normalized solution of a Teichmüller representative preserves
 the upper half plane. The lower branch of the half-plane dichotomy is excluded by a
 winding-number computation: the image of a small circle winds `+1` (sense preservation),
@@ -4012,7 +4036,7 @@ theorem teichRep_w_im_pos {Γ₀ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) �
   have hfar : ∀ w : ℂ, ‖w‖ = R → ‖p‖ + 1 < ‖u.w w‖ := by
     intro w hw
     by_contra hle
-    push_neg at hle
+    push Not at hle
     have h1 : u.w w ∈ Metric.closedBall (0:ℂ) (‖p‖ + 1) := by
       rw [Metric.mem_closedBall, dist_zero_right]
       exact hle
@@ -4345,7 +4369,7 @@ theorem teichRep_w_im_pos {Γ₀ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) �
     intro ϑ hϑ hne
     rw [Complex.mem_slitPlane_iff]
     by_contra hcon
-    push_neg at hcon
+    push Not at hcon
     obtain ⟨h1, h2⟩ := hcon
     have h3 : (Complex.I * (Λ ϑ - p)).re = -(Λ ϑ - p).im := by
       rw [Complex.mul_re]
@@ -4484,8 +4508,7 @@ theorem teichRep_w_im_pos {Γ₀ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) �
   have hp1 : L 1 0 - ℓb 0 = L 1 ϑminus - ℓb ϑminus := by
     refine disc_const (le_of_lt hϑminus0)
       ((hL1cont.continuousOn).sub (hℓbcont 0 ϑminus (le_refl 0) hmIcc.2 ?_)) ?_
-    · intro ϑ h1 h2
-      intro h3
+    · intro ϑ h1 h2 h3
       rw [h3] at h2
       linarith [hwinb.2.1]
     · exact hint4 ℓb 0 ϑminus (le_refl 0) hmIcc.2
@@ -4503,8 +4526,7 @@ theorem teichRep_w_im_pos {Γ₀ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) �
   have hp4 : L 1 ϑplus - ℓb ϑplus = L 1 (2*Real.pi) - ℓb (2*Real.pi) := by
     refine disc_const (le_of_lt hϑplus2π)
       ((hL1cont.continuousOn).sub (hℓbcont ϑplus (2*Real.pi) hpIcc.1 (le_refl _) ?_)) ?_
-    · intro ϑ h1 h2
-      intro h3
+    · intro ϑ h1 h2 h3
       rw [h3] at h1
       linarith [hwinb.2.2.1]
     · exact hint4 ℓb ϑplus (2*Real.pi) hpIcc.1 (le_refl _)
@@ -4549,7 +4571,7 @@ the upper half plane, they differ by a real Möbius map: their quotient is confo
 Weyl lemma and is a holomorphic self-homeomorphism of the upper half plane, hence Möbius. -/
 theorem exists_sl2_factorization_of_eq_coeff
     {Γ₀ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)} (u : TeichRep Γ₀)
-    {v vinv : ℂ → ℂ} {κ : ℝ} (hκ : κ < 1) (hv : IsQCUpper v vinv κ)
+    {v vinv : ℂ → ℂ} {κ : ℝ} (_hκ : κ < 1) (hv : IsQCUpper v vinv κ)
     (hcoeff : ∀ᵐ z ∂(volume.restrict {z : ℂ | 0 < z.im}),
       dzbar v z = u.b.μ z * dz v z) :
     ∃ R : Matrix.SpecialLinearGroup (Fin 2) ℝ,
