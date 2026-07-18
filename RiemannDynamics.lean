@@ -222,3 +222,9 @@ import RiemannDynamics.Teichmuller.Metric
 import RiemannDynamics.Teichmuller.ModAction
 import RiemannDynamics.Teichmuller.Mumford
 import RiemannDynamics.Teichmuller.UpperQC
+
+import RiemannDynamics.Hyperbolic.Geodesics
+import RiemannDynamics.Hyperbolic.TriangleArea
+import RiemannDynamics.Teichmuller.Polygon
+import RiemannDynamics.Teichmuller.PolygonRank
+import RiemannDynamics.Teichmuller.GaussBonnet
