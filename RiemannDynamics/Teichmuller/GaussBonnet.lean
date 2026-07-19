@@ -513,7 +513,20 @@ theorem fuchsianCovolume_eq_two_pi_mul (hΓ : IsFuchsianGroup Γ)
     (hcc : CompactSpace (Quotient (MulAction.orbitRel Γ UpperHalfPlane))) :
     fuchsianCovolume Γ = ENNReal.ofReal
       (2 * Real.pi * ((Module.finrank ℝ (homSubmodule (↥Γ)) : ℝ) - 2)) := by
-  sorry
+  obtain ⟨ε, hε, hgap⟩ := exists_translation_gap hΓ hfree hcc
+  obtain ⟨εt, hεt, hgapt⟩ := exists_trace_gap hΓ hfree hcc
+  obtain ⟨R, -, hdense⟩ := exists_orbit_density_bound hΓ hεt hgapt hcc UpperHalfPlane.I
+  have hGB := volume_dirichletDomain_gaussBonnet hΓ hfree hε hgap hdense
+  have hrank := finrank_homSubmodule_add_classCount hΓ hfree hε hgap hdense
+  rw [fuchsianCovolume, hGB]
+  have hcast : (Module.finrank ℝ (homSubmodule (↥Γ)) : ℝ)
+      + (polygonVertexClassCount Γ UpperHalfPlane.I : ℝ)
+      = (polygonSideCount Γ UpperHalfPlane.I : ℝ) + 1 := by
+    exact_mod_cast congrArg (Nat.cast : ℕ → ℝ) hrank
+  have h2 : (polygonSideCount Γ UpperHalfPlane.I : ℝ) - 1
+      - (polygonVertexClassCount Γ UpperHalfPlane.I : ℝ)
+      = (Module.finrank ℝ (homSubmodule (↥Γ)) : ℝ) - 2 := by linarith
+  rw [h2]
 
 /-! ## Transport of the character space across the Teichmüller family -/
 
@@ -880,7 +893,7 @@ transported function is again a character. -/
 noncomputable def transportFwd (x : TeichRep Γ₀) :
     homSubmodule (↥x.group) →ₗ[ℝ] homSubmodule (↥Γ₀) where
   toFun f := ⟨fun γ => (f : (↥x.group) → ℝ) (conjOf x γ), by
-    show ∀ a b : ↥Γ₀, (f : (↥x.group) → ℝ) (conjOf x (a * b))
+    change ∀ a b : ↥Γ₀, (f : (↥x.group) → ℝ) (conjOf x (a * b))
       = (f : (↥x.group) → ℝ) (conjOf x a) + (f : (↥x.group) → ℝ) (conjOf x b)
     intro a b
     have hab := conjOf_spec x (a * b)
@@ -917,7 +930,7 @@ the transported function is again a character. -/
 noncomputable def transportBwd (x : TeichRep Γ₀) :
     homSubmodule (↥Γ₀) →ₗ[ℝ] homSubmodule (↥x.group) where
   toFun g := ⟨fun W => (g : (↥Γ₀) → ℝ) (baseOf x W), by
-    show ∀ U V : ↥x.group, (g : (↥Γ₀) → ℝ) (baseOf x (U * V))
+    change ∀ U V : ↥x.group, (g : (↥Γ₀) → ℝ) (baseOf x (U * V))
       = (g : (↥Γ₀) → ℝ) (baseOf x U) + (g : (↥Γ₀) → ℝ) (baseOf x V)
     intro U V
     have hUV := baseOf_spec x (U * V)
@@ -960,14 +973,14 @@ theorem TeichRep.exists_homSubmodule_linearEquiv (x : TeichRep Γ₀) :
     intro g
     apply Subtype.ext
     funext γ
-    show (g : (↥Γ₀) → ℝ) (baseOf x (conjOf x γ)) = (g : (↥Γ₀) → ℝ) γ
+    change (g : (↥Γ₀) → ℝ) (baseOf x (conjOf x γ)) = (g : (↥Γ₀) → ℝ) γ
     exact apply_base_eq x g (baseOf_spec x (conjOf x γ))
       (conjOf_spec x γ)
   · apply LinearMap.ext
     intro f
     apply Subtype.ext
     funext W
-    show (f : (↥x.group) → ℝ) (conjOf x (baseOf x W))
+    change (f : (↥x.group) → ℝ) (conjOf x (baseOf x W))
       = (f : (↥x.group) → ℝ) W
     exact apply_conj_eq x f (conjOf_spec x (baseOf x W))
       (baseOf_spec x W)
@@ -981,7 +994,10 @@ theorem TeichRep.fuchsianCovolume_group (hΓ₀ : IsFuchsianGroup Γ₀)
     (hcc : CompactSpace (Quotient (MulAction.orbitRel Γ₀ UpperHalfPlane)))
     (x : TeichRep Γ₀) :
     fuchsianCovolume x.group = fuchsianCovolume Γ₀ := by
-  sorry
+  obtain ⟨e⟩ := x.exists_homSubmodule_linearEquiv
+  rw [fuchsianCovolume_eq_two_pi_mul (x.isFuchsian_group hΓ₀ hfree) (x.group_free hfree)
+      (x.group_cocompact hcc),
+    fuchsianCovolume_eq_two_pi_mul hΓ₀ hfree hcc, e.finrank_eq]
 
 /-! ## The uniform area bound -/
 

@@ -296,7 +296,7 @@ theorem affPt_coe (z w : UpperHalfPlane) :
     ((affPt z w : UpperHalfPlane) : ℂ) = ((w : ℂ) - (z.re : ℂ)) / (z.im : ℂ) := rfl
 
 theorem affPt_im (z w : UpperHalfPlane) : (affPt z w).im = w.im / z.im := by
-  show ((((w : ℂ) - (z.re : ℂ)) / (z.im : ℂ))).im = w.im / z.im
+  change ((((w : ℂ) - (z.re : ℂ)) / (z.im : ℂ))).im = w.im / z.im
   rw [div_ofReal_im]
   simp only [Complex.sub_im, Complex.ofReal_im, UpperHalfPlane.coe_im, sub_zero]
 
@@ -329,10 +329,10 @@ theorem hDD_eq_dist (z w w' : UpperHalfPlane) :
   rw [hyperbolicDistDisk_eq_upperHalfPlane_dist hmem hmem']
   congr 1
   · apply UpperHalfPlane.ext
-    show cayleyToHalfPlane (discChart z w) = _
+    change cayleyToHalfPlane (discChart z w) = _
     exact cayleyToHalfPlane_halfPlaneToCayley h1
   · apply UpperHalfPlane.ext
-    show cayleyToHalfPlane (discChart z w') = _
+    change cayleyToHalfPlane (discChart z w') = _
     exact cayleyToHalfPlane_halfPlaneToCayley h1'
 
 /-- The hyperbolic distance transported through the frame at any base point. -/
@@ -1939,7 +1939,7 @@ theorem geodSeg_subset_setOf_dist_le {p q a b : UpperHalfPlane}
     geodSeg a b ⊆ {τ : UpperHalfPlane | dist τ p ≤ dist τ q} := by
   rcases eq_or_ne p q with rfl | hpq
   · intro τ _
-    show dist τ p ≤ dist τ p
+    change dist τ p ≤ dist τ p
     exact le_refl _
   · obtain ⟨g, him, hre, h0⟩ := exists_mirror_normalizer hpq
     intro τ hτ
@@ -1952,7 +1952,7 @@ theorem geodSeg_subset_setOf_dist_le {p q a b : UpperHalfPlane}
       intro z
       rw [dist_smul, dist_smul]
     have hbetw := re_mem_geodSeg hτ'
-    show dist τ p ≤ dist τ q
+    change dist τ p ≤ dist τ q
     rcases lt_or_gt_of_ne h0 with hlt | hgt
     · have hset := setOf_dist_le_eq_of_im_eq (a := g • p) (b := g • q) him.symm
         (by rw [hre]; linarith)
@@ -1992,7 +1992,7 @@ theorem geodSeg_vertical_eq {A B : UpperHalfPlane} (hre : A.re = B.re) :
     exact mem_geodSeg_vertical hre hx
   · rintro ⟨hxre, hxlo, hxhi⟩
     obtain ⟨hlo, hhi⟩ := log_bounds A.im_pos B.im_pos x.im_pos hxlo hxhi
-    show dist A x + dist x B = dist A B
+    change dist A x + dist x B = dist A B
     rw [dist_of_re_eq hxre.symm, dist_of_re_eq (hxre.trans hre),
       dist_of_re_eq hre]
     rcases le_total A.im B.im with hAB | hAB
@@ -2171,7 +2171,7 @@ theorem collinear_re_zero {A B z : UpperHalfPlane} (hA : A.re = 0) (hB : B.re = 
     · exact (two_axis_on_circle hAz hA hB hAB rfl
         (mem_geodSeg_circle hAz hmem)).elim
   · have hmem : A ∈ geodSeg B z := by
-      show dist B A + dist A z = dist B z
+      change dist B A + dist A z = dist B z
       rw [dist_comm B A, dist_comm A z, dist_comm B z]
       linarith [hc]
     by_cases hBz : B.re = z.re

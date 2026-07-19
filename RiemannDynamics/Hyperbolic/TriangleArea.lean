@@ -492,7 +492,7 @@ theorem geodSeg_subset_vertical {a b : UpperHalfPlane} (hre : a.re = b.re) :
     linarith
   have hsq : (a.re - z.re) ^ 2 = 0 := by linarith
   have hzero : a.re - z.re = 0 := (pow_eq_zero_iff two_ne_zero).mp hsq
-  show z.re = a.re
+  change z.re = a.re
   linarith
 
 /-! ## Normalizing a real-centered circle to the imaginary axis -/
@@ -848,11 +848,11 @@ theorem mem_geodSeg_of_on_circle {a b ζ : UpperHalfPlane} (hre : a.re ≠ b.re)
 
 /-- The point at height `2r` over the center `c`. -/
 noncomputable def topPt (c r : ℝ) (hr : 0 < r) : UpperHalfPlane :=
-  UpperHalfPlane.mk ⟨c, 2 * r⟩ (by show (0 : ℝ) < 2 * r; linarith)
+  UpperHalfPlane.mk ⟨c, 2 * r⟩ (by change (0 : ℝ) < 2 * r; linarith)
 
 /-- The point at height `r/2` over the center `c`. -/
 noncomputable def botPt (c r : ℝ) (hr : 0 < r) : UpperHalfPlane :=
-  UpperHalfPlane.mk ⟨c, r / 2⟩ (by show (0 : ℝ) < r / 2; linarith)
+  UpperHalfPlane.mk ⟨c, r / 2⟩ (by change (0 : ℝ) < r / 2; linarith)
 
 theorem topPt_re (c r : ℝ) (hr : 0 < r) : (topPt c r hr).re = c := rfl
 theorem topPt_im (c r : ℝ) (hr : 0 < r) : (topPt c r hr).im = 2 * r := rfl
@@ -861,7 +861,7 @@ theorem botPt_im (c r : ℝ) (hr : 0 < r) : (botPt c r hr).im = r / 2 := rfl
 
 /-- The point at height `1` over the abscissa `x`. -/
 noncomputable def ptAt (x : ℝ) : UpperHalfPlane :=
-  UpperHalfPlane.mk ⟨x, 1⟩ (by show (0 : ℝ) < 1; norm_num)
+  UpperHalfPlane.mk ⟨x, 1⟩ (by change (0 : ℝ) < 1; norm_num)
 
 theorem ptAt_re (x : ℝ) : (ptAt x).re = x := rfl
 theorem ptAt_im (x : ℝ) : (ptAt x).im = 1 := rfl
@@ -1593,12 +1593,12 @@ theorem J_geodSeg (a b : UpperHalfPlane) :
   ext w
   constructor
   · rintro ⟨x, hx, rfl⟩
-    show dist _ _ + dist _ _ = dist _ _
+    change dist _ _ + dist _ _ = dist _ _
     rw [dist_J, dist_J, dist_J]
     exact hx
   · intro hw
     refine ⟨UpperHalfPlane.J • w, ?_, J_J w⟩
-    show dist a (UpperHalfPlane.J • w) + dist (UpperHalfPlane.J • w) b = dist a b
+    change dist a (UpperHalfPlane.J • w) + dist (UpperHalfPlane.J • w) b = dist a b
     rw [dist_J_swap a w, dist_comm (UpperHalfPlane.J • w) b, dist_J_swap b w,
       ← dist_J a b, dist_comm (UpperHalfPlane.J • b) w]
     exact hw
@@ -1703,7 +1703,7 @@ theorem volume_collinear {v₁ v₂ v₃ : UpperHalfPlane} (h1 : v₁.re = 0)
     have hwre : w.re = v₂.re := (mem_geodSeg_vertical (h2.trans h3.symm) hw).1
     have hre1w : v₁.re = w.re := by rw [h1, hwre, h2]
     have hxre : x.re = v₁.re := (mem_geodSeg_vertical hre1w hxw).1
-    show x.re = 0
+    change x.re = 0
     rw [hxre, h1]
   have hvol0 : volume (hyperbolicTriangle v₁ v₂ v₃) = 0 :=
     measure_mono_null hsubset (volume_vertLine 0)
@@ -1798,5 +1798,123 @@ theorem volume_hyperbolicTriangle (v₁ v₂ v₃ : UpperHalfPlane) (h₁₂ : v
       (fun h => h23 (by rw [← J_J w₂, h, J_J]))
   · exact volume_collinear hzero h2 h3 h12 h13 h23
   · exact volume_triangle_pos h2 h3 hpos h23
+
+
+/-- The angle deficit of the normalized cone triangle is nonnegative: the wedge over the
+upper circle is contained in the wedge over the lower circle. -/
+theorem cone_deficit_nonneg {U L P : UpperHalfPlane} (hU : U.re = 0) (hL : L.re = 0)
+    (hP : 0 < P.re) (him : L.im < U.im) :
+    0 ≤ π - sectorAngle P U L - sectorAngle U L P - sectorAngle L U P := by
+  have hneU : U.re ≠ P.re := by rw [hU]; exact ne_of_lt hP
+  have hneL : L.re ≠ P.re := by rw [hL]; exact ne_of_lt hP
+  obtain ⟨hU1, hU2, hUrel⟩ := axis_apex_rel hU hneU
+  obtain ⟨hL1, hL2, hLrel⟩ := axis_apex_rel hL hneL
+  have hru : 0 < geodRadius U P := geodRadius_pos U P
+  have hrl : 0 < geodRadius L P := geodRadius_pos L P
+  have hclL : geodCenter L P - geodRadius L P < 0 := clr_aux hL1 L.im_pos hrl
+  have hclR : P.re < geodCenter L P + geodRadius L P := crr_aux hL2 P.im_pos hrl
+  have hcuL : geodCenter U P - geodRadius U P < 0 := clr_aux hU1 U.im_pos hru
+  have hcuR : P.re < geodCenter U P + geodRadius U P := crr_aux hU2 P.im_pos hru
+  have hvl := volume_wedge (x₀ := geodCenter L P) (r := geodRadius L P) (x₁ := 0)
+    (x₂ := P.re) hrl (by linarith) hP.le (by linarith)
+  have hvu := volume_wedge (x₀ := geodCenter U P) (r := geodRadius U P) (x₁ := 0)
+    (x₂ := P.re) hru (by linarith) hP.le (by linarith)
+  have hcc : geodCenter U P ≤ geodCenter L P := cc_aux hLrel hUrel him L.im_pos hP
+  have hsub : {z : UpperHalfPlane | z.re ∈ Set.Icc 0 P.re
+      ∧ √(geodRadius U P ^ 2 - (z.re - geodCenter U P) ^ 2) ≤ z.im}
+      ⊆ {z : UpperHalfPlane | z.re ∈ Set.Icc 0 P.re
+      ∧ √(geodRadius L P ^ 2 - (z.re - geodCenter L P) ^ 2) ≤ z.im} := by
+    rintro z ⟨hicc, hle⟩
+    exact ⟨hicc, le_trans (Real.sqrt_le_sqrt
+      (arc_mono_aux hL1 hU1 hLrel hUrel hcc (Set.mem_Icc.mp hicc).2)) hle⟩
+  have hle := measure_mono (μ := (volume : Measure UpperHalfPlane)) hsub
+  rw [hvl, hvu] at hle
+  have hL0 : 0 ≤ arcsin ((P.re - geodCenter L P) / geodRadius L P)
+      - arcsin ((0 - geodCenter L P) / geodRadius L P) := by
+    have := Real.arcsin_le_arcsin (x := (0 - geodCenter L P) / geodRadius L P)
+      (y := (P.re - geodCenter L P) / geodRadius L P)
+      (by rw [div_le_div_iff_of_pos_right hrl]; linarith)
+    linarith
+  have hkey : arcsin ((P.re - geodCenter U P) / geodRadius U P)
+      - arcsin ((0 - geodCenter U P) / geodRadius U P)
+      ≤ arcsin ((P.re - geodCenter L P) / geodRadius L P)
+      - arcsin ((0 - geodCenter L P) / geodRadius L P) :=
+    (ENNReal.ofReal_le_ofReal_iff hL0).mp hle
+  rw [show (0 - geodCenter L P) / geodRadius L P
+      = -(geodCenter L P / geodRadius L P) by ring,
+    show (0 - geodCenter U P) / geodRadius U P
+      = -(geodCenter U P / geodRadius U P) by ring,
+    Real.arcsin_neg, Real.arcsin_neg] at hkey
+  rw [sectorAngle_apex hU hL hP him, sectorAngle_axis_down hU hL hP him,
+    sectorAngle_axis_up hL hU hP him]
+  linarith
+
+/-- The angle deficit is nonnegative for a triangle with vertical base and apex to the
+right. -/
+theorem deficit_nonneg_pos {w₁ w₂ w₃ : UpperHalfPlane} (h2 : w₂.re = 0)
+    (h3 : w₃.re = 0) (hpos : 0 < w₁.re) (h23 : w₂ ≠ w₃) :
+    0 ≤ π - sectorAngle w₁ w₂ w₃ - sectorAngle w₂ w₁ w₃ - sectorAngle w₃ w₁ w₂ := by
+  have hne23 : w₂.im ≠ w₃.im := fun h => h23 (ext_re_im (h2.trans h3.symm) h)
+  rcases lt_or_gt_of_ne hne23 with him | him
+  · have h := cone_deficit_nonneg h3 h2 hpos him
+    rw [sectorAngle_comm w₁ w₃ w₂, sectorAngle_comm w₃ w₂ w₁,
+      sectorAngle_comm w₂ w₃ w₁] at h
+    linarith
+  · have h := cone_deficit_nonneg h2 h3 hpos him
+    rwa [sectorAngle_comm w₂ w₃ w₁, sectorAngle_comm w₃ w₂ w₁] at h
+
+/-- The angles of a degenerate triangle carried by the imaginary axis sum to `π`. -/
+theorem deficit_collinear {v₁ v₂ v₃ : UpperHalfPlane} (h1 : v₁.re = 0)
+    (h2 : v₂.re = 0) (h3 : v₃.re = 0) (h₁₂ : v₁ ≠ v₂) (h₁₃ : v₁ ≠ v₃) (h₂₃ : v₂ ≠ v₃) :
+    sectorAngle v₁ v₂ v₃ + sectorAngle v₂ v₁ v₃ + sectorAngle v₃ v₁ v₂ = π := by
+  have hA1 := sectorAngle_collinear h1 h2 h3 (Ne.symm h₁₂) (Ne.symm h₁₃)
+  have hA2 := sectorAngle_collinear h2 h1 h3 h₁₂ (Ne.symm h₂₃)
+  have hA3 := sectorAngle_collinear h3 h1 h2 h₁₃ h₂₃
+  have hne12 : v₁.im ≠ v₂.im := fun h => h₁₂ (ext_re_im (h1.trans h2.symm) h)
+  have hne13 : v₁.im ≠ v₃.im := fun h => h₁₃ (ext_re_im (h1.trans h3.symm) h)
+  have hne23 : v₂.im ≠ v₃.im := fun h => h₂₃ (ext_re_im (h2.trans h3.symm) h)
+  rw [hA1, hA2, hA3]
+  rcases lt_or_gt_of_ne hne12 with h12 | h12 <;>
+    rcases lt_or_gt_of_ne hne13 with h13 | h13 <;>
+      rcases lt_or_gt_of_ne hne23 with h23 | h23 <;>
+        first
+          | linarith
+          | (rw [if_pos (by nlinarith), if_neg (not_lt.mpr (by nlinarith)),
+              if_neg (not_lt.mpr (by nlinarith))]; ring)
+          | (rw [if_neg (not_lt.mpr (by nlinarith)), if_pos (by nlinarith),
+              if_neg (not_lt.mpr (by nlinarith))]; ring)
+          | (rw [if_neg (not_lt.mpr (by nlinarith)), if_neg (not_lt.mpr (by nlinarith)),
+              if_pos (by nlinarith)]; ring)
+
+/-- **Nonnegative angle deficit**: the three angles of a geodesic triangle on pairwise
+distinct vertices sum to at most `π`. -/
+theorem deficit_nonneg (v₁ v₂ v₃ : UpperHalfPlane) (h₁₂ : v₁ ≠ v₂)
+    (h₁₃ : v₁ ≠ v₃) (h₂₃ : v₂ ≠ v₃) :
+    0 ≤ π - sectorAngle v₁ v₂ v₃ - sectorAngle v₂ v₁ v₃ - sectorAngle v₃ v₁ v₂ := by
+  suffices H : ∀ w₁ w₂ w₃ : UpperHalfPlane, w₂.re = 0 → w₃.re = 0 → w₁ ≠ w₂ → w₁ ≠ w₃
+      → w₂ ≠ w₃ →
+      0 ≤ π - sectorAngle w₁ w₂ w₃ - sectorAngle w₂ w₁ w₃ - sectorAngle w₃ w₁ w₂ by
+    obtain ⟨g, hg2, hg3⟩ := exists_verticalize v₂ v₃
+    rw [← sectorAngle_smul g v₁ v₂ v₃, ← sectorAngle_smul g v₂ v₁ v₃,
+      ← sectorAngle_smul g v₃ v₁ v₂]
+    exact H (g • v₁) (g • v₂) (g • v₃) hg2 hg3
+      (fun h => h₁₂ (smul_left_cancel g h)) (fun h => h₁₃ (smul_left_cancel g h))
+      (fun h => h₂₃ (smul_left_cancel g h))
+  intro w₁ w₂ w₃ h2 h3 h12 h13 h23
+  rcases lt_trichotomy w₁.re 0 with hneg | hzero | hpos
+  · rw [← sectorAngle_J w₁ w₂ w₃, ← sectorAngle_J w₂ w₁ w₃, ← sectorAngle_J w₃ w₁ w₂]
+    have hJ12 : UpperHalfPlane.J • w₁ ≠ UpperHalfPlane.J • w₂ := fun h =>
+      h12 (by rw [← J_J w₁, h, J_J])
+    have hJ13 : UpperHalfPlane.J • w₁ ≠ UpperHalfPlane.J • w₃ := fun h =>
+      h13 (by rw [← J_J w₁, h, J_J])
+    have hJ23 : UpperHalfPlane.J • w₂ ≠ UpperHalfPlane.J • w₃ := fun h =>
+      h23 (by rw [← J_J w₂, h, J_J])
+    exact deficit_nonneg_pos (by rw [J_smul_re, h2, neg_zero])
+      (by rw [J_smul_re, h3, neg_zero]) (by rw [J_smul_re]; linarith) hJ23
+  · have hsum := deficit_collinear hzero h2 h3 h12 h13 h23
+    linarith
+  · exact deficit_nonneg_pos h2 h3 hpos h23
+
+variable {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)} {τ₀ : UpperHalfPlane}
 
 end RiemannDynamics
