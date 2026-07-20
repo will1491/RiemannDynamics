@@ -228,3 +228,7 @@ import RiemannDynamics.Hyperbolic.TriangleArea
 import RiemannDynamics.Teichmuller.Polygon
 import RiemannDynamics.Teichmuller.PolygonRank
 import RiemannDynamics.Teichmuller.GaussBonnet
+
+import RiemannDynamics.Teichmuller.QuadraticDifferential.Def
+import RiemannDynamics.Teichmuller.QuadraticDifferential.Foliations
+import RiemannDynamics.Teichmuller.QuadraticDifferential.ExtremalLength
