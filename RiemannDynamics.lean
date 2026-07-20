@@ -232,3 +232,8 @@ import RiemannDynamics.Teichmuller.GaussBonnet
 import RiemannDynamics.Teichmuller.QuadraticDifferential.Def
 import RiemannDynamics.Teichmuller.QuadraticDifferential.Foliations
 import RiemannDynamics.Teichmuller.QuadraticDifferential.ExtremalLength
+import RiemannDynamics.Teichmuller.QuadraticDifferential.MarkedCandidate
+import RiemannDynamics.Teichmuller.QuadraticDifferential.Extremal
+import RiemannDynamics.Teichmuller.QuadraticDifferential.FlatMetric
+import RiemannDynamics.Teichmuller.QuadraticDifferential.HorizontalFlow
+import RiemannDynamics.Teichmuller.QuadraticDifferential.Teichmuller
