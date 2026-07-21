@@ -565,7 +565,7 @@ theorem transition_conj {x y : TeichRep Γ₀}
     apply y.w_injective
     rw [Function.rightInverse_invFun y.w_isQCAnalytic.1.1.bijective.surjective]
     rw [hyc u hu, hyu]
-  show x.w (Function.invFun y.w (moebiusMap W z))
+  change x.w (Function.invFun y.w (moebiusMap W z))
     = moebiusMap W' (x.w (Function.invFun y.w z))
   rw [hkey, hxc u hu]
 
@@ -586,7 +586,7 @@ theorem isMarkedCandidate_mapsTo_upper {x y : TeichRep Γ₀} {F : ℂ → ℂ} 
   have hOP : OrientationPreservingHomeo (Function.invFun x.w ∘ (F ∘ y.w)) := hGA.1
   have hid : ∀ t : ℝ, (Function.invFun x.w ∘ (F ∘ y.w)) (t : ℂ) = (t : ℂ) := by
     intro t
-    show Function.invFun x.w (F (y.w (t : ℂ))) = (t : ℂ)
+    change Function.invFun x.w (F (y.w (t : ℂ))) = (t : ℂ)
     rw [hb t]
     exact Function.leftInverse_invFun x.w_injective _
   have hup := mapsTo_upper_of_fixes_real hOP hid
@@ -594,7 +594,7 @@ theorem isMarkedCandidate_mapsTo_upper {x y : TeichRep Γ₀} {F : ℂ → ℂ} 
   have hu : 0 < (Function.invFun y.w z).im := invFun_w_mapsTo y hz
   have hGu := hup _ hu
   have hFz : F z = x.w ((Function.invFun x.w ∘ (F ∘ y.w)) (Function.invFun y.w z)) := by
-    show F z = x.w (Function.invFun x.w (F (y.w (Function.invFun y.w z))))
+    change F z = x.w (Function.invFun x.w (F (y.w (Function.invFun y.w z))))
     rw [Function.rightInverse_invFun y.w_isQCAnalytic.1.1.bijective.surjective z,
       Function.rightInverse_invFun x.w_isQCAnalytic.1.1.bijective.surjective]
   rw [hFz]
@@ -610,7 +610,7 @@ theorem gDilatationSet_nonempty (x y : TeichRep Γ₀) : (gDilatationSet x y).No
     rwa [← invFun_eq_homeoSymm hyK.2.1.isHomeomorph] at h
   refine ⟨x.b.K * y.b.K, x.w ∘ Function.invFun y.w, hxK.comp hyinv, ?_, ?_, ?_⟩
   · intro t
-    show x.w (Function.invFun y.w (y.w (t : ℂ))) = x.w (t : ℂ)
+    change x.w (Function.invFun y.w (y.w (t : ℂ))) = x.w (t : ℂ)
     rw [Function.leftInverse_invFun y.w_injective]
   · intro W hW
     obtain ⟨γ, hγ, hyc⟩ := w_conj_of_mem_group y hW
@@ -692,13 +692,13 @@ theorem mul_mem_gDilatationSet {x y z : TeichRep Γ₀} {K₁ K₂ : ℝ}
     obtain ⟨V, hV, h2⟩ := hfwd₂ W hW
     obtain ⟨W', hW', h1⟩ := hfwd₁ V hV
     refine ⟨W', hW', fun ζ hζ => ?_⟩
-    show F₁ (F₂ (moebiusMap W ζ)) = moebiusMap W' (F₁ (F₂ ζ))
+    change F₁ (F₂ (moebiusMap W ζ)) = moebiusMap W' (F₁ (F₂ ζ))
     rw [h2 ζ hζ, h1 (F₂ ζ) (hF₂up ζ hζ)]
   · intro W' hW'
     obtain ⟨V, hV, h1⟩ := hbwd₁ W' hW'
     obtain ⟨W, hW, h2⟩ := hbwd₂ V hV
     refine ⟨W, hW, fun ζ hζ => ?_⟩
-    show F₁ (F₂ (moebiusMap W ζ)) = moebiusMap W' (F₁ (F₂ ζ))
+    change F₁ (F₂ (moebiusMap W ζ)) = moebiusMap W' (F₁ (F₂ ζ))
     rw [h2 ζ hζ, h1 (F₂ ζ) (hF₂up ζ hζ)]
 
 /-- The triangle inequality for the intrinsic distance: marked candidates compose, with
@@ -1018,9 +1018,9 @@ theorem group_transport (x : TeichRep Γ₀) (P : ModGroupUpper Γ₀)
       moebiusMap Rx (moebiusMap V' w) = moebiusMap W' (moebiusMap Rx w) := by
   refine conj_push (u := fun z => x.w (P.g z)) (γ := γ₄) Rx (wg_surj x P)
     (fun z hz => ?_) (fun z hz => ?_)
-  · show x.w (P.g (moebiusMap γ₄ z)) = moebiusMap V' (x.w (P.g z))
+  · change x.w (P.g (moebiusMap γ₄ z)) = moebiusMap V' (x.w (P.g z))
     rw [hPc z hz, hxc (P.g z) (P.qc.mapsTo z hz)]
-  · show moebiusMap Rx (x.w (P.g (moebiusMap γ₄ z)))
+  · change moebiusMap Rx (x.w (P.g (moebiusMap γ₄ z)))
       = moebiusMap W' (moebiusMap Rx (x.w (P.g z)))
     rw [← hRx (moebiusMap γ₄ z) (moebiusMap_im_pos γ₄ hz), ← hRx z hz]
     exact hxU z hz
@@ -1119,6 +1119,11 @@ theorem mem_gDilatationSet_smulUpper (hΓ₀ : IsFuchsianGroup Γ₀)
     (hK : K ∈ gDilatationSet x y) :
     K ∈ gDilatationSet (x.smulUpper P) (y.smulUpper P) := by
   classical
+  -- standing assumptions of the theory, threaded uniformly through the API but not needed
+  -- by this particular transport argument
+  have _ := hΓ₀
+  have _ := hfree
+  have _ := hcc
   obtain ⟨F, hFqc, hb, hfwd, hbwd⟩ := hK
   have hK1 : 1 ≤ K := hFqc.1
   have hκ0 : (0 : ℝ) ≤ (K - 1) / (K + 1) := div_nonneg (by linarith) (by linarith)
@@ -1252,7 +1257,7 @@ theorem mem_gDilatationSet_smulUpper (hΓ₀ : IsFuchsianGroup Γ₀)
     have hsB : s ∉ Bt := by
       intro hmem
       refine hσ ⟨s, hmem, ?_⟩
-      show (Λf (s : ℂ)).re = σ
+      change (Λf (s : ℂ)).re = σ
       rw [hΛs, Complex.ofReal_re]
     have hWusymm : (hu11.homeomorph ((x.smulUpper P).w)).symm (σ : ℂ) = (t' : ℂ) := by
       rw [Homeomorph.symm_apply_eq, IsHomeomorph.homeomorph_apply]
@@ -1313,7 +1318,7 @@ theorem mem_gDilatationSet_smulUpper (hΓ₀ : IsFuchsianGroup Γ₀)
           = a * Λf (((y.smulUpper P).boundary t : ℝ) : ℂ) + bb := by
         rw [hF'app, hgood _ hsB, haff]
       have h2 := mul_left_cancel₀ ha (add_right_cancel h1)
-      show F' ((y.smulUpper P).w (t : ℂ)) = (x.smulUpper P).w (t : ℂ)
+      change F' ((y.smulUpper P).w (t : ℂ)) = (x.smulUpper P).w (t : ℂ)
       rw [hWvt, h2, hΛt]
     have hfun := Continuous.ext_on (dense_compl_finite hTbfin) hf₁ hf₂ hEqOn
     exact fun t => congrFun hfun t
@@ -1440,7 +1445,7 @@ theorem teichDistG_smulUpper (hΓ₀ : IsFuchsianGroup Γ₀)
     with hPinvdef
   have hcanc : ∀ z : ℂ, 0 < z.im → P.g (Pinv.g z) = z := by
     intro z hz
-    show P.g (g₂ z) = z
+    change P.g (g₂ z) = z
     rw [hg₂ z hz]
     exact P.qc.right_inv z hz
   have hxb := smulUpper_inv_boundary x P Pinv hcanc

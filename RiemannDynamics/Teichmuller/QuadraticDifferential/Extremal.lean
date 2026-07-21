@@ -427,7 +427,7 @@ theorem isMarkedCandidate_of_tendstoLocallyUniformly (hΓ₀ : IsFuchsianGroup �
           (by rw [Complex.conj_im]; linarith)
           (by rw [Complex.conj_im]; linarith)
           (fun k => by
-            show moebiusMap (V (k + N)) (starRingEnd ℂ (Fn (k + N) Complex.I))
+            change moebiusMap (V (k + N)) (starRingEnd ℂ (Fn (k + N) Complex.I))
               = starRingEnd ℂ (Fn (k + N) z₁)
             rw [moebiusMap_conj, hiden (k + N)])
         refine ⟨V₀, hV₀, ?_⟩
