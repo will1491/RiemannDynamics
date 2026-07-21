@@ -6,7 +6,7 @@ import RiemannDynamics.QC.Calculus.WeylLocal
 import RiemannDynamics.QC.Calculus.AnalyticClosedness
 import RiemannDynamics.QC.InverseQC.LusinN
 import RiemannDynamics.QC.Regularity.Quasisymmetry
-import RiemannDynamics.Hyperbolic.DiskMetric
+import RiemannDynamics.Hyperbolic.DiskModel.DiskMetric
 
 /-!
 # Upper-half-plane quasiconformal conjugacies and Marden stability

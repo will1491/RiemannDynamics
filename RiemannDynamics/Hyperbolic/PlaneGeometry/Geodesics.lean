@@ -1,5 +1,5 @@
 import Mathlib.Analysis.Complex.UpperHalfPlane.Metric
-import RiemannDynamics.Hyperbolic.DiskMetric
+import RiemannDynamics.Hyperbolic.DiskModel.DiskMetric
 import Mathlib.Analysis.SpecialFunctions.Complex.Arg
 import Mathlib.Analysis.SpecialFunctions.Trigonometric.Arctan
 

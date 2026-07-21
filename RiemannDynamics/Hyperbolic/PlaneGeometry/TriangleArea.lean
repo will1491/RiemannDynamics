@@ -1,4 +1,4 @@
-import RiemannDynamics.Hyperbolic.Geodesics
+import RiemannDynamics.Hyperbolic.PlaneGeometry.Geodesics
 import Mathlib.Analysis.Complex.UpperHalfPlane.Measure
 import Mathlib.MeasureTheory.Measure.Lebesgue.Complex
 import Mathlib.MeasureTheory.Group.Action

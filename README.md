@@ -6,7 +6,7 @@ A formalization of complex dynamics, Teichmüller theory, and hyperbolic geometr
 
 Headline results formalized so far — click to jump to the Lean source:
 
-1. **Schwarz–Pick inequality** — [`schwarzPick`](RiemannDynamics/Hyperbolic/SchwarzPick.lean#L89): a holomorphic self-map of the open unit disk is non-expansive for the Poincaré hyperbolic distance.
+1. **Schwarz–Pick inequality** — [`schwarzPick`](RiemannDynamics/Hyperbolic/DiskModel/SchwarzPick.lean#L89): a holomorphic self-map of the open unit disk is non-expansive for the Poincaré hyperbolic distance.
 2. **Covering property of the triply-punctured sphere by the unit disk** — [`modularLambda_isCoveringMapOn`](RiemannDynamics/Hyperbolic/ModularCoveringMap/CoveringAssembly.lean#L1498): the modular function `λ` is a covering map of `ℂ ∖ {0, 1}` (`= ℂ̂ ∖ {0, 1, ∞}`) from `𝔻`.
 3. **Montel–Carathéodory (strong Montel) theorem** — [`montel_caratheodory_sphere`](RiemannDynamics/NormalFamilies/StrongMontel/SphereMontel.lean#L37): a family of sphere-holomorphic maps omitting three fixed values is normal.
 

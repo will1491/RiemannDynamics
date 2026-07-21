@@ -3,8 +3,8 @@ Copyright (c) 2026 Will (Ziang) Li. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Will (Ziang) Li
 -/
-import RiemannDynamics.Hyperbolic.DiskMetric
-import RiemannDynamics.Hyperbolic.MobiusDisk
+import RiemannDynamics.Hyperbolic.DiskModel.DiskMetric
+import RiemannDynamics.Hyperbolic.DiskModel.MobiusDisk
 import Mathlib.Analysis.Complex.Schwarz
 
 /-!

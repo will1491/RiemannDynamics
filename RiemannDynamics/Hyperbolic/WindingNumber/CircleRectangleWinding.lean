@@ -12,7 +12,7 @@ import Mathlib.Analysis.Meromorphic.FactorizedRational
 import Mathlib.Analysis.Meromorphic.Divisor
 import Mathlib.Analysis.Normed.Module.Connected
 import Mathlib.LinearAlgebra.Complex.FiniteDimensional
-import RiemannDynamics.Hyperbolic.StarShapedPrimitive
+import RiemannDynamics.Hyperbolic.PlaneGeometry.StarShapedPrimitive
 
 /-! # Winding numbers for circles and rectangles
 

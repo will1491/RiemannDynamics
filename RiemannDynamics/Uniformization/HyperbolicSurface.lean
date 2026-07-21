@@ -1,7 +1,7 @@
 import RiemannDynamics.Uniformization.Trichotomy
-import RiemannDynamics.Hyperbolic.DiskMetric
-import RiemannDynamics.Hyperbolic.SchwarzPick
-import RiemannDynamics.Hyperbolic.MobiusDisk
+import RiemannDynamics.Hyperbolic.DiskModel.DiskMetric
+import RiemannDynamics.Hyperbolic.DiskModel.SchwarzPick
+import RiemannDynamics.Hyperbolic.DiskModel.MobiusDisk
 
 /-!
 # Hyperbolic surfaces and the hyperbolic metric

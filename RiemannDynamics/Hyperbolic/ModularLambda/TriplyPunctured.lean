@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Will (Ziang) Li
 -/
 import Mathlib.Topology.Homotopy.Lifting
-import RiemannDynamics.Hyperbolic.DiskMetric
+import RiemannDynamics.Hyperbolic.DiskModel.DiskMetric
 import RiemannDynamics.Hyperbolic.ModularCoveringMap.CoveringAssembly
 
 /-!
