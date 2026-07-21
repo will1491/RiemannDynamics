@@ -1967,10 +1967,14 @@ open ball, the boundary data outside. -/
 noncomputable def dirichletGlue (g : ℂ → ℝ) (c : ℂ) (R : ℝ) : ℂ → ℝ :=
   (Metric.ball c R).piecewise (poissonIntegral g c R) g
 
+/-- On the open ball `ball c R`, the glued Dirichlet solution `dirichletGlue g c R` equals the
+Poisson integral `poissonIntegral g c R` of the boundary data. -/
 theorem dirichletGlue_eq_poisson {g : ℂ → ℝ} {c : ℂ} {R : ℝ} {z : ℂ}
     (hz : z ∈ Metric.ball c R) : dirichletGlue g c R z = poissonIntegral g c R z := by
   simp [dirichletGlue, Set.piecewise, hz]
 
+/-- Off the open ball `ball c R` (on its boundary circle and its exterior), the glued Dirichlet
+solution `dirichletGlue g c R` equals the boundary data `g`. -/
 theorem dirichletGlue_eq_boundary {g : ℂ → ℝ} {c : ℂ} {R : ℝ} {z : ℂ}
     (hz : z ∉ Metric.ball c R) : dirichletGlue g c R z = g z := by
   simp [dirichletGlue, Set.piecewise, hz]
@@ -2562,6 +2566,8 @@ theorem exp_mem_grotzschRing_slitBox {s ξ θ : ℝ} (hs0 : 0 < s) (hs1 : s < 1)
 def openSlitBox (ξ₁ ξ₂ : ℝ) : Set ℂ :=
   {w : ℂ | ξ₁ < w.re ∧ w.re < ξ₂ ∧ 0 < w.im ∧ w.im < 2 * π}
 
+/-- The open slit box `openSlitBox ξ₁ ξ₂`, i.e. the open rectangle `(ξ₁, ξ₂) × (0, 2π)` in `ℂ`,
+is an open set. -/
 theorem isOpen_openSlitBox (ξ₁ ξ₂ : ℝ) : IsOpen (openSlitBox ξ₁ ξ₂) := by
   have h1 : IsOpen {w : ℂ | ξ₁ < w.re} := isOpen_lt continuous_const Complex.continuous_re
   have h2 : IsOpen {w : ℂ | w.re < ξ₂} := isOpen_lt Complex.continuous_re continuous_const

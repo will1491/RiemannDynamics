@@ -28,6 +28,7 @@ noncomputable def polarRotation {z : ℂ} (hz : z ≠ 0) : Circle :=
     rw [mem_sphere_zero_iff_norm, norm_div, Complex.norm_of_nonneg (norm_nonneg z)]
     exact div_self (by simpa using hz)⟩
 
+/-- The unit rotation `polarRotation hz`, viewed as a complex number, is `z / ‖z‖`. -/
 @[simp]
 theorem coe_polarRotation {z : ℂ} (hz : z ≠ 0) :
     (polarRotation hz : ℂ) = z / (‖z‖ : ℂ) := rfl
@@ -37,11 +38,15 @@ standard basis `{1, I}` by the unit `z/‖z‖`. -/
 noncomputable def polarBasis {z : ℂ} (hz : z ≠ 0) : OrthonormalBasis (Fin 2) ℝ ℂ :=
   Complex.orthonormalBasisOneI.map (rotation (polarRotation hz))
 
+/-- The first vector of the polar orthonormal basis at `z` is the unit radial direction
+`z / ‖z‖`. -/
 @[simp]
 theorem polarBasis_zero {z : ℂ} (hz : z ≠ 0) :
     polarBasis hz 0 = z / (‖z‖ : ℂ) := by
   simp [polarBasis, rotation_apply]
 
+/-- The second vector of the polar orthonormal basis at `z` is the unit tangential direction
+`I · z / ‖z‖`. -/
 @[simp]
 theorem polarBasis_one {z : ℂ} (hz : z ≠ 0) :
     polarBasis hz 1 = Complex.I * z / (‖z‖ : ℂ) := by

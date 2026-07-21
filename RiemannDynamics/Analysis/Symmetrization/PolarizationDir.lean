@@ -61,9 +61,11 @@ noncomputable def rotLIE (θ : ℝ) : ℂ ≃ₗᵢ[ℝ] ℂ where
     change ‖Complex.exp (θ * Complex.I) * z‖ = ‖z‖
     rw [norm_mul, Complex.norm_exp]; simp
 
+/-- The rotation isometry `rotLIE θ` acts by multiplication by `exp (θ I)`. -/
 @[simp] theorem rotLIE_apply (θ : ℝ) (z : ℂ) :
     rotLIE θ z = Complex.exp (θ * Complex.I) * z := rfl
 
+/-- The inverse rotation `(rotLIE θ).symm` acts by multiplication by `exp (-(θ I))`. -/
 @[simp] theorem rotLIE_symm_apply (θ : ℝ) (z : ℂ) :
     (rotLIE θ).symm z = Complex.exp (-(θ * Complex.I)) * z := rfl
 
