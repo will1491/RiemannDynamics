@@ -1,4 +1,4 @@
-import RiemannDynamics.Teichmuller.Mumford
+import RiemannDynamics.Teichmuller.Compactness.Mumford
 
 /-!
 # Covolume bounds and limit cocompactness for Fuchsian groups

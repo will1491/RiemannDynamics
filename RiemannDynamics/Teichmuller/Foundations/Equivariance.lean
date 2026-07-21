@@ -1,4 +1,4 @@
-import RiemannDynamics.Teichmuller.Beltrami
+import RiemannDynamics.Teichmuller.Foundations.Beltrami
 import RiemannDynamics.Uniformization.Fuchsian
 import RiemannDynamics.QC.Calculus.Removability
 import RiemannDynamics.QC.Calculus.Weyl

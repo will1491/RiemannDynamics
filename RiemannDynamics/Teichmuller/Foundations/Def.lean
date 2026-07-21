@@ -1,4 +1,4 @@
-import RiemannDynamics.Teichmuller.Equivariance
+import RiemannDynamics.Teichmuller.Foundations.Equivariance
 import RiemannDynamics.Surface.Orientation
 
 /-!

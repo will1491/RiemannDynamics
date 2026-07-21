@@ -1,5 +1,5 @@
-import RiemannDynamics.Teichmuller.Metric
-import RiemannDynamics.Teichmuller.UpperQC
+import RiemannDynamics.Teichmuller.Foundations.Metric
+import RiemannDynamics.Teichmuller.ModuliAction.UpperQC
 import RiemannDynamics.Surface.MappingClassGroup
 import Mathlib.Topology.MetricSpace.IsometricSMul
 

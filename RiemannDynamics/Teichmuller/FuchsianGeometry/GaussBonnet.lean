@@ -1,5 +1,5 @@
-import RiemannDynamics.Teichmuller.PolygonRank
-import RiemannDynamics.Teichmuller.Limit
+import RiemannDynamics.Teichmuller.FuchsianGeometry.PolygonRank
+import RiemannDynamics.Teichmuller.Compactness.Limit
 
 /-!
 # The uniform Gauss–Bonnet area bound across the Teichmüller family

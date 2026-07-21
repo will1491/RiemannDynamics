@@ -1,4 +1,4 @@
-import RiemannDynamics.Teichmuller.Dirichlet
+import RiemannDynamics.Teichmuller.FuchsianGeometry.Dirichlet
 import RiemannDynamics.Hyperbolic.TriangleArea
 import Mathlib.Data.Set.Card
 import Mathlib.Algebra.BigOperators.Finprod

@@ -1,4 +1,4 @@
-import RiemannDynamics.Teichmuller.Length
+import RiemannDynamics.Teichmuller.Compactness.Length
 import Mathlib.MeasureTheory.Group.FundamentalDomain
 
 /-!

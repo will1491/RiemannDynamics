@@ -1,4 +1,4 @@
-import RiemannDynamics.Teichmuller.Covolume
+import RiemannDynamics.Teichmuller.Compactness.Covolume
 import Mathlib.MeasureTheory.Measure.Lebesgue.Complex
 import Mathlib.MeasureTheory.Measure.Lebesgue.EqHaar
 

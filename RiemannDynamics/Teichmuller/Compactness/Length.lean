@@ -1,4 +1,4 @@
-import RiemannDynamics.Teichmuller.Metric
+import RiemannDynamics.Teichmuller.Foundations.Metric
 import Mathlib.Analysis.SpecialFunctions.Arcosh
 import Mathlib.Analysis.Complex.UpperHalfPlane.Metric
 import Mathlib.Analysis.Complex.UpperHalfPlane.Measure

@@ -1,5 +1,5 @@
-import RiemannDynamics.Teichmuller.GaussBonnet
-import RiemannDynamics.Teichmuller.ModAction
+import RiemannDynamics.Teichmuller.FuchsianGeometry.GaussBonnet
+import RiemannDynamics.Teichmuller.ModuliAction.ModAction
 import Mathlib.NumberTheory.ModularForms.SlashInvariantForms
 import Mathlib.Analysis.Complex.UpperHalfPlane.Manifold
 

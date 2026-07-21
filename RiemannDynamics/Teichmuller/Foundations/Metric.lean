@@ -1,4 +1,4 @@
-import RiemannDynamics.Teichmuller.Def
+import RiemannDynamics.Teichmuller.Foundations.Def
 import RiemannDynamics.QC.Calculus.Compactness
 import RiemannDynamics.QC.Regularity.Quasisymmetry
 

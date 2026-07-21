@@ -1,4 +1,4 @@
-import RiemannDynamics.Teichmuller.Def
+import RiemannDynamics.Teichmuller.Foundations.Def
 import RiemannDynamics.Surface.GenusSurface
 import RiemannDynamics.Uniformization.Fuchsian
 import RiemannDynamics.Uniformization.GenusHyperbolic

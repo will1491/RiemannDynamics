@@ -1,6 +1,6 @@
-import RiemannDynamics.Teichmuller.Covolume
-import RiemannDynamics.Teichmuller.ModAction
-import RiemannDynamics.Teichmuller.UpperQC
+import RiemannDynamics.Teichmuller.Compactness.Covolume
+import RiemannDynamics.Teichmuller.ModuliAction.ModAction
+import RiemannDynamics.Teichmuller.ModuliAction.UpperQC
 
 /-!
 # Convergence of Mumford limits in the Teichmüller metric

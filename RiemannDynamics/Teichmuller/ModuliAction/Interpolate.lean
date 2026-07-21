@@ -1,4 +1,4 @@
-import RiemannDynamics.Teichmuller.Dirichlet
+import RiemannDynamics.Teichmuller.FuchsianGeometry.Dirichlet
 import Mathlib.Topology.Covering.Basic
 import Mathlib.Topology.Homotopy.Lifting
 import Mathlib.Analysis.Convex.Contractible

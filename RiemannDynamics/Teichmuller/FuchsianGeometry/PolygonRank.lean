@@ -1,4 +1,4 @@
-import RiemannDynamics.Teichmuller.Polygon
+import RiemannDynamics.Teichmuller.FuchsianGeometry.Polygon
 
 /-!
 # The rank identity for the Dirichlet polygon

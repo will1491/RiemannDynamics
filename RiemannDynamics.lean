@@ -209,25 +209,27 @@ import RiemannDynamics.Surface.Orientation
 import RiemannDynamics.Surface.Pi1
 import RiemannDynamics.Surface.WindingFunctionals
 
-import RiemannDynamics.Teichmuller.Beltrami
-import RiemannDynamics.Teichmuller.Covolume
-import RiemannDynamics.Teichmuller.Def
-import RiemannDynamics.Teichmuller.Dirichlet
-import RiemannDynamics.Teichmuller.Equivariance
-import RiemannDynamics.Teichmuller.Interpolate
-import RiemannDynamics.Teichmuller.Length
-import RiemannDynamics.Teichmuller.Limit
-import RiemannDynamics.Teichmuller.Marked
-import RiemannDynamics.Teichmuller.Metric
-import RiemannDynamics.Teichmuller.ModAction
-import RiemannDynamics.Teichmuller.Mumford
-import RiemannDynamics.Teichmuller.UpperQC
+import RiemannDynamics.Teichmuller.Foundations.Beltrami
+import RiemannDynamics.Teichmuller.Foundations.Def
+import RiemannDynamics.Teichmuller.Foundations.Equivariance
+import RiemannDynamics.Teichmuller.Foundations.Marked
+import RiemannDynamics.Teichmuller.Foundations.Metric
+
+import RiemannDynamics.Teichmuller.Compactness.Covolume
+import RiemannDynamics.Teichmuller.Compactness.Length
+import RiemannDynamics.Teichmuller.Compactness.Limit
+import RiemannDynamics.Teichmuller.Compactness.Mumford
 
 import RiemannDynamics.Hyperbolic.Geodesics
 import RiemannDynamics.Hyperbolic.TriangleArea
-import RiemannDynamics.Teichmuller.Polygon
-import RiemannDynamics.Teichmuller.PolygonRank
-import RiemannDynamics.Teichmuller.GaussBonnet
+import RiemannDynamics.Teichmuller.FuchsianGeometry.Dirichlet
+import RiemannDynamics.Teichmuller.FuchsianGeometry.Polygon
+import RiemannDynamics.Teichmuller.FuchsianGeometry.PolygonRank
+import RiemannDynamics.Teichmuller.FuchsianGeometry.GaussBonnet
+
+import RiemannDynamics.Teichmuller.ModuliAction.Interpolate
+import RiemannDynamics.Teichmuller.ModuliAction.UpperQC
+import RiemannDynamics.Teichmuller.ModuliAction.ModAction
 
 import RiemannDynamics.Teichmuller.QuadraticDifferential.Def
 import RiemannDynamics.Teichmuller.QuadraticDifferential.Foliations

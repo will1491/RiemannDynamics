@@ -1,4 +1,4 @@
-import RiemannDynamics.Teichmuller.Interpolate
+import RiemannDynamics.Teichmuller.ModuliAction.Interpolate
 import RiemannDynamics.Uniformization.Fuchsian
 import RiemannDynamics.Uniformization.HolomorphicEquiv
 import RiemannDynamics.QC.MRMT.Uniqueness
