@@ -5692,4 +5692,4862 @@ theorem density_ratio_bound {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) �
     _ ≤ M := hM w hwK'
     _ ≤ max M 1 := le_max_left _ _
 
+/-- A not identically vanishing holomorphic differential has isolated zeros on the
+upper half plane. -/
+theorem zeros_isolated {q : ℂ → ℂ}
+    (hq : DifferentiableOn ℂ q {z : ℂ | 0 < z.im})
+    (hq0 : ∃ z₀ : ℂ, 0 < z₀.im ∧ q z₀ ≠ 0) {x : ℂ} (hx : 0 < x.im) :
+    ∀ᶠ w in nhdsWithin x {x}ᶜ, q w ≠ 0 := by
+  have hH : IsOpen {z : ℂ | 0 < z.im} := isOpen_lt continuous_const Complex.continuous_im
+  have hpre : IsPreconnected {z : ℂ | 0 < z.im} := by
+    have hconv : Convex ℝ {z : ℂ | 0 < z.im} := by
+      intro a ha b hb s t hs ht hst
+      have him : (s • a + t • b).im = s * a.im + t * b.im := by
+        simp [Complex.add_im, Complex.smul_im]
+      rw [Set.mem_setOf_eq, him]
+      rcases eq_or_lt_of_le hs with hs0 | hs0
+      · rw [← hs0] at hst ⊢
+        simp only [zero_mul, zero_add] at hst ⊢
+        rw [hst]
+        simpa using hb
+      · have ha' : (0 : ℝ) < a.im := ha
+        have hb' : (0 : ℝ) < b.im := hb
+        nlinarith [mul_pos hs0 ha', mul_nonneg ht hb'.le]
+    exact hconv.isPreconnected
+  have hAn : AnalyticOnNhd ℂ q {z : ℂ | 0 < z.im} := hq.analyticOnNhd hH
+  rcases (hAn x hx).eventually_eq_zero_or_eventually_ne_zero with hzero | hne
+  · exfalso
+    obtain ⟨z₀, hz₀, hqz₀⟩ := hq0
+    exact hqz₀ (hAn.eqOn_zero_of_preconnected_of_eventuallyEq_zero hpre hx hzero hz₀)
+  · exact hne
+
+/-- The hyperbolic distance is dominated by the euclidean distance divided by the
+geometric mean of the heights. -/
+theorem hyp_dist_le (z w : UpperHalfPlane) :
+    dist z w ≤ dist (z : ℂ) (w : ℂ) / Real.sqrt (z.im * w.im) := by
+  rw [UpperHalfPlane.dist_eq]
+  have hu : 0 ≤ dist (z : ℂ) (w : ℂ) / (2 * Real.sqrt (z.im * w.im)) := by positivity
+  have h1 : Real.arsinh (dist (z : ℂ) (w : ℂ) / (2 * Real.sqrt (z.im * w.im)))
+      ≤ dist (z : ℂ) (w : ℂ) / (2 * Real.sqrt (z.im * w.im)) := by
+    calc Real.arsinh (dist (z : ℂ) (w : ℂ) / (2 * Real.sqrt (z.im * w.im)))
+        ≤ Real.arsinh (Real.sinh (dist (z : ℂ) (w : ℂ)
+            / (2 * Real.sqrt (z.im * w.im)))) :=
+          Real.arsinh_le_arsinh.mpr (Real.self_le_sinh_iff.mpr hu)
+      _ = dist (z : ℂ) (w : ℂ) / (2 * Real.sqrt (z.im * w.im)) := Real.arsinh_sinh _
+  calc 2 * Real.arsinh (dist (z : ℂ) (w : ℂ) / (2 * Real.sqrt (z.im * w.im)))
+      ≤ 2 * (dist (z : ℂ) (w : ℂ) / (2 * Real.sqrt (z.im * w.im))) := by linarith
+    _ = dist (z : ℂ) (w : ℂ) / Real.sqrt (z.im * w.im) := by ring
+
+/-- Points of a small euclidean ball high in the half plane are hyperbolically close:
+euclidean radius an eighth of the height gives hyperbolic diameter at most one. -/
+theorem ball_hyp_diam {x : ℂ} (hx : 0 < x.im) {e : ℝ} (he : 0 < e)
+    (hee : e ≤ x.im / 8) {z w : ℂ} (hz : z ∈ Metric.ball x e) (hw : w ∈ Metric.ball x e)
+    (hzim : 0 < z.im) (hwim : 0 < w.im) :
+    dist (⟨z, hzim⟩ : UpperHalfPlane) (⟨w, hwim⟩ : UpperHalfPlane) ≤ 1 := by
+  have him : ∀ u : ℂ, u ∈ Metric.ball x e → x.im / 2 ≤ u.im := by
+    intro u hu
+    have h1 : |u.im - x.im| ≤ dist u x := by
+      rw [dist_eq_norm, ← Complex.sub_im]
+      exact Complex.abs_im_le_norm _
+    have h2 : dist u x < e := hu
+    have := abs_le.mp (le_trans h1 h2.le)
+    linarith
+  have hd : dist z w ≤ 2 * e := by
+    calc dist z w ≤ dist z x + dist x w := dist_triangle _ _ _
+      _ ≤ e + e := add_le_add hz.le (by rw [dist_comm]; exact hw.le)
+      _ = 2 * e := by ring
+  have hsq : x.im / 2 ≤ Real.sqrt (z.im * w.im) := by
+    have h1 := him z hz
+    have h2 := him w hw
+    have : (x.im / 2) ^ 2 ≤ z.im * w.im := by nlinarith
+    calc x.im / 2 = Real.sqrt ((x.im / 2) ^ 2) :=
+          (Real.sqrt_sq (by positivity)).symm
+      _ ≤ Real.sqrt (z.im * w.im) := Real.sqrt_le_sqrt this
+  calc dist (⟨z, hzim⟩ : UpperHalfPlane) (⟨w, hwim⟩ : UpperHalfPlane)
+      ≤ dist z w / Real.sqrt (z.im * w.im) := hyp_dist_le _ _
+    _ ≤ (2 * e) / (x.im / 2) := by
+        gcongr
+    _ ≤ 1 := by
+        rw [div_le_one (by positivity)]
+        linarith
+
+/-- **A zero-free annulus with positive flat density**: around every point of the upper
+half plane there is a small annulus, below an eighth of the height, on which `√‖q‖` has
+a positive minimum. -/
+theorem exists_annulus {q : ℂ → ℂ}
+    (hq : DifferentiableOn ℂ q {z : ℂ | 0 < z.im})
+    (hq0 : ∃ z₀ : ℂ, 0 < z₀.im ∧ q z₀ ≠ 0) {x : ℂ} (hx : 0 < x.im) :
+    ∃ e c : ℝ, 0 < e ∧ 0 < c ∧ e ≤ x.im / 8 ∧
+      ∀ w : ℂ, e / 2 ≤ ‖w - x‖ → ‖w - x‖ ≤ e → c ≤ Real.sqrt ‖q w‖ := by
+  obtain ⟨V, hVo, hxV, hVsub⟩ := mem_nhdsWithin.mp (zeros_isolated hq hq0 hx)
+  obtain ⟨r₁, hr₁, hball⟩ := Metric.isOpen_iff.mp hVo x hxV
+  set e : ℝ := min (r₁ / 2) (x.im / 8) with hedef
+  have he : 0 < e := lt_min (by linarith) (by linarith)
+  have heim : e ≤ x.im / 8 := min_le_right _ _
+  set A : Set ℂ := Metric.closedBall x e ∩ {w : ℂ | e / 2 ≤ ‖w - x‖} with hAdef
+  have hmemA : ∀ w ∈ A, e / 2 ≤ ‖w - x‖ ∧ ‖w - x‖ ≤ e := by
+    intro w hw
+    refine ⟨hw.2, ?_⟩
+    have := hw.1
+    rwa [Metric.mem_closedBall, dist_eq_norm] at this
+  have hAH : A ⊆ {z : ℂ | 0 < z.im} := by
+    intro w hw
+    have h1 : |w.im - x.im| ≤ ‖w - x‖ := by
+      rw [← Complex.sub_im]
+      exact Complex.abs_im_le_norm _
+    have h2 := abs_le.mp (le_trans h1 (hmemA w hw).2)
+    show 0 < w.im
+    linarith [h2.1]
+  have hAne : ∀ w ∈ A, q w ≠ 0 := by
+    intro w hw
+    refine hVsub ⟨hball ?_, ?_⟩
+    · rw [Metric.mem_ball, dist_eq_norm]
+      calc ‖w - x‖ ≤ e := (hmemA w hw).2
+        _ ≤ r₁ / 2 := min_le_left _ _
+        _ < r₁ := by linarith
+    · intro hwx
+      rw [Set.mem_singleton_iff] at hwx
+      have := (hmemA w hw).1
+      rw [hwx, sub_self, norm_zero] at this
+      linarith
+  have hAclosed : IsClosed A := by
+    refine Metric.isClosed_closedBall.inter ?_
+    have : {w : ℂ | e / 2 ≤ ‖w - x‖} = (fun w => ‖w - x‖) ⁻¹' Set.Ici (e / 2) := rfl
+    rw [this]
+    exact IsClosed.preimage ((continuous_id.sub continuous_const).norm)
+      isClosed_Ici
+  have hAc : IsCompact A :=
+    (isCompact_closedBall x e).of_isClosed_subset hAclosed
+      Set.inter_subset_left
+  have hAnonempty : A.Nonempty := by
+    refine ⟨x + ((e / 2 : ℝ) : ℂ), ?_, ?_⟩
+    · rw [Metric.mem_closedBall, dist_eq_norm, add_sub_cancel_left, Complex.norm_real,
+        Real.norm_eq_abs, abs_of_pos (by linarith)]
+      linarith
+    · rw [Set.mem_setOf_eq, add_sub_cancel_left, Complex.norm_real, Real.norm_eq_abs,
+        abs_of_pos (by linarith)]
+  have hcont : ContinuousOn (fun w => Real.sqrt ‖q w‖) A :=
+    ((hq.continuousOn.mono hAH).norm).sqrt
+  obtain ⟨w₀, hw₀A, hw₀min⟩ := hAc.exists_isMinOn hAnonempty hcont
+  refine ⟨e, Real.sqrt ‖q w₀‖, he, ?_, heim, ?_⟩
+  · exact Real.sqrt_pos.mpr (norm_pos_iff.mpr (hAne w₀ hw₀A))
+  · intro w h1 h2
+    exact hw₀min ⟨Metric.mem_closedBall.mpr (by rwa [dist_eq_norm]), h1⟩
+
+/-- Mean value bound from interior derivatives and continuity on the closed segment. -/
+theorem seg_bound {σ : ℝ → ℂ} {v u : ℝ} (hvu : v < u) {C : ℝ} (hC : 0 ≤ C)
+    (hσcont : ContinuousOn σ (Set.Icc v u))
+    (hderiv : ∀ w ∈ Set.Ioo v u, HasDerivAt σ (deriv σ w) w)
+    (hbnd : ∀ w ∈ Set.Ioo v u, ‖deriv σ w‖ ≤ C) :
+    ‖σ u - σ v‖ ≤ C * (u - v) := by
+  set δ : ℝ := (u - v) / 3 with hδdef
+  have hδ : 0 < δ := by
+    rw [hδdef]
+    linarith
+  set vn : ℕ → ℝ := fun n => v + δ / (n + 1) with hvndef
+  set un : ℕ → ℝ := fun n => u - δ / (n + 1) with hundef
+  have hstep : ∀ n : ℕ, ‖σ (un n) - σ (vn n)‖ ≤ C * (un n - vn n) := by
+    intro n
+    have hpos : 0 < δ / (n + 1) := by positivity
+    have hle : δ / (n + 1) ≤ δ := by
+      rw [div_le_iff₀ (by positivity : (0 : ℝ) < (n : ℝ) + 1)]
+      nlinarith [hδ.le, Nat.cast_nonneg (α := ℝ) n]
+    have h1 : v < vn n := by rw [hvndef]; simp only; linarith
+    have h2 : vn n ≤ un n := by
+      rw [hvndef, hundef]
+      simp only
+      rw [hδdef] at hle
+      linarith
+    have h3 : un n < u := by rw [hundef]; simp only; linarith
+    have hsub : Set.Icc (vn n) (un n) ⊆ Set.Ioo v u := fun w hw =>
+      ⟨lt_of_lt_of_le h1 hw.1, lt_of_le_of_lt hw.2 h3⟩
+    have hf : ∀ w ∈ Set.Icc (vn n) (un n),
+        HasDerivWithinAt σ (deriv σ w) (Set.Icc (vn n) (un n)) w := fun w hw =>
+      (hderiv w (hsub hw)).hasDerivWithinAt
+    have hb : ∀ w ∈ Set.Ico (vn n) (un n), ‖deriv σ w‖ ≤ C := fun w hw =>
+      hbnd w (hsub ⟨hw.1, hw.2.le⟩)
+    have := norm_image_sub_le_of_norm_deriv_le_segment' hf hb (un n)
+      (Set.right_mem_Icc.mpr h2)
+    linarith [this]
+  have hvmem : ∀ n, vn n ∈ Set.Icc v u := by
+    intro n
+    have hpos : 0 < δ / (n + 1) := by positivity
+    have hle : δ / (n + 1) ≤ δ := by
+      rw [div_le_iff₀ (by positivity : (0 : ℝ) < (n : ℝ) + 1)]
+      nlinarith [hδ.le, Nat.cast_nonneg (α := ℝ) n]
+    rw [hδdef] at hle
+    exact ⟨by rw [hvndef]; simp only; linarith, by rw [hvndef]; simp only; linarith⟩
+  have humem : ∀ n, un n ∈ Set.Icc v u := by
+    intro n
+    have hpos : 0 < δ / (n + 1) := by positivity
+    have hle : δ / (n + 1) ≤ δ := by
+      rw [div_le_iff₀ (by positivity : (0 : ℝ) < (n : ℝ) + 1)]
+      nlinarith [hδ.le, Nat.cast_nonneg (α := ℝ) n]
+    rw [hδdef] at hle
+    exact ⟨by rw [hundef]; simp only; linarith, by rw [hundef]; simp only; linarith⟩
+  have htend : Filter.Tendsto (fun n : ℕ => δ / (n + 1)) Filter.atTop (nhds 0) := by
+    have h0 : Filter.Tendsto (fun n : ℕ => 1 / ((n : ℝ) + 1)) Filter.atTop (nhds 0) :=
+      tendsto_one_div_add_atTop_nhds_zero_nat
+    have h2 : Filter.Tendsto (fun n : ℕ => δ * (1 / ((n : ℝ) + 1))) Filter.atTop
+        (nhds (δ * 0)) := h0.const_mul δ
+    simpa [div_eq_mul_inv, mul_zero] using h2
+  have hvt : Filter.Tendsto vn Filter.atTop (nhds v) := by
+    have := htend.const_add v
+    simpa [hvndef] using this
+  have hut : Filter.Tendsto un Filter.atTop (nhds u) := by
+    have h2 := (htend.const_mul (-1 : ℝ)).const_add u
+    have h3 : (fun n : ℕ => u + (-1) * (δ / (n + 1))) = un := by
+      funext n
+      rw [hundef]
+      ring
+    rw [h3] at h2
+    simpa using h2
+  have hσv : Filter.Tendsto (fun n => σ (vn n)) Filter.atTop (nhds (σ v)) := by
+    refine (hσcont v (Set.left_mem_Icc.mpr hvu.le)).tendsto.comp ?_
+    exact tendsto_nhdsWithin_iff.mpr ⟨hvt, Filter.Eventually.of_forall hvmem⟩
+  have hσu : Filter.Tendsto (fun n => σ (un n)) Filter.atTop (nhds (σ u)) := by
+    refine (hσcont u (Set.right_mem_Icc.mpr hvu.le)).tendsto.comp ?_
+    exact tendsto_nhdsWithin_iff.mpr ⟨hut, Filter.Eventually.of_forall humem⟩
+  refine le_of_tendsto_of_tendsto' ((hσu.sub hσv).norm) ?_ hstep
+  exact (hut.sub hvt).const_mul C
+
+/-- **Flat exit cost**: a trajectory piece starting well inside a zero-free annulus ball
+and of flat time span below the annulus cost stays inside the ball. -/
+theorem traj_stay {q : ℂ → ℂ} {σ : ℝ → ℂ} {T : ℝ}
+    (hσ : IsTrajOn q σ (Set.Icc 0 T)) {x : ℂ} {e c : ℝ} (he : 0 < e) (hc : 0 < c)
+    (hann : ∀ w : ℂ, e / 2 ≤ ‖w - x‖ → ‖w - x‖ ≤ e → c ≤ Real.sqrt ‖q w‖)
+    {a b : ℝ} (ha : 0 ≤ a) (hab : a ≤ b) (hbT : b ≤ T)
+    (hstart : ‖σ a - x‖ < e / 4) (hspan : b - a < c * (e / 4)) :
+    ∀ u ∈ Set.Icc a b, ‖σ u - x‖ < e := by
+  by_contra hcon
+  push Not at hcon
+  obtain ⟨u₀, hu₀mem, hu₀⟩ := hcon
+  have hIccsub : Set.Icc a b ⊆ Set.Icc 0 T := fun w hw =>
+    ⟨le_trans ha hw.1, le_trans hw.2 hbT⟩
+  have hcont : ContinuousOn (fun u => ‖σ u - x‖) (Set.Icc a b) :=
+    ((hσ.cont.mono hIccsub).sub continuousOn_const).norm
+  set S : Set ℝ := Set.Icc a b ∩ (fun u => ‖σ u - x‖) ⁻¹' Set.Ici e with hSdef
+  have hSclosed : IsClosed S :=
+    hcont.preimage_isClosed_of_isClosed isClosed_Icc isClosed_Ici
+  have hSne : S.Nonempty := ⟨u₀, hu₀mem, hu₀⟩
+  have hSbdd : BddBelow S := ⟨a, fun w hw => hw.1.1⟩
+  set ustar : ℝ := sInf S with hustardef
+  have hustarS : ustar ∈ S := hSclosed.csInf_mem hSne hSbdd
+  have hustarb : ustar ≤ b := hustarS.1.2
+  have haustar : a < ustar := by
+    rcases eq_or_lt_of_le hustarS.1.1 with heq | h
+    · exfalso
+      have := hustarS.2
+      rw [← heq] at this
+      have : e ≤ ‖σ a - x‖ := this
+      linarith
+    · exact h
+  have hcont2 : ContinuousOn (fun u => ‖σ u - x‖) (Set.Icc a ustar) :=
+    hcont.mono (Set.Icc_subset_Icc le_rfl hustarb)
+  set S₂ : Set ℝ := Set.Icc a ustar ∩ (fun u => ‖σ u - x‖) ⁻¹' Set.Iic (e / 2)
+    with hS₂def
+  have hS₂closed : IsClosed S₂ :=
+    hcont2.preimage_isClosed_of_isClosed isClosed_Icc isClosed_Iic
+  have hS₂ne : S₂.Nonempty :=
+    ⟨a, Set.left_mem_Icc.mpr haustar.le, by
+      show ‖σ a - x‖ ≤ e / 2
+      linarith⟩
+  have hS₂bdd : BddAbove S₂ := ⟨ustar, fun w hw => hw.1.2⟩
+  set v : ℝ := sSup S₂ with hvdef
+  have hvS₂ : v ∈ S₂ := hS₂closed.csSup_mem hS₂ne hS₂bdd
+  have hvustar : v < ustar := by
+    rcases eq_or_lt_of_le hvS₂.1.2 with heq | h
+    · exfalso
+      have h1 := hvS₂.2
+      rw [heq] at h1
+      have h2 : e ≤ ‖σ ustar - x‖ := hustarS.2
+      have : (‖σ ustar - x‖ : ℝ) ≤ e / 2 := h1
+      linarith
+    · exact h
+  have hmid : ∀ w ∈ Set.Ioo v ustar, e / 2 ≤ ‖σ w - x‖ ∧ ‖σ w - x‖ ≤ e := by
+    intro w hw
+    have hwmem : w ∈ Set.Icc a b :=
+      ⟨le_trans hvS₂.1.1 hw.1.le, le_trans hw.2.le hustarb⟩
+    constructor
+    · by_contra hlt
+      push Not at hlt
+      have : w ∈ S₂ := ⟨⟨le_trans hvS₂.1.1 hw.1.le, hw.2.le⟩, hlt.le⟩
+      have := le_csSup hS₂bdd this
+      linarith [hw.1]
+    · by_contra hgt
+      push Not at hgt
+      have : w ∈ S := ⟨hwmem, hgt.le⟩
+      have := csInf_le hSbdd this
+      linarith [hw.2]
+  have hbnd : ∀ w ∈ Set.Ioo v ustar,
+      HasDerivAt σ (deriv σ w) w ∧ ‖deriv σ w‖ ≤ 1 / c := by
+    intro w hw
+    have hw0 : 0 < w := lt_of_le_of_lt (le_trans ha hvS₂.1.1) hw.1
+    have hwT : w ≤ T := le_trans (le_trans hw.2.le hustarb) hbT
+    have hwmem : w ∈ Set.Icc 0 T := ⟨hw0.le, hwT⟩
+    have hnhds : Set.Icc 0 T ∈ nhds w := by
+      rcases eq_or_lt_of_le hwT with heq | hlt
+      · exfalso
+        have := hw.2
+        have h2 := hustarb
+        have h3 := hbT
+        linarith [heq ▸ (lt_of_lt_of_le hw.2 (le_trans hustarb hbT))]
+      · exact Icc_mem_nhds hw0 hlt
+    obtain ⟨d, hd, hdq⟩ := traj_hasDerivAt hσ hwmem hnhds
+    have hderiv : deriv σ w = d := hd.deriv
+    obtain ⟨h1, h2⟩ := hmid w hw
+    refine ⟨hderiv ▸ hd, ?_⟩
+    rw [hderiv]
+    have hsq : (c * ‖d‖) ^ 2 ≤ 1 := by
+      have hc2 : c ^ 2 ≤ ‖q (σ w)‖ := by
+        have := Real.sq_sqrt (norm_nonneg (q (σ w)))
+        nlinarith [hann (σ w) h1 h2, Real.sqrt_nonneg ‖q (σ w)‖]
+      calc (c * ‖d‖) ^ 2 = c ^ 2 * ‖d‖ ^ 2 := by ring
+        _ ≤ ‖q (σ w)‖ * ‖d‖ ^ 2 := by nlinarith [sq_nonneg ‖d‖]
+        _ = 1 := by rw [mul_comm]; exact hdq
+    have hcd : c * ‖d‖ ≤ 1 := by
+      nlinarith [mul_nonneg hc.le (norm_nonneg d)]
+    rw [le_div_iff₀ hc]
+    linarith [mul_comm c ‖d‖ ▸ hcd]
+  have hMV := seg_bound hvustar (by positivity : (0:ℝ) ≤ 1 / c)
+    ((hσ.cont.mono hIccsub).mono (Set.Icc_subset_Icc hvS₂.1.1 hustarb))
+    (fun w hw => (hbnd w hw).1) (fun w hw => (hbnd w hw).2)
+  have hdisp : e / 2 ≤ ‖σ ustar - σ v‖ := by
+    have h1 : e ≤ ‖σ ustar - x‖ := hustarS.2
+    have h2 : ‖σ v - x‖ ≤ e / 2 := hvS₂.2
+    calc e / 2 ≤ ‖σ ustar - x‖ - ‖σ v - x‖ := by linarith
+      _ ≤ ‖(σ ustar - x) - (σ v - x)‖ := norm_sub_norm_le _ _
+      _ = ‖σ ustar - σ v‖ := by rw [sub_sub_sub_cancel_right]
+  have hfinal : c * (e / 2) ≤ ustar - v := by
+    have := le_trans hdisp hMV
+    rw [div_mul_eq_mul_div, le_div_iff₀ hc] at this
+    linarith [this]
+  have hint : ustar - v ≤ b - a := by
+    have := hvS₂.1.1
+    linarith [hustarb]
+  linarith [hspan, hfinal, hint, mul_pos hc (by linarith : (0:ℝ) < e / 4)]
+
+/-- **Deck transport of vertical trajectories**: postcomposition with a deck Möbius map
+of an automorphic differential carries trajectories to trajectories. -/
+theorem traj_deck {q : ℂ → ℂ} {σ : ℝ → ℂ} {s : Set ℝ}
+    (γ : Matrix.SpecialLinearGroup (Fin 2) ℝ)
+    (hauto : ∀ z : ℂ, 0 < z.im → q (moebiusMap γ z) = moebiusDenom γ z ^ 4 * q z)
+    (hσ : IsTrajOn q σ s) :
+    IsTrajOn q (fun u => moebiusMap γ (σ u)) s := by
+  constructor
+  · intro t ht
+    have him : 0 < (σ t).im := (traj_regular hσ ht).1
+    exact (moebius_diffAt γ him).continuousAt.comp_continuousWithinAt (hσ.cont t ht)
+  · intro t ht
+    obtain ⟨U, hUo, hpU, hUH, hUne, Φ, hΦd, hΦinj, hΦsq, hev⟩ := hσ.chart t ht
+    refine ⟨moebiusMap γ '' U, isOpen_moebius_image γ hUo hUH, ⟨σ t, hpU, rfl⟩,
+      ?_, ?_, fun w => Φ (moebiusMap γ⁻¹ w), ?_, ?_, ?_, ?_⟩
+    · rintro w ⟨z, hzU, rfl⟩
+      exact moebiusMap_im_pos γ (hUH hzU)
+    · rintro w ⟨z, hzU, rfl⟩
+      have hzim : 0 < z.im := hUH hzU
+      rw [hauto z hzim]
+      exact mul_ne_zero (pow_ne_zero 4
+        (moebiusDenom_ne_zero_of_im_ne_zero γ hzim.ne')) (hUne z hzU)
+    · intro w hw
+      obtain ⟨z, hzU, rfl⟩ := hw
+      have hzim : 0 < z.im := hUH hzU
+      have hinvd : DifferentiableWithinAt ℂ (moebiusMap γ⁻¹) (moebiusMap γ '' U)
+          (moebiusMap γ z) :=
+        ((hasDerivAt_moebiusMap_of_im_pos γ⁻¹
+          (moebiusMap_im_pos γ hzim)).differentiableAt).differentiableWithinAt
+      have hmaps : Set.MapsTo (moebiusMap γ⁻¹) (moebiusMap γ '' U) U := by
+        rintro w' ⟨z', hz'U, rfl⟩
+        rw [moebius_cancel γ (hUH hz'U)]
+        exact hz'U
+      have hg : DifferentiableWithinAt ℂ Φ U (moebiusMap γ⁻¹ (moebiusMap γ z)) := by
+        rw [moebius_cancel γ hzim]
+        exact hΦd z hzU
+      exact hg.comp (moebiusMap γ z) hinvd hmaps
+    · rintro w₁ ⟨z₁, hz₁U, rfl⟩ w₂ ⟨z₂, hz₂U, rfl⟩ heq
+      have h1 : 0 < z₁.im := hUH hz₁U
+      have h2 : 0 < z₂.im := hUH hz₂U
+      beta_reduce at heq
+      rw [moebius_cancel γ h1, moebius_cancel γ h2] at heq
+      rw [hΦinj hz₁U hz₂U heq]
+    · rintro w ⟨z, hzU, rfl⟩
+      have hzim : 0 < z.im := hUH hzU
+      have hwim : 0 < (moebiusMap γ z).im := moebiusMap_im_pos γ hzim
+      have hdz : moebiusDenom γ z ≠ 0 :=
+        moebiusDenom_ne_zero_of_im_ne_zero γ hzim.ne'
+      have hΦz : DifferentiableAt ℂ Φ z := hΦd.differentiableAt (hUo.mem_nhds hzU)
+      have hinner : HasDerivAt (moebiusMap γ⁻¹)
+          ((moebiusDenom γ⁻¹ (moebiusMap γ z) ^ 2)⁻¹) (moebiusMap γ z) :=
+        hasDerivAt_moebiusMap_of_im_pos γ⁻¹ hwim
+      have houter : HasDerivAt Φ (deriv Φ z) (moebiusMap γ⁻¹ (moebiusMap γ z)) := by
+        rw [moebius_cancel γ hzim]
+        exact hΦz.hasDerivAt
+      have hcomp := HasDerivAt.comp (moebiusMap γ z) houter hinner
+      have hd : deriv (fun w => Φ (moebiusMap γ⁻¹ w)) (moebiusMap γ z)
+          = deriv Φ z * (moebiusDenom γ⁻¹ (moebiusMap γ z) ^ 2)⁻¹ := hcomp.deriv
+      have hcocycle : moebiusDenom γ⁻¹ (moebiusMap γ z) * moebiusDenom γ z = 1 := by
+        rw [moebiusDenom_mul γ⁻¹ γ z hdz, inv_mul_cancel, moebiusDenom_one]
+      have hΦsqz := hΦsq z hzU
+      have hqw := hauto z hzim
+      rw [hd]
+      have he : moebiusDenom γ⁻¹ (moebiusMap γ z) = (moebiusDenom γ z)⁻¹ :=
+        eq_inv_of_mul_eq_one_left hcocycle
+      calc (deriv Φ z * (moebiusDenom γ⁻¹ (moebiusMap γ z) ^ 2)⁻¹) ^ 2
+          = deriv Φ z ^ 2 * ((moebiusDenom γ⁻¹ (moebiusMap γ z) ^ 2)⁻¹) ^ 2 := by
+            ring
+        _ = -q z * (((moebiusDenom γ z)⁻¹ ^ 2)⁻¹) ^ 2 := by rw [hΦsqz, he]
+        _ = -(moebiusDenom γ z ^ 4 * q z) := by
+            field_simp
+        _ = -q (moebiusMap γ z) := by rw [← hqw]
+    · filter_upwards [hev] with u hu
+      have huim : 0 < (σ u).im := hUH hu.1
+      have htim : 0 < (σ t).im := hUH hpU
+      refine ⟨⟨σ u, hu.1, rfl⟩, ?_⟩
+      beta_reduce
+      rw [moebius_cancel γ huim, moebius_cancel γ htim]
+      exact hu.2
+
+/-- **Uniform flat step cost on a compact**: below a uniform flat time span, trajectory
+pieces starting in a fixed compact of the upper half plane move hyperbolic distance at
+most one. -/
+theorem uniform_step {q : ℂ → ℂ}
+    (hq : DifferentiableOn ℂ q {z : ℂ | 0 < z.im})
+    (hq0 : ∃ z₀ : ℂ, 0 < z₀.im ∧ q z₀ ≠ 0) {K' : Set ℂ} (hK'c : IsCompact K')
+    (hK'H : ∀ x ∈ K', 0 < x.im) :
+    ∃ η : ℝ, 0 < η ∧ ∀ (σ : ℝ → ℂ) (T a b : ℝ), IsTrajOn q σ (Set.Icc 0 T) →
+      0 ≤ a → a ≤ b → b ≤ T → b - a < η → σ a ∈ K' →
+      ∀ u ∈ Set.Icc a b, ∀ him : 0 < (σ u).im, ∀ him' : 0 < (σ a).im,
+        dist (⟨σ u, him⟩ : UpperHalfPlane) (⟨σ a, him'⟩ : UpperHalfPlane) ≤ 1 := by
+  have hloc : ∀ x : K', ∃ e c : ℝ, 0 < e ∧ 0 < c ∧ e ≤ (x : ℂ).im / 8 ∧
+      ∀ w : ℂ, e / 2 ≤ ‖w - (x : ℂ)‖ → ‖w - (x : ℂ)‖ ≤ e →
+        c ≤ Real.sqrt ‖q w‖ := fun x =>
+    exists_annulus hq hq0 (hK'H x x.2)
+  choose e c he hc hei hann using hloc
+  obtain ⟨F, hF⟩ := hK'c.elim_finite_subcover
+    (fun x : K' => Metric.ball (x : ℂ) (e x / 4))
+    (fun x => Metric.isOpen_ball) (fun w hw => Set.mem_iUnion.mpr
+      ⟨⟨w, hw⟩, Metric.mem_ball_self (by linarith [he ⟨w, hw⟩])⟩)
+  by_cases hFne : F.Nonempty
+  · set η : ℝ := F.inf' hFne (fun x => c x * (e x / 4)) with hηdef
+    have hη : 0 < η := by
+      rw [hηdef, Finset.lt_inf'_iff]
+      intro x _
+      have := hc x
+      have := he x
+      positivity
+    refine ⟨η, hη, ?_⟩
+    intro σ T a b hσ ha hab hbT hspan haK
+    obtain ⟨x, hxF, hax⟩ := Set.mem_iUnion₂.mp (hF haK)
+    have hηle : η ≤ c x * (e x / 4) := Finset.inf'_le _ hxF
+    have hstay := traj_stay hσ (he x) (hc x) (hann x) ha hab hbT
+      (by rwa [← dist_eq_norm]) (by linarith)
+    intro u hu him him'
+    have hu' : ‖σ u - (x : ℂ)‖ < e x := hstay u hu
+    have ha' : ‖σ a - (x : ℂ)‖ < e x := hstay a (Set.left_mem_Icc.mpr hab)
+    exact ball_hyp_diam (hK'H x x.2) (he x) (hei x)
+      (Metric.mem_ball.mpr (by rwa [dist_eq_norm]))
+      (Metric.mem_ball.mpr (by rwa [dist_eq_norm])) him him'
+  · refine ⟨1, one_pos, ?_⟩
+    intro σ T a b hσ ha hab hbT hspan haK
+    exfalso
+    obtain ⟨x, hxF, -⟩ := Set.mem_iUnion₂.mp (hF haK)
+    exact hFne ⟨x, hxF⟩
+
+/-- **Compact-track theorem**: over a cocompact group, the track of a finite-time
+vertical trajectory of an automorphic differential stays in a compact subset of the
+upper half plane. -/
+theorem traj_track_compact {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
+    (hΓ : IsFuchsianGroup Γ)
+    (hcc : CompactSpace (Quotient (MulAction.orbitRel Γ UpperHalfPlane)))
+    (q : QuadraticDifferential Γ) (hq0 : ∃ z₀ : ℂ, 0 < z₀.im ∧ q z₀ ≠ 0)
+    {σ : ℝ → ℂ} {T : ℝ} (hT : 0 ≤ T) (hσ : IsTrajOn q σ (Set.Icc 0 T)) :
+    ∃ L : Set ℂ, IsCompact L ∧ L ⊆ {z : ℂ | 0 < z.im} ∧
+      ∀ u ∈ Set.Icc 0 T, σ u ∈ L := by
+  have _ := hΓ
+  obtain ⟨K, hK, hcov⟩ := exists_compact_covering Γ hcc
+  set K' : Set ℂ := (fun τ : UpperHalfPlane => (τ : ℂ)) '' K with hK'def
+  have hK'c : IsCompact K' := hK.image UpperHalfPlane.continuous_coe
+  have hK'H : ∀ x ∈ K', 0 < x.im := by
+    rintro x ⟨τ, hτ, rfl⟩
+    exact τ.2
+  obtain ⟨η, hη, hstep⟩ := uniform_step q.holo hq0 hK'c hK'H
+  have hreg : ∀ u ∈ Set.Icc 0 T, 0 < (σ u).im := fun u hu => (traj_regular hσ hu).1
+  set τ₀ : UpperHalfPlane := ⟨σ 0, hreg 0 (Set.left_mem_Icc.mpr hT)⟩ with hτ₀def
+  have key : ∀ k : ℕ, ∀ u, ∀ hu : u ∈ Set.Icc 0 T, u ≤ k * (η / 2) →
+      dist (⟨σ u, hreg u hu⟩ : UpperHalfPlane) τ₀ ≤ k := by
+    intro k
+    induction k with
+    | zero =>
+      intro u hu hle
+      have hu0 : u = 0 := le_antisymm (by simpa using hle) hu.1
+      subst hu0
+      simp [hτ₀def]
+    | succ k ih =>
+      intro u hu hle
+      by_cases hcase : u ≤ k * (η / 2)
+      · calc dist (⟨σ u, hreg u hu⟩ : UpperHalfPlane) τ₀ ≤ k := ih u hu hcase
+          _ ≤ (k + 1 : ℕ) := by push_cast; linarith
+      · push Not at hcase
+        set a : ℝ := k * (η / 2) with hadef
+        have ha0 : 0 ≤ a := by positivity
+        have hau : a ≤ u := hcase.le
+        have haT : a ∈ Set.Icc 0 T := ⟨ha0, le_trans hau hu.2⟩
+        have hspan : u - a < η := by
+          have := hle
+          push_cast at this
+          rw [hadef]
+          linarith
+        obtain ⟨γ, hγK⟩ := hcov ⟨σ a, hreg a haT⟩
+        set σ' : ℝ → ℂ := fun v => moebiusMap (↑γ) (σ v) with hσ'def
+        have hσ' : IsTrajOn q σ' (Set.Icc 0 T) :=
+          traj_deck (↑γ) (q.automorphy (↑γ) γ.2) hσ
+        have hσ'a : σ' a ∈ K' := by
+          refine ⟨γ • ⟨σ a, hreg a haT⟩, hγK, ?_⟩
+          exact coe_smul_moebius γ ⟨σ a, hreg a haT⟩
+        have him : 0 < (σ' u).im := moebiusMap_im_pos _ (hreg u hu)
+        have him' : 0 < (σ' a).im := moebiusMap_im_pos _ (hreg a haT)
+        have hd1 := hstep σ' T a u hσ' ha0 hau hu.2 hspan hσ'a u
+          (Set.right_mem_Icc.mpr hau) him him'
+        have hlift : (⟨σ' u, him⟩ : UpperHalfPlane)
+            = (↑γ : Matrix.SpecialLinearGroup (Fin 2) ℝ) • ⟨σ u, hreg u hu⟩ :=
+          UpperHalfPlane.ext (coe_smul_eq_moebiusMap (↑γ) ⟨σ u, hreg u hu⟩).symm
+        have hlift' : (⟨σ' a, him'⟩ : UpperHalfPlane)
+            = (↑γ : Matrix.SpecialLinearGroup (Fin 2) ℝ) • ⟨σ a, hreg a haT⟩ :=
+          UpperHalfPlane.ext (coe_smul_eq_moebiusMap (↑γ) ⟨σ a, hreg a haT⟩).symm
+        rw [hlift, hlift'] at hd1
+        have hd2 : dist (⟨σ u, hreg u hu⟩ : UpperHalfPlane)
+            (⟨σ a, hreg a haT⟩ : UpperHalfPlane) ≤ 1 := by
+          rwa [dist_smul] at hd1
+        calc dist (⟨σ u, hreg u hu⟩ : UpperHalfPlane) τ₀
+            ≤ dist (⟨σ u, hreg u hu⟩ : UpperHalfPlane)
+                (⟨σ a, hreg a haT⟩ : UpperHalfPlane)
+              + dist (⟨σ a, hreg a haT⟩ : UpperHalfPlane) τ₀ := dist_triangle _ _ _
+          _ ≤ 1 + k := add_le_add hd2 (ih a haT (le_of_eq hadef))
+          _ = (k + 1 : ℕ) := by push_cast; ring
+  set N : ℕ := Nat.ceil (T / (η / 2)) with hNdef
+  refine ⟨(fun τ : UpperHalfPlane => (τ : ℂ)) '' Metric.closedBall τ₀ N,
+    (isCompact_closedBall τ₀ N).image UpperHalfPlane.continuous_coe, ?_, ?_⟩
+  · rintro x ⟨τ, -, rfl⟩
+    exact τ.2
+  · intro u hu
+    have hle : u ≤ N * (η / 2) := by
+      have h1 : T / (η / 2) ≤ N := Nat.le_ceil _
+      have h2 : T ≤ N * (η / 2) := by
+        rw [div_le_iff₀ (by positivity : (0:ℝ) < η / 2)] at h1
+        linarith
+      linarith [hu.2]
+    exact ⟨⟨σ u, hreg u hu⟩, Metric.mem_closedBall.mpr (key N u hu hle), rfl⟩
+
+
+/-- The zeros of a not identically vanishing differential are finite in every compact
+subset of the upper half plane. -/
+theorem zeros_finite {q : ℂ → ℂ}
+    (hq : DifferentiableOn ℂ q {z : ℂ | 0 < z.im})
+    (hq0 : ∃ z₀ : ℂ, 0 < z₀.im ∧ q z₀ ≠ 0) {L : Set ℂ} (hL : IsCompact L)
+    (hLH : L ⊆ {z : ℂ | 0 < z.im}) :
+    Set.Finite {z ∈ L | q z = 0} := by
+  have hloc : ∀ x : L, ∃ V : Set ℂ, IsOpen V ∧ (x : ℂ) ∈ V ∧
+      ∀ w ∈ V, q w = 0 → w = (x : ℂ) := by
+    intro x
+    have hev := zeros_isolated hq hq0 (hLH x.2)
+    obtain ⟨V, hVo, hxV, hVsub⟩ := mem_nhdsWithin.mp hev
+    refine ⟨V, hVo, hxV, fun w hwV hw0 => ?_⟩
+    by_contra hne
+    exact hVsub ⟨hwV, hne⟩ hw0
+  choose V hVo hVmem hVone using hloc
+  obtain ⟨F, hF⟩ := hL.elim_finite_subcover V hVo
+    (fun w hw => Set.mem_iUnion.mpr ⟨⟨w, hw⟩, hVmem ⟨w, hw⟩⟩)
+  refine Set.Finite.subset (Set.Finite.image (fun x : ↥L => (x : ℂ))
+    F.finite_toSet) ?_
+  rintro z ⟨hzL, hz0⟩
+  obtain ⟨x, hxF, hzV⟩ := Set.mem_iUnion₂.mp (hF hzL)
+  exact ⟨x, hxF, (hVone x z hzV hz0).symm⟩
+
+/-- **Two-sided power bounds at a zero**: near an isolated zero the modulus of the
+differential is comparable to the order power of the distance. -/
+theorem zero_order_bounds {q : ℂ → ℂ}
+    (hq : DifferentiableOn ℂ q {z : ℂ | 0 < z.im})
+    (hq0 : ∃ z₁ : ℂ, 0 < z₁.im ∧ q z₁ ≠ 0) {z₀ : ℂ} (hz₀ : 0 < z₀.im) :
+    ∃ (M : ℕ) (r C₁ C₂ : ℝ), 0 < r ∧ 0 < C₁ ∧ 0 < C₂ ∧
+      Metric.ball z₀ r ⊆ {z : ℂ | 0 < z.im} ∧
+      ∀ w ∈ Metric.ball z₀ r,
+        C₁ * ‖w - z₀‖ ^ M ≤ ‖q w‖ ∧ ‖q w‖ ≤ C₂ * ‖w - z₀‖ ^ M := by
+  have hH : IsOpen {z : ℂ | 0 < z.im} := isOpen_lt continuous_const Complex.continuous_im
+  have hnc : ¬ ∀ᶠ z in nhds z₀, q z = 0 := by
+    intro hev
+    have hacc := zeros_isolated hq hq0 hz₀
+    have hcomb := hacc.and (hev.filter_mono nhdsWithin_le_nhds)
+    haveI : (nhdsWithin z₀ ({z₀}ᶜ : Set ℂ)).NeBot :=
+      Module.punctured_nhds_neBot ℝ ℂ z₀
+    obtain ⟨w, hw1, hw2⟩ := hcomb.exists
+    exact hw1 hw2
+  obtain ⟨M, g, hg, hg0, hfac, -⟩ := exists_order_factorization hH hq hz₀ hnc
+  have hgc : ContinuousAt g z₀ := hg.continuousAt
+  have hgball : ∀ᶠ w in nhds z₀, ‖g w - g z₀‖ < ‖g z₀‖ / 2 := by
+    have h := hgc (Metric.ball_mem_nhds (g z₀) (by positivity : (0:ℝ) < ‖g z₀‖ / 2))
+    filter_upwards [h] with w hw
+    rw [← dist_eq_norm]
+    exact hw
+  have hmem : {w | q w = (w - z₀) ^ M * g w}
+      ∩ ({w | ‖g w - g z₀‖ < ‖g z₀‖ / 2} ∩ {z : ℂ | 0 < z.im}) ∈ nhds z₀ :=
+    Filter.inter_mem hfac (Filter.inter_mem hgball (hH.mem_nhds hz₀))
+  obtain ⟨r, hr, hball⟩ := Metric.mem_nhds_iff.mp hmem
+  refine ⟨M, r, ‖g z₀‖ / 2, 2 * ‖g z₀‖, hr, by positivity, by positivity,
+    fun w hw => (hball hw).2.2, ?_⟩
+  intro w hw
+  obtain ⟨hfacw, hgw, -⟩ := hball hw
+  have hgw' : ‖g w - g z₀‖ < ‖g z₀‖ / 2 := hgw
+  have hlow : ‖g z₀‖ / 2 ≤ ‖g w‖ := by
+    have h1 : ‖g z₀‖ - ‖g w‖ ≤ ‖g z₀ - g w‖ := norm_sub_norm_le (g z₀) (g w)
+    rw [norm_sub_rev] at h1
+    linarith
+  have hup : ‖g w‖ ≤ 2 * ‖g z₀‖ := by
+    have h1 : ‖g w‖ - ‖g z₀‖ ≤ ‖g w - g z₀‖ := norm_sub_norm_le (g w) (g z₀)
+    linarith
+  rw [hfacw, norm_mul, norm_pow]
+  constructor
+  · have := mul_le_mul_of_nonneg_left hlow (pow_nonneg (norm_nonneg (w - z₀)) M)
+    calc ‖g z₀‖ / 2 * ‖w - z₀‖ ^ M = ‖w - z₀‖ ^ M * (‖g z₀‖ / 2) := by ring
+      _ ≤ ‖w - z₀‖ ^ M * ‖g w‖ := this
+  · have := mul_le_mul_of_nonneg_left hup (pow_nonneg (norm_nonneg (w - z₀)) M)
+    calc ‖w - z₀‖ ^ M * ‖g w‖ ≤ ‖w - z₀‖ ^ M * (2 * ‖g z₀‖) := this
+      _ = 2 * ‖g z₀‖ * ‖w - z₀‖ ^ M := by ring
+
+/-- Time translation of a vertical trajectory. -/
+theorem traj_shift {q : ℂ → ℂ} {σ : ℝ → ℂ} {s : Set ℝ} (t₀ : ℝ)
+    (h : IsTrajOn q σ s) :
+    IsTrajOn q (fun u => σ (u + t₀)) ((fun u : ℝ => u + t₀) ⁻¹' s) := by
+  have hmap : ∀ t : ℝ, Filter.Tendsto (fun u : ℝ => u + t₀)
+      (nhdsWithin t ((fun u : ℝ => u + t₀) ⁻¹' s)) (nhdsWithin (t + t₀) s) := by
+    intro t
+    refine Filter.Tendsto.inf ((continuous_add_const t₀).tendsto t) ?_
+    exact Filter.tendsto_principal_principal.mpr fun u hu => hu
+  constructor
+  · intro t ht
+    exact ContinuousWithinAt.comp (h.cont (t + t₀) ht)
+      ((continuous_add_const t₀).continuousWithinAt) (fun u hu => hu)
+  · intro t ht
+    obtain ⟨U, hUo, hmem, hUH, hUne, Φ, hΦd, hΦinj, hΦsq, hev⟩ := h.chart (t + t₀) ht
+    refine ⟨U, hUo, hmem, hUH, hUne, Φ, hΦd, hΦinj, hΦsq, ?_⟩
+    filter_upwards [(hmap t).eventually hev] with u hu
+    refine ⟨hu.1, ?_⟩
+    rw [hu.2]
+    push_cast
+    ring
+
+/-- **Flat reach of a zero**: a trajectory running from the sphere of euclidean radius
+`s` into the ball of radius `s/8` around a point needs flat time at least
+`c(s) · s/4`, where `c(s)` is the annulus flat density floor. -/
+theorem traj_reach {q : ℂ → ℂ} {σ : ℝ → ℂ} {T : ℝ} (hT : 0 ≤ T)
+    (hσ : IsTrajOn q σ (Set.Icc 0 T)) {z₀ : ℂ} {s cs : ℝ} (hs : 0 < s) (hcs : 0 < cs)
+    (hann : ∀ w : ℂ, s / 2 ≤ ‖w - z₀‖ → ‖w - z₀‖ ≤ s → cs ≤ Real.sqrt ‖q w‖)
+    (hout : s ≤ ‖σ 0 - z₀‖) (hin : ‖σ T - z₀‖ ≤ s / 8) :
+    cs * (s / 4) ≤ T := by
+  by_contra hlt
+  push Not at hlt
+  set σ' : ℝ → ℂ := fun u => σ (T - u) with hσ'def
+  have hσ'traj : IsTrajOn q σ' (Set.Icc 0 T) := by
+    have h1 := traj_reverse (traj_shift T hσ)
+    have hset : (fun u : ℝ => -u) ⁻¹' ((fun u : ℝ => u + T) ⁻¹' Set.Icc 0 T)
+        = Set.Icc 0 T := by
+      ext u
+      simp only [Set.mem_preimage, Set.mem_Icc]
+      constructor
+      · rintro ⟨h1, h2⟩
+        constructor <;> linarith
+      · rintro ⟨h1, h2⟩
+        constructor <;> linarith
+    rw [hset] at h1
+    have hfun : (fun u : ℝ => (fun v => σ (v + T)) (-u)) = σ' := by
+      funext u
+      rw [hσ'def]
+      simp only
+      ring_nf
+    rwa [hfun] at h1
+  have hstart : ‖σ' 0 - z₀‖ < s / 4 := by
+    rw [hσ'def]
+    simp only [sub_zero]
+    calc ‖σ T - z₀‖ ≤ s / 8 := hin
+      _ < s / 4 := by linarith
+  have hstay := traj_stay hσ'traj hs hcs hann (le_refl 0) hT (le_refl T) hstart
+    (by linarith) T (Set.right_mem_Icc.mpr hT)
+  rw [hσ'def] at hstay
+  simp only [sub_self] at hstay
+  linarith [hout, hstay]
+
+/-- **Squared flat reach**: a trajectory of time span at most `ε` from `z'` into the
+deep eighth-ball of a zero forces the integer-power radius bound
+`C₁/(2^M · 16) · min(‖z' − z₀‖, r₀/2)^(M+2) ≤ ε²`. -/
+theorem reach_radius_sq {q : ℂ → ℂ} {σ : ℝ → ℂ} {T ε : ℝ}
+    (hT : 0 ≤ T) (hTε : T ≤ ε) (hσ : IsTrajOn q σ (Set.Icc 0 T))
+    {z₀ : ℂ} {M : ℕ} {r₀ C₁ C₂ : ℝ} (hr₀ : 0 < r₀) (hC₁ : 0 < C₁)
+    (hbounds : ∀ w ∈ Metric.ball z₀ r₀,
+      C₁ * ‖w - z₀‖ ^ M ≤ ‖q w‖ ∧ ‖q w‖ ≤ C₂ * ‖w - z₀‖ ^ M)
+    (hz' : 0 < ‖σ 0 - z₀‖)
+    (hin : ‖σ T - z₀‖ ≤ min ‖σ 0 - z₀‖ (r₀ / 2) / 8) :
+    C₁ / (2 ^ M * 16) * min ‖σ 0 - z₀‖ (r₀ / 2) ^ (M + 2) ≤ ε ^ 2 := by
+  set s : ℝ := min ‖σ 0 - z₀‖ (r₀ / 2) with hsdef
+  have hs : 0 < s := lt_min hz' (by linarith)
+  set cs : ℝ := Real.sqrt (C₁ * (s / 2) ^ M) with hcsdef
+  have hcs : 0 < cs := Real.sqrt_pos.mpr (by positivity)
+  have hann : ∀ w : ℂ, s / 2 ≤ ‖w - z₀‖ → ‖w - z₀‖ ≤ s → cs ≤ Real.sqrt ‖q w‖ := by
+    intro w h1 h2
+    have hwball : w ∈ Metric.ball z₀ r₀ := by
+      rw [Metric.mem_ball, dist_eq_norm]
+      have : s ≤ r₀ / 2 := min_le_right _ _
+      linarith
+    have hpow : C₁ * (s / 2) ^ M ≤ C₁ * ‖w - z₀‖ ^ M := by
+      have := pow_le_pow_left₀ (by positivity : (0:ℝ) ≤ s / 2) h1 M
+      nlinarith
+    exact Real.sqrt_le_sqrt (le_trans hpow (hbounds w hwball).1)
+  have hreach : cs * (s / 4) ≤ T :=
+    traj_reach hT hσ hs hcs hann (min_le_left _ _) hin
+  have hsq : (cs * (s / 4)) ^ 2 ≤ ε ^ 2 := by
+    have h1 : cs * (s / 4) ≤ ε := le_trans hreach hTε
+    nlinarith [mul_pos hcs (by linarith : (0:ℝ) < s / 4)]
+  have hexpand : (cs * (s / 4)) ^ 2 = C₁ / (2 ^ M * 16) * s ^ (M + 2) := by
+    have hcs2 : cs ^ 2 = C₁ * (s / 2) ^ M := Real.sq_sqrt (by positivity)
+    have hdiv : (s / 2) ^ M = s ^ M / 2 ^ M := div_pow s 2 M
+    calc (cs * (s / 4)) ^ 2 = cs ^ 2 * (s ^ 2 / 16) := by ring
+      _ = C₁ * (s ^ M / 2 ^ M) * (s ^ 2 / 16) := by rw [hcs2, hdiv]
+      _ = C₁ / (2 ^ M * 16) * (s ^ M * s ^ 2) := by
+          field_simp
+      _ = C₁ / (2 ^ M * 16) * s ^ (M + 2) := by rw [pow_add]
+  linarith [hexpand ▸ hsq]
+
+/-- **The ball mass bound**: the `|q|` mass of a small ball at a zero is controlled by
+the order power of its radius times its area. -/
+theorem ball_mass {q : ℂ → ℂ} {z₀ : ℂ} {M : ℕ} {r₀ C₁ C₂ : ℝ} (hρr : 0 < r₀)
+    (hbounds : ∀ w ∈ Metric.ball z₀ r₀,
+      C₁ * ‖w - z₀‖ ^ M ≤ ‖q w‖ ∧ ‖q w‖ ≤ C₂ * ‖w - z₀‖ ^ M)
+    {ρ : ℝ} (hρ : 0 < ρ) (hρle : ρ ≤ r₀) :
+    ∫⁻ w in Metric.ball z₀ ρ, ‖q w‖ₑ
+      ≤ ENNReal.ofReal (C₂ * ρ ^ M) * volume (Metric.ball z₀ ρ) := by
+  have hpt : ∀ w ∈ Metric.ball z₀ ρ, ‖q w‖ₑ ≤ ENNReal.ofReal (C₂ * ρ ^ M) := by
+    intro w hw
+    have hwr : ‖w - z₀‖ < ρ := by
+      rwa [Metric.mem_ball, dist_eq_norm] at hw
+    have hwball : w ∈ Metric.ball z₀ r₀ := by
+      rw [Metric.mem_ball, dist_eq_norm]
+      linarith
+    have hup := (hbounds w hwball).2
+    have hpow : ‖w - z₀‖ ^ M ≤ ρ ^ M := pow_le_pow_left₀ (norm_nonneg _) hwr.le M
+    rw [← ofReal_norm_eq_enorm]
+    refine ENNReal.ofReal_le_ofReal ?_
+    have hC₂pos : 0 ≤ C₂ := by
+      set w' : ℂ := z₀ + ((ρ / 2 : ℝ) : ℂ) with hw'def
+      have hw'n : ‖w' - z₀‖ = ρ / 2 := by
+        rw [hw'def, add_sub_cancel_left, Complex.norm_real, Real.norm_eq_abs,
+          abs_of_pos (by linarith)]
+      have hw'ball : w' ∈ Metric.ball z₀ r₀ := by
+        rw [Metric.mem_ball, dist_eq_norm, hw'n]
+        linarith
+      have h := (hbounds w' hw'ball).2
+      rw [hw'n] at h
+      nlinarith [norm_nonneg (q w'), pow_pos (by linarith : (0:ℝ) < ρ / 2) M]
+    nlinarith
+  calc ∫⁻ w in Metric.ball z₀ ρ, ‖q w‖ₑ
+      ≤ ∫⁻ _ in Metric.ball z₀ ρ, ENNReal.ofReal (C₂ * ρ ^ M) := by
+        refine setLIntegral_mono_ae' measurableSet_ball ?_
+        filter_upwards with w hw using hpt w hw
+    _ = ENNReal.ofReal (C₂ * ρ ^ M) * volume (Metric.ball z₀ ρ) := by
+        rw [setLIntegral_const]
+
+
+/-- **Compact track on the maximal window**: the track of a trajectory on `[0, c)` over a
+cocompact group stays in one compact subset of the upper half plane. -/
+theorem traj_track_compact_Ico {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
+    (hΓ : IsFuchsianGroup Γ)
+    (hcc : CompactSpace (Quotient (MulAction.orbitRel Γ UpperHalfPlane)))
+    (q : QuadraticDifferential Γ) (hq0 : ∃ z₀ : ℂ, 0 < z₀.im ∧ q z₀ ≠ 0)
+    {σ : ℝ → ℂ} {c : ℝ} (hc : 0 < c) (hσ : IsTrajOn q σ (Set.Ico 0 c)) :
+    ∃ L : Set ℂ, IsCompact L ∧ L ⊆ {z : ℂ | 0 < z.im} ∧
+      ∀ u ∈ Set.Ico 0 c, σ u ∈ L := by
+  have hreg : ∀ u ∈ Set.Ico 0 c, 0 < (σ u).im := fun u hu => (traj_regular hσ hu).1
+  have h0mem : (0 : ℝ) ∈ Set.Ico 0 c := ⟨le_refl 0, hc⟩
+  set τ₀ : UpperHalfPlane := ⟨σ 0, hreg 0 h0mem⟩ with hτ₀def
+  obtain ⟨K, hK, hcov⟩ := exists_compact_covering Γ hcc
+  set K' : Set ℂ := (fun τ : UpperHalfPlane => (τ : ℂ)) '' K with hK'def
+  have hK'c : IsCompact K' := hK.image UpperHalfPlane.continuous_coe
+  have hK'H : ∀ x ∈ K', 0 < x.im := by
+    rintro x ⟨τ, hτ, rfl⟩
+    exact τ.2
+  obtain ⟨η, hη, hstep⟩ := uniform_step q.holo hq0 hK'c hK'H
+  have key : ∀ k : ℕ, ∀ u, ∀ hu : u ∈ Set.Ico 0 c, u ≤ k * (η / 2) →
+      dist (⟨σ u, hreg u hu⟩ : UpperHalfPlane) τ₀ ≤ k := by
+    intro k
+    induction k with
+    | zero =>
+      intro u hu hle
+      have hu0 : u = 0 := le_antisymm (by simpa using hle) hu.1
+      subst hu0
+      simp [hτ₀def]
+    | succ k ih =>
+      intro u hu hle
+      by_cases hcase : u ≤ k * (η / 2)
+      · calc dist (⟨σ u, hreg u hu⟩ : UpperHalfPlane) τ₀ ≤ k := ih u hu hcase
+          _ ≤ (k + 1 : ℕ) := by push_cast; linarith
+      · push Not at hcase
+        set a : ℝ := k * (η / 2) with hadef
+        have ha0 : 0 ≤ a := by positivity
+        have hau : a ≤ u := hcase.le
+        have haI : a ∈ Set.Ico 0 c := ⟨ha0, lt_of_le_of_lt hau hu.2⟩
+        have hspan : u - a < η := by
+          have := hle
+          push_cast at this
+          rw [hadef]
+          linarith
+        have hσu : IsTrajOn q σ (Set.Icc 0 u) :=
+          traj_mono hσ (fun v hv => ⟨hv.1, lt_of_le_of_lt hv.2 hu.2⟩)
+        obtain ⟨γ, hγK⟩ := hcov ⟨σ a, hreg a haI⟩
+        set σ' : ℝ → ℂ := fun v => moebiusMap (↑γ) (σ v) with hσ'def
+        have hσ' : IsTrajOn q σ' (Set.Icc 0 u) :=
+          traj_deck (↑γ) (q.automorphy (↑γ) γ.2) hσu
+        have hσ'a : σ' a ∈ K' := by
+          refine ⟨γ • ⟨σ a, hreg a haI⟩, hγK, ?_⟩
+          exact coe_smul_moebius γ ⟨σ a, hreg a haI⟩
+        have him : 0 < (σ' u).im := moebiusMap_im_pos _ (hreg u hu)
+        have him' : 0 < (σ' a).im := moebiusMap_im_pos _ (hreg a haI)
+        have hd1 := hstep σ' u a u hσ' ha0 hau (le_refl u) hspan hσ'a u
+          (Set.right_mem_Icc.mpr hau) him him'
+        have hlift : (⟨σ' u, him⟩ : UpperHalfPlane)
+            = (↑γ : Matrix.SpecialLinearGroup (Fin 2) ℝ) • ⟨σ u, hreg u hu⟩ :=
+          UpperHalfPlane.ext (coe_smul_eq_moebiusMap (↑γ) ⟨σ u, hreg u hu⟩).symm
+        have hlift' : (⟨σ' a, him'⟩ : UpperHalfPlane)
+            = (↑γ : Matrix.SpecialLinearGroup (Fin 2) ℝ) • ⟨σ a, hreg a haI⟩ :=
+          UpperHalfPlane.ext (coe_smul_eq_moebiusMap (↑γ) ⟨σ a, hreg a haI⟩).symm
+        rw [hlift, hlift'] at hd1
+        have hd2 : dist (⟨σ u, hreg u hu⟩ : UpperHalfPlane)
+            (⟨σ a, hreg a haI⟩ : UpperHalfPlane) ≤ 1 := by
+          rwa [dist_smul] at hd1
+        calc dist (⟨σ u, hreg u hu⟩ : UpperHalfPlane) τ₀
+            ≤ dist (⟨σ u, hreg u hu⟩ : UpperHalfPlane)
+                (⟨σ a, hreg a haI⟩ : UpperHalfPlane)
+              + dist (⟨σ a, hreg a haI⟩ : UpperHalfPlane) τ₀ := dist_triangle _ _ _
+          _ ≤ 1 + k := add_le_add hd2 (ih a haI (le_of_eq hadef))
+          _ = (k + 1 : ℕ) := by push_cast; ring
+  set N : ℕ := Nat.ceil (c / (η / 2)) with hNdef
+  refine ⟨(fun τ : UpperHalfPlane => (τ : ℂ)) '' Metric.closedBall τ₀ N,
+    (isCompact_closedBall τ₀ N).image UpperHalfPlane.continuous_coe, ?_, ?_⟩
+  · rintro x ⟨τ, -, rfl⟩
+    exact τ.2
+  · intro u hu
+    have hle : u ≤ N * (η / 2) := by
+      have h1 : c / (η / 2) ≤ N := Nat.le_ceil _
+      have h2 : c ≤ N * (η / 2) := by
+        rw [div_le_iff₀ (by positivity : (0:ℝ) < η / 2)] at h1
+        linarith
+      linarith [hu.2]
+    exact ⟨⟨σ u, hreg u hu⟩, Metric.mem_closedBall.mpr (key N u hu hle), rfl⟩
+
+/-- **Dying trajectories approach the zeros**: a trajectory on a maximal finite window
+that does not close at its endpoint enters every neighborhood of the zero set. -/
+theorem dying_near_zero {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
+    (hΓ : IsFuchsianGroup Γ)
+    (hcc : CompactSpace (Quotient (MulAction.orbitRel Γ UpperHalfPlane)))
+    (q : QuadraticDifferential Γ) (hq0 : ∃ z₀ : ℂ, 0 < z₀.im ∧ q z₀ ≠ 0)
+    {σ : ℝ → ℂ} {c : ℝ} (hc : 0 < c) (hσ : IsTrajOn q σ (Set.Ico 0 c))
+    (hmax : ¬∃ σ' : ℝ → ℂ, Set.EqOn σ' σ (Set.Ico 0 c) ∧
+      IsTrajOn q σ' (Set.Icc 0 c)) :
+    ∀ ρ, 0 < ρ → ∃ u ∈ Set.Ico 0 c, ∃ z₀ : ℂ,
+      0 < z₀.im ∧ q z₀ = 0 ∧ ‖σ u - z₀‖ < ρ := by
+  intro ρ hρ
+  by_contra hcon
+  push Not at hcon
+  obtain ⟨L, hLc, hLH, hLtrack⟩ := traj_track_compact_Ico hΓ hcc q hq0 hc hσ
+  set Z : Set ℂ := {z ∈ L | q z = 0} with hZdef
+  have hZfin : Set.Finite Z := zeros_finite q.holo hq0 hLc hLH
+  set L' : Set ℂ := L \ ⋃ z₀ ∈ Z, Metric.ball z₀ ρ with hL'def
+  have hL'c : IsCompact L' := by
+    refine hLc.of_isClosed_subset (hLc.isClosed.sdiff ?_) Set.diff_subset
+    exact isOpen_biUnion fun z₀ _ => Metric.isOpen_ball
+  have hL'H : L' ⊆ {z : ℂ | 0 < z.im} := Set.diff_subset.trans hLH
+  have htrack' : ∀ u ∈ Set.Ico 0 c, σ u ∈ L' := by
+    intro u hu
+    refine ⟨hLtrack u hu, ?_⟩
+    intro hmem
+    obtain ⟨z₀, hz₀Z, hz₀ball⟩ := Set.mem_iUnion₂.mp hmem
+    have hz₀L : z₀ ∈ L := hz₀Z.1
+    have h1 : ρ ≤ ‖σ u - z₀‖ := hcon u hu z₀ (hLH hz₀L) hz₀Z.2
+    have h2 : ‖σ u - z₀‖ < ρ := by rwa [Metric.mem_ball, dist_eq_norm] at hz₀ball
+    linarith
+  have hL'ne : ∀ w ∈ L', q w ≠ 0 := by
+    intro w hw hw0
+    have hwZ : w ∈ Z := ⟨hw.1, hw0⟩
+    exact hw.2 (Set.mem_iUnion₂.mpr ⟨w, hwZ, Metric.mem_ball_self hρ⟩)
+  have hL'nonempty : L'.Nonempty := ⟨σ 0, htrack' 0 ⟨le_refl 0, hc⟩⟩
+  have hqcont : ContinuousOn (fun w => ‖q w‖) L' :=
+    (q.continuousOn_upper.mono hL'H).norm
+  obtain ⟨w₀, hw₀L', hw₀min⟩ := hL'c.exists_isMinOn hL'nonempty hqcont
+  have hm : 0 < ‖q w₀‖ := norm_pos_iff.mpr (hL'ne w₀ hw₀L')
+  have hbound : ∀ u ∈ Set.Ico 0 c, ‖q w₀‖ ≤ ‖q (σ u)‖ := fun u hu =>
+    hw₀min (htrack' u hu)
+  obtain ⟨w, hlim⟩ := traj_limit hc hσ hm hbound
+  haveI hne : (nhdsWithin c (Set.Ico 0 c)).NeBot := by
+    refine mem_closure_iff_nhdsWithin_neBot.mp ?_
+    rw [closure_Ico hc.ne]
+    exact ⟨hc.le, le_refl c⟩
+  have hwL' : w ∈ L' := hL'c.isClosed.mem_of_tendsto hlim
+    (eventually_mem_nhdsWithin.mono fun u hu => htrack' u hu)
+  obtain ⟨σ', hE', hσ'c, hT'⟩ := traj_close q.holo hc hσ (hL'H hwL')
+    (hL'ne w hwL') hlim
+  exact hmax ⟨σ', hE', hT'⟩
+
+
+/-- **Bounded multiplicity summation**: countably many measurable sets covering each
+point at most twice have summed integrals dominated by twice the union integral. -/
+theorem lintegral_mult_le {A : ℕ → Set ℂ} (hA : ∀ i, MeasurableSet (A i))
+    {f : ℂ → ℝ≥0∞} (hf : Measurable f)
+    (hmult : ∀ x : ℂ, (∑' i, (A i).indicator (fun _ => (1 : ℝ≥0∞)) x) ≤ 2) :
+    (∑' i, ∫⁻ x in A i, f x) ≤ 2 * ∫⁻ x in ⋃ i, A i, f x := by
+  have h1 : ∀ i, ∫⁻ x in A i, f x = ∫⁻ x, (A i).indicator f x := fun i =>
+    (lintegral_indicator (hA i) f).symm
+  have h2 : (∑' i, ∫⁻ x in A i, f x) = ∫⁻ x, ∑' i, (A i).indicator f x := by
+    rw [tsum_congr h1]
+    exact (lintegral_tsum fun i => (hf.indicator (hA i)).aemeasurable).symm
+  rw [h2]
+  have h3 : ∀ x, (∑' i, (A i).indicator f x)
+      ≤ (⋃ i, A i).indicator (fun y => 2 * f y) x := by
+    intro x
+    by_cases hx : x ∈ ⋃ i, A i
+    · rw [Set.indicator_of_mem hx]
+      have hpt : ∀ i, (A i).indicator f x
+          = f x * (A i).indicator (fun _ => (1 : ℝ≥0∞)) x := by
+        intro i
+        by_cases hxi : x ∈ A i
+        · rw [Set.indicator_of_mem hxi, Set.indicator_of_mem hxi, mul_one]
+        · rw [Set.indicator_of_notMem hxi, Set.indicator_of_notMem hxi, mul_zero]
+      rw [tsum_congr hpt, ENNReal.tsum_mul_left]
+      calc f x * ∑' i, (A i).indicator (fun _ => (1 : ℝ≥0∞)) x
+          ≤ f x * 2 := mul_le_mul_right (hmult x) _
+        _ = 2 * f x := by ring
+    · have hzero : ∀ i, (A i).indicator f x = 0 := by
+        intro i
+        refine Set.indicator_of_notMem (fun hxi => hx (Set.mem_iUnion.mpr ⟨i, hxi⟩)) f
+      rw [tsum_congr hzero]
+      simp [Set.indicator_of_notMem hx]
+  calc ∫⁻ x, ∑' i, (A i).indicator f x
+      ≤ ∫⁻ x, (⋃ i, A i).indicator (fun y => 2 * f y) x := lintegral_mono h3
+    _ = ∫⁻ x in ⋃ i, A i, 2 * f x :=
+        lintegral_indicator (MeasurableSet.iUnion hA) _
+    _ = 2 * ∫⁻ x in ⋃ i, A i, f x := lintegral_const_mul 2 hf
+
+/-- **Arrival uniqueness**: two trajectories reaching the same endpoint with the same
+chart slope there have the same start — arrivals at a point carry at most two starts,
+one per orientation. -/
+theorem arrival_unique {q Φ : ℂ → ℂ} {S : Set ℂ} (hS : IsOpen S)
+    (hΦinj : Set.InjOn Φ S)
+    {σ₁ σ₂ : ℝ → ℂ} {a : ℝ} (ha : 0 ≤ a)
+    (h₁ : IsTrajOn q σ₁ (Set.Icc 0 a)) (h₂ : IsTrajOn q σ₂ (Set.Icc 0 a))
+    (hend : σ₁ a = σ₂ a) (hyS : σ₁ a ∈ S) {s : ℝ}
+    (hs₁ : SlopeAt Φ σ₁ (Set.Icc 0 a) a s) (hs₂ : SlopeAt Φ σ₂ (Set.Icc 0 a) a s) :
+    σ₁ 0 = σ₂ 0 := by
+  have hamem : a ∈ Set.Icc 0 a := Set.right_mem_Icc.mpr ha
+  have hσ₁S : ∀ᶠ u in nhdsWithin a (Set.Icc 0 a), σ₁ u ∈ S :=
+    (h₁.cont a hamem) (hS.mem_nhds hyS)
+  have hσ₂S : ∀ᶠ u in nhdsWithin a (Set.Icc 0 a), σ₂ u ∈ S := by
+    refine (h₂.cont a hamem) ?_
+    rw [← hend] at *
+    exact hS.mem_nhds hyS
+  have hgerm : ∀ᶠ u in nhdsWithin a (Set.Icc 0 a), σ₁ u = σ₂ u := by
+    filter_upwards [hs₁, hs₂, hσ₁S, hσ₂S] with u e₁ e₂ m₁ m₂
+    refine hΦinj m₁ m₂ ?_
+    rw [e₁, e₂, hend]
+  -- reversed trajectories with germ at zero
+  set σ₁' : ℝ → ℂ := fun u => σ₁ (a - u) with hσ₁'def
+  set σ₂' : ℝ → ℂ := fun u => σ₂ (a - u) with hσ₂'def
+  have hrev : ∀ σ : ℝ → ℂ, IsTrajOn q σ (Set.Icc 0 a) →
+      IsTrajOn q (fun u => σ (a - u)) (Set.Icc 0 a) := by
+    intro σ hσ
+    have h1 := traj_reverse (traj_shift a hσ)
+    have hset : (fun u : ℝ => -u) ⁻¹' ((fun u : ℝ => u + a) ⁻¹' Set.Icc 0 a)
+        = Set.Icc 0 a := by
+      ext u
+      simp only [Set.mem_preimage, Set.mem_Icc]
+      constructor
+      · rintro ⟨hh1, hh2⟩
+        constructor <;> linarith
+      · rintro ⟨hh1, hh2⟩
+        constructor <;> linarith
+    rw [hset] at h1
+    have hfun : (fun u : ℝ => (fun v : ℝ => σ (v + a)) (-u)) = fun u => σ (a - u) := by
+      funext u
+      show σ (-u + a) = σ (a - u)
+      rw [neg_add_eq_sub]
+    rwa [hfun] at h1
+  have hmap : Filter.Tendsto (fun u : ℝ => a - u)
+      (nhdsWithin 0 (Set.Icc 0 a)) (nhdsWithin a (Set.Icc 0 a)) := by
+    refine Filter.Tendsto.inf ?_ ?_
+    · have h : Continuous fun u : ℝ => a - u := continuous_const.sub continuous_id
+      have h2 := h.tendsto (0 : ℝ)
+      simpa using h2
+    · refine Filter.tendsto_principal_principal.mpr fun u hu => ?_
+      exact ⟨by linarith [hu.2], by linarith [hu.1]⟩
+  have hgerm' : ∀ᶠ u in nhdsWithin 0 (Set.Icc 0 a), σ₁' u = σ₂' u :=
+    hmap.eventually hgerm
+  have hEq := traj_unique ha (hrev σ₁ h₁) (hrev σ₂ h₂) hgerm'
+  have := hEq (Set.right_mem_Icc.mpr ha)
+  simpa [hσ₁'def, hσ₂'def] using this
+
+/-- **Measurable single-step change of variables**: a legal chart move sends measurable
+pieces to measurable pieces of equal `|q|` mass. -/
+theorem step_cov {q Φ : ℂ → ℂ} {S : Set ℂ} (hS : IsOpen S)
+    (hΦd : DifferentiableOn ℂ Φ S) (hΦinj : Set.InjOn Φ S)
+    (hne : ∀ w ∈ S, q w ≠ 0) (hsq : ∀ w ∈ S, deriv Φ w ^ 2 = -q w)
+    {P : Set ℂ} (hP : MeasurableSet P) (hPS : P ⊆ S) {t : ℝ}
+    (hmove : ∀ w ∈ P, Φ w + (t : ℂ) ∈ Φ '' S) :
+    MeasurableSet (localFlow Φ S t '' P) ∧
+      ∫⁻ w in localFlow Φ S t '' P, ‖q w‖ₑ = ∫⁻ w in P, ‖q w‖ₑ := by
+  have himgopen : IsOpen (Φ '' S) := chart_image_open hS hΦd hne hsq
+  have hΦP : MeasurableSet (Φ '' P) :=
+    hP.image_of_continuousOn_injOn ((hΦd.continuousOn).mono hPS) (hΦinj.mono hPS)
+  have htrans : MeasurableSet ((fun ζ : ℂ => ζ + (t : ℂ)) '' (Φ '' P)) := by
+    have hpre : (fun ζ : ℂ => ζ + (t : ℂ)) '' (Φ '' P)
+        = (fun ζ : ℂ => ζ - (t : ℂ)) ⁻¹' (Φ '' P) := by
+      ext y
+      constructor
+      · rintro ⟨x, hx, rfl⟩
+        simpa using hx
+      · intro hy
+        exact ⟨y - (t : ℂ), hy, by ring⟩
+    rw [hpre]
+    exact hΦP.preimage (measurable_id.sub measurable_const)
+  have hinv_pre : ∀ U : Set ℂ,
+      (Function.invFunOn Φ S) ⁻¹' U ∩ (Φ '' S) = Φ '' (U ∩ S) := by
+    intro U
+    ext b
+    constructor
+    · rintro ⟨hbU, a, haS, rfl⟩
+      have hex : ∃ x ∈ S, Φ x = Φ a := ⟨a, haS, rfl⟩
+      have hval : Function.invFunOn Φ S (Φ a) = a :=
+        hΦinj (Function.invFunOn_mem hex) haS (Function.invFunOn_eq hex)
+      refine ⟨a, ⟨?_, haS⟩, rfl⟩
+      rwa [Set.mem_preimage, hval] at hbU
+    · rintro ⟨a, ⟨haU, haS⟩, rfl⟩
+      have hex : ∃ x ∈ S, Φ x = Φ a := ⟨a, haS, rfl⟩
+      have hval : Function.invFunOn Φ S (Φ a) = a :=
+        hΦinj (Function.invFunOn_mem hex) haS (Function.invFunOn_eq hex)
+      exact ⟨by rw [Set.mem_preimage, hval]; exact haU, ⟨a, haS, rfl⟩⟩
+  have hinvcont : ContinuousOn (Function.invFunOn Φ S) (Φ '' S) := by
+    rw [continuousOn_iff']
+    intro U hU
+    refine ⟨Φ '' (U ∩ S), chart_image_open (hU.inter hS)
+      (hΦd.mono Set.inter_subset_right) (fun w hw => hne w hw.2)
+      (fun w hw => hsq w hw.2), ?_⟩
+    rw [hinv_pre U]
+    exact (Set.inter_eq_self_of_subset_left
+      (Set.image_mono Set.inter_subset_right)).symm
+  have hinvinj : Set.InjOn (Function.invFunOn Φ S) (Φ '' S) := by
+    rintro b₁ ⟨a₁, ha₁, rfl⟩ b₂ ⟨a₂, ha₂, rfl⟩ heq
+    have hex₁ : ∃ x ∈ S, Φ x = Φ a₁ := ⟨a₁, ha₁, rfl⟩
+    have hex₂ : ∃ x ∈ S, Φ x = Φ a₂ := ⟨a₂, ha₂, rfl⟩
+    rw [hΦinj (Function.invFunOn_mem hex₁) ha₁ (Function.invFunOn_eq hex₁),
+      hΦinj (Function.invFunOn_mem hex₂) ha₂ (Function.invFunOn_eq hex₂)] at heq
+    rw [heq]
+  have hdecomp : localFlow Φ S t '' P
+      = Function.invFunOn Φ S '' ((fun ζ : ℂ => ζ + (t : ℂ)) '' (Φ '' P)) := by
+    ext y
+    constructor
+    · rintro ⟨w, hw, rfl⟩
+      exact ⟨Φ w + t, ⟨Φ w, ⟨w, hw, rfl⟩, rfl⟩, rfl⟩
+    · rintro ⟨b, ⟨x, ⟨w, hw, rfl⟩, rfl⟩, rfl⟩
+      exact ⟨w, hw, rfl⟩
+  have hsub : (fun ζ : ℂ => ζ + (t : ℂ)) '' (Φ '' P) ⊆ Φ '' S := by
+    rintro b ⟨x, ⟨w, hw, rfl⟩, rfl⟩
+    exact hmove w hw
+  have hBmeas : MeasurableSet (localFlow Φ S t '' P) := by
+    rw [hdecomp]
+    exact htrans.image_of_continuousOn_injOn (hinvcont.mono hsub) (hinvinj.mono hsub)
+  exact ⟨hBmeas, chart_flow_lintegral hS hΦd hΦinj hsq hP hPS hmove hBmeas⟩
+
+
+/-- The stepper position after `k` moves of size `h` from unit sign. -/
+noncomputable def pos {q : ℂ → ℂ} (A : Atlas q) (h : ℝ) (k : ℕ) (z : ℂ) : ℂ :=
+  ((A.step2)^[k] (h, z, 1)).2.1
+
+/-- The stepper sign after `k` moves of size `h` from unit sign. -/
+noncomputable def sgn {q : ℂ → ℂ} (A : Atlas q) (h : ℝ) (k : ℕ) (z : ℂ) : ℝ :=
+  ((A.step2)^[k] (h, z, 1)).2.2
+
+theorem measurable_pos {q : ℂ → ℂ} (A : Atlas q) (h : ℝ) (k : ℕ) :
+    Measurable (pos A h k) := by
+  have h1 : Measurable (fun z : ℂ => (h, z, (1 : ℝ))) :=
+    measurable_const.prodMk (measurable_id.prodMk measurable_const)
+  have h2 : Measurable (fun z : ℂ => (A.step2)^[k] (h, z, 1)) :=
+    (A.measurable_step2.iterate k).comp h1
+  exact measurable_fst.comp (measurable_snd.comp h2)
+
+theorem measurable_sgn {q : ℂ → ℂ} (A : Atlas q) (h : ℝ) (k : ℕ) :
+    Measurable (sgn A h k) := by
+  have h1 : Measurable (fun z : ℂ => (h, z, (1 : ℝ))) :=
+    measurable_const.prodMk (measurable_id.prodMk measurable_const)
+  have h2 : Measurable (fun z : ℂ => (A.step2)^[k] (h, z, 1)) :=
+    (A.measurable_step2.iterate k).comp h1
+  exact measurable_snd.comp (measurable_snd.comp h2)
+
+theorem step2_fst {q : ℂ → ℂ} (A : Atlas q) (h : ℝ) (k : ℕ) (z : ℂ) :
+    ((A.step2)^[k] (h, z, 1)).1 = h := by
+  induction k with
+  | zero => rfl
+  | succ k ih =>
+    rw [Function.iterate_succ_apply']
+    exact ih
+
+/-- The stepper position recursion through the chart-translation flow. -/
+theorem pos_succ {q : ℂ → ℂ} (A : Atlas q) (h : ℝ) (k : ℕ) (z : ℂ) :
+    pos A h (k + 1) z
+      = Function.invFunOn (A.Φ (A.sel (pos A h k z)))
+        (Metric.ball (A.c (A.sel (pos A h k z)))
+          (2 * A.r (A.sel (pos A h k z))))
+        (A.mchart (A.sel (pos A h k z)) (pos A h k z)
+          + ((sgn A h k z * ((A.step2)^[k] (h, z, 1)).1 : ℝ) : ℂ)) := by
+  rw [pos, Function.iterate_succ_apply']
+  rfl
+
+theorem pos_zero {q : ℂ → ℂ} (A : Atlas q) (h : ℝ) (z : ℂ) :
+    pos A h 0 z = z := rfl
+
+/-- **The itinerary chain change of variables**: on a measurable piece with constant
+legal itinerary, the iterated stepper transports measurably and preserves `|q|` mass. -/
+theorem chain_cov {q : ℂ → ℂ} (A : Atlas q) {h : ℝ} {N : ℕ}
+    {E : Set ℂ} (hE : MeasurableSet E) (c : ℕ → ℕ) (ε : ℕ → ℝ)
+    (hleg : ∀ k, k ≤ N → ∀ z ∈ E,
+      A.sel (pos A h k z) = c k ∧
+      sgn A h k z = ε k ∧
+      A.active (c k) ∧
+      pos A h k z ∈ Metric.ball (A.c (c k)) (A.r (c k)) ∧
+      A.Φ (c k) (pos A h k z) + ((ε k * h : ℝ) : ℂ)
+        ∈ A.Φ (c k) '' Metric.ball (A.c (c k)) (2 * A.r (c k))) :
+    ∀ k, k ≤ N + 1 → MeasurableSet (pos A h k '' E) ∧
+      ∫⁻ w in pos A h k '' E, ‖q w‖ₑ = ∫⁻ w in E, ‖q w‖ₑ := by
+  rcases Set.eq_empty_or_nonempty E with hemp | ⟨z₀, hz₀⟩
+  · intro k _
+    subst hemp
+    simp
+  intro k
+  induction k with
+  | zero =>
+    intro _
+    rw [show pos A h 0 '' E = E from by
+      rw [show pos A h 0 = id from funext fun z => pos_zero A h z,
+        Set.image_id]]
+    exact ⟨hE, rfl⟩
+  | succ k ih =>
+    intro hk1
+    have hk : k ≤ N := by omega
+    obtain ⟨ihm, ihe⟩ := ih (by omega)
+    have hact : A.active (c k) := (hleg k hk z₀ hz₀).2.2.1
+    have himg : pos A h (k + 1) '' E
+        = localFlow (A.Φ (c k)) (Metric.ball (A.c (c k)) (2 * A.r (c k)))
+            (ε k * h) '' (pos A h k '' E) := by
+      rw [← Set.image_comp]
+      refine Set.image_congr fun z hz => ?_
+      obtain ⟨hsel, hsgn, -, hmem, -⟩ := hleg k hk z hz
+      rw [pos_succ, step2_fst, hsel, hsgn]
+      show Function.invFunOn (A.Φ (c k))
+          (Metric.ball (A.c (c k)) (2 * A.r (c k)))
+          (A.mchart (c k) (pos A h k z) + ((ε k * h : ℝ) : ℂ))
+        = Function.invFunOn (A.Φ (c k))
+          (Metric.ball (A.c (c k)) (2 * A.r (c k)))
+          (A.Φ (c k) (pos A h k z) + ((ε k * h : ℝ) : ℂ))
+      rw [A.mchart_eq hact
+        (Metric.ball_subset_ball (by linarith [A.hr _ hact]) hmem)]
+    have hPS : pos A h k '' E
+        ⊆ Metric.ball (A.c (c k)) (2 * A.r (c k)) := by
+      rintro w ⟨z, hz, rfl⟩
+      exact Metric.ball_subset_ball (by linarith [A.hr _ hact])
+        (hleg k hk z hz).2.2.2.1
+    have hmove : ∀ w ∈ pos A h k '' E,
+        A.Φ (c k) w + ((ε k * h : ℝ) : ℂ)
+          ∈ A.Φ (c k) '' Metric.ball (A.c (c k)) (2 * A.r (c k)) := by
+      rintro w ⟨z, hz, rfl⟩
+      exact (hleg k hk z hz).2.2.2.2
+    obtain ⟨hm, he⟩ := step_cov Metric.isOpen_ball (A.hd _ hact)
+      (A.hinj _ hact) (A.hne _ hact) (A.hsq _ hact) ihm hPS hmove
+    rw [himg]
+    exact ⟨hm, he.trans ihe⟩
+
+
+/-- A pointwise indicator sum over a family hitting each point through at most two
+indices is bounded by two. -/
+theorem tsum_indicator_pair {ι : Type*} [Countable ι] {A : ι → Set ℂ} {x : ℂ}
+    {i₁ i₂ : ι} (hpair : ∀ i, x ∈ A i → i = i₁ ∨ i = i₂) :
+    (∑' i, (A i).indicator (fun _ => (1 : ℝ≥0∞)) x) ≤ 2 := by
+  classical
+  have hle : ∀ i, (A i).indicator (fun _ => (1 : ℝ≥0∞)) x
+      ≤ (if i = i₁ then (1 : ℝ≥0∞) else 0) + (if i = i₂ then (1 : ℝ≥0∞) else 0) := by
+    intro i
+    by_cases hx : x ∈ A i
+    · rcases hpair i hx with h | h
+      · rw [Set.indicator_of_mem hx, if_pos h]
+        exact le_add_right (le_refl 1)
+      · rw [Set.indicator_of_mem hx, if_pos h]
+        exact le_add_left (le_refl 1)
+    · rw [Set.indicator_of_notMem hx]
+      exact zero_le _
+  calc (∑' i, (A i).indicator (fun _ => (1 : ℝ≥0∞)) x)
+      ≤ ∑' i, ((if i = i₁ then (1 : ℝ≥0∞) else 0)
+          + (if i = i₂ then (1 : ℝ≥0∞) else 0)) := ENNReal.tsum_le_tsum hle
+    _ = (∑' i, (if i = i₁ then (1 : ℝ≥0∞) else 0))
+          + ∑' i, (if i = i₂ then (1 : ℝ≥0∞) else 0) := ENNReal.tsum_add
+    _ ≤ 1 + 1 := by
+        refine add_le_add ?_ ?_ <;>
+          · rw [tsum_eq_single _ (fun b hb => if_neg hb)]
+            split_ifs <;> simp
+    _ = 2 := by norm_num
+
+/-- Countably-indexed bounded-multiplicity summation over an arbitrary countable index
+type. -/
+theorem lintegral_mult_le' {ι : Type*} [Countable ι] {A : ι → Set ℂ}
+    (hA : ∀ i, MeasurableSet (A i)) {f : ℂ → ℝ≥0∞} (hf : Measurable f)
+    (hmult : ∀ x : ℂ, (∑' i, (A i).indicator (fun _ => (1 : ℝ≥0∞)) x) ≤ 2) :
+    (∑' i, ∫⁻ x in A i, f x) ≤ 2 * ∫⁻ x in ⋃ i, A i, f x := by
+  have h1 : ∀ i, ∫⁻ x in A i, f x = ∫⁻ x, (A i).indicator f x := fun i =>
+    (lintegral_indicator (hA i) f).symm
+  have h2 : (∑' i, ∫⁻ x in A i, f x) = ∫⁻ x, ∑' i, (A i).indicator f x := by
+    rw [tsum_congr h1]
+    exact (lintegral_tsum fun i => (hf.indicator (hA i)).aemeasurable).symm
+  rw [h2]
+  have h3 : ∀ x, (∑' i, (A i).indicator f x)
+      ≤ (⋃ i, A i).indicator (fun y => 2 * f y) x := by
+    intro x
+    by_cases hx : x ∈ ⋃ i, A i
+    · rw [Set.indicator_of_mem hx]
+      have hpt : ∀ i, (A i).indicator f x
+          = f x * (A i).indicator (fun _ => (1 : ℝ≥0∞)) x := by
+        intro i
+        by_cases hxi : x ∈ A i
+        · rw [Set.indicator_of_mem hxi, Set.indicator_of_mem hxi, mul_one]
+        · rw [Set.indicator_of_notMem hxi, Set.indicator_of_notMem hxi, mul_zero]
+      rw [tsum_congr hpt, ENNReal.tsum_mul_left]
+      calc f x * ∑' i, (A i).indicator (fun _ => (1 : ℝ≥0∞)) x
+          ≤ f x * 2 := mul_le_mul_right (hmult x) _
+        _ = 2 * f x := by ring
+    · have hzero : ∀ i, (A i).indicator f x = 0 := fun i =>
+        Set.indicator_of_notMem (fun hxi => hx (Set.mem_iUnion.mpr ⟨i, hxi⟩)) f
+      rw [tsum_congr hzero]
+      simp [Set.indicator_of_notMem hx]
+  calc ∫⁻ x, ∑' i, (A i).indicator f x
+      ≤ ∫⁻ x, (⋃ i, A i).indicator (fun y => 2 * f y) x := lintegral_mono h3
+    _ = ∫⁻ x in ⋃ i, A i, 2 * f x :=
+        lintegral_indicator (MeasurableSet.iUnion hA) _
+    _ = 2 * ∫⁻ x in ⋃ i, A i, f x := lintegral_const_mul 2 hf
+
+/-- The `N`-legal set of the stepper: each step up to `N` selects an active chart with
+the position in its unit ball, carries a unit sign, and moves legally in the chart. -/
+def legal {q : ℂ → ℂ} (A : Atlas q) (h : ℝ) (N : ℕ) : Set ℂ :=
+  {z | ∀ k, k ≤ N → A.active (A.sel (pos A h k z)) ∧
+    pos A h k z ∈ Metric.ball (A.c (A.sel (pos A h k z)))
+      (A.r (A.sel (pos A h k z))) ∧
+    (sgn A h k z = 1 ∨ sgn A h k z = -1) ∧
+    A.Φ (A.sel (pos A h k z)) (pos A h k z)
+        + ((sgn A h k z * h : ℝ) : ℂ)
+      ∈ A.Φ (A.sel (pos A h k z)) ''
+        Metric.ball (A.c (A.sel (pos A h k z)))
+          (2 * A.r (A.sel (pos A h k z)))}
+
+/-- The itinerary itinPiece of a set: the members realizing a prescribed selector-and-sign
+sequence. -/
+def itinPiece {q : ℂ → ℂ} (A : Atlas q) (h : ℝ) (N : ℕ) (E : Set ℂ)
+    (c : Fin (N + 1) → ℕ × Bool) : Set ℂ :=
+  {z ∈ E | ∀ k : Fin (N + 1), A.sel (pos A h (k : ℕ) z) = (c k).1 ∧
+    sgn A h (k : ℕ) z = (if (c k).2 then (1 : ℝ) else -1)}
+
+theorem piece_measurable {q : ℂ → ℂ} (A : Atlas q) (h : ℝ) (N : ℕ)
+    {E : Set ℂ} (hE : MeasurableSet E) (c : Fin (N + 1) → ℕ × Bool) :
+    MeasurableSet (itinPiece A h N E c) := by
+  have hset : itinPiece A h N E c = E ∩ ⋂ k : Fin (N + 1),
+      ((pos A h (k : ℕ)) ⁻¹' (A.sel ⁻¹' {(c k).1})
+        ∩ (sgn A h (k : ℕ)) ⁻¹' {(if (c k).2 then (1 : ℝ) else -1)}) := by
+    ext z
+    simp only [itinPiece, Set.mem_setOf_eq, Set.mem_inter_iff, Set.mem_iInter,
+      Set.mem_preimage, Set.mem_singleton_iff]
+  rw [hset]
+  refine hE.inter (MeasurableSet.iInter fun k => ?_)
+  exact ((A.measurable_sel.comp (measurable_pos A h k))
+      (measurableSet_singleton _)).inter
+    ((measurable_sgn A h k) (measurableSet_singleton _))
+
+open Classical in
+/-- The canonical itinerary of a point. -/
+noncomputable def itin {q : ℂ → ℂ} (A : Atlas q) (h : ℝ) (N : ℕ) (z : ℂ) :
+    Fin (N + 1) → ℕ × Bool := fun k =>
+  (A.sel (pos A h (k : ℕ) z), if sgn A h (k : ℕ) z = 1 then true else false)
+
+/-- Membership in a itinPiece pins the itinerary. -/
+theorem itin_eq {q : ℂ → ℂ} (A : Atlas q) {h : ℝ} {N : ℕ} {E : Set ℂ}
+    (hEL : E ⊆ legal A h N) {c : Fin (N + 1) → ℕ × Bool} {z : ℂ}
+    (hz : z ∈ itinPiece A h N E c) : c = itin A h N z := by
+  classical
+  funext k
+  obtain ⟨hzE, hcl⟩ := hz
+  obtain ⟨hsel, hsgn⟩ := hcl k
+  have hpm : (sgn A h (k : ℕ) z = 1 ∨ sgn A h (k : ℕ) z = -1) :=
+    ((hEL hzE) (k : ℕ) (by omega)).2.2.1
+  refine Prod.ext hsel.symm ?_
+  show (c k).2 = (if sgn A h (k : ℕ) z = 1 then true else false)
+  cases hcb : (c k).2
+  · simp only [hcb, Bool.false_eq_true, if_false] at hsgn
+    rw [if_neg (by rw [hsgn]; norm_num)]
+  · simp only [hcb, if_true] at hsgn
+    rw [if_pos hsgn]
+
+/-- **The flow-push inequality**: on a measurable legal set with two-fold arrival
+multiplicity, the `|q|` mass is dominated by twice the mass of the stepper image. -/
+theorem flow_push {q : ℂ → ℂ} (hqm : Measurable q) (A : Atlas q) {h : ℝ} {N : ℕ}
+    {E : Set ℂ} (hE : MeasurableSet E) (hEL : E ⊆ legal A h N)
+    (hmult : ∀ y : ℂ, ∃ z₁ z₂ : ℂ, ∀ z ∈ E,
+      pos A h (N + 1) z = y → z = z₁ ∨ z = z₂) :
+    ∫⁻ w in E, ‖q w‖ₑ ≤ 2 * ∫⁻ w in pos A h (N + 1) '' E, ‖q w‖ₑ := by
+  classical
+  set P : (Fin (N + 1) → ℕ × Bool) → Set ℂ := itinPiece A h N E with hPdef
+  have hPmeas : ∀ c, MeasurableSet (P c) := fun c => piece_measurable A h N hE c
+  have hPsub : ∀ c, P c ⊆ E := fun c z hz => hz.1
+  have hcover : E = ⋃ c, P c := by
+    ext z
+    constructor
+    · intro hz
+      refine Set.mem_iUnion.mpr ⟨itin A h N z, hz, fun k => ⟨rfl, ?_⟩⟩
+      have hpm := ((hEL hz) (k : ℕ) (by omega)).2.2.1
+      show sgn A h (k : ℕ) z
+        = (if (if sgn A h (k : ℕ) z = 1 then true else false) then (1 : ℝ) else -1)
+      rcases hpm with h1 | h1
+      · rw [if_pos h1]
+        simp [h1]
+      · rw [if_neg (by rw [h1]; norm_num)]
+        simp [h1]
+    · intro hz
+      obtain ⟨c, hzc⟩ := Set.mem_iUnion.mp hz
+      exact hzc.1
+  have hdisj : Pairwise (Function.onFun Disjoint P) := by
+    intro c₁ c₂ hne
+    rw [Function.onFun, Set.disjoint_left]
+    intro z hz₁ hz₂
+    exact hne ((itin_eq A hEL hz₁).trans (itin_eq A hEL hz₂).symm)
+  have hchain : ∀ c, MeasurableSet (pos A h (N + 1) '' P c) ∧
+      ∫⁻ w in pos A h (N + 1) '' P c, ‖q w‖ₑ = ∫⁻ w in P c, ‖q w‖ₑ := by
+    intro c
+    refine chain_cov A (hPmeas c)
+      (fun k => if hk : k < N + 1 then (c ⟨k, hk⟩).1 else 0)
+      (fun k => if hk : k < N + 1 then (if (c ⟨k, hk⟩).2 then (1 : ℝ) else -1) else 0)
+      ?_ (N + 1) (le_refl _)
+    intro k hk z hz
+    have hk' : k < N + 1 := by omega
+    obtain ⟨hzE, hcl⟩ := hz
+    obtain ⟨hsel, hsgn⟩ := hcl ⟨k, hk'⟩
+    obtain ⟨hact, hball, hpm, hmove⟩ := (hEL hzE) k hk
+    beta_reduce
+    rw [dif_pos hk', dif_pos hk']
+    refine ⟨hsel, hsgn, ?_, ?_, ?_⟩
+    · rw [← hsel]
+      exact hact
+    · rw [← hsel]
+      exact hball
+    · rw [← hsel, ← hsgn]
+      exact hmove
+  have hsum : ∫⁻ w in E, ‖q w‖ₑ = ∑' c, ∫⁻ w in P c, ‖q w‖ₑ := by
+    conv_lhs => rw [hcover]
+    exact lintegral_iUnion hPmeas hdisj _
+  have hmult' : ∀ y : ℂ,
+      (∑' c, (pos A h (N + 1) '' P c).indicator (fun _ => (1 : ℝ≥0∞)) y) ≤ 2 := by
+    intro y
+    obtain ⟨z₁, z₂, hz12⟩ := hmult y
+    refine tsum_indicator_pair (i₁ := itin A h N z₁)
+      (i₂ := itin A h N z₂) ?_
+    intro c hc
+    obtain ⟨z, hzP, hzy⟩ := hc
+    rcases hz12 z (hPsub c hzP) hzy with rfl | rfl
+    · exact Or.inl (itin_eq A hEL hzP)
+    · exact Or.inr (itin_eq A hEL hzP)
+  calc ∫⁻ w in E, ‖q w‖ₑ = ∑' c, ∫⁻ w in P c, ‖q w‖ₑ := hsum
+    _ = ∑' c, ∫⁻ w in pos A h (N + 1) '' P c, ‖q w‖ₑ :=
+        tsum_congr fun c => ((hchain c).2).symm
+    _ ≤ 2 * ∫⁻ w in ⋃ c, pos A h (N + 1) '' P c, ‖q w‖ₑ :=
+        lintegral_mult_le' (fun c => (hchain c).1) hqm.enorm hmult'
+    _ ≤ 2 * ∫⁻ w in pos A h (N + 1) '' E, ‖q w‖ₑ := by
+        refine mul_le_mul_right (lintegral_mono_set ?_) 2
+        exact Set.iUnion_subset fun c => Set.image_mono (hPsub c)
+
+
+/-- **The segment trajectory of a legal move**: if the developed segment of one signed
+step stays in the developed chart image, the local translation flow is a vertical
+trajectory with that chart slope. -/
+theorem seg_traj {q Φ : ℂ → ℂ} {S : Set ℂ} (hS : IsOpen S)
+    (hΦd : DifferentiableOn ℂ Φ S) (hΦinj : Set.InjOn Φ S)
+    (hSH : S ⊆ {z : ℂ | 0 < z.im}) (hSne : ∀ w ∈ S, q w ≠ 0)
+    (hΦsq : ∀ w ∈ S, deriv Φ w ^ 2 = -q w)
+    {z : ℂ} (hz : z ∈ S) {sgn h : ℝ} (hsgn : sgn = 1 ∨ sgn = -1) (hh : 0 < h)
+    (hseg : ∀ u ∈ Set.Icc (0 : ℝ) h, Φ z + ((sgn * u : ℝ) : ℂ) ∈ Φ '' S) :
+    (fun u => localFlow Φ S (sgn * u) z) 0 = z ∧
+    IsTrajOn q (fun u => localFlow Φ S (sgn * u) z) (Set.Icc 0 h) ∧
+    SlopeAt Φ (fun u => localFlow Φ S (sgn * u) z) (Set.Icc 0 h) 0 sgn := by
+  have hder : ∀ w ∈ S, deriv Φ w ≠ 0 := by
+    intro w hw h0
+    apply hSne w hw
+    have := hΦsq w hw
+    rw [h0] at this
+    simpa using this.symm
+  set σ : ℝ → ℂ := fun u => localFlow Φ S (sgn * u) z with hσdef
+  have hσdev : ∀ u ∈ Set.Icc (0 : ℝ) h, Φ (σ u) = Φ z + ((sgn * u : ℝ) : ℂ) :=
+    fun u hu => localFlow_dev (hseg u hu)
+  have hσS : ∀ u ∈ Set.Icc (0 : ℝ) h, σ u ∈ S := fun u hu =>
+    localFlow_mem (hseg u hu)
+  have hσ0 : σ 0 = z := by
+    rw [hσdef]
+    simp only [mul_zero]
+    exact localFlow_zero hΦinj hz
+  have hσcont : ContinuousOn σ (Set.Icc 0 h) := by
+    intro u hu
+    have hd := localFlow_hasDerivAt hS hΦd hΦinj (hseg u hu)
+      (hder _ (hσS u hu))
+    have hcont : ContinuousAt (fun t : ℝ => localFlow Φ S t z) (sgn * u) :=
+      hd.continuousAt
+    have hmul : ContinuousAt (fun u : ℝ => sgn * u) u :=
+      (continuous_const.mul continuous_id).continuousAt
+    exact (hcont.comp hmul).continuousWithinAt
+  refine ⟨hσ0, ⟨hσcont, ?_⟩, ?_⟩
+  · intro t ht
+    have hsne : (sgn : ℂ) ≠ 0 := by
+      rcases hsgn with h1 | h1 <;> rw [h1] <;> norm_num
+    have hs2 : ((sgn : ℝ) : ℂ) ^ 2 = 1 := by
+      rcases hsgn with h1 | h1 <;> rw [h1] <;> norm_num
+    refine ⟨S, hS, hσS t ht, hSH, hSne, fun w => ((sgn : ℝ) : ℂ) * Φ w,
+      fun w hw => ((hΦd w hw).const_mul _), ?_, ?_, ?_⟩
+    · intro x hx y hy hxy
+      exact hΦinj hx hy (mul_left_cancel₀ hsne hxy)
+    · intro w hw
+      have hdiff : DifferentiableAt ℂ Φ w := hΦd.differentiableAt (hS.mem_nhds hw)
+      rw [deriv_const_mul _ hdiff, mul_pow, hs2, one_mul]
+      exact hΦsq w hw
+    · filter_upwards [eventually_mem_nhdsWithin] with u hu
+      refine ⟨hσS u hu, ?_⟩
+      show ((sgn : ℝ) : ℂ) * Φ (σ u) = ((sgn : ℝ) : ℂ) * Φ (σ t) + _
+      rw [hσdev u hu, hσdev t ht]
+      push_cast
+      rcases hsgn with h1 | h1 <;> rw [h1] <;> push_cast <;> ring
+  · show ∀ᶠ u in nhdsWithin 0 (Set.Icc 0 h), Φ (σ u) = Φ (σ 0) + sgn * ((u - 0 : ℝ) : ℂ)
+    filter_upwards [eventually_mem_nhdsWithin] with u hu
+    rw [hσdev u hu, hσ0]
+    push_cast
+    ring
+
+
+/-- The rational parameter grid of a closed segment. -/
+def ratGrid (h : ℝ) : Set ℚ := {u : ℚ | 0 ≤ (u : ℝ) ∧ (u : ℝ) ≤ h}
+
+/-- **Lower bound direction**: a segment inside an open set keeps a positive distance
+floor at all rational parameters. -/
+theorem seg_inf_pos {O : Set ℂ} (hO : IsOpen O) {p : ℝ → ℂ}
+    (hp : Continuous p) {h : ℝ}
+    (hin : ∀ u ∈ Set.Icc (0 : ℝ) h, p u ∈ O) :
+    0 < ⨅ u : ratGrid h, Metric.infEDist (p (u : ℚ)) Oᶜ := by
+  have hcomp : IsCompact (p '' Set.Icc 0 h) := isCompact_Icc.image hp
+  have hsubO : p '' Set.Icc 0 h ⊆ O := by
+    rintro w ⟨u, hu, rfl⟩
+    exact hin u hu
+  obtain ⟨ε, hε, hthick⟩ := hcomp.exists_thickening_subset_open hO hsubO
+  have hlb : ∀ u : ratGrid h,
+      ENNReal.ofReal ε ≤ Metric.infEDist (p ((u : ℚ) : ℝ)) Oᶜ := by
+    intro u
+    by_contra hlt
+    push Not at hlt
+    obtain ⟨y, hyO, hyd⟩ := Metric.infEDist_lt_iff.mp hlt
+    have hpK : p ((u : ℚ) : ℝ) ∈ p '' Set.Icc 0 h :=
+      ⟨((u : ℚ) : ℝ), ⟨u.2.1, u.2.2⟩, rfl⟩
+    have hymem : y ∈ Metric.thickening ε (p '' Set.Icc 0 h) := by
+      rw [Metric.mem_thickening_iff]
+      refine ⟨p ((u : ℚ) : ℝ), hpK, ?_⟩
+      rw [dist_comm]
+      exact edist_lt_ofReal.mp hyd
+    exact hyO (hthick hymem)
+  calc (0 : ℝ≥0∞) < ENNReal.ofReal ε := ENNReal.ofReal_pos.mpr hε
+    _ ≤ ⨅ u : ratGrid h, Metric.infEDist (p ((u : ℚ) : ℝ)) Oᶜ := le_iInf hlb
+
+/-- **Upper bound direction**: a positive rational distance floor keeps the whole
+segment inside the open set. -/
+theorem seg_inf_mem {O : Set ℂ} {g : ℂ} {s : ℝ} {h : ℝ} (hh : 0 < h)
+    (hpos : 0 < ⨅ u : ratGrid h,
+      Metric.infEDist (g + ((s * ((u : ℚ) : ℝ) : ℝ) : ℂ)) Oᶜ)
+    {u : ℝ} (hu : u ∈ Set.Icc (0 : ℝ) h) : g + ((s * u : ℝ) : ℂ) ∈ O := by
+  by_contra hout
+  have hzero : Metric.infEDist (g + ((s * u : ℝ) : ℂ)) Oᶜ = 0 :=
+    Metric.infEDist_zero_of_mem hout
+  set c : ℝ≥0∞ := min (⨅ v : ratGrid h,
+    Metric.infEDist (g + ((s * ((v : ℚ) : ℝ) : ℝ) : ℂ)) Oᶜ) 1 with hcdef
+  have hc0 : 0 < c := lt_min hpos one_pos
+  have hcne : c ≠ ⊤ := ne_top_of_le_ne_top ENNReal.one_ne_top (min_le_right _ _)
+  have hctr : 0 < c.toReal := ENNReal.toReal_pos hc0.ne' hcne
+  set δ : ℝ := c.toReal / (2 * (|s| + 1)) with hδdef
+  have hδ : 0 < δ := by positivity
+  -- a rational parameter within δ of u inside the grid
+  have hrat : ∃ v : ratGrid h, |((v : ℚ) : ℝ) - u| < δ := by
+    rcases eq_or_lt_of_le hu.1 with h0 | h0
+    · refine ⟨⟨0, by norm_num, by norm_num; linarith⟩, ?_⟩
+      rw [← h0]
+      simpa using hδ
+    · obtain ⟨v, hv1, hv2⟩ := exists_rat_btwn (show max 0 (u - δ) < u from
+        max_lt h0 (by linarith))
+      have hv0 : (0 : ℝ) ≤ (v : ℝ) := le_trans (le_max_left _ _) hv1.le
+      have hvh : ((v : ℝ) : ℝ) ≤ h := le_trans hv2.le hu.2
+      refine ⟨⟨v, hv0, hvh⟩, ?_⟩
+      have := le_max_right 0 (u - δ)
+      rw [abs_sub_lt_iff]
+      constructor <;> linarith [hv1, hv2]
+  obtain ⟨v, hv⟩ := hrat
+  have htri : (⨅ w : ratGrid h,
+        Metric.infEDist (g + ((s * ((w : ℚ) : ℝ) : ℝ) : ℂ)) Oᶜ)
+      ≤ ENNReal.ofReal (|s| * δ) := by
+    refine le_trans (iInf_le _ v) ?_
+    calc Metric.infEDist (g + ((s * ((v : ℚ) : ℝ) : ℝ) : ℂ)) Oᶜ
+        ≤ Metric.infEDist (g + ((s * u : ℝ) : ℂ)) Oᶜ
+          + edist (g + ((s * ((v : ℚ) : ℝ) : ℝ) : ℂ)) (g + ((s * u : ℝ) : ℂ)) :=
+          Metric.infEDist_le_infEDist_add_edist
+      _ = edist (g + ((s * ((v : ℚ) : ℝ) : ℝ) : ℂ)) (g + ((s * u : ℝ) : ℂ)) := by
+          rw [hzero, zero_add]
+      _ ≤ ENNReal.ofReal (|s| * δ) := by
+          rw [edist_dist, dist_eq_norm]
+          refine ENNReal.ofReal_le_ofReal ?_
+          have hnorm : (g + ((s * ((v : ℚ) : ℝ) : ℝ) : ℂ)) - (g + ((s * u : ℝ) : ℂ))
+              = (((s * ((v : ℚ) : ℝ) - s * u : ℝ)) : ℂ) := by
+            push_cast
+            ring
+          rw [hnorm, Complex.norm_real, Real.norm_eq_abs, ← mul_sub, abs_mul]
+          exact mul_le_mul_of_nonneg_left hv.le (abs_nonneg s)
+  have hfin : c ≤ ENNReal.ofReal (|s| * δ) := le_trans (min_le_left _ _) htri
+  have hcontra : ENNReal.ofReal (|s| * δ) < c := by
+    have h1 : |s| * δ < c.toReal := by
+      rw [hδdef]
+      rw [div_eq_mul_inv]
+      have hpos1 : (0 : ℝ) < |s| + 1 := by positivity
+      calc |s| * (c.toReal * (2 * (|s| + 1))⁻¹)
+          ≤ (|s| + 1) * (c.toReal * (2 * (|s| + 1))⁻¹) := by
+            refine mul_le_mul_of_nonneg_right (by linarith [abs_nonneg s]) ?_
+            positivity
+        _ = c.toReal / 2 := by
+            field_simp
+        _ < c.toReal := by linarith
+    calc ENNReal.ofReal (|s| * δ) < ENNReal.ofReal c.toReal := by
+          refine ENNReal.ofReal_lt_ofReal_iff ?_ |>.mpr h1
+          exact hctr
+      _ = c := ENNReal.ofReal_toReal hcne
+  exact absurd hfin (not_le.mpr hcontra)
+
+/-- **Segment-condition measurability**: staying in an open set along a measurable
+family of developed segments is a measurable condition. -/
+theorem seg_cond_measurable {O : Set ℂ} (hO : IsOpen O) {g : ℂ → ℂ} {s : ℂ → ℝ}
+    (hg : Measurable g) (hs : Measurable s) {h : ℝ} (hh : 0 < h) :
+    MeasurableSet {z : ℂ | ∀ u ∈ Set.Icc (0 : ℝ) h,
+      g z + ((s z * u : ℝ) : ℂ) ∈ O} := by
+  have hkey : {z : ℂ | ∀ u ∈ Set.Icc (0 : ℝ) h, g z + ((s z * u : ℝ) : ℂ) ∈ O}
+      = {z : ℂ | 0 < ⨅ u : ratGrid h,
+          Metric.infEDist (g z + ((s z * ((u : ℚ) : ℝ) : ℝ) : ℂ)) Oᶜ} := by
+    ext z
+    simp only [Set.mem_setOf_eq]
+    constructor
+    · intro hz
+      have hcont : Continuous fun u : ℝ => g z + ((s z * u : ℝ) : ℂ) :=
+        continuous_const.add (Complex.continuous_ofReal.comp
+          (continuous_const.mul continuous_id))
+      exact seg_inf_pos hO hcont hz
+    · intro hz u hu
+      exact seg_inf_mem hh hz hu
+  rw [hkey]
+  refine measurableSet_lt measurable_const ?_
+  refine Measurable.iInf fun u => ?_
+  have hpt : Measurable fun z => g z + ((s z * ((u : ℚ) : ℝ) : ℝ) : ℂ) :=
+    hg.add (Complex.measurable_ofReal.comp (hs.mul_const _))
+  exact (Metric.continuous_infEDist).measurable.comp hpt
+
+
+/-- The **strong-legal set**: every step up to `N` selects an active chart holding the
+position in its unit ball, carries a unit sign, and its whole developed segment stays
+in the developed chart image. -/
+def slegal {q : ℂ → ℂ} (A : Atlas q) (h : ℝ) (N : ℕ) : Set ℂ :=
+  {z | ∀ k, k ≤ N → A.active (A.sel (pos A h k z)) ∧
+    pos A h k z ∈ Metric.ball (A.c (A.sel (pos A h k z)))
+      (A.r (A.sel (pos A h k z))) ∧
+    (sgn A h k z = 1 ∨ sgn A h k z = -1) ∧
+    ∀ u ∈ Set.Icc (0 : ℝ) h,
+      A.Φ (A.sel (pos A h k z)) (pos A h k z) + ((sgn A h k z * u : ℝ) : ℂ)
+        ∈ A.Φ (A.sel (pos A h k z)) ''
+          Metric.ball (A.c (A.sel (pos A h k z))) (2 * A.r (A.sel (pos A h k z)))}
+
+/-- Measurability of the strong-legal set. -/
+theorem slegal_measurable {q : ℂ → ℂ} (A : Atlas q) {h : ℝ} (hh : 0 < h)
+    (N : ℕ) : MeasurableSet (slegal A h N) := by
+  classical
+  have hset : slegal A h N = ⋂ k ∈ Set.Iic N, ⋃ j : ℕ,
+      ((pos A h k) ⁻¹' (A.sel ⁻¹' {j})
+        ∩ ({z | A.active j}
+        ∩ ((pos A h k) ⁻¹' Metric.ball (A.c j) (A.r j)
+        ∩ (((sgn A h k) ⁻¹' {1} ∪ (sgn A h k) ⁻¹' {-1})
+        ∩ {z | ∀ u ∈ Set.Icc (0 : ℝ) h,
+            A.mchart j (pos A h k z) + ((sgn A h k z * u : ℝ) : ℂ)
+              ∈ A.Φ j '' Metric.ball (A.c j) (2 * A.r j)})))) := by
+    ext z
+    simp only [Set.mem_setOf_eq, Set.mem_iInter, Set.mem_iUnion, Set.mem_inter_iff,
+      Set.mem_preimage, Set.mem_singleton_iff, Set.mem_union, Set.mem_Iic]
+    constructor
+    · intro hz k hk
+      obtain ⟨hact, hball, hsgn, hseg⟩ := hz k hk
+      refine ⟨A.sel (pos A h k z), rfl, hact, hball, hsgn, ?_⟩
+      intro u hu
+      have hmem2 : pos A h k z ∈ Metric.ball (A.c (A.sel (pos A h k z)))
+          (2 * A.r (A.sel (pos A h k z))) :=
+        Metric.ball_subset_ball (by linarith [A.hr _ hact]) hball
+      rw [A.mchart_eq hact hmem2]
+      exact hseg u hu
+    · intro hz k hk
+      obtain ⟨j, hsel, hact, hball, hsgn, hseg⟩ := hz k hk
+      subst hsel
+      refine ⟨hact, hball, hsgn, ?_⟩
+      intro u hu
+      have hmem2 : pos A h k z ∈ Metric.ball (A.c (A.sel (pos A h k z)))
+          (2 * A.r (A.sel (pos A h k z))) :=
+        Metric.ball_subset_ball (by linarith [A.hr _ hact]) hball
+      have := hseg u hu
+      rwa [A.mchart_eq hact hmem2] at this
+  rw [hset]
+  refine MeasurableSet.biInter ((Set.finite_Iic N).countable) fun k _ => ?_
+  refine MeasurableSet.iUnion fun j => ?_
+  refine ((A.measurable_sel.comp (measurable_pos A h k))
+    (measurableSet_singleton j)).inter ?_
+  refine MeasurableSet.inter ?_ ?_
+  · by_cases hact : A.active j
+    · have : {z : ℂ | A.active j} = Set.univ := by
+        ext z
+        simp [hact]
+      rw [this]
+      exact MeasurableSet.univ
+    · have : {z : ℂ | A.active j} = ∅ := by
+        ext z
+        simp [hact]
+      rw [this]
+      exact MeasurableSet.empty
+  refine MeasurableSet.inter ((measurable_pos A h k) measurableSet_ball) ?_
+  refine MeasurableSet.inter (((measurable_sgn A h k) (measurableSet_singleton 1)).union
+    ((measurable_sgn A h k) (measurableSet_singleton (-1)))) ?_
+  by_cases hact : A.active j
+  · exact seg_cond_measurable
+      (chart_image_open Metric.isOpen_ball (A.hd j hact) (A.hne j hact) (A.hsq j hact))
+      ((A.measurable_mchart j).comp (measurable_pos A h k)) (measurable_sgn A h k) hh
+  · have hjunk : A.Φ j = id := A.hjunk j hact
+    have hopen : IsOpen (A.Φ j '' Metric.ball (A.c j) (2 * A.r j)) := by
+      rw [hjunk, Set.image_id]
+      exact Metric.isOpen_ball
+    exact seg_cond_measurable hopen
+      ((A.measurable_mchart j).comp (measurable_pos A h k)) (measurable_sgn A h k) hh
+
+/-- The stepper sign recursion. -/
+theorem sgn_succ {q : ℂ → ℂ} (A : Atlas q) (h : ℝ) (k : ℕ) (z : ℂ) :
+    sgn A h (k + 1) z
+      = sgn A h k z * ((deriv (A.Φ (A.sel (pos A h (k + 1) z))) (pos A h (k + 1) z))
+        * (deriv (A.Φ (A.sel (pos A h k z))) (pos A h (k + 1) z))⁻¹).re := by
+  rw [sgn, Function.iterate_succ_apply']
+  have hpos : (A.step2 ((A.step2)^[k] (h, z, 1))).2.1 = pos A h (k + 1) z := by
+    rw [pos, Function.iterate_succ_apply']
+  show ((A.step2)^[k] (h, z, 1)).2.2
+      * ((deriv (A.Φ (A.sel (A.step2 ((A.step2)^[k] (h, z, 1))).2.1))
+          ((A.step2 ((A.step2)^[k] (h, z, 1))).2.1))
+        * (deriv (A.Φ (A.sel ((A.step2)^[k] (h, z, 1)).2.1))
+          ((A.step2 ((A.step2)^[k] (h, z, 1))).2.1))⁻¹).re = _
+  rw [hpos]
+  rfl
+
+
+/-- **The step unit**: the k-th strong-legal clause produces a segment trajectory from
+the k-th position to the (k+1)-st, arriving with the updated sign as chart slope. -/
+theorem slegal_step {q : ℂ → ℂ} (A : Atlas q) {h : ℝ} (hh : 0 < h)
+    {z : ℂ} {k : ℕ}
+    (hact : A.active (A.sel (pos A h k z)))
+    (hball : pos A h k z ∈ Metric.ball (A.c (A.sel (pos A h k z)))
+      (A.r (A.sel (pos A h k z))))
+    (hsgn : sgn A h k z = 1 ∨ sgn A h k z = -1)
+    (hseg : ∀ u ∈ Set.Icc (0 : ℝ) h,
+      A.Φ (A.sel (pos A h k z)) (pos A h k z) + ((sgn A h k z * u : ℝ) : ℂ)
+        ∈ A.Φ (A.sel (pos A h k z)) ''
+          Metric.ball (A.c (A.sel (pos A h k z)))
+            (2 * A.r (A.sel (pos A h k z)))) :
+    ∃ τ : ℝ → ℂ, τ 0 = pos A h k z ∧ IsTrajOn q τ (Set.Icc 0 h) ∧
+      SlopeAt (A.Φ (A.sel (pos A h k z))) τ (Set.Icc 0 h) 0 (sgn A h k z) ∧
+      τ h = pos A h (k + 1) z ∧
+      (sgn A h (k + 1) z = 1 ∨ sgn A h (k + 1) z = -1) ∧
+      SlopeAt (A.Φ (A.sel (pos A h (k + 1) z))) τ (Set.Icc 0 h) h
+        (sgn A h (k + 1) z) := by
+  set j : ℕ := A.sel (pos A h k z) with hjdef
+  set x : ℂ := pos A h k z with hxdef
+  set s : ℝ := sgn A h k z with hsdef
+  set S : Set ℂ := Metric.ball (A.c j) (2 * A.r j) with hSdef
+  have hxS : x ∈ S := Metric.ball_subset_ball (by linarith [A.hr j hact]) hball
+  obtain ⟨hτ0, hτtraj, hτslope⟩ := seg_traj Metric.isOpen_ball (A.hd j hact)
+    (A.hinj j hact) (A.hH j hact) (A.hne j hact) (A.hsq j hact) hxS hsgn hh hseg
+  set τ : ℝ → ℂ := fun u => localFlow (A.Φ j) S (s * u) x with hτdef
+  have hτh : τ h = pos A h (k + 1) z := by
+    rw [pos_succ, step2_fst]
+    show Function.invFunOn (A.Φ j) S (A.Φ j x + ((s * h : ℝ) : ℂ)) = _
+    rw [← A.mchart_eq hact hxS]
+  have hhmem : h ∈ Set.Icc (0 : ℝ) h := Set.right_mem_Icc.mpr hh.le
+  have hτhS : τ h ∈ S := localFlow_mem (hseg h hhmem)
+  have him' : 0 < (pos A h (k + 1) z).im := by
+    rw [← hτh]
+    exact A.hH j hact hτhS
+  have hne' : q (pos A h (k + 1) z) ≠ 0 := by
+    rw [← hτh]
+    exact A.hne j hact _ hτhS
+  obtain ⟨hact', hball'⟩ := A.sel_spec him' hne'
+  set j' : ℕ := A.sel (pos A h (k + 1) z) with hj'def
+  have hx'S : pos A h (k + 1) z ∈ S := hτh ▸ hτhS
+  have hx'S' : pos A h (k + 1) z ∈ Metric.ball (A.c j') (2 * A.r j') :=
+    Metric.ball_subset_ball (by linarith [A.hr j' hact']) hball'
+  have haff : ∀ v ∈ Set.Icc (0 : ℝ) h,
+      A.Φ j (τ v) = A.Φ j (τ 0) + s * ((v - 0 : ℝ) : ℂ) := by
+    intro v hv
+    have hdev : A.Φ j (τ v) = A.Φ j x + ((s * v : ℝ) : ℂ) :=
+      localFlow_dev (hseg v hv)
+    rw [hdev, hτ0]
+    push_cast
+    ring
+  have hslope₁ : SlopeAt (A.Φ j) τ (Set.Icc 0 h) h s :=
+    slope_transport Metric.isOpen_ball (A.hd j hact) (A.hsq j hact) hτtraj
+      (le_refl 0) hh (le_refl h) hτhS haff
+  obtain ⟨ε', hε'pm, hderiv', hrel'⟩ := chart_ratio (q := q) Metric.isOpen_ball
+    Metric.isOpen_ball (A.hd j hact) (A.hd j' hact') (A.hsq j hact)
+    (A.hsq j' hact') hx'S hx'S'
+  have hdne : deriv (A.Φ j) (pos A h (k + 1) z) ≠ 0 := by
+    intro h0
+    apply hne'
+    have hsq := A.hsq j hact _ hx'S
+    rw [h0] at hsq
+    simpa using hsq.symm
+  have hratio : ((deriv (A.Φ j') (pos A h (k + 1) z))
+      * (deriv (A.Φ j) (pos A h (k + 1) z))⁻¹).re = ε' := by
+    rw [hderiv', mul_assoc, mul_inv_cancel₀ hdne, mul_one, Complex.ofReal_re]
+  have hsucc : sgn A h (k + 1) z = s * ε' := by
+    rw [sgn_succ, hratio]
+  have hpm' : sgn A h (k + 1) z = 1 ∨ sgn A h (k + 1) z = -1 := by
+    rw [hsucc]
+    rcases hsgn with h1 | h1 <;> rcases hε'pm with h2 | h2 <;>
+      rw [show s = sgn A h k z from rfl] at * <;> rw [h1, h2] <;> norm_num
+  have hslope₂ : SlopeAt (A.Φ j') τ (Set.Icc 0 h) h (ε' * s) := by
+    refine slope_ratio ((Metric.isOpen_ball.inter Metric.isOpen_ball).connectedComponentIn)
+      hhmem (hτtraj.cont h hhmem) ?_ hrel' hslope₁
+    rw [hτh]
+    exact mem_connectedComponentIn ⟨hx'S, hx'S'⟩
+  refine ⟨τ, hτ0, hτtraj, hτslope, hτh, hpm', ?_⟩
+  rw [hsucc, mul_comm s ε']
+  exact hslope₂
+
+
+/-- **Junction glue of trajectory units**: two trajectories meeting at a point with the
+same signed slope in one chart concatenate to a trajectory. -/
+theorem traj_glue_units {q Φ : ℂ → ℂ} {S : Set ℂ} (hS : IsOpen S)
+    (hΦd : DifferentiableOn ℂ Φ S) (hΦinj : Set.InjOn Φ S)
+    (hSH : S ⊆ {z : ℂ | 0 < z.im}) (hSne : ∀ w ∈ S, q w ≠ 0)
+    (hΦsq : ∀ w ∈ S, deriv Φ w ^ 2 = -q w)
+    {σ τ : ℝ → ℂ} {b δ : ℝ} (hb : 0 ≤ b) (hδ : 0 < δ)
+    (hσ : IsTrajOn q σ (Set.Icc 0 b)) (hτ : IsTrajOn q τ (Set.Icc 0 δ))
+    (hmatch : τ 0 = σ b) {s : ℝ} (hs : s = 1 ∨ s = -1)
+    (hσarr : SlopeAt Φ σ (Set.Icc 0 b) b s)
+    (hτ0 : SlopeAt Φ τ (Set.Icc 0 δ) 0 s) (hσbS : σ b ∈ S) :
+    ∃ σ' : ℝ → ℂ, Set.EqOn σ' σ (Set.Icc 0 b) ∧
+      (∀ u ∈ Set.Icc b (b + δ), σ' u = τ (u - b)) ∧
+      IsTrajOn q σ' (Set.Icc 0 (b + δ)) := by
+  classical
+  set σ' : ℝ → ℂ := fun u => if u ≤ b then σ u else τ (u - b) with hσ'def
+  have hEq : Set.EqOn σ' σ (Set.Icc 0 b) := fun u hu => if_pos hu.2
+  have hσ'b : σ' b = σ b := if_pos le_rfl
+  have hEqR : ∀ u ∈ Set.Icc b (b + δ), σ' u = τ (u - b) := by
+    intro u hu
+    rcases eq_or_lt_of_le hu.1 with heq | hlt
+    · rw [← heq, hσ'b, show b - b = (0 : ℝ) by ring, hmatch]
+    · exact if_neg (not_le.mpr hlt)
+  have hshift : ∀ t : ℝ, Filter.Tendsto (fun u : ℝ => u - b)
+      (nhdsWithin t (Set.Icc b (b + δ))) (nhdsWithin (t - b) (Set.Icc 0 δ)) := by
+    intro t
+    refine Filter.Tendsto.inf ?_ ?_
+    · exact (continuous_id.sub continuous_const).tendsto t
+    · refine Filter.tendsto_principal_principal.mpr fun u hu => ?_
+      exact ⟨by linarith [hu.1], by linarith [hu.2]⟩
+  have hτ0S : ∀ᶠ v in nhdsWithin 0 (Set.Icc 0 δ), τ v ∈ S := by
+    have h0mem : (0 : ℝ) ∈ Set.Icc 0 δ := Set.left_mem_Icc.mpr hδ.le
+    exact (hτ.cont 0 h0mem) (hmatch ▸ hS.mem_nhds hσbS)
+  have hσbS' : ∀ᶠ u in nhdsWithin b (Set.Icc 0 b), σ u ∈ S := by
+    have hbmem : b ∈ Set.Icc 0 b := Set.right_mem_Icc.mpr hb
+    exact (hσ.cont b hbmem) (hS.mem_nhds hσbS)
+  refine ⟨σ', hEq, hEqR, ?_, ?_⟩
+  · intro t ht
+    rcases lt_trichotomy t b with htb | heq | htb
+    · show Filter.Tendsto σ' (nhdsWithin t (Set.Icc 0 (b + δ))) (nhds (σ' t))
+      rw [nhdsWithin_left (by linarith) htb, hEq ⟨ht.1, htb.le⟩]
+      exact Filter.Tendsto.congr'
+        (eventually_mem_nhdsWithin.mono fun u hu => (hEq hu).symm)
+        (hσ.cont t ⟨ht.1, htb.le⟩)
+    · subst heq
+      show Filter.Tendsto σ' (nhdsWithin t (Set.Icc 0 (t + δ))) (nhds (σ' t))
+      rw [nhdsWithin_split hb hδ.le, Filter.tendsto_sup]
+      constructor
+      · rw [hσ'b]
+        exact Filter.Tendsto.congr'
+          (eventually_mem_nhdsWithin.mono fun u hu => (hEq hu).symm)
+          (hσ.cont t (Set.right_mem_Icc.mpr hb))
+      · rw [hσ'b, ← hmatch]
+        refine Filter.Tendsto.congr'
+          (eventually_mem_nhdsWithin.mono fun u hu => (hEqR u hu).symm) ?_
+        have h0mem : (0 : ℝ) ∈ Set.Icc 0 δ := Set.left_mem_Icc.mpr hδ.le
+        have hsh := hshift t
+        rw [sub_self] at hsh
+        exact Filter.Tendsto.comp (hτ.cont 0 h0mem) hsh
+    · show Filter.Tendsto σ' (nhdsWithin t (Set.Icc 0 (b + δ))) (nhds (σ' t))
+      have htmem : t - b ∈ Set.Icc 0 δ := ⟨by linarith, by linarith [ht.2]⟩
+      rw [nhdsWithin_right hb htb, hEqR t ⟨htb.le, ht.2⟩]
+      exact Filter.Tendsto.congr'
+        (eventually_mem_nhdsWithin.mono fun u hu => (hEqR u hu).symm)
+        (Filter.Tendsto.comp (hτ.cont (t - b) htmem) (hshift t))
+  · intro t ht
+    rcases lt_trichotomy t b with htb | heq | htb
+    · obtain ⟨Ut, hUto, hptU, hUtH, hUtne, Φt, hΦtd, hΦtinj, hΦtsq, hevt⟩ :=
+        hσ.chart t ⟨ht.1, htb.le⟩
+      refine ⟨Ut, hUto, by rw [hEq ⟨ht.1, htb.le⟩]; exact hptU, hUtH, hUtne,
+        Φt, hΦtd, hΦtinj, hΦtsq, ?_⟩
+      rw [nhdsWithin_left (by linarith) htb]
+      filter_upwards [hevt, eventually_mem_nhdsWithin] with u hu huIcc
+      rw [hEq huIcc, hEq ⟨ht.1, htb.le⟩]
+      exact hu
+    · subst heq
+      have hsne : ((s : ℝ) : ℂ) ≠ 0 := by
+        rcases hs with h1 | h1 <;> rw [h1] <;> norm_num
+      have hs2 : ((s : ℝ) : ℂ) ^ 2 = 1 := by
+        rcases hs with h1 | h1 <;> rw [h1] <;> norm_num
+      refine ⟨S, hS, by rw [hσ'b]; exact hσbS, hSH, hSne,
+        fun w => ((s : ℝ) : ℂ) * Φ w, fun w hw => ((hΦd w hw).const_mul _),
+        ?_, ?_, ?_⟩
+      · intro x hx y hy hxy
+        exact hΦinj hx hy (mul_left_cancel₀ hsne hxy)
+      · intro w hw
+        have hdiff : DifferentiableAt ℂ Φ w := hΦd.differentiableAt (hS.mem_nhds hw)
+        rw [deriv_const_mul _ hdiff, mul_pow, hs2, one_mul]
+        exact hΦsq w hw
+      · rw [nhdsWithin_split hb hδ.le, Filter.eventually_sup]
+        constructor
+        · filter_upwards [hσarr, hσbS', eventually_mem_nhdsWithin] with u hu hSu huIcc
+          rw [hEq huIcc, hσ'b]
+          refine ⟨hSu, ?_⟩
+          show ((s : ℝ) : ℂ) * Φ (σ u) = ((s : ℝ) : ℂ) * Φ (σ t) + _
+          rw [hu]
+          push_cast
+          rcases hs with h1 | h1 <;> rw [h1] <;> push_cast <;> ring
+        · have hsh := hshift t
+          rw [sub_self] at hsh
+          filter_upwards [hsh.eventually hτ0, hsh.eventually hτ0S,
+            eventually_mem_nhdsWithin] with u hu hSu huIcc
+          rw [hEqR u huIcc, hσ'b]
+          refine ⟨hSu, ?_⟩
+          show ((s : ℝ) : ℂ) * Φ (τ (u - t)) = ((s : ℝ) : ℂ) * Φ (σ t) + _
+          rw [hu, hmatch]
+          push_cast
+          rcases hs with h1 | h1 <;> rw [h1] <;> push_cast <;> ring
+    · have htmem : t - b ∈ Set.Icc 0 δ := ⟨by linarith, by linarith [ht.2]⟩
+      obtain ⟨Ut, hUto, hptU, hUtH, hUtne, Φt, hΦtd, hΦtinj, hΦtsq, hevt⟩ :=
+        hτ.chart (t - b) htmem
+      refine ⟨Ut, hUto, by rw [hEqR t ⟨htb.le, ht.2⟩]; exact hptU, hUtH, hUtne,
+        Φt, hΦtd, hΦtinj, hΦtsq, ?_⟩
+      rw [nhdsWithin_right hb htb]
+      filter_upwards [(hshift t).eventually hevt, eventually_mem_nhdsWithin]
+        with u hu huIcc
+      rw [hEqR u huIcc, hEqR t ⟨htb.le, ht.2⟩]
+      refine ⟨hu.1, ?_⟩
+      rw [hu.2]
+      congr 1
+      push_cast
+      ring
+
+
+/-- Slope transfer through the right piece of a glued curve. -/
+theorem slope_glue_shift {Φ : ℂ → ℂ} {σ' τ : ℝ → ℂ} {b δ s : ℝ}
+    (hb : 0 ≤ b) (hδ : 0 < δ)
+    (hR : ∀ u ∈ Set.Icc b (b + δ), σ' u = τ (u - b))
+    (hτ : SlopeAt Φ τ (Set.Icc 0 δ) δ s) :
+    SlopeAt Φ σ' (Set.Icc 0 (b + δ)) (b + δ) s := by
+  have hshift : Filter.Tendsto (fun u : ℝ => u - b)
+      (nhdsWithin (b + δ) (Set.Icc b (b + δ))) (nhdsWithin δ (Set.Icc 0 δ)) := by
+    refine Filter.Tendsto.inf ?_ ?_
+    · have h1 : Continuous fun u : ℝ => u - b := continuous_id.sub continuous_const
+      have h2 := h1.tendsto (b + δ)
+      simpa using h2
+    · refine Filter.tendsto_principal_principal.mpr fun u hu => ?_
+      exact ⟨by linarith [hu.1], by linarith [hu.2]⟩
+  show ∀ᶠ u in nhdsWithin (b + δ) (Set.Icc 0 (b + δ)),
+    Φ (σ' u) = Φ (σ' (b + δ)) + s * ((u - (b + δ) : ℝ) : ℂ)
+  rw [nhdsWithin_right hb (by linarith : b < b + δ)]
+  filter_upwards [hshift.eventually hτ, eventually_mem_nhdsWithin] with u hu huI
+  rw [hR u huI, hR (b + δ) (Set.right_mem_Icc.mpr (by linarith)),
+    show b + δ - b = δ by ring, hu]
+  congr 1
+  push_cast
+  ring
+
+/-- **Strong-legal runs are trajectories**: a strong-legal point carries a slope-one
+trajectory over the whole run window ending at the final stepper position with the
+final stepper sign as arrival slope. -/
+theorem slegal_traj {q : ℂ → ℂ} (A : Atlas q) {h : ℝ} (hh : 0 < h) :
+    ∀ N : ℕ, ∀ z, z ∈ slegal A h N →
+    ∃ σ : ℝ → ℂ, σ 0 = z ∧ IsTrajOn q σ (Set.Icc 0 (((N + 1 : ℕ) : ℝ) * h)) ∧
+      SlopeAt (A.Φ (A.sel z)) σ (Set.Icc 0 (((N + 1 : ℕ) : ℝ) * h)) 0 1 ∧
+      SlopeAt (A.Φ (A.sel (pos A h (N + 1) z))) σ
+        (Set.Icc 0 (((N + 1 : ℕ) : ℝ) * h)) (((N + 1 : ℕ) : ℝ) * h)
+        (sgn A h (N + 1) z) ∧
+      σ (((N + 1 : ℕ) : ℝ) * h) = pos A h (N + 1) z := by
+  intro N
+  induction N with
+  | zero =>
+    intro z hz
+    obtain ⟨hact, hball, hsgn, hseg⟩ := hz 0 (le_refl 0)
+    obtain ⟨τ, hτ0, hτtraj, hτslope, hτh, hpm, hτarr⟩ :=
+      slegal_step A hh hact hball hsgn hseg
+    have hcast : (((0 + 1 : ℕ) : ℝ)) * h = h := by norm_num
+    rw [hcast]
+    exact ⟨τ, hτ0, hτtraj, hτslope, hτarr, hτh⟩
+  | succ N ih =>
+    intro z hz
+    have hzN : z ∈ slegal A h N := fun k hk => hz k (by omega)
+    obtain ⟨σ, hσ0, hσtraj, hσslope, hσarr, hσend⟩ := ih z hzN
+    obtain ⟨hact, hball, hsgn, hseg⟩ := hz (N + 1) (le_refl _)
+    obtain ⟨τ, hτ0, hτtraj, hτslope, hτh, hpm, hτarr⟩ :=
+      slegal_step A hh hact hball hsgn hseg
+    set b : ℝ := ((N + 1 : ℕ) : ℝ) * h with hbdef
+    have hb : 0 ≤ b := by positivity
+    have hmatch : τ 0 = σ b := by rw [hτ0, hσend]
+    have hσbS : σ b ∈ Metric.ball (A.c (A.sel (pos A h (N + 1) z)))
+        (2 * A.r (A.sel (pos A h (N + 1) z))) := by
+      rw [hσend]
+      exact Metric.ball_subset_ball (by linarith [A.hr _ hact]) hball
+    have hσarr' : SlopeAt (A.Φ (A.sel (pos A h (N + 1) z))) σ (Set.Icc 0 b) b
+        (sgn A h (N + 1) z) := hσarr
+    obtain ⟨σ', hEqL, hEqR, hσ'traj⟩ := traj_glue_units Metric.isOpen_ball
+      (A.hd _ hact) (A.hinj _ hact) (A.hH _ hact) (A.hne _ hact) (A.hsq _ hact)
+      hb hh hσtraj hτtraj hmatch hsgn hσarr' hτslope hσbS
+    have hcast : (((N + 1 + 1 : ℕ) : ℝ)) * h = b + h := by
+      rw [hbdef]
+      push_cast
+      ring
+    rw [hcast]
+    have hb0 : 0 < b := by
+      rw [hbdef]
+      have : (0 : ℝ) < ((N + 1 : ℕ) : ℝ) := by positivity
+      positivity
+    refine ⟨σ', ?_, hσ'traj, ?_, ?_, ?_⟩
+    · rw [hEqL (Set.left_mem_Icc.mpr hb), hσ0]
+    · show ∀ᶠ u in nhdsWithin 0 (Set.Icc 0 (b + h)),
+        A.Φ (A.sel z) (σ' u) = A.Φ (A.sel z) (σ' 0) + 1 * ((u - 0 : ℝ) : ℂ)
+      rw [nhdsWithin_left (by linarith : b ≤ b + h) hb0]
+      have hσ'0 : σ' 0 = σ 0 := hEqL (Set.left_mem_Icc.mpr hb)
+      filter_upwards [hσslope, eventually_mem_nhdsWithin] with u hu huI
+      rw [hEqL huI, hσ'0]
+      exact hu
+    · exact slope_glue_shift hb hh hEqR hτarr
+    · rw [hEqR (b + h) (Set.right_mem_Icc.mpr (by linarith)),
+        show b + h - b = h by ring, hτh]
+
+
+/-- Two chart slopes of the same curve at the same accumulating time agree. -/
+theorem slope_eq {Φ : ℂ → ℂ} {σ : ℝ → ℂ} {I : Set ℝ} {u s₁ s₂ : ℝ}
+    [hne : (nhdsWithin u (I \ {u})).NeBot]
+    (h₁ : SlopeAt Φ σ I u s₁) (h₂ : SlopeAt Φ σ I u s₂) : s₁ = s₂ := by
+  have hmono : nhdsWithin u (I \ {u}) ≤ nhdsWithin u I :=
+    nhdsWithin_mono u Set.diff_subset
+  obtain ⟨v, hv, e₁, e₂⟩ := (eventually_mem_nhdsWithin.and
+    ((h₁.filter_mono hmono).and (h₂.filter_mono hmono))).exists
+  have hvne : ((v - u : ℝ) : ℂ) ≠ 0 := by
+    refine Complex.ofReal_ne_zero.mpr (sub_ne_zero.mpr ?_)
+    intro hvu
+    exact hv.2 (hvu ▸ rfl)
+  have hmul : (s₁ : ℂ) * ((v - u : ℝ) : ℂ) = s₂ * ((v - u : ℝ) : ℂ) := by
+    have := e₁.symm.trans e₂
+    linear_combination this
+  exact_mod_cast mul_right_cancel₀ hvne hmul
+
+/-- **From strong legality to trajectories**: the backward inclusion of the existence
+characterization. -/
+theorem traj_of_slegal {q : ℂ → ℂ} (A : Atlas q) {T : ℝ} (hT : 0 < T)
+    {z : ℂ} {N : ℕ} (hz : z ∈ slegal A (T / (N + 1)) N) :
+    ∃ σ : ℝ → ℂ, σ 0 = z ∧ IsTrajOn q σ (Set.Icc 0 T) ∧
+      SlopeAt (A.Φ (A.sel z)) σ (Set.Icc 0 T) 0 1 := by
+  have hh : 0 < T / (N + 1) := by positivity
+  obtain ⟨σ, hσ0, hσtraj, hσslope, -, -⟩ := slegal_traj A hh N z hz
+  have hcast : (((N + 1 : ℕ) : ℝ)) * (T / (N + 1)) = T := by
+    push_cast
+    field_simp
+  rw [hcast] at hσtraj hσslope
+  exact ⟨σ, hσ0, hσtraj, hσslope⟩
+
+/-- **From trajectories to strong legality**: the forward inclusion of the existence
+characterization. -/
+theorem slegal_of_traj {q : ℂ → ℂ}
+    (hq : DifferentiableOn ℂ q {z : ℂ | 0 < z.im}) (A : Atlas q) {T : ℝ}
+    (hT : 0 < T) {σ : ℝ → ℂ} (hσ : IsTrajOn q σ (Set.Icc 0 T))
+    (hslope0 : SlopeAt (A.Φ (A.sel (σ 0))) σ (Set.Icc 0 T) 0 1) :
+    ∃ N : ℕ, σ 0 ∈ slegal A (T / (N + 1)) N := by
+  have hreg : ∀ v ∈ Set.Icc 0 T, 0 < (σ v).im ∧ q (σ v) ≠ 0 := fun v hv =>
+    traj_regular hσ hv
+  have hqcont : ContinuousOn (fun v => ‖q (σ v)‖) (Set.Icc 0 T) := by
+    refine ContinuousOn.norm (hq.continuousOn.comp hσ.cont ?_)
+    exact fun v hv => (hreg v hv).1
+  obtain ⟨v₀, hv₀mem, hv₀min⟩ := isCompact_Icc.exists_isMinOn
+    ⟨0, Set.left_mem_Icc.mpr hT.le⟩ hqcont
+  set m : ℝ := ‖q (σ v₀)‖ with hmdef
+  have hm : 0 < m := norm_pos_iff.mpr (hreg v₀ hv₀mem).2
+  have hbound : ∀ v ∈ Set.Icc 0 T, m ≤ ‖q (σ v)‖ := fun v hv => hv₀min hv
+  obtain ⟨J, hJ⟩ := sel_bound A hσ.cont hreg
+  obtain ⟨ρ, hρ, hρle⟩ := atlas_radius_min A J
+  have hrad : ∀ v ∈ Set.Icc 0 T, ρ ≤ A.r (A.sel (σ v)) := fun v hv =>
+    hρle _ (hJ v hv) (A.sel_spec (hreg v hv).1 (hreg v hv).2).1
+  obtain ⟨N, hN⟩ := exists_nat_gt (Real.sqrt m⁻¹ * T / ρ)
+  refine ⟨N, ?_⟩
+  set h : ℝ := T / (N + 1) with hhdef
+  have hnn : (0 : ℝ) < (N : ℝ) + 1 := by positivity
+  have hh0 : 0 < h := by rw [hhdef]; positivity
+  have hsmall : Real.sqrt m⁻¹ * h < ρ := by
+    have h2 : Real.sqrt m⁻¹ * T < ρ * ((N : ℝ) + 1) := by
+      have h1 : Real.sqrt m⁻¹ * T / ρ < (N : ℝ) + 1 := lt_trans hN (by linarith)
+      have := (div_lt_iff₀ hρ).mp h1
+      linarith
+    rw [hhdef, ← mul_div_assoc, div_lt_iff₀ hnn]
+    linarith
+  have hth : ((N : ℝ) + 1) * h = T := by rw [hhdef]; field_simp
+  intro k hk
+  have hk1 : (k : ℝ) ≤ (N : ℝ) := by exact_mod_cast hk
+  have hkT : (k : ℝ) * h ≤ T := by nlinarith
+  have hkT' : (k : ℝ) * h + h ≤ T := by nlinarith
+  have hklt : (k : ℝ) * h < T := by nlinarith
+  obtain ⟨-, hpos, hsl⟩ := stepper_follows A hσ hm hbound hrad hh0 hsmall
+    hslope0 k hkT
+  have hposdef : pos A h k (σ 0) = σ ((k : ℝ) * h) := hpos
+  have hsgnsl : SlopeAt (A.Φ (A.sel (σ ((k : ℝ) * h)))) σ (Set.Icc 0 T)
+      ((k : ℝ) * h) (sgn A h k (σ 0)) := hsl
+  set t : ℝ := (k : ℝ) * h with htdef
+  have ht0 : 0 ≤ t := by positivity
+  have htmem : t ∈ Set.Icc 0 T := ⟨ht0, hkT⟩
+  obtain ⟨him, hq0⟩ := hreg t htmem
+  obtain ⟨hact, hmem⟩ := A.sel_spec him hq0
+  have hrpos : 0 < A.r (A.sel (σ t)) := A.hr _ hact
+  have htS : σ t ∈ Metric.ball (A.c (A.sel (σ t))) (2 * A.r (A.sel (σ t))) :=
+    Metric.ball_subset_ball (by linarith) hmem
+  obtain ⟨ε, hε, hev⟩ := traj_ambient_local Metric.isOpen_ball
+    (A.hd _ hact) (A.hsq _ hact) hσ Set.Subset.rfl htmem htS
+  have hslε : SlopeAt (A.Φ (A.sel (σ t))) σ (Set.Icc 0 T) t ε := hev
+  haveI hne : (nhdsWithin t (Set.Icc 0 T \ {t})).NeBot := by
+    have hsub : Set.Ioc t T ⊆ Set.Icc 0 T \ {t} := fun u hu =>
+      ⟨⟨le_trans ht0 hu.1.le, hu.2⟩, hu.1.ne'⟩
+    have hbot : (nhdsWithin t (Set.Ioc t T)).NeBot := left_nhdsWithin_Ioc_neBot hklt
+    exact hbot.mono (nhdsWithin_mono t hsub)
+  have hsgn : sgn A h k (σ 0) = ε := slope_eq hsgnsl hslε
+  obtain ⟨htrack, haff, -⟩ := step_position A hσ hm hbound hrad hh0 hsmall
+    ht0 hkT' hsgnsl
+  rw [hposdef]
+  refine ⟨hact, hmem, ?_, ?_⟩
+  · rcases hε with hε1 | hε1
+    · exact Or.inl (hsgn.trans hε1)
+    · exact Or.inr (hsgn.trans hε1)
+  · intro u hu
+    have humem : t + u ∈ Set.Icc t (t + h) :=
+      ⟨by linarith [hu.1], by linarith [hu.2]⟩
+    refine ⟨σ (t + u), htrack (t + u) humem, ?_⟩
+    rw [haff (t + u) humem]
+    push_cast
+    ring
+
+/-- **Measurability of trajectory existence**: the set of seeds admitting a unit-slope
+trajectory of a given duration is the countable union of the strong-legal sets, hence
+measurable. -/
+theorem traj_exists_measurable {q : ℂ → ℂ}
+    (hq : DifferentiableOn ℂ q {z : ℂ | 0 < z.im}) (A : Atlas q) {T : ℝ}
+    (hT : 0 < T) :
+    MeasurableSet {z : ℂ | ∃ σ : ℝ → ℂ, σ 0 = z ∧ IsTrajOn q σ (Set.Icc 0 T) ∧
+      SlopeAt (A.Φ (A.sel z)) σ (Set.Icc 0 T) 0 1} := by
+  have hset : {z : ℂ | ∃ σ : ℝ → ℂ, σ 0 = z ∧ IsTrajOn q σ (Set.Icc 0 T) ∧
+      SlopeAt (A.Φ (A.sel z)) σ (Set.Icc 0 T) 0 1}
+      = ⋃ N : ℕ, slegal A (T / (N + 1)) N := by
+    ext z
+    simp only [Set.mem_setOf_eq, Set.mem_iUnion]
+    constructor
+    · rintro ⟨σ, hσ0, hσtraj, hσslope⟩
+      rw [← hσ0] at hσslope
+      obtain ⟨N, hN⟩ := slegal_of_traj hq A hT hσtraj hσslope
+      rw [hσ0] at hN
+      exact ⟨N, hN⟩
+    · rintro ⟨N, hN⟩
+      exact traj_of_slegal A hT hN
+  rw [hset]
+  exact MeasurableSet.iUnion fun N => slegal_measurable A (by positivity) N
+
+/-- **A dying seed pays the quadratic price at a zero**: a maximal trajectory dying by
+time `ε` singles out a zero of the differential whose reach functional is at most
+`ε ^ 2`. -/
+theorem dying_seed_near_zero {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
+    (hΓ : IsFuchsianGroup Γ)
+    (hcc : CompactSpace (Quotient (MulAction.orbitRel Γ UpperHalfPlane)))
+    (q : QuadraticDifferential Γ) (hq0 : ∃ z₀ : ℂ, 0 < z₀.im ∧ q z₀ ≠ 0)
+    {σ : ℝ → ℂ} {c ε : ℝ} (hc : 0 < c) (hcε : c ≤ ε)
+    (hσ : IsTrajOn q σ (Set.Ico 0 c))
+    (hmax : ¬∃ σ' : ℝ → ℂ, Set.EqOn σ' σ (Set.Ico 0 c) ∧
+      IsTrajOn q σ' (Set.Icc 0 c))
+    {M : ℂ → ℕ} {r₀ C₁ C₂ : ℂ → ℝ}
+    (hdata : ∀ z₀ : ℂ, 0 < z₀.im → q z₀ = 0 → 0 < r₀ z₀ ∧ 0 < C₁ z₀ ∧
+      ∀ w ∈ Metric.ball z₀ (r₀ z₀),
+        C₁ z₀ * ‖w - z₀‖ ^ M z₀ ≤ ‖q w‖ ∧ ‖q w‖ ≤ C₂ z₀ * ‖w - z₀‖ ^ M z₀) :
+    ∃ z₀ : ℂ, 0 < z₀.im ∧ q z₀ = 0 ∧
+      C₁ z₀ / (2 ^ M z₀ * 16) * min ‖σ 0 - z₀‖ (r₀ z₀ / 2) ^ (M z₀ + 2) ≤ ε ^ 2 := by
+  classical
+  obtain ⟨L, hLc, hLH, hLtrack⟩ := traj_track_compact_Ico hΓ hcc q hq0 hc hσ
+  have h0mem : (0 : ℝ) ∈ Set.Ico 0 c := ⟨le_refl 0, hc⟩
+  have hLne : L.Nonempty := ⟨σ 0, hLtrack 0 h0mem⟩
+  obtain ⟨w₀, hw₀L, hw₀min⟩ := hLc.exists_isMinOn hLne
+    Complex.continuous_im.continuousOn
+  set η : ℝ := w₀.im with hηdef
+  have hη : 0 < η := hLH hw₀L
+  set L' : Set ℂ := Metric.cthickening (η / 2) L ∩ {z : ℂ | η / 2 ≤ z.im} with hL'def
+  have hL'c : IsCompact L' := hLc.cthickening.inter_right
+    (isClosed_le continuous_const Complex.continuous_im)
+  have hL'H : L' ⊆ {z : ℂ | 0 < z.im} := fun z hz => by
+    have h1 : (0 : ℝ) < η / 2 := by positivity
+    exact lt_of_lt_of_le h1 hz.2
+  set Z : Set ℂ := {z ∈ L' | q z = 0} with hZdef
+  have hZfin : Set.Finite Z := zeros_finite q.holo hq0 hL'c hL'H
+  have hpool : ∀ ρ, 0 < ρ → ρ ≤ η / 2 →
+      ∃ z₀ ∈ Z, ∃ u ∈ Set.Ico 0 c, ‖σ u - z₀‖ < ρ := by
+    intro ρ hρ hρη
+    obtain ⟨u, hu, z₀, him, h0, hnear⟩ :=
+      dying_near_zero hΓ hcc q hq0 hc hσ hmax ρ hρ
+    have hz₀u : ‖z₀ - σ u‖ < ρ := by rw [norm_sub_rev]; exact hnear
+    refine ⟨z₀, ⟨⟨?_, ?_⟩, h0⟩, u, hu, hnear⟩
+    · refine Metric.mem_cthickening_of_dist_le z₀ (σ u) _ _ (hLtrack u hu) ?_
+      rw [dist_eq_norm]
+      linarith
+    · have h1 : η ≤ (σ u).im := hw₀min (hLtrack u hu)
+      have h2 : |z₀.im - (σ u).im| ≤ ‖z₀ - σ u‖ := by
+        simpa [Complex.sub_im] using Complex.abs_im_le_norm (z₀ - σ u)
+      have h3 := (abs_le.mp h2).1
+      show η / 2 ≤ z₀.im
+      linarith
+  have hrec : ∃ z₀ ∈ Z, ∀ ρ, 0 < ρ → ∃ u ∈ Set.Ico 0 c, ‖σ u - z₀‖ < ρ := by
+    by_contra hcon
+    push Not at hcon
+    have hcon' : ∀ z₀ : ℂ, ∃ ρ, 0 < ρ ∧
+        (z₀ ∈ Z → ∀ u ∈ Set.Ico 0 c, ρ ≤ ‖σ u - z₀‖) := by
+      intro z₀
+      by_cases hz : z₀ ∈ Z
+      · obtain ⟨ρ, hρ, hfar⟩ := hcon z₀ hz
+        exact ⟨ρ, hρ, fun _ => hfar⟩
+      · exact ⟨1, one_pos, fun h => absurd h hz⟩
+    choose ρf hρf hρfar using hcon'
+    obtain ⟨zw, hzw, -⟩ := hpool (η / 2) (by positivity) le_rfl
+    have hFne : hZfin.toFinset.Nonempty :=
+      ⟨zw, hZfin.mem_toFinset.mpr hzw⟩
+    set ρm : ℝ := min (hZfin.toFinset.inf' hFne ρf) (η / 2) with hρmdef
+    have hρm : 0 < ρm := by
+      refine lt_min ?_ (by positivity)
+      exact (Finset.lt_inf'_iff hFne).mpr fun z _ => hρf z
+    obtain ⟨z₀, hz₀Z, u, hu, hnear⟩ := hpool ρm hρm (min_le_right _ _)
+    have h2 : ρm ≤ ρf z₀ := le_trans (min_le_left _ _)
+      (Finset.inf'_le ρf (hZfin.mem_toFinset.mpr hz₀Z))
+    have h1 : ρf z₀ ≤ ‖σ u - z₀‖ := hρfar z₀ hz₀Z u hu
+    linarith
+  obtain ⟨z₀, hz₀Z, hz₀rec⟩ := hrec
+  have hz₀im : 0 < z₀.im := hL'H hz₀Z.1
+  obtain ⟨hr₀, hC₁, hbounds⟩ := hdata z₀ hz₀im hz₀Z.2
+  have hq0' : q (σ 0) ≠ 0 := (traj_regular hσ h0mem).2
+  have hz' : 0 < ‖σ 0 - z₀‖ := by
+    rw [norm_pos_iff, sub_ne_zero]
+    intro he
+    exact hq0' (he ▸ hz₀Z.2)
+  have hs : 0 < min ‖σ 0 - z₀‖ (r₀ z₀ / 2) := lt_min hz' (by linarith)
+  obtain ⟨u, hu, hunear⟩ := hz₀rec (min ‖σ 0 - z₀‖ (r₀ z₀ / 2) / 8) (by positivity)
+  have hσu : IsTrajOn q σ (Set.Icc 0 u) :=
+    traj_mono hσ fun v hv => ⟨hv.1, lt_of_le_of_lt hv.2 hu.2⟩
+  exact ⟨z₀, hz₀im, hz₀Z.2, reach_radius_sq hu.1 (le_trans hu.2.le hcε) hσu
+    hr₀ hC₁ hbounds hz' hunear.le⟩
+
+/-- **Inversion of the reach functional**: below the per-zero threshold, the reach
+inequality places the seed inside the power ball at its zero. -/
+theorem reach_invert {a s r e δ : ℝ} {M : ℕ} (ha : 0 < a) (hδ : 0 < δ)
+    (h : a * min s (r / 2) ^ (M + 2) ≤ e ^ 2)
+    (hth : e ^ 2 < a * δ ^ (M + 2)) (hδr : δ ≤ r / 2) : s ≤ δ := by
+  by_contra hs
+  push Not at hs
+  have hmin : δ ≤ min s (r / 2) := le_min hs.le hδr
+  have hpow : δ ^ (M + 2) ≤ min s (r / 2) ^ (M + 2) :=
+    pow_le_pow_left₀ hδ.le hmin _
+  nlinarith [mul_le_mul_of_nonneg_left hpow ha.le]
+
+/-- The `|q|`-mass of a small ball at a zero of local order `M` is at most a constant
+multiple of `δ ^ (M + 2)`. -/
+theorem ball_mass_pow {q : ℂ → ℂ} {z₀ : ℂ} {M : ℕ} {r₀ C₁ C₂ : ℝ}
+    (hρr : 0 < r₀) (hC₂ : 0 ≤ C₂)
+    (hbounds : ∀ w ∈ Metric.ball z₀ r₀,
+      C₁ * ‖w - z₀‖ ^ M ≤ ‖q w‖ ∧ ‖q w‖ ≤ C₂ * ‖w - z₀‖ ^ M)
+    {δ : ℝ} (hδ : 0 < δ) (hδle : δ ≤ r₀) :
+    ∫⁻ w in Metric.ball z₀ δ, ‖q w‖ₑ
+      ≤ ENNReal.ofReal (C₂ * Real.pi * δ ^ (M + 2)) := by
+  refine le_trans (ball_mass hρr hbounds hδ hδle) (le_of_eq ?_)
+  have hpi : (NNReal.pi : ℝ≥0∞) = ENNReal.ofReal Real.pi := by
+    rw [← NNReal.coe_real_pi, ENNReal.ofReal_coe_nnreal]
+  rw [Complex.volume_ball, hpi, ← ENNReal.ofReal_pow hδ.le,
+    ← ENNReal.ofReal_mul (by positivity : (0 : ℝ) ≤ δ ^ 2),
+    ← ENNReal.ofReal_mul (mul_nonneg hC₂ (by positivity : (0 : ℝ) ≤ δ ^ M))]
+  congr 1
+  ring
+
+
+/-- Strong legality implies legality: the moving-segment clause at the full step recovers
+the single-step clause. -/
+theorem slegal_legal {q : ℂ → ℂ} (A : Atlas q) {h : ℝ} (hh : 0 ≤ h) (N : ℕ) :
+    slegal A h N ⊆ legal A h N := by
+  intro z hz k hk
+  obtain ⟨hact, hball, hpm, hmove⟩ := hz k hk
+  exact ⟨hact, hball, hpm, hmove h ⟨hh, le_refl h⟩⟩
+
+/-- The stepper arrival sign of a strong-legal seed is a unit. -/
+theorem sgn_last_pm {q : ℂ → ℂ} (A : Atlas q) {h : ℝ} (hh : 0 < h) {N : ℕ}
+    {z : ℂ} (hz : z ∈ slegal A h N) :
+    sgn A h (N + 1) z = 1 ∨ sgn A h (N + 1) z = -1 := by
+  obtain ⟨σ, hσ0, hσtraj, -, hσarr, hσend⟩ := slegal_traj A hh N z hz
+  have hT : (0 : ℝ) < ((N + 1 : ℕ) : ℝ) * h := by push_cast; positivity
+  have hTmem : ((N + 1 : ℕ) : ℝ) * h ∈ Set.Icc (0 : ℝ) (((N + 1 : ℕ) : ℝ) * h) :=
+    Set.right_mem_Icc.mpr hT.le
+  obtain ⟨him, hq0⟩ := traj_regular hσtraj hTmem
+  obtain ⟨hact, hmem⟩ := A.sel_spec him hq0
+  have hrpos : 0 < A.r (A.sel (σ (((N + 1 : ℕ) : ℝ) * h))) := A.hr _ hact
+  have hTS : σ (((N + 1 : ℕ) : ℝ) * h) ∈ Metric.ball
+      (A.c (A.sel (σ (((N + 1 : ℕ) : ℝ) * h))))
+      (2 * A.r (A.sel (σ (((N + 1 : ℕ) : ℝ) * h)))) :=
+    Metric.ball_subset_ball (by linarith) hmem
+  obtain ⟨ε, hε, hev⟩ := traj_ambient_local Metric.isOpen_ball
+    (A.hd _ hact) (A.hsq _ hact) hσtraj Set.Subset.rfl hTmem hTS
+  have hslε : SlopeAt (A.Φ (A.sel (σ (((N + 1 : ℕ) : ℝ) * h)))) σ
+      (Set.Icc 0 (((N + 1 : ℕ) : ℝ) * h)) (((N + 1 : ℕ) : ℝ) * h) ε := hev
+  haveI : (nhdsWithin (((N + 1 : ℕ) : ℝ) * h)
+      (Set.Icc 0 (((N + 1 : ℕ) : ℝ) * h) \ {((N + 1 : ℕ) : ℝ) * h})).NeBot := by
+    have hsub : Set.Ico 0 (((N + 1 : ℕ) : ℝ) * h)
+        ⊆ Set.Icc 0 (((N + 1 : ℕ) : ℝ) * h) \ {((N + 1 : ℕ) : ℝ) * h} := fun u hu =>
+      ⟨⟨hu.1, hu.2.le⟩, hu.2.ne⟩
+    exact (right_nhdsWithin_Ico_neBot hT).mono (nhdsWithin_mono _ hsub)
+  rw [← hσend] at hσarr
+  have hkey : sgn A h (N + 1) z = ε := slope_eq hσarr hslε
+  rcases hε with h1 | h1
+  · exact Or.inl (hkey.trans h1)
+  · exact Or.inr (hkey.trans h1)
+
+/-- **Global two-point multiplicity of the arrival map**: on a strong-legal set, at most
+one seed arrives at a given point with each arrival orientation. -/
+theorem endpoint_mult {q : ℂ → ℂ} (A : Atlas q) {h : ℝ} (hh : 0 < h) (N : ℕ)
+    (y : ℂ) : ∃ z₁ z₂ : ℂ, ∀ z ∈ slegal A h N, pos A h (N + 1) z = y →
+      z = z₁ ∨ z = z₂ := by
+  classical
+  have hT : (0 : ℝ) < ((N + 1 : ℕ) : ℝ) * h := by push_cast; positivity
+  have hTmem : ((N + 1 : ℕ) : ℝ) * h ∈ Set.Icc (0 : ℝ) (((N + 1 : ℕ) : ℝ) * h) :=
+    Set.right_mem_Icc.mpr hT.le
+  by_cases hreg : 0 < y.im ∧ q y ≠ 0
+  case neg =>
+    refine ⟨0, 0, fun z hz hpos => ?_⟩
+    obtain ⟨σ, hσ0, hσtraj, -, -, hσend⟩ := slegal_traj A hh N z hz
+    have hr := traj_regular hσtraj hTmem
+    rw [hσend, hpos] at hr
+    exact absurd hr hreg
+  case pos =>
+  obtain ⟨him, hq0⟩ := hreg
+  obtain ⟨hact, hmem⟩ := A.sel_spec him hq0
+  have hrpos : 0 < A.r (A.sel y) := A.hr _ hact
+  have hyS : y ∈ Metric.ball (A.c (A.sel y)) (2 * A.r (A.sel y)) :=
+    Metric.ball_subset_ball (by linarith) hmem
+  have main : ∀ z ∈ slegal A h N, pos A h (N + 1) z = y → ∀ z' ∈ slegal A h N,
+      pos A h (N + 1) z' = y → sgn A h (N + 1) z = sgn A h (N + 1) z' → z = z' := by
+    intro z hz hposz z' hz' hposz' hsgn
+    obtain ⟨σ, hσ0, hσtraj, -, hσarr, hσend⟩ := slegal_traj A hh N z hz
+    obtain ⟨σ', hσ0', hσtraj', -, hσarr', hσend'⟩ := slegal_traj A hh N z' hz'
+    have hendy : σ (((N + 1 : ℕ) : ℝ) * h) = y := hσend.trans hposz
+    have hendy' : σ' (((N + 1 : ℕ) : ℝ) * h) = y := hσend'.trans hposz'
+    have hend : σ (((N + 1 : ℕ) : ℝ) * h) = σ' (((N + 1 : ℕ) : ℝ) * h) :=
+      hendy.trans hendy'.symm
+    rw [hposz] at hσarr
+    rw [hposz'] at hσarr'
+    rw [hsgn] at hσarr
+    have hkey := arrival_unique Metric.isOpen_ball (A.hinj _ hact) hT.le
+      hσtraj hσtraj' hend (by rw [hendy]; exact hyS) hσarr hσarr'
+    rw [hσ0, hσ0'] at hkey
+    exact hkey
+  by_cases h1 : ∃ z, z ∈ slegal A h N ∧ pos A h (N + 1) z = y ∧
+      sgn A h (N + 1) z = 1
+  · by_cases h2 : ∃ z, z ∈ slegal A h N ∧ pos A h (N + 1) z = y ∧
+        sgn A h (N + 1) z = -1
+    · obtain ⟨z₁, hz₁, hp₁, hs₁⟩ := h1
+      obtain ⟨z₂, hz₂, hp₂, hs₂⟩ := h2
+      refine ⟨z₁, z₂, fun z hz hpos => ?_⟩
+      rcases sgn_last_pm A hh hz with hs | hs
+      · exact Or.inl (main z hz hpos z₁ hz₁ hp₁ (by rw [hs, hs₁]))
+      · exact Or.inr (main z hz hpos z₂ hz₂ hp₂ (by rw [hs, hs₂]))
+    · obtain ⟨z₁, hz₁, hp₁, hs₁⟩ := h1
+      refine ⟨z₁, z₁, fun z hz hpos => ?_⟩
+      rcases sgn_last_pm A hh hz with hs | hs
+      · exact Or.inl (main z hz hpos z₁ hz₁ hp₁ (by rw [hs, hs₁]))
+      · exact absurd ⟨z, hz, hpos, hs⟩ h2
+  · by_cases h2 : ∃ z, z ∈ slegal A h N ∧ pos A h (N + 1) z = y ∧
+        sgn A h (N + 1) z = -1
+    · obtain ⟨z₂, hz₂, hp₂, hs₂⟩ := h2
+      refine ⟨z₂, z₂, fun z hz hpos => ?_⟩
+      rcases sgn_last_pm A hh hz with hs | hs
+      · exact absurd ⟨z, hz, hpos, hs⟩ h1
+      · exact Or.inl (main z hz hpos z₂ hz₂ hp₂ (by rw [hs, hs₂]))
+    · refine ⟨0, 0, fun z hz hpos => ?_⟩
+      rcases sgn_last_pm A hh hz with hs | hs
+      · exact absurd ⟨z, hz, hpos, hs⟩ h1
+      · exact absurd ⟨z, hz, hpos, hs⟩ h2
+
+/-- **Window push**: the `|q|`-mass of a measurable strong-legal set is at most twice
+the mass of its arrival set. -/
+theorem window_push {q : ℂ → ℂ} (hqm : Measurable q) (A : Atlas q) {h : ℝ}
+    (hh : 0 < h) {N : ℕ} {E : Set ℂ} (hE : MeasurableSet E)
+    (hEs : E ⊆ slegal A h N) :
+    ∫⁻ w in E, ‖q w‖ₑ ≤ 2 * ∫⁻ w in pos A h (N + 1) '' E, ‖q w‖ₑ := by
+  refine flow_push hqm A hE (hEs.trans (slegal_legal A hh.le N)) fun y => ?_
+  obtain ⟨z₁, z₂, hmult⟩ := endpoint_mult A hh N y
+  exact ⟨z₁, z₂, fun z hz => hmult z (hEs hz)⟩
+
+/-- **Interval-overlap gluing**: a trajectory on `[0, c)` and a shifted closed right
+piece agreeing with it on the half-open overlap glue to a trajectory on `[0, c]`. -/
+theorem traj_glue_overlap {q : ℂ → ℂ} {σ τ' : ℝ → ℂ} {b c : ℝ}
+    (hb : 0 ≤ b) (hbc : b < c)
+    (hσ : IsTrajOn q σ (Set.Ico 0 c)) (hτ' : IsTrajOn q τ' (Set.Icc 0 (c - b)))
+    (hEq : ∀ u ∈ Set.Ico 0 (c - b), τ' u = σ (u + b)) :
+    ∃ σ'' : ℝ → ℂ, Set.EqOn σ'' σ (Set.Ico 0 c) ∧ IsTrajOn q σ'' (Set.Icc 0 c) := by
+  classical
+  set σ'' : ℝ → ℂ := fun t => if t < c then σ t else τ' (t - b) with hσ''def
+  have hE : Set.EqOn σ'' σ (Set.Ico 0 c) := fun t ht => if_pos ht.2
+  have hc'' : σ'' c = τ' (c - b) := if_neg (lt_irrefl c)
+  have hmid : ∀ t ∈ Set.Icc b c, σ'' t = τ' (t - b) := by
+    intro t ht
+    rcases lt_or_ge t c with hlt | hge
+    · have h1 : τ' (t - b) = σ (t - b + b) :=
+        hEq (t - b) ⟨by linarith [ht.1], by linarith⟩
+      rw [hE ⟨le_trans hb ht.1, hlt⟩, h1, show t - b + b = t by ring]
+    · rw [le_antisymm ht.2 hge, hc'']
+  have hfilt : ∀ t ∈ Set.Ico 0 c,
+      nhdsWithin t (Set.Icc 0 c) = nhdsWithin t (Set.Ico 0 c) := by
+    intro t ht
+    have h1 : t < (t + c) / 2 := by linarith [ht.2]
+    have h2 : (t + c) / 2 ≤ c := by linarith [ht.2]
+    rw [nhdsWithin_agree h1 h2, nhdsWithin_left h2 h1]
+  have hright : nhdsWithin c (Set.Icc 0 c) = nhdsWithin c (Set.Icc b c) := by
+    have h1 : c = b + (c - b) := by ring
+    calc nhdsWithin c (Set.Icc 0 c)
+        = nhdsWithin c (Set.Icc 0 (b + (c - b))) := by rw [← h1]
+      _ = nhdsWithin c (Set.Icc b (b + (c - b))) := nhdsWithin_right hb hbc
+      _ = nhdsWithin c (Set.Icc b c) := by rw [← h1]
+  have hshift : Filter.Tendsto (fun u : ℝ => u - b) (nhdsWithin c (Set.Icc b c))
+      (nhdsWithin (c - b) (Set.Icc 0 (c - b))) := by
+    refine Filter.Tendsto.inf ((continuous_sub_right b).tendsto c) ?_
+    refine Filter.tendsto_principal_principal.mpr fun u hu => ?_
+    rw [Set.mem_Icc] at hu ⊢
+    exact ⟨by linarith [hu.1], by linarith [hu.2]⟩
+  have hcont : ContinuousOn σ'' (Set.Icc 0 c) := by
+    intro t ht
+    rcases lt_or_ge t c with hlt | hge
+    · have htI : t ∈ Set.Ico 0 c := ⟨ht.1, hlt⟩
+      have h1 : Filter.Tendsto σ (nhdsWithin t (Set.Icc 0 c)) (nhds (σ t)) := by
+        rw [hfilt t htI]
+        exact hσ.cont t htI
+      have h2 : Filter.Tendsto σ'' (nhdsWithin t (Set.Icc 0 c)) (nhds (σ t)) := by
+        refine Filter.Tendsto.congr' ?_ h1
+        rw [hfilt t htI]
+        filter_upwards [self_mem_nhdsWithin] with u hu
+        exact (hE hu).symm
+      show Filter.Tendsto σ'' (nhdsWithin t (Set.Icc 0 c)) (nhds (σ'' t))
+      rw [hE htI]
+      exact h2
+    · have hτc : ContinuousWithinAt τ' (Set.Icc 0 (c - b)) (c - b) :=
+        hτ'.cont (c - b) (Set.right_mem_Icc.mpr (by linarith))
+      have h1 : Filter.Tendsto (fun u : ℝ => τ' (u - b))
+          (nhdsWithin c (Set.Icc b c)) (nhds (τ' (c - b))) :=
+        Filter.Tendsto.comp hτc hshift
+      have h2 : Filter.Tendsto σ'' (nhdsWithin c (Set.Icc b c))
+          (nhds (τ' (c - b))) := by
+        refine Filter.Tendsto.congr' ?_ h1
+        filter_upwards [self_mem_nhdsWithin] with u hu
+        exact (hmid u hu).symm
+      rw [le_antisymm ht.2 hge]
+      show Filter.Tendsto σ'' (nhdsWithin c (Set.Icc 0 c)) (nhds (σ'' c))
+      rw [hc'', hright]
+      exact h2
+  refine ⟨σ'', hE, ⟨hcont, ?_⟩⟩
+  intro t ht
+  rcases lt_or_ge t c with hlt | hge
+  · have htI : t ∈ Set.Ico 0 c := ⟨ht.1, hlt⟩
+    obtain ⟨U, hUo, hmem, hUH, hUne, Φ, hΦd, hΦinj, hΦsq, hev⟩ := hσ.chart t htI
+    refine ⟨U, hUo, ?_, hUH, hUne, Φ, hΦd, hΦinj, hΦsq, ?_⟩
+    · rw [hE htI]
+      exact hmem
+    · rw [hfilt t htI]
+      filter_upwards [hev, self_mem_nhdsWithin] with u hu huI
+      rw [hE huI, hE htI]
+      exact hu
+  · have hEc : t = c := le_antisymm ht.2 hge
+    rw [hEc]
+    obtain ⟨U, hUo, hmem, hUH, hUne, Φ, hΦd, hΦinj, hΦsq, hev⟩ :=
+      hτ'.chart (c - b) (Set.right_mem_Icc.mpr (by linarith))
+    refine ⟨U, hUo, ?_, hUH, hUne, Φ, hΦd, hΦinj, hΦsq, ?_⟩
+    · rw [hc'']
+      exact hmem
+    · rw [hright]
+      filter_upwards [hshift.eventually hev, self_mem_nhdsWithin] with u hu huI
+      rw [hmid u huI, hc'']
+      refine ⟨hu.1, ?_⟩
+      rw [hu.2]
+      push_cast
+      ring
+
+/-- **Seed uniqueness**: two trajectories from one seed with equal initial chart slope
+in an injective chart around the seed agree on the common interval. -/
+theorem seed_unique {q Φ : ℂ → ℂ} {S : Set ℂ} (hS : IsOpen S)
+    (hΦinj : Set.InjOn Φ S) {σ₁ σ₂ : ℝ → ℂ} {b : ℝ} (hb : 0 ≤ b)
+    (h₁ : IsTrajOn q σ₁ (Set.Icc 0 b)) (h₂ : IsTrajOn q σ₂ (Set.Icc 0 b))
+    (h0 : σ₁ 0 = σ₂ 0) (hyS : σ₁ 0 ∈ S) {s : ℝ}
+    (hs₁ : SlopeAt Φ σ₁ (Set.Icc 0 b) 0 s) (hs₂ : SlopeAt Φ σ₂ (Set.Icc 0 b) 0 s) :
+    Set.EqOn σ₁ σ₂ (Set.Icc 0 b) := by
+  have h0mem : (0 : ℝ) ∈ Set.Icc 0 b := Set.left_mem_Icc.mpr hb
+  have hσ₁S : ∀ᶠ u in nhdsWithin 0 (Set.Icc 0 b), σ₁ u ∈ S :=
+    (h₁.cont 0 h0mem) (hS.mem_nhds hyS)
+  have hσ₂S : ∀ᶠ u in nhdsWithin 0 (Set.Icc 0 b), σ₂ u ∈ S :=
+    (h₂.cont 0 h0mem) (hS.mem_nhds (h0 ▸ hyS))
+  refine traj_unique hb h₁ h₂ ?_
+  filter_upwards [hs₁, hs₂, hσ₁S, hσ₂S] with u e₁ e₂ m₁ m₂
+  refine hΦinj m₁ m₂ ?_
+  rw [e₁, e₂, h0]
+
+/-- **Positively oriented seed**: through every regular point there is a unit-slope
+trajectory germ in the selected chart. -/
+theorem seed_plus {q : ℂ → ℂ}
+    (hq : DifferentiableOn ℂ q {z : ℂ | 0 < z.im}) (A : Atlas q) {z : ℂ}
+    (hzim : 0 < z.im) (hz0 : q z ≠ 0) :
+    ∃ δ > 0, ∃ σ : ℝ → ℂ, σ 0 = z ∧ IsTrajOn q σ (Set.Icc 0 δ) ∧
+      SlopeAt (A.Φ (A.sel z)) σ (Set.Icc 0 δ) 0 1 := by
+  obtain ⟨δ, hδ, σs, hσs0, hσs⟩ := exists_traj_seed hq hzim hz0
+  obtain ⟨hact, hmem⟩ := A.sel_spec hzim hz0
+  have hrpos : 0 < A.r (A.sel z) := A.hr _ hact
+  have hzS : z ∈ Metric.ball (A.c (A.sel z)) (2 * A.r (A.sel z)) :=
+    Metric.ball_subset_ball (by linarith) hmem
+  have h0mem : (0 : ℝ) ∈ Set.Icc (-δ) δ := ⟨by linarith, hδ.le⟩
+  have hzS' : σs 0 ∈ Metric.ball (A.c (A.sel z)) (2 * A.r (A.sel z)) := by
+    rw [hσs0]
+    exact hzS
+  obtain ⟨ε, hε, hev⟩ := traj_ambient_local Metric.isOpen_ball
+    (A.hd _ hact) (A.hsq _ hact) hσs Set.Subset.rfl h0mem hzS'
+  have hsub : Set.Icc (0 : ℝ) δ ⊆ Set.Icc (-δ) δ :=
+    Set.Icc_subset_Icc (by linarith) le_rfl
+  rcases hε with hε1 | hε1
+  · refine ⟨δ, hδ, σs, hσs0, traj_mono hσs hsub, ?_⟩
+    have := hev.filter_mono (nhdsWithin_mono 0 hsub)
+    rw [hε1] at this
+    exact this
+  · refine ⟨δ, hδ, fun u => σs (-u),
+      by show σs (-0) = z; rw [neg_zero]; exact hσs0, ?_, ?_⟩
+    · refine traj_mono (traj_reverse hσs) fun u hu => ?_
+      show -u ∈ Set.Icc (-δ) δ
+      rw [Set.mem_Icc]
+      exact ⟨by linarith [hu.2], by linarith [hu.1]⟩
+    · have hneg : Filter.Tendsto (fun u : ℝ => -u) (nhdsWithin 0 (Set.Icc 0 δ))
+          (nhdsWithin 0 (Set.Icc (-δ) δ)) := by
+        have h0 : Filter.Tendsto (fun u : ℝ => -u) (nhds (0 : ℝ)) (nhds 0) := by
+          simpa using continuous_neg.tendsto (0 : ℝ)
+        refine Filter.Tendsto.inf h0 ?_
+        refine Filter.tendsto_principal_principal.mpr fun u hu => ?_
+        rw [Set.mem_Icc] at hu ⊢
+        exact ⟨by linarith [hu.2], by linarith [hu.1]⟩
+      filter_upwards [hneg.eventually hev] with u hu
+      show A.Φ (A.sel z) (σs (-u))
+        = A.Φ (A.sel z) (σs (-0)) + ((1 : ℝ) : ℂ) * ((u - 0 : ℝ) : ℂ)
+      rw [neg_zero, hu, hε1]
+      push_cast
+      ring
+
+/-- **Maximal dying data**: a regular seed with no unit-slope trajectory of duration `T`
+carries a maximal half-open unit-slope trajectory of lifetime at most `T`. -/
+theorem dying_data {q : ℂ → ℂ}
+    (hq : DifferentiableOn ℂ q {z : ℂ | 0 < z.im}) (A : Atlas q) {z : ℂ}
+    (hzim : 0 < z.im) (hz0 : q z ≠ 0) {T : ℝ} (hT : 0 < T)
+    (hno : ¬∃ σ : ℝ → ℂ, σ 0 = z ∧ IsTrajOn q σ (Set.Icc 0 T) ∧
+      SlopeAt (A.Φ (A.sel z)) σ (Set.Icc 0 T) 0 1) :
+    ∃ c σ, 0 < c ∧ c ≤ T ∧ σ 0 = z ∧ IsTrajOn q σ (Set.Ico 0 c) ∧
+      SlopeAt (A.Φ (A.sel z)) σ (Set.Ico 0 c) 0 1 ∧
+      ¬∃ σ' : ℝ → ℂ, Set.EqOn σ' σ (Set.Ico 0 c) ∧
+        IsTrajOn q σ' (Set.Icc 0 c) := by
+  classical
+  obtain ⟨hact, hmem⟩ := A.sel_spec hzim hz0
+  have hrpos : 0 < A.r (A.sel z) := A.hr _ hact
+  have hzS : z ∈ Metric.ball (A.c (A.sel z)) (2 * A.r (A.sel z)) :=
+    Metric.ball_subset_ball (by linarith) hmem
+  obtain ⟨δ', hδ', σg, hσg0, hσgT, hσgS⟩ := seed_plus hq A hzim hz0
+  set δ₀ : ℝ := min δ' (T / 2) with hδ₀def
+  have hδ₀ : 0 < δ₀ := lt_min hδ' (by linarith)
+  have hδ₀δ' : δ₀ ≤ δ' := min_le_left _ _
+  have hσ₀ : IsTrajOn q σg (Set.Icc 0 δ₀) :=
+    traj_mono hσgT (Set.Icc_subset_Icc le_rfl hδ₀δ')
+  have hσ₀S : SlopeAt (A.Φ (A.sel z)) σg (Set.Icc 0 δ₀) 0 1 := by
+    have h1 : ∀ᶠ v in nhdsWithin 0 (Set.Icc 0 δ'), A.Φ (A.sel z) (σg v)
+        = A.Φ (A.sel z) (σg 0) + ((1 : ℝ) : ℂ) * ((v - 0 : ℝ) : ℂ) := hσgS
+    rw [nhdsWithin_left hδ₀δ' hδ₀] at h1
+    exact h1
+  set F : Set ℝ := {b | 0 < b ∧ ∃ σ : ℝ → ℂ, σ 0 = z ∧
+    IsTrajOn q σ (Set.Icc 0 b) ∧
+    SlopeAt (A.Φ (A.sel z)) σ (Set.Icc 0 b) 0 1} with hFdef
+  have hδ₀F : δ₀ ∈ F := ⟨hδ₀, σg, hσg0, hσ₀, hσ₀S⟩
+  have hFT : ∀ b ∈ F, b < T := by
+    intro b hb
+    by_contra hge
+    have hTb : T ≤ b := not_lt.mp hge
+    obtain ⟨hbpos, σ, hσ0, hσtraj, hσS⟩ := hb
+    refine hno ⟨σ, hσ0, traj_mono hσtraj (Set.Icc_subset_Icc le_rfl hTb), ?_⟩
+    have h1 : ∀ᶠ v in nhdsWithin 0 (Set.Icc 0 b), A.Φ (A.sel z) (σ v)
+        = A.Φ (A.sel z) (σ 0) + ((1 : ℝ) : ℂ) * ((v - 0 : ℝ) : ℂ) := hσS
+    rw [nhdsWithin_left hTb hT] at h1
+    exact h1
+  have hFne : F.Nonempty := ⟨δ₀, hδ₀F⟩
+  have hFbdd : BddAbove F := ⟨T, fun b hb => (hFT b hb).le⟩
+  have hopen : ∀ b ∈ F, ∃ d, b < d ∧ d ∈ F := by
+    intro b hb
+    obtain ⟨hbpos, σ, hσ0, hσtraj, hσS⟩ := hb
+    obtain ⟨δe, hδe, σ', hE', hσ'⟩ := traj_extend hq hbpos.le hσtraj
+    refine ⟨b + δe, by linarith, ⟨by linarith, σ', ?_, hσ', ?_⟩⟩
+    · rw [hE' (Set.left_mem_Icc.mpr hbpos.le), hσ0]
+    · have h1 : ∀ᶠ v in nhdsWithin 0 (Set.Icc 0 b), A.Φ (A.sel z) (σ v)
+          = A.Φ (A.sel z) (σ 0) + ((1 : ℝ) : ℂ) * ((v - 0 : ℝ) : ℂ) := hσS
+      show ∀ᶠ v in nhdsWithin 0 (Set.Icc 0 (b + δe)), A.Φ (A.sel z) (σ' v)
+        = A.Φ (A.sel z) (σ' 0) + ((1 : ℝ) : ℂ) * ((v - 0 : ℝ) : ℂ)
+      rw [nhdsWithin_left (by linarith : b ≤ b + δe) hbpos]
+      filter_upwards [h1, self_mem_nhdsWithin] with v hv hvm
+      rw [hE' hvm, hE' (Set.left_mem_Icc.mpr hbpos.le)]
+      exact hv
+  set c : ℝ := sSup F with hcdef
+  have hδ₀c : δ₀ ≤ c := le_csSup hFbdd hδ₀F
+  have hcT : c ≤ T := csSup_le hFne fun b hb => (hFT b hb).le
+  have hδ₀c' : δ₀ < c := by
+    obtain ⟨d, hd, hdF⟩ := hopen δ₀ hδ₀F
+    exact lt_of_lt_of_le hd (le_csSup hFbdd hdF)
+  have hc0 : (0 : ℝ) < c := lt_of_lt_of_le hδ₀ hδ₀c
+  have hcoh : ∀ b, δ₀ ≤ b → ∀ σ : ℝ → ℂ, σ 0 = z → IsTrajOn q σ (Set.Icc 0 b) →
+      SlopeAt (A.Φ (A.sel z)) σ (Set.Icc 0 b) 0 1 →
+      Set.EqOn σ σg (Set.Icc 0 δ₀) := by
+    intro b hδb σ hσ0 hσtraj hσS
+    have hσS' : SlopeAt (A.Φ (A.sel z)) σ (Set.Icc 0 δ₀) 0 1 := by
+      have h1 : ∀ᶠ v in nhdsWithin 0 (Set.Icc 0 b), A.Φ (A.sel z) (σ v)
+          = A.Φ (A.sel z) (σ 0) + ((1 : ℝ) : ℂ) * ((v - 0 : ℝ) : ℂ) := hσS
+      rw [nhdsWithin_left hδb hδ₀] at h1
+      exact h1
+    refine seed_unique Metric.isOpen_ball (A.hinj _ hact) hδ₀.le
+      (traj_mono hσtraj (Set.Icc_subset_Icc le_rfl hδb)) hσ₀ ?_ ?_ hσS' hσ₀S
+    · rw [hσ0, hσg0]
+    · rw [hσ0]
+      exact hzS
+  have hfam : ∀ b ∈ Set.Ico δ₀ c, ∃ σ : ℝ → ℂ,
+      Set.EqOn σ σg (Set.Icc 0 δ₀) ∧ IsTrajOn q σ (Set.Icc 0 b) := by
+    intro b hb
+    obtain ⟨d, hdF, hbd⟩ := exists_lt_of_lt_csSup hFne hb.2
+    obtain ⟨hdpos, σ, hσ0, hσtraj, hσS⟩ := hdF
+    exact ⟨σ, hcoh d (le_trans hb.1 hbd.le) σ hσ0 hσtraj hσS,
+      traj_mono hσtraj (Set.Icc_subset_Icc le_rfl hbd.le)⟩
+  obtain ⟨σm, hEg, hσm⟩ := traj_family hδ₀ hδ₀c' hfam
+  have hσm0 : σm 0 = z := by
+    rw [hEg (Set.left_mem_Icc.mpr hδ₀.le), hσg0]
+  have hσmS : SlopeAt (A.Φ (A.sel z)) σm (Set.Ico 0 c) 0 1 := by
+    have h1 : ∀ᶠ v in nhdsWithin 0 (Set.Icc 0 δ₀), A.Φ (A.sel z) (σg v)
+        = A.Φ (A.sel z) (σg 0) + ((1 : ℝ) : ℂ) * ((v - 0 : ℝ) : ℂ) := hσ₀S
+    show ∀ᶠ v in nhdsWithin 0 (Set.Ico 0 c), A.Φ (A.sel z) (σm v)
+      = A.Φ (A.sel z) (σm 0) + ((1 : ℝ) : ℂ) * ((v - 0 : ℝ) : ℂ)
+    rw [nhdsWithin_agree hδ₀ (le_of_lt hδ₀c')]
+    filter_upwards [h1, self_mem_nhdsWithin] with v hv hvm
+    rw [hEg hvm, hEg (Set.left_mem_Icc.mpr hδ₀.le)]
+    exact hv
+  refine ⟨c, σm, hc0, hcT, hσm0, hσm, hσmS, ?_⟩
+  rintro ⟨σ', hE', hσ'⟩
+  obtain ⟨δe, hδe, σ'', hE'', hσ''⟩ := traj_extend hq hc0.le hσ'
+  have hv0 : σ'' 0 = σm 0 := by
+    rw [hE'' (Set.left_mem_Icc.mpr hc0.le), hE' ⟨le_rfl, hc0⟩]
+  have hσ''0 : σ'' 0 = z := hv0.trans hσm0
+  have hσ''S : SlopeAt (A.Φ (A.sel z)) σ'' (Set.Icc 0 (c + δe)) 0 1 := by
+    have h1 : ∀ᶠ v in nhdsWithin 0 (Set.Ico 0 c), A.Φ (A.sel z) (σm v)
+        = A.Φ (A.sel z) (σm 0) + ((1 : ℝ) : ℂ) * ((v - 0 : ℝ) : ℂ) := hσmS
+    show ∀ᶠ v in nhdsWithin 0 (Set.Icc 0 (c + δe)), A.Φ (A.sel z) (σ'' v)
+      = A.Φ (A.sel z) (σ'' 0) + ((1 : ℝ) : ℂ) * ((v - 0 : ℝ) : ℂ)
+    have hfl : nhdsWithin (0 : ℝ) (Set.Icc 0 (c + δe))
+        = nhdsWithin 0 (Set.Ico 0 c) := by
+      rw [nhdsWithin_left (by linarith : δ₀ ≤ c + δe) hδ₀,
+        nhdsWithin_agree hδ₀ (le_of_lt hδ₀c')]
+    rw [hfl]
+    filter_upwards [h1, self_mem_nhdsWithin] with v hv hvm
+    have he1 : σ'' v = σm v := by
+      rw [hE'' ⟨hvm.1, hvm.2.le⟩, hE' hvm]
+    rw [he1, hv0]
+    exact hv
+  have hmemF : c + δe ∈ F := ⟨by linarith, σ'', hσ''0, hσ'', hσ''S⟩
+  have hle : c + δe ≤ c := le_csSup hFbdd hmemF
+  linarith
+
+/-- **Window dying data**: a seed surviving to time `a` but not to `a + ε` yields
+maximal dying data of lifetime at most `ε` starting at its time-`a` arrival point. -/
+theorem window_dying {q : ℂ → ℂ}
+    (hq : DifferentiableOn ℂ q {z : ℂ | 0 < z.im}) (A : Atlas q) {z : ℂ}
+    (hzim : 0 < z.im) (hz0 : q z ≠ 0) {a ε : ℝ} (ha : 0 < a) (hε : 0 < ε)
+    (hyes : ∃ σ : ℝ → ℂ, σ 0 = z ∧ IsTrajOn q σ (Set.Icc 0 a) ∧
+      SlopeAt (A.Φ (A.sel z)) σ (Set.Icc 0 a) 0 1)
+    (hno : ¬∃ σ : ℝ → ℂ, σ 0 = z ∧ IsTrajOn q σ (Set.Icc 0 (a + ε)) ∧
+      SlopeAt (A.Φ (A.sel z)) σ (Set.Icc 0 (a + ε)) 0 1) :
+    ∃ σa : ℝ → ℂ, (σa 0 = z ∧ IsTrajOn q σa (Set.Icc 0 a) ∧
+      SlopeAt (A.Φ (A.sel z)) σa (Set.Icc 0 a) 0 1) ∧
+      ∃ c' τ, 0 < c' ∧ c' ≤ ε ∧ τ 0 = σa a ∧ IsTrajOn q τ (Set.Ico 0 c') ∧
+        ¬∃ τ' : ℝ → ℂ, Set.EqOn τ' τ (Set.Ico 0 c') ∧
+          IsTrajOn q τ' (Set.Icc 0 c') := by
+  obtain ⟨c, σm, hc0, hcT, hσm0, hσm, hσmS, hmaxm⟩ :=
+    dying_data hq A hzim hz0 (by linarith : (0 : ℝ) < a + ε) hno
+  obtain ⟨σ, hσ0, hσtraj, hσS⟩ := hyes
+  obtain ⟨hact, hmem⟩ := A.sel_spec hzim hz0
+  have hrpos : 0 < A.r (A.sel z) := A.hr _ hact
+  have hzS : z ∈ Metric.ball (A.c (A.sel z)) (2 * A.r (A.sel z)) :=
+    Metric.ball_subset_ball (by linarith) hmem
+  have hslope_cut : ∀ b, 0 < b → b < c →
+      SlopeAt (A.Φ (A.sel z)) σm (Set.Icc 0 b) 0 1 := by
+    intro b hb hbc
+    have h1 : ∀ᶠ v in nhdsWithin 0 (Set.Ico 0 c), A.Φ (A.sel z) (σm v)
+        = A.Φ (A.sel z) (σm 0) + ((1 : ℝ) : ℂ) * ((v - 0 : ℝ) : ℂ) := hσmS
+    rw [nhdsWithin_agree hb hbc.le] at h1
+    exact h1
+  have hac : a < c := by
+    by_contra hge
+    have hca : c ≤ a := not_lt.mp hge
+    have hEqOn : Set.EqOn σ σm (Set.Ico 0 c) := by
+      intro t ht
+      have hb0 : (0 : ℝ) < (t + c) / 2 := by linarith [ht.1, hc0]
+      have hbc : (t + c) / 2 < c := by linarith [ht.2]
+      have hsub : Set.Icc (0 : ℝ) ((t + c) / 2) ⊆ Set.Ico 0 c := fun u hu =>
+        ⟨hu.1, lt_of_le_of_lt hu.2 hbc⟩
+      have hσcut : SlopeAt (A.Φ (A.sel z)) σ (Set.Icc 0 ((t + c) / 2)) 0 1 := by
+        have h1 : ∀ᶠ v in nhdsWithin 0 (Set.Icc 0 a), A.Φ (A.sel z) (σ v)
+            = A.Φ (A.sel z) (σ 0) + ((1 : ℝ) : ℂ) * ((v - 0 : ℝ) : ℂ) := hσS
+        rw [nhdsWithin_left (by linarith : (t + c) / 2 ≤ a) hb0] at h1
+        exact h1
+      have hkey := seed_unique Metric.isOpen_ball (A.hinj _ hact) hb0.le
+        (traj_mono hσtraj (Set.Icc_subset_Icc le_rfl (by linarith)))
+        (traj_mono hσm hsub) (by rw [hσ0, hσm0]) (by rw [hσ0]; exact hzS)
+        hσcut (hslope_cut _ hb0 hbc)
+      exact hkey ⟨ht.1, by linarith [ht.2]⟩
+    exact hmaxm ⟨σ, hEqOn, traj_mono hσtraj (Set.Icc_subset_Icc le_rfl hca)⟩
+  have hsuba : Set.Icc (0 : ℝ) a ⊆ Set.Ico 0 c := fun u hu =>
+    ⟨hu.1, lt_of_le_of_lt hu.2 hac⟩
+  refine ⟨σm, ⟨hσm0, traj_mono hσm hsuba, hslope_cut a ha hac⟩,
+    c - a, fun u => σm (u + a), by linarith, by linarith, ?_, ?_, ?_⟩
+  · show σm (0 + a) = σm a
+    rw [zero_add]
+  · refine traj_mono (traj_shift a hσm) fun u hu => ?_
+    show u + a ∈ Set.Ico 0 c
+    rw [Set.mem_Ico]
+    exact ⟨by linarith [hu.1], by linarith [hu.2]⟩
+  · rintro ⟨τ', hEτ, hτ'⟩
+    have hEq : ∀ u ∈ Set.Ico 0 (c - a), τ' u = σm (u + a) := fun u hu => hEτ hu
+    obtain ⟨σ'', hE'', hσ''⟩ :=
+      traj_glue_overlap ha.le hac hσm hτ' hEq
+    exact hmaxm ⟨σ'', hE'', hσ''⟩
+
+/-- **Window endpoint estimate**: if a seed survives to time `a` but not to `a + ε`, its
+time-`a` arrival point pays the quadratic reach price `ε ^ 2` at some zero. -/
+theorem window_endpoint {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
+    (hΓ : IsFuchsianGroup Γ)
+    (hcc : CompactSpace (Quotient (MulAction.orbitRel Γ UpperHalfPlane)))
+    (q : QuadraticDifferential Γ) (hq0 : ∃ z₀ : ℂ, 0 < z₀.im ∧ q z₀ ≠ 0)
+    (A : Atlas (q : ℂ → ℂ)) {z : ℂ} (hzim : 0 < z.im) (hz0 : q z ≠ 0)
+    {a ε : ℝ} (ha : 0 < a) (hε : 0 < ε)
+    (hyes : ∃ σ : ℝ → ℂ, σ 0 = z ∧ IsTrajOn q σ (Set.Icc 0 a) ∧
+      SlopeAt (A.Φ (A.sel z)) σ (Set.Icc 0 a) 0 1)
+    (hno : ¬∃ σ : ℝ → ℂ, σ 0 = z ∧ IsTrajOn q σ (Set.Icc 0 (a + ε)) ∧
+      SlopeAt (A.Φ (A.sel z)) σ (Set.Icc 0 (a + ε)) 0 1)
+    {M : ℂ → ℕ} {r₀ C₁ C₂ : ℂ → ℝ}
+    (hdata : ∀ z₀ : ℂ, 0 < z₀.im → q z₀ = 0 → 0 < r₀ z₀ ∧ 0 < C₁ z₀ ∧
+      ∀ w ∈ Metric.ball z₀ (r₀ z₀),
+        C₁ z₀ * ‖w - z₀‖ ^ M z₀ ≤ ‖q w‖ ∧ ‖q w‖ ≤ C₂ z₀ * ‖w - z₀‖ ^ M z₀) :
+    ∃ σa : ℝ → ℂ, (σa 0 = z ∧ IsTrajOn q σa (Set.Icc 0 a) ∧
+      SlopeAt (A.Φ (A.sel z)) σa (Set.Icc 0 a) 0 1) ∧
+      ∃ z₀ : ℂ, 0 < z₀.im ∧ q z₀ = 0 ∧
+        C₁ z₀ / (2 ^ M z₀ * 16) * min ‖σa a - z₀‖ (r₀ z₀ / 2) ^ (M z₀ + 2)
+          ≤ ε ^ 2 := by
+  obtain ⟨σa, hpre, c', τ, hc'0, hc'ε, hτ0, hτ, hτmax⟩ :=
+    window_dying q.holo A hzim hz0 ha hε hyes hno
+  obtain ⟨z₀, hz₀im, hz₀0, hz₀le⟩ := dying_seed_near_zero hΓ hcc q hq0
+    hc'0 hc'ε hτ hτmax hdata
+  refine ⟨σa, hpre, z₀, hz₀im, hz₀0, ?_⟩
+  rw [← hτ0]
+  exact hz₀le
+
+
+/-- **Uniform hyperbolic displacement bound**: a trajectory of flat duration `T` moves
+its seed by at most `⌈T / (η / 2)⌉` in the hyperbolic metric, with `η` independent of
+the trajectory. -/
+theorem track_unif {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
+    (hΓ : IsFuchsianGroup Γ)
+    (hcc : CompactSpace (Quotient (MulAction.orbitRel Γ UpperHalfPlane)))
+    (q : QuadraticDifferential Γ) (hq0 : ∃ z₀ : ℂ, 0 < z₀.im ∧ q z₀ ≠ 0) :
+    ∃ η : ℝ, 0 < η ∧ ∀ (σ : ℝ → ℂ) (T : ℝ), 0 ≤ T → IsTrajOn q σ (Set.Icc 0 T) →
+      ∀ u, u ∈ Set.Icc 0 T → ∀ h1 : 0 < (σ u).im, ∀ h0 : 0 < (σ 0).im,
+        dist (⟨σ u, h1⟩ : UpperHalfPlane) (⟨σ 0, h0⟩ : UpperHalfPlane)
+          ≤ (Nat.ceil (T / (η / 2)) : ℝ) := by
+  have _ := hΓ
+  obtain ⟨K, hK, hcov⟩ := exists_compact_covering Γ hcc
+  set K' : Set ℂ := (fun τ : UpperHalfPlane => (τ : ℂ)) '' K with hK'def
+  have hK'c : IsCompact K' := hK.image UpperHalfPlane.continuous_coe
+  have hK'H : ∀ x ∈ K', 0 < x.im := by
+    rintro x ⟨τ, hτ, rfl⟩
+    exact τ.2
+  obtain ⟨η, hη, hstep⟩ := uniform_step q.holo hq0 hK'c hK'H
+  refine ⟨η, hη, ?_⟩
+  intro σ T hT hσ
+  have hreg : ∀ u ∈ Set.Icc 0 T, 0 < (σ u).im := fun u hu => (traj_regular hσ hu).1
+  have h0' : 0 < (σ 0).im := hreg 0 (Set.left_mem_Icc.mpr hT)
+  set τ₀ : UpperHalfPlane := ⟨σ 0, h0'⟩ with hτ₀def
+  have key : ∀ k : ℕ, ∀ u, ∀ hu : u ∈ Set.Icc 0 T, u ≤ k * (η / 2) →
+      dist (⟨σ u, hreg u hu⟩ : UpperHalfPlane) τ₀ ≤ k := by
+    intro k
+    induction k with
+    | zero =>
+      intro u hu hle
+      have hu0 : u = 0 := le_antisymm (by simpa using hle) hu.1
+      subst hu0
+      simp [hτ₀def]
+    | succ k ih =>
+      intro u hu hle
+      by_cases hcase : u ≤ k * (η / 2)
+      · calc dist (⟨σ u, hreg u hu⟩ : UpperHalfPlane) τ₀ ≤ k := ih u hu hcase
+          _ ≤ (k + 1 : ℕ) := by push_cast; linarith
+      · push Not at hcase
+        set a : ℝ := k * (η / 2) with hadef
+        have ha0 : 0 ≤ a := by positivity
+        have hau : a ≤ u := hcase.le
+        have haT : a ∈ Set.Icc 0 T := ⟨ha0, le_trans hau hu.2⟩
+        have hspan : u - a < η := by
+          have := hle
+          push_cast at this
+          rw [hadef]
+          linarith
+        obtain ⟨γ, hγK⟩ := hcov ⟨σ a, hreg a haT⟩
+        set σ' : ℝ → ℂ := fun v => moebiusMap (↑γ) (σ v) with hσ'def
+        have hσ' : IsTrajOn q σ' (Set.Icc 0 T) :=
+          traj_deck (↑γ) (q.automorphy (↑γ) γ.2) hσ
+        have hσ'a : σ' a ∈ K' := by
+          refine ⟨γ • ⟨σ a, hreg a haT⟩, hγK, ?_⟩
+          exact coe_smul_moebius γ ⟨σ a, hreg a haT⟩
+        have him : 0 < (σ' u).im := moebiusMap_im_pos _ (hreg u hu)
+        have him' : 0 < (σ' a).im := moebiusMap_im_pos _ (hreg a haT)
+        have hd1 := hstep σ' T a u hσ' ha0 hau hu.2 hspan hσ'a u
+          (Set.right_mem_Icc.mpr hau) him him'
+        have hlift : (⟨σ' u, him⟩ : UpperHalfPlane)
+            = (↑γ : Matrix.SpecialLinearGroup (Fin 2) ℝ) • ⟨σ u, hreg u hu⟩ :=
+          UpperHalfPlane.ext (coe_smul_eq_moebiusMap (↑γ) ⟨σ u, hreg u hu⟩).symm
+        have hlift' : (⟨σ' a, him'⟩ : UpperHalfPlane)
+            = (↑γ : Matrix.SpecialLinearGroup (Fin 2) ℝ) • ⟨σ a, hreg a haT⟩ :=
+          UpperHalfPlane.ext (coe_smul_eq_moebiusMap (↑γ) ⟨σ a, hreg a haT⟩).symm
+        rw [hlift, hlift'] at hd1
+        have hd2 : dist (⟨σ u, hreg u hu⟩ : UpperHalfPlane)
+            (⟨σ a, hreg a haT⟩ : UpperHalfPlane) ≤ 1 := by
+          rwa [dist_smul] at hd1
+        calc dist (⟨σ u, hreg u hu⟩ : UpperHalfPlane) τ₀
+            ≤ dist (⟨σ u, hreg u hu⟩ : UpperHalfPlane)
+                (⟨σ a, hreg a haT⟩ : UpperHalfPlane)
+              + dist (⟨σ a, hreg a haT⟩ : UpperHalfPlane) τ₀ := dist_triangle _ _ _
+          _ ≤ 1 + k := add_le_add hd2 (ih a haT (le_of_eq hadef))
+          _ = (k + 1 : ℕ) := by push_cast; ring
+  intro u hu h1 h0
+  have hle : u ≤ (Nat.ceil (T / (η / 2)) : ℝ) * (η / 2) := by
+    have hc1 : T / (η / 2) ≤ (Nat.ceil (T / (η / 2)) : ℝ) := Nat.le_ceil _
+    have hc2 : T ≤ (Nat.ceil (T / (η / 2)) : ℝ) * (η / 2) := by
+      rw [div_le_iff₀ (by positivity : (0 : ℝ) < η / 2)] at hc1
+      linarith
+    linarith [hu.2]
+  exact key (Nat.ceil (T / (η / 2))) u hu hle
+
+/-- **Located dying-seed keystone**: a maximal trajectory dying by time `ε` singles out a
+zero whose reach functional is at most `ε ^ 2` and which lies within half the local
+height of a track point. -/
+theorem dying_seed_located {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
+    (hΓ : IsFuchsianGroup Γ)
+    (hcc : CompactSpace (Quotient (MulAction.orbitRel Γ UpperHalfPlane)))
+    (q : QuadraticDifferential Γ) (hq0 : ∃ z₀ : ℂ, 0 < z₀.im ∧ q z₀ ≠ 0)
+    {σ : ℝ → ℂ} {c ε : ℝ} (hc : 0 < c) (hcε : c ≤ ε)
+    (hσ : IsTrajOn q σ (Set.Ico 0 c))
+    (hmax : ¬∃ σ' : ℝ → ℂ, Set.EqOn σ' σ (Set.Ico 0 c) ∧
+      IsTrajOn q σ' (Set.Icc 0 c))
+    {M : ℂ → ℕ} {r₀ C₁ C₂ : ℂ → ℝ}
+    (hdata : ∀ z₀ : ℂ, 0 < z₀.im → q z₀ = 0 → 0 < r₀ z₀ ∧ 0 < C₁ z₀ ∧
+      ∀ w ∈ Metric.ball z₀ (r₀ z₀),
+        C₁ z₀ * ‖w - z₀‖ ^ M z₀ ≤ ‖q w‖ ∧ ‖q w‖ ≤ C₂ z₀ * ‖w - z₀‖ ^ M z₀) :
+    ∃ z₀ : ℂ, 0 < z₀.im ∧ q z₀ = 0 ∧
+      (∃ u ∈ Set.Ico 0 c, ‖σ u - z₀‖ ≤ (σ u).im / 2) ∧
+      C₁ z₀ / (2 ^ M z₀ * 16) * min ‖σ 0 - z₀‖ (r₀ z₀ / 2) ^ (M z₀ + 2) ≤ ε ^ 2 := by
+  classical
+  obtain ⟨L, hLc, hLH, hLtrack⟩ := traj_track_compact_Ico hΓ hcc q hq0 hc hσ
+  have h0mem : (0 : ℝ) ∈ Set.Ico 0 c := ⟨le_refl 0, hc⟩
+  have hLne : L.Nonempty := ⟨σ 0, hLtrack 0 h0mem⟩
+  obtain ⟨w₀, hw₀L, hw₀min⟩ := hLc.exists_isMinOn hLne
+    Complex.continuous_im.continuousOn
+  set η : ℝ := w₀.im with hηdef
+  have hη : 0 < η := hLH hw₀L
+  set L' : Set ℂ := Metric.cthickening (η / 2) L ∩ {z : ℂ | η / 2 ≤ z.im} with hL'def
+  have hL'c : IsCompact L' := hLc.cthickening.inter_right
+    (isClosed_le continuous_const Complex.continuous_im)
+  have hL'H : L' ⊆ {z : ℂ | 0 < z.im} := fun z hz => by
+    have h1 : (0 : ℝ) < η / 2 := by positivity
+    exact lt_of_lt_of_le h1 hz.2
+  set Z : Set ℂ := {z ∈ L' | q z = 0} with hZdef
+  have hZfin : Set.Finite Z := zeros_finite q.holo hq0 hL'c hL'H
+  have hpool : ∀ ρ, 0 < ρ → ρ ≤ η / 2 →
+      ∃ z₀ ∈ Z, ∃ u ∈ Set.Ico 0 c, ‖σ u - z₀‖ < ρ := by
+    intro ρ hρ hρη
+    obtain ⟨u, hu, z₀, him, h0, hnear⟩ :=
+      dying_near_zero hΓ hcc q hq0 hc hσ hmax ρ hρ
+    have hz₀u : ‖z₀ - σ u‖ < ρ := by rw [norm_sub_rev]; exact hnear
+    refine ⟨z₀, ⟨⟨?_, ?_⟩, h0⟩, u, hu, hnear⟩
+    · refine Metric.mem_cthickening_of_dist_le z₀ (σ u) _ _ (hLtrack u hu) ?_
+      rw [dist_eq_norm]
+      linarith
+    · have h1 : η ≤ (σ u).im := hw₀min (hLtrack u hu)
+      have h2 : |z₀.im - (σ u).im| ≤ ‖z₀ - σ u‖ := by
+        simpa [Complex.sub_im] using Complex.abs_im_le_norm (z₀ - σ u)
+      have h3 := (abs_le.mp h2).1
+      show η / 2 ≤ z₀.im
+      linarith
+  have hrec : ∃ z₀ ∈ Z, ∀ ρ, 0 < ρ → ∃ u ∈ Set.Ico 0 c, ‖σ u - z₀‖ < ρ := by
+    by_contra hcon
+    push Not at hcon
+    have hcon' : ∀ z₀ : ℂ, ∃ ρ, 0 < ρ ∧
+        (z₀ ∈ Z → ∀ u ∈ Set.Ico 0 c, ρ ≤ ‖σ u - z₀‖) := by
+      intro z₀
+      by_cases hz : z₀ ∈ Z
+      · obtain ⟨ρ, hρ, hfar⟩ := hcon z₀ hz
+        exact ⟨ρ, hρ, fun _ => hfar⟩
+      · exact ⟨1, one_pos, fun h => absurd h hz⟩
+    choose ρf hρf hρfar using hcon'
+    obtain ⟨zw, hzw, -⟩ := hpool (η / 2) (by positivity) le_rfl
+    have hFne : hZfin.toFinset.Nonempty := ⟨zw, hZfin.mem_toFinset.mpr hzw⟩
+    set ρm : ℝ := min (hZfin.toFinset.inf' hFne ρf) (η / 2) with hρmdef
+    have hρm : 0 < ρm := by
+      refine lt_min ?_ (by positivity)
+      exact (Finset.lt_inf'_iff hFne).mpr fun z _ => hρf z
+    obtain ⟨z₀, hz₀Z, u, hu, hnear⟩ := hpool ρm hρm (min_le_right _ _)
+    have h2 : ρm ≤ ρf z₀ := le_trans (min_le_left _ _)
+      (Finset.inf'_le ρf (hZfin.mem_toFinset.mpr hz₀Z))
+    have h1 : ρf z₀ ≤ ‖σ u - z₀‖ := hρfar z₀ hz₀Z u hu
+    linarith
+  obtain ⟨z₀, hz₀Z, hz₀rec⟩ := hrec
+  have hz₀im : 0 < z₀.im := hL'H hz₀Z.1
+  obtain ⟨hr₀, hC₁, hbounds⟩ := hdata z₀ hz₀im hz₀Z.2
+  have hq0' : q (σ 0) ≠ 0 := (traj_regular hσ h0mem).2
+  have hz' : 0 < ‖σ 0 - z₀‖ := by
+    rw [norm_pos_iff, sub_ne_zero]
+    intro he
+    exact hq0' (he ▸ hz₀Z.2)
+  have hs : 0 < min ‖σ 0 - z₀‖ (r₀ z₀ / 2) := lt_min hz' (by linarith)
+  obtain ⟨u, hu, hunear⟩ := hz₀rec
+    (min (min ‖σ 0 - z₀‖ (r₀ z₀ / 2) / 8) (η / 2))
+    (lt_min (by linarith) (by positivity))
+  have hσu : IsTrajOn q σ (Set.Icc 0 u) :=
+    traj_mono hσ fun v hv => ⟨hv.1, lt_of_le_of_lt hv.2 hu.2⟩
+  have himu : η ≤ (σ u).im := hw₀min (hLtrack u hu)
+  refine ⟨z₀, hz₀im, hz₀Z.2, ⟨u, hu, ?_⟩,
+    reach_radius_sq hu.1 (le_trans hu.2.le hcε) hσu hr₀ hC₁ hbounds hz'
+      (le_trans hunear.le (min_le_left _ _))⟩
+  have h1 : ‖σ u - z₀‖ ≤ η / 2 := le_trans hunear.le (min_le_right _ _)
+  linarith
+
+/-- A point within half the local height of a hyperbolic point lies at hyperbolic
+distance at most one from it. -/
+theorem near_height_dist {p v : ℂ} (hp : 0 < p.im)
+    (hv : ‖v - p‖ ≤ p.im / 2) (hvim : 0 < v.im) :
+    dist (⟨v, hvim⟩ : UpperHalfPlane) (⟨p, hp⟩ : UpperHalfPlane) ≤ 1 := by
+  have him : p.im / 2 ≤ v.im := by
+    have h2 : |v.im - p.im| ≤ ‖v - p‖ := by
+      simpa [Complex.sub_im] using Complex.abs_im_le_norm (v - p)
+    have h3 := (abs_le.mp h2).1
+    linarith
+  refine le_trans (UpperHalfPlane.dist_le_dist_coe_div_sqrt _ _) ?_
+  have hprod : 0 < v.im * p.im := mul_pos hvim hp
+  have hsq : 0 < Real.sqrt (v.im * p.im) := Real.sqrt_pos.mpr hprod
+  have hs : p.im / 2 ≤ Real.sqrt (v.im * p.im) := by
+    rw [show p.im / 2 = Real.sqrt ((p.im / 2) ^ 2) from
+      (Real.sqrt_sq (by positivity)).symm]
+    exact Real.sqrt_le_sqrt (by nlinarith)
+  show dist (v : ℂ) (p : ℂ) / Real.sqrt (v.im * p.im) ≤ 1
+  rw [div_le_one hsq, dist_eq_norm]
+  exact le_trans hv hs
+
+/-- **Located window endpoint**: a seed surviving to `a ∈ (0, T]` but dying before
+`a + ε` with `ε ≤ 1` produces a zero within a uniform hyperbolic radius of the seed
+whose reach functional at the arrival point is at most `ε ^ 2`. -/
+theorem window_endpoint_located
+    {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)} (hΓ : IsFuchsianGroup Γ)
+    (hcc : CompactSpace (Quotient (MulAction.orbitRel Γ UpperHalfPlane)))
+    (q : QuadraticDifferential Γ) (hq0 : ∃ z₀ : ℂ, 0 < z₀.im ∧ q z₀ ≠ 0)
+    (A : Atlas (q : ℂ → ℂ)) {η : ℝ} (hη : 0 < η)
+    (htrack : ∀ (σ : ℝ → ℂ) (T : ℝ), 0 ≤ T → IsTrajOn q σ (Set.Icc 0 T) →
+      ∀ u, u ∈ Set.Icc 0 T → ∀ h1 : 0 < (σ u).im, ∀ h0 : 0 < (σ 0).im,
+        dist (⟨σ u, h1⟩ : UpperHalfPlane) (⟨σ 0, h0⟩ : UpperHalfPlane)
+          ≤ (Nat.ceil (T / (η / 2)) : ℝ))
+    {z : ℂ} (hzim : 0 < z.im) (hz0 : q z ≠ 0) {a ε T : ℝ}
+    (ha : 0 < a) (haT : a ≤ T) (hε : 0 < ε) (hε1 : ε ≤ 1)
+    (hyes : ∃ σ : ℝ → ℂ, σ 0 = z ∧ IsTrajOn q σ (Set.Icc 0 a) ∧
+      SlopeAt (A.Φ (A.sel z)) σ (Set.Icc 0 a) 0 1)
+    (hno : ¬∃ σ : ℝ → ℂ, σ 0 = z ∧ IsTrajOn q σ (Set.Icc 0 (a + ε)) ∧
+      SlopeAt (A.Φ (A.sel z)) σ (Set.Icc 0 (a + ε)) 0 1)
+    {M : ℂ → ℕ} {r₀ C₁ C₂ : ℂ → ℝ}
+    (hdata : ∀ z₀ : ℂ, 0 < z₀.im → q z₀ = 0 → 0 < r₀ z₀ ∧ 0 < C₁ z₀ ∧
+      ∀ w ∈ Metric.ball z₀ (r₀ z₀),
+        C₁ z₀ * ‖w - z₀‖ ^ M z₀ ≤ ‖q w‖ ∧ ‖q w‖ ≤ C₂ z₀ * ‖w - z₀‖ ^ M z₀) :
+    ∃ z₀ : ℂ, ∃ hz₀im : 0 < z₀.im, q z₀ = 0 ∧
+      dist (⟨z₀, hz₀im⟩ : UpperHalfPlane) (⟨z, hzim⟩ : UpperHalfPlane)
+        ≤ (Nat.ceil (T / (η / 2)) : ℝ) + (Nat.ceil (1 / (η / 2)) : ℝ) + 1 ∧
+      ∃ σa : ℝ → ℂ, (σa 0 = z ∧ IsTrajOn q σa (Set.Icc 0 a) ∧
+        SlopeAt (A.Φ (A.sel z)) σa (Set.Icc 0 a) 0 1) ∧
+        C₁ z₀ / (2 ^ M z₀ * 16) * min ‖σa a - z₀‖ (r₀ z₀ / 2) ^ (M z₀ + 2)
+          ≤ ε ^ 2 := by
+  obtain ⟨σa, hpre, c', τ, hc'0, hc'ε, hτ0, hτ, hτmax⟩ :=
+    window_dying q.holo A hzim hz0 ha hε hyes hno
+  obtain ⟨z₀, hz₀im, hz₀0, ⟨u, hu, hunear⟩, hreach⟩ :=
+    dying_seed_located hΓ hcc q hq0 hc'0 hc'ε hτ hτmax hdata
+  have hτu : IsTrajOn q τ (Set.Icc 0 u) :=
+    traj_mono hτ fun v hv => ⟨hv.1, lt_of_le_of_lt hv.2 hu.2⟩
+  have himτu : 0 < (τ u).im :=
+    (traj_regular hτu (Set.right_mem_Icc.mpr hu.1)).1
+  have himτ0 : 0 < (τ 0).im := (traj_regular hτu (Set.left_mem_Icc.mpr hu.1)).1
+  have hd1 : dist (⟨z₀, hz₀im⟩ : UpperHalfPlane)
+      (⟨τ u, himτu⟩ : UpperHalfPlane) ≤ 1 := by
+    refine near_height_dist himτu ?_ hz₀im
+    rw [norm_sub_rev]
+    exact hunear
+  have hu1 : u ≤ 1 := le_trans hu.2.le (le_trans hc'ε hε1)
+  have hd2 : dist (⟨τ u, himτu⟩ : UpperHalfPlane) (⟨τ 0, himτ0⟩ : UpperHalfPlane)
+      ≤ (Nat.ceil (1 / (η / 2)) : ℝ) := by
+    refine le_trans
+      (htrack τ u hu.1 hτu u (Set.right_mem_Icc.mpr hu.1) himτu himτ0) ?_
+    have hcle : Nat.ceil (u / (η / 2)) ≤ Nat.ceil (1 / (η / 2)) :=
+      Nat.ceil_le_ceil (by gcongr)
+    exact_mod_cast hcle
+  obtain ⟨hσa0, hσatraj, hσaS⟩ := hpre
+  have himw : 0 < (σa a).im :=
+    (traj_regular hσatraj (Set.right_mem_Icc.mpr ha.le)).1
+  have himz : 0 < (σa 0).im :=
+    (traj_regular hσatraj (Set.left_mem_Icc.mpr ha.le)).1
+  have hd3 : dist (⟨σa a, himw⟩ : UpperHalfPlane) (⟨σa 0, himz⟩ : UpperHalfPlane)
+      ≤ (Nat.ceil (T / (η / 2)) : ℝ) := by
+    refine le_trans
+      (htrack σa a ha.le hσatraj a (Set.right_mem_Icc.mpr ha.le) himw himz) ?_
+    have hcle : Nat.ceil (a / (η / 2)) ≤ Nat.ceil (T / (η / 2)) :=
+      Nat.ceil_le_ceil (by gcongr)
+    exact_mod_cast hcle
+  have he1 : (⟨τ 0, himτ0⟩ : UpperHalfPlane) = ⟨σa a, himw⟩ :=
+    UpperHalfPlane.ext hτ0
+  have he2 : (⟨σa 0, himz⟩ : UpperHalfPlane) = ⟨z, hzim⟩ :=
+    UpperHalfPlane.ext hσa0
+  refine ⟨z₀, hz₀im, hz₀0, ?_, σa, ⟨hσa0, hσatraj, hσaS⟩, ?_⟩
+  · calc dist (⟨z₀, hz₀im⟩ : UpperHalfPlane) (⟨z, hzim⟩ : UpperHalfPlane)
+        ≤ dist (⟨z₀, hz₀im⟩ : UpperHalfPlane) (⟨τ u, himτu⟩ : UpperHalfPlane)
+          + dist (⟨τ u, himτu⟩ : UpperHalfPlane) (⟨z, hzim⟩ : UpperHalfPlane) :=
+        dist_triangle _ _ _
+      _ ≤ 1 + ((Nat.ceil (1 / (η / 2)) : ℝ) + (Nat.ceil (T / (η / 2)) : ℝ)) := by
+        refine add_le_add hd1 ?_
+        calc dist (⟨τ u, himτu⟩ : UpperHalfPlane) (⟨z, hzim⟩ : UpperHalfPlane)
+            ≤ dist (⟨τ u, himτu⟩ : UpperHalfPlane)
+                (⟨τ 0, himτ0⟩ : UpperHalfPlane)
+              + dist (⟨τ 0, himτ0⟩ : UpperHalfPlane)
+                (⟨z, hzim⟩ : UpperHalfPlane) := dist_triangle _ _ _
+          _ ≤ (Nat.ceil (1 / (η / 2)) : ℝ) + (Nat.ceil (T / (η / 2)) : ℝ) := by
+            refine add_le_add hd2 ?_
+            rw [he1, ← he2]
+            exact hd3
+      _ = (Nat.ceil (T / (η / 2)) : ℝ) + (Nat.ceil (1 / (η / 2)) : ℝ) + 1 := by
+        ring
+  · rw [← hτ0]
+    exact hreach
+
+/-- **Finite zero pool**: the zeros lying within hyperbolic distance `R` of a compact
+subset of the upper half plane form a finite set. -/
+theorem zero_pool {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
+    (q : QuadraticDifferential Γ) (hq0 : ∃ z₀ : ℂ, 0 < z₀.im ∧ q z₀ ≠ 0)
+    {K : Set ℂ} (hKc : IsCompact K) (hKne : K.Nonempty)
+    (hKH : K ⊆ {z : ℂ | 0 < z.im}) (R : ℝ) :
+    Set.Finite {v : ℂ | q v = 0 ∧ ∃ hv : 0 < v.im, ∃ z ∈ K, ∃ hz : 0 < z.im,
+      dist (⟨v, hv⟩ : UpperHalfPlane) (⟨z, hz⟩ : UpperHalfPlane) ≤ R} := by
+  obtain ⟨zm, hzmK, hzmmin⟩ :=
+    hKc.exists_isMinOn hKne Complex.continuous_im.continuousOn
+  obtain ⟨zM, hzMK, hzMmax⟩ :=
+    hKc.exists_isMaxOn hKne Complex.continuous_im.continuousOn
+  obtain ⟨B, hB⟩ := hKc.isBounded.subset_closedBall 0
+  have hm : 0 < zm.im := hKH hzmK
+  set L : Set ℂ := Metric.closedBall 0 (B + zM.im * (Real.exp R - 1))
+      ∩ {w : ℂ | zm.im / Real.exp R ≤ w.im} with hLdef
+  have hLc : IsCompact L := (isCompact_closedBall _ _).inter_right
+    (isClosed_le continuous_const Complex.continuous_im)
+  have hLH : L ⊆ {z : ℂ | 0 < z.im} := fun w hw => by
+    have h1 : (0 : ℝ) < zm.im / Real.exp R := by positivity
+    exact lt_of_lt_of_le h1 hw.2
+  refine Set.Finite.subset (zeros_finite q.holo hq0 hLc hLH) ?_
+  rintro v ⟨hv0, hv, z, hzK, hz, hdist⟩
+  have hdnn : (0 : ℝ)
+      ≤ dist (⟨v, hv⟩ : UpperHalfPlane) (⟨z, hz⟩ : UpperHalfPlane) := dist_nonneg
+  have hRnn : (0 : ℝ) ≤ R := le_trans hdnn hdist
+  refine ⟨⟨?_, ?_⟩, hv0⟩
+  · have h1 := UpperHalfPlane.dist_coe_le (⟨v, hv⟩ : UpperHalfPlane) ⟨z, hz⟩
+    have h3 : z.im ≤ zM.im := hzMmax hzK
+    have hee : Real.exp (dist (⟨v, hv⟩ : UpperHalfPlane)
+        (⟨z, hz⟩ : UpperHalfPlane)) ≤ Real.exp R := Real.exp_le_exp.mpr hdist
+    have hex1 : (1 : ℝ) ≤ Real.exp (dist (⟨v, hv⟩ : UpperHalfPlane)
+        (⟨z, hz⟩ : UpperHalfPlane)) := by
+      rw [show (1 : ℝ) = Real.exp 0 from (Real.exp_zero).symm]
+      exact Real.exp_le_exp.mpr hdnn
+    have h1' : dist v (z : ℂ) ≤ z.im * (Real.exp (dist (⟨v, hv⟩ : UpperHalfPlane)
+        (⟨z, hz⟩ : UpperHalfPlane)) - 1) := h1
+    have hzM0 : (0 : ℝ) ≤ zM.im := le_trans hz.le h3
+    have h4 : dist v (z : ℂ) ≤ zM.im * (Real.exp R - 1) := by
+      refine le_trans h1' ?_
+      nlinarith [hz.le]
+    have h5 : dist (z : ℂ) 0 ≤ B := by
+      have := hB hzK
+      rwa [Metric.mem_closedBall] at this
+    rw [Metric.mem_closedBall]
+    calc dist v 0 ≤ dist v (z : ℂ) + dist (z : ℂ) 0 := dist_triangle _ _ _
+      _ ≤ zM.im * (Real.exp R - 1) + B := add_le_add h4 h5
+      _ = B + zM.im * (Real.exp R - 1) := by ring
+  · have h1 := UpperHalfPlane.im_div_exp_dist_le (⟨z, hz⟩ : UpperHalfPlane) ⟨v, hv⟩
+    have h2 : zm.im ≤ z.im := hzmmin hzK
+    have h3 : dist (⟨z, hz⟩ : UpperHalfPlane) (⟨v, hv⟩ : UpperHalfPlane) ≤ R := by
+      rw [dist_comm]
+      exact hdist
+    show zm.im / Real.exp R ≤ v.im
+    refine le_trans ?_ h1
+    calc zm.im / Real.exp R ≤ z.im / Real.exp R := by gcongr
+      _ ≤ z.im / Real.exp (dist (⟨z, hz⟩ : UpperHalfPlane)
+          (⟨v, hv⟩ : UpperHalfPlane)) := by
+        have h4 : Real.exp (dist (⟨z, hz⟩ : UpperHalfPlane)
+            (⟨v, hv⟩ : UpperHalfPlane)) ≤ Real.exp R := Real.exp_le_exp.mpr h3
+        gcongr
+
+/-- **Reach ball with mass**: below the per-zero threshold, the reach inequality places
+the point in an explicit ball whose `|q|`-mass is at most a constant multiple of
+`ε ^ 2`. -/
+theorem reach_ball {q : ℂ → ℂ} {z₀ w : ℂ} {M : ℕ} {r₀ C₁ C₂ ε : ℝ}
+    (hr₀ : 0 < r₀) (hC₁ : 0 < C₁) (hC₂ : 0 ≤ C₂)
+    (hbounds : ∀ v ∈ Metric.ball z₀ r₀,
+      C₁ * ‖v - z₀‖ ^ M ≤ ‖q v‖ ∧ ‖q v‖ ≤ C₂ * ‖v - z₀‖ ^ M)
+    (hε : 0 < ε)
+    (hth : ε ^ 2 ≤ C₁ * (r₀ / 2) ^ (M + 2) / (2 ^ (M + 1) * 16))
+    (hreach : C₁ / (2 ^ M * 16) * min ‖w - z₀‖ (r₀ / 2) ^ (M + 2) ≤ ε ^ 2) :
+    ∃ δ : ℝ, 0 < δ ∧ ‖w - z₀‖ ≤ δ ∧
+      ∫⁻ v in Metric.ball z₀ δ, ‖q v‖ₑ
+        ≤ ENNReal.ofReal (C₂ * Real.pi * (2 ^ (M + 1) * 16 / C₁) * ε ^ 2) := by
+  set x : ℝ := 2 ^ (M + 1) * 16 / C₁ * ε ^ 2 with hxdef
+  have hx : 0 < x := by positivity
+  set δ : ℝ := x ^ ((((M + 2 : ℕ) : ℝ))⁻¹ : ℝ) with hδdef
+  have hδ : 0 < δ := Real.rpow_pos_of_pos hx _
+  have hδpow : δ ^ (M + 2) = x :=
+    Real.rpow_inv_natCast_pow hx.le (by omega)
+  have hδr : δ ≤ r₀ / 2 := by
+    have h2 := hth
+    rw [le_div_iff₀ (by positivity : (0 : ℝ) < 2 ^ (M + 1) * 16)] at h2
+    have h1 : x ≤ (r₀ / 2) ^ (M + 2) := by
+      rw [hxdef, div_mul_eq_mul_div, div_le_iff₀ hC₁]
+      nlinarith [h2]
+    have h3 : δ ^ (M + 2) ≤ (r₀ / 2) ^ (M + 2) := by
+      rw [hδpow]
+      exact h1
+    exact le_of_pow_le_pow_left₀ (by omega) (by positivity) h3
+  have hinv : ‖w - z₀‖ ≤ δ := by
+    refine reach_invert (by positivity : (0 : ℝ) < C₁ / (2 ^ M * 16)) hδ hreach
+      ?_ hδr
+    rw [hδpow, hxdef]
+    have hcomp : C₁ / (2 ^ M * 16) * (2 ^ (M + 1) * 16 / C₁ * ε ^ 2)
+        = 2 * ε ^ 2 := by
+      field_simp
+      ring
+    rw [hcomp]
+    nlinarith
+  have hmass := ball_mass_pow hr₀ hC₂ hbounds hδ (le_trans hδr (by linarith))
+  refine ⟨δ, hδ, hinv, le_trans hmass ?_⟩
+  refine ENNReal.ofReal_le_ofReal (le_of_eq ?_)
+  rw [hδpow, hxdef]
+  ring
+
+/-- **Arrival identification**: the stepper chain endpoint of a strong-legal seed equals
+the endpoint of any unit-slope trajectory of the full grid duration. -/
+theorem pos_eq_traj {q : ℂ → ℂ} (A : Atlas q) {h : ℝ} (hh : 0 < h) {N : ℕ}
+    {z : ℂ} (hz : z ∈ slegal A h N) {σ : ℝ → ℂ}
+    (hσ0 : σ 0 = z) (hσ : IsTrajOn q σ (Set.Icc 0 (((N + 1 : ℕ) : ℝ) * h)))
+    (hσS : SlopeAt (A.Φ (A.sel z)) σ
+      (Set.Icc 0 (((N + 1 : ℕ) : ℝ) * h)) 0 1) :
+    pos A h (N + 1) z = σ (((N + 1 : ℕ) : ℝ) * h) := by
+  obtain ⟨σ', hσ'0, hσ'traj, hσ'S, -, hσ'end⟩ := slegal_traj A hh N z hz
+  have hT : (0 : ℝ) < ((N + 1 : ℕ) : ℝ) * h := by push_cast; positivity
+  have hreg : 0 < z.im ∧ q z ≠ 0 := by
+    have := traj_regular hσ (Set.left_mem_Icc.mpr hT.le)
+    rwa [hσ0] at this
+  obtain ⟨hact, hmem⟩ := A.sel_spec hreg.1 hreg.2
+  have hrpos : 0 < A.r (A.sel z) := A.hr _ hact
+  have hEq := seed_unique Metric.isOpen_ball (A.hinj _ hact) hT.le hσ'traj hσ
+    (by rw [hσ'0, hσ0])
+    (by rw [hσ'0]; exact Metric.ball_subset_ball (by linarith) hmem) hσ'S hσS
+  rw [← hσ'end]
+  exact hEq (Set.right_mem_Icc.mpr hT.le)
+
+
+/-- **Point-uniform reach ball**: below the per-zero threshold there is one radius
+capturing every point satisfying the reach inequality, with ball mass controlled by
+`ε ^ 2`. -/
+theorem reach_ball' {q : ℂ → ℂ} {z₀ : ℂ} {M : ℕ} {r₀ C₁ C₂ ε : ℝ}
+    (hr₀ : 0 < r₀) (hC₁ : 0 < C₁) (hC₂ : 0 ≤ C₂)
+    (hbounds : ∀ v ∈ Metric.ball z₀ r₀,
+      C₁ * ‖v - z₀‖ ^ M ≤ ‖q v‖ ∧ ‖q v‖ ≤ C₂ * ‖v - z₀‖ ^ M)
+    (hε : 0 < ε)
+    (hth : ε ^ 2 ≤ C₁ * (r₀ / 2) ^ (M + 2) / (2 ^ (M + 1) * 16)) :
+    ∃ δ : ℝ, 0 < δ ∧
+      (∀ w : ℂ, C₁ / (2 ^ M * 16) * min ‖w - z₀‖ (r₀ / 2) ^ (M + 2) ≤ ε ^ 2 →
+        w ∈ Metric.ball z₀ δ) ∧
+      ∫⁻ v in Metric.ball z₀ δ, ‖q v‖ₑ
+        ≤ ENNReal.ofReal
+          (C₂ * Real.pi * (2 ^ (M + 2) * (2 ^ (M + 1) * 16 / C₁)) * ε ^ 2) := by
+  set x : ℝ := 2 ^ (M + 1) * 16 / C₁ * ε ^ 2 with hxdef
+  have hx : 0 < x := by positivity
+  set δ : ℝ := x ^ ((((M + 2 : ℕ) : ℝ))⁻¹ : ℝ) with hδdef
+  have hδ : 0 < δ := Real.rpow_pos_of_pos hx _
+  have hδpow : δ ^ (M + 2) = x :=
+    Real.rpow_inv_natCast_pow hx.le (by omega)
+  have hδr : δ ≤ r₀ / 2 := by
+    have h2 := hth
+    rw [le_div_iff₀ (by positivity : (0 : ℝ) < 2 ^ (M + 1) * 16)] at h2
+    have h1 : x ≤ (r₀ / 2) ^ (M + 2) := by
+      rw [hxdef, div_mul_eq_mul_div, div_le_iff₀ hC₁]
+      nlinarith [h2]
+    have h3 : δ ^ (M + 2) ≤ (r₀ / 2) ^ (M + 2) := by
+      rw [hδpow]
+      exact h1
+    exact le_of_pow_le_pow_left₀ (by omega) (by positivity) h3
+  refine ⟨2 * δ, by positivity, fun w hreach => ?_, ?_⟩
+  · have hcap : ‖w - z₀‖ ≤ δ := by
+      refine reach_invert (by positivity : (0 : ℝ) < C₁ / (2 ^ M * 16)) hδ hreach
+        ?_ hδr
+      rw [hδpow, hxdef]
+      have hcomp : C₁ / (2 ^ M * 16) * (2 ^ (M + 1) * 16 / C₁ * ε ^ 2)
+          = 2 * ε ^ 2 := by
+        field_simp
+        ring
+      rw [hcomp]
+      nlinarith
+    rw [Metric.mem_ball, dist_eq_norm]
+    linarith
+  · refine le_trans (ball_mass_pow hr₀ hC₂ hbounds (by positivity)
+      (by linarith : 2 * δ ≤ r₀)) ?_
+    refine ENNReal.ofReal_le_ofReal (le_of_eq ?_)
+    rw [mul_pow, hδpow, hxdef]
+    ring
+
+/-- **The dying pool**: a finite zero pool with a uniform threshold, capture radii, and
+`ε ^ 2`-controlled total ball mass, covering all zeros within hyperbolic reach `R` of a
+compact seed set. -/
+theorem pool {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
+    (q : QuadraticDifferential Γ) (hq0 : ∃ z₀ : ℂ, 0 < z₀.im ∧ q z₀ ≠ 0)
+    {K : Set ℂ} (hKc : IsCompact K) (hKne : K.Nonempty)
+    (hKH : K ⊆ {z : ℂ | 0 < z.im}) (R : ℝ)
+    {M : ℂ → ℕ} {r₀ C₁ C₂ : ℂ → ℝ}
+    (hdata : ∀ z₀ : ℂ, 0 < z₀.im → q z₀ = 0 → 0 < r₀ z₀ ∧ 0 < C₁ z₀ ∧
+      0 ≤ C₂ z₀ ∧ ∀ w ∈ Metric.ball z₀ (r₀ z₀),
+        C₁ z₀ * ‖w - z₀‖ ^ M z₀ ≤ ‖q w‖ ∧ ‖q w‖ ≤ C₂ z₀ * ‖w - z₀‖ ^ M z₀) :
+    ∃ Z : Finset ℂ, ∃ ε₀ Cp : ℝ, 0 < ε₀ ∧ 0 ≤ Cp ∧
+      ∀ ε, 0 < ε → ε ≤ ε₀ → ∃ δ : ℂ → ℝ,
+        (∀ z₀ : ℂ, ∀ hz₀ : 0 < z₀.im, q z₀ = 0 →
+          (∃ z ∈ K, ∃ hz : 0 < z.im, dist (⟨z₀, hz₀⟩ : UpperHalfPlane)
+            (⟨z, hz⟩ : UpperHalfPlane) ≤ R) →
+          z₀ ∈ Z ∧ ∀ w : ℂ,
+            C₁ z₀ / (2 ^ M z₀ * 16)
+                * min ‖w - z₀‖ (r₀ z₀ / 2) ^ (M z₀ + 2) ≤ ε ^ 2 →
+            w ∈ Metric.ball z₀ (δ z₀)) ∧
+        ∫⁻ v in ⋃ z₀ ∈ Z, Metric.ball z₀ (δ z₀), ‖q v‖ₑ
+          ≤ ENNReal.ofReal (Cp * ε ^ 2) := by
+  classical
+  have hfin := zero_pool q hq0 hKc hKne hKH R
+  set Z : Finset ℂ := hfin.toFinset with hZdef
+  set t : ℂ → ℝ := fun z₀ =>
+    Real.sqrt (C₁ z₀ * (r₀ z₀ / 2) ^ (M z₀ + 2) / (2 ^ (M z₀ + 1) * 16)) with htdef
+  have htpos : ∀ z₀ ∈ Z, 0 < t z₀ := by
+    intro z₀ hz₀
+    obtain ⟨h0, hv, -⟩ := hfin.mem_toFinset.mp hz₀
+    obtain ⟨hr, hC1, -, -⟩ := hdata z₀ hv h0
+    exact Real.sqrt_pos.mpr (by positivity)
+  by_cases hZne : Z.Nonempty
+  case neg =>
+    refine ⟨Z, 1, 0, one_pos, le_refl 0, fun ε hε hεle =>
+      ⟨fun _ => 1, ?_, ?_⟩⟩
+    · intro z₀ hz₀ h0 hnear
+      exact absurd ⟨z₀, hfin.mem_toFinset.mpr ⟨h0, hz₀, hnear⟩⟩ hZne
+    · rw [Finset.not_nonempty_iff_eq_empty.mp hZne]
+      simp
+  case pos =>
+  set ε₀ : ℝ := Z.inf' hZne t with hε₀def
+  have hε₀pos : 0 < ε₀ := (Finset.lt_inf'_iff hZne).mpr htpos
+  set Cp : ℝ := ∑ z₀ ∈ Z, C₂ z₀ * Real.pi *
+    (2 ^ (M z₀ + 2) * (2 ^ (M z₀ + 1) * 16 / C₁ z₀)) with hCpdef
+  have hterm : ∀ z₀ ∈ Z, 0 ≤ C₂ z₀ * Real.pi *
+      (2 ^ (M z₀ + 2) * (2 ^ (M z₀ + 1) * 16 / C₁ z₀)) := by
+    intro z₀ hz₀
+    obtain ⟨h0, hv, -⟩ := hfin.mem_toFinset.mp hz₀
+    obtain ⟨hr, hC1, hC2, -⟩ := hdata z₀ hv h0
+    positivity
+  have hCp : 0 ≤ Cp := Finset.sum_nonneg hterm
+  refine ⟨Z, ε₀, Cp, hε₀pos, hCp, ?_⟩
+  intro ε hε hεle
+  have key : ∀ z₀ : ℂ, ∃ δv : ℝ, z₀ ∈ Z →
+      (0 < δv ∧ (∀ w : ℂ, C₁ z₀ / (2 ^ M z₀ * 16)
+          * min ‖w - z₀‖ (r₀ z₀ / 2) ^ (M z₀ + 2) ≤ ε ^ 2 →
+        w ∈ Metric.ball z₀ δv) ∧
+      ∫⁻ v in Metric.ball z₀ δv, ‖q v‖ₑ ≤ ENNReal.ofReal (C₂ z₀ * Real.pi *
+        (2 ^ (M z₀ + 2) * (2 ^ (M z₀ + 1) * 16 / C₁ z₀)) * ε ^ 2)) := by
+    intro z₀
+    by_cases hz₀ : z₀ ∈ Z
+    · obtain ⟨h0, him, -⟩ := hfin.mem_toFinset.mp hz₀
+      obtain ⟨hr, hC1, hC2, hb⟩ := hdata z₀ him h0
+      have hthr : ε ^ 2
+          ≤ C₁ z₀ * (r₀ z₀ / 2) ^ (M z₀ + 2) / (2 ^ (M z₀ + 1) * 16) := by
+        have h1 : ε ≤ t z₀ := le_trans hεle (Finset.inf'_le t hz₀)
+        have h2 : ε ^ 2 ≤ t z₀ ^ 2 := by nlinarith
+        rw [htdef] at h2
+        rwa [Real.sq_sqrt (by positivity)] at h2
+      obtain ⟨δv, hδv, hcap, hmass⟩ := reach_ball' hr hC1 hC2 hb hε hthr
+      exact ⟨δv, fun _ => ⟨hδv, hcap, hmass⟩⟩
+    · exact ⟨1, fun h => absurd h hz₀⟩
+  choose δ hδ using key
+  refine ⟨δ, ?_, ?_⟩
+  · intro z₀ hz₀ h0 hnear
+    have hz₀Z : z₀ ∈ Z := hfin.mem_toFinset.mpr ⟨h0, hz₀, hnear⟩
+    exact ⟨hz₀Z, (hδ z₀ hz₀Z).2.1⟩
+  · have hsub : ∫⁻ v in ⋃ z₀ ∈ Z, Metric.ball z₀ (δ z₀), ‖q v‖ₑ
+        ≤ ∑ z₀ ∈ Z, ∫⁻ v in Metric.ball z₀ (δ z₀), ‖q v‖ₑ := by
+      have hconv : (⋃ z₀ ∈ Z, Metric.ball z₀ (δ z₀))
+          = ⋃ z₀ : {x // x ∈ Z}, Metric.ball (z₀ : ℂ) (δ z₀) := by
+        ext v
+        simp only [Set.mem_iUnion, Subtype.exists, exists_prop]
+      rw [hconv]
+      refine le_trans (lintegral_iUnion_le _ _) ?_
+      rw [tsum_fintype]
+      exact le_of_eq (Finset.sum_coe_sort Z
+        fun z₀ => ∫⁻ v in Metric.ball z₀ (δ z₀), ‖q v‖ₑ)
+    refine le_trans hsub ?_
+    refine le_trans (Finset.sum_le_sum fun z₀ hz₀ => (hδ z₀ hz₀).2.2)
+      (le_of_eq ?_)
+    rw [← ENNReal.ofReal_sum_of_nonneg fun z₀ hz₀ =>
+      mul_nonneg (hterm z₀ hz₀) (by positivity)]
+    congr 1
+    rw [hCpdef, Finset.sum_mul]
+
+/-- **Cross-grid arrival multiplicity**: over all grids of one total duration, at most
+two strong-legal seeds arrive at a given point. -/
+theorem cross_mult {q : ℂ → ℂ} (A : Atlas q) {a : ℝ} (ha : 0 < a) (y : ℂ) :
+    ∃ z₁ z₂ : ℂ, ∀ N : ℕ, ∀ z : ℂ, z ∈ slegal A (a / (N + 1)) N →
+      pos A (a / (N + 1)) (N + 1) z = y → z = z₁ ∨ z = z₂ := by
+  classical
+  have hgrid : ∀ N : ℕ, (0 : ℝ) < a / (N + 1) := fun N => by positivity
+  have hTeq : ∀ N : ℕ, ((N + 1 : ℕ) : ℝ) * (a / (N + 1)) = a := fun N => by
+    push_cast
+    field_simp
+  have hdat : ∀ N : ℕ, ∀ z : ℂ, z ∈ slegal A (a / (N + 1)) N →
+      ∃ σ : ℝ → ℂ, σ 0 = z ∧ IsTrajOn q σ (Set.Icc 0 a) ∧
+        SlopeAt (A.Φ (A.sel z)) σ (Set.Icc 0 a) 0 1 ∧
+        SlopeAt (A.Φ (A.sel (pos A (a / (N + 1)) (N + 1) z))) σ (Set.Icc 0 a) a
+          (sgn A (a / (N + 1)) (N + 1) z) ∧
+        σ a = pos A (a / (N + 1)) (N + 1) z := by
+    intro N z hz
+    obtain ⟨σ, h0, htraj, hS0, hSa, hend⟩ := slegal_traj A (hgrid N) N z hz
+    rw [hTeq N] at htraj hS0 hSa hend
+    exact ⟨σ, h0, htraj, hS0, hSa, hend⟩
+  by_cases hreg : 0 < y.im ∧ q y ≠ 0
+  case neg =>
+    refine ⟨0, 0, fun N z hz hpos => ?_⟩
+    obtain ⟨σ, h0, htraj, -, -, hend⟩ := hdat N z hz
+    have hr := traj_regular htraj (Set.right_mem_Icc.mpr ha.le)
+    rw [hend, hpos] at hr
+    exact absurd hr hreg
+  case pos =>
+  obtain ⟨him, hq0⟩ := hreg
+  obtain ⟨hact, hmem⟩ := A.sel_spec him hq0
+  have hrpos : 0 < A.r (A.sel y) := A.hr _ hact
+  have hyS : y ∈ Metric.ball (A.c (A.sel y)) (2 * A.r (A.sel y)) :=
+    Metric.ball_subset_ball (by linarith) hmem
+  have main : ∀ (N : ℕ) (z : ℂ), z ∈ slegal A (a / (N + 1)) N →
+      pos A (a / (N + 1)) (N + 1) z = y →
+      ∀ (N' : ℕ) (z' : ℂ), z' ∈ slegal A (a / (N' + 1)) N' →
+      pos A (a / (N' + 1)) (N' + 1) z' = y →
+      sgn A (a / (N + 1)) (N + 1) z = sgn A (a / (N' + 1)) (N' + 1) z' →
+      z = z' := by
+    intro N z hz hpos N' z' hz' hpos' hsgn
+    obtain ⟨σ, h0, htraj, -, hSa, hend⟩ := hdat N z hz
+    obtain ⟨σ', h0', htraj', -, hSa', hend'⟩ := hdat N' z' hz'
+    rw [hpos] at hSa
+    rw [hpos'] at hSa'
+    rw [hsgn] at hSa
+    have hkey := arrival_unique Metric.isOpen_ball (A.hinj _ hact) ha.le
+      htraj htraj' (by rw [hend, hpos, hend', hpos'])
+      (by rw [hend, hpos]; exact hyS) hSa hSa'
+    rw [h0, h0'] at hkey
+    exact hkey
+  by_cases h1 : ∃ (N : ℕ) (z : ℂ), (z ∈ slegal A (a / (N + 1)) N ∧
+      pos A (a / (N + 1)) (N + 1) z = y) ∧ sgn A (a / (N + 1)) (N + 1) z = 1
+  · by_cases h2 : ∃ (N : ℕ) (z : ℂ), (z ∈ slegal A (a / (N + 1)) N ∧
+        pos A (a / (N + 1)) (N + 1) z = y) ∧ sgn A (a / (N + 1)) (N + 1) z = -1
+    · obtain ⟨N₁, z₁, ⟨hz₁, hp₁⟩, hs₁⟩ := h1
+      obtain ⟨N₂, z₂, ⟨hz₂, hp₂⟩, hs₂⟩ := h2
+      refine ⟨z₁, z₂, fun N z hz hpos => ?_⟩
+      rcases sgn_last_pm A (hgrid N) hz with hs | hs
+      · exact Or.inl (main N z hz hpos N₁ z₁ hz₁ hp₁ (by rw [hs, hs₁]))
+      · exact Or.inr (main N z hz hpos N₂ z₂ hz₂ hp₂ (by rw [hs, hs₂]))
+    · obtain ⟨N₁, z₁, ⟨hz₁, hp₁⟩, hs₁⟩ := h1
+      refine ⟨z₁, z₁, fun N z hz hpos => ?_⟩
+      rcases sgn_last_pm A (hgrid N) hz with hs | hs
+      · exact Or.inl (main N z hz hpos N₁ z₁ hz₁ hp₁ (by rw [hs, hs₁]))
+      · exact absurd ⟨N, z, ⟨hz, hpos⟩, hs⟩ h2
+  · by_cases h2 : ∃ (N : ℕ) (z : ℂ), (z ∈ slegal A (a / (N + 1)) N ∧
+        pos A (a / (N + 1)) (N + 1) z = y) ∧ sgn A (a / (N + 1)) (N + 1) z = -1
+    · obtain ⟨N₂, z₂, ⟨hz₂, hp₂⟩, hs₂⟩ := h2
+      refine ⟨z₂, z₂, fun N z hz hpos => ?_⟩
+      rcases sgn_last_pm A (hgrid N) hz with hs | hs
+      · exact absurd ⟨N, z, ⟨hz, hpos⟩, hs⟩ h1
+      · exact Or.inl (main N z hz hpos N₂ z₂ hz₂ hp₂ (by rw [hs, hs₂]))
+    · refine ⟨0, 0, fun N z hz hpos => ?_⟩
+      rcases sgn_last_pm A (hgrid N) hz with hs | hs
+      · exact absurd ⟨N, z, ⟨hz, hpos⟩, hs⟩ h1
+      · exact absurd ⟨N, z, ⟨hz, hpos⟩, hs⟩ h2
+
+/-- **Cross-grid union push**: the `|q|`-mass of countably many disjoint strong-legal
+layers of one total duration is at most twice the mass of any arrival target. -/
+theorem grid_union_push {q : ℂ → ℂ} (hqm : Measurable q) (A : Atlas q)
+    {a : ℝ} (ha : 0 < a) {W : ℕ → Set ℂ}
+    (hWm : ∀ N, MeasurableSet (W N))
+    (hWs : ∀ N, W N ⊆ slegal A (a / (N + 1)) N)
+    (hWd : Pairwise (Function.onFun Disjoint W))
+    {B : Set ℂ}
+    (hB : ∀ N : ℕ, ∀ z ∈ W N, pos A (a / (N + 1)) (N + 1) z ∈ B) :
+    ∫⁻ w in ⋃ N, W N, ‖q w‖ₑ ≤ 2 * ∫⁻ w in B, ‖q w‖ₑ := by
+  classical
+  have hgrid : ∀ N : ℕ, (0 : ℝ) < a / (N + 1) := fun N => by positivity
+  have hEL : ∀ N, W N ⊆ legal A (a / (N + 1)) N := fun N =>
+    (hWs N).trans (slegal_legal A (hgrid N).le N)
+  set P : (Σ N : ℕ, (Fin (N + 1) → ℕ × Bool)) → Set ℂ :=
+    fun i => itinPiece A (a / (i.1 + 1)) i.1 (W i.1) i.2 with hPdef
+  have hPsub : ∀ i, P i ⊆ W i.1 := fun i z hz => hz.1
+  have hPmeas : ∀ i, MeasurableSet (P i) := fun i =>
+    piece_measurable A _ _ (hWm i.1) i.2
+  have hcov : ⋃ N, W N = ⋃ i, P i := by
+    ext z
+    simp only [Set.mem_iUnion]
+    constructor
+    · rintro ⟨N, hz⟩
+      refine ⟨⟨N, itin A (a / (N + 1)) N z⟩, hz, fun k => ⟨rfl, ?_⟩⟩
+      have hpm := ((hEL N hz) (k : ℕ)
+        (by exact Nat.lt_succ_iff.mp k.isLt)).2.2.1
+      show sgn A (a / (N + 1)) (k : ℕ) z
+        = (if (if sgn A (a / (N + 1)) (k : ℕ) z = 1 then true else false)
+          then (1 : ℝ) else -1)
+      rcases hpm with h1 | h1
+      · rw [if_pos h1]
+        simp [h1]
+      · rw [if_neg (by rw [h1]; norm_num)]
+        simp [h1]
+    · rintro ⟨i, hz⟩
+      exact ⟨i.1, hz.1⟩
+  have hdisj : Pairwise (Function.onFun Disjoint P) := by
+    rintro ⟨N, c⟩ ⟨N', c'⟩ hij
+    rw [Function.onFun, Set.disjoint_left]
+    intro z hzi hzj
+    by_cases hN : N = N'
+    · subst hN
+      have h1 := itin_eq A (hEL N) hzi
+      have h2 := itin_eq A (hEL N) hzj
+      exact hij (by rw [Sigma.mk.injEq]; exact ⟨rfl, heq_of_eq (h1.trans h2.symm)⟩)
+    · exact Set.disjoint_left.mp (hWd hN) (hPsub ⟨N, c⟩ hzi) (hPsub ⟨N', c'⟩ hzj)
+  have hchain : ∀ i, MeasurableSet (pos A (a / (i.1 + 1)) (i.1 + 1) '' P i) ∧
+      ∫⁻ w in pos A (a / (i.1 + 1)) (i.1 + 1) '' P i, ‖q w‖ₑ
+        = ∫⁻ w in P i, ‖q w‖ₑ := by
+    rintro ⟨N, c⟩
+    refine chain_cov A (hPmeas ⟨N, c⟩)
+      (fun k => if hk : k < N + 1 then (c ⟨k, hk⟩).1 else 0)
+      (fun k => if hk : k < N + 1 then
+        (if (c ⟨k, hk⟩).2 then (1 : ℝ) else -1) else 0)
+      ?_ (N + 1) (le_refl _)
+    intro k hk z hz
+    have hk' : k < N + 1 := by omega
+    obtain ⟨hzE, hcl⟩ := hz
+    obtain ⟨hsel, hsgn⟩ := hcl ⟨k, hk'⟩
+    obtain ⟨hact, hball, hpm, hmove⟩ := (hEL N hzE) k hk
+    beta_reduce
+    rw [dif_pos hk', dif_pos hk']
+    refine ⟨hsel, hsgn, ?_, ?_, ?_⟩
+    · rw [← hsel]
+      exact hact
+    · rw [← hsel]
+      exact hball
+    · rw [← hsel, ← hsgn]
+      exact hmove
+  have hsum : ∫⁻ w in ⋃ N, W N, ‖q w‖ₑ = ∑' i, ∫⁻ w in P i, ‖q w‖ₑ := by
+    rw [hcov]
+    exact lintegral_iUnion hPmeas hdisj _
+  have hmult' : ∀ y : ℂ,
+      (∑' i : Σ N : ℕ, (Fin (N + 1) → ℕ × Bool),
+        (pos A (a / (i.1 + 1)) (i.1 + 1) '' P i).indicator
+          (fun _ => (1 : ℝ≥0∞)) y) ≤ 2 := by
+    intro y
+    obtain ⟨z₁, z₂, hz12⟩ := cross_mult A ha y
+    have hidx : ∀ zc : ℂ, ∃ i : Σ N : ℕ, (Fin (N + 1) → ℕ × Bool),
+        ∀ j : Σ N : ℕ, (Fin (N + 1) → ℕ × Bool), zc ∈ P j → j = i := by
+      intro zc
+      by_cases hzc : ∃ N, zc ∈ W N
+      · obtain ⟨N, hN⟩ := hzc
+        refine ⟨⟨N, itin A (a / (N + 1)) N zc⟩, ?_⟩
+        rintro ⟨N', c'⟩ hj
+        have hNN : N' = N := by
+          by_contra hne
+          exact Set.disjoint_left.mp (hWd hne) (hPsub ⟨N', c'⟩ hj) hN
+        subst hNN
+        rw [Sigma.mk.injEq]
+        exact ⟨rfl, heq_of_eq (itin_eq A (hEL N') hj)⟩
+      · refine ⟨⟨0, fun _ => (0, true)⟩, ?_⟩
+        rintro ⟨N', c'⟩ hj
+        exact absurd ⟨N', hPsub ⟨N', c'⟩ hj⟩ hzc
+    obtain ⟨i₁, hi₁⟩ := hidx z₁
+    obtain ⟨i₂, hi₂⟩ := hidx z₂
+    refine tsum_indicator_pair (i₁ := i₁) (i₂ := i₂) ?_
+    rintro ⟨N, c⟩ hc
+    obtain ⟨z, hzP, hzy⟩ := hc
+    rcases hz12 N z (hWs N (hPsub ⟨N, c⟩ hzP)) hzy with rfl | rfl
+    · exact Or.inl (hi₁ ⟨N, c⟩ hzP)
+    · exact Or.inr (hi₂ ⟨N, c⟩ hzP)
+  calc ∫⁻ w in ⋃ N, W N, ‖q w‖ₑ = ∑' i, ∫⁻ w in P i, ‖q w‖ₑ := hsum
+    _ = ∑' i : Σ N : ℕ, (Fin (N + 1) → ℕ × Bool),
+        ∫⁻ w in pos A (a / (i.1 + 1)) (i.1 + 1) '' P i, ‖q w‖ₑ :=
+        tsum_congr fun i => ((hchain i).2).symm
+    _ ≤ 2 * ∫⁻ w in ⋃ i : Σ N : ℕ, (Fin (N + 1) → ℕ × Bool),
+        pos A (a / (i.1 + 1)) (i.1 + 1) '' P i, ‖q w‖ₑ :=
+        lintegral_mult_le' (fun i => (hchain i).1) hqm.enorm hmult'
+    _ ≤ 2 * ∫⁻ w in B, ‖q w‖ₑ := by
+        refine mul_le_mul_right (lintegral_mono_set ?_) 2
+        refine Set.iUnion_subset fun i => ?_
+        rintro y ⟨z, hzP, rfl⟩
+        exact hB i.1 z (hPsub i hzP)
+
+
+/-- **Window mass bound**: the seeds of a compact set surviving to `a` but not to
+`a + ε` carry `|q|`-mass at most twice the pool-ball mass. -/
+theorem window_bound {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
+    (hΓ : IsFuchsianGroup Γ)
+    (hcc : CompactSpace (Quotient (MulAction.orbitRel Γ UpperHalfPlane)))
+    (q : QuadraticDifferential Γ) (hq0 : ∃ z₀ : ℂ, 0 < z₀.im ∧ q z₀ ≠ 0)
+    (hqm : Measurable (q : ℂ → ℂ)) (A : Atlas (q : ℂ → ℂ))
+    {η : ℝ} (hη : 0 < η)
+    (htrack : ∀ (σ : ℝ → ℂ) (T : ℝ), 0 ≤ T → IsTrajOn q σ (Set.Icc 0 T) →
+      ∀ u, u ∈ Set.Icc 0 T → ∀ h1 : 0 < (σ u).im, ∀ h0 : 0 < (σ 0).im,
+        dist (⟨σ u, h1⟩ : UpperHalfPlane) (⟨σ 0, h0⟩ : UpperHalfPlane)
+          ≤ (Nat.ceil (T / (η / 2)) : ℝ))
+    {M : ℂ → ℕ} {r₀ C₁ C₂ : ℂ → ℝ}
+    (hdata : ∀ z₀ : ℂ, 0 < z₀.im → q z₀ = 0 → 0 < r₀ z₀ ∧ 0 < C₁ z₀ ∧
+      ∀ w ∈ Metric.ball z₀ (r₀ z₀),
+        C₁ z₀ * ‖w - z₀‖ ^ M z₀ ≤ ‖q w‖ ∧ ‖q w‖ ≤ C₂ z₀ * ‖w - z₀‖ ^ M z₀)
+    {K : Set ℂ} (hKm : MeasurableSet K) (hKH : K ⊆ {z : ℂ | 0 < z.im})
+    {Z : Finset ℂ} {δ : ℂ → ℝ} {T a ε Cmass : ℝ}
+    (ha : 0 < a) (haT : a ≤ T) (hε : 0 < ε) (hε1 : ε ≤ 1)
+    (hcapture : ∀ z₀ : ℂ, ∀ hz₀ : 0 < z₀.im, q z₀ = 0 →
+      (∃ z ∈ K, ∃ hz : 0 < z.im, dist (⟨z₀, hz₀⟩ : UpperHalfPlane)
+        (⟨z, hz⟩ : UpperHalfPlane)
+        ≤ (Nat.ceil (T / (η / 2)) : ℝ) + (Nat.ceil (1 / (η / 2)) : ℝ) + 1) →
+      z₀ ∈ Z ∧ ∀ w : ℂ,
+        C₁ z₀ / (2 ^ M z₀ * 16)
+            * min ‖w - z₀‖ (r₀ z₀ / 2) ^ (M z₀ + 2) ≤ ε ^ 2 →
+        w ∈ Metric.ball z₀ (δ z₀))
+    (hmassB : ∫⁻ v in ⋃ z₀ ∈ Z, Metric.ball z₀ (δ z₀), ‖(q : ℂ → ℂ) v‖ₑ
+      ≤ ENNReal.ofReal (Cmass * ε ^ 2)) :
+    ∫⁻ w in {z ∈ K | q z ≠ 0 ∧
+        (∃ σ : ℝ → ℂ, σ 0 = z ∧ IsTrajOn q σ (Set.Icc 0 a) ∧
+          SlopeAt (A.Φ (A.sel z)) σ (Set.Icc 0 a) 0 1) ∧
+        ¬∃ σ : ℝ → ℂ, σ 0 = z ∧ IsTrajOn q σ (Set.Icc 0 (a + ε)) ∧
+          SlopeAt (A.Φ (A.sel z)) σ (Set.Icc 0 (a + ε)) 0 1},
+      ‖(q : ℂ → ℂ) w‖ₑ ≤ 2 * ENNReal.ofReal (Cmass * ε ^ 2) := by
+  classical
+  set W : Set ℂ := {z ∈ K | q z ≠ 0 ∧
+      (∃ σ : ℝ → ℂ, σ 0 = z ∧ IsTrajOn q σ (Set.Icc 0 a) ∧
+        SlopeAt (A.Φ (A.sel z)) σ (Set.Icc 0 a) 0 1) ∧
+      ¬∃ σ : ℝ → ℂ, σ 0 = z ∧ IsTrajOn q σ (Set.Icc 0 (a + ε)) ∧
+        SlopeAt (A.Φ (A.sel z)) σ (Set.Icc 0 (a + ε)) 0 1} with hWdef
+  have hgrid : ∀ N : ℕ, (0 : ℝ) < a / (N + 1) := fun N => by positivity
+  have hTeq : ∀ N : ℕ, ((N + 1 : ℕ) : ℝ) * (a / (N + 1)) = a := fun N => by
+    push_cast
+    field_simp
+  have hset : W = K ∩ ({z : ℂ | q z ≠ 0} ∩
+      ({z : ℂ | ∃ σ : ℝ → ℂ, σ 0 = z ∧ IsTrajOn q σ (Set.Icc 0 a) ∧
+        SlopeAt (A.Φ (A.sel z)) σ (Set.Icc 0 a) 0 1} ∩
+      {z : ℂ | ∃ σ : ℝ → ℂ, σ 0 = z ∧ IsTrajOn q σ (Set.Icc 0 (a + ε)) ∧
+        SlopeAt (A.Φ (A.sel z)) σ (Set.Icc 0 (a + ε)) 0 1}ᶜ)) := by
+    ext z
+    simp only [hWdef, Set.mem_setOf_eq, Set.mem_inter_iff, Set.mem_compl_iff]
+  have hWm : MeasurableSet W := by
+    rw [hset]
+    exact hKm.inter (((hqm (measurableSet_singleton 0)).compl).inter
+      ((traj_exists_measurable q.holo A ha).inter
+        (traj_exists_measurable q.holo A
+          (by linarith : (0 : ℝ) < a + ε)).compl))
+  set WL : ℕ → Set ℂ := fun N => (W ∩ slegal A (a / (N + 1)) N)
+    \ ⋃ N' ∈ Finset.range N, slegal A (a / (N' + 1)) N' with hWLdef
+  have hWLm : ∀ N, MeasurableSet (WL N) := by
+    intro N
+    refine (hWm.inter (slegal_measurable A (hgrid N) N)).diff ?_
+    exact MeasurableSet.biUnion (Finset.range N).countable_toSet
+      fun N' _ => slegal_measurable A (hgrid N') N'
+  have hWLs : ∀ N, WL N ⊆ slegal A (a / (N + 1)) N := fun N z hz => hz.1.2
+  have hWLd : Pairwise (Function.onFun Disjoint WL) := by
+    intro N N' hNN
+    rw [Function.onFun, Set.disjoint_left]
+    intro z hz hz'
+    rcases lt_or_gt_of_ne hNN with hlt | hlt
+    · exact hz'.2 (Set.mem_iUnion₂.mpr ⟨N, Finset.mem_range.mpr hlt, hz.1.2⟩)
+    · exact hz.2 (Set.mem_iUnion₂.mpr ⟨N', Finset.mem_range.mpr hlt, hz'.1.2⟩)
+  have hWLu : (⋃ N, WL N) = W := by
+    ext z
+    simp only [Set.mem_iUnion]
+    constructor
+    · rintro ⟨N, hz⟩
+      exact hz.1.1
+    · intro hz
+      have hex : ∃ N : ℕ, z ∈ slegal A (a / (N + 1)) N := by
+        obtain ⟨hzK, hq0z, ⟨σ, hσ0, hσtraj, hσS⟩, hno⟩ := hz
+        rw [← hσ0] at hσS
+        obtain ⟨N, hN⟩ := slegal_of_traj q.holo A ha hσtraj hσS
+        rw [hσ0] at hN
+        exact ⟨N, hN⟩
+      refine ⟨Nat.find hex, ⟨hz, Nat.find_spec hex⟩, ?_⟩
+      intro hmem
+      obtain ⟨N', hN'mem, hN'⟩ := Set.mem_iUnion₂.mp hmem
+      exact Nat.find_min hex (Finset.mem_range.mp hN'mem) hN'
+  have hB : ∀ N : ℕ, ∀ z ∈ WL N, pos A (a / (N + 1)) (N + 1) z
+      ∈ ⋃ z₀ ∈ Z, Metric.ball z₀ (δ z₀) := by
+    intro N z hz
+    obtain ⟨hzK, hq0z, hyes, hno⟩ := hz.1.1
+    have hzim : 0 < z.im := hKH hzK
+    obtain ⟨z₀, hz₀im, hz₀0, hz₀dist, σa, hpre, hreach⟩ :=
+      window_endpoint_located hΓ hcc q hq0 A hη htrack hzim hq0z ha haT hε hε1
+        hyes hno hdata
+    obtain ⟨hz₀Z, hcap⟩ := hcapture z₀ hz₀im hz₀0 ⟨z, hzK, hzim, hz₀dist⟩
+    have hball : σa a ∈ Metric.ball z₀ (δ z₀) := hcap (σa a) hreach
+    obtain ⟨hσa0, hσatraj, hσaS⟩ := hpre
+    have htraj' : IsTrajOn q σa
+        (Set.Icc 0 (((N + 1 : ℕ) : ℝ) * (a / (N + 1)))) := by
+      rw [hTeq N]
+      exact hσatraj
+    have hS' : SlopeAt (A.Φ (A.sel z)) σa
+        (Set.Icc 0 (((N + 1 : ℕ) : ℝ) * (a / (N + 1)))) 0 1 := by
+      rw [hTeq N]
+      exact hσaS
+    have hposeq : pos A (a / (N + 1)) (N + 1) z = σa a := by
+      have h1 := pos_eq_traj A (hgrid N) hz.1.2 hσa0 htraj' hS'
+      rw [hTeq N] at h1
+      exact h1
+    rw [hposeq]
+    exact Set.mem_iUnion₂.mpr ⟨z₀, hz₀Z, hball⟩
+  calc ∫⁻ w in W, ‖(q : ℂ → ℂ) w‖ₑ
+      = ∫⁻ w in ⋃ N, WL N, ‖(q : ℂ → ℂ) w‖ₑ := by rw [hWLu]
+    _ ≤ 2 * ∫⁻ w in ⋃ z₀ ∈ Z, Metric.ball z₀ (δ z₀), ‖(q : ℂ → ℂ) w‖ₑ :=
+        grid_union_push hqm A ha hWLm hWLs hWLd hB
+    _ ≤ 2 * ENNReal.ofReal (Cmass * ε ^ 2) := mul_le_mul_right hmassB 2
+
+/-- **Zeroth window bound**: the seeds of a compact set dying before time `ε` lie in the
+pool balls, so their `|q|`-mass is at most the pool-ball mass. -/
+theorem window0_bound {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
+    (hΓ : IsFuchsianGroup Γ)
+    (hcc : CompactSpace (Quotient (MulAction.orbitRel Γ UpperHalfPlane)))
+    (q : QuadraticDifferential Γ) (hq0 : ∃ z₀ : ℂ, 0 < z₀.im ∧ q z₀ ≠ 0)
+    (A : Atlas (q : ℂ → ℂ)) {η : ℝ} (hη : 0 < η)
+    (htrack : ∀ (σ : ℝ → ℂ) (T : ℝ), 0 ≤ T → IsTrajOn q σ (Set.Icc 0 T) →
+      ∀ u, u ∈ Set.Icc 0 T → ∀ h1 : 0 < (σ u).im, ∀ h0 : 0 < (σ 0).im,
+        dist (⟨σ u, h1⟩ : UpperHalfPlane) (⟨σ 0, h0⟩ : UpperHalfPlane)
+          ≤ (Nat.ceil (T / (η / 2)) : ℝ))
+    {M : ℂ → ℕ} {r₀ C₁ C₂ : ℂ → ℝ}
+    (hdata : ∀ z₀ : ℂ, 0 < z₀.im → q z₀ = 0 → 0 < r₀ z₀ ∧ 0 < C₁ z₀ ∧
+      ∀ w ∈ Metric.ball z₀ (r₀ z₀),
+        C₁ z₀ * ‖w - z₀‖ ^ M z₀ ≤ ‖q w‖ ∧ ‖q w‖ ≤ C₂ z₀ * ‖w - z₀‖ ^ M z₀)
+    {K : Set ℂ} (hKH : K ⊆ {z : ℂ | 0 < z.im})
+    {Z : Finset ℂ} {δ : ℂ → ℝ} {T ε Cmass : ℝ}
+    (hε : 0 < ε) (hε1 : ε ≤ 1)
+    (hcapture : ∀ z₀ : ℂ, ∀ hz₀ : 0 < z₀.im, q z₀ = 0 →
+      (∃ z ∈ K, ∃ hz : 0 < z.im, dist (⟨z₀, hz₀⟩ : UpperHalfPlane)
+        (⟨z, hz⟩ : UpperHalfPlane)
+        ≤ (Nat.ceil (T / (η / 2)) : ℝ) + (Nat.ceil (1 / (η / 2)) : ℝ) + 1) →
+      z₀ ∈ Z ∧ ∀ w : ℂ,
+        C₁ z₀ / (2 ^ M z₀ * 16)
+            * min ‖w - z₀‖ (r₀ z₀ / 2) ^ (M z₀ + 2) ≤ ε ^ 2 →
+        w ∈ Metric.ball z₀ (δ z₀))
+    (hmassB : ∫⁻ v in ⋃ z₀ ∈ Z, Metric.ball z₀ (δ z₀), ‖(q : ℂ → ℂ) v‖ₑ
+      ≤ ENNReal.ofReal (Cmass * ε ^ 2)) :
+    ∫⁻ w in {z ∈ K | q z ≠ 0 ∧
+        ¬∃ σ : ℝ → ℂ, σ 0 = z ∧ IsTrajOn q σ (Set.Icc 0 ε) ∧
+          SlopeAt (A.Φ (A.sel z)) σ (Set.Icc 0 ε) 0 1},
+      ‖(q : ℂ → ℂ) w‖ₑ ≤ ENNReal.ofReal (Cmass * ε ^ 2) := by
+  refine le_trans (lintegral_mono_set ?_) hmassB
+  rintro z ⟨hzK, hq0z, hno⟩
+  have hzim : 0 < z.im := hKH hzK
+  obtain ⟨c, σ, hc0, hcε, hσ0, hσ, hσS, hmax⟩ :=
+    dying_data q.holo A hzim hq0z hε hno
+  obtain ⟨z₀, hz₀im, hz₀0, ⟨u, hu, hunear⟩, hreach⟩ :=
+    dying_seed_located hΓ hcc q hq0 hc0 hcε hσ hmax hdata
+  rw [hσ0] at hreach
+  have hσu : IsTrajOn q σ (Set.Icc 0 u) :=
+    traj_mono hσ fun v hv => ⟨hv.1, lt_of_le_of_lt hv.2 hu.2⟩
+  have himu : 0 < (σ u).im :=
+    (traj_regular hσu (Set.right_mem_Icc.mpr hu.1)).1
+  have him0 : 0 < (σ 0).im := (traj_regular hσu (Set.left_mem_Icc.mpr hu.1)).1
+  have hd1 : dist (⟨z₀, hz₀im⟩ : UpperHalfPlane)
+      (⟨σ u, himu⟩ : UpperHalfPlane) ≤ 1 := by
+    refine near_height_dist himu ?_ hz₀im
+    rw [norm_sub_rev]
+    exact hunear
+  have hu1 : u ≤ 1 := le_trans hu.2.le (le_trans hcε hε1)
+  have hd2 : dist (⟨σ u, himu⟩ : UpperHalfPlane) (⟨σ 0, him0⟩ : UpperHalfPlane)
+      ≤ (Nat.ceil (1 / (η / 2)) : ℝ) := by
+    refine le_trans
+      (htrack σ u hu.1 hσu u (Set.right_mem_Icc.mpr hu.1) himu him0) ?_
+    have hcle : Nat.ceil (u / (η / 2)) ≤ Nat.ceil (1 / (η / 2)) :=
+      Nat.ceil_le_ceil (by gcongr)
+    exact_mod_cast hcle
+  have he0 : (⟨σ 0, him0⟩ : UpperHalfPlane) = ⟨z, hzim⟩ :=
+    UpperHalfPlane.ext hσ0
+  have hdist : dist (⟨z₀, hz₀im⟩ : UpperHalfPlane) (⟨z, hzim⟩ : UpperHalfPlane)
+      ≤ (Nat.ceil (T / (η / 2)) : ℝ) + (Nat.ceil (1 / (η / 2)) : ℝ) + 1 := by
+    rw [← he0]
+    have htri := dist_triangle (⟨z₀, hz₀im⟩ : UpperHalfPlane)
+      (⟨σ u, himu⟩ : UpperHalfPlane) (⟨σ 0, him0⟩ : UpperHalfPlane)
+    have hTnn : (0 : ℝ) ≤ (Nat.ceil (T / (η / 2)) : ℝ) := Nat.cast_nonneg _
+    linarith
+  obtain ⟨hz₀Z, hcap⟩ := hcapture z₀ hz₀im hz₀0 ⟨z, hzK, hzim, hdist⟩
+  exact Set.mem_iUnion₂.mpr ⟨z₀, hz₀Z, hcap z hreach⟩
+
+/-- **Dying-set mass bound**: over a compact seed set, for every fine enough
+subdivision the dying-set mass is at most `n · 2 · Cp · (T/n)²`. -/
+theorem dying_mass_bound {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
+    (hΓ : IsFuchsianGroup Γ)
+    (hcc : CompactSpace (Quotient (MulAction.orbitRel Γ UpperHalfPlane)))
+    (q : QuadraticDifferential Γ) (hq0 : ∃ z₀ : ℂ, 0 < z₀.im ∧ q z₀ ≠ 0)
+    (hqm : Measurable (q : ℂ → ℂ)) (A : Atlas (q : ℂ → ℂ))
+    {η : ℝ} (hη : 0 < η)
+    (htrack : ∀ (σ : ℝ → ℂ) (T : ℝ), 0 ≤ T → IsTrajOn q σ (Set.Icc 0 T) →
+      ∀ u, u ∈ Set.Icc 0 T → ∀ h1 : 0 < (σ u).im, ∀ h0 : 0 < (σ 0).im,
+        dist (⟨σ u, h1⟩ : UpperHalfPlane) (⟨σ 0, h0⟩ : UpperHalfPlane)
+          ≤ (Nat.ceil (T / (η / 2)) : ℝ))
+    {M : ℂ → ℕ} {r₀ C₁ C₂ : ℂ → ℝ}
+    (hdata : ∀ z₀ : ℂ, 0 < z₀.im → q z₀ = 0 → 0 < r₀ z₀ ∧ 0 < C₁ z₀ ∧
+      0 ≤ C₂ z₀ ∧ ∀ w ∈ Metric.ball z₀ (r₀ z₀),
+        C₁ z₀ * ‖w - z₀‖ ^ M z₀ ≤ ‖q w‖ ∧ ‖q w‖ ≤ C₂ z₀ * ‖w - z₀‖ ^ M z₀)
+    {K : Set ℂ} (hKc : IsCompact K) (hKne : K.Nonempty)
+    (hKH : K ⊆ {z : ℂ | 0 < z.im}) {T : ℝ} (hT : 0 < T) :
+    ∃ Cp : ℝ, 0 ≤ Cp ∧ ∃ n₀ : ℕ, ∀ n : ℕ, n₀ ≤ n → 1 ≤ n →
+      ∫⁻ w in {z ∈ K | q z ≠ 0 ∧
+          ¬∃ σ : ℝ → ℂ, σ 0 = z ∧ IsTrajOn q σ (Set.Icc 0 T) ∧
+            SlopeAt (A.Φ (A.sel z)) σ (Set.Icc 0 T) 0 1},
+        ‖(q : ℂ → ℂ) w‖ₑ
+        ≤ (n : ℝ≥0∞) * (2 * ENNReal.ofReal (Cp * (T / n) ^ 2)) := by
+  classical
+  have hdata' : ∀ z₀ : ℂ, 0 < z₀.im → q z₀ = 0 → 0 < r₀ z₀ ∧ 0 < C₁ z₀ ∧
+      ∀ w ∈ Metric.ball z₀ (r₀ z₀), C₁ z₀ * ‖w - z₀‖ ^ M z₀ ≤ ‖q w‖ ∧
+        ‖q w‖ ≤ C₂ z₀ * ‖w - z₀‖ ^ M z₀ := fun z₀ h1 h2 =>
+    ⟨(hdata z₀ h1 h2).1, (hdata z₀ h1 h2).2.1, (hdata z₀ h1 h2).2.2.2⟩
+  obtain ⟨Z, ε₀, Cp, hε₀, hCp, hpool⟩ := pool q hq0 hKc hKne hKH
+    ((Nat.ceil (T / (η / 2)) : ℝ) + (Nat.ceil (1 / (η / 2)) : ℝ) + 1) hdata
+  have hmin : (0 : ℝ) < min 1 ε₀ := lt_min one_pos hε₀
+  obtain ⟨n₀, hn₀⟩ := exists_nat_gt (T / min 1 ε₀)
+  refine ⟨Cp, hCp, n₀, fun n hn hn1 => ?_⟩
+  set ε : ℝ := T / n with hεdef
+  have hnpos : (0 : ℝ) < n := by exact_mod_cast hn1
+  have hε : 0 < ε := by rw [hεdef]; positivity
+  have hεmin : ε ≤ min 1 ε₀ := by
+    rw [div_lt_iff₀ hmin] at hn₀
+    have hn' : (n₀ : ℝ) ≤ n := by exact_mod_cast hn
+    rw [hεdef, div_le_iff₀ hnpos]
+    nlinarith [mul_le_mul_of_nonneg_right hn' hmin.le]
+  have hε1 : ε ≤ 1 := le_trans hεmin (min_le_left _ _)
+  have hεε₀ : ε ≤ ε₀ := le_trans hεmin (min_le_right _ _)
+  obtain ⟨δ, hcapture, hmassB⟩ := hpool ε hε hεε₀
+  have hnε : (n : ℝ) * ε = T := by
+    rw [hεdef]
+    field_simp
+  set W0 : Set ℂ := {z ∈ K | q z ≠ 0 ∧
+      ¬∃ σ : ℝ → ℂ, σ 0 = z ∧ IsTrajOn q σ (Set.Icc 0 ε) ∧
+        SlopeAt (A.Φ (A.sel z)) σ (Set.Icc 0 ε) 0 1} with hW0def
+  set Wk : ℕ → Set ℂ := fun k => {z ∈ K | q z ≠ 0 ∧
+      (∃ σ : ℝ → ℂ, σ 0 = z ∧ IsTrajOn q σ (Set.Icc 0 ((k : ℝ) * ε)) ∧
+        SlopeAt (A.Φ (A.sel z)) σ (Set.Icc 0 ((k : ℝ) * ε)) 0 1) ∧
+      ¬∃ σ : ℝ → ℂ, σ 0 = z ∧ IsTrajOn q σ (Set.Icc 0 ((k : ℝ) * ε + ε)) ∧
+        SlopeAt (A.Φ (A.sel z)) σ (Set.Icc 0 ((k : ℝ) * ε + ε)) 0 1} with hWkdef
+  have hcover : {z ∈ K | q z ≠ 0 ∧
+      ¬∃ σ : ℝ → ℂ, σ 0 = z ∧ IsTrajOn q σ (Set.Icc 0 T) ∧
+        SlopeAt (A.Φ (A.sel z)) σ (Set.Icc 0 T) 0 1}
+      ⊆ W0 ∪ ⋃ k ∈ Finset.Icc 1 (n - 1), Wk k := by
+    rintro z ⟨hzK, hq0z, hno⟩
+    set P : ℕ → Prop := fun k => 0 < k ∧ ∃ σ : ℝ → ℂ, σ 0 = z ∧
+      IsTrajOn q σ (Set.Icc 0 ((k : ℝ) * ε)) ∧
+      SlopeAt (A.Φ (A.sel z)) σ (Set.Icc 0 ((k : ℝ) * ε)) 0 1 with hPdef
+    by_cases hPex : ∃ m, m ≤ n - 1 ∧ P m
+    · right
+      obtain ⟨m, hm, hPm⟩ := hPex
+      have hPk₀ : P (Nat.findGreatest P (n - 1)) := Nat.findGreatest_spec hm hPm
+      set k₀ : ℕ := Nat.findGreatest P (n - 1) with hk₀def
+      have hk₀1 : 1 ≤ k₀ := hPk₀.1
+      have hk₀le : k₀ ≤ n - 1 := Nat.findGreatest_le _
+      have hnocert : ¬∃ σ : ℝ → ℂ, σ 0 = z ∧
+          IsTrajOn q σ (Set.Icc 0 ((k₀ : ℝ) * ε + ε)) ∧
+          SlopeAt (A.Φ (A.sel z)) σ (Set.Icc 0 ((k₀ : ℝ) * ε + ε)) 0 1 := by
+        have hcast : (k₀ : ℝ) * ε + ε = ((k₀ + 1 : ℕ) : ℝ) * ε := by
+          push_cast
+          ring
+        rw [hcast]
+        by_cases hk₀n : k₀ + 1 ≤ n - 1
+        · have hnP := Nat.findGreatest_is_greatest (Nat.lt_succ_self k₀) hk₀n
+          intro hcert
+          exact hnP ⟨Nat.succ_pos k₀, hcert⟩
+        · have hk₀eq : k₀ + 1 = n := by omega
+          rw [hk₀eq, show ((n : ℕ) : ℝ) * ε = T from hnε]
+          exact hno
+      exact Set.mem_iUnion₂.mpr ⟨k₀, Finset.mem_Icc.mpr ⟨hk₀1, hk₀le⟩,
+        ⟨hzK, hq0z, hPk₀.2, hnocert⟩⟩
+    · left
+      refine ⟨hzK, hq0z, ?_⟩
+      rintro ⟨σ, hσ0, hσtraj, hσS⟩
+      by_cases hn1' : n = 1
+      · have hTε : T = ε := by
+          rw [hεdef, hn1']
+          norm_num
+        exact hno ⟨σ, hσ0, by rw [hTε]; exact hσtraj, by rw [hTε]; exact hσS⟩
+      · refine hPex ⟨1, by omega, one_pos, σ, hσ0, ?_, ?_⟩
+        · rw [show ((1 : ℕ) : ℝ) * ε = ε by push_cast; ring]
+          exact hσtraj
+        · rw [show ((1 : ℕ) : ℝ) * ε = ε by push_cast; ring]
+          exact hσS
+  refine le_trans (lintegral_mono_set hcover) ?_
+  refine le_trans (lintegral_union_le _ _ _) ?_
+  have h0 : ∫⁻ w in W0, ‖(q : ℂ → ℂ) w‖ₑ ≤ ENNReal.ofReal (Cp * ε ^ 2) :=
+    window0_bound hΓ hcc q hq0 A hη htrack hdata' hKH hε hε1
+      hcapture hmassB
+  have hk : ∀ k ∈ Finset.Icc 1 (n - 1), ∫⁻ w in Wk k, ‖(q : ℂ → ℂ) w‖ₑ
+      ≤ 2 * ENNReal.ofReal (Cp * ε ^ 2) := by
+    intro k hkmem
+    obtain ⟨hk1, hkle⟩ := Finset.mem_Icc.mp hkmem
+    have hk1' : (1 : ℝ) ≤ (k : ℝ) := by exact_mod_cast hk1
+    have hka : (0 : ℝ) < (k : ℝ) * ε := by nlinarith
+    have hkaT : (k : ℝ) * ε ≤ T := by
+      rw [← hnε]
+      have h1 : (k : ℝ) ≤ (n : ℝ) := by exact_mod_cast (by omega : k ≤ n)
+      nlinarith
+    exact window_bound hΓ hcc q hq0 hqm A hη htrack hdata'
+      hKc.measurableSet hKH hka hkaT hε hε1 hcapture hmassB
+  have hsub : ∫⁻ w in ⋃ k ∈ Finset.Icc 1 (n - 1), Wk k, ‖(q : ℂ → ℂ) w‖ₑ
+      ≤ ∑ k ∈ Finset.Icc 1 (n - 1), ∫⁻ w in Wk k, ‖(q : ℂ → ℂ) w‖ₑ := by
+    have hconv : (⋃ k ∈ Finset.Icc 1 (n - 1), Wk k)
+        = ⋃ k : {x // x ∈ Finset.Icc 1 (n - 1)}, Wk (k : ℕ) := by
+      ext v
+      simp only [Set.mem_iUnion, Subtype.exists, exists_prop]
+    rw [hconv]
+    refine le_trans (lintegral_iUnion_le _ _) ?_
+    rw [tsum_fintype]
+    exact le_of_eq (Finset.sum_coe_sort _
+      fun k => ∫⁻ w in Wk k, ‖(q : ℂ → ℂ) w‖ₑ)
+  have hksum : ∑ k ∈ Finset.Icc 1 (n - 1), ∫⁻ w in Wk k, ‖(q : ℂ → ℂ) w‖ₑ
+      ≤ ((n - 1 : ℕ) : ℝ≥0∞) * (2 * ENNReal.ofReal (Cp * ε ^ 2)) := by
+    refine le_trans (Finset.sum_le_sum hk) ?_
+    rw [Finset.sum_const, Nat.card_Icc, nsmul_eq_mul]
+    simp
+  refine le_trans (add_le_add h0 (le_trans hsub hksum)) ?_
+  have hle2 : ENNReal.ofReal (Cp * ε ^ 2) ≤ 2 * ENNReal.ofReal (Cp * ε ^ 2) :=
+    le_mul_of_one_le_left (zero_le _) one_le_two
+  have hcast : ((n - 1 : ℕ) : ℝ≥0∞) + 1 = (n : ℝ≥0∞) := by
+    exact_mod_cast congrArg (Nat.cast : ℕ → ℝ≥0∞) (Nat.sub_add_cancel hn1)
+  calc ENNReal.ofReal (Cp * ε ^ 2)
+        + ((n - 1 : ℕ) : ℝ≥0∞) * (2 * ENNReal.ofReal (Cp * ε ^ 2))
+      ≤ 2 * ENNReal.ofReal (Cp * ε ^ 2)
+        + ((n - 1 : ℕ) : ℝ≥0∞) * (2 * ENNReal.ofReal (Cp * ε ^ 2)) :=
+        add_le_add hle2 le_rfl
+    _ = (((n - 1 : ℕ) : ℝ≥0∞) + 1) * (2 * ENNReal.ofReal (Cp * ε ^ 2)) := by
+        ring
+    _ = (n : ℝ≥0∞) * (2 * ENNReal.ofReal (Cp * ε ^ 2)) := by rw [hcast]
+
+/-- **Dying-set nullity on a compact**: the seeds of a compact set with no unit-slope
+trajectory of duration `T` form a volume-null set. -/
+theorem dying_null {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
+    (hΓ : IsFuchsianGroup Γ)
+    (hcc : CompactSpace (Quotient (MulAction.orbitRel Γ UpperHalfPlane)))
+    (q : QuadraticDifferential Γ) (hq0 : ∃ z₀ : ℂ, 0 < z₀.im ∧ q z₀ ≠ 0)
+    (hqm : Measurable (q : ℂ → ℂ)) (A : Atlas (q : ℂ → ℂ))
+    {η : ℝ} (hη : 0 < η)
+    (htrack : ∀ (σ : ℝ → ℂ) (T : ℝ), 0 ≤ T → IsTrajOn q σ (Set.Icc 0 T) →
+      ∀ u, u ∈ Set.Icc 0 T → ∀ h1 : 0 < (σ u).im, ∀ h0 : 0 < (σ 0).im,
+        dist (⟨σ u, h1⟩ : UpperHalfPlane) (⟨σ 0, h0⟩ : UpperHalfPlane)
+          ≤ (Nat.ceil (T / (η / 2)) : ℝ))
+    {M : ℂ → ℕ} {r₀ C₁ C₂ : ℂ → ℝ}
+    (hdata : ∀ z₀ : ℂ, 0 < z₀.im → q z₀ = 0 → 0 < r₀ z₀ ∧ 0 < C₁ z₀ ∧
+      0 ≤ C₂ z₀ ∧ ∀ w ∈ Metric.ball z₀ (r₀ z₀),
+        C₁ z₀ * ‖w - z₀‖ ^ M z₀ ≤ ‖q w‖ ∧ ‖q w‖ ≤ C₂ z₀ * ‖w - z₀‖ ^ M z₀)
+    {K : Set ℂ} (hKc : IsCompact K) (hKne : K.Nonempty)
+    (hKH : K ⊆ {z : ℂ | 0 < z.im}) {T : ℝ} (hT : 0 < T) :
+    volume {z ∈ K | q z ≠ 0 ∧
+      ¬∃ σ : ℝ → ℂ, σ 0 = z ∧ IsTrajOn q σ (Set.Icc 0 T) ∧
+        SlopeAt (A.Φ (A.sel z)) σ (Set.Icc 0 T) 0 1} = 0 := by
+  obtain ⟨Cp, hCp, n₀, hbound⟩ := dying_mass_bound hΓ hcc q hq0 hqm A hη
+    htrack hdata hKc hKne hKH hT
+  set D : Set ℂ := {z ∈ K | q z ≠ 0 ∧
+    ¬∃ σ : ℝ → ℂ, σ 0 = z ∧ IsTrajOn q σ (Set.Icc 0 T) ∧
+      SlopeAt (A.Φ (A.sel z)) σ (Set.Icc 0 T) 0 1} with hDdef
+  have hmass : ∫⁻ w in D, ‖(q : ℂ → ℂ) w‖ₑ = 0 := by
+    have hreal : Filter.Tendsto (fun n : ℕ => 2 * Cp * T ^ 2 / n)
+        Filter.atTop (nhds 0) := tendsto_const_div_atTop_nhds_zero_nat _
+    have htend : Filter.Tendsto
+        (fun n : ℕ => ENNReal.ofReal (2 * Cp * T ^ 2 / n))
+        Filter.atTop (nhds 0) := by
+      have := ENNReal.tendsto_ofReal hreal
+      rwa [ENNReal.ofReal_zero] at this
+    have htend' : Filter.Tendsto
+        (fun n : ℕ => (n : ℝ≥0∞) * (2 * ENNReal.ofReal (Cp * (T / n) ^ 2)))
+        Filter.atTop (nhds 0) := by
+      refine Filter.Tendsto.congr' ?_ htend
+      filter_upwards [Filter.eventually_ge_atTop 1] with n hn1
+      have hnpos : (0 : ℝ) < n := by exact_mod_cast hn1
+      have h2 : (2 : ℝ≥0∞) = ENNReal.ofReal 2 := by
+        rw [ENNReal.ofReal_ofNat]
+      have hn : (n : ℝ≥0∞) = ENNReal.ofReal (n : ℝ) := by
+        rw [ENNReal.ofReal_natCast]
+      rw [hn, h2, ← ENNReal.ofReal_mul (by norm_num : (0 : ℝ) ≤ 2),
+        ← ENNReal.ofReal_mul (Nat.cast_nonneg n)]
+      congr 1
+      field_simp
+    refine le_antisymm ?_ (zero_le _)
+    refine ge_of_tendsto htend' ?_
+    filter_upwards [Filter.eventually_ge_atTop n₀, Filter.eventually_ge_atTop 1]
+      with n h1 h2
+    exact hbound n h1 h2
+  have hDsub : D ⊆ {w : ℂ | ‖(q : ℂ → ℂ) w‖ₑ ≠ 0} := by
+    rintro z ⟨-, hq0z, -⟩
+    simpa using hq0z
+  have hae := (lintegral_eq_zero_iff hqm.enorm).mp hmass
+  have hnull : volume.restrict D {w : ℂ | ‖(q : ℂ → ℂ) w‖ₑ ≠ 0} = 0 := by
+    have := ae_iff.mp hae
+    simpa using this
+  refine le_antisymm ?_ (zero_le _)
+  calc volume D = volume.restrict D D := by rw [Measure.restrict_apply_self]
+    _ ≤ volume.restrict D {w : ℂ | ‖(q : ℂ → ℂ) w‖ₑ ≠ 0} := measure_mono hDsub
+    _ = 0 := hnull
+
+/-- **Forward almost-everywhere completeness**: almost every point of the upper half
+plane with `q ≠ 0` admits a unit-slope trajectory of every duration. -/
+theorem forward_good_ae {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
+    (hΓ : IsFuchsianGroup Γ)
+    (hcc : CompactSpace (Quotient (MulAction.orbitRel Γ UpperHalfPlane)))
+    (q : QuadraticDifferential Γ) (hq0 : ∃ z₀ : ℂ, 0 < z₀.im ∧ q z₀ ≠ 0)
+    (hqm : Measurable (q : ℂ → ℂ)) (A : Atlas (q : ℂ → ℂ))
+    {η : ℝ} (hη : 0 < η)
+    (htrack : ∀ (σ : ℝ → ℂ) (T : ℝ), 0 ≤ T → IsTrajOn q σ (Set.Icc 0 T) →
+      ∀ u, u ∈ Set.Icc 0 T → ∀ h1 : 0 < (σ u).im, ∀ h0 : 0 < (σ 0).im,
+        dist (⟨σ u, h1⟩ : UpperHalfPlane) (⟨σ 0, h0⟩ : UpperHalfPlane)
+          ≤ (Nat.ceil (T / (η / 2)) : ℝ))
+    {M : ℂ → ℕ} {r₀ C₁ C₂ : ℂ → ℝ}
+    (hdata : ∀ z₀ : ℂ, 0 < z₀.im → q z₀ = 0 → 0 < r₀ z₀ ∧ 0 < C₁ z₀ ∧
+      0 ≤ C₂ z₀ ∧ ∀ w ∈ Metric.ball z₀ (r₀ z₀),
+        C₁ z₀ * ‖w - z₀‖ ^ M z₀ ≤ ‖q w‖ ∧ ‖q w‖ ≤ C₂ z₀ * ‖w - z₀‖ ^ M z₀) :
+    ∀ᵐ z ∂(volume.restrict {z : ℂ | 0 < z.im}), q z ≠ 0 →
+      ∀ T : ℝ, 0 < T → ∃ σ : ℝ → ℂ, σ 0 = z ∧ IsTrajOn q σ (Set.Icc 0 T) ∧
+        SlopeAt (A.Φ (A.sel z)) σ (Set.Icc 0 T) 0 1 := by
+  have hSm : MeasurableSet {z : ℂ | 0 < z.im} :=
+    measurableSet_lt measurable_const Complex.measurable_im
+  rw [ae_restrict_iff' hSm, ae_iff]
+  set K : ℕ → Set ℂ := fun m => Metric.closedBall 0 ((m : ℝ) + 1)
+    ∩ {z : ℂ | 1 / ((m : ℝ) + 1) ≤ z.im} with hKdef
+  have hKc : ∀ m, IsCompact (K m) := fun m =>
+    (isCompact_closedBall _ _).inter_right
+      (isClosed_le continuous_const Complex.continuous_im)
+  have hKne : ∀ m, (K m).Nonempty := by
+    intro m
+    have hm0 : (0 : ℝ) ≤ (m : ℝ) := Nat.cast_nonneg m
+    refine ⟨Complex.I, ?_, ?_⟩
+    · rw [Metric.mem_closedBall, dist_zero_right, Complex.norm_I]
+      linarith
+    · show 1 / ((m : ℝ) + 1) ≤ Complex.I.im
+      rw [Complex.I_im, div_le_one (by positivity)]
+      linarith
+  have hKH : ∀ m, K m ⊆ {z : ℂ | 0 < z.im} := fun m z hz => by
+    have h1 : (0 : ℝ) < 1 / ((m : ℝ) + 1) := by positivity
+    exact lt_of_lt_of_le h1 hz.2
+  refine measure_mono_null ?_ (measure_iUnion_null fun m : ℕ =>
+    measure_iUnion_null fun j : ℕ =>
+      dying_null hΓ hcc q hq0 hqm A hη htrack hdata (hKc m) (hKne m)
+        (hKH m) (by positivity : (0 : ℝ) < (j : ℝ) + 1))
+  intro z hz
+  simp only [Set.mem_setOf_eq] at hz
+  push Not at hz
+  obtain ⟨hzS, hq0z, T, hT, hno⟩ := hz
+  have him : 0 < z.im := hzS
+  obtain ⟨m₁, hm₁⟩ := exists_nat_ge ‖z‖
+  obtain ⟨m₂, hm₂⟩ := exists_nat_ge (1 / z.im)
+  have hzK : z ∈ K (max m₁ m₂) := by
+    have hc1 : (m₁ : ℝ) ≤ ((max m₁ m₂ : ℕ) : ℝ) := by
+      exact_mod_cast le_max_left m₁ m₂
+    have hc2 : (m₂ : ℝ) ≤ ((max m₁ m₂ : ℕ) : ℝ) := by
+      exact_mod_cast le_max_right m₁ m₂
+    refine ⟨?_, ?_⟩
+    · rw [Metric.mem_closedBall, dist_zero_right]
+      linarith
+    · change 1 / (((max m₁ m₂ : ℕ) : ℝ) + 1) ≤ z.im
+      rw [div_le_iff₀ (by positivity)]
+      rw [div_le_iff₀ him] at hm₂
+      nlinarith
+  obtain ⟨j, hj⟩ := exists_nat_ge T
+  have hno' : ¬∃ σ : ℝ → ℂ, σ 0 = z ∧
+      IsTrajOn q σ (Set.Icc 0 ((j : ℝ) + 1)) ∧
+      SlopeAt (A.Φ (A.sel z)) σ (Set.Icc 0 ((j : ℝ) + 1)) 0 1 := by
+    rintro ⟨σ, hσ0, hσtraj, hσS⟩
+    have h1 : ∀ᶠ v in nhdsWithin 0 (Set.Icc 0 ((j : ℝ) + 1)),
+        A.Φ (A.sel z) (σ v)
+        = A.Φ (A.sel z) (σ 0) + ((1 : ℝ) : ℂ) * ((v - 0 : ℝ) : ℂ) := hσS
+    rw [nhdsWithin_left (by linarith : T ≤ (j : ℝ) + 1) hT] at h1
+    exact hno σ hσ0
+      (traj_mono hσtraj (Set.Icc_subset_Icc le_rfl (by linarith))) h1
+  exact Set.mem_iUnion.mpr ⟨max m₁ m₂,
+    Set.mem_iUnion.mpr ⟨j, hzK, hq0z, hno'⟩⟩
+
+
+open Classical in
+/-- **The mirror atlas**: the same margin atlas with reversed development orientation on
+the active charts. -/
+noncomputable def mirrorAtlas {q : ℂ → ℂ} (A : Atlas q) : Atlas q where
+  c := A.c
+  r := A.r
+  Φ := fun j => if A.active j then fun w => -(A.Φ j w) else id
+  active := A.active
+  hr := A.hr
+  hH := A.hH
+  hne := A.hne
+  hd := fun j hj => by
+    rw [if_pos hj]
+    exact (A.hd j hj).neg
+  hinj := fun j hj => by
+    rw [if_pos hj]
+    intro x hx y hy hxy
+    exact A.hinj j hj hx hy (neg_injective hxy)
+  hsq := fun j hj w hw => by
+    rw [if_pos hj]
+    have h1 : deriv (fun v => -(A.Φ j v)) w = -deriv (A.Φ j) w := deriv.neg
+    rw [h1, neg_sq]
+    exact A.hsq j hj w hw
+  hcover := A.hcover
+  hjunk := fun j hj => if_neg hj
+
+/-- The mirror atlas has the same chart selector. -/
+theorem mirror_sel {q : ℂ → ℂ} (A : Atlas q) :
+    (mirrorAtlas A).sel = A.sel := rfl
+
+/-- On active indices the mirror chart is the negated chart. -/
+theorem mirror_Φ {q : ℂ → ℂ} (A : Atlas q) {j : ℕ} (hj : A.active j) :
+    (mirrorAtlas A).Φ j = fun w => -(A.Φ j w) := if_pos hj
+
+/-- **Backward almost-everywhere completeness**: almost every point with `q ≠ 0` admits
+a reversely oriented trajectory of every duration, by mirroring the atlas. -/
+theorem backward_good_ae {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
+    (hΓ : IsFuchsianGroup Γ)
+    (hcc : CompactSpace (Quotient (MulAction.orbitRel Γ UpperHalfPlane)))
+    (q : QuadraticDifferential Γ) (hq0 : ∃ z₀ : ℂ, 0 < z₀.im ∧ q z₀ ≠ 0)
+    (hqm : Measurable (q : ℂ → ℂ)) (A : Atlas (q : ℂ → ℂ))
+    {η : ℝ} (hη : 0 < η)
+    (htrack : ∀ (σ : ℝ → ℂ) (T : ℝ), 0 ≤ T → IsTrajOn q σ (Set.Icc 0 T) →
+      ∀ u, u ∈ Set.Icc 0 T → ∀ h1 : 0 < (σ u).im, ∀ h0 : 0 < (σ 0).im,
+        dist (⟨σ u, h1⟩ : UpperHalfPlane) (⟨σ 0, h0⟩ : UpperHalfPlane)
+          ≤ (Nat.ceil (T / (η / 2)) : ℝ))
+    {M : ℂ → ℕ} {r₀ C₁ C₂ : ℂ → ℝ}
+    (hdata : ∀ z₀ : ℂ, 0 < z₀.im → q z₀ = 0 → 0 < r₀ z₀ ∧ 0 < C₁ z₀ ∧
+      0 ≤ C₂ z₀ ∧ ∀ w ∈ Metric.ball z₀ (r₀ z₀),
+        C₁ z₀ * ‖w - z₀‖ ^ M z₀ ≤ ‖q w‖ ∧ ‖q w‖ ≤ C₂ z₀ * ‖w - z₀‖ ^ M z₀) :
+    ∀ᵐ z ∂(volume.restrict {z : ℂ | 0 < z.im}), q z ≠ 0 →
+      ∀ T : ℝ, 0 < T → ∃ σ : ℝ → ℂ, σ 0 = z ∧ IsTrajOn q σ (Set.Icc 0 T) ∧
+        SlopeAt (A.Φ (A.sel z)) σ (Set.Icc 0 T) 0 (-1) := by
+  have hfwd := forward_good_ae hΓ hcc q hq0 hqm (mirrorAtlas A) hη htrack hdata
+  have hSm : MeasurableSet {z : ℂ | 0 < z.im} :=
+    measurableSet_lt measurable_const Complex.measurable_im
+  filter_upwards [hfwd, ae_restrict_mem hSm] with z hz hzS
+  intro hq0z T hT
+  obtain ⟨σ, hσ0, hσtraj, hσS⟩ := hz hq0z T hT
+  refine ⟨σ, hσ0, hσtraj, ?_⟩
+  obtain ⟨hact, -⟩ := A.sel_spec hzS hq0z
+  rw [mirror_sel, mirror_Φ A hact] at hσS
+  have h1 : ∀ᶠ v in nhdsWithin 0 (Set.Icc 0 T),
+      -(A.Φ (A.sel z) (σ v))
+        = -(A.Φ (A.sel z) (σ 0)) + ((1 : ℝ) : ℂ) * ((v - 0 : ℝ) : ℂ) := hσS
+  filter_upwards [h1] with v hv
+  show A.Φ (A.sel z) (σ v)
+    = A.Φ (A.sel z) (σ 0) + ((-1 : ℝ) : ℂ) * ((v - 0 : ℝ) : ℂ)
+  push_cast at hv ⊢
+  linear_combination -hv
+
+/-- **The full-measure two-sided regular set**: almost every point of the upper half
+plane lies in the good set of the atlas. -/
+theorem good_ae {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
+    (hΓ : IsFuchsianGroup Γ)
+    (hcc : CompactSpace (Quotient (MulAction.orbitRel Γ UpperHalfPlane)))
+    (q : QuadraticDifferential Γ) (hq0 : ∃ z₀ : ℂ, 0 < z₀.im ∧ q z₀ ≠ 0)
+    (A : Atlas (q : ℂ → ℂ)) :
+    ∀ᵐ z ∂(volume.restrict {z : ℂ | 0 < z.im}), z ∈ good (q : ℂ → ℂ) A := by
+  obtain ⟨η, hη, htrack⟩ := track_unif hΓ hcc q hq0
+  have hchoice : ∀ z₀ : ℂ, ∃ (Mz : ℕ) (rz C1z C2z : ℝ), 0 < z₀.im → q z₀ = 0 →
+      0 < rz ∧ 0 < C1z ∧ 0 ≤ C2z ∧ ∀ w ∈ Metric.ball z₀ rz,
+        C1z * ‖w - z₀‖ ^ Mz ≤ ‖q w‖ ∧ ‖q w‖ ≤ C2z * ‖w - z₀‖ ^ Mz := by
+    intro z₀
+    by_cases h : 0 < z₀.im ∧ q z₀ = 0
+    · obtain ⟨Mz, rz, C1z, C2z, hr, h1, h2, -, hb⟩ :=
+        zero_order_bounds q.holo hq0 h.1
+      exact ⟨Mz, rz, C1z, C2z, fun _ _ => ⟨hr, h1, h2.le, hb⟩⟩
+    · exact ⟨0, 1, 1, 1, fun h1 h2 => absurd ⟨h1, h2⟩ h⟩
+  choose M r₀ C₁ C₂ hdata using hchoice
+  have hfwd := forward_good_ae hΓ hcc q hq0 q.measurable A hη htrack
+    (fun z₀ h1 h2 => hdata z₀ h1 h2)
+  have hbwd := backward_good_ae hΓ hcc q hq0 q.measurable A hη htrack
+    (fun z₀ h1 h2 => hdata z₀ h1 h2)
+  have hne := q.ae_ne_zero hq0
+  have hSm : MeasurableSet {z : ℂ | 0 < z.im} :=
+    measurableSet_lt measurable_const Complex.measurable_im
+  filter_upwards [hfwd, hbwd, hne, ae_restrict_mem hSm] with z h1 h2 h3 h4
+  exact ⟨h4, h3, h1 h3, h2 h3⟩
+
+/-- **Reparametrized trajectory regularity**: the unit-time reparametrization of a
+vertical trajectory is Lipschitz with the flat speed constant, absolutely continuous,
+and tracks regular points; the density floor along the track is uniform. -/
+theorem traj_repar_ac {q : ℂ → ℂ}
+    (hq : DifferentiableOn ℂ q {z : ℂ | 0 < z.im})
+    {σ : ℝ → ℂ} {T : ℝ} (hT : 0 < T) (hσ : IsTrajOn q σ (Set.Icc 0 T)) :
+    ∃ m : ℝ, 0 < m ∧ (∀ v ∈ Set.Icc 0 T, m ≤ ‖q (σ v)‖) ∧
+      ContinuousOn (fun s => σ (s * T)) (Set.Icc 0 1) ∧
+      AbsolutelyContinuousOnInterval (fun s => σ (s * T)) 0 1 ∧
+      ∀ s ∈ Set.Icc (0 : ℝ) 1, 0 < (σ (s * T)).im ∧ q (σ (s * T)) ≠ 0 := by
+  have hreg : ∀ v ∈ Set.Icc 0 T, 0 < (σ v).im ∧ q (σ v) ≠ 0 := fun v hv =>
+    traj_regular hσ hv
+  have hqcont : ContinuousOn (fun v => ‖q (σ v)‖) (Set.Icc 0 T) := by
+    refine ContinuousOn.norm (hq.continuousOn.comp hσ.cont ?_)
+    exact fun v hv => (hreg v hv).1
+  obtain ⟨v₀, hv₀mem, hv₀min⟩ := isCompact_Icc.exists_isMinOn
+    ⟨0, Set.left_mem_Icc.mpr hT.le⟩ hqcont
+  set m : ℝ := ‖q (σ v₀)‖ with hmdef
+  have hm : 0 < m := norm_pos_iff.mpr (hreg v₀ hv₀mem).2
+  have hbound : ∀ v ∈ Set.Icc 0 T, m ≤ ‖q (σ v)‖ := fun v hv => hv₀min hv
+  have hmem : ∀ s ∈ Set.Icc (0 : ℝ) 1, s * T ∈ Set.Icc 0 T := by
+    intro s hs
+    constructor
+    · exact mul_nonneg hs.1 hT.le
+    · nlinarith [hs.2]
+  have hlip : LipschitzOnWith (Real.toNNReal (Real.sqrt m⁻¹ * T))
+      (fun s => σ (s * T)) (Set.uIcc (0 : ℝ) 1) := by
+    rw [Set.uIcc_of_le (by norm_num : (0 : ℝ) ≤ 1)]
+    rw [lipschitzOnWith_iff_dist_le_mul]
+    intro s hs s' hs'
+    rcases le_total s' s with hle | hle
+    · have h1 := traj_dist_le_Icc hσ hm hbound
+        (mul_nonneg hs'.1 hT.le)
+        (by nlinarith : s' * T ≤ s * T) (hmem s hs).2
+      rw [dist_eq_norm, Real.dist_eq,
+        Real.coe_toNNReal _ (by positivity : (0 : ℝ) ≤ Real.sqrt m⁻¹ * T)]
+      have habs : |s - s'| = s - s' := abs_of_nonneg (by linarith)
+      rw [habs]
+      calc ‖σ (s * T) - σ (s' * T)‖ ≤ Real.sqrt m⁻¹ * (s * T - s' * T) :=
+            h1
+        _ = Real.sqrt m⁻¹ * T * (s - s') := by ring
+    · have h1 := traj_dist_le_Icc hσ hm hbound
+        (mul_nonneg hs.1 hT.le)
+        (by nlinarith : s * T ≤ s' * T) (hmem s' hs').2
+      rw [dist_eq_norm, Real.dist_eq,
+        Real.coe_toNNReal _ (by positivity : (0 : ℝ) ≤ Real.sqrt m⁻¹ * T)]
+      have habs : |s - s'| = s' - s := by
+        rw [abs_of_nonpos (by linarith)]
+        ring
+      rw [habs, norm_sub_rev]
+      calc ‖σ (s' * T) - σ (s * T)‖ ≤ Real.sqrt m⁻¹ * (s' * T - s * T) :=
+            h1
+        _ = Real.sqrt m⁻¹ * T * (s' - s) := by ring
+  refine ⟨m, hm, hbound, ?_, hlip.absolutelyContinuousOnInterval, ?_⟩
+  · intro s hs
+    refine ContinuousWithinAt.comp (hσ.cont (s * T) (hmem s hs)) ?_ ?_
+    · exact ((continuous_mul_const T).continuousAt).continuousWithinAt
+    · exact fun u hu => hmem u hu
+  · exact fun s hs => hreg (s * T) (hmem s hs)
+
+/-- **Natural chart at a regular point** in the vertical convention: a ball chart whose
+squared derivative is `-q`. -/
+theorem natural_chart_at {q : ℂ → ℂ}
+    (hq : DifferentiableOn ℂ q {z : ℂ | 0 < z.im}) {z : ℂ}
+    (hzim : 0 < z.im) (hz0 : q z ≠ 0) :
+    ∃ r > 0, ∃ Φ : ℂ → ℂ, DifferentiableOn ℂ Φ (Metric.ball z r) ∧
+      ∀ w ∈ Metric.ball z r, deriv Φ w ^ 2 = -q w := by
+  have hH : IsOpen {z : ℂ | 0 < z.im} :=
+    isOpen_lt continuous_const Complex.continuous_im
+  obtain ⟨r, hr, -, Φ, hΦd, -, hΦsq⟩ :=
+    exists_natural_chart (q := fun w => -q w) hH hq.neg hzim
+      (neg_ne_zero.mpr hz0)
+  exact ⟨r, hr, Φ, hΦd, hΦsq⟩
+
+/-- **Frame-matched leafwise assembly**: the chain bound with the endpoint frames of the
+development chain pinned to the given natural charts, so that the displacement floor is
+only required for chains extending the prescribed endpoint frames. -/
+theorem leaf_lb_assembly' {q : ℂ → ℂ} {γ : ℝ → ℂ} {Φs Φe : ℂ → ℂ}
+    {rs re T : ℝ} {C : ℝ≥0∞} {ρ : ℝ → ℝ≥0∞}
+    (hγc : ContinuousOn γ (Set.Icc 0 1))
+    (hγac : AbsolutelyContinuousOnInterval γ 0 1)
+    (hatlas : ∀ x ∈ γ '' Set.Icc 0 1, ∃ r > 0, ∃ Φ : ℂ → ℂ,
+      DifferentiableOn ℂ Φ (Metric.ball x r) ∧
+      ∀ z ∈ Metric.ball x r, deriv Φ z ^ 2 = -q z)
+    (hrs : 0 < rs) (hre : 0 < re)
+    (hΦs : DifferentiableOn ℂ Φs (Metric.ball (γ 0) rs))
+    (hΦsq : ∀ z ∈ Metric.ball (γ 0) rs, deriv Φs z ^ 2 = -q z)
+    (hΦe : DifferentiableOn ℂ Φe (Metric.ball (γ 1) re))
+    (hΦeq : ∀ z ∈ Metric.ball (γ 1) re, deriv Φe z ^ 2 = -q z)
+    (hrepar : ∫⁻ s in Set.Icc (0 : ℝ) 1, horizontalDensity q γ s
+      ≤ ∫⁻ t in Set.Icc (0 : ℝ) T, ρ t)
+    (hdisp : ∀ n : ℕ, ∀ D : DevChain q γ (n + 1), D.t 0 = 0 → D.t (n + 1) = 1 →
+      D.Φ 0 = Φs → D.Φ n = Φe →
+      ENNReal.ofReal T ≤ ENNReal.ofReal
+        |chainPull D.ε D.c n ((Φe (γ 1)).re) - (Φs (γ 0)).re| + 2 * C) :
+    ENNReal.ofReal T ≤ (∫⁻ t in Set.Icc (0 : ℝ) T, ρ t) + 2 * C := by
+  obtain ⟨n, D, ht0, htn, hΦ0, hΦn⟩ :=
+    exists_devChain hγc hγac hatlas hrs hre hΦs hΦsq hΦe hΦeq
+  have hvar := devChain_variation_lb n D
+  rw [ht0, htn, hΦ0, hΦn] at hvar
+  calc ENNReal.ofReal T
+      ≤ ENNReal.ofReal
+          |chainPull D.ε D.c n ((Φe (γ 1)).re) - (Φs (γ 0)).re| + 2 * C :=
+        hdisp n D ht0 htn hΦ0 hΦn
+    _ ≤ (∫⁻ s in Set.Icc (0 : ℝ) 1, horizontalDensity q γ s) + 2 * C :=
+        add_le_add hvar le_rfl
+    _ ≤ (∫⁻ t in Set.Icc (0 : ℝ) T, ρ t) + 2 * C := add_le_add hrepar le_rfl
+
+/-- **Chain displacement is at most the flat length**: the pulled endpoint displacement
+of any full development chain along a curve is bounded by the flat length of the
+curve. -/
+theorem chain_disp_le_qdLength {q : ℂ → ℂ} {γ : ℝ → ℂ}
+    (n : ℕ) (D : DevChain q γ (n + 1)) (ht0 : D.t 0 = 0)
+    (htn : D.t (n + 1) = 1) :
+    ENNReal.ofReal |chainPull D.ε D.c n ((D.Φ n (γ (D.t (n + 1)))).re)
+        - (D.Φ 0 (γ (D.t 0))).re|
+      ≤ qdLength q γ := by
+  refine le_trans (devChain_variation_lb n D) ?_
+  rw [ht0, htn]
+  exact horizontalVariation_le_qdLength q γ
+
+/-- **Near-optimal flat paths**: below any strict overshoot of the flat distance there
+is a connecting flat path of that length. -/
+theorem exists_near_optimal_path {q : ℂ → ℂ} {z w : ℂ} {B : ℝ≥0∞}
+    (hlt : qdDist q z w < B) :
+    ∃ γ : ℝ → ℂ, IsFlatPath γ z w ∧ qdLength q γ < B := by
+  have h1 : ⨅ (γ : ℝ → ℂ) (_ : IsFlatPath γ z w), qdLength q γ < B := hlt
+  obtain ⟨γ, hγ⟩ := iInf_lt_iff.mp h1
+  obtain ⟨hpath, hlen⟩ := iInf_lt_iff.mp hγ
+  exact ⟨γ, hpath, hlen⟩
+
+/-- **Development chains with natural pieces**: the chain construction additionally
+exposes, for every piece, a chart ball containing the piece track on which the chain
+frame is a natural chart of `-q`. -/
+theorem exists_devChain' {q : ℂ → ℂ} {σ : ℝ → ℂ} {Φs Φe : ℂ → ℂ} {rs re : ℝ}
+    (hσc : ContinuousOn σ (Set.Icc 0 1))
+    (hσac : AbsolutelyContinuousOnInterval σ 0 1)
+    (hatlas : ∀ x ∈ σ '' Set.Icc 0 1, ∃ r > 0, ∃ Φ : ℂ → ℂ,
+      DifferentiableOn ℂ Φ (Metric.ball x r) ∧
+      ∀ z ∈ Metric.ball x r, deriv Φ z ^ 2 = -q z)
+    (hrs : 0 < rs) (hre : 0 < re)
+    (hΦs : DifferentiableOn ℂ Φs (Metric.ball (σ 0) rs))
+    (hΦsq : ∀ z ∈ Metric.ball (σ 0) rs, deriv Φs z ^ 2 = -q z)
+    (hΦe : DifferentiableOn ℂ Φe (Metric.ball (σ 1) re))
+    (hΦeq : ∀ z ∈ Metric.ball (σ 1) re, deriv Φe z ^ 2 = -q z) :
+    ∃ n : ℕ, ∃ D : DevChain q σ (n + 1),
+      D.t 0 = 0 ∧ D.t (n + 1) = 1 ∧ D.Φ 0 = Φs ∧ D.Φ n = Φe ∧
+      ∀ i : ℕ, ∃ x : ℂ, ∃ ρ : ℝ, 0 < ρ ∧
+        (∀ s ∈ Set.Icc (D.t i) (D.t (i + 1)), σ s ∈ Metric.ball x ρ) ∧
+        DifferentiableOn ℂ (D.Φ i) (Metric.ball x ρ) ∧
+        ∀ w ∈ Metric.ball x ρ, deriv (D.Φ i) w ^ 2 = -q w := by
+  classical
+  set K : Set ℂ := σ '' Set.Icc 0 1 with hKdef
+  have hKc : IsCompact K := isCompact_Icc.image_of_continuousOn hσc
+  choose! rx hrx Φx hΦx hΦxq using hatlas
+  obtain ⟨δe, hδe, hleb⟩ := lebesgue_number_lemma_of_emetric (s := K)
+    (c := fun x : K => Metric.ball (x : ℂ) (rx x)) hKc
+    (fun _ => Metric.isOpen_ball)
+    (fun x hx => Set.mem_iUnion.mpr ⟨⟨x, hx⟩, Metric.mem_ball_self (hrx x hx)⟩)
+  obtain ⟨δ', hδ'0, hδ'⟩ := ENNReal.lt_iff_exists_nnreal_btwn.mp hδe
+  have hδ'pos : (0 : ℝ) < δ' := by exact_mod_cast hδ'0
+  have hballs : ∀ x ∈ K, ∃ y : K,
+      Metric.ball x (δ' : ℝ) ⊆ Metric.ball (y : ℂ) (rx y) := by
+    intro x hx
+    obtain ⟨y, hy⟩ := hleb x hx
+    refine ⟨y, ?_⟩
+    intro w hw
+    apply hy
+    rw [Metric.mem_eball]
+    exact lt_trans (edist_lt_coe.mpr (Metric.mem_ball.mp hw)) hδ'
+  have hunif : UniformContinuousOn σ (Set.Icc 0 1) :=
+    isCompact_Icc.uniformContinuousOn_of_continuous hσc
+  obtain ⟨Δ, hΔ0, hΔ⟩ := Metric.uniformContinuousOn_iff.mp hunif (δ' : ℝ) hδ'pos
+  set m : ℕ := ⌈2 / Δ⌉₊ + 1 with hmdef
+  set t : ℕ → ℝ := fun i => if i = 0 then 0
+    else min ((i - 1 : ℕ) * (Δ / 2)) 1 with htdef
+  have ht0 : t 0 = 0 := by simp [htdef]
+  have ht1 : t 1 = 0 := by simp [htdef]
+  have htmem : ∀ i, t i ∈ Set.Icc (0 : ℝ) 1 := by
+    intro i
+    by_cases h : i = 0
+    · simp [htdef, h]
+    · simp only [htdef, if_neg h]
+      constructor
+      · exact le_min (by positivity) zero_le_one
+      · exact min_le_right _ _
+  have htlast : ∀ i, m + 1 ≤ i → t i = 1 := by
+    intro i hi
+    have hne : i ≠ 0 := by omega
+    simp only [htdef, if_neg hne]
+    rw [min_eq_right]
+    have h2 : (2 : ℝ) / Δ ≤ ⌈2 / Δ⌉₊ := Nat.le_ceil _
+    have hm : (m : ℝ) ≤ (i - 1 : ℕ) := by
+      have : m ≤ i - 1 := by omega
+      exact_mod_cast this
+    have hmΔ : (2 : ℝ) / Δ * (Δ / 2) ≤ (i - 1 : ℕ) * (Δ / 2) := by
+      apply mul_le_mul_of_nonneg_right _ (by positivity)
+      calc (2 : ℝ) / Δ ≤ ⌈2 / Δ⌉₊ := h2
+        _ ≤ (m : ℝ) := by exact_mod_cast Nat.le_succ _
+        _ ≤ _ := hm
+    calc (1 : ℝ) = 2 / Δ * (Δ / 2) := by field_simp
+      _ ≤ _ := hmΔ
+  have htmono : ∀ i, t i ≤ t (i + 1) := by
+    intro i
+    by_cases h : i = 0
+    · rw [h, ht0]
+      exact (htmem 1).1
+    · simp only [htdef, if_neg h, if_neg (Nat.succ_ne_zero i)]
+      have : ((i - 1 : ℕ) : ℝ) ≤ ((i + 1 - 1 : ℕ) : ℝ) := by
+        have : i - 1 ≤ i + 1 - 1 := by omega
+        exact_mod_cast this
+      exact min_le_min (mul_le_mul_of_nonneg_right this (by positivity)) le_rfl
+  have htmesh : ∀ i, t (i + 1) - t i ≤ Δ / 2 := by
+    intro i
+    by_cases h : i = 0
+    · rw [h, ht0, ht1]
+      simp only [sub_self]
+      positivity
+    · simp only [htdef, if_neg h, if_neg (Nat.succ_ne_zero i)]
+      have hstep : ((i + 1 - 1 : ℕ) : ℝ) * (Δ / 2)
+          = ((i - 1 : ℕ) : ℝ) * (Δ / 2) + Δ / 2 := by
+        have : (i + 1 - 1 : ℕ) = (i - 1) + 1 := by omega
+        rw [this]
+        push_cast
+        ring
+      have h1 : min (((i + 1 - 1 : ℕ) : ℝ) * (Δ / 2)) 1
+          ≤ min (((i - 1 : ℕ) : ℝ) * (Δ / 2)) 1 + Δ / 2 := by
+        rw [hstep]
+        rcases le_or_gt (((i - 1 : ℕ) : ℝ) * (Δ / 2)) 1 with hc | hc
+        · rw [min_eq_left hc]
+          exact le_trans (min_le_left _ _) (by linarith)
+        · rw [min_eq_right hc.le]
+          have : min (((i - 1 : ℕ) : ℝ) * (Δ / 2) + Δ / 2) 1 ≤ 1 :=
+            min_le_right _ _
+          linarith
+      linarith
+  have hpieces : ∀ i : ℕ, ∃ x : ℂ, ∃ ρ : ℝ, ∃ Φ : ℂ → ℂ,
+      0 < ρ ∧ DifferentiableOn ℂ Φ (Metric.ball x ρ) ∧
+      (∀ z ∈ Metric.ball x ρ, deriv Φ z ^ 2 = -q z) ∧
+      (∀ s ∈ Set.Icc (t i) (t (i + 1)), σ s ∈ Metric.ball x ρ) ∧
+      (i = 0 → Φ = Φs) ∧ (i = m + 1 → Φ = Φe) := by
+    intro i
+    rcases eq_or_ne i 0 with h0 | h0
+    · subst h0
+      refine ⟨σ 0, rs, Φs, hrs, hΦs, hΦsq, ?_, fun _ => rfl,
+        fun hc => absurd hc (by omega)⟩
+      intro s hs
+      rw [ht0, ht1] at hs
+      rw [le_antisymm hs.2 hs.1]
+      exact Metric.mem_ball_self hrs
+    rcases le_or_gt (m + 1) i with hge | hlt
+    · have hti : t i = 1 := htlast i hge
+      have hti1 : t (i + 1) = 1 := htlast _ (by omega)
+      refine ⟨σ 1, re, Φe, hre, hΦe, hΦeq, ?_, fun hc => absurd hc h0,
+        fun _ => rfl⟩
+      intro s hs
+      rw [hti, hti1] at hs
+      rw [le_antisymm hs.2 hs.1]
+      exact Metric.mem_ball_self hre
+    · have htiK : σ (t i) ∈ K := Set.mem_image_of_mem σ (htmem i)
+      obtain ⟨y, hy⟩ := hballs (σ (t i)) htiK
+      refine ⟨(y : ℂ), rx y, Φx y, hrx y y.2, hΦx y y.2, hΦxq y y.2, ?_,
+        fun hc => absurd hc h0, fun hc => absurd hc (by omega)⟩
+      intro s hs
+      apply hy
+      rw [Metric.mem_ball]
+      have hs01 : s ∈ Set.Icc (0 : ℝ) 1 :=
+        ⟨le_trans (htmem i).1 hs.1, le_trans hs.2 (htmem (i + 1)).2⟩
+      have hd : dist s (t i) < Δ := by
+        rw [Real.dist_eq, abs_of_nonneg (by linarith [hs.1])]
+        have h1 := htmesh i
+        have h2 := hs.2
+        linarith
+      exact hΔ s hs01 (t i) (htmem i) hd
+  choose xf ρf Φf hρf hΦfd hΦfq htrf hguard0 hguardn using hpieces
+  have hjunc : ∀ i : ℕ, ∃ e c : ℝ, (e = 1 ∨ e = -1) ∧
+      (i + 1 < m + 2 →
+        (Φf (i + 1) (σ (t (i + 1)))).re = e * (Φf i (σ (t (i + 1)))).re + c) := by
+    intro i
+    rcases lt_or_ge (i + 1) (m + 2) with hlt | hge
+    · have hp1 : σ (t (i + 1)) ∈ Metric.ball (xf i) (ρf i) :=
+        htrf i _ (Set.right_mem_Icc.mpr (htmono i))
+      have hp2 : σ (t (i + 1)) ∈ Metric.ball (xf (i + 1)) (ρf (i + 1)) :=
+        htrf (i + 1) _ (Set.left_mem_Icc.mpr (htmono (i + 1)))
+      obtain ⟨e, c, hsgn, hrel⟩ := ball_junction (hΦfd i) (hΦfd (i + 1))
+        (hΦfq i) (hΦfq (i + 1)) hp1 hp2
+      exact ⟨e, c, hsgn, fun _ => hrel⟩
+    · exact ⟨1, 0, Or.inl rfl, fun hc => absurd hc (by omega)⟩
+  choose εf cf hsgnf hmatchf using hjunc
+  have hsub : ∀ i : ℕ, Set.Icc (t i) (t (i + 1)) ⊆ Set.Icc (0 : ℝ) 1 :=
+    fun i => Set.Icc_subset_Icc (htmem i).1 (htmem (i + 1)).2
+  have hsubu : ∀ i : ℕ, Set.uIcc (t i) (t (i + 1)) ⊆ Set.uIcc (0 : ℝ) 1 := by
+    intro i
+    rw [Set.uIcc_of_le (htmono i), Set.uIcc_of_le zero_le_one]
+    exact hsub i
+  refine ⟨m + 1, ⟨t, Φf, εf, cf, fun i _ => htmono i, ?_, ?_, ?_, hsgnf,
+    fun i hi => hmatchf i hi⟩, ht0, htlast (m + 1 + 1) (by omega),
+    hguard0 0 rfl, hguardn (m + 1) rfl,
+    fun i => ⟨xf i, ρf i, hρf i, htrf i, hΦfd i, hΦfq i⟩⟩
+  · intro i _
+    exact (piece_data (htmono i) (hΦfd i) (hΦfq i) (hσc.mono (hsub i))
+      (hσac.mono (hsubu i)) (htrf i)).2.1
+  · intro i _
+    exact (piece_data (htmono i) (hΦfd i) (hΦfq i) (hσc.mono (hsub i))
+      (hσac.mono (hsubu i)) (htrf i)).1
+  · intro i _
+    exact (piece_data (htmono i) (hΦfd i) (hΦfq i) (hσc.mono (hsub i))
+      (hσac.mono (hsubu i)) (htrf i)).2.2
+
+/-- **Sound leafwise assembly**: the displacement floor is required only for chains
+whose pieces are natural charts covering their tracks — the chains actually produced by
+the construction — closing the interface against non-developing chains. -/
+theorem leaf_lb_assembly'' {q : ℂ → ℂ} {γ : ℝ → ℂ} {Φs Φe : ℂ → ℂ}
+    {rs re T : ℝ} {C : ℝ≥0∞} {ρ : ℝ → ℝ≥0∞}
+    (hγc : ContinuousOn γ (Set.Icc 0 1))
+    (hγac : AbsolutelyContinuousOnInterval γ 0 1)
+    (hatlas : ∀ x ∈ γ '' Set.Icc 0 1, ∃ r > 0, ∃ Φ : ℂ → ℂ,
+      DifferentiableOn ℂ Φ (Metric.ball x r) ∧
+      ∀ z ∈ Metric.ball x r, deriv Φ z ^ 2 = -q z)
+    (hrs : 0 < rs) (hre : 0 < re)
+    (hΦs : DifferentiableOn ℂ Φs (Metric.ball (γ 0) rs))
+    (hΦsq : ∀ z ∈ Metric.ball (γ 0) rs, deriv Φs z ^ 2 = -q z)
+    (hΦe : DifferentiableOn ℂ Φe (Metric.ball (γ 1) re))
+    (hΦeq : ∀ z ∈ Metric.ball (γ 1) re, deriv Φe z ^ 2 = -q z)
+    (hrepar : ∫⁻ s in Set.Icc (0 : ℝ) 1, horizontalDensity q γ s
+      ≤ ∫⁻ t in Set.Icc (0 : ℝ) T, ρ t)
+    (hdisp : ∀ n : ℕ, ∀ D : DevChain q γ (n + 1), D.t 0 = 0 → D.t (n + 1) = 1 →
+      D.Φ 0 = Φs → D.Φ n = Φe →
+      (∀ i : ℕ, ∃ x : ℂ, ∃ ρ' : ℝ, 0 < ρ' ∧
+        (∀ s ∈ Set.Icc (D.t i) (D.t (i + 1)), γ s ∈ Metric.ball x ρ') ∧
+        DifferentiableOn ℂ (D.Φ i) (Metric.ball x ρ') ∧
+        ∀ w ∈ Metric.ball x ρ', deriv (D.Φ i) w ^ 2 = -q w) →
+      ENNReal.ofReal T ≤ ENNReal.ofReal
+        |chainPull D.ε D.c n ((Φe (γ 1)).re) - (Φs (γ 0)).re| + 2 * C) :
+    ENNReal.ofReal T ≤ (∫⁻ t in Set.Icc (0 : ℝ) T, ρ t) + 2 * C := by
+  obtain ⟨n, D, ht0, htn, hΦ0, hΦn, hnat⟩ :=
+    exists_devChain' hγc hγac hatlas hrs hre hΦs hΦsq hΦe hΦeq
+  have hvar := devChain_variation_lb n D
+  rw [ht0, htn, hΦ0, hΦn] at hvar
+  calc ENNReal.ofReal T
+      ≤ ENNReal.ofReal
+          |chainPull D.ε D.c n ((Φe (γ 1)).re) - (Φs (γ 0)).re| + 2 * C :=
+        hdisp n D ht0 htn hΦ0 hΦn hnat
+    _ ≤ (∫⁻ s in Set.Icc (0 : ℝ) 1, horizontalDensity q γ s) + 2 * C :=
+        add_le_add hvar le_rfl
+    _ ≤ (∫⁻ t in Set.Icc (0 : ℝ) T, ρ t) + 2 * C := add_le_add hrepar le_rfl
+
+/-- **The zero-free tube**: a compact set of regular points admits a closed thickening
+of positive radius consisting of regular points. -/
+theorem zero_free_tube {q : ℂ → ℂ}
+    (hq : DifferentiableOn ℂ q {z : ℂ | 0 < z.im}) {K : Set ℂ}
+    (hKc : IsCompact K) (hKH : K ⊆ {z : ℂ | 0 < z.im})
+    (hKq : ∀ x ∈ K, q x ≠ 0) :
+    ∃ ρ > 0, Metric.cthickening ρ K ⊆ {z : ℂ | 0 < z.im ∧ q z ≠ 0} := by
+  have hH : IsOpen {z : ℂ | 0 < z.im} :=
+    isOpen_lt continuous_const Complex.continuous_im
+  have hG : IsOpen {z : ℂ | 0 < z.im ∧ q z ≠ 0} := by
+    have h1 : {z : ℂ | 0 < z.im ∧ q z ≠ 0}
+        = {z : ℂ | 0 < z.im} ∩ (q ⁻¹' {0})ᶜ ∩ {z : ℂ | 0 < z.im} := by
+      ext z
+      simp only [Set.mem_setOf_eq, Set.mem_inter_iff, Set.mem_compl_iff,
+        Set.mem_preimage, Set.mem_singleton_iff]
+      tauto
+    rw [h1]
+    exact (hq.continuousOn.isOpen_inter_preimage hH isClosed_singleton.isOpen_compl)
+      |>.inter hH
+  have hKG : K ⊆ {z : ℂ | 0 < z.im ∧ q z ≠ 0} := fun x hx => ⟨hKH hx, hKq x hx⟩
+  obtain ⟨ρ, hρ, hsub⟩ := hKc.exists_cthickening_subset_open hG hKG
+  exact ⟨ρ, hρ, hsub⟩
+
+/-- **The transverse-coordinate leafwise floor**: a coordinate advancing by `T` along
+the leaf, moving at most `C` across each endpoint connector, and horizontally
+`1`-Lipschitz along the image curve, yields the leafwise lower bound of the symmetrized
+flow interface. -/
+theorem leaf_lb_of_transverse {q : ℂ → ℂ} {γ : ℝ → ℂ} {a b : ℂ}
+    {T : ℝ} {C : ℝ≥0∞} {ρ : ℝ → ℝ≥0∞} {φ : ℂ → ℝ}
+    (hadv : φ b - φ a = T)
+    (hlip0 : ENNReal.ofReal |φ (γ 0) - φ a| ≤ C)
+    (hlip1 : ENNReal.ofReal |φ b - φ (γ 1)| ≤ C)
+    (hhor : ENNReal.ofReal |φ (γ 1) - φ (γ 0)|
+      ≤ ∫⁻ s in Set.Icc (0 : ℝ) 1, horizontalDensity q γ s)
+    (hrepar : ∫⁻ s in Set.Icc (0 : ℝ) 1, horizontalDensity q γ s
+      ≤ ∫⁻ t in Set.Icc (0 : ℝ) T, ρ t) :
+    ENNReal.ofReal T ≤ (∫⁻ t in Set.Icc (0 : ℝ) T, ρ t) + 2 * C := by
+  have htri : T ≤ |φ (γ 0) - φ a| + |φ (γ 1) - φ (γ 0)| + |φ b - φ (γ 1)| := by
+    rw [← hadv]
+    calc φ b - φ a
+        = (φ (γ 0) - φ a) + (φ (γ 1) - φ (γ 0)) + (φ b - φ (γ 1)) := by ring
+      _ ≤ |φ (γ 0) - φ a| + |φ (γ 1) - φ (γ 0)| + |φ b - φ (γ 1)| := by
+          have h1 := le_abs_self (φ (γ 0) - φ a)
+          have h2 := le_abs_self (φ (γ 1) - φ (γ 0))
+          have h3 := le_abs_self (φ b - φ (γ 1))
+          linarith
+  calc ENNReal.ofReal T
+      ≤ ENNReal.ofReal
+          (|φ (γ 0) - φ a| + |φ (γ 1) - φ (γ 0)| + |φ b - φ (γ 1)|) :=
+        ENNReal.ofReal_le_ofReal htri
+    _ ≤ ENNReal.ofReal (|φ (γ 0) - φ a| + |φ (γ 1) - φ (γ 0)|)
+        + ENNReal.ofReal |φ b - φ (γ 1)| := ENNReal.ofReal_add_le
+    _ ≤ ENNReal.ofReal |φ (γ 0) - φ a| + ENNReal.ofReal |φ (γ 1) - φ (γ 0)|
+        + ENNReal.ofReal |φ b - φ (γ 1)| :=
+        add_le_add ENNReal.ofReal_add_le le_rfl
+    _ ≤ C + (∫⁻ s in Set.Icc (0 : ℝ) 1, horizontalDensity q γ s) + C :=
+        add_le_add (add_le_add hlip0 hhor) hlip1
+    _ ≤ C + (∫⁻ t in Set.Icc (0 : ℝ) T, ρ t) + C :=
+        add_le_add (add_le_add le_rfl hrepar) le_rfl
+    _ = (∫⁻ t in Set.Icc (0 : ℝ) T, ρ t) + 2 * C := by ring
+
+/-- **Neighborhood junction**: two natural ball charts are related by one sign and one
+constant on the whole ball intersection. -/
+theorem ball_junction' {q Φ₁ Φ₂ : ℂ → ℂ} {x₁ x₂ : ℂ} {r₁ r₂ : ℝ}
+    (h₁ : DifferentiableOn ℂ Φ₁ (Metric.ball x₁ r₁))
+    (h₂ : DifferentiableOn ℂ Φ₂ (Metric.ball x₂ r₂))
+    (hq₁ : ∀ z ∈ Metric.ball x₁ r₁, deriv Φ₁ z ^ 2 = -q z)
+    (hq₂ : ∀ z ∈ Metric.ball x₂ r₂, deriv Φ₂ z ^ 2 = -q z)
+    {p : ℂ} (hp₁ : p ∈ Metric.ball x₁ r₁) (hp₂ : p ∈ Metric.ball x₂ r₂) :
+    ∃ ε c : ℝ, (ε = 1 ∨ ε = -1) ∧
+      ∀ w ∈ Metric.ball x₁ r₁ ∩ Metric.ball x₂ r₂,
+        (Φ₂ w).re = ε * (Φ₁ w).re + c := by
+  set Ω : Set ℂ := Metric.ball x₁ r₁ ∩ Metric.ball x₂ r₂ with hΩdef
+  have hΩopen : IsOpen Ω := Metric.isOpen_ball.inter Metric.isOpen_ball
+  have hΩconn : IsPreconnected Ω :=
+    ((convex_ball x₁ r₁).inter (convex_ball x₂ r₂)).isPreconnected
+  have hpΩ : p ∈ Ω := ⟨hp₁, hp₂⟩
+  have hsq : ∀ z ∈ Ω, deriv Φ₂ z ^ 2 = deriv Φ₁ z ^ 2 := fun z hz => by
+    rw [hq₂ z hz.2, hq₁ z hz.1]
+  exact junction_data hΩopen hΩconn hpΩ (h₁.mono Set.inter_subset_left)
+    (h₂.mono Set.inter_subset_right) hsq
+
+/-- **Development chains with coherent junctions**: the chain construction with the
+piece frames natural on exposed balls and each junction relation holding on the whole
+ball overlap. -/
+theorem exists_devChain'' {q : ℂ → ℂ} {σ : ℝ → ℂ} {Φs Φe : ℂ → ℂ}
+    {rs re : ℝ}
+    (hσc : ContinuousOn σ (Set.Icc 0 1))
+    (hσac : AbsolutelyContinuousOnInterval σ 0 1)
+    (hatlas : ∀ x ∈ σ '' Set.Icc 0 1, ∃ r > 0, ∃ Φ : ℂ → ℂ,
+      DifferentiableOn ℂ Φ (Metric.ball x r) ∧
+      ∀ z ∈ Metric.ball x r, deriv Φ z ^ 2 = -q z)
+    (hrs : 0 < rs) (hre : 0 < re)
+    (hΦs : DifferentiableOn ℂ Φs (Metric.ball (σ 0) rs))
+    (hΦsq : ∀ z ∈ Metric.ball (σ 0) rs, deriv Φs z ^ 2 = -q z)
+    (hΦe : DifferentiableOn ℂ Φe (Metric.ball (σ 1) re))
+    (hΦeq : ∀ z ∈ Metric.ball (σ 1) re, deriv Φe z ^ 2 = -q z) :
+    ∃ n : ℕ, ∃ D : DevChain q σ (n + 1),
+      D.t 0 = 0 ∧ D.t (n + 1) = 1 ∧ D.Φ 0 = Φs ∧ D.Φ n = Φe ∧
+      ∃ x : ℕ → ℂ, ∃ ρ : ℕ → ℝ,
+        (∀ i : ℕ, 0 < ρ i ∧
+          (∀ s ∈ Set.Icc (D.t i) (D.t (i + 1)),
+            σ s ∈ Metric.ball (x i) (ρ i)) ∧
+          DifferentiableOn ℂ (D.Φ i) (Metric.ball (x i) (ρ i)) ∧
+          ∀ w ∈ Metric.ball (x i) (ρ i), deriv (D.Φ i) w ^ 2 = -q w) ∧
+        ∀ i : ℕ, i + 1 < n + 1 →
+          ∀ w ∈ Metric.ball (x i) (ρ i) ∩ Metric.ball (x (i + 1)) (ρ (i + 1)),
+            (D.Φ (i + 1) w).re = D.ε i * (D.Φ i w).re + D.c i := by
+  classical
+  set K : Set ℂ := σ '' Set.Icc 0 1 with hKdef
+  have hKc : IsCompact K := isCompact_Icc.image_of_continuousOn hσc
+  choose! rx hrx Φx hΦx hΦxq using hatlas
+  obtain ⟨δe, hδe, hleb⟩ := lebesgue_number_lemma_of_emetric (s := K)
+    (c := fun x : K => Metric.ball (x : ℂ) (rx x)) hKc
+    (fun _ => Metric.isOpen_ball)
+    (fun x hx => Set.mem_iUnion.mpr ⟨⟨x, hx⟩, Metric.mem_ball_self (hrx x hx)⟩)
+  obtain ⟨δ', hδ'0, hδ'⟩ := ENNReal.lt_iff_exists_nnreal_btwn.mp hδe
+  have hδ'pos : (0 : ℝ) < δ' := by exact_mod_cast hδ'0
+  have hballs : ∀ x ∈ K, ∃ y : K,
+      Metric.ball x (δ' : ℝ) ⊆ Metric.ball (y : ℂ) (rx y) := by
+    intro x hx
+    obtain ⟨y, hy⟩ := hleb x hx
+    refine ⟨y, ?_⟩
+    intro w hw
+    apply hy
+    rw [Metric.mem_eball]
+    exact lt_trans (edist_lt_coe.mpr (Metric.mem_ball.mp hw)) hδ'
+  have hunif : UniformContinuousOn σ (Set.Icc 0 1) :=
+    isCompact_Icc.uniformContinuousOn_of_continuous hσc
+  obtain ⟨Δ, hΔ0, hΔ⟩ := Metric.uniformContinuousOn_iff.mp hunif (δ' : ℝ) hδ'pos
+  set m : ℕ := ⌈2 / Δ⌉₊ + 1 with hmdef
+  set t : ℕ → ℝ := fun i => if i = 0 then 0
+    else min ((i - 1 : ℕ) * (Δ / 2)) 1 with htdef
+  have ht0 : t 0 = 0 := by simp [htdef]
+  have ht1 : t 1 = 0 := by simp [htdef]
+  have htmem : ∀ i, t i ∈ Set.Icc (0 : ℝ) 1 := by
+    intro i
+    by_cases h : i = 0
+    · simp [htdef, h]
+    · simp only [htdef, if_neg h]
+      constructor
+      · exact le_min (by positivity) zero_le_one
+      · exact min_le_right _ _
+  have htlast : ∀ i, m + 1 ≤ i → t i = 1 := by
+    intro i hi
+    have hne : i ≠ 0 := by omega
+    simp only [htdef, if_neg hne]
+    rw [min_eq_right]
+    have h2 : (2 : ℝ) / Δ ≤ ⌈2 / Δ⌉₊ := Nat.le_ceil _
+    have hm : (m : ℝ) ≤ (i - 1 : ℕ) := by
+      have : m ≤ i - 1 := by omega
+      exact_mod_cast this
+    have hmΔ : (2 : ℝ) / Δ * (Δ / 2) ≤ (i - 1 : ℕ) * (Δ / 2) := by
+      apply mul_le_mul_of_nonneg_right _ (by positivity)
+      calc (2 : ℝ) / Δ ≤ ⌈2 / Δ⌉₊ := h2
+        _ ≤ (m : ℝ) := by exact_mod_cast Nat.le_succ _
+        _ ≤ _ := hm
+    calc (1 : ℝ) = 2 / Δ * (Δ / 2) := by field_simp
+      _ ≤ _ := hmΔ
+  have htmono : ∀ i, t i ≤ t (i + 1) := by
+    intro i
+    by_cases h : i = 0
+    · rw [h, ht0]
+      exact (htmem 1).1
+    · simp only [htdef, if_neg h, if_neg (Nat.succ_ne_zero i)]
+      have : ((i - 1 : ℕ) : ℝ) ≤ ((i + 1 - 1 : ℕ) : ℝ) := by
+        have : i - 1 ≤ i + 1 - 1 := by omega
+        exact_mod_cast this
+      exact min_le_min (mul_le_mul_of_nonneg_right this (by positivity)) le_rfl
+  have htmesh : ∀ i, t (i + 1) - t i ≤ Δ / 2 := by
+    intro i
+    by_cases h : i = 0
+    · rw [h, ht0, ht1]
+      simp
+      positivity
+    · simp only [htdef, if_neg h, if_neg (Nat.succ_ne_zero i)]
+      have hstep : ((i + 1 - 1 : ℕ) : ℝ) * (Δ / 2)
+          = ((i - 1 : ℕ) : ℝ) * (Δ / 2) + Δ / 2 := by
+        have : (i + 1 - 1 : ℕ) = (i - 1) + 1 := by omega
+        rw [this]
+        push_cast
+        ring
+      have h1 : min (((i + 1 - 1 : ℕ) : ℝ) * (Δ / 2)) 1
+          ≤ min (((i - 1 : ℕ) : ℝ) * (Δ / 2)) 1 + Δ / 2 := by
+        rw [hstep]
+        rcases le_or_gt (((i - 1 : ℕ) : ℝ) * (Δ / 2)) 1 with hc | hc
+        · rw [min_eq_left hc]
+          exact le_trans (min_le_left _ _) (by linarith)
+        · rw [min_eq_right hc.le]
+          have : min (((i - 1 : ℕ) : ℝ) * (Δ / 2) + Δ / 2) 1 ≤ 1 :=
+            min_le_right _ _
+          linarith
+      linarith
+  have hpieces : ∀ i : ℕ, ∃ x : ℂ, ∃ ρ : ℝ, ∃ Φ : ℂ → ℂ,
+      0 < ρ ∧ DifferentiableOn ℂ Φ (Metric.ball x ρ) ∧
+      (∀ z ∈ Metric.ball x ρ, deriv Φ z ^ 2 = -q z) ∧
+      (∀ s ∈ Set.Icc (t i) (t (i + 1)), σ s ∈ Metric.ball x ρ) ∧
+      (i = 0 → Φ = Φs) ∧ (i = m + 1 → Φ = Φe) := by
+    intro i
+    rcases eq_or_ne i 0 with h0 | h0
+    · subst h0
+      refine ⟨σ 0, rs, Φs, hrs, hΦs, hΦsq, ?_, fun _ => rfl,
+        fun hc => absurd hc (by omega)⟩
+      intro s hs
+      rw [ht0, ht1] at hs
+      rw [le_antisymm hs.2 hs.1]
+      exact Metric.mem_ball_self hrs
+    rcases le_or_gt (m + 1) i with hge | hlt
+    · have hti : t i = 1 := htlast i hge
+      have hti1 : t (i + 1) = 1 := htlast _ (by omega)
+      refine ⟨σ 1, re, Φe, hre, hΦe, hΦeq, ?_, fun hc => absurd hc h0,
+        fun _ => rfl⟩
+      intro s hs
+      rw [hti, hti1] at hs
+      rw [le_antisymm hs.2 hs.1]
+      exact Metric.mem_ball_self hre
+    · have htiK : σ (t i) ∈ K := Set.mem_image_of_mem σ (htmem i)
+      obtain ⟨y, hy⟩ := hballs (σ (t i)) htiK
+      refine ⟨(y : ℂ), rx y, Φx y, hrx y y.2, hΦx y y.2, hΦxq y y.2, ?_,
+        fun hc => absurd hc h0, fun hc => absurd hc (by omega)⟩
+      intro s hs
+      apply hy
+      rw [Metric.mem_ball]
+      have hs01 : s ∈ Set.Icc (0 : ℝ) 1 :=
+        ⟨le_trans (htmem i).1 hs.1, le_trans hs.2 (htmem (i + 1)).2⟩
+      have hd : dist s (t i) < Δ := by
+        rw [Real.dist_eq, abs_of_nonneg (by linarith [hs.1])]
+        have h1 := htmesh i
+        have h2 := hs.2
+        linarith
+      exact hΔ s hs01 (t i) (htmem i) hd
+  choose xf ρf Φf hρf hΦfd hΦfq htrf hguard0 hguardn using hpieces
+  have hjunc : ∀ i : ℕ, ∃ e c : ℝ, (e = 1 ∨ e = -1) ∧
+      (i + 1 < m + 2 → ∀ w ∈ Metric.ball (xf i) (ρf i)
+        ∩ Metric.ball (xf (i + 1)) (ρf (i + 1)),
+        (Φf (i + 1) w).re = e * (Φf i w).re + c) := by
+    intro i
+    rcases lt_or_ge (i + 1) (m + 2) with hlt | hge
+    · have hp1 : σ (t (i + 1)) ∈ Metric.ball (xf i) (ρf i) :=
+        htrf i _ (Set.right_mem_Icc.mpr (htmono i))
+      have hp2 : σ (t (i + 1)) ∈ Metric.ball (xf (i + 1)) (ρf (i + 1)) :=
+        htrf (i + 1) _ (Set.left_mem_Icc.mpr (htmono (i + 1)))
+      obtain ⟨e, c, hsgn, hrel⟩ := ball_junction' (hΦfd i) (hΦfd (i + 1))
+        (hΦfq i) (hΦfq (i + 1)) hp1 hp2
+      exact ⟨e, c, hsgn, fun _ => hrel⟩
+    · exact ⟨1, 0, Or.inl rfl, fun hc => absurd hc (by omega)⟩
+  choose εf cf hsgnf hrelf using hjunc
+  have hmatchf : ∀ i, i + 1 < m + 2 →
+      (Φf (i + 1) (σ (t (i + 1)))).re
+        = εf i * (Φf i (σ (t (i + 1)))).re + cf i := by
+    intro i hi
+    exact hrelf i hi _ ⟨htrf i _ (Set.right_mem_Icc.mpr (htmono i)),
+      htrf (i + 1) _ (Set.left_mem_Icc.mpr (htmono (i + 1)))⟩
+  have hsub : ∀ i : ℕ, Set.Icc (t i) (t (i + 1)) ⊆ Set.Icc (0 : ℝ) 1 :=
+    fun i => Set.Icc_subset_Icc (htmem i).1 (htmem (i + 1)).2
+  have hsubu : ∀ i : ℕ, Set.uIcc (t i) (t (i + 1)) ⊆ Set.uIcc (0 : ℝ) 1 := by
+    intro i
+    rw [Set.uIcc_of_le (htmono i), Set.uIcc_of_le zero_le_one]
+    exact hsub i
+  refine ⟨m + 1, ⟨t, Φf, εf, cf, fun i _ => htmono i, ?_, ?_, ?_, hsgnf,
+    fun i hi => hmatchf i hi⟩, ht0, htlast (m + 1 + 1) (by omega),
+    hguard0 0 rfl, hguardn (m + 1) rfl, xf, ρf,
+    fun i => ⟨hρf i, htrf i, hΦfd i, hΦfq i⟩,
+    fun i hi => hrelf i hi⟩
+  · intro i _
+    exact (piece_data (htmono i) (hΦfd i) (hΦfq i) (hσc.mono (hsub i))
+      (hσac.mono (hsubu i)) (htrf i)).2.1
+  · intro i _
+    exact (piece_data (htmono i) (hΦfd i) (hΦfq i) (hσc.mono (hsub i))
+      (hσac.mono (hsubu i)) (htrf i)).1
+  · intro i _
+    exact (piece_data (htmono i) (hΦfd i) (hΦfq i) (hσc.mono (hsub i))
+      (hσac.mono (hsubu i)) (htrf i)).2.2
+
+/-- The real part of a natural chart is nonconstant on any open set around a regular
+point. -/
+theorem re_chart_nonconst {q Φ : ℂ → ℂ} {ω : Set ℂ} (hω : IsOpen ω)
+    {w : ℂ} (hw : w ∈ ω) (hd : DifferentiableOn ℂ Φ ω)
+    (hsq : ∀ v ∈ ω, deriv Φ v ^ 2 = -q v) (hq0 : q w ≠ 0) :
+    ∃ w' ∈ ω, (Φ w').re ≠ (Φ w).re := by
+  by_contra hcon
+  push Not at hcon
+  have hΦ' : deriv Φ w ≠ 0 := by
+    intro h0
+    apply hq0
+    have := hsq w hw
+    rw [h0] at this
+    simpa using this.symm
+  set d : ℂ := (starRingEnd ℂ) (deriv Φ w) with hddef
+  have hΦat : DifferentiableAt ℂ Φ w := hd.differentiableAt (hω.mem_nhds hw)
+  have hF : HasDerivAt (fun z : ℂ => Φ (w + z * d)) (deriv Φ w * d) 0 := by
+    have h1 : HasDerivAt (fun z : ℂ => w + z * d) d 0 := by
+      simpa using ((hasDerivAt_id (0 : ℂ)).mul_const d).const_add w
+    have h2 : HasDerivAt Φ (deriv Φ w) (w + (0 : ℂ) * d) := by
+      simpa using hΦat.hasDerivAt
+    simpa [mul_comm] using h2.comp (0 : ℂ) h1
+  have hcomp : HasDerivAt (fun t : ℝ => Φ (w + (t : ℂ) * d))
+      (deriv Φ w * d) 0 := by
+    have := hF.comp_ofReal
+    simpa using this
+  have hre : HasDerivAt (fun t : ℝ => (Φ (w + (t : ℂ) * d)).re)
+      (deriv Φ w * d).re 0 :=
+    (Complex.reCLM.hasFDerivAt.comp_hasDerivAt 0 hcomp)
+  have hL : (deriv Φ w * d).re = ‖deriv Φ w‖ ^ 2 := by
+    rw [hddef, Complex.mul_conj', ← Complex.ofReal_pow, Complex.ofReal_re]
+  have hmemev : ∀ᶠ t : ℝ in nhds 0, w + (t : ℂ) * d ∈ ω := by
+    have hcont : Continuous fun t : ℝ => w + (t : ℂ) * d := by
+      continuity
+    have h0 : (fun t : ℝ => w + (t : ℂ) * d) 0 ∈ ω := by
+      simpa using hw
+    exact hcont.continuousAt.preimage_mem_nhds (hω.mem_nhds h0)
+  have hconst : HasDerivAt (fun t : ℝ => (Φ (w + (t : ℂ) * d)).re) 0 0 := by
+    refine (hasDerivAt_const (0 : ℝ) ((Φ w).re)).congr_of_eventuallyEq ?_
+    filter_upwards [hmemev] with t ht
+    exact hcon _ ht
+  have h0 := hre.unique hconst
+  rw [hL] at h0
+  have : deriv Φ w = 0 := by
+    have hn : ‖deriv Φ w‖ = 0 := by
+      have := sq_eq_zero_iff.mp h0
+      exact this
+    exact norm_eq_zero.mp hn
+  exact hΦ' this
+
+/-- **In-tube chain coherence**: along a curve inside an open zero-free set carrying a
+global natural chart, a chain with natural pieces and overlap-coherent junctions pulls
+the endpoint development exactly to the global chart displacement. -/
+theorem chain_coherence {q : ℂ → ℂ} {U : Set ℂ} (hU : IsOpen U)
+    (hUne : ∀ w ∈ U, q w ≠ 0) {Φg : ℂ → ℂ}
+    (hΦgd : DifferentiableOn ℂ Φg U) (hΦgsq : ∀ w ∈ U, deriv Φg w ^ 2 = -q w)
+    {γ : ℝ → ℂ} (n : ℕ) (D : DevChain q γ (n + 1))
+    (hγc : ContinuousOn γ (Set.Icc (D.t 0) (D.t (n + 1))))
+    {x : ℕ → ℂ} {ρ : ℕ → ℝ}
+    (hnat : ∀ i : ℕ, 0 < ρ i ∧
+      (∀ s ∈ Set.Icc (D.t i) (D.t (i + 1)), γ s ∈ Metric.ball (x i) (ρ i)) ∧
+      DifferentiableOn ℂ (D.Φ i) (Metric.ball (x i) (ρ i)) ∧
+      ∀ w ∈ Metric.ball (x i) (ρ i), deriv (D.Φ i) w ^ 2 = -q w)
+    (hjrel : ∀ i : ℕ, i + 1 < n + 1 →
+      ∀ w ∈ Metric.ball (x i) (ρ i) ∩ Metric.ball (x (i + 1)) (ρ (i + 1)),
+        (D.Φ (i + 1) w).re = D.ε i * (D.Φ i w).re + D.c i)
+    (htube : ∀ s ∈ Set.Icc (D.t 0) (D.t (n + 1)), γ s ∈ U) :
+    |chainPull D.ε D.c n ((D.Φ n (γ (D.t (n + 1)))).re)
+        - (D.Φ 0 (γ (D.t 0))).re|
+      = |(Φg (γ (D.t (n + 1)))).re - (Φg (γ (D.t 0))).re| := by
+  classical
+  have hmon : ∀ i j : ℕ, i ≤ j → j ≤ n + 1 → D.t i ≤ D.t j := by
+    intro i j hij hj
+    induction j with
+    | zero =>
+      have : i = 0 := by omega
+      rw [this]
+    | succ k ih =>
+      by_cases hik : i ≤ k
+      · exact le_trans (ih hik (by omega)) (D.hmono k (by omega))
+      · have : i = k + 1 := by omega
+        rw [this]
+  have hsubI : ∀ i : ℕ, i ≤ n →
+      Set.Icc (D.t i) (D.t (i + 1)) ⊆ Set.Icc (D.t 0) (D.t (n + 1)) :=
+    fun i hi => Set.Icc_subset_Icc (hmon 0 i (by omega) (by omega))
+      (hmon (i + 1) (n + 1) (by omega) le_rfl)
+  set Ω : ℕ → Set ℂ := fun i =>
+    connectedComponentIn (Metric.ball (x i) (ρ i) ∩ U) (γ (D.t i)) with hΩdef
+  have hΩo : ∀ i, IsOpen (Ω i) := fun i =>
+    (Metric.isOpen_ball.inter hU).connectedComponentIn
+  have hleft : ∀ i : ℕ, i ≤ n → D.t i ∈ Set.Icc (D.t i) (D.t (i + 1)) :=
+    fun i hi => Set.left_mem_Icc.mpr (D.hmono i (by omega))
+  have hright : ∀ i : ℕ, i ≤ n → D.t (i + 1) ∈ Set.Icc (D.t i) (D.t (i + 1)) :=
+    fun i hi => Set.right_mem_Icc.mpr (D.hmono i (by omega))
+  have hbase : ∀ i : ℕ, i ≤ n →
+      γ (D.t i) ∈ Metric.ball (x i) (ρ i) ∩ U := fun i hi =>
+    ⟨(hnat i).2.1 _ (hleft i hi), htube _ (hsubI i hi (hleft i hi))⟩
+  have htrkΩ : ∀ i : ℕ, i ≤ n →
+      ∀ s ∈ Set.Icc (D.t i) (D.t (i + 1)), γ s ∈ Ω i := by
+    intro i hi
+    have himg : IsPreconnected (γ '' Set.Icc (D.t i) (D.t (i + 1))) :=
+      (isPreconnected_Icc).image _ (hγc.mono (hsubI i hi))
+    have hsubBU : γ '' Set.Icc (D.t i) (D.t (i + 1))
+        ⊆ Metric.ball (x i) (ρ i) ∩ U := by
+      rintro w ⟨s, hs, rfl⟩
+      exact ⟨(hnat i).2.1 s hs, htube s (hsubI i hi hs)⟩
+    have hsubc := himg.subset_connectedComponentIn
+      (Set.mem_image_of_mem γ (hleft i hi)) hsubBU
+    exact fun s hs => hsubc (Set.mem_image_of_mem γ hs)
+  have hclass : ∀ i : ℕ, ∃ sc kc : ℝ, (sc = 1 ∨ sc = -1) ∧
+      (i ≤ n → ∀ w ∈ Ω i, (D.Φ i w).re = sc * (Φg w).re + kc) := by
+    intro i
+    by_cases hi : i ≤ n
+    · have hsubBU : Ω i ⊆ Metric.ball (x i) (ρ i) ∩ U :=
+        connectedComponentIn_subset _ _
+      obtain ⟨sc, kc, hsgn, hrel⟩ := junction_data (hΩo i)
+        isPreconnected_connectedComponentIn
+        (mem_connectedComponentIn (hbase i hi))
+        (hΦgd.mono fun w hw => (hsubBU hw).2)
+        ((hnat i).2.2.1.mono fun w hw => (hsubBU hw).1)
+        (fun w hw => by
+          rw [(hnat i).2.2.2 w (hsubBU hw).1, hΦgsq w (hsubBU hw).2])
+      exact ⟨sc, kc, hsgn, fun _ => hrel⟩
+    · exact ⟨1, 0, Or.inl rfl, fun hc => absurd hc hi⟩
+  choose sg kg hsgn hrelg using hclass
+  have hcoh : ∀ i : ℕ, i + 1 ≤ n →
+      sg (i + 1) = D.ε i * sg i ∧ kg (i + 1) = D.ε i * kg i + D.c i := by
+    intro i hi1
+    have hi : i ≤ n := by omega
+    set w₀ : ℂ := γ (D.t (i + 1)) with hw₀def
+    have hw₀i : w₀ ∈ Ω i := htrkΩ i hi _ (hright i hi)
+    have hw₀i1 : w₀ ∈ Ω (i + 1) := htrkΩ (i + 1) hi1 _ (hleft (i + 1) hi1)
+    have hw₀BU : w₀ ∈ Metric.ball (x i) (ρ i)
+        ∩ Metric.ball (x (i + 1)) (ρ (i + 1)) ∩ U :=
+      ⟨⟨((connectedComponentIn_subset _ _) hw₀i).1,
+        ((connectedComponentIn_subset _ _) hw₀i1).1⟩,
+        ((connectedComponentIn_subset _ _) hw₀i).2⟩
+    set ω : Set ℂ := connectedComponentIn
+      (Metric.ball (x i) (ρ i) ∩ Metric.ball (x (i + 1)) (ρ (i + 1)) ∩ U)
+      w₀ with hωdef
+    have hωo : IsOpen ω :=
+      ((Metric.isOpen_ball.inter Metric.isOpen_ball).inter hU).connectedComponentIn
+    have hωmem : w₀ ∈ ω := mem_connectedComponentIn hw₀BU
+    have hωsub := connectedComponentIn_subset
+      (Metric.ball (x i) (ρ i) ∩ Metric.ball (x (i + 1)) (ρ (i + 1)) ∩ U) w₀
+    have hωΩi : ω ⊆ Ω i := by
+      have h1 : ω ⊆ connectedComponentIn (Metric.ball (x i) (ρ i) ∩ U) w₀ :=
+        isPreconnected_connectedComponentIn.subset_connectedComponentIn hωmem
+          (fun w hw => ⟨(hωsub hw).1.1, (hωsub hw).2⟩)
+      rwa [← connectedComponentIn_eq hw₀i] at h1
+    have hωΩi1 : ω ⊆ Ω (i + 1) := by
+      have h1 : ω ⊆ connectedComponentIn
+          (Metric.ball (x (i + 1)) (ρ (i + 1)) ∩ U) w₀ :=
+        isPreconnected_connectedComponentIn.subset_connectedComponentIn hωmem
+          (fun w hw => ⟨(hωsub hw).1.2, (hωsub hw).2⟩)
+      rwa [← connectedComponentIn_eq hw₀i1] at h1
+    have hid : ∀ w ∈ ω, sg (i + 1) * (Φg w).re + kg (i + 1)
+        = D.ε i * (sg i * (Φg w).re + kg i) + D.c i := by
+      intro w hw
+      rw [← hrelg (i + 1) hi1 w (hωΩi1 hw), ← hrelg i hi w (hωΩi hw)]
+      exact hjrel i (by omega) w ⟨(hωsub hw).1.1, (hωsub hw).1.2⟩
+    obtain ⟨w', hw', hne⟩ := re_chart_nonconst hωo hωmem
+      (hΦgd.mono fun w hw => (hωsub hw).2)
+      (fun v hv => hΦgsq v (hωsub hv).2) (hUne _ (hωsub hωmem).2)
+    have h1 := hid w' hw'
+    have h2 := hid w₀ hωmem
+    have hs : sg (i + 1) = D.ε i * sg i := by
+      have hdiff : (sg (i + 1) - D.ε i * sg i)
+          * ((Φg w').re - (Φg w₀).re) = 0 := by linarith [h1, h2]
+      rcases mul_eq_zero.mp hdiff with h | h
+      · linarith
+      · exact absurd (by linarith : (Φg w').re = (Φg w₀).re) hne
+    refine ⟨hs, ?_⟩
+    have := h2
+    rw [hs] at this
+    nlinarith [this]
+  have hpull : ∀ i : ℕ, i ≤ n → ∀ y : ℝ,
+      chainPull D.ε D.c i (sg i * y + kg i) = sg 0 * y + kg 0 := by
+    intro i
+    induction i with
+    | zero =>
+      intro _ y
+      rfl
+    | succ i ih =>
+      intro hi y
+      have hcohi := hcoh i hi
+      have hε2 : D.ε i * D.ε i = 1 := by
+        rcases D.hsign i with h | h <;> rw [h] <;> norm_num
+      show chainPull D.ε D.c i
+        (D.ε i * ((sg (i + 1) * y + kg (i + 1)) - D.c i)) = sg 0 * y + kg 0
+      have harg : D.ε i * ((sg (i + 1) * y + kg (i + 1)) - D.c i)
+          = sg i * y + kg i := by
+        rw [hcohi.1, hcohi.2]
+        linear_combination (sg i * y + kg i) * hε2
+      rw [harg]
+      exact ih (by omega) y
+  have hend1 : (D.Φ n (γ (D.t (n + 1)))).re
+      = sg n * (Φg (γ (D.t (n + 1)))).re + kg n :=
+    hrelg n le_rfl _ (htrkΩ n le_rfl _ (hright n le_rfl))
+  have hend0 : (D.Φ 0 (γ (D.t 0))).re
+      = sg 0 * (Φg (γ (D.t 0))).re + kg 0 :=
+    hrelg 0 (by omega) _ (htrkΩ 0 (by omega) _ (hleft 0 (by omega)))
+  rw [hend1, hend0, hpull n le_rfl]
+  have : sg 0 * (Φg (γ (D.t (n + 1)))).re + kg 0
+      - (sg 0 * (Φg (γ (D.t 0))).re + kg 0)
+      = sg 0 * ((Φg (γ (D.t (n + 1)))).re - (Φg (γ (D.t 0))).re) := by ring
+  rw [this, abs_mul]
+  rcases hsgn 0 with h | h <;> rw [h] <;> simp
+
 end RiemannDynamics
