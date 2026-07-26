@@ -3314,7 +3314,7 @@ theorem deltaField_zero_iterate {r : RationalData} {v : ℂ → ℂ}
         -- the set where the `k`-th iterate stays finite is open
         have hopen : IsOpen {x : ℂ | r.toSphereMap^[k] ((x : ℂ̂)) ≠ ∞} := by
           have hc : Continuous fun x : ℂ => r.toSphereMap^[k] ((x : ℂ̂)) :=
-            (r.toSphereMap_continuous.iterate k).comp OnePoint.continuous_coe
+            (r.continuous_toSphereMap.iterate k).comp OnePoint.continuous_coe
           exact OnePoint.isClosed_infty.isOpen_compl.preimage hc
         -- near `w`, the `(k+1)`-reading is the composite of the two readings
         have hev : ((fun x : ℂ => chartFiniteMap (r.toSphereMap ((x : ℂ̂))))

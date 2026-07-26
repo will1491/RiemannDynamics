@@ -156,7 +156,7 @@ theorem iterDeriv_eq_deriv_iterate (r : RationalData) (m : ℕ) (z : ℂ)
         -- the set where the `k`-th iterate stays finite is open
         have hopen : IsOpen {x : ℂ | r.toSphereMap^[k] ((x : ℂ̂)) ≠ ∞} := by
           have hc : Continuous fun x : ℂ => r.toSphereMap^[k] ((x : ℂ̂)) :=
-            (r.toSphereMap_continuous.iterate k).comp OnePoint.continuous_coe
+            (r.continuous_toSphereMap.iterate k).comp OnePoint.continuous_coe
           exact OnePoint.isClosed_infty.isOpen_compl.preimage hc
         -- near `w`, the `(k+1)`-reading is the composite of the two readings
         have hev : ((fun x : ℂ => chartFiniteMap (r.toSphereMap ((x : ℂ̂))))
@@ -627,7 +627,7 @@ theorem spreadCoeff_aemeasurable {r : RationalData} (hd : 1 ≤ r.degree)
       (hemb n).measurableSet_image' hSsub
     have hVopen : IsOpen {z : ℂ | r.toSphereMap^[m] ((z : ℂ̂)) ≠ ∞} := by
       have hc : Continuous fun z : ℂ => r.toSphereMap^[m] ((z : ℂ̂)) :=
-        (r.toSphereMap_continuous.iterate m).comp OnePoint.continuous_coe
+        (r.continuous_toSphereMap.iterate m).comp OnePoint.continuous_coe
       exact OnePoint.isClosed_infty.isOpen_compl.preimage hc
     have hAeq : A m n = {z : ℂ | r.toSphereMap^[m] ((z : ℂ̂)) ≠ ∞}
         ∩ (F m) ⁻¹' (Uf.restrict (F n) '' (Subtype.val ⁻¹' S)) := by

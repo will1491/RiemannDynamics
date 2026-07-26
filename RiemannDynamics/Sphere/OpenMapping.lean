@@ -42,7 +42,7 @@ namespace RiemannDynamics
 theorem IsRational.continuous {f : ℂ̂ → ℂ̂} (hf : IsRational f) :
     Continuous f := by
   obtain ⟨r, rfl⟩ := hf
-  exact r.toSphereMap_continuous
+  exact r.continuous_toSphereMap
 
 /-- Sending a quotient to the sphere with poles at the zeros of the
 denominator is, after inversion, the reciprocal quotient: the value-level
