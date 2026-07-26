@@ -23,7 +23,7 @@ trichotomy consumes:
 * the full space `M` is biholomorphic to the open set `⊤ : Opens M`
   (`nonempty_diffeomorph_top`);
 * every Möbius transformation of `ℂ̂` is a biholomorphism
-  (`exists_glSMul_diffeomorph`);
+  (`exists_gl_smul_diffeomorph`);
 * a biholomorphism restricts to a biholomorphism between an open set and its
   image (`exists_diffeomorph_opens_image`);
 * a domain in `ℂ̂` avoiding `∞` reads as a plane domain through the finite
@@ -248,7 +248,7 @@ theorem nonempty_diffeomorph_of_injOn_differentiableOn (U V : Opens ℂ)
 
 /-- Every Möbius transformation acts on the Riemann sphere as a
 biholomorphism. -/
-theorem exists_glSMul_diffeomorph (g : GL (Fin 2) ℂ) :
+theorem exists_gl_smul_diffeomorph (g : GL (Fin 2) ℂ) :
     ∃ e : ℂ̂ ≃ₘ^ω⟮𝓘(ℂ), 𝓘(ℂ)⟯ ℂ̂, ⇑e = (g • ·) := by
   classical
   -- Chart bookkeeping: the chart at a finite point is the finite chart, at `∞` the infinity
@@ -275,7 +275,7 @@ theorem exists_glSMul_diffeomorph (g : GL (Fin 2) ℂ) :
     cases z with
     | coe x =>
       rw [contMDiffAt_iff]
-      refine ⟨(continuous_glSMul u).continuousAt, ?_⟩
+      refine ⟨(continuous_gl_smul u).continuousAt, ?_⟩
       simp only [hval_coe, extChartAt_coe, extChartAt_coe_symm, modelWithCornersSelf_coe,
         modelWithCornersSelf_coe_symm, Function.comp_id, Function.id_comp, Set.range_id,
         contDiffWithinAt_univ, hchart_coe, Function.comp_apply, id_eq, sphereChartFinite_coe]
@@ -286,7 +286,7 @@ theorem exists_glSMul_diffeomorph (g : GL (Fin 2) ℂ) :
         sphereChartFinite_coe]
     | infty =>
       rw [contMDiffAt_iff]
-      refine ⟨(continuous_glSMul u).continuousAt, ?_⟩
+      refine ⟨(continuous_gl_smul u).continuousAt, ?_⟩
       simp only [hval_infty, extChartAt_coe, extChartAt_coe_symm, modelWithCornersSelf_coe,
         modelWithCornersSelf_coe_symm, Function.comp_id, Function.id_comp, Set.range_id,
         contDiffWithinAt_univ, hchart_infty, Function.comp_apply, id_eq,
@@ -329,7 +329,7 @@ theorem exists_glSMul_diffeomorph (g : GL (Fin 2) ℂ) :
       by_cases hx : x = 0
       · subst hx
         rw [contMDiffAt_iff]
-        refine ⟨(continuous_glSMul inversionGL).continuousAt, ?_⟩
+        refine ⟨(continuous_gl_smul inversionGL).continuousAt, ?_⟩
         simp only [hinv0, extChartAt_coe, extChartAt_coe_symm, modelWithCornersSelf_coe,
           modelWithCornersSelf_coe_symm, Function.comp_id, Function.id_comp, Set.range_id,
           contDiffWithinAt_univ, hchart_coe, hchart_infty, Function.comp_apply, id_eq,
@@ -338,7 +338,7 @@ theorem exists_glSMul_diffeomorph (g : GL (Fin 2) ℂ) :
         simp only [Function.comp_apply, sphereChartFinite_symm_apply, sphereChartInfty_apply,
           inversionGL_smul_smul, sphereChartFinite_coe, id_eq]
       · rw [contMDiffAt_iff]
-        refine ⟨(continuous_glSMul inversionGL).continuousAt, ?_⟩
+        refine ⟨(continuous_gl_smul inversionGL).continuousAt, ?_⟩
         have hvx : inversionGL • ((x : ℂ̂)) = ((x⁻¹ : ℂ) : ℂ̂) := by
           rw [inversionGL_smul_coe, if_neg hx]
         simp only [hvx, extChartAt_coe, extChartAt_coe_symm, modelWithCornersSelf_coe,
@@ -350,7 +350,7 @@ theorem exists_glSMul_diffeomorph (g : GL (Fin 2) ℂ) :
         rw [inversionGL_smul_coe, if_neg hw, sphereChartFinite_coe]
     | infty =>
       rw [contMDiffAt_iff]
-      refine ⟨(continuous_glSMul inversionGL).continuousAt, ?_⟩
+      refine ⟨(continuous_gl_smul inversionGL).continuousAt, ?_⟩
       simp only [inversionGL_smul_infty, extChartAt_coe, extChartAt_coe_symm,
         modelWithCornersSelf_coe, modelWithCornersSelf_coe_symm, Function.comp_id,
         Function.id_comp, Set.range_id, contDiffWithinAt_univ, hchart_coe, hchart_infty,

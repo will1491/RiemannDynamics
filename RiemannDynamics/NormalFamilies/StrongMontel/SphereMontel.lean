@@ -16,10 +16,10 @@ on `U` for the spherical metric.
 
 The proof is a Möbius conjugation of the two-point theorem
 `montel_caratheodory`. A Möbius transformation `g` sends `(a, b, c)` to
-`(0, 1, ∞)` (`exists_glSMul_eq_zero_one_infty`); the transformed family
+`(0, 1, ∞)` (`exists_gl_smul_eq_zero_one_infty`); the transformed family
 `g • f` omits `∞`, so it consists of honest holomorphic functions
 (`SphereHolomorphicOn.differentiableOn_chartFiniteMap` after
-`SphereHolomorphicOn.glSMul`) omitting `0` and `1`, and the two-point
+`SphereHolomorphicOn.gl_smul`) omitting `0` and `1`, and the two-point
 theorem applies. Normality then transfers back through the inverse Möbius
 map `g⁻¹ • ·`, which is uniformly continuous because the sphere is compact
 (`IsNormal.comp_uniformContinuous`).
@@ -43,7 +43,7 @@ theorem montel_caratheodory_sphere {𝓕 : Set (ℂ → ℂ̂)} {U : Set ℂ} {a
   · intro seq
     exact absurd (seq 0).2 (Set.notMem_empty _)
   have hU : IsOpen U := (hol f₀ hf₀).isOpen
-  obtain ⟨g, hga, hgb, hgc⟩ := exists_glSMul_eq_zero_one_infty hab hac hbc
+  obtain ⟨g, hga, hgb, hgc⟩ := exists_gl_smul_eq_zero_one_infty hab hac hbc
   -- The transformed family `g • f` omits `0`, `1`, `∞` pointwise on `U`.
   have hne : ∀ f ∈ 𝓕, ∀ z ∈ U,
       g • f z ≠ ((0 : ℂ) : ℂ̂) ∧ g • f z ≠ ((1 : ℂ) : ℂ̂) ∧ g • f z ≠ ∞ := by
@@ -60,7 +60,7 @@ theorem montel_caratheodory_sphere {𝓕 : Set (ℂ → ℂ̂)} {U : Set ℂ} {a
   have hol' : ∀ h ∈ (fun f : ℂ → ℂ̂ => fun z => chartFiniteMap (g • f z)) '' 𝓕,
       DifferentiableOn ℂ h U := by
     rintro _ ⟨f, hf, rfl⟩
-    exact ((hol f hf).glSMul g).differentiableOn_chartFiniteMap
+    exact ((hol f hf).gl_smul g).differentiableOn_chartFiniteMap
       fun z hz => (hne f hf z hz).2.2
   have homit' : ∀ h ∈ (fun f : ℂ → ℂ̂ => fun z => chartFiniteMap (g • f z)) '' 𝓕,
       ∀ z ∈ U, h z ≠ 0 ∧ h z ≠ 1 := by
@@ -91,7 +91,7 @@ theorem montel_caratheodory_sphere {𝓕 : Set (ℂ → ℂ̂)} {U : Set ℂ} {a
     rfl
   -- Transfer back through the uniformly continuous inverse Möbius map.
   have hT : UniformContinuous (fun y : ℂ̂ => g⁻¹ • y) :=
-    CompactSpace.uniformContinuous_of_continuous (continuous_glSMul g⁻¹)
+    CompactSpace.uniformContinuous_of_continuous (continuous_gl_smul g⁻¹)
   have hN2 := h𝓖.comp_uniformContinuous hT
   refine hN2.of_forall_exists_eqOn fun f hf => ?_
   exact ⟨fun z => g⁻¹ • (g • f z), ⟨fun z => g • f z, ⟨f, hf, rfl⟩, rfl⟩,

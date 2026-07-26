@@ -156,7 +156,7 @@ theorem exists_iterate_mem_of_mem_juliaSet {f : ℂ̂ → ℂ̂} (hf : IsRationa
       have heT : Topology.IsOpenEmbedding (fun w : ℂ => inversionGL • (w : ℂ̂)) :=
         (Homeomorph.isOpenEmbedding
           ⟨⟨fun z => inversionGL • z, fun z => inversionGL • z, hinvol, hinvol⟩,
-            continuous_glSMul _, continuous_glSMul _⟩).comp
+            continuous_gl_smul _, continuous_gl_smul _⟩).comp
           OnePoint.isOpenEmbedding_coe
       have hzero : inversionGL • ((0 : ℂ) : ℂ̂) = ∞ := by
         rw [inversionGL_smul_coe]
@@ -790,8 +790,8 @@ theorem juliaSet_perfect {f : ℂ̂ → ℂ̂} (hf : IsRational f)
   have hVU : interior U ⊆ U := interior_subset
   -- STEP 1: no three distinct Julia points avoid the forward orbit of `x`.
   have hsmall : ∀ w₁ w₂ w₃ : ℂ̂,
-      w₁ ∈ JuliaSet f \ ForwardOrbit f x → w₂ ∈ JuliaSet f \ ForwardOrbit f x →
-      w₃ ∈ JuliaSet f \ ForwardOrbit f x →
+      w₁ ∈ JuliaSet f \ forwardOrbit f x → w₂ ∈ JuliaSet f \ forwardOrbit f x →
+      w₃ ∈ JuliaSet f \ forwardOrbit f x →
       w₁ ≠ w₂ → w₁ ≠ w₃ → w₂ ≠ w₃ → False := by
     intro w₁ w₂ w₃ h₁ h₂ h₃ h12 h13 h23
     obtain ⟨n, z, hzV, hzmem⟩ :=
@@ -810,9 +810,9 @@ theorem juliaSet_perfect {f : ℂ̂ → ℂ̂} (hf : IsRational f)
     · exact h₂.2 ⟨n, h⟩
     · exact h₃.2 ⟨n, h⟩
   -- STEP 2: the Julia points outside the forward orbit form a finite set.
-  have hfin : (JuliaSet f \ ForwardOrbit f x).Finite := by
+  have hfin : (JuliaSet f \ forwardOrbit f x).Finite := by
     by_contra hinf'
-    have hinf : (JuliaSet f \ ForwardOrbit f x).Infinite := hinf'
+    have hinf : (JuliaSet f \ forwardOrbit f x).Infinite := hinf'
     obtain ⟨w₁, hw₁⟩ := hinf.nonempty
     obtain ⟨w₂, hw₂⟩ := (hinf.diff (Set.finite_singleton w₁)).nonempty
     obtain ⟨w₃, hw₃⟩ := (hinf.diff ((Set.finite_singleton w₂).insert w₁)).nonempty
@@ -824,11 +824,11 @@ theorem juliaSet_perfect {f : ℂ̂ → ℂ̂} (hf : IsRational f)
   by_cases hper : ∃ k : ℕ, 1 ≤ k ∧ f^[k] x = x
   · -- STEP 3: a periodic `x` would make the Julia set finite.
     obtain ⟨k, hk1, hkfix⟩ := hper
-    have hOfin : (ForwardOrbit f x).Finite :=
+    have hOfin : (forwardOrbit f x).Finite :=
       forwardOrbit_finite_of_iterate_fixed hk1 hkfix
     have hJfin : (JuliaSet f).Finite := by
       refine (hfin.union hOfin).subset fun y hy => ?_
-      by_cases hyO : y ∈ ForwardOrbit f x
+      by_cases hyO : y ∈ forwardOrbit f x
       · exact Or.inr hyO
       · exact Or.inl ⟨hy, hyO⟩
     exact juliaSet_infinite hf hd hJfin
@@ -840,19 +840,19 @@ theorem juliaSet_perfect {f : ℂ̂ → ℂ̂} (hf : IsRational f)
     have hvJ : v ∈ JuliaSet f := by
       rw [← juliaSet_preimage_eq_of_isRational hf hd1, Set.mem_preimage, hv]
       exact hx
-    have hvO : v ∉ ForwardOrbit f x := by
+    have hvO : v ∉ forwardOrbit f x := by
       rintro ⟨i, hi⟩
       exact hper (i + 1) (Nat.le_add_left 1 i)
         (by rw [Function.iterate_succ_apply', hi, hv])
-    have hback : BackwardOrbit f v ⊆ JuliaSet f \ ForwardOrbit f x := by
+    have hback : backwardOrbit f v ⊆ JuliaSet f \ forwardOrbit f x := by
       rintro u ⟨j, hj⟩
       refine ⟨?_, ?_⟩
       · rw [← juliaSet_preimage_iterate_eq hf hd1 j, Set.mem_preimage, hj]
         exact hvJ
       · rintro ⟨i, hi⟩
         exact hvO ⟨j + i, by rw [Function.iterate_add_apply, hi, hj]⟩
-    have hbfin : (BackwardOrbit f v).Finite := hfin.subset hback
-    have hbpre : f ⁻¹' (BackwardOrbit f v) ⊆ BackwardOrbit f v := by
+    have hbfin : (backwardOrbit f v).Finite := hfin.subset hback
+    have hbpre : f ⁻¹' (backwardOrbit f v) ⊆ backwardOrbit f v := by
       rintro u ⟨j, hj⟩
       exact ⟨j + 1, by rw [Function.iterate_succ_apply]; exact hj⟩
     exact hvJ (subset_fatouSet_of_finite_preimage_subset hf hd hbfin hbpre

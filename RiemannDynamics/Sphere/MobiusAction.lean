@@ -3,8 +3,8 @@ Copyright (c) 2026 Will (Ziang) Li. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Will (Ziang) Li
 -/
-import Mathlib.Topology.Compactification.OnePoint.ProjectiveLine
 import Mathlib.LinearAlgebra.Matrix.Notation
+import Mathlib.Topology.Compactification.OnePoint.ProjectiveLine
 import RiemannDynamics.Sphere.Basic
 
 /-!
@@ -14,14 +14,20 @@ Mathlib provides the set-theoretic action of `GL (Fin 2) ℂ` on
 `ℂ̂ = OnePoint ℂ` (via the identification with `ℙ¹(ℂ)`), together with the
 explicit Möbius formulas `OnePoint.smul_some_eq_ite` and
 `OnePoint.smul_infty_eq_ite`. This file supplies the topological layer that
-Mathlib leaves open:
+Mathlib leaves open.
 
-* `continuous_glSMul` : every Möbius transformation `g • ·` is continuous on
-  `ℂ̂` (hence a homeomorphism, its inverse being the action of `g⁻¹`);
-* `exists_glSMul_eq_zero_one_infty` : the action is transitive on ordered
-  triples of distinct points — every triple can be sent to `(0, 1, ∞)`;
-* `inversionGL` : the inversion `z ↦ 1/z` as a group element, which
-  interchanges the two standard charts of `ℂ̂`.
+## Main definitions
+
+* `inversionGL` — the inversion `z ↦ 1/z` as an element of `GL (Fin 2) ℂ`,
+  which interchanges the two standard charts of `ℂ̂`.
+* `mobiusApply` — the Möbius transformation `g • ·` packaged as a map `ℂ̂ → ℂ̂`.
+
+## Main results
+
+* `continuous_gl_smul` — every Möbius transformation `g • ·` is continuous on
+  `ℂ̂` (hence a homeomorphism, its inverse being the action of `g⁻¹`).
+* `exists_gl_smul_eq_zero_one_infty` — the action is transitive on ordered triples
+  of distinct points: every such triple can be sent to `(0, 1, ∞)`.
 -/
 
 open OnePoint Matrix Filter Topology
@@ -63,7 +69,7 @@ theorem inversionGL_smul_coe_chartInftyMap {z : ℂ̂} (hz : z ≠ ((0 : ℂ) : 
 /-- **Möbius transformations are continuous** on the Riemann sphere. Since the
 inverse transformation is the action of `g⁻¹`, every `g • ·` is in fact a
 homeomorphism of `ℂ̂`. -/
-theorem continuous_glSMul (g : GL (Fin 2) ℂ) : Continuous (fun z : ℂ̂ => g • z) := by
+theorem continuous_gl_smul (g : GL (Fin 2) ℂ) : Continuous (fun z : ℂ̂ => g • z) := by
   -- The coercion `ℂ → ℂ̂` tends to `∞` along the cocompact filter.
   have hcoe_inf : Filter.Tendsto ((↑) : ℂ → ℂ̂) (Filter.cocompact ℂ) (nhds (∞ : ℂ̂)) := by
     rw [← Filter.coclosedCompact_eq_cocompact]
@@ -214,7 +220,7 @@ theorem continuous_glSMul (g : GL (Fin 2) ℂ) : Continuous (fun z : ℂ̂ => g 
 
 /-- **Triple transitivity**: any three distinct points of `ℂ̂` can be sent to
 `(0, 1, ∞)` by a Möbius transformation. -/
-theorem exists_glSMul_eq_zero_one_infty {a b c : ℂ̂}
+theorem exists_gl_smul_eq_zero_one_infty {a b c : ℂ̂}
     (hab : a ≠ b) (hac : a ≠ c) (hbc : b ≠ c) :
     ∃ g : GL (Fin 2) ℂ, g • a = ((0 : ℂ) : ℂ̂) ∧ g • b = ((1 : ℂ) : ℂ̂) ∧ g • c = ∞ := by
   -- Step 1: a transformation `g₁` sending `c` to `∞`.
@@ -270,7 +276,6 @@ theorem exists_glSMul_eq_zero_one_infty {a b c : ℂ̂}
       rw [hg₂, hcoe₂]; simp
     rw [if_pos hcond]
 
-
 /-- A Möbius transformation with explicit coefficients, as a total map on
 the sphere: `x ↦ (a·x + b)/(c·x + d)` with poles sent to `∞` and
 `∞ ↦ a/c` (or `∞` when `c = 0`). Used with variable coefficients, where
@@ -281,12 +286,15 @@ noncomputable def mobiusApply (a b c d : ℂ) : ℂ̂ → ℂ̂ := fun w =>
       if c * x + d = 0 then ∞ else (((a * x + b) / (c * x + d) : ℂ) : ℂ̂)
   | ∞ => if c = 0 then ∞ else ((a / c : ℂ) : ℂ̂)
 
+/-- The value of `mobiusApply` at a finite point: `(a·x + b)/(c·x + d)`, with a
+pole sent to `∞`. -/
 theorem mobiusApply_coe (a b c d x : ℂ) :
     mobiusApply a b c d ((x : ℂ̂))
       = if c * x + d = 0 then ∞
         else (((a * x + b) / (c * x + d) : ℂ) : ℂ̂) := by
   rfl
 
+/-- The value of `mobiusApply` at `∞`: `a/c`, or `∞` when `c = 0`. -/
 theorem mobiusApply_infty (a b c d : ℂ) :
     mobiusApply a b c d (∞ : ℂ̂)
       = if c = 0 then ∞ else ((a / c : ℂ) : ℂ̂) := by
@@ -373,7 +381,7 @@ theorem continuousOn_mobiusApply :
       rw [← SemigroupAction.mul_smul, hJJ, one_smul]
     exact (Homeomorph.isOpenEmbedding
       ⟨⟨fun z => inversionGL • z, fun z => inversionGL • z, hinvol, hinvol⟩,
-        continuous_glSMul _, continuous_glSMul _⟩).comp OnePoint.isOpenEmbedding_coe
+        continuous_gl_smul _, continuous_gl_smul _⟩).comp OnePoint.isOpenEmbedding_coe
   -- Neighborhood transport onto `𝓝 (p, ∞)` along the inversion parameterization.
   have hΘ : ∀ p : ℂ × ℂ × ℂ × ℂ,
       Filter.map (fun q : (ℂ × ℂ × ℂ × ℂ) × ℂ => (q.1, inversionGL • (q.2 : ℂ̂)))
@@ -469,7 +477,7 @@ theorem continuousOn_mobiusApply :
     have hG : ContinuousAt (fun q : (ℂ × ℂ × ℂ × ℂ) × ℂ̂ =>
         inversionGL • mobiusApply q.1.2.2.1 q.1.2.2.2 q.1.1 q.1.2.1 q.2)
         ((a, b, c, d), w) :=
-      (continuous_glSMul inversionGL).continuousAt.comp hinner
+      (continuous_gl_smul inversionGL).continuousAt.comp hinner
     refine hG.continuousWithinAt.congr (fun y hy => ?_) ?_
     · exact hrow y.1.1 y.1.2.1 y.1.2.2.1 y.1.2.2.2 hy y.2
     · exact hrow a b c d hdet w

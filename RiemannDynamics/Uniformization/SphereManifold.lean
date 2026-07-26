@@ -63,8 +63,8 @@ noncomputable def inversionHomeomorph : ℂ̂ ≃ₜ ℂ̂ :=
     invFun := (inversionGL • ·)
     left_inv := inversionGL_smul_smul
     right_inv := inversionGL_smul_smul
-    continuous_toFun := continuous_glSMul inversionGL
-    continuous_invFun := continuous_glSMul inversionGL }
+    continuous_toFun := continuous_gl_smul inversionGL
+    continuous_invFun := continuous_gl_smul inversionGL }
 
 @[simp]
 theorem inversionHomeomorph_apply (z : ℂ̂) :

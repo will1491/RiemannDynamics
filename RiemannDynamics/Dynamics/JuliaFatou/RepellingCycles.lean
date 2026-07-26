@@ -343,7 +343,7 @@ theorem mem_juliaSet_of_isRepellingPeriodicPt {f : ℂ̂ → ℂ̂}
       exact if_pos rfl
     have hU'open : IsOpen {w : ℂ | g (inversionGL • ((w : ℂ̂))) ≠ ((0 : ℂ) : ℂ̂)} :=
       isOpen_compl_singleton.preimage
-        (hg_cont.comp ((continuous_glSMul inversionGL).comp OnePoint.continuous_coe))
+        (hg_cont.comp ((continuous_gl_smul inversionGL).comp OnePoint.continuous_coe))
     have h0U' : (0 : ℂ) ∈ {w : ℂ | g (inversionGL • ((w : ℂ̂))) ≠ ((0 : ℂ) : ℂ̂)} := by
       change g (inversionGL • (((0 : ℂ) : ℂ̂))) ≠ ((0 : ℂ) : ℂ̂)
       rw [hinv0, hg_fix]

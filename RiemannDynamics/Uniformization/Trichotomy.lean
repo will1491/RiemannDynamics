@@ -80,26 +80,26 @@ theorem sphere_domain_trichotomy (U : Opens ℂ̂) (hsc : SimplyConnectedSpace �
       exact huniv (Set.eq_univ_of_forall h)
     obtain ⟨g, hg⟩ : ∃ g : GL (Fin 2) ℂ, g • z₀ = (∞ : ℂ̂) := by
       by_cases h0 : z₀ = ((0 : ℂ) : ℂ̂)
-      · obtain ⟨g, -, -, hg⟩ := exists_glSMul_eq_zero_one_infty
+      · obtain ⟨g, -, -, hg⟩ := exists_gl_smul_eq_zero_one_infty
           (a := ((1 : ℂ) : ℂ̂)) (b := ((2 : ℂ) : ℂ̂)) (c := z₀)
           (by rw [Ne, OnePoint.coe_eq_coe]; norm_num)
           (by rw [h0, Ne, OnePoint.coe_eq_coe]; norm_num)
           (by rw [h0, Ne, OnePoint.coe_eq_coe]; norm_num)
         exact ⟨g, hg⟩
       · by_cases h1 : z₀ = ((1 : ℂ) : ℂ̂)
-        · obtain ⟨g, -, -, hg⟩ := exists_glSMul_eq_zero_one_infty
+        · obtain ⟨g, -, -, hg⟩ := exists_gl_smul_eq_zero_one_infty
             (a := ((0 : ℂ) : ℂ̂)) (b := ((2 : ℂ) : ℂ̂)) (c := z₀)
             (by rw [Ne, OnePoint.coe_eq_coe]; norm_num)
             (by rw [h1, Ne, OnePoint.coe_eq_coe]; norm_num)
             (by rw [h1, Ne, OnePoint.coe_eq_coe]; norm_num)
           exact ⟨g, hg⟩
-        · obtain ⟨g, -, -, hg⟩ := exists_glSMul_eq_zero_one_infty
+        · obtain ⟨g, -, -, hg⟩ := exists_gl_smul_eq_zero_one_infty
             (a := ((0 : ℂ) : ℂ̂)) (b := ((1 : ℂ) : ℂ̂)) (c := z₀)
             (by rw [Ne, OnePoint.coe_eq_coe]; norm_num)
             (Ne.symm h0) (Ne.symm h1)
           exact ⟨g, hg⟩
     -- Transport `U` by the Möbius biholomorphism; the image avoids `∞`.
-    obtain ⟨e_g, he_g⟩ := exists_glSMul_diffeomorph g
+    obtain ⟨e_g, he_g⟩ := exists_gl_smul_diffeomorph g
     obtain ⟨V, hVimg, ⟨e₁⟩⟩ := exists_diffeomorph_opens_image e_g U
     have hinfV : (∞ : ℂ̂) ∉ (V : Set ℂ̂) := by
       rw [hVimg, he_g]

@@ -3,10 +3,9 @@ Copyright (c) 2026 Will (Ziang) Li. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Will (Ziang) Li
 -/
-import RiemannDynamics.Sphere.RationalMap
 import Mathlib.LinearAlgebra.Dimension.Constructions
 import Mathlib.LinearAlgebra.FiniteDimensional.Defs
-import Mathlib.Data.Finsupp.Defs
+import RiemannDynamics.Sphere.RationalMap
 
 /-!
 # The parameter space of degree-`d` rational maps
@@ -23,6 +22,21 @@ The finite-dimensionality of this carrier is the *contradiction target* of
 Sullivan's No Wandering Domains: a wandering Fatou component would yield an
 injective holomorphic map from a polydisk of dimension `> 2d + 1` into the
 projectivised carrier, contradicting `2d + 1`-dimensionality.
+
+## Main definitions
+
+* `RatMap` — the affine parameter space
+  `(Fin (d + 1) → ℂ) × (Fin (d + 1) → ℂ)` of degree-at-most-`d` rational maps.
+* `RatMap.toNumPoly`, `RatMap.toDenPoly` — the numerator and denominator
+  polynomials of a `RatMap d` value.
+* `RatMap.toRationalData` — the `RationalData` induced by a `RatMap d` value with
+  nonzero denominator.
+
+## Main results
+
+* `RatMap.finrank_eq` — the carrier has `ℂ`-dimension `2 * (d + 1)`.
+* `RatMap.toRationalData_degree_le`, `RatMap.exists_of_isRational_of_degree_le` —
+  the correspondence between `RatMap d` values and rational maps of degree `≤ d`.
 -/
 
 open Polynomial
@@ -119,14 +133,7 @@ theorem exists_of_isRational_of_degree_le
   have hnatDen : r₀.denReduced.natDegree ≤ d := by
     unfold RationalData.degree at hdeg
     exact le_trans (le_max_right _ _) hdeg
-  have hdenR_ne_zero : r₀.denReduced ≠ 0 := by
-    unfold RationalData.denReduced
-    intro hz
-    have h1 : r₀.den = gcd r₀.num r₀.den * (r₀.den / gcd r₀.num r₀.den) :=
-      (EuclideanDomain.mul_div_cancel' (gcd_ne_zero_of_right r₀.den_ne_zero)
-        (gcd_dvd_right _ _)).symm
-    rw [hz, mul_zero] at h1
-    exact r₀.den_ne_zero h1
+  have hdenR_ne_zero : r₀.denReduced ≠ 0 := r₀.denReduced_ne_zero
   -- Build the RatMap d from coefficient tuples
   refine ⟨⟨fun i : Fin (d+1) => r₀.numReduced.coeff i,
            fun i : Fin (d+1) => r₀.denReduced.coeff i⟩, ?_, ?_⟩

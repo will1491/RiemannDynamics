@@ -3,9 +3,9 @@ Copyright (c) 2026 Will (Ziang) Li. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Will (Ziang) Li
 -/
-import RiemannDynamics.Sphere.Basic
-import Mathlib.Analysis.SpecialFunctions.Pow.Real
 import Mathlib.Analysis.InnerProductSpace.PiL2
+import Mathlib.Analysis.SpecialFunctions.Pow.Real
+import RiemannDynamics.Sphere.Basic
 
 /-!
 # The spherical (chordal) metric on `ℂ̂`
@@ -18,6 +18,28 @@ This metric is *topologically equivalent* to the one-point-compactification
 topology already on `ℂ̂` (Mathlib's `OnePoint ℂ` instance), but its metric form
 is what the dynamics line uses for spherical-metric normal families and for
 Julia/Fatou set hyperbolicity.
+
+## Main definitions
+
+* `chordalDist`, `chordalDistInfty` — the chordal distance between two finite
+  points, and from a finite point to `∞`.
+* `sphericalDist` — the chordal / Fubini–Study metric on `ℂ̂`.
+* `stereoEmbed` — the inverse stereographic embedding `ℂ̂ → S² ⊂ ℝ³`.
+
+## Main results
+
+* `dist_stereoEmbed_eq_sphericalDist` — `sphericalDist` equals the Euclidean
+  distance between the stereographic images.
+* `sphericalDist_comm`, `sphericalDist_nonneg`, `sphericalDist_eq_zero_iff`,
+  `sphericalDist_triangle` — the metric-space axioms for `sphericalDist`.
+* `sphericalDist_induces_topology` — the metric topology is the one-point
+  compactification topology already on `ℂ̂`.
+
+## Implementation notes
+
+We do not promote `sphericalDist` to a `MetricSpace` instance here: the instance
+is added where it is first consumed, to avoid a diamond with the existing
+`OnePoint ℂ` topology.
 -/
 
 open OnePoint Real
@@ -61,7 +83,7 @@ noncomputable def stereoEmbed : ℂ̂ → EuclideanSpace ℝ (Fin 3) := fun z =>
 These three theorems together state that `sphericalDist` is a metric, and the
 metric topology it induces is the one-point compactification topology already
 on `ℂ̂`. We do not yet promote this to a `MetricSpace` instance — instances
-on `ℂ̂` are added when the downstream phase that consumes them lands. -/
+on `ℂ̂` are added where they are first consumed. -/
 
 /-- The defining identity: the chordal metric is the pullback of the
 Euclidean (`L²`) metric on `S² ⊂ ℝ³` under the inverse stereographic
@@ -311,7 +333,7 @@ theorem sphericalDist_le_two (z w : ℂ̂) : sphericalDist z w ≤ 2 := by
       norm_num
 
 /-- The spherical metric induces the one-point-compactification topology on `ℂ̂`. -/
-theorem sphericalDist_inducesTopology :
+theorem sphericalDist_induces_topology :
     ∀ s : Set ℂ̂, IsOpen s ↔
       ∀ z ∈ s, ∃ ε > 0, ∀ w, sphericalDist z w < ε → w ∈ s := by
   -- Step 1: Continuity of stereoEmbed.
@@ -399,7 +421,6 @@ theorem sphericalDist_inducesTopology :
       · intro hws
         refine ⟨w, hws, ?_⟩
         rw [dist_self]; exact hε w hws
-
 
 /-! ## Access lemmas and the Euclidean comparison -/
 

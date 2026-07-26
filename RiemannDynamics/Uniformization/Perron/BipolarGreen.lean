@@ -9165,7 +9165,7 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
     have hdet : (!![c, 0; 0, (1 : ℂ)]).det ≠ 0 := by
       rw [Matrix.det_fin_two_of]
       simpa using hc
-    obtain ⟨e, he⟩ := exists_glSMul_diffeomorph
+    obtain ⟨e, he⟩ := exists_gl_smul_diffeomorph
       (Matrix.GeneralLinearGroup.mkOfDetNeZero !![c, 0; 0, (1 : ℂ)] hdet)
     refine ⟨fun z => Matrix.GeneralLinearGroup.mkOfDetNeZero !![c, 0; 0, (1 : ℂ)] hdet • z,
       ?_, ?_, ?_⟩

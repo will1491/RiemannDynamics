@@ -15,7 +15,7 @@ of the other. On Fatou components this is an equivalence relation; the
 semigroup law `fcOrbit_add` supplies transitivity.
 
 The *grand orbit* of a component `U` as a subset of the sphere is
-`fcGrandOrbit f U = ⋃ z ∈ U, GrandOrbit f z`. For a rational map it is a
+`fcGrandOrbit f U = ⋃ z ∈ U, grandOrbit f z`. For a rational map it is a
 fully `f`-invariant subset of the Fatou set: closed under `f` and under
 `f`-preimages. This is the set over which Sullivan's argument spreads an
 `f`-invariant Beltrami coefficient (taking it to be zero on the Julia set).
@@ -34,7 +34,7 @@ def fcEquiv (f : ℂ̂ → ℂ̂) (U V : Set ℂ̂) : Prop :=
 
 /-- The grand orbit of a component, as a subset of the sphere. -/
 def fcGrandOrbit (f : ℂ̂ → ℂ̂) (U : Set ℂ̂) : Set ℂ̂ :=
-  ⋃ z ∈ U, GrandOrbit f z
+  ⋃ z ∈ U, grandOrbit f z
 
 /-- `fcEquiv` is reflexive. -/
 theorem fcEquiv_refl (U : Set ℂ̂) : fcEquiv f U U :=
