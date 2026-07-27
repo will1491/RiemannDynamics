@@ -187,7 +187,7 @@ theorem exists_upper_conjugator_of_candidates {x y : TeichRep Γ₀} {F G : ℂ 
     intro s
     obtain ⟨t, ht⟩ := y.boundary_surjective s
     have hyw : y.w (t : ℂ) = (s : ℂ) := by rw [y.w_ofReal t, ht]
-    show Ginv (F (s : ℂ)) = (s : ℂ)
+    change Ginv (F (s : ℂ)) = (s : ℂ)
     rw [← hyw, hFc.1 t, ← hGc.1 t, hGiG]
   have hbyw : ∀ t : ℝ, H (y.w t) = y.w t := by
     intro t
@@ -223,7 +223,7 @@ theorem exists_upper_conjugator_of_candidates {x y : TeichRep Γ₀} {F G : ℂ 
         Ginv (moebiusMap W' z) = moebiusMap δ (Ginv z) :=
       inv_conj_of_conj hGinvup (fun z _ => hGiG z) (fun z _ => hGGi z) hGconj
     refine ⟨δ, hδ, fun z hz => ?_⟩
-    show Ginv (F (moebiusMap γ z)) = moebiusMap δ (Ginv (F z))
+    change Ginv (F (moebiusMap γ z)) = moebiusMap δ (Ginv (F z))
     rw [hFconj z hz]
     exact hGinvconj (F z) (hFup z hz)
   -- boundary pinning upgrades the intertwining witness to the group element itself
@@ -318,7 +318,7 @@ theorem exists_upper_conjugator_of_candidates {x y : TeichRep Γ₀} {F G : ℂ 
       (hHcont.tendsto (t : ℂ)).mono_left nhdsWithin_le_nhds
     rwa [hRfix t] at h1
   · intro z hz
-    show F z = G (Ginv (F z))
+    change F z = G (Ginv (F z))
     rw [hGGi (F z)]
 
 /-! ## Extremality of Teichmüller-form candidates -/

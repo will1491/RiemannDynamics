@@ -627,7 +627,7 @@ theorem reich_strebel_of_flowData
         / (1 - ‖wirtingerQuotient h z‖ ^ 2)) := by
     calc B = ∫⁻ z in ω, rsWeight q h z * ‖q z‖ₑ :=
           lintegral_congr_ae (haeW.mono fun z hz => by
-            show rsWeightM q h κ z * ‖q z‖ₑ = rsWeight q h z * ‖q z‖ₑ
+            change rsWeightM q h κ z * ‖q z‖ₑ = rsWeight q h z * ‖q z‖ₑ
             rw [hz])
       _ = _ := lintegral_congr fun z => by
           show rsWeight q h z * ‖q z‖ₑ = _
@@ -1102,7 +1102,7 @@ theorem isOpen_moebius_image (γ : Matrix.SpecialLinearGroup (Fin 2) ℝ)
     · rintro ⟨v, hvV, rfl⟩
       have hv : 0 < v.im := hVU hvV
       refine ⟨moebiusMap_im_pos γ hv, ?_⟩
-      show moebiusMap γ⁻¹ (moebiusMap γ v) ∈ V
+      change moebiusMap γ⁻¹ (moebiusMap γ v) ∈ V
       rw [moebius_cancel γ hv]
       exact hvV
     · rintro ⟨hw, hwV⟩
@@ -1263,7 +1263,7 @@ theorem reich_strebel_tiling_bound
       rw [himeq]
       exact hγmem
   refine le_trans (lintegral_cov_le q hqc hωmeas) ?_
-  show ∫⁻ z in E, ‖q z‖ₑ ≤ q.l1Norm
+  change ∫⁻ z in E, ‖q z‖ₑ ≤ q.l1Norm
   have hsplit : ∫⁻ z in E, ‖q z‖ₑ ≤ ∑' c, ∫⁻ z in T c ∩ E, ‖q z‖ₑ := by
     calc ∫⁻ z in E, ‖q z‖ₑ ≤ ∫⁻ z in Bad ∪ ⋃ c, (T c ∩ E), ‖q z‖ₑ :=
           lintegral_mono_set hEcover
@@ -1418,7 +1418,6 @@ theorem slit_segment_subset {z₀ : ℂ} {r c : ℝ} (hc : 0 < c) (hcr : c < r)
   obtain ⟨s, t, hs, ht, hst, rfl⟩ := hw
   have hw0 : s • a + t • (z₀ + (c : ℂ)) - z₀ = s • (a - z₀) + t • (c : ℂ) := by
     have hz : (s : ℂ) + (t : ℂ) = 1 := by
-      push_cast
       exact_mod_cast congrArg (fun x : ℝ => (x : ℂ)) hst
     rw [Complex.real_smul, Complex.real_smul, Complex.real_smul, Complex.real_smul]
     linear_combination z₀ * hz
@@ -1690,7 +1689,7 @@ theorem slit_chart_branch_classification {q Ψ Φ : ℂ → ℂ} {z₀ : ℂ} {r
       intro z hz hzs
       have hΦd : DifferentiableAt ℂ Φ z := hΦ.differentiableAt (hTopen.mem_nhds ⟨hz, hzs⟩)
       have hΨd : DifferentiableAt ℂ Ψ z := hΨ.differentiableAt (hTopen.mem_nhds ⟨hz, hzs⟩)
-      show deriv (Φ - Ψ) z = 0
+      change deriv (Φ - Ψ) z = 0
       rw [(hΦd.hasDerivAt.sub hΨd.hasDerivAt).deriv]
       have := ((hsub ⟨hz, hzs⟩).1).self_of_nhds
       simpa [hu] using this
@@ -1711,7 +1710,7 @@ theorem slit_chart_branch_classification {q Ψ Φ : ℂ → ℂ} {z₀ : ℂ} {r
       intro z hz hzs
       have hΦd : DifferentiableAt ℂ Φ z := hΦ.differentiableAt (hTopen.mem_nhds ⟨hz, hzs⟩)
       have hΨd : DifferentiableAt ℂ Ψ z := hΨ.differentiableAt (hTopen.mem_nhds ⟨hz, hzs⟩)
-      show deriv (Φ + Ψ) z = 0
+      change deriv (Φ + Ψ) z = 0
       rw [(hΦd.hasDerivAt.add hΨd.hasDerivAt).deriv]
       have := ((hsub ⟨hz, hzs⟩).1).self_of_nhds
       simpa [hv] using this
@@ -2028,7 +2027,7 @@ theorem open_branch_classification {Φ₁ Φ₂ : ℂ → ℂ} {Ω : Set ℂ} (h
     · intro z hz
       have hd₂ : DifferentiableAt ℂ Φ₂ z := h₂.differentiableAt (hΩ.mem_nhds hz)
       have hd₁ : DifferentiableAt ℂ Φ₁ z := h₁.differentiableAt (hΩ.mem_nhds hz)
-      show deriv (fun w => (Φ₂ - Φ₁) w - (Φ₂ p - Φ₁ p)) z = 0
+      change deriv (fun w => (Φ₂ - Φ₁) w - (Φ₂ p - Φ₁ p)) z = 0
       rw [((hd₂.hasDerivAt.sub hd₁.hasDerivAt).sub_const _).deriv]
       have := h0 z hz
       simpa using this
@@ -2042,7 +2041,7 @@ theorem open_branch_classification {Φ₁ Φ₂ : ℂ → ℂ} {Ω : Set ℂ} (h
     · intro z hz
       have hd₂ : DifferentiableAt ℂ Φ₂ z := h₂.differentiableAt (hΩ.mem_nhds hz)
       have hd₁ : DifferentiableAt ℂ Φ₁ z := h₁.differentiableAt (hΩ.mem_nhds hz)
-      show deriv (fun w => (Φ₂ + Φ₁) w - (Φ₂ p + Φ₁ p)) z = 0
+      change deriv (fun w => (Φ₂ + Φ₁) w - (Φ₂ p + Φ₁ p)) z = 0
       rw [((hd₂.hasDerivAt.add hd₁.hasDerivAt).sub_const _).deriv]
       have := h0 z hz
       simpa using this
@@ -2178,7 +2177,7 @@ theorem ae_degenerate (P : ℝ → Prop) (c : ℝ) :
   simp
 
 /-- Absolute continuity on a degenerate interval. -/
-theorem ac_degenerate (f : ℝ → ℂ → ℝ) (g : ℝ → ℝ) (c : ℝ) :
+theorem ac_degenerate (g : ℝ → ℝ) (c : ℝ) :
     AbsolutelyContinuousOnInterval g c c := by
   rw [absolutelyContinuousOnInterval_iff]
   intro ε hε
@@ -2296,7 +2295,7 @@ theorem exists_devChain {q : ℂ → ℂ} {σ : ℝ → ℂ} {Φs Φe : ℂ → 
   have htmesh : ∀ i, t (i + 1) - t i ≤ Δ / 2 := by
     intro i
     by_cases h : i = 0
-    · rw [h, ht0, ht1]; simp; positivity
+    · rw [h, ht0, ht1]; simp only [sub_self]; positivity
     · simp only [htdef, if_neg h, if_neg (Nat.succ_ne_zero i)]
       have hstep : ((i + 1 - 1 : ℕ) : ℝ) * (Δ / 2) = ((i - 1 : ℕ) : ℝ) * (Δ / 2) + Δ / 2 := by
         have : (i + 1 - 1 : ℕ) = (i - 1) + 1 := by omega
@@ -2620,7 +2619,7 @@ theorem reich_strebel_of_flowDataSym
         / (1 - ‖wirtingerQuotient h z‖ ^ 2)) := by
     calc B = ∫⁻ z in ω, rsWeight q h z * ‖q z‖ₑ :=
           lintegral_congr_ae (haeW.mono fun z hz => by
-            show rsWeightM q h κ z * ‖q z‖ₑ = rsWeight q h z * ‖q z‖ₑ
+            change rsWeightM q h κ z * ‖q z‖ₑ = rsWeight q h z * ‖q z‖ₑ
             rw [hz])
       _ = _ := lintegral_congr fun z => by
           show rsWeight q h z * ‖q z‖ₑ = _
@@ -3010,7 +3009,7 @@ theorem localFlow_zero {Φ : ℂ → ℂ} {S : Set ℂ} (hinj : Set.InjOn Φ S) 
 theorem localFlow_add {Φ : ℂ → ℂ} {S : Set ℂ} {s t : ℝ} {w : ℂ}
     (hs : Φ w + (s : ℂ) ∈ Φ '' S) :
     localFlow Φ S t (localFlow Φ S s w) = localFlow Φ S (s + t) w := by
-  show Function.invFunOn Φ S (Φ (localFlow Φ S s w) + (t : ℂ)) = _
+  change Function.invFunOn Φ S (Φ (localFlow Φ S s w) + (t : ℂ)) = _
   rw [localFlow_dev hs]
   unfold localFlow
   congr 1
@@ -3130,14 +3129,14 @@ theorem volume_im_line_eq_zero (c : ℝ) : volume {w : ℂ | w.im = c} = 0 := by
     constructor
     · intro hw'
       refine ⟨-Complex.I * w', ?_, ?_⟩
-      · show (-Complex.I * w').re = c
+      · change (-Complex.I * w').re = c
         simp only [Complex.neg_re, Complex.mul_re, Complex.I_re, Complex.I_im, zero_mul,
           one_mul, zero_sub, neg_mul, neg_neg]
         simpa using hw'
-      · show Complex.I * (-Complex.I * w') = w'
+      · change Complex.I * (-Complex.I * w') = w'
         rw [← mul_assoc, mul_neg, Complex.I_mul_I, neg_neg, one_mul]
     · rintro ⟨w, hw, rfl⟩
-      show (Complex.I * w).im = c
+      change (Complex.I * w).im = c
       simp only [Complex.mul_im, Complex.I_re, Complex.I_im, one_mul, zero_mul]
       simpa using hw
   have hmeas : MeasurableSet {w : ℂ | w.re = c} :=
@@ -3462,7 +3461,7 @@ theorem traj_align {q : ℂ → ℂ} {σ τ : ℝ → ℂ} {b δ : ℝ} (hb : 0 
         constructor <;> linarith [hv.1, hv.2]
     have hrev := traj_reverse hτ
     rw [neg_preimage_Icc δ] at hrev
-    refine ⟨fun v => τ (-v), by show τ (-0) = _; rw [neg_zero]; exact hτ0, hrev,
+    refine ⟨fun v => τ (-v), by change τ (-0) = _; rw [neg_zero]; exact hτ0, hrev,
       U, hUo, hpU, hUH, hUne, Φ, hΦd, hΦinj, hΦsq, hevσ, ?_⟩
     filter_upwards [hneg.eventually hevτ, hneg.eventually hτΩ] with v hv hvΩ
     refine ⟨(hΩsub hvΩ).1, ?_⟩
@@ -3545,13 +3544,13 @@ theorem traj_extend {q : ℂ → ℂ}
   refine ⟨δ, hδ, σ', hEq, ?_, ?_⟩
   · intro t ht
     rcases lt_trichotomy t b with htb | heq | htb
-    · show Filter.Tendsto σ' (nhdsWithin t (Set.Icc 0 (b + δ))) (nhds (σ' t))
+    · change Filter.Tendsto σ' (nhdsWithin t (Set.Icc 0 (b + δ))) (nhds (σ' t))
       rw [nhdsWithin_left (by linarith) htb, hEq ⟨ht.1, htb.le⟩]
       exact Filter.Tendsto.congr'
         (eventually_mem_nhdsWithin.mono fun u hu => (hEq hu).symm)
         (hσ.cont t ⟨ht.1, htb.le⟩)
     · subst heq
-      show Filter.Tendsto σ' (nhdsWithin t (Set.Icc 0 (t + δ))) (nhds (σ' t))
+      change Filter.Tendsto σ' (nhdsWithin t (Set.Icc 0 (t + δ))) (nhds (σ' t))
       rw [nhdsWithin_split hb hδ.le, Filter.tendsto_sup]
       constructor
       · rw [hσ'b]
@@ -3562,7 +3561,7 @@ theorem traj_extend {q : ℂ → ℂ}
         refine Filter.Tendsto.congr'
           (eventually_mem_nhdsWithin.mono fun u hu => (hEqR u hu).symm) ?_
         exact Filter.Tendsto.comp (hυ.cont 0 h0mem) hshift0
-    · show Filter.Tendsto σ' (nhdsWithin t (Set.Icc 0 (b + δ))) (nhds (σ' t))
+    · change Filter.Tendsto σ' (nhdsWithin t (Set.Icc 0 (b + δ))) (nhds (σ' t))
       have htmem : t - b ∈ Set.Icc (-δ) δ := ⟨by linarith, by linarith [ht.2]⟩
       rw [nhdsWithin_right hb htb, hEqR t ⟨htb.le, ht.2⟩]
       refine Filter.Tendsto.congr'
@@ -4056,12 +4055,12 @@ theorem traj_close {q : ℂ → ℂ} (hq : DifferentiableOn ℂ q {z : ℂ | 0 <
   refine ⟨σ', hEq, hσ'c, ?_, ?_⟩
   · intro t ht
     rcases lt_or_eq_of_le ht.2 with htc | htc
-    · show Filter.Tendsto σ' (nhdsWithin t (Set.Icc 0 c)) (nhds (σ' t))
+    · change Filter.Tendsto σ' (nhdsWithin t (Set.Icc 0 c)) (nhds (σ' t))
       rw [nhdsWithin_Ico htc, hEq ⟨ht.1, htc⟩]
       exact Filter.Tendsto.congr'
         (eventually_mem_nhdsWithin.mono fun u hu => (hEq hu).symm)
         (hσ.cont t ⟨ht.1, htc⟩)
-    · show Filter.Tendsto σ' (nhdsWithin t (Set.Icc 0 c)) (nhds (σ' t))
+    · change Filter.Tendsto σ' (nhdsWithin t (Set.Icc 0 c)) (nhds (σ' t))
       rw [htc, hsplit c, Filter.tendsto_sup, hσ'c]
       constructor
       · exact Filter.Tendsto.congr'
@@ -4127,7 +4126,7 @@ theorem traj_coherent {q : ℂ → ℂ} {σ₀ σ₁ σ₂ : ℝ → ℂ} {δ₀
   refine mem_nhdsWithin.mpr ⟨Set.Iio δ₀, isOpen_Iio, hδ₀, ?_⟩
   rintro u ⟨hu1, hu2⟩
   have huδ : u ∈ Set.Icc 0 δ₀ := ⟨hu2.1, le_of_lt hu1⟩
-  show σ₁ u = σ₂ u
+  change σ₁ u = σ₂ u
   rw [hE₁ huδ, hE₂ huδ]
 
 /-- Below an inner cutoff the long half-open and short closed time intervals induce the
@@ -4188,7 +4187,7 @@ theorem traj_family {q : ℂ → ℂ} {σ₀ : ℝ → ℂ} {δ₀ c : ℝ}
     have hb := hpick_mem t
     have htb : t < pick t := hpick_gt t ht.1 ht.2
     have hσt : σ t = F (pick t) t := hcoh (pick t) hb t ⟨ht.1, htb.le⟩
-    show Filter.Tendsto σ (nhdsWithin t (Set.Ico 0 c)) (nhds (σ t))
+    change Filter.Tendsto σ (nhdsWithin t (Set.Ico 0 c)) (nhds (σ t))
     rw [nhdsWithin_agree htb hb.2.le, hσt]
     refine Filter.Tendsto.congr' ?_ ((hF2 (pick t) hb).cont t ⟨ht.1, htb.le⟩)
     exact eventually_mem_nhdsWithin.mono fun u hu => (hcoh (pick t) hb u hu).symm
@@ -4371,12 +4370,12 @@ theorem exists_countable_atlas {q : ℂ → ℂ}
       · exact hΨinj.mono (hsub2.trans hsubR)
       · exact fun w hw => hΨsq w (hsubR (hsub2 hw))
     refine ⟨j, ?_, ?_⟩
-    · show P (e j)
+    · change P (e j)
       rw [hj]
       exact hPa
-    · show z ∈ Metric.ball (embed (e j)).1 (embed (e j)).2
+    · change z ∈ Metric.ball (embed (e j)).1 (embed (e j)).2
       rw [hj]
-      show z ∈ Metric.ball A ((ρ : ℚ) : ℝ)
+      change z ∈ Metric.ball A ((ρ : ℚ) : ℝ)
       rw [Metric.mem_ball, dist_eq_norm]
       calc ‖z - A‖ < R / 8 := ha
         _ < (ρ : ℝ) := hρ1
@@ -4553,7 +4552,7 @@ theorem chart_image_open {q Φ : ℂ → ℂ} {S : Set ℂ} (hS : IsOpen S)
 
 /-- **Measurability of the chart inverse**: the set inverse of an injective map with open
 image, continuous inverse on the image, and constant junk off the image. -/
-theorem invFunOn_measurable {Φ : ℂ → ℂ} {S : Set ℂ} (hS : IsOpen S)
+theorem invFunOn_measurable {Φ : ℂ → ℂ} {S : Set ℂ} (_hS : IsOpen S)
     (himg : IsOpen (Φ '' S)) (hinj : Set.InjOn Φ S)
     (hopenmap : ∀ U : Set ℂ, IsOpen U → IsOpen (Φ '' (U ∩ S))) :
     Measurable (Function.invFunOn Φ S) := by
@@ -4661,7 +4660,7 @@ open Classical in
 /-- The masked atlas chart: the chart on its doubled ball, zero elsewhere and for
 inactive indices. -/
 noncomputable def Atlas.mchart {q : ℂ → ℂ} (A : Atlas q) (j : ℕ) : ℂ → ℂ :=
-  if h : A.active j then
+  if _h : A.active j then
     (Metric.ball (A.c j) (2 * A.r j)).piecewise (A.Φ j) fun _ => 0
   else fun _ => 0
 
@@ -5035,7 +5034,7 @@ theorem slope_transport {q Φ : ℂ → ℂ} {S : Set ℂ} (hS : IsOpen S)
 /-- **Chart change of the slope**: through an affine branch relation the slope
 multiplies by the branch sign. -/
 theorem slope_ratio {Φ₁ Φ₂ : ℂ → ℂ} {Ω : Set ℂ} (hΩo : IsOpen Ω)
-    {σ : ℝ → ℂ} {T u s ε : ℝ} {k : ℂ} (hu : u ∈ Set.Icc 0 T)
+    {σ : ℝ → ℂ} {T u s ε : ℝ} {k : ℂ} (_hu : u ∈ Set.Icc 0 T)
     (hcont : ContinuousWithinAt σ (Set.Icc 0 T) u) (hxΩ : σ u ∈ Ω)
     (hrel : ∀ z ∈ Ω, Φ₂ z = (ε : ℂ) * Φ₁ z + k)
     (hslope : SlopeAt Φ₁ σ (Set.Icc 0 T) u s) :
@@ -5142,7 +5141,7 @@ theorem step_follows {q : ℂ → ℂ} (A : Atlas q) {σ : ℝ → ℂ} {T : ℝ
   have h22 : (A.step2 (h, σ u, sgn)).2.2
       = sgn * ((deriv (A.Φ j') (σ (u + h)))
         * (deriv (A.Φ j) (σ (u + h)))⁻¹).re := by
-    show sgn * ((deriv (A.Φ (A.sel (Function.invFunOn (A.Φ j)
+    change sgn * ((deriv (A.Φ (A.sel (Function.invFunOn (A.Φ j)
         (Metric.ball (A.c j) (2 * A.r j))
         (A.mchart j (σ u) + ((sgn * h : ℝ) : ℂ)))))
         (Function.invFunOn (A.Φ j) (Metric.ball (A.c j) (2 * A.r j))
@@ -5191,9 +5190,9 @@ theorem stepper_follows {q : ℂ → ℂ} (A : Atlas q) {σ : ℝ → ℂ} {T : 
   | zero =>
     intro _
     refine ⟨rfl, ?_, ?_⟩
-    · show σ 0 = σ ((0 : ℕ) * h)
+    · change σ 0 = σ ((0 : ℕ) * h)
       norm_num
-    · show SlopeAt (A.Φ (A.sel (σ ((0 : ℕ) * h)))) σ (Set.Icc 0 T)
+    · change SlopeAt (A.Φ (A.sel (σ ((0 : ℕ) * h)))) σ (Set.Icc 0 T)
         ((0 : ℕ) * h) (1 : ℝ)
       norm_num
       exact hslope0
@@ -5301,14 +5300,14 @@ theorem step2_neg {q : ℂ → ℂ} (A : Atlas q) (p : ℝ × ℂ × ℝ) :
     push_cast
     ring
   refine Prod.ext rfl (Prod.ext ?_ ?_)
-  · show Function.invFunOn (A.Φ (A.sel p.2.1))
+  · change Function.invFunOn (A.Φ (A.sel p.2.1))
         (Metric.ball (A.c (A.sel p.2.1)) (2 * A.r (A.sel p.2.1)))
         (A.mchart (A.sel p.2.1) p.2.1 + ((-p.2.2 * -p.1 : ℝ) : ℂ))
       = Function.invFunOn (A.Φ (A.sel p.2.1))
         (Metric.ball (A.c (A.sel p.2.1)) (2 * A.r (A.sel p.2.1)))
         (A.mchart (A.sel p.2.1) p.2.1 + ((p.2.2 * p.1 : ℝ) : ℂ))
     rw [harg]
-  · show (-p.2.2) * ((deriv (A.Φ (A.sel (Function.invFunOn (A.Φ (A.sel p.2.1))
+  · change (-p.2.2) * ((deriv (A.Φ (A.sel (Function.invFunOn (A.Φ (A.sel p.2.1))
         (Metric.ball (A.c (A.sel p.2.1)) (2 * A.r (A.sel p.2.1)))
         (A.mchart (A.sel p.2.1) p.2.1 + ((-p.2.2 * -p.1 : ℝ) : ℂ)))))
         (Function.invFunOn (A.Φ (A.sel p.2.1))
@@ -5348,9 +5347,9 @@ theorem stepper_follows_gen {q : ℂ → ℂ} (A : Atlas q) {σ : ℝ → ℂ} {
   | zero =>
     intro _
     refine ⟨rfl, ?_, ?_⟩
-    · show σ 0 = σ ((0 : ℕ) * h)
+    · change σ 0 = σ ((0 : ℕ) * h)
       norm_num
-    · show SlopeAt (A.Φ (A.sel (σ ((0 : ℕ) * h)))) σ (Set.Icc 0 T) ((0 : ℕ) * h) s₀
+    · change SlopeAt (A.Φ (A.sel (σ ((0 : ℕ) * h)))) σ (Set.Icc 0 T) ((0 : ℕ) * h) s₀
       norm_num
       exact hslope0
   | succ k ih =>
@@ -5521,7 +5520,7 @@ theorem step2_zero {q : ℂ → ℂ} (A : Atlas q) {z : ℂ} (hz : 0 < z.im)
     rw [h0] at hsq
     simpa using hsq.symm
   refine Prod.ext rfl (Prod.ext hinv ?_)
-  show s * ((deriv (A.Φ (A.sel (Function.invFunOn (A.Φ j)
+  change s * ((deriv (A.Φ (A.sel (Function.invFunOn (A.Φ j)
       (Metric.ball (A.c j) (2 * A.r j)) (A.mchart j z + ((s * 0 : ℝ) : ℂ)))))
       (Function.invFunOn (A.Φ j) (Metric.ball (A.c j) (2 * A.r j))
       (A.mchart j z + ((s * 0 : ℝ) : ℂ))))
@@ -5544,7 +5543,7 @@ theorem flow_zero {q : ℂ → ℂ} (A : Atlas q) {z : ℂ} (hz : 0 < z.im)
         rw [Function.iterate_succ_apply', ih,
           show ((0 : ℝ) / (n + 1), z, (1 : ℝ)) = ((0 : ℝ), z, (1 : ℝ)) by norm_num,
           step2_zero A hz hq0 1]
-    show ((A.step2)^[n + 1] ((0 : ℝ) / (n + 1), z, 1)).2.1 = z
+    change ((A.step2)^[n + 1] ((0 : ℝ) / (n + 1), z, 1)).2.1 = z
     rw [hstep (n + 1)]
   have hconv : Filter.Tendsto (fun n => A.flowApprox n ((0 : ℝ), z)) Filter.atTop
       (nhds z) := by
@@ -5708,7 +5707,7 @@ theorem zeros_isolated {q : ℂ → ℂ}
     have hconv : Convex ℝ {z : ℂ | 0 < z.im} := by
       intro a ha b hb s t hs ht hst
       have him : (s • a + t • b).im = s * a.im + t * b.im := by
-        simp [Complex.add_im, Complex.smul_im]
+        simp [Complex.add_im]
       rw [Set.mem_setOf_eq, him]
       rcases eq_or_lt_of_le hs with hs0 | hs0
       · rw [← hs0] at hst ⊢
@@ -5801,7 +5800,7 @@ theorem exists_annulus {q : ℂ → ℂ}
       rw [← Complex.sub_im]
       exact Complex.abs_im_le_norm _
     have h2 := abs_le.mp (le_trans h1 (hmemA w hw).2)
-    show 0 < w.im
+    change 0 < w.im
     linarith [h2.1]
   have hAne : ∀ w ∈ A, q w ≠ 0 := by
     intro w hw
@@ -5840,7 +5839,7 @@ theorem exists_annulus {q : ℂ → ℂ}
     exact hw₀min ⟨Metric.mem_closedBall.mpr (by rwa [dist_eq_norm]), h1⟩
 
 /-- Mean value bound from interior derivatives and continuity on the closed segment. -/
-theorem seg_bound {σ : ℝ → ℂ} {v u : ℝ} (hvu : v < u) {C : ℝ} (hC : 0 ≤ C)
+theorem seg_bound {σ : ℝ → ℂ} {v u : ℝ} (hvu : v < u) {C : ℝ} (_hC : 0 ≤ C)
     (hσcont : ContinuousOn σ (Set.Icc v u))
     (hderiv : ∀ w ∈ Set.Ioo v u, HasDerivAt σ (deriv σ w) w)
     (hbnd : ∀ w ∈ Set.Ioo v u, ‖deriv σ w‖ ≤ C) :
@@ -5921,7 +5920,7 @@ and of flat time span below the annulus cost stays inside the ball. -/
 theorem traj_stay {q : ℂ → ℂ} {σ : ℝ → ℂ} {T : ℝ}
     (hσ : IsTrajOn q σ (Set.Icc 0 T)) {x : ℂ} {e c : ℝ} (he : 0 < e) (hc : 0 < c)
     (hann : ∀ w : ℂ, e / 2 ≤ ‖w - x‖ → ‖w - x‖ ≤ e → c ≤ Real.sqrt ‖q w‖)
-    {a b : ℝ} (ha : 0 ≤ a) (hab : a ≤ b) (hbT : b ≤ T)
+    {a b : ℝ} (ha : 0 ≤ a) (_hab : a ≤ b) (hbT : b ≤ T)
     (hstart : ‖σ a - x‖ < e / 4) (hspan : b - a < c * (e / 4)) :
     ∀ u ∈ Set.Icc a b, ‖σ u - x‖ < e := by
   by_contra hcon
@@ -5955,7 +5954,7 @@ theorem traj_stay {q : ℂ → ℂ} {σ : ℝ → ℂ} {T : ℝ}
     hcont2.preimage_isClosed_of_isClosed isClosed_Icc isClosed_Iic
   have hS₂ne : S₂.Nonempty :=
     ⟨a, Set.left_mem_Icc.mpr haustar.le, by
-      show ‖σ a - x‖ ≤ e / 2
+      change ‖σ a - x‖ ≤ e / 2
       linarith⟩
   have hS₂bdd : BddAbove S₂ := ⟨ustar, fun w hw => hw.1.2⟩
   set v : ℝ := sSup S₂ with hvdef
@@ -6462,7 +6461,7 @@ theorem ball_mass {q : ℂ → ℂ} {z₀ : ℂ} {M : ℕ} {r₀ C₁ C₂ : ℝ
 /-- **Compact track on the maximal window**: the track of a trajectory on `[0, c)` over a
 cocompact group stays in one compact subset of the upper half plane. -/
 theorem traj_track_compact_Ico {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
-    (hΓ : IsFuchsianGroup Γ)
+    (_hΓ : IsFuchsianGroup Γ)
     (hcc : CompactSpace (Quotient (MulAction.orbitRel Γ UpperHalfPlane)))
     (q : QuadraticDifferential Γ) (hq0 : ∃ z₀ : ℂ, 0 < z₀.im ∧ q z₀ ≠ 0)
     {σ : ℝ → ℂ} {c : ℝ} (hc : 0 < c) (hσ : IsTrajOn q σ (Set.Ico 0 c)) :
@@ -6677,7 +6676,7 @@ theorem arrival_unique {q Φ : ℂ → ℂ} {S : Set ℂ} (hS : IsOpen S)
     rw [hset] at h1
     have hfun : (fun u : ℝ => (fun v : ℝ => σ (v + a)) (-u)) = fun u => σ (a - u) := by
       funext u
-      show σ (-u + a) = σ (a - u)
+      change σ (-u + a) = σ (a - u)
       rw [neg_add_eq_sub]
     rwa [hfun] at h1
   have hmap : Filter.Tendsto (fun u : ℝ => a - u)
@@ -6849,7 +6848,7 @@ theorem chain_cov {q : ℂ → ℂ} (A : Atlas q) {h : ℝ} {N : ℕ}
       refine Set.image_congr fun z hz => ?_
       obtain ⟨hsel, hsgn, -, hmem, -⟩ := hleg k hk z hz
       rw [pos_succ, step2_fst, hsel, hsgn]
-      show Function.invFunOn (A.Φ (c k))
+      change Function.invFunOn (A.Φ (c k))
           (Metric.ball (A.c (c k)) (2 * A.r (c k)))
           (A.mchart (c k) (pos A h k z) + ((ε k * h : ℝ) : ℂ))
         = Function.invFunOn (A.Φ (c k))
@@ -6990,7 +6989,7 @@ theorem itin_eq {q : ℂ → ℂ} (A : Atlas q) {h : ℝ} {N : ℕ} {E : Set ℂ
   have hpm : (sgn A h (k : ℕ) z = 1 ∨ sgn A h (k : ℕ) z = -1) :=
     ((hEL hzE) (k : ℕ) (by omega)).2.2.1
   refine Prod.ext hsel.symm ?_
-  show (c k).2 = (if sgn A h (k : ℕ) z = 1 then true else false)
+  change (c k).2 = (if sgn A h (k : ℕ) z = 1 then true else false)
   cases hcb : (c k).2
   · simp only [hcb, Bool.false_eq_true, if_false] at hsgn
     rw [if_neg (by rw [hsgn]; norm_num)]
@@ -7014,7 +7013,7 @@ theorem flow_push {q : ℂ → ℂ} (hqm : Measurable q) (A : Atlas q) {h : ℝ}
     · intro hz
       refine Set.mem_iUnion.mpr ⟨itin A h N z, hz, fun k => ⟨rfl, ?_⟩⟩
       have hpm := ((hEL hz) (k : ℕ) (by omega)).2.2.1
-      show sgn A h (k : ℕ) z
+      change sgn A h (k : ℕ) z
         = (if (if sgn A h (k : ℕ) z = 1 then true else false) then (1 : ℝ) else -1)
       rcases hpm with h1 | h1
       · rw [if_pos h1]
@@ -7081,7 +7080,7 @@ theorem seg_traj {q Φ : ℂ → ℂ} {S : Set ℂ} (hS : IsOpen S)
     (hΦd : DifferentiableOn ℂ Φ S) (hΦinj : Set.InjOn Φ S)
     (hSH : S ⊆ {z : ℂ | 0 < z.im}) (hSne : ∀ w ∈ S, q w ≠ 0)
     (hΦsq : ∀ w ∈ S, deriv Φ w ^ 2 = -q w)
-    {z : ℂ} (hz : z ∈ S) {sgn h : ℝ} (hsgn : sgn = 1 ∨ sgn = -1) (hh : 0 < h)
+    {z : ℂ} (hz : z ∈ S) {sgn h : ℝ} (hsgn : sgn = 1 ∨ sgn = -1) (_hh : 0 < h)
     (hseg : ∀ u ∈ Set.Icc (0 : ℝ) h, Φ z + ((sgn * u : ℝ) : ℂ) ∈ Φ '' S) :
     (fun u => localFlow Φ S (sgn * u) z) 0 = z ∧
     IsTrajOn q (fun u => localFlow Φ S (sgn * u) z) (Set.Icc 0 h) ∧
@@ -7130,7 +7129,7 @@ theorem seg_traj {q Φ : ℂ → ℂ} {S : Set ℂ} (hS : IsOpen S)
       rw [hσdev u hu, hσdev t ht]
       push_cast
       rcases hsgn with h1 | h1 <;> rw [h1] <;> push_cast <;> ring
-  · show ∀ᶠ u in nhdsWithin 0 (Set.Icc 0 h), Φ (σ u) = Φ (σ 0) + sgn * ((u - 0 : ℝ) : ℂ)
+  · change ∀ᶠ u in nhdsWithin 0 (Set.Icc 0 h), Φ (σ u) = Φ (σ 0) + sgn * ((u - 0 : ℝ) : ℂ)
     filter_upwards [eventually_mem_nhdsWithin] with u hu
     rw [hσdev u hu, hσ0]
     push_cast
@@ -7351,7 +7350,7 @@ theorem sgn_succ {q : ℂ → ℂ} (A : Atlas q) (h : ℝ) (k : ℕ) (z : ℂ) :
   rw [sgn, Function.iterate_succ_apply']
   have hpos : (A.step2 ((A.step2)^[k] (h, z, 1))).2.1 = pos A h (k + 1) z := by
     rw [pos, Function.iterate_succ_apply']
-  show ((A.step2)^[k] (h, z, 1)).2.2
+  change ((A.step2)^[k] (h, z, 1)).2.2
       * ((deriv (A.Φ (A.sel (A.step2 ((A.step2)^[k] (h, z, 1))).2.1))
           ((A.step2 ((A.step2)^[k] (h, z, 1))).2.1))
         * (deriv (A.Φ (A.sel ((A.step2)^[k] (h, z, 1)).2.1))
@@ -7389,7 +7388,7 @@ theorem slegal_step {q : ℂ → ℂ} (A : Atlas q) {h : ℝ} (hh : 0 < h)
   set τ : ℝ → ℂ := fun u => localFlow (A.Φ j) S (s * u) x with hτdef
   have hτh : τ h = pos A h (k + 1) z := by
     rw [pos_succ, step2_fst]
-    show Function.invFunOn (A.Φ j) S (A.Φ j x + ((s * h : ℝ) : ℂ)) = _
+    change Function.invFunOn (A.Φ j) S (A.Φ j x + ((s * h : ℝ) : ℂ)) = _
     rw [← A.mchart_eq hact hxS]
   have hhmem : h ∈ Set.Icc (0 : ℝ) h := Set.right_mem_Icc.mpr hh.le
   have hτhS : τ h ∈ S := localFlow_mem (hseg h hhmem)
@@ -7482,13 +7481,13 @@ theorem traj_glue_units {q Φ : ℂ → ℂ} {S : Set ℂ} (hS : IsOpen S)
   refine ⟨σ', hEq, hEqR, ?_, ?_⟩
   · intro t ht
     rcases lt_trichotomy t b with htb | heq | htb
-    · show Filter.Tendsto σ' (nhdsWithin t (Set.Icc 0 (b + δ))) (nhds (σ' t))
+    · change Filter.Tendsto σ' (nhdsWithin t (Set.Icc 0 (b + δ))) (nhds (σ' t))
       rw [nhdsWithin_left (by linarith) htb, hEq ⟨ht.1, htb.le⟩]
       exact Filter.Tendsto.congr'
         (eventually_mem_nhdsWithin.mono fun u hu => (hEq hu).symm)
         (hσ.cont t ⟨ht.1, htb.le⟩)
     · subst heq
-      show Filter.Tendsto σ' (nhdsWithin t (Set.Icc 0 (t + δ))) (nhds (σ' t))
+      change Filter.Tendsto σ' (nhdsWithin t (Set.Icc 0 (t + δ))) (nhds (σ' t))
       rw [nhdsWithin_split hb hδ.le, Filter.tendsto_sup]
       constructor
       · rw [hσ'b]
@@ -7502,7 +7501,7 @@ theorem traj_glue_units {q Φ : ℂ → ℂ} {S : Set ℂ} (hS : IsOpen S)
         have hsh := hshift t
         rw [sub_self] at hsh
         exact Filter.Tendsto.comp (hτ.cont 0 h0mem) hsh
-    · show Filter.Tendsto σ' (nhdsWithin t (Set.Icc 0 (b + δ))) (nhds (σ' t))
+    · change Filter.Tendsto σ' (nhdsWithin t (Set.Icc 0 (b + δ))) (nhds (σ' t))
       have htmem : t - b ∈ Set.Icc 0 δ := ⟨by linarith, by linarith [ht.2]⟩
       rw [nhdsWithin_right hb htb, hEqR t ⟨htb.le, ht.2⟩]
       exact Filter.Tendsto.congr'
@@ -7581,7 +7580,7 @@ theorem slope_glue_shift {Φ : ℂ → ℂ} {σ' τ : ℝ → ℂ} {b δ s : ℝ
       simpa using h2
     · refine Filter.tendsto_principal_principal.mpr fun u hu => ?_
       exact ⟨by linarith [hu.1], by linarith [hu.2]⟩
-  show ∀ᶠ u in nhdsWithin (b + δ) (Set.Icc 0 (b + δ)),
+  change ∀ᶠ u in nhdsWithin (b + δ) (Set.Icc 0 (b + δ)),
     Φ (σ' u) = Φ (σ' (b + δ)) + s * ((u - (b + δ) : ℝ) : ℂ)
   rw [nhdsWithin_right hb (by linarith : b < b + δ)]
   filter_upwards [hshift.eventually hτ, eventually_mem_nhdsWithin] with u hu huI
@@ -7642,7 +7641,7 @@ theorem slegal_traj {q : ℂ → ℂ} (A : Atlas q) {h : ℝ} (hh : 0 < h) :
       positivity
     refine ⟨σ', ?_, hσ'traj, ?_, ?_, ?_⟩
     · rw [hEqL (Set.left_mem_Icc.mpr hb), hσ0]
-    · show ∀ᶠ u in nhdsWithin 0 (Set.Icc 0 (b + h)),
+    · change ∀ᶠ u in nhdsWithin 0 (Set.Icc 0 (b + h)),
         A.Φ (A.sel z) (σ' u) = A.Φ (A.sel z) (σ' 0) + 1 * ((u - 0 : ℝ) : ℂ)
       rw [nhdsWithin_left (by linarith : b ≤ b + h) hb0]
       have hσ'0 : σ' 0 = σ 0 := hEqL (Set.left_mem_Icc.mpr hb)
@@ -7832,7 +7831,7 @@ theorem dying_seed_near_zero {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) �
       have h2 : |z₀.im - (σ u).im| ≤ ‖z₀ - σ u‖ := by
         simpa [Complex.sub_im] using Complex.abs_im_le_norm (z₀ - σ u)
       have h3 := (abs_le.mp h2).1
-      show η / 2 ≤ z₀.im
+      change η / 2 ≤ z₀.im
       linarith
   have hrec : ∃ z₀ ∈ Z, ∀ ρ, 0 < ρ → ∃ u ∈ Set.Ico 0 c, ‖σ u - z₀‖ < ρ := by
     by_contra hcon
@@ -8065,7 +8064,7 @@ theorem traj_glue_overlap {q : ℂ → ℂ} {σ τ' : ℝ → ℂ} {b c : ℝ}
         rw [hfilt t htI]
         filter_upwards [self_mem_nhdsWithin] with u hu
         exact (hE hu).symm
-      show Filter.Tendsto σ'' (nhdsWithin t (Set.Icc 0 c)) (nhds (σ'' t))
+      change Filter.Tendsto σ'' (nhdsWithin t (Set.Icc 0 c)) (nhds (σ'' t))
       rw [hE htI]
       exact h2
     · have hτc : ContinuousWithinAt τ' (Set.Icc 0 (c - b)) (c - b) :=
@@ -8079,7 +8078,7 @@ theorem traj_glue_overlap {q : ℂ → ℂ} {σ τ' : ℝ → ℂ} {b c : ℝ}
         filter_upwards [self_mem_nhdsWithin] with u hu
         exact (hmid u hu).symm
       rw [le_antisymm ht.2 hge]
-      show Filter.Tendsto σ'' (nhdsWithin c (Set.Icc 0 c)) (nhds (σ'' c))
+      change Filter.Tendsto σ'' (nhdsWithin c (Set.Icc 0 c)) (nhds (σ'' c))
       rw [hc'', hright]
       exact h2
   refine ⟨σ'', hE, ⟨hcont, ?_⟩⟩
@@ -8153,9 +8152,9 @@ theorem seed_plus {q : ℂ → ℂ}
     rw [hε1] at this
     exact this
   · refine ⟨δ, hδ, fun u => σs (-u),
-      by show σs (-0) = z; rw [neg_zero]; exact hσs0, ?_, ?_⟩
+      by change σs (-0) = z; rw [neg_zero]; exact hσs0, ?_, ?_⟩
     · refine traj_mono (traj_reverse hσs) fun u hu => ?_
-      show -u ∈ Set.Icc (-δ) δ
+      change -u ∈ Set.Icc (-δ) δ
       rw [Set.mem_Icc]
       exact ⟨by linarith [hu.2], by linarith [hu.1]⟩
     · have hneg : Filter.Tendsto (fun u : ℝ => -u) (nhdsWithin 0 (Set.Icc 0 δ))
@@ -8224,7 +8223,7 @@ theorem dying_data {q : ℂ → ℂ}
     · rw [hE' (Set.left_mem_Icc.mpr hbpos.le), hσ0]
     · have h1 : ∀ᶠ v in nhdsWithin 0 (Set.Icc 0 b), A.Φ (A.sel z) (σ v)
           = A.Φ (A.sel z) (σ 0) + ((1 : ℝ) : ℂ) * ((v - 0 : ℝ) : ℂ) := hσS
-      show ∀ᶠ v in nhdsWithin 0 (Set.Icc 0 (b + δe)), A.Φ (A.sel z) (σ' v)
+      change ∀ᶠ v in nhdsWithin 0 (Set.Icc 0 (b + δe)), A.Φ (A.sel z) (σ' v)
         = A.Φ (A.sel z) (σ' 0) + ((1 : ℝ) : ℂ) * ((v - 0 : ℝ) : ℂ)
       rw [nhdsWithin_left (by linarith : b ≤ b + δe) hbpos]
       filter_upwards [h1, self_mem_nhdsWithin] with v hv hvm
@@ -8264,7 +8263,7 @@ theorem dying_data {q : ℂ → ℂ}
   have hσmS : SlopeAt (A.Φ (A.sel z)) σm (Set.Ico 0 c) 0 1 := by
     have h1 : ∀ᶠ v in nhdsWithin 0 (Set.Icc 0 δ₀), A.Φ (A.sel z) (σg v)
         = A.Φ (A.sel z) (σg 0) + ((1 : ℝ) : ℂ) * ((v - 0 : ℝ) : ℂ) := hσ₀S
-    show ∀ᶠ v in nhdsWithin 0 (Set.Ico 0 c), A.Φ (A.sel z) (σm v)
+    change ∀ᶠ v in nhdsWithin 0 (Set.Ico 0 c), A.Φ (A.sel z) (σm v)
       = A.Φ (A.sel z) (σm 0) + ((1 : ℝ) : ℂ) * ((v - 0 : ℝ) : ℂ)
     rw [nhdsWithin_agree hδ₀ (le_of_lt hδ₀c')]
     filter_upwards [h1, self_mem_nhdsWithin] with v hv hvm
@@ -8279,7 +8278,7 @@ theorem dying_data {q : ℂ → ℂ}
   have hσ''S : SlopeAt (A.Φ (A.sel z)) σ'' (Set.Icc 0 (c + δe)) 0 1 := by
     have h1 : ∀ᶠ v in nhdsWithin 0 (Set.Ico 0 c), A.Φ (A.sel z) (σm v)
         = A.Φ (A.sel z) (σm 0) + ((1 : ℝ) : ℂ) * ((v - 0 : ℝ) : ℂ) := hσmS
-    show ∀ᶠ v in nhdsWithin 0 (Set.Icc 0 (c + δe)), A.Φ (A.sel z) (σ'' v)
+    change ∀ᶠ v in nhdsWithin 0 (Set.Icc 0 (c + δe)), A.Φ (A.sel z) (σ'' v)
       = A.Φ (A.sel z) (σ'' 0) + ((1 : ℝ) : ℂ) * ((v - 0 : ℝ) : ℂ)
     have hfl : nhdsWithin (0 : ℝ) (Set.Icc 0 (c + δe))
         = nhdsWithin 0 (Set.Ico 0 c) := by
@@ -8347,10 +8346,10 @@ theorem window_dying {q : ℂ → ℂ}
     ⟨hu.1, lt_of_le_of_lt hu.2 hac⟩
   refine ⟨σm, ⟨hσm0, traj_mono hσm hsuba, hslope_cut a ha hac⟩,
     c - a, fun u => σm (u + a), by linarith, by linarith, ?_, ?_, ?_⟩
-  · show σm (0 + a) = σm a
+  · change σm (0 + a) = σm a
     rw [zero_add]
   · refine traj_mono (traj_shift a hσm) fun u hu => ?_
-    show u + a ∈ Set.Ico 0 c
+    change u + a ∈ Set.Ico 0 c
     rw [Set.mem_Ico]
     exact ⟨by linarith [hu.1], by linarith [hu.2]⟩
   · rintro ⟨τ', hEτ, hτ'⟩
@@ -8520,7 +8519,7 @@ theorem dying_seed_located {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ
       have h2 : |z₀.im - (σ u).im| ≤ ‖z₀ - σ u‖ := by
         simpa [Complex.sub_im] using Complex.abs_im_le_norm (z₀ - σ u)
       have h3 := (abs_le.mp h2).1
-      show η / 2 ≤ z₀.im
+      change η / 2 ≤ z₀.im
       linarith
   have hrec : ∃ z₀ ∈ Z, ∀ ρ, 0 < ρ → ∃ u ∈ Set.Ico 0 c, ‖σ u - z₀‖ < ρ := by
     by_contra hcon
@@ -8582,7 +8581,7 @@ theorem near_height_dist {p v : ℂ} (hp : 0 < p.im)
     rw [show p.im / 2 = Real.sqrt ((p.im / 2) ^ 2) from
       (Real.sqrt_sq (by positivity)).symm]
     exact Real.sqrt_le_sqrt (by nlinarith)
-  show dist (v : ℂ) (p : ℂ) / Real.sqrt (v.im * p.im) ≤ 1
+  change dist (v : ℂ) (p : ℂ) / Real.sqrt (v.im * p.im) ≤ 1
   rw [div_le_one hsq, dist_eq_norm]
   exact le_trans hv hs
 
@@ -8727,7 +8726,7 @@ theorem zero_pool {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
     have h3 : dist (⟨z, hz⟩ : UpperHalfPlane) (⟨v, hv⟩ : UpperHalfPlane) ≤ R := by
       rw [dist_comm]
       exact hdist
-    show zm.im / Real.exp R ≤ v.im
+    change zm.im / Real.exp R ≤ v.im
     refine le_trans ?_ h1
     calc zm.im / Real.exp R ≤ z.im / Real.exp R := by gcongr
       _ ≤ z.im / Real.exp (dist (⟨z, hz⟩ : UpperHalfPlane)
@@ -9054,7 +9053,7 @@ theorem grid_union_push {q : ℂ → ℂ} (hqm : Measurable q) (A : Atlas q)
       refine ⟨⟨N, itin A (a / (N + 1)) N z⟩, hz, fun k => ⟨rfl, ?_⟩⟩
       have hpm := ((hEL N hz) (k : ℕ)
         (by exact Nat.lt_succ_iff.mp k.isLt)).2.2.1
-      show sgn A (a / (N + 1)) (k : ℕ) z
+      change sgn A (a / (N + 1)) (k : ℕ) z
         = (if (if sgn A (a / (N + 1)) (k : ℕ) z = 1 then true else false)
           then (1 : ℝ) else -1)
       rcases hpm with h1 | h1
@@ -9580,7 +9579,7 @@ theorem forward_good_ae {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
     refine ⟨Complex.I, ?_, ?_⟩
     · rw [Metric.mem_closedBall, dist_zero_right, Complex.norm_I]
       linarith
-    · show 1 / ((m : ℝ) + 1) ≤ Complex.I.im
+    · change 1 / ((m : ℝ) + 1) ≤ Complex.I.im
       rw [Complex.I_im, div_le_one (by positivity)]
       linarith
   have hKH : ∀ m, K m ⊆ {z : ℂ | 0 < z.im} := fun m z hz => by
@@ -10244,7 +10243,7 @@ theorem exists_devChain'' {q : ℂ → ℂ} {σ : ℝ → ℂ} {Φs Φe : ℂ �
     intro i
     by_cases h : i = 0
     · rw [h, ht0, ht1]
-      simp
+      simp only [sub_self]
       positivity
     · simp only [htdef, if_neg h, if_neg (Nat.succ_ne_zero i)]
       have hstep : ((i + 1 - 1 : ℕ) : ℝ) * (Δ / 2)
@@ -10533,7 +10532,7 @@ theorem chain_coherence {q : ℂ → ℂ} {U : Set ℂ} (hU : IsOpen U)
       have hcohi := hcoh i hi
       have hε2 : D.ε i * D.ε i = 1 := by
         rcases D.hsign i with h | h <;> rw [h] <;> norm_num
-      show chainPull D.ε D.c i
+      change chainPull D.ε D.c i
         (D.ε i * ((sg (i + 1) * y + kg (i + 1)) - D.c i)) = sg 0 * y + kg 0
       have harg : D.ε i * ((sg (i + 1) * y + kg (i + 1)) - D.c i)
           = sg i * y + kg i := by
@@ -10608,7 +10607,7 @@ theorem traj_deriv_qsq {q : ℂ → ℂ} {σ : ℝ → ℂ} {s : Set ℝ} {t : �
       hF.comp_ofReal
     refine h1.congr_of_eventuallyEq ?_
     filter_upwards [hev] with u hu
-    show Φ (σ u) = Φ (σ t) + ((u : ℂ) - (t : ℂ))
+    change Φ (σ u) = Φ (σ t) + ((u : ℂ) - (t : ℂ))
     rw [hu.2]
     push_cast
     ring
@@ -10723,10 +10722,10 @@ theorem acOn_comp_affine {X : Type*} [PseudoMetricSpace X] {f : ℝ → X}
     rw [hmin] at h1
     rw [hmax] at h2
     constructor
-    · show min x y < (s - d) / c
+    · change min x y < (s - d) / c
       rw [lt_div_iff₀ hc]
       nlinarith
-    · show (s - d) / c ≤ max x y
+    · change (s - d) / c ≤ max x y
       rw [div_le_iff₀ hc]
       nlinarith
   have hmemIcc : ∀ t : ℝ, t ∈ Set.uIcc a b →
@@ -10735,11 +10734,11 @@ theorem acOn_comp_affine {X : Type*} [PseudoMetricSpace X] {f : ℝ → X}
     rw [Set.uIcc] at ht ⊢
     obtain ⟨h1, h2⟩ := ht
     constructor
-    · show min (c * a + d) (c * b + d) ≤ c * t + d
+    · change min (c * a + d) (c * b + d) ≤ c * t + d
       rw [hmin]
       have h3 : (min a b : ℝ) ≤ t := h1
       nlinarith
-    · show c * t + d ≤ max (c * a + d) (c * b + d)
+    · change c * t + d ≤ max (c * a + d) (c * b + d)
       rw [hmax]
       have h3 : t ≤ (max a b : ℝ) := h2
       nlinarith
@@ -10949,7 +10948,7 @@ theorem pathJoin_isFlatPath {γ₁ γ₂ : ℝ → ℂ} {a b c : ℂ}
   · rw [pathJoin, if_neg (by norm_num : ¬(1 : ℝ) ≤ 1 / 2)]
     rw [show 2 * (1 : ℝ) - 1 = 1 by norm_num, h₂.final]
   · intro s hs
-    show Filter.Tendsto (pathJoin γ₁ γ₂) (nhdsWithin s (Set.Icc (0 : ℝ) 1))
+    change Filter.Tendsto (pathJoin γ₁ γ₂) (nhdsWithin s (Set.Icc (0 : ℝ) 1))
       (nhds (pathJoin γ₁ γ₂ s))
     rcases lt_trichotomy s (1 / 2) with hlt | heq | hgt
     · have hsI : s ∈ Set.Icc (0 : ℝ) (1 / 2) := ⟨hs.1, hlt.le⟩
@@ -11113,7 +11112,7 @@ theorem flow_eq_pos_bwd {q : ℂ → ℂ}
   have hσS' : SlopeAt (A.Φ (A.sel z)) σ (Set.Icc 0 t) 0 (-1) := by
     have h1 : SlopeAt ((mirrorAtlas A).Φ (A.sel z)) σ (Set.Icc 0 t) 0 1 := hσS
     rw [mirror_Φ A hact] at h1
-    show ∀ᶠ v in nhdsWithin 0 (Set.Icc 0 t),
+    change ∀ᶠ v in nhdsWithin 0 (Set.Icc 0 t),
       A.Φ (A.sel z) (σ v) = A.Φ (A.sel z) (σ 0) + ((-1 : ℝ) : ℂ) * ((v - 0 : ℝ) : ℂ)
     filter_upwards [h1] with v hv
     have hv' : -(A.Φ (A.sel z) (σ v))
@@ -11151,7 +11150,7 @@ theorem good_slegal_bwd {q : ℂ → ℂ}
       (Set.Icc 0 t) 0 1 := by
     have h1 : SlopeAt ((mirrorAtlas A).Φ (A.sel z)) σ (Set.Icc 0 t) 0 1 := by
       rw [mirror_Φ A hact]
-      show ∀ᶠ v in nhdsWithin 0 (Set.Icc 0 t),
+      change ∀ᶠ v in nhdsWithin 0 (Set.Icc 0 t),
         -(A.Φ (A.sel z) (σ v))
           = -(A.Φ (A.sel z) (σ 0)) + ((1 : ℝ) : ℂ) * ((v - 0 : ℝ) : ℂ)
       have hσS0 : SlopeAt (A.Φ (A.sel z)) σ (Set.Icc 0 t) 0 (-1) := hσS
@@ -11655,7 +11654,7 @@ theorem label_decomp {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
     · rintro ⟨N, hz⟩
       refine ⟨⟨N, itin B (t / (N + 1)) N z⟩, hz, fun k => ⟨rfl, ?_⟩⟩
       have hpm := ((hEL N hz) (k : ℕ) (Nat.lt_succ_iff.mp k.isLt)).2.2.1
-      show sgn B (t / (N + 1)) (k : ℕ) z
+      change sgn B (t / (N + 1)) (k : ℕ) z
         = (if (if sgn B (t / (N + 1)) (k : ℕ) z = 1 then true else false)
           then (1 : ℝ) else -1)
       rcases hpm with h1 | h1
@@ -11728,7 +11727,7 @@ theorem traj_reverse_at {q : ℂ → ℂ} {σ : ℝ → ℂ} {a : ℝ}
   rw [hset] at h1
   have hfun : (fun u : ℝ => (fun v : ℝ => σ (v + a)) (-u)) = fun u => σ (a - u) := by
     funext u
-    show σ (-u + a) = σ (a - u)
+    change σ (-u + a) = σ (a - u)
     rw [neg_add_eq_sub]
   rwa [hfun] at h1
 
@@ -11743,7 +11742,7 @@ theorem slope_reverse {Φ : ℂ → ℂ} {σ : ℝ → ℂ} {t ε : ℝ}
       simpa using h
     · exact Filter.tendsto_principal_principal.mpr fun u hu =>
         ⟨by linarith [hu.2], by linarith [hu.1]⟩
-  show ∀ᶠ v in nhdsWithin 0 (Set.Icc 0 t),
+  change ∀ᶠ v in nhdsWithin 0 (Set.Icc 0 t),
     Φ (σ (t - v)) = Φ (σ (t - 0)) + ((-ε : ℝ) : ℂ) * ((v - 0 : ℝ) : ℂ)
   filter_upwards [hmap.eventually hev] with v hv
   rw [sub_zero]
@@ -11754,7 +11753,7 @@ theorem slope_reverse {Φ : ℂ → ℂ} {σ : ℝ → ℂ} {t ε : ℝ}
 theorem slope_congr {Φ : ℂ → ℂ} {σ σ' : ℝ → ℂ} {I : Set ℝ} {u s : ℝ}
     (hEq : Set.EqOn σ σ' I) (hu : u ∈ I) (h : SlopeAt Φ σ I u s) :
     SlopeAt Φ σ' I u s := by
-  show ∀ᶠ v in nhdsWithin u I, Φ (σ' v) = Φ (σ' u) + s * ((v - u : ℝ) : ℂ)
+  change ∀ᶠ v in nhdsWithin u I, Φ (σ' v) = Φ (σ' u) + s * ((v - u : ℝ) : ℂ)
   filter_upwards [h, eventually_mem_nhdsWithin] with v hv hvI
   rw [← hEq hvI, ← hEq hu]
   exact hv
@@ -11979,7 +11978,7 @@ theorem mult_pair {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
     cases b
     · have h1 : SlopeAt ((mirrorAtlas A).Φ (A.sel z)) σ (Set.Icc 0 t) 0 1 := hS
       rw [mirror_Φ A hactz] at h1
-      show ∀ᶠ v in nhdsWithin 0 (Set.Icc 0 t),
+      change ∀ᶠ v in nhdsWithin 0 (Set.Icc 0 t),
         A.Φ (A.sel z) (σ v)
           = A.Φ (A.sel z) (σ 0) + ((-1 : ℝ) : ℂ) * ((v - 0 : ℝ) : ℂ)
       filter_upwards [h1] with v hv
@@ -12014,7 +12013,7 @@ theorem mult_pair {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
     have hτtraj : IsTrajOn (q : ℂ → ℂ) τ (Set.Icc 0 t) :=
       traj_deck _ hauto hσtraj
     have hτt : τ t = y := by
-      show moebiusMap (↑(Quotient.out cq))⁻¹ (σ t) = y
+      change moebiusMap (↑(Quotient.out cq))⁻¹ (σ t) = y
       rw [hσend]
       exact moebius_cancel _ hyim
     obtain ⟨ε, hεpm, hev⟩ := traj_ambient_local Metric.isOpen_ball (A.hd _ hact)
@@ -12026,7 +12025,7 @@ theorem mult_pair {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
       have him : 0 < (σ u).im := (traj_regular hσtraj hu).1
       exact (moebius_cancel' _ him).symm
     refine ⟨z, τ, ε, hzp, hεpm, hτtraj, ?_, hτt, hev, ?_⟩
-    · show moebiusMap (↑(Quotient.out cq))⁻¹ (σ 0) = _
+    · change moebiusMap (↑(Quotient.out cq))⁻¹ (σ 0) = _
       rw [hσ0]
     · exact slope_congr hEqγ (Set.left_mem_Icc.mpr ht.le)
         (hlab b z hzreg.1 hzreg.2 σ hσS)
@@ -12678,13 +12677,13 @@ theorem pathJoin_horVar_le (q : ℂ → ℂ) (γ₁ γ₂ : ℝ → ℂ) :
       filter_upwards [hmem, hne] with s hs hs12
       have hslt : s < 1 / 2 := lt_of_le_of_ne hs.2 hs12
       have hval : pathJoin γ₁ γ₂ s = (fun t => γ₁ (2 * t + 0)) s := by
-        show (if s ≤ 1 / 2 then γ₁ (2 * s) else γ₂ (2 * s - 1)) = γ₁ (2 * s + 0)
+        change (if s ≤ 1 / 2 then γ₁ (2 * s) else γ₂ (2 * s - 1)) = γ₁ (2 * s + 0)
         rw [if_pos hslt.le, add_zero]
       have hder : deriv (pathJoin γ₁ γ₂) s
           = deriv (fun t => γ₁ (2 * t + 0)) s := by
         refine Filter.EventuallyEq.deriv_eq ?_
         filter_upwards [Iio_mem_nhds hslt] with u hu
-        show (if u ≤ 1 / 2 then γ₁ (2 * u) else γ₂ (2 * u - 1)) = γ₁ (2 * u + 0)
+        change (if u ≤ 1 / 2 then γ₁ (2 * u) else γ₂ (2 * u - 1)) = γ₁ (2 * u + 0)
         rw [if_pos (le_of_lt hu), add_zero]
       have hden : horizontalDensity q (pathJoin γ₁ γ₂) s
           = horizontalDensity q (fun t => γ₁ (2 * t + 0)) s := by
@@ -12716,14 +12715,14 @@ theorem pathJoin_horVar_le (q : ℂ → ℂ) (γ₁ γ₂ : ℝ → ℂ) :
       filter_upwards [hmem, hne] with s hs hs12
       have hslt : 1 / 2 < s := lt_of_le_of_ne hs.1 (Ne.symm hs12)
       have hval : pathJoin γ₁ γ₂ s = (fun t => γ₂ (2 * t + -1)) s := by
-        show (if s ≤ 1 / 2 then γ₁ (2 * s) else γ₂ (2 * s - 1)) = γ₂ (2 * s + -1)
+        change (if s ≤ 1 / 2 then γ₁ (2 * s) else γ₂ (2 * s - 1)) = γ₂ (2 * s + -1)
         rw [if_neg (not_le.mpr hslt)]
         ring_nf
       have hder : deriv (pathJoin γ₁ γ₂) s
           = deriv (fun t => γ₂ (2 * t + -1)) s := by
         refine Filter.EventuallyEq.deriv_eq ?_
         filter_upwards [Ioi_mem_nhds hslt] with u hu
-        show (if u ≤ 1 / 2 then γ₁ (2 * u) else γ₂ (2 * u - 1)) = γ₂ (2 * u + -1)
+        change (if u ≤ 1 / 2 then γ₁ (2 * u) else γ₂ (2 * u - 1)) = γ₂ (2 * u + -1)
         rw [if_neg (not_le.mpr hu)]
         ring_nf
       have hden : horizontalDensity q (pathJoin γ₁ γ₂) s
@@ -12824,7 +12823,7 @@ theorem chainPull_id : ∀ (n : ℕ) (v : ℝ),
     rfl
   | succ n ih =>
     intro v
-    show chainPull (fun _ => (1 : ℝ)) (fun _ => (0 : ℝ)) n (1 * (v - 0)) = v
+    change chainPull (fun _ => (1 : ℝ)) (fun _ => (0 : ℝ)) n (1 * (v - 0)) = v
     rw [one_mul, sub_zero]
     exact ih v
 
@@ -12911,7 +12910,7 @@ theorem global_chart_variation_lb {q Φg : ℂ → ℂ} {U : Set ℂ} (hU : IsOp
     intro i
     by_cases h : i = 0
     · rw [h, ht0, ht1]
-      simp
+      simp only [sub_self]
       positivity
     · simp only [htdef, if_neg h, if_neg (Nat.succ_ne_zero i)]
       have hstep : ((i + 1 - 1 : ℕ) : ℝ) * (Δ / 2)
@@ -13128,7 +13127,7 @@ theorem two_step_core {q : ℂ → ℂ}
         ⟨by linarith [hu.1, hu.2], by linarith [hu.1, hu.2]⟩
   have hSp : SlopeAt (A.Φ (A.sel (σ s))) (fun u => σ (u + s))
       (Set.Icc 0 s) 0 ε := by
-    show ∀ᶠ u in nhdsWithin 0 (Set.Icc 0 s),
+    change ∀ᶠ u in nhdsWithin 0 (Set.Icc 0 s),
       A.Φ (A.sel (σ s)) (σ (u + s))
         = A.Φ (A.sel (σ s)) (σ (0 + s)) + (ε : ℂ) * ((u - 0 : ℝ) : ℂ)
     filter_upwards [hmapp.eventually hev] with u hu
@@ -13137,7 +13136,7 @@ theorem two_step_core {q : ℂ → ℂ}
     linear_combination hu
   have hSm : SlopeAt (A.Φ (A.sel (σ s))) (fun u => σ (s - u))
       (Set.Icc 0 s) 0 (-ε) := by
-    show ∀ᶠ u in nhdsWithin 0 (Set.Icc 0 s),
+    change ∀ᶠ u in nhdsWithin 0 (Set.Icc 0 s),
       A.Φ (A.sel (σ s)) (σ (s - u))
         = A.Φ (A.sel (σ s)) (σ (s - 0)) + ((-ε : ℝ) : ℂ) * ((u - 0 : ℝ) : ℂ)
     filter_upwards [hmapm.eventually hev] with u hu
@@ -13145,16 +13144,16 @@ theorem two_step_core {q : ℂ → ℂ}
     push_cast at hu ⊢
     linear_combination hu
   have hτp0 : (fun u => σ (u + s)) 0 = σ s := by
-    show σ (0 + s) = σ s
+    change σ (0 + s) = σ s
     rw [zero_add]
   have hτps : (fun u => σ (u + s)) s = σ (2 * s) := by
-    show σ (s + s) = σ (2 * s)
+    change σ (s + s) = σ (2 * s)
     rw [two_mul]
   have hτm0 : (fun u => σ (s - u)) 0 = σ s := by
-    show σ (s - 0) = σ s
+    change σ (s - 0) = σ s
     rw [sub_zero]
   have hτms : (fun u => σ (s - u)) s = σ 0 := by
-    show σ (s - s) = σ 0
+    change σ (s - s) = σ 0
     rw [sub_self]
   have hτp' : IsTrajOn q (fun u => σ (u + s)) (Set.Icc 0 (- -s)) := by
     rw [neg_neg]
@@ -13258,10 +13257,10 @@ theorem flow_deck_swap {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
       (2 * A.r (A.sel (moebiusMap γ z))) :=
     Metric.ball_subset_ball (by linarith) (A.sel_spec hγzim hγzq).2
   have hτ0 : τ 0 = moebiusMap γ z := by
-    show moebiusMap γ (σ 0) = _
+    change moebiusMap γ (σ 0) = _
     rw [hσ0]
   have hτ'0 : τ' 0 = moebiusMap γ z := by
-    show moebiusMap γ (σ' 0) = _
+    change moebiusMap γ (σ' 0) = _
     rw [hσ'0]
   have h0mem : (0 : ℝ) ∈ Set.Icc (0 : ℝ) s := Set.left_mem_Icc.mpr hs.le
   obtain ⟨ε, hεpm, hev⟩ := traj_ambient_local Metric.isOpen_ball (A.hd _ hact)
@@ -13290,10 +13289,10 @@ theorem flow_deck_swap {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
       norm_num
     · exact absurd (h2.trans h1.symm) key
   have hτs : τ s = moebiusMap γ (A.flow s z) := by
-    show moebiusMap γ (σ s) = _
+    change moebiusMap γ (σ s) = _
     rw [hσev s (Set.right_mem_Icc.mpr hs.le)]
   have hτ's : τ' s = moebiusMap γ (A.flow (-s) z) := by
-    show moebiusMap γ (σ' s) = _
+    change moebiusMap γ (σ' s) = _
     rw [hσ'ev s (Set.right_mem_Icc.mpr hs.le)]
   rcases hεpm with h1 | h1
   · left
@@ -13355,7 +13354,7 @@ theorem pos_preimage_null {q : ℂ → ℂ} (hqm : Measurable q) (B : Atlas q)
     · intro hz
       refine ⟨itin B h Nn z, hz, fun k => ⟨rfl, ?_⟩⟩
       have hpm := ((hEL hz) (k : ℕ) (Nat.lt_succ_iff.mp k.isLt)).2.2.1
-      show sgn B h (k : ℕ) z
+      change sgn B h (k : ℕ) z
         = (if (if sgn B h (k : ℕ) z = 1 then true else false)
           then (1 : ℝ) else -1)
       rcases hpm with h1 | h1
@@ -13700,7 +13699,7 @@ theorem track_separation {σ : ℝ → ℂ} {T : ℝ}
     · exact hc.comp continuous_snd.continuousOn fun p hp => hp.2.1
   obtain ⟨p₀, hp₀, hmin⟩ := hPc.exists_isMinOn hPne hfc
   refine ⟨‖σ p₀.1 - σ p₀.2‖, ?_, ?_⟩
-  · show 0 < ‖σ p₀.1 - σ p₀.2‖
+  · change 0 < ‖σ p₀.1 - σ p₀.2‖
     rw [norm_pos_iff, sub_ne_zero]
     intro heq
     have h4 := hinj hp₀.1 hp₀.2.1 heq
@@ -14362,7 +14361,7 @@ theorem sym_hrepar {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
       congr 1
     rw [hflowe]
     exact image_density_eq hT hqw0 hd2 hbelt rfl hγd
-  show (∫⁻ s in Set.Icc (0 : ℝ) 1,
+  change (∫⁻ s in Set.Icc (0 : ℝ) 1,
       horizontalDensity (q : ℂ → ℂ) (fun s' => h (σ (s' * T))) s)
     ≤ ∫⁻ t in Set.Icc (0 : ℝ) T, rsDensity (q : ℂ → ℂ) h (A.flow t z)
   rw [lintegral_congr_ae haes,
@@ -14512,7 +14511,7 @@ theorem tube_chart {q : ℂ → ℂ}
   have hkAstep : ∀ i, kA (i + 1) = kA i - sA (i + 1) * cj i := by
     intro i
     rw [hkAdef]
-    show -(∑ k ∈ Finset.range (i + 1), sA (k + 1) * cj k)
+    change -(∑ k ∈ Finset.range (i + 1), sA (k + 1) * cj k)
       = -(∑ k ∈ Finset.range i, sA (k + 1) * cj k) - sA (i + 1) * cj i
     rw [Finset.sum_range_succ]
     ring
@@ -14530,7 +14529,7 @@ theorem tube_chart {q : ℂ → ℂ}
       A (i + 1) w = A i w := by
     intro i hi w hw
     rw [hAdef]
-    show sA (i + 1) * Ψt (i + 1) w + kA (i + 1) = sA i * Ψt i w + kA i
+    change sA (i + 1) * Ψt (i + 1) w + kA (i + 1) = sA i * Ψt i w + kA i
     rw [hjrel i hi w hw, hsAstep, hkAstep, hsAstep]
     have hε2 : εj i * εj i = 1 := by
       rcases hεj i with h | h <;> rw [h] <;> ring
@@ -14546,7 +14545,7 @@ theorem tube_chart {q : ℂ → ℂ}
         (Metric.isOpen_ball.mem_nhds (hBsubt k hkn hz))
     have hd1 : deriv (A k) z = sA k * deriv (Ψt k) z := by
       rw [hAdef]
-      show deriv (fun w => sA k * Ψt k w + kA k) z = _
+      change deriv (fun w => sA k * Ψt k w + kA k) z = _
       rw [deriv_add_const, deriv_const_mul _ hdiff]
     rw [hd1, mul_pow]
     have h2 : sA k ^ 2 = 1 := by
@@ -14683,7 +14682,7 @@ theorem tube_chart {q : ℂ → ℂ}
     intro i hi w hw
     have hex : ∃ k, k ≤ n + 1 ∧ w ∈ B k := ⟨i, hi, hw⟩
     rw [hΦgdef]
-    show (if h : ∃ k, k ≤ n + 1 ∧ w ∈ B k then A (Nat.find h) w else 0)
+    change (if h : ∃ k, k ≤ n + 1 ∧ w ∈ B k then A (Nat.find h) w else 0)
       = A i w
     rw [dif_pos hex]
     have hk := Nat.find_spec hex
@@ -14748,11 +14747,11 @@ theorem segment_variation_lb {q Φg : ℂ → ℂ} {U : Set ℂ} (hU : IsOpen U)
   have hmain := global_chart_variation_lb hU hΦgd hΦgsq hrc hrac hrtr
   have hr0 : r 0 = p α := by
     rw [hrdef]
-    show p (c * 0 + α) = p α
+    change p (c * 0 + α) = p α
     rw [show c * 0 + α = α by ring]
   have hr1 : r 1 = p β := by
     rw [hrdef]
-    show p (c * 1 + α) = p β
+    change p (c * 1 + α) = p β
     rw [show c * 1 + α = β by rw [hcdef]; ring]
   rw [hr0, hr1] at hmain
   refine le_trans hmain ?_
@@ -14916,7 +14915,7 @@ theorem chartline_heights_null {q : ℂ → ℂ} (hqm : Measurable q) (A : Atlas
     measurableSet_ball.inter ((A.measurable_mchart j) hBm)
   refine measure_mono_null (t := X) (fun z hz => ?_) ?_
   · refine ⟨hz.1, ?_⟩
-    show A.mchart j z ∈ B
+    change A.mchart j z ∈ B
     rw [A.mchart_eq hj hz.1]
     exact hBsub hz.2
   · have hXball : X ⊆ Metric.ball (A.c j) (2 * A.r j) := Set.inter_subset_left
@@ -15132,7 +15131,7 @@ theorem leaf_window_ac {q h : ℂ → ℂ} {σ : ℝ → ℂ} {T : ℝ}
     have hex : ∃ x ∈ S, Φ x = Φ (σ u) := ⟨σ u, huS, rfl⟩
     have hinv : Function.invFunOn Φ S (Φ (σ u)) = σ u :=
       hΦinj (Function.invFunOn_mem hex) huS (Function.invFunOn_eq hex)
-    show h (Function.invFunOn Φ S _) = h (σ u)
+    change h (Function.invFunOn Φ S _) = h (σ u)
     rw [hline u hu, hinv]
   rcases hεpm with hε1 | hε1
   · have hmaps : ∀ t ∈ Set.uIcc w₁ w₂,
@@ -15159,7 +15158,7 @@ theorem leaf_window_ac {q h : ℂ → ℂ} {σ : ℝ → ℂ} {T : ℝ}
     refine AbsolutelyContinuousOnInterval.congr hAC fun t ht => ?_
     have h1 := hval t ht
     rw [hε1] at h1
-    show g (1 * t + (xv - v)) = h (σ t)
+    change g (1 * t + (xv - v)) = h (σ t)
     have h2 : 1 * t + (xv - v) = xv + 1 * (t - v) := by ring
     rw [h2]
     exact h1
@@ -15189,7 +15188,7 @@ theorem leaf_window_ac {q h : ℂ → ℂ} {σ : ℝ → ℂ} {T : ℝ}
     refine AbsolutelyContinuousOnInterval.congr hAC fun t ht => ?_
     have h1 := hval t ht
     rw [hε1] at h1
-    show g (-(1 * t + -(xv + v))) = h (σ t)
+    change g (-(1 * t + -(xv + v))) = h (σ t)
     have h2 : -(1 * t + -(xv + v)) = xv + -1 * (t - v) := by ring
     rw [h2]
     exact h1
@@ -15501,7 +15500,7 @@ theorem slice_agree_ae {f g : ℂ → ℂ} (hfg : f =ᵐ[volume] g) :
     have hfun : (⇑Complex.measurableEquivRealProd.symm ∘ Prod.swap)
         = fun p : ℝ × ℝ => ((p.2 : ℝ) : ℂ) + (p.1 : ℝ) * Complex.I := by
       funext p
-      show Complex.measurableEquivRealProd.symm (p.2, p.1) = _
+      change Complex.measurableEquivRealProd.symm (p.2, p.1) = _
       rw [Complex.measurableEquivRealProd_symm_apply]
       exact Complex.mk_eq_add_mul_I _ _
     rwa [hfun] at h4
@@ -16122,7 +16121,7 @@ theorem w11loc_localization {q h hinv : ℂ → ℂ} {κ : ℝ} (A : Atlas q)
       (Metric.ball (A.c j) (2 * A.r j)) z)) ⊆ T2 := by
     intro z hz
     refine hχ_supp fun h0 => hz ?_
-    show χ z • _ = 0
+    change χ z • _ = 0
     rw [h0]
     simp
   have hGxsupp : Function.support (fun z => χ z • D z
@@ -16133,7 +16132,7 @@ theorem w11loc_localization {q h hinv : ℂ → ℂ} {κ : ℝ} (A : Atlas q)
     have hzts : z ∉ tsupport χ := fun hc =>
       hzT ((closure_minimal hχ_supp hT2c.isClosed) hc)
     apply hz
-    show χ z • D z + ((fderiv ℝ χ z) 1) • _ = 0
+    change χ z • D z + ((fderiv ℝ χ z) 1) • _ = 0
     rw [image_eq_zero_of_notMem_tsupport hzts, hχfd0 z hzts]
     simp
   have hGcs := HasCompactSupport.of_support_subset_isCompact hT2c hGsupp
@@ -16187,7 +16186,7 @@ theorem w11loc_localization {q h hinv : ℂ → ℂ} {κ : ℝ} (A : Atlas q)
       (Metric.ball (A.c j) (2 * A.r j)) z),
     hGcont.locallyIntegrable, hGxint.locallyIntegrable, huniv,
     interior T1, isOpen_interior, hKT1, fun w hw => ?_⟩
-  show χ w • _ = _
+  change χ w • _ = _
   rw [hχ_one w (interior_subset hw)]
   simp
 
@@ -16520,13 +16519,13 @@ theorem window_coarea {q Ψ : ℂ → ℂ} {V : Set ℂ} (hV : IsOpen V)
   set tk : ℕ → ℝ := fun k => (k : ℝ) / ((n : ℝ) + 1) with htkdef
   have hstep : ∀ k : ℕ, tk (k + 1) - tk k = 1 / ((n : ℝ) + 1) := by
     intro k
-    show ((k + 1 : ℕ) : ℝ) / ((n : ℝ) + 1) - (k : ℝ) / ((n : ℝ) + 1) = 1 / ((n : ℝ) + 1)
+    change ((k + 1 : ℕ) : ℝ) / ((n : ℝ) + 1) - (k : ℝ) / ((n : ℝ) + 1) = 1 / ((n : ℝ) + 1)
     push_cast
     field_simp
     ring
   have htkle : ∀ i j : ℕ, i ≤ j → tk i ≤ tk j := by
     intro i j hij
-    show (i : ℝ) / ((n : ℝ) + 1) ≤ (j : ℝ) / ((n : ℝ) + 1)
+    change (i : ℝ) / ((n : ℝ) + 1) ≤ (j : ℝ) / ((n : ℝ) + 1)
     have hij' : (i : ℝ) ≤ (j : ℝ) := Nat.cast_le.mpr hij
     gcongr
   have htklt : ∀ k : ℕ, tk k < tk (k + 1) := by
@@ -16537,9 +16536,9 @@ theorem window_coarea {q Ψ : ℂ → ℂ} {V : Set ℂ} (hV : IsOpen V)
   have hIk01 : ∀ k, k < n + 1 → Set.Icc (tk k) (tk (k + 1)) ⊆ Set.Icc (0:ℝ) 1 := by
     intro k hk
     refine Set.Icc_subset_Icc ?_ ?_
-    · show (0:ℝ) ≤ (k : ℝ) / ((n : ℝ) + 1)
+    · change (0:ℝ) ≤ (k : ℝ) / ((n : ℝ) + 1)
       positivity
-    · show ((k + 1 : ℕ) : ℝ) / ((n : ℝ) + 1) ≤ 1
+    · change ((k + 1 : ℕ) : ℝ) / ((n : ℝ) + 1) ≤ 1
       rw [div_le_one hnpos]
       push_cast
       have : (k : ℝ) ≤ n := by exact_mod_cast Nat.lt_succ_iff.mp hk
@@ -16550,12 +16549,12 @@ theorem window_coarea {q Ψ : ℂ → ℂ} {V : Set ℂ} (hV : IsOpen V)
     have hx0 : 0 ≤ s * ((n : ℝ) + 1) := mul_nonneg hs.1 hnpos.le
     set k : ℕ := min n ⌊s * ((n : ℝ) + 1)⌋₊ with hkdef
     refine ⟨k, Finset.mem_range.mpr (Nat.lt_succ_of_le (min_le_left _ _)), ?_, ?_⟩
-    · show (k : ℝ) / ((n : ℝ) + 1) ≤ s
+    · change (k : ℝ) / ((n : ℝ) + 1) ≤ s
       rw [div_le_iff₀ hnpos]
       have h1 : (k : ℝ) ≤ (⌊s * ((n : ℝ) + 1)⌋₊ : ℝ) :=
         Nat.cast_le.mpr (min_le_right _ _)
       exact h1.trans (Nat.floor_le hx0)
-    · show s ≤ ((k + 1 : ℕ) : ℝ) / ((n : ℝ) + 1)
+    · change s ≤ ((k + 1 : ℕ) : ℝ) / ((n : ℝ) + 1)
       rw [le_div_iff₀ hnpos]
       rcases le_or_gt ⌊s * ((n : ℝ) + 1)⌋₊ n with hfl | hfl
       · have hk : k = ⌊s * ((n : ℝ) + 1)⌋₊ := by rw [hkdef]; exact min_eq_right hfl
@@ -16770,7 +16769,7 @@ theorem winding_comp_convex_zero {U : Set ℂ} (hU : Convex ℝ U)
   have hgone : (⟨fun t => g (γ t), hgc.comp_continuous γ.continuous htr⟩
       : C(I, ℂ)) 0 = (⟨fun t => g (γ t), hgc.comp_continuous γ.continuous htr⟩
       : C(I, ℂ)) 1 := by
-    show g (γ 0) = g (γ 1)
+    change g (γ 0) = g (γ 1)
     rw [← hcdef, hcl]
   have h0I : ((0 : I) : ℝ) = 0 := rfl
   have h1I : ((1 : I) : ℝ) = 1 := rfl
@@ -16827,11 +16826,11 @@ theorem winding_factored {P : Polynomial ℂ} (hP : P ≠ 0) {g : ℂ → ℂ}
       = (P.roots.map fun ζ => windingNumber γ ζ).sum := by
   have hclP : (⟨fun t => P.eval (γ t), P.continuous.comp γ.continuous⟩ : C(I, ℂ)) 0
       = (⟨fun t => P.eval (γ t), P.continuous.comp γ.continuous⟩ : C(I, ℂ)) 1 := by
-    show P.eval (γ 0) = P.eval (γ 1)
+    change P.eval (γ 0) = P.eval (γ 1)
     rw [hcl]
   have hclg : (⟨fun t => g (γ t), hgc⟩ : C(I, ℂ)) 0
       = (⟨fun t => g (γ t), hgc⟩ : C(I, ℂ)) 1 := by
-    show g (γ 0) = g (γ 1)
+    change g (γ 0) = g (γ 1)
     rw [hcl]
   have hmul : (⟨fun t => P.eval (γ t) * g (γ t),
         ((P.continuous.comp γ.continuous).mul hgc)⟩ : C(I, ℂ))
@@ -16868,7 +16867,7 @@ theorem winding_of_exp (L : C(I, ℂ)) {m : ℤ}
   set γ : C(I, ℂ) := ⟨fun t => Complex.exp (L t),
     Complex.continuous_exp.comp L.continuous⟩ with hγdef
   have hcl : γ 0 = γ 1 := by
-    show Complex.exp (L 0) = Complex.exp (L 1)
+    change Complex.exp (L 0) = Complex.exp (L 1)
     have h1 : L 1 = L 0 + 2 * Real.pi * Complex.I * m := by
       linear_combination hm
     rw [h1, Complex.exp_add]
@@ -16879,7 +16878,7 @@ theorem winding_of_exp (L : C(I, ℂ)) {m : ℤ}
   have hne : ∀ t : I, γ t ≠ (0 : ℂ) := fun t => Complex.exp_ne_zero _
   have hlift : IsLogLiftOf L (shiftedCurve γ 0) := by
     intro t
-    show Complex.exp (L t) = shiftedCurve γ 0 t
+    change Complex.exp (L t) = shiftedCurve γ 0 t
     simp [shiftedCurve, hγdef]
   have hspec := windingNumber_spec hcl hne hlift
   rw [hm] at hspec
@@ -16900,11 +16899,11 @@ theorem winding_product_exp {A d : C(I, ℂ)} (hclA : A 0 = A 1) (hcld : d 0 = d
   have hprod : (A * (d * d) : C(I, ℂ))
       = ⟨fun t => Complex.exp (L t), Complex.continuous_exp.comp L.continuous⟩ := by
     ext t
-    show A t * (d t * d t) = Complex.exp (L t)
+    change A t * (d t * d t) = Complex.exp (L t)
     rw [← hexp t]
     ring
   have hcldd : (d * d : C(I, ℂ)) 0 = (d * d) 1 := by
-    show d 0 * d 0 = d 1 * d 1
+    change d 0 * d 0 = d 1 * d 1
     rw [hcld]
   have hddne : ∀ t : I, (d * d : C(I, ℂ)) t ≠ 0 :=
     fun t => mul_ne_zero (hdne t) (hdne t)
@@ -16999,7 +16998,7 @@ theorem rectangle_hull {K : Set ℂ} (hK : IsCompact K) (hKne : K.Nonempty)
     have h2 := h1 hz
     rw [closure_Ioo (by intro h; linarith [h] : (m / 2 : ℝ) ≠ R + 1)] at h2
     have := h2.1
-    show (0 : ℝ) < z.im
+    change (0 : ℝ) < z.im
     linarith
   have hbdd : Bornology.IsBounded U := by
     refine Bornology.IsBounded.subset (Metric.isBounded_closedBall
@@ -17381,23 +17380,23 @@ theorem bigon_count {q : ℂ → ℂ} (γ₁ γ₂ d₁ d₂ : C(I, ℂ)) {εA �
   have ha12 : a₁ 1 = a₂ 0 := congrArg q hA.symm
   have ha23 : a₂ 1 = a₃ 0 := rfl
   have he01 : d₁ 1 = e₁ 0 := by
-    show d₁ 1 = Complex.exp (cA * (((0 : I) : ℝ) : ℂ)) * d₁ 1
+    change d₁ 1 = Complex.exp (cA * (((0 : I) : ℝ) : ℂ)) * d₁ 1
     norm_num
   have he12 : e₁ 1 = d₂ 0 := by
-    show Complex.exp (cA * (((1 : I) : ℝ) : ℂ)) * d₁ 1 = d₂ 0
+    change Complex.exp (cA * (((1 : I) : ℝ) : ℂ)) * d₁ 1 = d₂ 0
     rw [hdA]
     norm_num [hexpA]
   have he23 : d₂ 1 = e₃ 0 := by
-    show d₂ 1 = Complex.exp (cB * (((0 : I) : ℝ) : ℂ)) * d₂ 1
+    change d₂ 1 = Complex.exp (cB * (((0 : I) : ℝ) : ℂ)) * d₂ 1
     norm_num
   have hl01 : l₀ 1 = l₁ 0 := by
-    show piI = piI + 2 * cA * (((0 : I) : ℝ) : ℂ)
+    change piI = piI + 2 * cA * (((0 : I) : ℝ) : ℂ)
     norm_num
   have hl12 : l₁ 1 = l₂ 0 := by
-    show piI + 2 * cA * (((1 : I) : ℝ) : ℂ) = piI + 2 * cA
+    change piI + 2 * cA * (((1 : I) : ℝ) : ℂ) = piI + 2 * cA
     norm_num
   have hl23 : l₂ 1 = l₃ 0 := by
-    show piI + 2 * cA = piI + 2 * cA + 2 * cB * (((0 : I) : ℝ) : ℂ)
+    change piI + 2 * cA = piI + 2 * cA + 2 * cB * (((0 : I) : ℝ) : ℂ)
     norm_num
   set zbig : C(I, ℂ) := ⟨fun t => quarterConcat γ₁ z₁ γ₂ z₃ t,
     (quarterConcat_continuous _ _ _ _ hz01 hz12 hz23).comp
@@ -17413,21 +17412,21 @@ theorem bigon_count {q : ℂ → ℂ} (γ₁ γ₂ d₁ d₂ : C(I, ℂ)) {εA �
       continuous_subtype_val⟩ with hLbigdef
   have hAz : ∀ t : I, Abig t = q (zbig t) := by
     intro t
-    show quarterConcat a₀ a₁ a₂ a₃ (t : ℝ) = q (quarterConcat γ₁ z₁ γ₂ z₃ (t : ℝ))
+    change quarterConcat a₀ a₁ a₂ a₃ (t : ℝ) = q (quarterConcat γ₁ z₁ γ₂ z₃ (t : ℝ))
     exact quarterConcat_rel (P := fun a z _ => a = q z)
       (c₀ := γ₁) (c₁ := z₁) (c₂ := γ₂) (c₃ := z₃)
       (fun u => rfl) (fun u => rfl) (fun u => rfl) (fun u => rfl) (t : ℝ)
   have hExp : ∀ t : I, Abig t * dbig t ^ 2 = Complex.exp (Lbig t) := by
     intro t
-    show quarterConcat a₀ a₁ a₂ a₃ (t : ℝ) * quarterConcat d₁ e₁ d₂ e₃ (t : ℝ) ^ 2
+    change quarterConcat a₀ a₁ a₂ a₃ (t : ℝ) * quarterConcat d₁ e₁ d₂ e₃ (t : ℝ) ^ 2
       = Complex.exp (quarterConcat l₀ l₁ l₂ l₃ (t : ℝ))
     refine quarterConcat_rel (P := fun a d l => a * d ^ 2 = Complex.exp l)
       ?_ ?_ ?_ ?_ (t : ℝ)
     · intro u
-      show q (γ₁ u) * d₁ u ^ 2 = Complex.exp piI
+      change q (γ₁ u) * d₁ u ^ 2 = Complex.exp piI
       rw [hq₁ u, hpi]
     · intro u
-      show q (γ₁ 1) * (Complex.exp (cA * ((u : ℝ) : ℂ)) * d₁ 1) ^ 2
+      change q (γ₁ 1) * (Complex.exp (cA * ((u : ℝ) : ℂ)) * d₁ 1) ^ 2
         = Complex.exp (piI + 2 * cA * ((u : ℝ) : ℂ))
       have h1 : Complex.exp (cA * ((u : ℝ) : ℂ)) ^ 2
           = Complex.exp (2 * cA * ((u : ℝ) : ℂ)) := by
@@ -17442,11 +17441,11 @@ theorem bigon_count {q : ℂ → ℂ} (γ₁ γ₂ d₁ d₂ : C(I, ℂ)) {εA �
             rw [Complex.exp_add, hpi]
             ring
     · intro u
-      show q (γ₂ u) * d₂ u ^ 2 = Complex.exp (piI + 2 * cA)
+      change q (γ₂ u) * d₂ u ^ 2 = Complex.exp (piI + 2 * cA)
       rw [hq₂ u, Complex.exp_add, hpi, hexp2A]
       norm_num
     · intro u
-      show q (γ₂ 1) * (Complex.exp (cB * ((u : ℝ) : ℂ)) * d₂ 1) ^ 2
+      change q (γ₂ 1) * (Complex.exp (cB * ((u : ℝ) : ℂ)) * d₂ 1) ^ 2
         = Complex.exp (piI + 2 * cA + 2 * cB * ((u : ℝ) : ℂ))
       have h1 : Complex.exp (cB * ((u : ℝ) : ℂ)) ^ 2
           = Complex.exp (2 * cB * ((u : ℝ) : ℂ)) := by
@@ -17464,7 +17463,7 @@ theorem bigon_count {q : ℂ → ℂ} (γ₁ γ₂ d₁ d₂ : C(I, ℂ)) {εA �
             ring
   have hdne : ∀ t : I, dbig t ≠ 0 := by
     intro t
-    show quarterConcat d₁ e₁ d₂ e₃ (t : ℝ) ≠ 0
+    change quarterConcat d₁ e₁ d₂ e₃ (t : ℝ) ≠ 0
     refine quarterConcat_rel (P := fun _ d _ => d ≠ 0)
       (a₀ := d₁) (a₁ := e₁) (a₂ := d₂) (a₃ := e₃)
       (c₀ := d₁) (c₁ := e₁) (c₂ := d₂) (c₃ := e₃)
@@ -17477,7 +17476,7 @@ theorem bigon_count {q : ℂ → ℂ} (γ₁ γ₂ d₁ d₂ : C(I, ℂ)) {εA �
       exact mul_ne_zero (Complex.exp_ne_zero _) (hd₂ne 1)
   have htrack : ∀ t : I, zbig t ∈ Set.range γ₁ ∪ Set.range γ₂ := by
     intro t
-    show quarterConcat γ₁ z₁ γ₂ z₃ (t : ℝ) ∈ Set.range γ₁ ∪ Set.range γ₂
+    change quarterConcat γ₁ z₁ γ₂ z₃ (t : ℝ) ∈ Set.range γ₁ ∪ Set.range γ₂
     refine quarterConcat_rel (P := fun _ z _ => z ∈ Set.range γ₁ ∪ Set.range γ₂)
       (a₀ := γ₁) (a₁ := z₁) (a₂ := γ₂) (a₃ := z₃)
       (c₀ := γ₁) (c₁ := z₁) (c₂ := γ₂) (c₃ := z₃)
@@ -17487,19 +17486,19 @@ theorem bigon_count {q : ℂ → ℂ} (γ₁ γ₂ d₁ d₂ : C(I, ℂ)) {εA �
     · exact fun u => Or.inr ⟨u, rfl⟩
     · exact fun u => Or.inr ⟨1, rfl⟩
   have hz0 : zbig 0 = γ₁ 0 := by
-    show quarterConcat γ₁ z₁ γ₂ z₃ (((0 : I) : ℝ)) = γ₁ 0
+    change quarterConcat γ₁ z₁ γ₂ z₃ (((0 : I) : ℝ)) = γ₁ 0
     rw [show (((0 : I) : ℝ)) = (0 : ℝ) from rfl, quarterConcat_zero]
   have hzcl : zbig 0 = zbig 1 := by
     rw [hz0]
-    show γ₁ 0 = quarterConcat γ₁ z₁ γ₂ z₃ (((1 : I) : ℝ))
+    change γ₁ 0 = quarterConcat γ₁ z₁ γ₂ z₃ (((1 : I) : ℝ))
     rw [show (((1 : I) : ℝ)) = (1 : ℝ) from rfl, quarterConcat_one]
     exact hB
   have hdcl : dbig 0 = dbig 1 := by
-    show quarterConcat d₁ e₁ d₂ e₃ (((0 : I) : ℝ))
+    change quarterConcat d₁ e₁ d₂ e₃ (((0 : I) : ℝ))
       = quarterConcat d₁ e₁ d₂ e₃ (((1 : I) : ℝ))
     rw [show (((0 : I) : ℝ)) = (0 : ℝ) from rfl,
       show (((1 : I) : ℝ)) = (1 : ℝ) from rfl, quarterConcat_zero, quarterConcat_one]
-    show d₁ 0 = Complex.exp (cB * (((1 : I) : ℝ) : ℂ)) * d₂ 1
+    change d₁ 0 = Complex.exp (cB * (((1 : I) : ℝ) : ℂ)) * d₂ 1
     rw [hdB]
     norm_num [hexpB]
   have hAcl : Abig 0 = Abig 1 := by
@@ -17512,13 +17511,13 @@ theorem bigon_count {q : ℂ → ℂ} (γ₁ γ₂ d₁ d₂ : C(I, ℂ)) {εA �
   obtain ⟨m, hm, hmval⟩ : ∃ m : ℤ, (m = -1 ∨ m = 0 ∨ m = 1) ∧
       Lbig 1 - Lbig 0 = 2 * Real.pi * Complex.I * m := by
     have hL0 : Lbig 0 = piI := by
-      show quarterConcat l₀ l₁ l₂ l₃ (((0 : I) : ℝ)) = piI
+      change quarterConcat l₀ l₁ l₂ l₃ (((0 : I) : ℝ)) = piI
       rw [show (((0 : I) : ℝ)) = (0 : ℝ) from rfl, quarterConcat_zero]
       rfl
     have hL1 : Lbig 1 = piI + 2 * cA + 2 * cB := by
-      show quarterConcat l₀ l₁ l₂ l₃ (((1 : I) : ℝ)) = piI + 2 * cA + 2 * cB
+      change quarterConcat l₀ l₁ l₂ l₃ (((1 : I) : ℝ)) = piI + 2 * cA + 2 * cB
       rw [show (((1 : I) : ℝ)) = (1 : ℝ) from rfl, quarterConcat_one]
-      show piI + 2 * cA + 2 * cB * (((1 : I) : ℝ) : ℂ) = piI + 2 * cA + 2 * cB
+      change piI + 2 * cA + 2 * cB * (((1 : I) : ℝ) : ℂ) = piI + 2 * cA + 2 * cB
       norm_num
     rw [hL0, hL1]
     rcases hεA with h1 | h1 <;> rcases hεB with h2 | h2 <;>
@@ -17554,17 +17553,17 @@ theorem winding_pos_mul {γ : C(I, ℂ)} {ρ : C(I, ℝ)} (hcl : γ 0 = γ 1)
   set ρc : C(I, ℂ) := ⟨fun t => ((ρ t : ℝ) : ℂ),
     Complex.continuous_ofReal.comp ρ.continuous⟩ with hρcdef
   have hρccl : ρc 0 = ρc 1 := by
-    show ((ρ 0 : ℝ) : ℂ) = ((ρ 1 : ℝ) : ℂ)
+    change ((ρ 0 : ℝ) : ℂ) = ((ρ 1 : ℝ) : ℂ)
     rw [hρcl]
   have hρcne : ∀ t : I, ρc t ≠ 0 := by
     intro t
-    show ((ρ t : ℝ) : ℂ) ≠ 0
+    change ((ρ t : ℝ) : ℂ) ≠ 0
     exact_mod_cast (hρ t).ne'
   set L : C(I, ℂ) := ⟨fun t => ((Real.log (ρ t) : ℝ) : ℂ),
     Complex.continuous_ofReal.comp (ρ.continuous.log fun t => (hρ t).ne')⟩
     with hLdef
   have hLm : L 1 - L 0 = 2 * Real.pi * Complex.I * ((0 : ℤ) : ℂ) := by
-    show ((Real.log (ρ 1) : ℝ) : ℂ) - ((Real.log (ρ 0) : ℝ) : ℂ)
+    change ((Real.log (ρ 1) : ℝ) : ℂ) - ((Real.log (ρ 0) : ℝ) : ℂ)
       = 2 * Real.pi * Complex.I * ((0 : ℤ) : ℂ)
     rw [hρcl]
     norm_num
@@ -17573,7 +17572,7 @@ theorem winding_pos_mul {γ : C(I, ℂ)} {ρ : C(I, ℝ)} (hcl : γ 0 = γ 1)
     have h2 : (⟨fun t => Complex.exp (L t),
         Complex.continuous_exp.comp L.continuous⟩ : C(I, ℂ)) = ρc := by
       ext t
-      show Complex.exp ((Real.log (ρ t) : ℝ) : ℂ) = ((ρ t : ℝ) : ℂ)
+      change Complex.exp ((Real.log (ρ t) : ℝ) : ℂ) = ((ρ t : ℝ) : ℂ)
       rw [← Complex.ofReal_exp, Real.exp_log (hρ t)]
     rw [h2] at h1
     exact h1
@@ -17590,7 +17589,7 @@ theorem winding_pos_mul {γ : C(I, ℂ)} {ρ : C(I, ℝ)} (hcl : γ 0 = γ 1)
 unit interval, the difference quotient extended by the derivative on the diagonal is
 continuous on the square. -/
 theorem secant_continuous {γ g : ℝ → ℂ}
-    (hd : ∀ t ∈ Set.Icc (0:ℝ) 1, HasDerivAt γ (g t) t)
+    (hd : ∀ t ∈ Set.Icc (0 : ℝ) 1, HasDerivAt γ (g t) t)
     (hg : ContinuousOn g (Set.Icc 0 1)) :
     ContinuousOn (fun p : ℝ × ℝ =>
       if p.1 = p.2 then g p.1 else (γ p.2 - γ p.1) / (p.2 - p.1))
@@ -17706,7 +17705,7 @@ theorem secant_continuous {γ g : ℝ → ℂ}
 /-- **Chords of a simple closed curve do not degenerate**: distinct parameters of the
 fundamental interval, other than the endpoint pair, have distinct values. -/
 theorem simple_chord_ne {γ : ℝ → ℂ} (hinj : Set.InjOn γ (Set.Ico 0 1))
-    (hcl : γ 0 = γ 1) {s t : ℝ} (hs : s ∈ Set.Icc (0:ℝ) 1) (ht : t ∈ Set.Icc (0:ℝ) 1)
+    (hcl : γ 0 = γ 1) {s t : ℝ} (hs : s ∈ Set.Icc (0 : ℝ) 1) (ht : t ∈ Set.Icc (0 : ℝ) 1)
     (hst : s < t) (hne : ¬(s = 0 ∧ t = 1)) : γ s ≠ γ t := by
   intro heq
   rcases lt_or_eq_of_le ht.2 with ht1 | ht1
@@ -17722,7 +17721,7 @@ theorem simple_chord_ne {γ : ℝ → ℂ} (hinj : Set.InjOn γ (Set.Ico 0 1))
 matching derivative, the reversed chord divided by the wrapped gap `s + 1 - t` extends
 continuously to the corner `(0, 1)` with value `g 0`. -/
 theorem rescaled_secant_corner {γ g : ℝ → ℂ}
-    (hd : ∀ t ∈ Set.Icc (0:ℝ) 1, HasDerivAt γ (g t) t)
+    (hd : ∀ t ∈ Set.Icc (0 : ℝ) 1, HasDerivAt γ (g t) t)
     (hg : ContinuousOn g (Set.Icc 0 1))
     (hcl : γ 0 = γ 1) (hgcl : g 1 = g 0) :
     ContinuousWithinAt (fun p : ℝ × ℝ =>
@@ -17883,7 +17882,7 @@ theorem secantMap_corner (γ g : ℝ → ℂ) :
 
 /-- The secant map is the rescaled chord off the diagonal and the corner. -/
 theorem secantMap_off (γ g : ℝ → ℂ) {p : ℝ × ℝ}
-    (hne : p ≠ ((0:ℝ), (1:ℝ))) (hd : p.1 ≠ p.2) :
+    (hne : p ≠ ((0 : ℝ), (1 : ℝ))) (hd : p.1 ≠ p.2) :
     secantMap γ g p
       = (γ p.2 - γ p.1) / ((((p.2 - p.1) * (p.1 + 1 - p.2) : ℝ)) : ℂ) := by
   unfold secantMap
@@ -17892,7 +17891,7 @@ theorem secantMap_off (γ g : ℝ → ℂ) {p : ℝ × ℝ}
 /-- **The secant map of a simple closed curve does not vanish** on the parameter
 triangle when the derivative does not vanish. -/
 theorem secantMap_ne {γ g : ℝ → ℂ} (hinj : Set.InjOn γ (Set.Ico 0 1))
-    (hcl : γ 0 = γ 1) (hgne : ∀ u ∈ Set.Icc (0:ℝ) 1, g u ≠ 0) :
+    (hcl : γ 0 = γ 1) (hgne : ∀ u ∈ Set.Icc (0 : ℝ) 1, g u ≠ 0) :
     ∀ p ∈ (Set.Icc (0:ℝ) 1 ×ˢ Set.Icc (0:ℝ) 1) ∩ {p : ℝ × ℝ | p.1 ≤ p.2},
       secantMap γ g p ≠ 0 := by
   rintro ⟨s, t⟩ ⟨⟨hs, ht⟩, hle⟩
@@ -17925,7 +17924,7 @@ the plain secant over the unit wrapped gap, the corner chart is the reversed res
 secant over the unit parameter gap, and the generic chart is a quotient of continuous
 functions. -/
 theorem secantMap_continuousOn {γ g : ℝ → ℂ}
-    (hd : ∀ t ∈ Set.Icc (0:ℝ) 1, HasDerivAt γ (g t) t)
+    (hd : ∀ t ∈ Set.Icc (0 : ℝ) 1, HasDerivAt γ (g t) t)
     (hg : ContinuousOn g (Set.Icc 0 1))
     (hcl : γ 0 = γ 1) (hgcl : g 1 = g 0) :
     ContinuousOn (secantMap γ g)
@@ -18166,7 +18165,7 @@ theorem theta_band_neg {θ : ℝ → ℝ} {a b : ℝ} {k : ℤ}
   · intro u hu
     rw [Real.sin_sub_pi]
     linarith [hsin u hu]
-  · show θ a - Real.pi = 2 * Real.pi * k
+  · change θ a - Real.pi = 2 * Real.pi * k
     rw [hstart]
     ring
 
@@ -18231,7 +18230,7 @@ theorem upper_lower_winding {γ : C(I, ℂ)} (hne : ∀ t : I, γ t ≠ 0)
     (Complex.continuous_im.comp (L.continuous.comp continuous_projIcc)).continuousOn
   have hθval : ∀ t : I, θ ((t : ℝ)) = (L t).im := by
     intro t
-    show (L (Set.projIcc 0 1 zero_le_one ((t : ℝ)))).im = (L t).im
+    change (L (Set.projIcc 0 1 zero_le_one ((t : ℝ)))).im = (L t).im
     rw [Set.projIcc_val zero_le_one t]
   -- the start pins to an even multiple
   obtain ⟨k₀, hk₀⟩ : ∃ k₀ : ℤ, θ 0 = 2 * Real.pi * k₀ := by
@@ -18347,9 +18346,9 @@ theorem upper_lower_winding {γ : C(I, ℂ)} (hne : ∀ t : I, γ t ≠ 0)
 /-- **Horizontality at a minimum**: the derivative of a closed curve at a basepoint of
 minimal imaginary part, matching at the wrap-around, has vanishing imaginary part. -/
 theorem min_im_deriv_zero {γ g : ℝ → ℂ}
-    (hd : ∀ t ∈ Set.Icc (0:ℝ) 1, HasDerivAt γ (g t) t)
+    (hd : ∀ t ∈ Set.Icc (0 : ℝ) 1, HasDerivAt γ (g t) t)
     (hcl : γ 0 = γ 1) (hgcl : g 1 = g 0)
-    (hmin : ∀ t ∈ Set.Icc (0:ℝ) 1, (γ 0).im ≤ (γ t).im) :
+    (hmin : ∀ t ∈ Set.Icc (0 : ℝ) 1, (γ 0).im ≤ (γ t).im) :
     (g 0).im = 0 := by
   have him_deriv : ∀ t ∈ Set.Icc (0:ℝ) 1,
       HasDerivAt (fun u => (γ u).im) ((g t).im) t := by
@@ -18414,19 +18413,19 @@ theorem legsPath_continuous : Continuous legsPath := by
     subst ht'
     norm_num [Prod.ext_iff]
 
-theorem legsPath_mem {u : ℝ} (hu : u ∈ Set.Icc (0:ℝ) 1) :
+theorem legsPath_mem {u : ℝ} (hu : u ∈ Set.Icc (0 : ℝ) 1) :
     (legsPath u).1 ∈ Set.Icc (0:ℝ) 1 ∧ (legsPath u).2 ∈ Set.Icc (0:ℝ) 1 ∧
       (legsPath u).1 ≤ (legsPath u).2 := by
   unfold legsPath
   by_cases h : u ≤ 1/2
   · rw [if_pos h]
     refine ⟨⟨le_refl 0, by norm_num⟩, ⟨by linarith [hu.1], by linarith⟩, ?_⟩
-    show (0:ℝ) ≤ 2 * u
+    change (0:ℝ) ≤ 2 * u
     linarith [hu.1]
   · rw [if_neg h]
     have h' : 1/2 < u := not_le.mp h
     exact ⟨⟨by linarith, by linarith [hu.2]⟩, ⟨by norm_num, le_refl 1⟩,
-      by show 2*u - 1 ≤ (1:ℝ); linarith [hu.2]⟩
+      by change 2*u - 1 ≤ (1:ℝ); linarith [hu.2]⟩
 
 theorem legsPath_zero : legsPath 0 = ((0:ℝ), (0:ℝ)) := by
   unfold legsPath
@@ -18449,12 +18448,12 @@ theorem div_real_im (w : ℂ) (r : ℝ) :
 curve whose basepoint has minimal imaginary part and whose basepoint tangent points in
 the positive real direction, the tangent loop winds exactly once about the origin. -/
 theorem tangent_winding_pos {γ g : ℝ → ℂ}
-    (hd : ∀ t ∈ Set.Icc (0:ℝ) 1, HasDerivAt γ (g t) t)
+    (hd : ∀ t ∈ Set.Icc (0 : ℝ) 1, HasDerivAt γ (g t) t)
     (hg : ContinuousOn g (Set.Icc 0 1))
     (hcl : γ 0 = γ 1) (hgcl : g 1 = g 0)
     (hinj : Set.InjOn γ (Set.Ico 0 1))
-    (hgne : ∀ u ∈ Set.Icc (0:ℝ) 1, g u ≠ 0)
-    (hmin : ∀ t ∈ Set.Icc (0:ℝ) 1, (γ 0).im ≤ (γ t).im)
+    (hgne : ∀ u ∈ Set.Icc (0 : ℝ) 1, g u ≠ 0)
+    (hmin : ∀ t ∈ Set.Icc (0 : ℝ) 1, (γ 0).im ≤ (γ t).im)
     (hre : 0 < (g 0).re) :
     windingNumber ⟨fun t : I => g ((t : ℝ)),
       hg.comp_continuous continuous_subtype_val fun t => t.2⟩ 0 = 1 := by
@@ -18503,22 +18502,22 @@ theorem tangent_winding_pos {γ g : ℝ → ℂ}
     refine ⟨⟨⟨?_, ?_⟩, ?_, ?_⟩, ?_⟩
     · have := mul_nonneg (by linarith : (0:ℝ) ≤ 1 - ((τ:ℝ))) hu0
       have := mul_nonneg hτ0 ha1
-      show (0:ℝ) ≤ _
+      change (0:ℝ) ≤ _
       linarith
     · have h1 := mul_le_mul_of_nonneg_left hu1 (by linarith : (0:ℝ) ≤ 1 - ((τ:ℝ)))
       have h2 := mul_le_mul_of_nonneg_left ha2 hτ0
-      show _ ≤ (1:ℝ)
+      change _ ≤ (1:ℝ)
       linarith
     · have := mul_nonneg (by linarith : (0:ℝ) ≤ 1 - ((τ:ℝ))) hu0
       have := mul_nonneg hτ0 hb1
-      show (0:ℝ) ≤ _
+      change (0:ℝ) ≤ _
       linarith
     · have h1 := mul_le_mul_of_nonneg_left hu1 (by linarith : (0:ℝ) ≤ 1 - ((τ:ℝ)))
       have h2 := mul_le_mul_of_nonneg_left hb2 hτ0
-      show _ ≤ (1:ℝ)
+      change _ ≤ (1:ℝ)
       linarith
     · have := mul_le_mul_of_nonneg_left hab hτ0
-      show (1 - ((τ:ℝ))) * ((u:ℝ)) + ((τ:ℝ)) * (legsPath ((u:ℝ))).1
+      change (1 - ((τ:ℝ))) * ((u:ℝ)) + ((τ:ℝ)) * (legsPath ((u:ℝ))).1
         ≤ (1 - ((τ:ℝ))) * ((u:ℝ)) + ((τ:ℝ)) * (legsPath ((u:ℝ))).2
       linarith
   have hDval : ∀ u : I, Dcur u = g ((u : ℝ)) := fun u => secantMap_diag γ g _
@@ -18530,7 +18529,7 @@ theorem tangent_winding_pos {γ g : ℝ → ℂ}
     intro u
     have h1 : Hm (0, u) = (((u : ℝ)), ((u : ℝ))) := by
       rw [hHmdef]
-      show ((1 - ((0:I):ℝ)) * _ + ((0:I):ℝ) * _,
+      change ((1 - ((0:I):ℝ)) * _ + ((0:I):ℝ) * _,
         (1 - ((0:I):ℝ)) * _ + ((0:I):ℝ) * _) = _
       rw [hcoe0, Prod.ext_iff]
       constructor <;> ring
@@ -18540,7 +18539,7 @@ theorem tangent_winding_pos {γ g : ℝ → ℂ}
     intro u
     have h1 : Hm (1, u) = legsPath ((u : ℝ)) := by
       rw [hHmdef]
-      show ((1 - ((1:I):ℝ)) * _ + ((1:I):ℝ) * _,
+      change ((1 - ((1:I):ℝ)) * _ + ((1:I):ℝ) * _,
         (1 - ((1:I):ℝ)) * _ + ((1:I):ℝ) * _) = _
       rw [hcoeone, Prod.ext_iff]
       constructor <;> ring
@@ -18553,24 +18552,24 @@ theorem tangent_winding_pos {γ g : ℝ → ℂ}
     · subst h
       have h1 : Hm (τ, 0) = ((0 : ℝ), (0 : ℝ)) := by
         rw [hHmdef]
-        show ((1 - ((τ:I):ℝ)) * ((0:I):ℝ) + _ * (legsPath ((0:I):ℝ)).1,
+        change ((1 - ((τ:I):ℝ)) * ((0:I):ℝ) + _ * (legsPath ((0:I):ℝ)).1,
           (1 - ((τ:I):ℝ)) * ((0:I):ℝ) + _ * (legsPath ((0:I):ℝ)).2) = _
         rw [hcoe0, legsPath_zero, Prod.ext_iff]
         constructor <;> ring
       rw [h1, hDval]
-      show secantMap γ g ((0:ℝ), (0:ℝ)) = g ((0:I):ℝ)
+      change secantMap γ g ((0:ℝ), (0:ℝ)) = g ((0:I):ℝ)
       rw [hcoe0]
       exact secantMap_diag γ g 0
     · rw [Set.mem_singleton_iff] at h
       subst h
       have h1 : Hm (τ, 1) = ((1 : ℝ), (1 : ℝ)) := by
         rw [hHmdef]
-        show ((1 - ((τ:I):ℝ)) * ((1:I):ℝ) + _ * (legsPath ((1:I):ℝ)).1,
+        change ((1 - ((τ:I):ℝ)) * ((1:I):ℝ) + _ * (legsPath ((1:I):ℝ)).1,
           (1 - ((τ:I):ℝ)) * ((1:I):ℝ) + _ * (legsPath ((1:I):ℝ)).2) = _
         rw [hcoeone, legsPath_one, Prod.ext_iff]
         constructor <;> ring
       rw [h1, hDval]
-      show secantMap γ g ((1:ℝ), (1:ℝ)) = g ((1:I):ℝ)
+      change secantMap γ g ((1:ℝ), (1:ℝ)) = g ((1:I):ℝ)
       rw [hcoeone]
       exact secantMap_diag γ g 1
   have hHne : ∀ p : I × I, secantMap γ g (Hm p) ≠ 0 :=
@@ -18582,21 +18581,21 @@ theorem tangent_winding_pos {γ g : ℝ → ℂ}
         ContinuousMap.HomotopyRel Dcur LL {0, 1})
       (fun t s => hHne (t, s))
   have hLL0 : LL 0 = g 0 := by
-    show secantMap γ g (legsPath (((0:I) : ℝ))) = g 0
+    change secantMap γ g (legsPath (((0:I) : ℝ))) = g 0
     rw [hcoe0, legsPath_zero]
     exact secantMap_diag γ g 0
   have hLL1 : LL 1 = g 1 := by
-    show secantMap γ g (legsPath (((1:I) : ℝ))) = g 1
+    change secantMap γ g (legsPath (((1:I) : ℝ))) = g 1
     rw [hcoeone, legsPath_one]
     exact secantMap_diag γ g 1
   have hLLhalf : LL ⟨1/2, by norm_num⟩ = -(g 0) := by
-    show secantMap γ g (legsPath (((⟨1/2, by norm_num⟩ : I)) : ℝ)) = -(g 0)
+    change secantMap γ g (legsPath (((⟨1/2, by norm_num⟩ : I)) : ℝ)) = -(g 0)
     rw [show (((⟨1/2, by norm_num⟩ : I)) : ℝ) = 1/2 from rfl, legsPath_half]
     exact secantMap_corner γ g
   have hup : ∀ t : I, ((t : ℝ)) ≤ 1/2 → 0 ≤ (LL t).im := by
     intro t htle
     have hu0 : 0 ≤ ((t:ℝ)) := t.2.1
-    show 0 ≤ (secantMap γ g (legsPath ((t:ℝ)))).im
+    change 0 ≤ (secantMap γ g (legsPath ((t:ℝ)))).im
     have hLg : legsPath ((t:ℝ)) = ((0:ℝ), 2*((t:ℝ))) := if_pos htle
     rcases eq_or_lt_of_le hu0 with h0 | h0
     · rw [← h0, legsPath_zero, secantMap_diag, him0]
@@ -18609,7 +18608,7 @@ theorem tangent_winding_pos {γ g : ℝ → ℂ}
           have := he.2
           linarith
         have hne2 : ((0:ℝ), 2*((t:ℝ))).1 ≠ ((0:ℝ), 2*((t:ℝ))).2 := by
-          show (0:ℝ) ≠ 2*((t:ℝ))
+          change (0:ℝ) ≠ 2*((t:ℝ))
           intro he
           linarith
         rw [hLg, secantMap_off γ g hne1 hne2]
@@ -18618,14 +18617,14 @@ theorem tangent_winding_pos {γ g : ℝ → ℂ}
           rw [Complex.sub_im]
           linarith [hmin _ hmem2t]
         have hrpos : (0:ℝ) < (2*((t:ℝ)) - 0) * (0 + 1 - 2*((t:ℝ))) := by nlinarith
-        show 0 ≤ ((γ (2*((t:ℝ))) - γ 0)
+        change 0 ≤ ((γ (2*((t:ℝ))) - γ 0)
           / ((((2*((t:ℝ)) - 0) * (0 + 1 - 2*((t:ℝ))) : ℝ)) : ℂ)).im
         rw [div_real_im]
         exact mul_nonneg (inv_nonneg.mpr hrpos.le) hch
   have hdown : ∀ t : I, 1/2 ≤ ((t : ℝ)) → (LL t).im ≤ 0 := by
     intro t htge
     have hu1 : ((t:ℝ)) ≤ 1 := t.2.2
-    show (secantMap γ g (legsPath ((t:ℝ)))).im ≤ 0
+    change (secantMap γ g (legsPath ((t:ℝ)))).im ≤ 0
     rcases eq_or_lt_of_le htge with hh | hh
     · rw [← hh, legsPath_half, secantMap_corner, Complex.neg_im, him0]
       norm_num
@@ -18640,7 +18639,7 @@ theorem tangent_winding_pos {γ g : ℝ → ℂ}
           have := he.1
           linarith
         have hne2 : ((2*((t:ℝ)) - 1 : ℝ), (1:ℝ)).1 ≠ ((2*((t:ℝ)) - 1 : ℝ), (1:ℝ)).2 := by
-          show (2*((t:ℝ)) - 1 : ℝ) ≠ 1
+          change (2*((t:ℝ)) - 1 : ℝ) ≠ 1
           intro he
           linarith
         rw [hLg, secantMap_off γ g hne1 hne2]
@@ -18651,7 +18650,7 @@ theorem tangent_winding_pos {γ g : ℝ → ℂ}
           linarith [hmin (2*((t:ℝ)) - 1) ⟨hs0.le, hs1⟩]
         have hrpos : (0:ℝ) < (1 - (2*((t:ℝ)) - 1)) * ((2*((t:ℝ)) - 1) + 1 - 1) := by
           nlinarith
-        show ((γ 1 - γ (2*((t:ℝ)) - 1))
+        change ((γ 1 - γ (2*((t:ℝ)) - 1))
           / ((((1 - (2*((t:ℝ)) - 1)) * ((2*((t:ℝ)) - 1) + 1 - 1) : ℝ)) : ℂ)).im ≤ 0
         rw [div_real_im]
         refine mul_nonpos_iff.mpr (Or.inl ⟨inv_nonneg.mpr hrpos.le, hch⟩)
@@ -18698,7 +18697,7 @@ theorem winding_reverse {γ : C(I, ℂ)} {q : ℂ} (hcl : γ 0 = γ 1)
   have h2 : (L.comp ⟨unitInterval.symm, unitInterval.continuous_symm⟩) 1
       - (L.comp ⟨unitInterval.symm, unitInterval.continuous_symm⟩) 0
       = -(L 1 - L 0) := by
-    show L (unitInterval.symm 1) - L (unitInterval.symm 0) = -(L 1 - L 0)
+    change L (unitInterval.symm 1) - L (unitInterval.symm 0) = -(L 1 - L 0)
     rw [unitInterval.symm_zero, unitInterval.symm_one]
     ring
   rw [h2, hspec] at hspecR
@@ -18717,25 +18716,25 @@ theorem winding_neg {γ : C(I, ℂ)} (hcl : γ 0 = γ 1) (hne : ∀ t : I, γ t 
     windingNumber (-γ) 0 = windingNumber γ 0 := by
   have h1 : (-γ : C(I, ℂ)) = ContinuousMap.const I (-1 : ℂ) * γ := by
     ext t
-    show -(γ t) = -1 * γ t
+    change -(γ t) = -1 * γ t
     ring
   have hccl : (ContinuousMap.const I (-1 : ℂ)) 0 = (ContinuousMap.const I (-1 : ℂ)) 1 :=
     rfl
   have hcne : ∀ t : I, (ContinuousMap.const I (-1 : ℂ)) t ≠ 0 := by
     intro t
-    show (-1 : ℂ) ≠ 0
+    change (-1 : ℂ) ≠ 0
     norm_num
   rw [h1, windingNumber_mul _ _ hccl hcl hcne hne,
     windingNumber_const (-1) 0 (by norm_num), zero_add]
 
 /-- **The tangent loop of a negatively directed basepoint winds minus once.** -/
 theorem tangent_winding_neg {γ g : ℝ → ℂ}
-    (hd : ∀ t ∈ Set.Icc (0:ℝ) 1, HasDerivAt γ (g t) t)
+    (hd : ∀ t ∈ Set.Icc (0 : ℝ) 1, HasDerivAt γ (g t) t)
     (hg : ContinuousOn g (Set.Icc 0 1))
     (hcl : γ 0 = γ 1) (hgcl : g 1 = g 0)
     (hinj : Set.InjOn γ (Set.Ico 0 1))
-    (hgne : ∀ u ∈ Set.Icc (0:ℝ) 1, g u ≠ 0)
-    (hmin : ∀ t ∈ Set.Icc (0:ℝ) 1, (γ 0).im ≤ (γ t).im)
+    (hgne : ∀ u ∈ Set.Icc (0 : ℝ) 1, g u ≠ 0)
+    (hmin : ∀ t ∈ Set.Icc (0 : ℝ) 1, (γ 0).im ≤ (γ t).im)
     (hre : (g 0).re < 0) :
     windingNumber ⟨fun t : I => g ((t : ℝ)),
       hg.comp_continuous continuous_subtype_val fun t => t.2⟩ 0 = -1 := by
@@ -18754,11 +18753,11 @@ theorem tangent_winding_neg {γ g : ℝ → ℂ}
     refine ContinuousOn.neg (hg.comp ?_ hmem)
     exact (continuous_const.sub continuous_id).continuousOn
   have hcl' : γ' 0 = γ' 1 := by
-    show γ (1 - 0) = γ (1 - 1)
+    change γ (1 - 0) = γ (1 - 1)
     norm_num
     rw [hcl]
   have hgcl' : g' 1 = g' 0 := by
-    show -(g (1 - 1)) = -(g (1 - 0))
+    change -(g (1 - 1)) = -(g (1 - 0))
     norm_num
     rw [hgcl]
   have hinj' : Set.InjOn γ' (Set.Ico 0 1) := by
@@ -18788,12 +18787,12 @@ theorem tangent_winding_neg {γ g : ℝ → ℂ}
     exact neg_ne_zero.mpr (hgne _ (hmem u hu))
   have hmin' : ∀ t ∈ Set.Icc (0:ℝ) 1, (γ' 0).im ≤ (γ' t).im := by
     intro t ht
-    show (γ (1 - 0)).im ≤ (γ (1 - t)).im
+    change (γ (1 - 0)).im ≤ (γ (1 - t)).im
     norm_num
     rw [← hcl]
     exact hmin _ (hmem t ht)
   have hre' : 0 < (g' 0).re := by
-    show 0 < (-(g (1 - 0))).re
+    change 0 < (-(g (1 - 0))).re
     norm_num
     rw [hgcl]
     linarith
@@ -18802,12 +18801,12 @@ theorem tangent_winding_neg {γ g : ℝ → ℂ}
   set G : C(I, ℂ) := ⟨fun t : I => g ((t : ℝ)),
     hg.comp_continuous continuous_subtype_val fun t => t.2⟩ with hGdef
   have hGcl : G 0 = G 1 := by
-    show g (((0:I) : ℝ)) = g (((1:I) : ℝ))
+    change g (((0:I) : ℝ)) = g (((1:I) : ℝ))
     rw [show (((0:I) : ℝ)) = 0 from rfl, show (((1:I) : ℝ)) = 1 from rfl, hgcl]
   have hGne : ∀ t : I, G t ≠ 0 := fun t => hgne _ t.2
   have hRcl : (G.comp ⟨unitInterval.symm, unitInterval.continuous_symm⟩) 0
       = (G.comp ⟨unitInterval.symm, unitInterval.continuous_symm⟩) 1 := by
-    show G (unitInterval.symm 0) = G (unitInterval.symm 1)
+    change G (unitInterval.symm 0) = G (unitInterval.symm 1)
     rw [unitInterval.symm_zero, unitInterval.symm_one, hGcl]
   have hRne : ∀ t : I, (G.comp ⟨unitInterval.symm, unitInterval.continuous_symm⟩) t
       ≠ 0 := fun t => hGne _
@@ -18815,7 +18814,7 @@ theorem tangent_winding_neg {γ g : ℝ → ℂ}
       hg'c.comp_continuous continuous_subtype_val fun t => t.2⟩ : C(I, ℂ))
       = -(G.comp ⟨unitInterval.symm, unitInterval.continuous_symm⟩) := by
     ext t
-    show -(g (1 - ((t : ℝ)))) = -(g ((unitInterval.symm t : ℝ)))
+    change -(g (1 - ((t : ℝ)))) = -(g ((unitInterval.symm t : ℝ)))
     rw [unitInterval.coe_symm_eq]
   rw [hident] at hpos
   rw [winding_neg hRcl hRne, winding_reverse hGcl hGne] at hpos
@@ -18885,7 +18884,7 @@ theorem winding_rotate {γ : C(I, ℂ)} {q : ℂ} (hcl : γ 0 = γ 1)
   set Lrot : C(I, ℂ) := ⟨fun t : I => LrotF ((t : ℝ)),
     hLrc.comp continuous_subtype_val⟩ with hLrotdef
   have hRcl : R 0 = R 1 := by
-    show rotateLoop γ c (((0:I) : ℝ)) = rotateLoop γ c (((1:I) : ℝ))
+    change rotateLoop γ c (((0:I) : ℝ)) = rotateLoop γ c (((1:I) : ℝ))
     rw [show (((0:I) : ℝ)) = 0 from rfl, show (((1:I) : ℝ)) = 1 from rfl]
     rcases le_or_gt (1 + c) 1 with h | h
     · have hc0 : c = 0 := by linarith [hc.1]
@@ -18898,16 +18897,16 @@ theorem winding_rotate {γ : C(I, ℂ)} {q : ℂ} (hcl : γ 0 = γ 1)
       norm_num
   have hRne : ∀ t : I, R t ≠ q := by
     intro t
-    show rotateLoop γ c ((t : ℝ)) ≠ q
+    change rotateLoop γ c ((t : ℝ)) ≠ q
     unfold rotateLoop
     split_ifs <;> exact hne _
   have hLrlift : IsLogLiftOf Lrot (shiftedCurve R q) := by
     intro t
     have hval : shiftedCurve R q t = rotateLoop γ c ((t : ℝ)) - q := by
       simp [shiftedCurve, hRdef]
-    show Complex.exp (LrotF ((t : ℝ))) = shiftedCurve R q t
+    change Complex.exp (LrotF ((t : ℝ))) = shiftedCurve R q t
     rw [hval]
-    show Complex.exp (if ((t : ℝ)) + c ≤ 1
+    change Complex.exp (if ((t : ℝ)) + c ≤ 1
         then L (Set.projIcc 0 1 zero_le_one (((t : ℝ)) + c))
         else L (Set.projIcc 0 1 zero_le_one (((t : ℝ)) + c - 1)) + (L 1 - L 0))
       = rotateLoop γ c ((t : ℝ)) - q
@@ -18920,7 +18919,7 @@ theorem winding_rotate {γ : C(I, ℂ)} {q : ℂ} (hcl : γ 0 = γ 1)
       simpa [shiftedCurve] using h1
   have hspecR := windingNumber_spec hRcl hRne hLrlift
   have hinc : Lrot 1 - Lrot 0 = L 1 - L 0 := by
-    show LrotF (((1:I) : ℝ)) - LrotF (((0:I) : ℝ)) = L 1 - L 0
+    change LrotF (((1:I) : ℝ)) - LrotF (((0:I) : ℝ)) = L 1 - L 0
     rw [show (((0:I) : ℝ)) = 0 from rfl, show (((1:I) : ℝ)) = 1 from rfl, hLrdef]
     rcases le_or_gt (1 + c) 1 with h | h
     · have hc0 : c = 0 := by linarith [hc.1]
@@ -19092,18 +19091,18 @@ theorem seam_glue {F fL fR : ℝ → ℂ} {dL dR : ℂ} {a s b : ℝ}
   exact hasDerivWithinAt_univ.mp hunion
 
 /-- Branch values of the quarter-schedule concatenation. -/
-theorem quarterPW_eval₀ {f₀ f₁ f₂ f₃ : ℝ → ℂ} {t : ℝ} (h : t ≤ 1/4) :
+theorem quarterPW_eval₀ {f₀ f₁ f₂ f₃ : ℝ → ℂ} {t : ℝ} (h : t ≤ 1 / 4) :
     quarterPW f₀ f₁ f₂ f₃ t = f₀ (4*t) := by
   unfold quarterPW
   exact if_pos h
 
 theorem quarterPW_eval₁ {f₀ f₁ f₂ f₃ : ℝ → ℂ} {t : ℝ} (h1 : ¬ t ≤ 1/4)
-    (h2 : t ≤ 1/2) : quarterPW f₀ f₁ f₂ f₃ t = f₁ (4*t - 1) := by
+    (h2 : t ≤ 1 / 2) : quarterPW f₀ f₁ f₂ f₃ t = f₁ (4*t - 1) := by
   unfold quarterPW
   rw [if_neg h1, if_pos h2]
 
 theorem quarterPW_eval₂ {f₀ f₁ f₂ f₃ : ℝ → ℂ} {t : ℝ} (h1 : ¬ t ≤ 1/4)
-    (h2 : ¬ t ≤ 1/2) (h3 : t ≤ 3/4) :
+    (h2 : ¬ t ≤ 1/2) (h3 : t ≤ 3 / 4) :
     quarterPW f₀ f₁ f₂ f₃ t = f₂ (4*t - 2) := by
   unfold quarterPW
   rw [if_neg h1, if_neg h2, if_pos h3]
@@ -19259,11 +19258,11 @@ theorem quarterPW_continuous {f₀ f₁ f₂ f₃ : ℝ → ℂ}
 quarter-schedule concatenations over the unit range. -/
 theorem quarterPW_rel_Icc {P : ℂ → ℂ → ℂ → Prop}
     {a₀ a₁ a₂ a₃ b₀ b₁ b₂ b₃ c₀ c₁ c₂ c₃ : ℝ → ℂ}
-    (h₀ : ∀ u ∈ Set.Icc (0:ℝ) 1, P (a₀ u) (b₀ u) (c₀ u))
-    (h₁ : ∀ u ∈ Set.Icc (0:ℝ) 1, P (a₁ u) (b₁ u) (c₁ u))
-    (h₂ : ∀ u ∈ Set.Icc (0:ℝ) 1, P (a₂ u) (b₂ u) (c₂ u))
-    (h₃ : ∀ u ∈ Set.Icc (0:ℝ) 1, P (a₃ u) (b₃ u) (c₃ u))
-    {t : ℝ} (ht : t ∈ Set.Icc (0:ℝ) 1) :
+    (h₀ : ∀ u ∈ Set.Icc (0 : ℝ) 1, P (a₀ u) (b₀ u) (c₀ u))
+    (h₁ : ∀ u ∈ Set.Icc (0 : ℝ) 1, P (a₁ u) (b₁ u) (c₁ u))
+    (h₂ : ∀ u ∈ Set.Icc (0 : ℝ) 1, P (a₂ u) (b₂ u) (c₂ u))
+    (h₃ : ∀ u ∈ Set.Icc (0 : ℝ) 1, P (a₃ u) (b₃ u) (c₃ u))
+    {t : ℝ} (ht : t ∈ Set.Icc (0 : ℝ) 1) :
     P (quarterPW a₀ a₁ a₂ a₃ t) (quarterPW b₀ b₁ b₂ b₃ t)
       (quarterPW c₀ c₁ c₂ c₃ t) := by
   unfold quarterPW
@@ -19289,10 +19288,10 @@ theorem rounded_count {q : ℂ → ℂ}
     (hg30 : g₃ 1 = g₀ 0)
     (hL01 : L₀ 1 = L₁ 0) (hL12 : L₁ 1 = L₂ 0) (hL23 : L₂ 1 = L₃ 0)
     (hLm : L₃ 1 - L₀ 0 = 2 * Real.pi * Complex.I * m)
-    (hexp₀ : ∀ u ∈ Set.Icc (0:ℝ) 1, q (p₀ u) * g₀ u ^ 2 = Complex.exp (L₀ u))
-    (hexp₁ : ∀ u ∈ Set.Icc (0:ℝ) 1, q (p₁ u) * g₁ u ^ 2 = Complex.exp (L₁ u))
-    (hexp₂ : ∀ u ∈ Set.Icc (0:ℝ) 1, q (p₂ u) * g₂ u ^ 2 = Complex.exp (L₂ u))
-    (hexp₃ : ∀ u ∈ Set.Icc (0:ℝ) 1, q (p₃ u) * g₃ u ^ 2 = Complex.exp (L₃ u))
+    (hexp₀ : ∀ u ∈ Set.Icc (0 : ℝ) 1, q (p₀ u) * g₀ u ^ 2 = Complex.exp (L₀ u))
+    (hexp₁ : ∀ u ∈ Set.Icc (0 : ℝ) 1, q (p₁ u) * g₁ u ^ 2 = Complex.exp (L₁ u))
+    (hexp₂ : ∀ u ∈ Set.Icc (0 : ℝ) 1, q (p₂ u) * g₂ u ^ 2 = Complex.exp (L₂ u))
+    (hexp₃ : ∀ u ∈ Set.Icc (0 : ℝ) 1, q (p₃ u) * g₃ u ^ 2 = Complex.exp (L₃ u))
     (hqc : Continuous fun t : I => q (quarterPW p₀ p₁ p₂ p₃ ((t : ℝ)))) :
     windingNumber ⟨fun t : I => q (quarterPW p₀ p₁ p₂ p₃ ((t : ℝ))), hqc⟩ 0
       + 2 * windingNumber ⟨fun t : I => 4 * quarterPW g₀ g₁ g₂ g₃ ((t : ℝ)),
@@ -19330,17 +19329,17 @@ theorem rounded_count {q : ℂ → ℂ}
       hg01 hg12 hg23).comp continuous_subtype_val)⟩ with hddef
   have hexpF : ∀ t : I, Acur t * dcur t ^ 2 = Complex.exp (Lt t) := by
     intro t
-    show q (quarterPW p₀ p₁ p₂ p₃ ((t : ℝ)))
+    change q (quarterPW p₀ p₁ p₂ p₃ ((t : ℝ)))
         * (4 * quarterPW g₀ g₁ g₂ g₃ ((t : ℝ))) ^ 2
       = Complex.exp (quarterPW L₀ L₁ L₂ L₃ ((t : ℝ)) + ((Real.log 16 : ℝ) : ℂ))
     rw [Complex.exp_add, h16, ← hexpAll t]
     ring
   have hAcl : Acur 0 = Acur 1 := by
-    show q (quarterPW p₀ p₁ p₂ p₃ (((0:I) : ℝ)))
+    change q (quarterPW p₀ p₁ p₂ p₃ (((0:I) : ℝ)))
       = q (quarterPW p₀ p₁ p₂ p₃ (((1:I) : ℝ)))
     rw [hcoe0, hcoe1, hq0, hq1, hv30]
   have hdcl : dcur 0 = dcur 1 := by
-    show 4 * quarterPW g₀ g₁ g₂ g₃ (((0:I) : ℝ))
+    change 4 * quarterPW g₀ g₁ g₂ g₃ (((0:I) : ℝ))
       = 4 * quarterPW g₀ g₁ g₂ g₃ (((1:I) : ℝ))
     rw [hcoe0, hcoe1, hq0, hq1, hg30]
   have hAne : ∀ t : I, Acur t ≠ 0 := by
@@ -19361,7 +19360,7 @@ theorem rounded_count {q : ℂ → ℂ}
     norm_num at h1
     exact Complex.exp_ne_zero _ h1.symm
   have hLtm : Lt 1 - Lt 0 = 2 * Real.pi * Complex.I * m := by
-    show (quarterPW L₀ L₁ L₂ L₃ (((1:I) : ℝ)) + ((Real.log 16 : ℝ) : ℂ))
+    change (quarterPW L₀ L₁ L₂ L₃ (((1:I) : ℝ)) + ((Real.log 16 : ℝ) : ℂ))
         - (quarterPW L₀ L₁ L₂ L₃ (((0:I) : ℝ)) + ((Real.log 16 : ℝ) : ℂ))
       = 2 * Real.pi * Complex.I * m
     rw [hcoe0, hcoe1, hq0, hq1]
@@ -19372,11 +19371,11 @@ theorem rounded_count {q : ℂ → ℂ}
 /-- **The free-basepoint tangent winding**: the tangent loop of a simple closed
 continuously differentiable curve winds exactly once, in one of the two senses. -/
 theorem tangent_winding_free {γ g : ℝ → ℂ}
-    (hd : ∀ t ∈ Set.Icc (0:ℝ) 1, HasDerivAt γ (g t) t)
+    (hd : ∀ t ∈ Set.Icc (0 : ℝ) 1, HasDerivAt γ (g t) t)
     (hg : ContinuousOn g (Set.Icc 0 1))
     (hcl : γ 0 = γ 1) (hgcl : g 1 = g 0)
     (hinj : Set.InjOn γ (Set.Ico 0 1))
-    (hgne : ∀ u ∈ Set.Icc (0:ℝ) 1, g u ≠ 0) :
+    (hgne : ∀ u ∈ Set.Icc (0 : ℝ) 1, g u ≠ 0) :
     windingNumber ⟨fun t : I => g ((t : ℝ)),
         hg.comp_continuous continuous_subtype_val fun t => t.2⟩ 0 = 1
       ∨ windingNumber ⟨fun t : I => g ((t : ℝ)),
@@ -19479,7 +19478,7 @@ theorem tangent_winding_free {γ g : ℝ → ℂ}
         · intro u hu
           rcases eq_or_lt_of_le hu.1 with he | hlt'
           · rw [← he]
-            show (if t + c ≤ 1 then γ (t + c) else γ (t + c - 1)) = γ (t + c - 1)
+            change (if t + c ≤ 1 then γ (t + c) else γ (t + c - 1)) = γ (t + c - 1)
             rw [if_pos heq.le, heq]
             norm_num
             exact hcl.symm
@@ -19525,7 +19524,7 @@ theorem tangent_winding_free {γ g : ℝ → ℂ}
             simp only [Set.mem_Ici] at hu2
             rcases eq_or_lt_of_le hu2 with he | hlt'
             · rw [← he]
-              show t + c - 1 ∈ Set.Icc (0:ℝ) 1
+              change t + c - 1 ∈ Set.Icc (0:ℝ) 1
               rw [show t + c - 1 = 0 by linarith]
               norm_num
             · exact hmem2 u hu1.2 (by linarith)
@@ -19533,12 +19532,12 @@ theorem tangent_winding_free {γ g : ℝ → ℂ}
             simp only [Set.mem_Ici] at hu2
             rcases eq_or_lt_of_le hu2 with he | hlt'
             · rw [← he]
-              show (if t + c ≤ 1 then g (t + c) else g (t + c - 1)) = g (t + c - 1)
+              change (if t + c ≤ 1 then g (t + c) else g (t + c - 1)) = g (t + c - 1)
               rw [if_pos heq.le, heq]
               norm_num
               exact hgcl
             · exact if_neg (by linarith)
-          · show (if t + c ≤ 1 then g (t + c) else g (t + c - 1)) = g (t + c - 1)
+          · change (if t + c ≤ 1 then g (t + c) else g (t + c - 1)) = g (t + c - 1)
             rw [if_pos heq.le, heq]
             norm_num
             exact hgcl
@@ -19560,29 +19559,29 @@ theorem tangent_winding_free {γ g : ℝ → ℂ}
           simp only [Set.mem_setOf_eq] at hu2
           exact if_neg (by linarith)
     have hclc : γc 0 = γc 1 := by
-      show (if (0:ℝ) + c ≤ 1 then γ ((0:ℝ) + c) else γ ((0:ℝ) + c - 1))
+      change (if (0:ℝ) + c ≤ 1 then γ ((0:ℝ) + c) else γ ((0:ℝ) + c - 1))
         = (if (1:ℝ) + c ≤ 1 then γ ((1:ℝ) + c) else γ ((1:ℝ) + c - 1))
       rw [if_pos (by linarith), if_neg (by linarith : ¬ (1:ℝ) + c ≤ 1)]
       norm_num
     have hgclc : gc 1 = gc 0 := by
-      show (if (1:ℝ) + c ≤ 1 then g ((1:ℝ) + c) else g ((1:ℝ) + c - 1))
+      change (if (1:ℝ) + c ≤ 1 then g ((1:ℝ) + c) else g ((1:ℝ) + c - 1))
         = (if (0:ℝ) + c ≤ 1 then g ((0:ℝ) + c) else g ((0:ℝ) + c - 1))
       rw [if_neg (by linarith : ¬ (1:ℝ) + c ≤ 1), if_pos (by linarith)]
       norm_num
     have hgnec : ∀ u ∈ Set.Icc (0:ℝ) 1, gc u ≠ 0 := by
       intro u hu
-      show (if u + c ≤ 1 then g (u + c) else g (u + c - 1)) ≠ 0
+      change (if u + c ≤ 1 then g (u + c) else g (u + c - 1)) ≠ 0
       split_ifs with h
       · exact hgne _ (hmem1 u hu.1 h)
       · exact hgne _ (hmem2 u hu.2 (not_le.mp h))
     have hminc : ∀ t ∈ Set.Icc (0:ℝ) 1, (γc 0).im ≤ (γc t).im := by
       intro t ht
       have h0 : γc 0 = γ c := by
-        show (if (0:ℝ) + c ≤ 1 then γ ((0:ℝ) + c) else γ ((0:ℝ) + c - 1)) = γ c
+        change (if (0:ℝ) + c ≤ 1 then γ ((0:ℝ) + c) else γ ((0:ℝ) + c - 1)) = γ c
         rw [if_pos (by linarith)]
         norm_num
       rw [h0]
-      show (γ c).im ≤ (if t + c ≤ 1 then γ (t + c) else γ (t + c - 1)).im
+      change (γ c).im ≤ (if t + c ≤ 1 then γ (t + c) else γ (t + c - 1)).im
       split_ifs with h
       · exact hmin _ (hmem1 t ht.1 h)
       · exact hmin _ (hmem2 t ht.2 (not_le.mp h))
@@ -19641,7 +19640,7 @@ theorem tangent_winding_free {γ g : ℝ → ℂ}
     set G : C(I, ℂ) := ⟨fun t : I => g ((t : ℝ)),
       hg.comp_continuous continuous_subtype_val fun t => t.2⟩ with hGdef
     have hGcl : G 0 = G 1 := by
-      show g (((0:I) : ℝ)) = g (((1:I) : ℝ))
+      change g (((0:I) : ℝ)) = g (((1:I) : ℝ))
       rw [show (((0:I) : ℝ)) = 0 from rfl, show (((1:I) : ℝ)) = 1 from rfl]
       exact hgcl.symm
     have hGne : ∀ t : I, G t ≠ 0 := fun t => hgne _ t.2
@@ -19650,21 +19649,21 @@ theorem tangent_winding_free {γ g : ℝ → ℂ}
         = ⟨fun t : I => rotateLoop G c ((t : ℝ)),
           (rotateLoop_continuous G hGcl).comp continuous_subtype_val⟩ := by
       ext t
-      show gc ((t : ℝ)) = rotateLoop G c ((t : ℝ))
+      change gc ((t : ℝ)) = rotateLoop G c ((t : ℝ))
       rcases le_or_gt (((t : ℝ)) + c) 1 with h | h
       · rw [rotateLoop_apply_le G h]
-        show (if ((t:ℝ)) + c ≤ 1 then g (((t:ℝ)) + c) else g (((t:ℝ)) + c - 1))
+        change (if ((t:ℝ)) + c ≤ 1 then g (((t:ℝ)) + c) else g (((t:ℝ)) + c - 1))
           = G (Set.projIcc 0 1 zero_le_one (((t:ℝ)) + c))
         rw [if_pos h]
-        show g (((t:ℝ)) + c)
+        change g (((t:ℝ)) + c)
           = g ((Set.projIcc 0 1 zero_le_one (((t:ℝ)) + c) : I) : ℝ)
         congr 1
         rw [Set.projIcc_of_mem zero_le_one (hmem1 _ t.2.1 h)]
       · rw [rotateLoop_apply_gt G (not_le.mpr h)]
-        show (if ((t:ℝ)) + c ≤ 1 then g (((t:ℝ)) + c) else g (((t:ℝ)) + c - 1))
+        change (if ((t:ℝ)) + c ≤ 1 then g (((t:ℝ)) + c) else g (((t:ℝ)) + c - 1))
           = G (Set.projIcc 0 1 zero_le_one (((t:ℝ)) + c - 1))
         rw [if_neg (not_le.mpr h)]
-        show g (((t:ℝ)) + c - 1)
+        change g (((t:ℝ)) + c - 1)
           = g ((Set.projIcc 0 1 zero_le_one (((t:ℝ)) + c - 1) : I) : ℝ)
         congr 1
         rw [Set.projIcc_of_mem zero_le_one (hmem2 _ t.2.2 h)]
@@ -19691,13 +19690,13 @@ theorem no_bigon_loop {q : ℂ → ℂ} {U : Set ℂ} (hUconv : Convex ℝ U)
     (hq0 : ∃ z₀ : ℂ, 0 < z₀.im ∧ q z₀ ≠ 0)
     (hfin : {z ∈ U | q z = 0}.Finite)
     {ρ g : ℝ → ℂ} {m : ℤ}
-    (hd : ∀ t ∈ Set.Icc (0:ℝ) 1, HasDerivAt ρ (g t) t)
+    (hd : ∀ t ∈ Set.Icc (0 : ℝ) 1, HasDerivAt ρ (g t) t)
     (hgc : ContinuousOn g (Set.Icc 0 1))
     (hcl : ρ 0 = ρ 1) (hgcl : g 1 = g 0)
     (hinj : Set.InjOn ρ (Set.Ico 0 1))
-    (hgne : ∀ u ∈ Set.Icc (0:ℝ) 1, g u ≠ 0)
-    (htr : ∀ u ∈ Set.Icc (0:ℝ) 1, ρ u ∈ U)
-    (hqne : ∀ u ∈ Set.Icc (0:ℝ) 1, q (ρ u) ≠ 0)
+    (hgne : ∀ u ∈ Set.Icc (0 : ℝ) 1, g u ≠ 0)
+    (htr : ∀ u ∈ Set.Icc (0 : ℝ) 1, ρ u ∈ U)
+    (hqne : ∀ u ∈ Set.Icc (0 : ℝ) 1, q (ρ u) ≠ 0)
     (hqρc : Continuous fun t : I => q (ρ ((t : ℝ))))
     (hcount : windingNumber ⟨fun t : I => q (ρ ((t : ℝ))), hqρc⟩ 0
         + 2 * windingNumber ⟨fun t : I => g ((t : ℝ)),
@@ -19723,7 +19722,7 @@ theorem no_bigon_loop {q : ℂ → ℂ} {U : Set ℂ} (hUconv : Convex ℝ U)
     hρc.comp_continuous continuous_subtype_val fun t => t.2⟩ with hPdef
   have hdich := tangent_winding_free hd hgc hcl hgcl hinj hgne
   have hPcl : P 0 = P 1 := by
-    show ρ (((0:I) : ℝ)) = ρ (((1:I) : ℝ))
+    change ρ (((0:I) : ℝ)) = ρ (((1:I) : ℝ))
     rw [show (((0:I) : ℝ)) = 0 from rfl, show (((1:I) : ℝ)) = 1 from rfl]
     exact hcl
   have hPtr : ∀ t : I, P t ∈ U := fun t => htr _ t.2
@@ -19752,18 +19751,18 @@ theorem no_bigon_loop {q : ℂ → ℂ} {U : Set ℂ} (hUconv : Convex ℝ U)
       exact ⟨by linarith [t.2.2], by linarith [t.2.1]⟩
     -- the reversed tangent loop winds positively
     have hGcl : G 0 = G 1 := by
-      show g (((0:I) : ℝ)) = g (((1:I) : ℝ))
+      change g (((0:I) : ℝ)) = g (((1:I) : ℝ))
       rw [show (((0:I) : ℝ)) = 0 from rfl, show (((1:I) : ℝ)) = 1 from rfl]
       exact hgcl.symm
     have hGne : ∀ t : I, G t ≠ 0 := fun t => hgne _ t.2
     have hidg : (⟨fun t : I => -(g (1 - ((t : ℝ)))), hgrevc⟩ : C(I, ℂ))
         = -(G.comp ⟨unitInterval.symm, unitInterval.continuous_symm⟩) := by
       ext t
-      show -(g (1 - ((t : ℝ)))) = -(g ((unitInterval.symm t : ℝ)))
+      change -(g (1 - ((t : ℝ)))) = -(g ((unitInterval.symm t : ℝ)))
       rw [unitInterval.coe_symm_eq]
     have hRcl : (G.comp ⟨unitInterval.symm, unitInterval.continuous_symm⟩) 0
         = (G.comp ⟨unitInterval.symm, unitInterval.continuous_symm⟩) 1 := by
-      show G (unitInterval.symm 0) = G (unitInterval.symm 1)
+      change G (unitInterval.symm 0) = G (unitInterval.symm 1)
       rw [unitInterval.symm_zero, unitInterval.symm_one, hGcl]
     have hRne : ∀ t : I,
         (G.comp ⟨unitInterval.symm, unitInterval.continuous_symm⟩) t ≠ 0 :=
@@ -19775,7 +19774,7 @@ theorem no_bigon_loop {q : ℂ → ℂ} {U : Set ℂ} (hUconv : Convex ℝ U)
     -- the reversed value loop winds oppositely
     have hqPcl : (⟨fun t : I => q (ρ ((t : ℝ))), hqρc⟩ : C(I, ℂ)) 0
         = (⟨fun t : I => q (ρ ((t : ℝ))), hqρc⟩ : C(I, ℂ)) 1 := by
-      show q (ρ (((0:I) : ℝ))) = q (ρ (((1:I) : ℝ)))
+      change q (ρ (((0:I) : ℝ))) = q (ρ (((1:I) : ℝ)))
       rw [show (((0:I) : ℝ)) = 0 from rfl, show (((1:I) : ℝ)) = 1 from rfl, hcl]
     have hqPne : ∀ t : I,
         (⟨fun t : I => q (ρ ((t : ℝ))), hqρc⟩ : C(I, ℂ)) t ≠ 0 :=
@@ -19785,7 +19784,7 @@ theorem no_bigon_loop {q : ℂ → ℂ} {U : Set ℂ} (hUconv : Convex ℝ U)
     -- assemble the reversed loop data for the holomorphic winding bound
     set Prev : C(I, ℂ) := ⟨fun t : I => ρ (1 - ((t : ℝ))), hrevc⟩ with hPrevdef
     have hPrevcl : Prev 0 = Prev 1 := by
-      show ρ (1 - (((0:I) : ℝ))) = ρ (1 - (((1:I) : ℝ)))
+      change ρ (1 - (((0:I) : ℝ))) = ρ (1 - (((1:I) : ℝ)))
       rw [show (((0:I) : ℝ)) = 0 from rfl, show (((1:I) : ℝ)) = 1 from rfl]
       norm_num
       exact hcl.symm
@@ -19804,7 +19803,7 @@ theorem no_bigon_loop {q : ℂ → ℂ} {U : Set ℂ} (hUconv : Convex ℝ U)
         = (⟨fun t : I => q (ρ ((t : ℝ))), hqρc⟩ : C(I, ℂ)).comp
             ⟨unitInterval.symm, unitInterval.continuous_symm⟩ := by
       ext t
-      show q (ρ (1 - ((t : ℝ)))) = q (ρ ((unitInterval.symm t : ℝ)))
+      change q (ρ (1 - ((t : ℝ)))) = q (ρ ((unitInterval.symm t : ℝ)))
       rw [unitInterval.coe_symm_eq]
     rw [hidq, winding_reverse hqPcl hqPne] at hq2
     rw [h1] at hcount
@@ -20048,7 +20047,7 @@ theorem cubicRampSpeed_continuous (v L : ℝ) : Continuous (cubicRampSpeed v L) 
   unfold cubicRampSpeed
   fun_prop
 
-theorem cubicRampSpeed_pos {v L : ℝ} (hv : 0 < v) (h3 : v < 3*L) :
+theorem cubicRampSpeed_pos {v L : ℝ} (hv : 0 < v) (h3 : v < 3 * L) :
     ∀ u ∈ Set.Icc (0:ℝ) 1, 0 < cubicRampSpeed v L u := by
   intro u hu
   unfold cubicRampSpeed
@@ -20058,7 +20057,7 @@ theorem cubicRampSpeed_pos {v L : ℝ} (hv : 0 < v) (h3 : v < 3*L) :
   · nlinarith
   · nlinarith
 
-theorem cubicRamp_strictMono {a v L : ℝ} (hv : 0 < v) (h3 : v < 3*L) :
+theorem cubicRamp_strictMono {a v L : ℝ} (hv : 0 < v) (h3 : v < 3 * L) :
     StrictMonoOn (cubicRamp a v L) (Set.Icc 0 1) := by
   refine strictMonoOn_of_deriv_pos (convex_Icc 0 1) ?_ ?_
   · exact Continuous.continuousOn (by unfold cubicRamp; fun_prop)
@@ -20068,7 +20067,7 @@ theorem cubicRamp_strictMono {a v L : ℝ} (hv : 0 < v) (h3 : v < 3*L) :
     exact cubicRampSpeed_pos hv h3 u ⟨hu.1.le, hu.2.le⟩
 
 /-- The ramp maps the unit interval onto `[a, a + L]`. -/
-theorem cubicRamp_mapsTo {a v L : ℝ} (hv : 0 < v) (h3 : v < 3*L) :
+theorem cubicRamp_mapsTo {a v L : ℝ} (hv : 0 < v) (h3 : v < 3 * L) :
     ∀ u ∈ Set.Icc (0:ℝ) 1, cubicRamp a v L u ∈ Set.Icc a (a + L) := by
   intro u hu
   have hmono := cubicRamp_strictMono (a := a) hv h3
@@ -20084,7 +20083,7 @@ theorem cubicRamp_mapsTo {a v L : ℝ} (hv : 0 < v) (h3 : v < 3*L) :
 
 /-- Pointwise affine quarter-speed chain rule. -/
 theorem affine_chain_at {f g : ℝ → ℂ} {c t : ℝ}
-    (hd : HasDerivAt f (g (4*t - c)) (4*t - c)) :
+    (hd : HasDerivAt f (g (4 * t - c)) (4 * t - c)) :
     HasDerivAt (fun u => f (4*u - c)) (4 * g (4*t - c)) t := by
   have hin : HasDerivAt (fun u : ℝ => 4*u - c) 4 t := by
     simpa using ((hasDerivAt_id t).const_mul (4:ℝ)).sub_const c
@@ -20096,10 +20095,10 @@ differentiable on the closed unit interval with matching junction values and
 velocities concatenate to a curve differentiable at every point of the closed unit
 interval. -/
 theorem quarterPW_hasDerivAt_Icc {f₀ f₁ f₂ f₃ g₀ g₁ g₂ g₃ : ℝ → ℂ}
-    (hd₀ : ∀ u ∈ Set.Icc (0:ℝ) 1, HasDerivAt f₀ (g₀ u) u)
-    (hd₁ : ∀ u ∈ Set.Icc (0:ℝ) 1, HasDerivAt f₁ (g₁ u) u)
-    (hd₂ : ∀ u ∈ Set.Icc (0:ℝ) 1, HasDerivAt f₂ (g₂ u) u)
-    (hd₃ : ∀ u ∈ Set.Icc (0:ℝ) 1, HasDerivAt f₃ (g₃ u) u)
+    (hd₀ : ∀ u ∈ Set.Icc (0 : ℝ) 1, HasDerivAt f₀ (g₀ u) u)
+    (hd₁ : ∀ u ∈ Set.Icc (0 : ℝ) 1, HasDerivAt f₁ (g₁ u) u)
+    (hd₂ : ∀ u ∈ Set.Icc (0 : ℝ) 1, HasDerivAt f₂ (g₂ u) u)
+    (hd₃ : ∀ u ∈ Set.Icc (0 : ℝ) 1, HasDerivAt f₃ (g₃ u) u)
     (hv01 : f₀ 1 = f₁ 0) (hv12 : f₁ 1 = f₂ 0) (hv23 : f₂ 1 = f₃ 0)
     (hg01 : g₀ 1 = g₁ 0) (hg12 : g₁ 1 = g₂ 0) (hg23 : g₂ 1 = g₃ 0) :
     ∀ t ∈ Set.Icc (0:ℝ) 1, HasDerivAt (quarterPW f₀ f₁ f₂ f₃)
@@ -20226,16 +20225,16 @@ theorem quarterPW_eq_concat {f₀ f₁ f₂ f₃ : ℝ → ℂ}
   intro t ht
   unfold quarterPW quarterConcat
   split_ifs with hA hB hC
-  · show f₀ (4*t) = f₀ ((Set.projIcc 0 1 zero_le_one (4*t) : I) : ℝ)
+  · change f₀ (4*t) = f₀ ((Set.projIcc 0 1 zero_le_one (4*t) : I) : ℝ)
     congr 1
     rw [Set.projIcc_of_mem zero_le_one ⟨by linarith [ht.1], by linarith⟩]
-  · show f₁ (4*t - 1) = f₁ ((Set.projIcc 0 1 zero_le_one (4*t - 1) : I) : ℝ)
+  · change f₁ (4*t - 1) = f₁ ((Set.projIcc 0 1 zero_le_one (4*t - 1) : I) : ℝ)
     congr 1
     rw [Set.projIcc_of_mem zero_le_one ⟨by linarith [not_le.mp hA], by linarith⟩]
-  · show f₂ (4*t - 2) = f₂ ((Set.projIcc 0 1 zero_le_one (4*t - 2) : I) : ℝ)
+  · change f₂ (4*t - 2) = f₂ ((Set.projIcc 0 1 zero_le_one (4*t - 2) : I) : ℝ)
     congr 1
     rw [Set.projIcc_of_mem zero_le_one ⟨by linarith [not_le.mp hB], by linarith⟩]
-  · show f₃ (4*t - 3) = f₃ ((Set.projIcc 0 1 zero_le_one (4*t - 3) : I) : ℝ)
+  · change f₃ (4*t - 3) = f₃ ((Set.projIcc 0 1 zero_le_one (4*t - 3) : I) : ℝ)
     congr 1
     rw [Set.projIcc_of_mem zero_le_one
       ⟨by linarith [not_le.mp hC], by linarith [ht.2]⟩]
@@ -20252,9 +20251,9 @@ theorem quarterPW_continuousOn_Icc {f₀ f₁ f₂ f₃ : ℝ → ℂ}
     ⟨fun x : I => f₁ ((x : ℝ)), h₁.comp_continuous continuous_subtype_val fun x => x.2⟩
     ⟨fun x : I => f₂ ((x : ℝ)), h₂.comp_continuous continuous_subtype_val fun x => x.2⟩
     ⟨fun x : I => f₃ ((x : ℝ)), h₃.comp_continuous continuous_subtype_val fun x => x.2⟩
-    (by show f₀ (((1:I) : ℝ)) = f₁ (((0:I) : ℝ)); simpa using hv01)
-    (by show f₁ (((1:I) : ℝ)) = f₂ (((0:I) : ℝ)); simpa using hv12)
-    (by show f₂ (((1:I) : ℝ)) = f₃ (((0:I) : ℝ)); simpa using hv23)
+    (by change f₀ (((1:I) : ℝ)) = f₁ (((0:I) : ℝ)); simpa using hv01)
+    (by change f₁ (((1:I) : ℝ)) = f₂ (((0:I) : ℝ)); simpa using hv12)
+    (by change f₂ (((1:I) : ℝ)) = f₃ (((0:I) : ℝ)); simpa using hv23)
   exact (hcc.continuousOn).congr (quarterPW_eq_concat h₀ h₁ h₂ h₃)
 
 /-- **The arc piece of the rounded bigon**: a trajectory arc with exponentially
@@ -20263,7 +20262,7 @@ derivative on the unit interval, endpoint positions and velocities at the trunca
 data, an exponential presentation with clamped-speed modulus, and a continuous
 exponent. -/
 theorem arc_piece {q : ℂ → ℂ} {f df : ℝ → ℂ} {a L v : ℝ} {E : ℂ}
-    (hv : 0 < v) (h3 : v < 3*L)
+    (hv : 0 < v) (h3 : v < 3 * L)
     (hd : ∀ w ∈ Set.Icc a (a + L), HasDerivAt f (df w) w)
     (hdc : ContinuousOn df (Set.Icc a (a + L)))
     (hE : ∀ w ∈ Set.Icc a (a + L), q (f w) * df w ^ 2 = Complex.exp E) :
@@ -20351,10 +20350,10 @@ theorem rounded_count_Icc {q : ℂ → ℂ}
     (hg30 : g₃ 1 = g₀ 0)
     (hL01 : L₀ 1 = L₁ 0) (hL12 : L₁ 1 = L₂ 0) (hL23 : L₂ 1 = L₃ 0)
     (hLm : L₃ 1 - L₀ 0 = 2 * Real.pi * Complex.I * m)
-    (hexp₀ : ∀ u ∈ Set.Icc (0:ℝ) 1, q (p₀ u) * g₀ u ^ 2 = Complex.exp (L₀ u))
-    (hexp₁ : ∀ u ∈ Set.Icc (0:ℝ) 1, q (p₁ u) * g₁ u ^ 2 = Complex.exp (L₁ u))
-    (hexp₂ : ∀ u ∈ Set.Icc (0:ℝ) 1, q (p₂ u) * g₂ u ^ 2 = Complex.exp (L₂ u))
-    (hexp₃ : ∀ u ∈ Set.Icc (0:ℝ) 1, q (p₃ u) * g₃ u ^ 2 = Complex.exp (L₃ u))
+    (hexp₀ : ∀ u ∈ Set.Icc (0 : ℝ) 1, q (p₀ u) * g₀ u ^ 2 = Complex.exp (L₀ u))
+    (hexp₁ : ∀ u ∈ Set.Icc (0 : ℝ) 1, q (p₁ u) * g₁ u ^ 2 = Complex.exp (L₁ u))
+    (hexp₂ : ∀ u ∈ Set.Icc (0 : ℝ) 1, q (p₂ u) * g₂ u ^ 2 = Complex.exp (L₂ u))
+    (hexp₃ : ∀ u ∈ Set.Icc (0 : ℝ) 1, q (p₃ u) * g₃ u ^ 2 = Complex.exp (L₃ u))
     (hqc : Continuous fun t : I => q (quarterPW p₀ p₁ p₂ p₃ ((t : ℝ)))) :
     windingNumber ⟨fun t : I => q (quarterPW p₀ p₁ p₂ p₃ ((t : ℝ))), hqc⟩ 0
       + 2 * windingNumber ⟨fun t : I => 4 * quarterPW g₀ g₁ g₂ g₃ ((t : ℝ)),
@@ -20368,7 +20367,7 @@ theorem rounded_count_Icc {q : ℂ → ℂ}
   have hclid : ∀ u ∈ Set.Icc (0:ℝ) 1, cl u = u := by
     intro u hu
     rw [hcldef]
-    show max 0 (min 1 u) = u
+    change max 0 (min 1 u) = u
     rw [min_eq_right hu.2, max_eq_right hu.1]
   have hclmem : ∀ u : ℝ, cl u ∈ Set.Icc (0:ℝ) 1 := by
     intro u
@@ -20376,11 +20375,11 @@ theorem rounded_count_Icc {q : ℂ → ℂ}
     · exact le_max_left 0 _
     · rcases le_total u 1 with h | h
       · rw [hcldef]
-        show max 0 (min 1 u) ≤ 1
+        change max 0 (min 1 u) ≤ 1
         rw [min_eq_right h]
         exact max_le zero_le_one h
       · rw [hcldef]
-        show max 0 (min 1 u) ≤ 1
+        change max 0 (min 1 u) ≤ 1
         rw [min_eq_left h]
         norm_num
   have hcl0 : cl 0 = 0 := hclid 0 (by norm_num)
@@ -20393,21 +20392,21 @@ theorem rounded_count_Icc {q : ℂ → ℂ}
     (hLc₀.comp_continuous hclc hclmem) (hLc₁.comp_continuous hclc hclmem)
     (hLc₂.comp_continuous hclc hclmem) (hLc₃.comp_continuous hclc hclmem)
     hv30
-    (by show g₀ (cl 1) = g₁ (cl 0); rw [hcl0, hcl1, hg01])
-    (by show g₁ (cl 1) = g₂ (cl 0); rw [hcl0, hcl1, hg12])
-    (by show g₂ (cl 1) = g₃ (cl 0); rw [hcl0, hcl1, hg23])
-    (by show g₃ (cl 1) = g₀ (cl 0); rw [hcl0, hcl1, hg30])
-    (by show L₀ (cl 1) = L₁ (cl 0); rw [hcl0, hcl1, hL01])
-    (by show L₁ (cl 1) = L₂ (cl 0); rw [hcl0, hcl1, hL12])
-    (by show L₂ (cl 1) = L₃ (cl 0); rw [hcl0, hcl1, hL23])
-    (by show L₃ (cl 1) - L₀ (cl 0) = _; rw [hcl0, hcl1]; exact hLm)
-    (by intro u hu; show q (p₀ u) * g₀ (cl u) ^ 2 = Complex.exp (L₀ (cl u))
+    (by change g₀ (cl 1) = g₁ (cl 0); rw [hcl0, hcl1, hg01])
+    (by change g₁ (cl 1) = g₂ (cl 0); rw [hcl0, hcl1, hg12])
+    (by change g₂ (cl 1) = g₃ (cl 0); rw [hcl0, hcl1, hg23])
+    (by change g₃ (cl 1) = g₀ (cl 0); rw [hcl0, hcl1, hg30])
+    (by change L₀ (cl 1) = L₁ (cl 0); rw [hcl0, hcl1, hL01])
+    (by change L₁ (cl 1) = L₂ (cl 0); rw [hcl0, hcl1, hL12])
+    (by change L₂ (cl 1) = L₃ (cl 0); rw [hcl0, hcl1, hL23])
+    (by change L₃ (cl 1) - L₀ (cl 0) = _; rw [hcl0, hcl1]; exact hLm)
+    (by intro u hu; change q (p₀ u) * g₀ (cl u) ^ 2 = Complex.exp (L₀ (cl u))
         rw [hclid u hu]; exact hexp₀ u hu)
-    (by intro u hu; show q (p₁ u) * g₁ (cl u) ^ 2 = Complex.exp (L₁ (cl u))
+    (by intro u hu; change q (p₁ u) * g₁ (cl u) ^ 2 = Complex.exp (L₁ (cl u))
         rw [hclid u hu]; exact hexp₁ u hu)
-    (by intro u hu; show q (p₂ u) * g₂ (cl u) ^ 2 = Complex.exp (L₂ (cl u))
+    (by intro u hu; change q (p₂ u) * g₂ (cl u) ^ 2 = Complex.exp (L₂ (cl u))
         rw [hclid u hu]; exact hexp₂ u hu)
-    (by intro u hu; show q (p₃ u) * g₃ (cl u) ^ 2 = Complex.exp (L₃ (cl u))
+    (by intro u hu; change q (p₃ u) * g₃ (cl u) ^ 2 = Complex.exp (L₃ (cl u))
         rw [hclid u hu]; exact hexp₃ u hu)
     hqc
   have hident : (⟨fun t : I => 4 * quarterPW (g₀ ∘ cl) (g₁ ∘ cl) (g₂ ∘ cl)
@@ -20417,9 +20416,9 @@ theorem rounded_count_Icc {q : ℂ → ℂ}
         (hgc₁.comp_continuous hclc hclmem).continuousOn
         (hgc₂.comp_continuous hclc hclmem).continuousOn
         (hgc₃.comp_continuous hclc hclmem).continuousOn
-        (by show g₀ (cl 1) = g₁ (cl 0); rw [hcl0, hcl1, hg01])
-        (by show g₁ (cl 1) = g₂ (cl 0); rw [hcl0, hcl1, hg12])
-        (by show g₂ (cl 1) = g₃ (cl 0); rw [hcl0, hcl1, hg23]))).comp_continuous
+        (by change g₀ (cl 1) = g₁ (cl 0); rw [hcl0, hcl1, hg01])
+        (by change g₁ (cl 1) = g₂ (cl 0); rw [hcl0, hcl1, hg12])
+        (by change g₂ (cl 1) = g₃ (cl 0); rw [hcl0, hcl1, hg23]))).comp_continuous
           continuous_subtype_val fun t => t.2)⟩ : C(I, ℂ))
       = ⟨fun t : I => 4 * quarterPW g₀ g₁ g₂ g₃ ((t : ℝ)),
           continuous_const.mul
@@ -20427,23 +20426,23 @@ theorem rounded_count_Icc {q : ℂ → ℂ}
               hg01 hg12 hg23).comp_continuous
                 continuous_subtype_val fun t => t.2)⟩ := by
     ext t
-    show 4 * quarterPW (g₀ ∘ cl) (g₁ ∘ cl) (g₂ ∘ cl) (g₃ ∘ cl) ((t : ℝ))
+    change 4 * quarterPW (g₀ ∘ cl) (g₁ ∘ cl) (g₂ ∘ cl) (g₃ ∘ cl) ((t : ℝ))
       = 4 * quarterPW g₀ g₁ g₂ g₃ ((t : ℝ))
     congr 1
     refine quarterPW_rel_Icc (P := fun a b _ => a = b)
       (c₀ := g₀) (c₁ := g₁) (c₂ := g₂) (c₃ := g₃)
       ?_ ?_ ?_ ?_ t.2
     · intro u hu
-      show g₀ (cl u) = g₀ u
+      change g₀ (cl u) = g₀ u
       rw [hclid u hu]
     · intro u hu
-      show g₁ (cl u) = g₁ u
+      change g₁ (cl u) = g₁ u
       rw [hclid u hu]
     · intro u hu
-      show g₂ (cl u) = g₂ u
+      change g₂ (cl u) = g₂ u
       rw [hclid u hu]
     · intro u hu
-      show g₃ (cl u) = g₃ u
+      change g₃ (cl u) = g₃ u
       rw [hclid u hu]
   rw [← hident]
   convert hcount using 3
@@ -20778,7 +20777,7 @@ theorem bigonLoop_continuousOn {q : ℂ → ℂ} {γ τ : ℝ → ℂ} {T s μ :
           ((continuous_id.sub continuous_const).continuousWithinAt) ?_
         rintro y ⟨hy1, hy2⟩
         have := Set.mem_Ici.mp hy2
-        show y - x ∈ Set.Icc (-μ) (s + μ)
+        change y - x ∈ Set.Icc (-μ) (s + μ)
         exact ⟨by linarith, by linarith [hy1.2]⟩
       refine hshift.congr ?_ ?_
       · rintro y ⟨hy1, hy2⟩
@@ -20795,7 +20794,7 @@ theorem bigonLoop_continuousOn {q : ℂ → ℂ} {γ τ : ℝ → ℂ} {T s μ :
         ((continuous_id.sub continuous_const).continuousWithinAt) ?_
       rintro y ⟨hy1, hy2⟩
       have := Set.mem_Ioi.mp hy2
-      show y - T ∈ Set.Icc (-μ) (s + μ)
+      change y - T ∈ Set.Icc (-μ) (s + μ)
       exact ⟨by linarith, by linarith [hy1.2]⟩
     refine hshift.congr ?_ ?_
     · rintro y ⟨hy1, hy2⟩
@@ -21201,13 +21200,13 @@ theorem bigon_corner_kits {q : ℂ → ℂ} {γ τ : ℝ → ℂ} {a T b μ s : 
   -- kit at the second corner, through the shifted transverse arc
   have hτsh := isTrajOn_shift b hτ
   have hshcorner : (fun v => τ (b + v)) 0 = γ a := by
-    show τ (b + 0) = γ a
+    change τ (b + 0) = γ a
     rw [add_zero, hc2]
   obtain ⟨S₂, Φ₂, ε₂, r₂, hr₂, hε₂, hS₂o, hΦ₂d, hΦ₂inj, hΦ₂sq, hq₂ne, hball₂,
       hdevγ₂, hdevτ₂'⟩ :=
     corner_data hγ hamem hτsh (hη₀ := hμ)
       (fun v hv => by
-        show b + v ∈ Set.Icc (-μ) (s + μ)
+        change b + v ∈ Set.Icc (-μ) (s + μ)
         exact ⟨by linarith [hv.1], by linarith [hv.2]⟩) hshcorner
   -- the common radius
   refine ⟨S₁, S₂, Φ₁, Φ₂, ε₁, ε₂, min r₁ r₂, lt_min hr₁ hr₂, hε₁, hε₂,
@@ -21551,7 +21550,7 @@ theorem corner1_seams {γ τ : ℝ → ℂ} {T : ℝ}
   have hderivτ : deriv τ r = -(Complex.I * ε₁) / deriv Φ₁ (τ r) :=
     (eq_div_iff hΦτne).mpr (by linear_combination hvelτ)
   refine ⟨hP0, hP1, ?_, ?_, htr⟩
-  · show ((r : ℂ) * Complex.I * (ω : ℂ)
+  · change ((r : ℂ) * Complex.I * (ω : ℂ)
         * Complex.exp (Complex.I * ((α : ℂ) + (ω : ℂ) * ((0:ℝ) : ℂ))))
       / deriv Φ₁ (cornerPiece Φ₁ S₁
         (Φ₁ (γ T) - ((1:ℝ) : ℂ)*r + Complex.I*((-ε₁ : ℝ) : ℂ)*r) r α ω 0)
@@ -21559,7 +21558,7 @@ theorem corner1_seams {γ τ : ℝ → ℂ} {T : ℝ}
     rw [hP0, hg3, hderivγ]
     push_cast
     ring
-  · show ((r : ℂ) * Complex.I * (ω : ℂ)
+  · change ((r : ℂ) * Complex.I * (ω : ℂ)
         * Complex.exp (Complex.I * ((α : ℂ) + (ω : ℂ) * ((1:ℝ) : ℂ))))
       / deriv Φ₁ (cornerPiece Φ₁ S₁
         (Φ₁ (γ T) - ((1:ℝ) : ℂ)*r + Complex.I*((-ε₁ : ℝ) : ℂ)*r) r α ω 1)
@@ -21672,7 +21671,7 @@ theorem corner2_seams {γ τ : ℝ → ℂ} {a b : ℝ}
   have hderivτ : deriv τ (b - r) = -(Complex.I * ε₂) / deriv Φ₂ (τ (b - r)) :=
     (eq_div_iff hΦτne).mpr (by linear_combination hvelτ)
   refine ⟨hP0, hP1, ?_, ?_, htr⟩
-  · show ((r : ℂ) * Complex.I * (ω' : ℂ)
+  · change ((r : ℂ) * Complex.I * (ω' : ℂ)
         * Complex.exp (Complex.I * ((α' : ℂ) + (ω' : ℂ) * ((0:ℝ) : ℂ))))
       / deriv Φ₂ (cornerPiece Φ₂ S₂
         (Φ₂ (γ a) - ((-1:ℝ) : ℂ)*r + Complex.I*(ε₂ : ℂ)*r) r α' ω' 0)
@@ -21687,7 +21686,7 @@ theorem corner2_seams {γ τ : ℝ → ℂ} {a b : ℝ}
     rw [hnum]
     push_cast
     ring
-  · show ((r : ℂ) * Complex.I * (ω' : ℂ)
+  · change ((r : ℂ) * Complex.I * (ω' : ℂ)
         * Complex.exp (Complex.I * ((α' : ℂ) + (ω' : ℂ) * ((1:ℝ) : ℂ))))
       / deriv Φ₂ (cornerPiece Φ₂ S₂
         (Φ₂ (γ a) - ((-1:ℝ) : ℂ)*r + Complex.I*(ε₂ : ℂ)*r) r α' ω' 1)
@@ -21745,10 +21744,10 @@ theorem four_piece_bundle {q : ℂ → ℂ} {γ τ : ℝ → ℂ} {a b T : ℝ}
     (hε₁ : ε₁ = 1 ∨ ε₁ = -1) (hε₂ : ε₂ = 1 ∨ ε₂ = -1)
     (hα₁ : α₁ = -(-ε₁) * (Real.pi / 2)) (hω₁ : ω₁ = 1 * (-ε₁) * (Real.pi / 2))
     (hα₂ : α₂ = -ε₂ * Real.pi) (hω₂ : ω₂ = ε₂ * (Real.pi / 2))
-    (hc₁ : c₁ = Φ₁ (γ T) - ((1:ℝ) : ℂ)*r + Complex.I*((-ε₁ : ℝ) : ℂ)*r)
-    (hc₂ : c₂ = Φ₂ (γ a) - ((-1:ℝ) : ℂ)*r + Complex.I*(ε₂ : ℂ)*r)
-    (h3γ : r * (Real.pi/2) < 3 * (T - a - 2*r))
-    (h3τ : r * (Real.pi/2) < 3 * (b - 2*r))
+    (hc₁ : c₁ = Φ₁ (γ T) - ((1 : ℝ) : ℂ) * r + Complex.I * ((-ε₁ : ℝ) : ℂ) * r)
+    (hc₂ : c₂ = Φ₂ (γ a) - ((-1 : ℝ) : ℂ) * r + Complex.I * (ε₂ : ℂ) * r)
+    (h3γ : r * (Real.pi / 2) < 3 * (T - a - 2 * r))
+    (h3τ : r * (Real.pi / 2) < 3 * (b - 2 * r))
     (hS₁o : IsOpen S₁) (hΦ₁d : DifferentiableOn ℂ Φ₁ S₁) (hΦ₁inj : Set.InjOn Φ₁ S₁)
     (hΦ₁sq : ∀ z ∈ S₁, deriv Φ₁ z ^ 2 = -q z) (hq₁ne : ∀ z ∈ S₁, q z ≠ 0)
     (hS₂o : IsOpen S₂) (hΦ₂d : DifferentiableOn ℂ Φ₂ S₂) (hΦ₂inj : Set.InjOn Φ₂ S₂)
@@ -21873,7 +21872,7 @@ theorem qdDist_symm_le {q : ℂ → ℂ} (hqm : Measurable q) (z w : ℂ) :
   set γ' : ℝ → ℂ := fun t => γ (max 0 (min 1 t)) with hγ'def
   have hid : ∀ t ∈ Set.Icc (0 : ℝ) 1, γ' t = γ t := by
     intro t ht
-    show γ (max 0 (min 1 t)) = γ t
+    change γ (max 0 (min 1 t)) = γ t
     rw [min_eq_right ht.2, max_eq_right ht.1]
   have hγ'cont : Continuous γ' := by
     have hclamp : Continuous fun t : ℝ => max 0 (min 1 t) :=
@@ -21912,7 +21911,7 @@ theorem qdDist_symm_le {q : ℂ → ℂ} (hqm : Measurable q) (z w : ℂ) :
     have h2 := acOn_comp_affine one_pos hacη'
     have hac : AbsolutelyContinuousOnInterval (reversePath γ') 0 1 := by
       refine AbsolutelyContinuousOnInterval.congr h2 fun t ht => ?_
-      show γ' (-(1 * t + -1)) = γ' (1 - t)
+      change γ' (-(1 * t + -1)) = γ' (1 - t)
       congr 1
       ring
     refine ⟨?_, ?_, ?_, hac, ?_⟩
@@ -21924,7 +21923,7 @@ theorem qdDist_symm_le {q : ℂ → ℂ} (hqm : Measurable q) (z w : ℂ) :
         AbsolutelyContinuousOnInterval.continuousOn hac
       rwa [Set.uIcc_of_le (by norm_num : (0 : ℝ) ≤ 1)] at h3
     · intro t ht
-      show 0 < (γ' (1 - t)).im
+      change 0 < (γ' (1 - t)).im
       exact hγ'flat.upper (1 - t) ⟨by linarith [ht.2], by linarith [ht.1]⟩
   calc qdDist q w z ≤ qdLength q (reversePath γ') := qdDist_le_qdLength hrev
     _ = qdLength q γ' := arcLengthLineIntegral_reversePath _ hρm hγ'ac hγ'cont
@@ -21985,7 +21984,7 @@ theorem sym_hrepar_neg {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
       congr 1
     rw [hflowe]
     exact image_density_eq hT hqw0 hd2 hbelt rfl hγd
-  show (∫⁻ s in Set.Icc (0 : ℝ) 1,
+  change (∫⁻ s in Set.Icc (0 : ℝ) 1,
       horizontalDensity (q : ℂ → ℂ) (fun s' => h (σ (s' * T))) s)
     ≤ ∫⁻ t in Set.Icc (0 : ℝ) T, rsDensity (q : ℂ → ℂ) h (A.flow (-t) z)
   rw [lintegral_congr_ae haes,
@@ -22236,7 +22235,7 @@ theorem wirtingerQuotient_hMod {h : ℂ → ℂ} {z : ℂ} (hz : 0 < z.im) :
     wirtingerQuotient (hMod h) z = wirtingerQuotient h z := by
   have hfeq : fderiv ℝ (hMod h) z = fderiv ℝ h z :=
     (hMod_eventuallyEq hz).fderiv_eq
-  show dzbar (hMod h) z / dz (hMod h) z = dzbar h z / dz h z
+  change dzbar (hMod h) z / dz (hMod h) z = dzbar h z / dz h z
   rw [dz, dzbar, dz, dzbar, hfeq]
 
 /-- **Pointwise leafwise bound**: the forward leaf field shape at a regular point with
@@ -22267,11 +22266,11 @@ theorem sym_leaf_lb_pt {q h : ℂ → ℂ} {A : Atlas q} {C : ℝ≥0∞}
   have himT : 0 < (σ T).im :=
     (traj_regular hσtraj (Set.right_mem_Icc.mpr hT.le)).1
   have hC0 : qdDist q (σ 0) ((fun s => h (σ (s * T))) 0) ≤ C := by
-    show qdDist q (σ 0) (h (σ (0 * T))) ≤ C
+    change qdDist q (σ 0) (h (σ (0 * T))) ≤ C
     rw [zero_mul]
     exact hCbd (σ 0) him0
   have hC1 : qdDist q ((fun s => h (σ (s * T))) 1) (σ T) ≤ C := by
-    show qdDist q (h (σ (1 * T))) (σ T) ≤ C
+    change qdDist q (h (σ (1 * T))) (σ T) ≤ C
     rw [one_mul]
     exact le_trans (qdDist_symm_le hqm _ _) (hCbd (σ T) himT)
   exact leaf_lb_of_dH hsep'
@@ -22304,11 +22303,11 @@ theorem sym_leaf_lb_neg_pt {q h : ℂ → ℂ} {A : Atlas q} {C : ℝ≥0∞}
   have himT : 0 < (σ T).im :=
     (traj_regular hσtraj (Set.right_mem_Icc.mpr hT.le)).1
   have hC0 : qdDist q (σ 0) ((fun s => h (σ (s * T))) 0) ≤ C := by
-    show qdDist q (σ 0) (h (σ (0 * T))) ≤ C
+    change qdDist q (σ 0) (h (σ (0 * T))) ≤ C
     rw [zero_mul]
     exact hCbd (σ 0) him0
   have hC1 : qdDist q ((fun s => h (σ (s * T))) 1) (σ T) ≤ C := by
-    show qdDist q (h (σ (1 * T))) (σ T) ≤ C
+    change qdDist q (h (σ (1 * T))) (σ T) ≤ C
     rw [one_mul]
     exact le_trans (qdDist_symm_le hqm _ _) (hCbd (σ T) himT)
   exact leaf_lb_of_dH hsep'
@@ -22727,7 +22726,7 @@ theorem traj_double_cover {q : ℂ → ℂ} {z₀ : ℂ} {σ w : ℝ → ℂ} {b
       filter_upwards [hev, hτcont.tendsto.eventually_mem hVmem,
         eventually_mem_nhdsWithin] with u hu hVu huI
       refine ⟨hVu, ?_⟩
-      show Φ (p (w u + Complex.I)) = Φ (p (w t + Complex.I)) + _
+      change Φ (p (w u + Complex.I)) = Φ (p (w t + Complex.I)) + _
       rw [hpτ u huI, hpτ t ht]
       exact hu.2
 
@@ -22819,7 +22818,7 @@ theorem no_alltime_traj_to_zero {q : ℂ → ℂ}
     have hpow : (v - Complex.I) ^ (2 * (m + 1))
         = ((v - Complex.I) ^ 2) ^ m * (v - Complex.I) ^ 2 := by
       rw [show 2 * (m + 1) = 2 * m + 2 by ring, pow_add, pow_mul]
-    show 4 * (v - Complex.I) ^ 2 * q (p v) = _
+    change 4 * (v - Complex.I) ^ 2 * q (p v) = _
     rw [hv, hpz, hpow, hĝdef]
     ring
   obtain ⟨rE, hrE, -, Φ, hΦd, hΦsq⟩ := even_zero_transparent_chart isOpen_univ
@@ -23112,7 +23111,7 @@ theorem leaf_follow {q Φ : ℂ → ℂ} {S : Set ℂ} (hS : IsOpen S)
         (fun y : ℝ => σ (y + (t - h))) (-v)) (u + -h))
         = fun u => σ (t + (-1) * u) := by
       funext u
-      show σ (-(u + -h) + (t - h)) = σ (t + (-1) * u)
+      change σ (-(u + -h) + (t - h)) = σ (t + (-1) * u)
       ring_nf
     rwa [hfun] at hshift2
   have hdevbwd : ∀ᶠ u in nhdsWithin 0 (Set.Icc 0 h),
@@ -23366,10 +23365,10 @@ theorem vertical_connect {q Φ : ℂ → ℂ} {S : Set ℂ} (hS : IsOpen S)
     rw [hsgnabs, abs_of_pos hℓ]
     linarith
   refine ⟨fun u => localFlow Ψ S (sgn * (u + μ)) zst, hshift, ?_, ?_⟩
-  · show localFlow Ψ S (sgn * (0 + μ)) zst = z₂
+  · change localFlow Ψ S (sgn * (0 + μ)) zst = z₂
     rw [hτeq 0, mul_zero]
     exact localFlow_zero hΨinj hz₂S
-  · show localFlow Ψ S (sgn * (ℓ + μ)) zst = z₁
+  · change localFlow Ψ S (sgn * (ℓ + μ)) zst = z₁
     rw [hτeq ℓ]
     refine hΨinj (localFlow_mem hτℓmem) hz₁S ?_
     rw [localFlow_dev hτℓmem, hΨdef]
@@ -23453,9 +23452,9 @@ theorem confined_tail_false {q : ℂ → ℂ}
       exact ⟨by linarith, by linarith⟩
     refine hbigon (fun u => σ (u + s₁)) τ₀ T 0 μ hT le_rfl hμ
       (hσv μ hμ hμle) hτh ?_ ?_
-    · show τ₀ 0 = σ (T + s₁)
+    · change τ₀ 0 = σ (T + s₁)
       rw [hτ₀0, hTdef, sub_add_cancel, hpt]
-    · show τ₀ 0 = σ (0 + s₁)
+    · change τ₀ 0 = σ (0 + s₁)
       rw [hτ₀0, zero_add]
   · -- distinct heights: vertical chart connection, genuine bigon
     obtain ⟨τ, hτtraj, hτ0, hτℓ⟩ := vertical_connect hSopen hΦd hΦinj hSH
@@ -23463,9 +23462,9 @@ theorem confined_tail_false {q : ℂ → ℂ}
     have hμ : (0 : ℝ) < ρ₀ / 4 := by positivity
     refine hbigon (fun u => σ (u + s₁)) τ T |h₁ - h₂| (ρ₀ / 4) hT (abs_nonneg _)
       hμ (hσv _ hμ le_rfl) hτtraj ?_ ?_
-    · show τ 0 = σ (T + s₁)
+    · change τ 0 = σ (T + s₁)
       rw [hτ0, hTdef, sub_add_cancel]
-    · show τ |h₁ - h₂| = σ (0 + s₁)
+    · change τ |h₁ - h₂| = σ (0 + s₁)
       rw [hτℓ, zero_add]
 
 /-- **Confined-end exclusion, backward**: under the same no-bigon principle, an all-time
@@ -23543,7 +23542,7 @@ theorem leafLoop_closed (p : C(unitInterval, ℂ)) (f : ℝ → ℂ) (T : ℝ)
     (hfc : ContinuousOn f (Set.Icc 0 T)) (hT : 0 ≤ T) (hm : p 1 = f T)
     (h0 : p 0 = f 0) :
     leafLoopC p f T hfc hT hm 0 = leafLoopC p f T hfc hT hm 1 := by
-  show leafLoop p f T ((0 : unitInterval) : ℝ)
+  change leafLoop p f T ((0 : unitInterval) : ℝ)
     = leafLoop p f T ((1 : unitInterval) : ℝ)
   rw [leafLoop, leafLoop]
   norm_num
@@ -23577,7 +23576,7 @@ theorem leaf_cross_once {q : ℂ → ℂ}
     rw [Set.preimage_univ, Set.preimage_univ] at h1
     have hfun : (fun v : ℝ => (fun w : ℝ => τ (-w)) (v + -c)) = fun v => τ (c - v) := by
       funext v
-      show τ (-(v + -c)) = τ (c - v)
+      change τ (-(v + -c)) = τ (c - v)
       congr 1
       ring
     rwa [hfun] at h1
@@ -23604,18 +23603,18 @@ theorem leaf_cross_once {q : ℂ → ℂ}
     rcases le_total ur ul with hu | hu
     · refine hbigon _ (fun v => τ (v + ur)) T' (ul - ur) μ hT'
         (by linarith) hμ hσv (traj_mono (hτshift ur) (Set.subset_univ _)) ?_ ?_
-      · show τ (0 + ur) = σ (T' + tl)
+      · change τ (0 + ur) = σ (T' + tl)
         rw [zero_add]
         exact hσvT.symm
-      · show τ (ul - ur + ur) = σ (0 + tl)
+      · change τ (ul - ur + ur) = σ (0 + tl)
         rw [sub_add_cancel]
         exact hσv0.symm
     · refine hbigon _ (fun v => τ (ur - v)) T' (ur - ul) μ hT'
         (by linarith) hμ hσv (traj_mono (hτrevs ur) (Set.subset_univ _)) ?_ ?_
-      · show τ (ur - 0) = σ (T' + tl)
+      · change τ (ur - 0) = σ (T' + tl)
         rw [sub_zero]
         exact hσvT.symm
-      · show τ (ur - (ur - ul)) = σ (0 + tl)
+      · change τ (ur - (ur - ul)) = σ (0 + tl)
         rw [show ur - (ur - ul) = ul from by ring]
         exact hσv0.symm
   have key2 : ∀ t ul ur : ℝ, a < t → ul < ur →
@@ -23882,7 +23881,7 @@ theorem tube_level {q : ℂ → ℂ}
     · exact Or.inr (by norm_num)
     · exact Or.inl (by norm_num)
   · intro u hu
-    show (Complex.I * Φg (σ u)).im = (Φg (σ 0)).re - -ε₀ * u
+    change (Complex.I * Φg (σ u)).im = (Φg (σ 0)).re - -ε₀ * u
     rw [haff u hu]
     rw [show Φg (σ 0) + (ε₀ : ℂ) * ((u - 0 : ℝ) : ℂ)
       = Φg (σ 0) + ((ε₀ * u : ℝ) : ℂ) by push_cast; ring]
@@ -24580,7 +24579,7 @@ theorem zeros_countable {q : ℂ → ℂ}
       have h4 : (0 : ℝ) < (max n₁ n₂ : ℕ) + 1 := by positivity
       have h6 : 1 / z.im ≤ ((max n₁ n₂ : ℕ) : ℝ) + 1 := by linarith
       rw [div_le_iff₀ hzim] at h6
-      show 1 / (((max n₁ n₂ : ℕ) : ℝ) + 1) ≤ z.im
+      change 1 / (((max n₁ n₂ : ℕ) : ℝ) + 1) ≤ z.im
       rw [div_le_iff₀ h4]
       linarith [mul_comm z.im (((max n₁ n₂ : ℕ) : ℝ) + 1)]
   refine Set.Countable.mono hcover ?_
@@ -24621,7 +24620,7 @@ theorem leaf_cross_once_open {q : ℂ → ℂ}
     have h1 := traj_shift (-c) (traj_reverse hτ)
     have hfun : (fun v : ℝ => (fun w : ℝ => τ (-w)) (v + -c)) = fun v => τ (c - v) := by
       funext v
-      show τ (-(v + -c)) = τ (c - v)
+      change τ (-(v + -c)) = τ (c - v)
       congr 1
       ring
     rw [hfun] at h1
@@ -24684,10 +24683,10 @@ theorem leaf_cross_once_open {q : ℂ → ℂ}
         (by linarith) hμ hσv
         (hτsub ur μ (by linarith [hμur.1, hur.1]) (by linarith [hμur.2, hur.2])
           (ul - ur) (by linarith) (by linarith [hμul.2, hul.2])) ?_ ?_
-      · show τ (0 + ur) = σ (T' + tl)
+      · change τ (0 + ur) = σ (T' + tl)
         rw [zero_add]
         exact hσvT.symm
-      · show τ (ul - ur + ur) = σ (0 + tl)
+      · change τ (ul - ur + ur) = σ (0 + tl)
         rw [sub_add_cancel]
         exact hσv0.symm
     · refine hbigon _ (fun v => τ (ur - v)) T' (ur - ul) μ hT'
@@ -24698,10 +24697,10 @@ theorem leaf_cross_once_open {q : ℂ → ℂ}
             rw [this]
             linarith [hμul.1, hul.1])
           (by linarith [hμur.2, hur.2])) ?_ ?_
-      · show τ (ur - 0) = σ (T' + tl)
+      · change τ (ur - 0) = σ (T' + tl)
         rw [sub_zero]
         exact hσvT.symm
-      · show τ (ur - (ur - ul)) = σ (0 + tl)
+      · change τ (ur - (ur - ul)) = σ (0 + tl)
         rw [show ur - (ur - ul) = ul from by ring]
         exact hσv0.symm
   have key2 : ∀ t ul ur : ℝ, a < t → ul < ur → ul ∈ Set.Ioo α β →
@@ -25054,7 +25053,7 @@ theorem exists_loglift_open {σ : ℝ → ℂ} {z₀ : ℂ} {α β : ℝ} (hαβ
   · intro t ht
     obtain ⟨N, hN⟩ := hmemtx t ht
     have hex : ∃ n : ℕ, t ∈ Set.Icc (a n) (b n) := ⟨N, hN.1.le, hN.2.le⟩
-    show Complex.exp (if h : ∃ n : ℕ, t ∈ Set.Icc (a n) (b n)
+    change Complex.exp (if h : ∃ n : ℕ, t ∈ Set.Icc (a n) (b n)
       then Ln (Nat.find h) t else 0) = σ t - z₀
     rw [dif_pos hex]
     exact hLnexp _ t (Nat.find_spec hex)
@@ -25176,7 +25175,7 @@ theorem traj_double_cover_on {q : ℂ → ℂ} {z₀ : ℂ} {σ w : ℝ → ℂ}
       filter_upwards [hev, hτcont.tendsto.eventually_mem hVmem,
         eventually_mem_nhdsWithin] with u hu hVu huI
       refine ⟨hVu, ?_⟩
-      show Φ (p (w u + Complex.I)) = Φ (p (w t + Complex.I)) + _
+      change Φ (p (w u + Complex.I)) = Φ (p (w t + Complex.I)) + _
       rw [hpτ u huI, hpτ t ht]
       exact hu.2
 
@@ -25649,7 +25648,7 @@ theorem prong_finite {q' : ℂ → ℂ}
     have hpow : (v - Complex.I) ^ (2 * (m + 1))
         = ((v - Complex.I) ^ 2) ^ m * (v - Complex.I) ^ 2 := by
       rw [show 2 * (m + 1) = 2 * m + 2 by ring, pow_add, pow_mul]
-    show 4 * (v - Complex.I) ^ 2 * q' (p v) = _
+    change 4 * (v - Complex.I) ^ 2 * q' (p v) = _
     rw [hv, hpz, hpow, hghdef]
     ring
   obtain ⟨rE, hrE, -, Φ, hΦd, hΦsq⟩ := even_zero_transparent_chart isOpen_univ
@@ -25859,7 +25858,7 @@ theorem dying_floor {q' : ℂ → ℂ} {γ : ℝ → ℂ} {zz : ℂ} {b : ℝ}
     have hfun : (fun v : ℝ => (fun x : ℝ => γ (-x)) (v + -u)) =
         fun v => γ (u - v) := by
       funext v
-      show γ (-(v + -u)) = γ (u - v)
+      change γ (-(v + -u)) = γ (u - v)
       congr 1
       ring
     rwa [hfun] at hshift
@@ -25920,7 +25919,7 @@ theorem traj_agree_of_germ {qL : ℂ → ℂ} {σ₁ σ₂ : ℝ → ℂ}
       have hfun : (fun wv : ℝ => (fun x : ℝ => τ (-x)) (wv + -(2 * u)))
           = fun wv => τ (2 * u - wv) := by
         funext wv
-        show τ (-(wv + -(2 * u))) = τ (2 * u - wv)
+        change τ (-(wv + -(2 * u))) = τ (2 * u - wv)
         congr 1
         ring
       rwa [hfun] at hsh
@@ -26042,7 +26041,7 @@ theorem shared_level {q : ℂ → ℂ}
       have hfun : (fun wv : ℝ => (fun x : ℝ => γ₁ (-x)) (wv + -(2 * u)))
           = fun wv => γ₁ (2 * u - wv) := by
         funext wv
-        show γ₁ (-(wv + -(2 * u))) = γ₁ (2 * u - wv)
+        change γ₁ (-(wv + -(2 * u))) = γ₁ (2 * u - wv)
         congr 1
         ring
       rwa [hfun] at hsh
@@ -26201,7 +26200,7 @@ theorem bad_levels_finite {q : ℂ → ℂ}
       intro w h1 h2
       have hwA : w ∈ A := ⟨Metric.mem_closedBall.mpr (by rwa [dist_eq_norm]), h1⟩
       have h3 := hwmmin hwA
-      show cs ≤ Real.sqrt ‖-q w‖
+      change cs ≤ Real.sqrt ‖-q w‖
       rw [norm_neg]
       exact Real.sqrt_le_sqrt h3
     set b₀ : ℝ := cs * (s / 4) with hb₀def
@@ -26382,7 +26381,7 @@ theorem leaves_meet_level {q : ℂ → ℂ}
         have hfun : (fun v : ℝ => (fun x : ℝ => γ₁ (-x)) (v + -(2 * u₁)))
             = fun v => γ₁ (2 * u₁ - v) := by
           funext v
-          show γ₁ (-(v + -(2 * u₁))) = γ₁ (2 * u₁ - v)
+          change γ₁ (-(v + -(2 * u₁))) = γ₁ (2 * u₁ - v)
           congr 1
           ring
         rwa [hfun] at hsh
@@ -26696,7 +26695,7 @@ theorem winding_sub_eq_ratio {γ : C(unitInterval, ℂ)} (hcl : γ 0 = γ 1)
   -- the difference of the lifts lifts the ratio
   have hLr : IsLogLiftOf (Lp - Lm) (shiftedCurve r 0) := by
     intro t
-    show Complex.exp (Lp t - Lm t) = shiftedCurve r 0 t
+    change Complex.exp (Lp t - Lm t) = shiftedCurve r 0 t
     rw [Complex.exp_sub, hLp t, hLm t, hsubp t, hsubm t]
     have : shiftedCurve r 0 t = r t := by simp [shiftedCurve]
     rw [this, hr t]
