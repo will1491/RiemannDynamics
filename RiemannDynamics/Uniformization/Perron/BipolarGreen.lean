@@ -32,14 +32,14 @@ of `ℂ̂`.
 * `hasGreenFunction_coordDisk_compl` — every piece is hyperbolic;
 * `exists_harnack_chain_const`, `exists_mharmonicOn_limit_of_locally_bounded`
   — the symmetry-free Harnack chain and harmonic normal-families bricks;
-* `pieceGreen_drift_bound_core`, `exists_pieceGreen_drift_bound` — the drift
+* `exists_pieceGreen_drift_bound_core`, `exists_pieceGreen_drift_bound` — the drift
   bound: two piece Green's functions, evaluated at a fixed third base point,
   differ by a shrink-independent constant;
-* `exists_bipolarGreen` — the dipole limit;
+* `exists_bipolar_green` — the dipole limit;
 * `exists_bipolar_map` — the meromorphic dipole map;
 * `injective_bipolar_map` — that map is injective, on a surface carrying no
   Green's function at any point;
-* `not_bddAbove_greenFamily_of_compactSpace` — compact surfaces have no
+* `not_bddAbove_image_greenFamily_of_compactSpace` — compact surfaces have no
   Green's function;
 * `exists_diffeomorph_opens_of_forall_not_hasGreenFunction` — the
   non-hyperbolic case of the planarity theorem.
@@ -104,16 +104,16 @@ surface: the Perron upper envelope `greenEnvelope` computed inside `P`, extended
 zero when the pole or the argument leaves the piece. It is the Green's function
 proper only where the piece is hyperbolic at `p`; on a non-hyperbolic piece the
 envelope is a supremum of an unbounded set (see
-`not_bddAbove_greenFamily_of_compactSpace`) and carries no such meaning. Every use
+`not_bddAbove_image_greenFamily_of_compactSpace`) and carries no such meaning. Every use
 below is on a `CoordDisk.compl`, which `hasGreenFunction_coordDisk_compl` shows is
 hyperbolic. -/
-noncomputable def pieceGreen [T2Space M] (P : Opens M) (p x : M) : ℝ :=
+noncomputable def pieceGreen (P : Opens M) (p x : M) : ℝ :=
   open scoped Classical in
   if h : p ∈ P ∧ x ∈ P then greenEnvelope (⟨p, h.1⟩ : ↥P) ⟨x, h.2⟩ else 0
 
 variable [T2Space M] [ConnectedSpace M]
 
-/-! ## The pieces are hyperbolic -/
+/-! ### The pieces are hyperbolic -/
 
 omit [IsManifold 𝓘(ℂ) ω M] in
 /-- Removing a closed coordinate disk keeps the surface connected. -/
@@ -136,11 +136,11 @@ theorem isConnected_coordDisk_compl (D : CoordDisk M) :
     exact hδsub
   -- The open chart annulus is connected, via polar coordinates.
   have hann : IsConnected (ball c R \ closedBall c r) := by
-    have hcont : Continuous fun p : ℝ × ℝ =>
+    have hcont : Continuous fun p : ℝ × ℝ ↦
         c + (p.1 : ℂ) * Complex.exp ((p.2 : ℂ) * Complex.I) :=
       continuous_const.add ((Complex.continuous_ofReal.comp continuous_fst).mul
         (((Complex.continuous_ofReal.comp continuous_snd).mul continuous_const).cexp))
-    have himg : (fun p : ℝ × ℝ => c + (p.1 : ℂ) * Complex.exp ((p.2 : ℂ) * Complex.I)) ''
+    have himg : (fun p : ℝ × ℝ ↦ c + (p.1 : ℂ) * Complex.exp ((p.2 : ℂ) * Complex.I)) ''
         (Set.Ioo r R ×ˢ (Set.univ : Set ℝ)) = ball c R \ closedBall c r := by
       apply Set.Subset.antisymm
       · rintro w ⟨⟨t, θ⟩, ⟨⟨hrt, htR⟩, -⟩, hw⟩
@@ -157,7 +157,7 @@ theorem isConnected_coordDisk_compl (D : CoordDisk M) :
       · rintro w ⟨hwb, hwc⟩
         have hrt : r < ‖w - c‖ := by
           rw [← dist_eq_norm]
-          exact not_le.1 fun h => hwc (mem_closedBall.2 h)
+          exact not_le.1 fun h ↦ hwc (mem_closedBall.2 h)
         have htR : ‖w - c‖ < R := by rw [← dist_eq_norm]; exact mem_ball.1 hwb
         refine ⟨(‖w - c‖, (w - c).arg), ⟨⟨hrt, htR⟩, Set.mem_univ _⟩, ?_⟩
         change c + (‖w - c‖ : ℂ) * Complex.exp (((w - c).arg : ℂ) * Complex.I) = w
@@ -193,13 +193,13 @@ theorem isConnected_coordDisk_compl (D : CoordDisk M) :
         exact hwc (h2 ▸ hw')
     · rintro x ⟨⟨hxsrc, hxb⟩, hxc⟩
       rw [Set.mem_preimage] at hxb
-      refine ⟨e x, ⟨hxb, fun hmem => hxc ?_⟩, e.left_inv hxsrc⟩
+      refine ⟨e x, ⟨hxb, fun hmem ↦ hxc ?_⟩, e.left_inv hxsrc⟩
       rw [hcarrier]
       exact ⟨e x, hmem, e.left_inv hxsrc⟩
   have hA : IsConnected (N \ D.closedCarrier) := by
     rw [← himgA]
-    exact hann.image _ (e.continuousOn_symm.mono fun w hw => hballR hw.1)
-  have hsub' : N \ D.closedCarrier ⊆ D.closedCarrierᶜ := fun z hz => hz.2
+    exact hann.image _ (e.continuousOn_symm.mono fun w hw ↦ hballR hw.1)
+  have hsub' : N \ D.closedCarrier ⊆ D.closedCarrierᶜ := fun z hz ↦ hz.2
   rw [hcompl]
   have hopen : IsOpen (D.closedCarrierᶜ) := D.isCompact_closedCarrier.isClosed.isOpen_compl
   have hcenter : D.center ∈ D.closedCarrier := by
@@ -254,7 +254,7 @@ theorem isConnected_coordDisk_compl (D : CoordDisk M) :
         · exact h
       have h := key v u hv hu (by rw [Set.union_comm]; exact huv) hsu hNv
       rwa [Set.inter_comm v u] at h
-    · obtain ⟨z, hzN, hzuv⟩ := hA.2 u v hu hv (fun z hz => huv (hsub' hz)) hu1 hv1
+    · obtain ⟨z, hzN, hzuv⟩ := hA.2 u v hu hv (fun z hz ↦ huv (hsub' hz)) hu1 hv1
       exact ⟨z, hsub' hzN, hzuv⟩
 
 omit [IsManifold 𝓘(ℂ) ω M] in
@@ -340,8 +340,8 @@ theorem hasGreenFunction_coordDisk_compl (D : CoordDisk M) (p : M)
   -- Restriction of plane subharmonicity.
   have subMono : ∀ (F : ℂ → ℝ) (U W : Set ℂ), SubharmonicOn F U → W ⊆ U →
       SubharmonicOn F W :=
-    fun F U W hF hWU =>
-      ⟨hF.1.mono hWU, fun c hc ρ hρ hball => hF.2 c (hWU hc) ρ hρ (hball.trans hWU)⟩
+    fun F U W hF hWU ↦
+      ⟨hF.1.mono hWU, fun c hc ρ hρ hball ↦ hF.2 c (hWU hc) ρ hρ (hball.trans hWU)⟩
   -- Chart images as intersections with preimages, on the piece and on the base.
   have himgN : ∀ (e : OpenPartialHomeomorph ↥D.compl ℂ) (s : Set ℂ), s ⊆ e.target →
       e.symm '' s = e.source ∩ e ⁻¹' s := by
@@ -365,14 +365,14 @@ theorem hasGreenFunction_coordDisk_compl (D : CoordDisk M) (p : M)
       (chartAt ℂ y).continuousAt_symm (mem_chart_target ℂ y)
     have hev2 : ∀ᶠ w in 𝓝 (chartAt ℂ y y),
         f ((chartAt ℂ y).symm w) = g ((chartAt ℂ y).symm w) :=
-      hcont.eventually (p := fun z => f z = g z) (by rw [hyy]; exact hev)
+      hcont.eventually (p := fun z ↦ f z = g z) (by rw [hyy]; exact hev)
     obtain ⟨r2, hr2, hball2⟩ := Metric.eventually_nhds_iff_ball.mp hev2
     refine ⟨min r r2, lt_min hr hr2, (ball_subset_ball (min_le_left _ _)).trans hrsub, ?_⟩
     exact transfer _ _ _ _ hsh (ball_subset_ball (min_le_left _ _))
-      (fun w hw => hball2 w (ball_subset_ball (min_le_right _ _) hw))
+      (fun w hw ↦ hball2 w (ball_subset_ball (min_le_right _ _) hw))
   -- Positive scaling preserves subharmonicity at a point.
   have msubSmul : ∀ (f : ↥D.compl → ℝ) (a : ℝ), 0 ≤ a → ∀ y : ↥D.compl,
-      MSubharmonicAt f y → MSubharmonicAt (fun z => a * f z) y := by
+      MSubharmonicAt f y → MSubharmonicAt (fun z ↦ a * f z) y := by
     intro f a ha y hf
     obtain ⟨r, hr, hrsub, hsh⟩ := hf
     refine ⟨r, hr, hrsub, ?_⟩
@@ -383,7 +383,7 @@ theorem hasGreenFunction_coordDisk_compl (D : CoordDisk M) (p : M)
     have hci : CircleIntegrable (f ∘ (chartAt ℂ y).symm) c ρ :=
       (hsh.1.mono hsph).circleIntegrable hρ.le
     have h1 := hsh.2 c hc ρ hρ hcb
-    have h2 : Real.circleAverage (fun w => a * (f ∘ (chartAt ℂ y).symm) w) c ρ
+    have h2 : Real.circleAverage (fun w ↦ a * (f ∘ (chartAt ℂ y).symm) w) c ρ
         = a * Real.circleAverage (f ∘ (chartAt ℂ y).symm) c ρ := by
       have := Real.circleAverage_fun_smul (a := a) (f := f ∘ (chartAt ℂ y).symm)
         (c := c) (R := ρ)
@@ -391,16 +391,16 @@ theorem hasGreenFunction_coordDisk_compl (D : CoordDisk M) (p : M)
     calc a * f ((chartAt ℂ y).symm c)
         ≤ a * Real.circleAverage (f ∘ (chartAt ℂ y).symm) c ρ :=
           mul_le_mul_of_nonneg_left h1 ha
-      _ = Real.circleAverage ((fun z => a * f z) ∘ (chartAt ℂ y).symm) c ρ := by
+      _ = Real.circleAverage ((fun z ↦ a * f z) ∘ (chartAt ℂ y).symm) c ρ := by
           rw [← h2]; rfl
   -- Affine images of harmonic functions are harmonic.
   have mharmAffine : ∀ (g : ↥D.compl → ℝ) (x : ↥D.compl) (a c : ℝ), MHarmonicAt g x →
-      MHarmonicAt (fun y => a * g y + c) x := by
+      MHarmonicAt (fun y ↦ a * g y + c) x := by
     intro g x a c hg
     have h1 : HarmonicAt (g ∘ (chartAt ℂ x).symm) (chartAt ℂ x x) := hg
     have h2 := (h1.const_smul (c := a)).add (harmonicAt_const c)
-    have heq2 : (a • (g ∘ (chartAt ℂ x).symm) + fun _ => c) =
-        (fun y => a * g y + c) ∘ (chartAt ℂ x).symm := by
+    have heq2 : (a • (g ∘ (chartAt ℂ x).symm) + fun _ ↦ c) =
+        (fun y ↦ a * g y + c) ∘ (chartAt ℂ x).symm := by
       funext w
       simp [smul_eq_mul]
     rw [heq2] at h2
@@ -414,7 +414,7 @@ theorem hasGreenFunction_coordDisk_compl (D : CoordDisk M) (p : M)
     have hso : IsOpen {x | x ∈ Ω ∧ w x = w xm} := by
       rw [isOpen_iff_mem_nhds]
       rintro x ⟨hxΩ, hxw⟩
-      have hmax' : ∀ y ∈ Ω, w y ≤ w x := fun y hy => (hmax y hy).trans_eq hxw.symm
+      have hmax' : ∀ y ∈ Ω, w y ≤ w x := fun y hy ↦ (hmax y hy).trans_eq hxw.symm
       have hev := MSubharmonicAt.eventually_eq_of_le hΩo hxΩ hwsub hmax'
       filter_upwards [hev, hΩo.mem_nhds hxΩ] with y hy hyΩ
       exact ⟨hyΩ, hy.trans hxw⟩
@@ -434,7 +434,7 @@ theorem hasGreenFunction_coordDisk_compl (D : CoordDisk M) (p : M)
       rintro x ⟨⟨-, h1⟩, -, h2⟩
       exact h2 h1
     have hres := hΩc.subset_left_of_subset_union hso hto hdisj hsub ⟨xm, hxm, hxm, rfl⟩
-    exact fun x hx => (hres hx).2
+    exact fun x hx ↦ (hres hx).2
   -- ## Maximum principle on a proper open subset of the piece.
   have maxPrin : ∀ (Ω : Set ↥D.compl) (w : ↥D.compl → ℝ) (m : ℝ) (Kc : Set ↥D.compl),
       IsOpen Ω → Ω ≠ Set.univ → MSubharmonicOn w Ω → IsCompact Kc →
@@ -471,7 +471,7 @@ theorem hasGreenFunction_coordDisk_compl (D : CoordDisk M) (p : M)
     have hCcΩ : connectedComponentIn Ω xm ⊆ Ω := connectedComponentIn_subset _ _
     have hconst := propagate (connectedComponentIn Ω xm) w xm hCco
       isPreconnected_connectedComponentIn hCcx
-      (fun x hx => hwsub x (hCcΩ hx)) (fun x hx => hall x (hCcΩ hx))
+      (fun x hx ↦ hwsub x (hCcΩ hx)) (fun x hx ↦ hall x (hCcΩ hx))
     have hfrne :
         (closure (connectedComponentIn Ω xm) \ connectedComponentIn Ω xm).Nonempty := by
       by_contra hem
@@ -541,7 +541,7 @@ theorem hasGreenFunction_coordDisk_compl (D : CoordDisk M) (p : M)
       · intro _
         exact lt_of_le_of_lt (min_le_right _ _) (by linarith)
     · exact ⟨D.radius + δ, by linarith, hthick _ (by linarith) le_rfl,
-        fun hcon => absurd hcon hps⟩
+        fun hcon ↦ absurd hcon hps⟩
   have hρ₁pos : 0 < ρ₁ := hρ₀pos.trans hρ₁gt
   -- The compact collar on the base surface, and its preimage on the piece.
   set Ccol : Set M := e₀.symm '' (closedBall c₀ ρ₁ \ ball c₀ D.radius) with hCcol
@@ -573,7 +573,7 @@ theorem hasGreenFunction_coordDisk_compl (D : CoordDisk M) (p : M)
       h1.preimage_mem_nhds (hChatcl.isOpen_compl.mem_nhds (hsymz₀ ▸ hp₀Chat))
     exact Filter.inter_mem (eN.open_target.mem_nhds hz₀tgt) h3
   obtain ⟨R, hR, hRsub⟩ := nhds_basis_closedBall.mem_iff.1 hpre₀
-  have hRtgt : closedBall z₀ R ⊆ eN.target := fun z hz => (hRsub hz).1
+  have hRtgt : closedBall z₀ R ⊆ eN.target := fun z hz ↦ (hRsub hz).1
   have hR2tgt : closedBall (chartAt ℂ p₀ p₀) (R / 2) ⊆ (chartAt ℂ p₀).target := by
     rw [← heN, ← hz₀]
     exact (closedBall_subset_closedBall (by linarith)).trans hRtgt
@@ -592,7 +592,7 @@ theorem hasGreenFunction_coordDisk_compl (D : CoordDisk M) (p : M)
     exact ⟨z₀, mem_closedBall_self (by positivity), hsymz₀⟩
   have hp₀W : p₀ ∉ Wset := by
     rw [hWdef]
-    exact fun hc => hc hp₀car
+    exact fun hc ↦ hc hp₀car
   have hWne : Wset ≠ Set.univ := by
     intro hcon
     apply hp₀W
@@ -627,7 +627,7 @@ theorem hasGreenFunction_coordDisk_compl (D : CoordDisk M) (p : M)
   -- The circles of radii `R/2` and `R`.
   set Γin : Set ↥D.compl := eN.symm '' sphere z₀ (R / 2) with hΓin
   set Γout : Set ↥D.compl := eN.symm '' sphere z₀ R with hΓout
-  have hsphtgt : ∀ r' : ℝ, r' ≤ R → sphere z₀ r' ⊆ eN.target := fun r' hr' =>
+  have hsphtgt : ∀ r' : ℝ, r' ≤ R → sphere z₀ r' ⊆ eN.target := fun r' hr' ↦
     sphere_subset_closedBall.trans ((closedBall_subset_closedBall hr').trans hRtgt)
   have hΓincomp : IsCompact Γin :=
     (isCompact_sphere z₀ (R / 2)).image_of_continuousOn
@@ -683,13 +683,13 @@ theorem hasGreenFunction_coordDisk_compl (D : CoordDisk M) (p : M)
   set Fam : Set (↥D.compl → ℝ) := {u | MSubharmonicOn u Wset ∧ (∀ y ∈ Wset, u y ≤ 1)
       ∧
     ∃ K : Set ↥D.compl, IsCompact K ∧ ∀ y ∈ Wset, y ∉ K → u y = 0} with hFam
-  have h0Fam : (fun _ : ↥D.compl => (0 : ℝ)) ∈ Fam := by
-    refine ⟨fun y _ => ?_, fun y _ => by norm_num, ∅, isCompact_empty, fun y _ _ => rfl⟩
+  have h0Fam : (fun _ : ↥D.compl ↦ (0 : ℝ)) ∈ Fam := by
+    refine ⟨fun y _ ↦ ?_, fun y _ ↦ by norm_num, ∅, isCompact_empty, fun y _ _ ↦ rfl⟩
     exact (mharmonicAt_const (a := (0 : ℝ))).msubharmonicAt
-  set omeg : ↥D.compl → ℝ := fun y => sSup ((fun u => u y) '' Fam) with homeg
-  have hFamne : ∀ y : ↥D.compl, ((fun u => u y) '' Fam).Nonempty :=
-    fun y => ⟨0, (fun _ : ↥D.compl => (0 : ℝ)), h0Fam, rfl⟩
-  have hFamBdd : ∀ y ∈ Wset, BddAbove ((fun u => u y) '' Fam) := by
+  set omeg : ↥D.compl → ℝ := fun y ↦ sSup ((fun u ↦ u y) '' Fam) with homeg
+  have hFamne : ∀ y : ↥D.compl, ((fun u ↦ u y) '' Fam).Nonempty :=
+    fun y ↦ ⟨0, (fun _ : ↥D.compl ↦ (0 : ℝ)), h0Fam, rfl⟩
+  have hFamBdd : ∀ y ∈ Wset, BddAbove ((fun u ↦ u y) '' Fam) := by
     intro y hy
     refine ⟨1, ?_⟩
     rintro b ⟨u, hu, rfl⟩
@@ -700,18 +700,18 @@ theorem hasGreenFunction_coordDisk_compl (D : CoordDisk M) (p : M)
     rintro b ⟨u, hu, rfl⟩
     exact hu.2.1 y hy
   have homegge : ∀ y ∈ Wset, ∀ u ∈ Fam, u y ≤ omeg y :=
-    fun y hy u hu => le_csSup (hFamBdd y hy) ⟨u, hu, rfl⟩
+    fun y hy u hu ↦ le_csSup (hFamBdd y hy) ⟨u, hu, rfl⟩
   have homegge0 : ∀ y ∈ Wset, 0 ≤ omeg y :=
-    fun y hy => homegge y hy _ h0Fam
+    fun y hy ↦ homegge y hy _ h0Fam
   -- Max-closure of the family.
-  have hFammax : ∀ u₁ ∈ Fam, ∀ u₂ ∈ Fam, (fun y => max (u₁ y) (u₂ y)) ∈ Fam := by
+  have hFammax : ∀ u₁ ∈ Fam, ∀ u₂ ∈ Fam, (fun y ↦ max (u₁ y) (u₂ y)) ∈ Fam := by
     rintro u₁ ⟨hs₁, hb₁, K₁, hK₁, hz₁⟩ u₂ ⟨hs₂, hb₂, K₂, hK₂, hz₂⟩
-    refine ⟨fun y hy => (hs₁ y hy).max (hs₂ y hy), fun y hy => max_le (hb₁ y hy) (hb₂ y
+    refine ⟨fun y hy ↦ (hs₁ y hy).max (hs₂ y hy), fun y hy ↦ max_le (hb₁ y hy) (hb₂ y
         hy),
       K₁ ∪ K₂, hK₁.union hK₂, ?_⟩
     intro y hy hyK
     change max (u₁ y) (u₂ y) = 0
-    rw [hz₁ y hy (fun h => hyK (Or.inl h)), hz₂ y hy (fun h => hyK (Or.inr h))]
+    rw [hz₁ y hy (fun h ↦ hyK (Or.inl h)), hz₂ y hy (fun h ↦ hyK (Or.inr h))]
     exact max_self 0
   -- ## Perron: the envelope is harmonic on the region
   have homegHarm : MHarmonicOn omeg Wset := by
@@ -731,7 +731,7 @@ theorem hasGreenFunction_coordDisk_compl (D : CoordDisk M) (p : M)
     have hρ : 0 < ρ := by positivity
     have hρlt : ρ < ρb := by rw [hρdef]; linarith
     have hballtgt : ball cx ρb ⊆ ex.target :=
-      fun w hw => (hρbsub (ball_subset_closedBall hw)).1
+      fun w hw ↦ (hρbsub (ball_subset_closedBall hw)).1
     have hballW : ∀ w ∈ ball cx ρb, ex.symm w ∈ Wset := by
       intro w hw
       have := (hρbsub (ball_subset_closedBall hw)).2
@@ -769,7 +769,7 @@ theorem hasGreenFunction_coordDisk_compl (D : CoordDisk M) (p : M)
       intro pf qf hpc hqc hpq w hw
       simp only [RiemannDynamics.poissonModify, if_pos hw, poissonIntegral]
       have hwlt : ‖w - cx‖ < ρ := by rw [← dist_eq_norm]; exact mem_ball.1 hw
-      have hkcont : ContinuousOn (fun s => poissonKernel cx w s) (sphere cx ρ) := by
+      have hkcont : ContinuousOn (fun s ↦ poissonKernel cx w s) (sphere cx ρ) := by
         rw [poissonKernel_eq_re_herglotzRieszKernel]
         apply Complex.continuous_re.comp_continuousOn
         rw [herglotzRieszKernel_fun_def]
@@ -780,9 +780,9 @@ theorem hasGreenFunction_coordDisk_compl (D : CoordDisk M) (p : M)
         intro hcontra
         have : s - cx = w - cx := by linear_combination (norm := ring_nf) hcontra
         rw [this] at hsn; rw [hsn] at hwlt; linarith
-      have hci_p : CircleIntegrable (fun s => poissonKernel cx w s * pf s) cx ρ :=
+      have hci_p : CircleIntegrable (fun s ↦ poissonKernel cx w s * pf s) cx ρ :=
         (hkcont.mul hpc).circleIntegrable hρ.le
-      have hci_q : CircleIntegrable (fun s => poissonKernel cx w s * qf s) cx ρ :=
+      have hci_q : CircleIntegrable (fun s ↦ poissonKernel cx w s * qf s) cx ρ :=
         (hkcont.mul hqc).circleIntegrable hρ.le
       have hker_nn : ∀ s ∈ sphere cx |ρ|, 0 ≤ poissonKernel cx w s := by
         intro s hs
@@ -831,7 +831,7 @@ theorem hasGreenFunction_coordDisk_compl (D : CoordDisk M) (p : M)
       rintro y ⟨w, hw, rfl⟩
       exact hballW w (hcbρ hw)
     have hBregBcl : Breg ⊆ Bcl := Set.image_mono ball_subset_closedBall
-    set mdf : (↥D.compl → ℝ) → ↥D.compl → ℝ := fun u y =>
+    set mdf : (↥D.compl → ℝ) → ↥D.compl → ℝ := fun u y ↦
       if y ∈ ex.source ∧ ex y ∈ ball cx ρ then
         RiemannDynamics.poissonModify (u ∘ ex.symm) cx ρ (ex y) else u y with hmdf
     -- `mdf u = u` off the compact `Bcl`.
@@ -897,7 +897,7 @@ theorem hasGreenFunction_coordDisk_compl (D : CoordDisk M) (p : M)
             ring_nf
             exact le_rfl
           refine ⟨r', hr'pos, hr'sub.trans hballtgt, ?_⟩
-          exact transfer _ _ _ _ hPMsub hr'sub (fun w hw => (hmdfread u (hr'sub hw)).symm)
+          exact transfer _ _ _ _ hPMsub hr'sub (fun w hw ↦ (hmdfread u (hr'sub hw)).symm)
         · have hbase := husub y hy
           apply msubCongr u (mdf u) y hbase
           filter_upwards [hBclcomp.isClosed.isOpen_compl.mem_nhds hyB] with z hz
@@ -915,8 +915,8 @@ theorem hasGreenFunction_coordDisk_compl (D : CoordDisk M) (p : M)
           exact hule y hy
       · -- vanishing off a compact set
         intro y hy hyK
-        rw [hmdfoff u y (fun h => hyK (Or.inr h))]
-        exact hKuz y hy (fun h => hyK (Or.inl h))
+        rw [hmdfoff u y (fun h ↦ hyK (Or.inr h))]
+        exact hKuz y hy (fun h ↦ hyK (Or.inl h))
     -- The transplant dominates the member.
     have hmdfge : ∀ u ∈ Fam, ∀ y ∈ Wset, u y ≤ mdf u y := by
       rintro u ⟨husub, -, -⟩ y hy
@@ -931,7 +931,7 @@ theorem hasGreenFunction_coordDisk_compl (D : CoordDisk M) (p : M)
         rw [h1]
     -- (P4) running maxima.
     set rmax : (ℕ → ↥D.compl → ℝ) → ℕ → ↥D.compl → ℝ :=
-      fun g => fun k => Nat.rec (g 0) (fun n acc => fun y => max (acc y) (g (n + 1) y)) k
+      fun g ↦ fun k ↦ Nat.rec (g 0) (fun n acc ↦ fun y ↦ max (acc y) (g (n + 1) y)) k
       with hrmax
     have hrmax_mem : ∀ (g : ℕ → ↥D.compl → ℝ), (∀ n, g n ∈ Fam) →
         ∀ k, rmax g k ∈ Fam := by
@@ -946,7 +946,7 @@ theorem hasGreenFunction_coordDisk_compl (D : CoordDisk M) (p : M)
       | zero => simp [hrmax]
       | succ n => exact le_max_right _ _
     have hrmax_mono : ∀ (g : ℕ → ↥D.compl → ℝ) (y : ↥D.compl),
-        Monotone (fun k => rmax g k y) := by
+        Monotone (fun k ↦ rmax g k y) := by
       intro g y
       apply monotone_nat_of_le_succ
       intro n
@@ -960,14 +960,14 @@ theorem hasGreenFunction_coordDisk_compl (D : CoordDisk M) (p : M)
       | succ n ih => exact max_le_max ih (hle (n + 1) y)
     -- (P5) maximizing sequences.
     have hmaxseq : ∀ q ∈ Wset, ∃ s : ℕ → ↥D.compl → ℝ, (∀ n, s n ∈ Fam) ∧
-        Tendsto (fun n => s n q) atTop (𝓝 (omeg q)) := by
+        Tendsto (fun n ↦ s n q) atTop (𝓝 (omeg q)) := by
       intro q hq
       obtain ⟨a, -, hatends, hamem⟩ :=
         exists_seq_tendsto_sSup (hFamne q) (hFamBdd q hq)
-      have hchoose : ∀ n, ∃ v ∈ Fam, v q = a n := fun n => hamem n
+      have hchoose : ∀ n, ∃ v ∈ Fam, v q = a n := fun n ↦ hamem n
       choose s hs hsval using hchoose
       refine ⟨s, hs, ?_⟩
-      have : (fun n => s n q) = a := funext fun n => hsval n
+      have : (fun n ↦ s n q) = a := funext fun n ↦ hsval n
       rw [this]
       exact hatends
     -- (P6) the harmonic limit construction on the chart disk.
@@ -975,37 +975,37 @@ theorem hasGreenFunction_coordDisk_compl (D : CoordDisk M) (p : M)
         ∃ V : ℂ → ℝ, HarmonicOnNhd V (ball cx ρ) ∧
           (∀ y : ↥D.compl, y ∈ ex.source → ex y ∈ ball cx ρ →
             V (ex y) ≤ omeg y ∧ ∀ k, g k y ≤ V (ex y)) ∧
-          V = fun w => ⨆ k, RiemannDynamics.poissonModify (rmax g k ∘ ex.symm) cx ρ w := by
+          V = fun w ↦ ⨆ k, RiemannDynamics.poissonModify (rmax g k ∘ ex.symm) cx ρ w := by
       intro g hg
       set Vseq : ℕ → ℂ → ℝ :=
-        fun k => RiemannDynamics.poissonModify (rmax g k ∘ ex.symm) cx ρ with hVseq
+        fun k ↦ RiemannDynamics.poissonModify (rmax g k ∘ ex.symm) cx ρ with hVseq
       have hrm_mem : ∀ k, rmax g k ∈ Fam := hrmax_mem g hg
       have hrm_read : ∀ k, SubharmonicOn (rmax g k ∘ ex.symm) (ball cx ρb) :=
-        fun k => hread _ (hrm_mem k).1
+        fun k ↦ hread _ (hrm_mem k).1
       have hVharm : ∀ k, HarmonicOnNhd (Vseq k) (ball cx ρ) :=
-        fun k => poissonModify_harmonicOn (hrm_read k) hρ hcbρ
+        fun k ↦ poissonModify_harmonicOn (hrm_read k) hρ hcbρ
       -- the plane value equals the surface transplant inside the disk
       have hVsurf : ∀ k, ∀ w ∈ ball cx ρ, Vseq k w = mdf (rmax g k) (ex.symm w) :=
-        fun k w hw => (hmdfval (rmax g k) w hw).symm
+        fun k w hw ↦ (hmdfval (rmax g k) w hw).symm
       have hVle : ∀ k, ∀ w ∈ ball cx ρ, Vseq k w ≤ omeg (ex.symm w) := by
         intro k w hw
         rw [hVsurf k w hw]
         exact homegge _ (hballW w (ball_subset_ball hρlt.le hw)) _
           (hmdfmem _ (hrm_mem k))
-      have hVmono : ∀ w ∈ ball cx ρ, Monotone (fun k => Vseq k w) := by
+      have hVmono : ∀ w ∈ ball cx ρ, Monotone (fun k ↦ Vseq k w) := by
         intro w hw
         apply monotone_nat_of_le_succ
         intro k
         exact hpmono _ _ ((hrm_read k).1.mono hsphρ) ((hrm_read (k + 1)).1.mono hsphρ)
-          (fun s _ => hrmax_mono g (ex.symm s) (Nat.le_succ k)) w hw
-      have hVbdd : ∀ w ∈ ball cx ρ, BddAbove (Set.range fun k => Vseq k w) := by
+          (fun s _ ↦ hrmax_mono g (ex.symm s) (Nat.le_succ k)) w hw
+      have hVbdd : ∀ w ∈ ball cx ρ, BddAbove (Set.range fun k ↦ Vseq k w) := by
         intro w hw
         exact ⟨omeg (ex.symm w), by rintro b ⟨k, rfl⟩; exact hVle k w hw⟩
-      set V : ℂ → ℝ := fun w => ⨆ k, Vseq k w with hV
-      have htends : ∀ w ∈ ball cx ρ, Tendsto (fun k => Vseq k w) atTop (𝓝 (V w)) :=
-        fun w hw => tendsto_atTop_ciSup (hVmono w hw) (hVbdd w hw)
+      set V : ℂ → ℝ := fun w ↦ ⨆ k, Vseq k w with hV
+      have htends : ∀ w ∈ ball cx ρ, Tendsto (fun k ↦ Vseq k w) atTop (𝓝 (V w)) :=
+        fun w hw ↦ tendsto_atTop_ciSup (hVmono w hw) (hVbdd w hw)
       have hbddV : ∀ w ∈ ball cx ρ, ∀ k, Vseq k w ≤ V w :=
-        fun w hw k => le_ciSup (hVbdd w hw) k
+        fun w hw k ↦ le_ciSup (hVbdd w hw) k
       have hVlim : HarmonicOnNhd V (ball cx ρ) :=
         harmonicOnNhd_of_monotone_tendsto hVharm hVmono hbddV htends
       refine ⟨V, hVlim, ?_, rfl⟩
@@ -1015,7 +1015,7 @@ theorem hasGreenFunction_coordDisk_compl (D : CoordDisk M) (p : M)
         rw [hywt]
         exact hballW _ (ball_subset_ball hρlt.le hyball)
       constructor
-      · refine ciSup_le fun k => ?_
+      · refine ciSup_le fun k ↦ ?_
         have := hVle k (ex y) hyball
         rwa [← hywt] at this
       · intro k
@@ -1041,8 +1041,8 @@ theorem hasGreenFunction_coordDisk_compl (D : CoordDisk M) (p : M)
           rw [this]
           exact hballW _ (ball_subset_ball hρlt.le hqball)
         obtain ⟨g1, hg1mem, hg1t⟩ := hmaxseq q hqW
-        set gc : ℕ → ↥D.compl → ℝ := fun n y => max (g0 n y) (g1 n y) with hgc
-        have hgcmem : ∀ n, gc n ∈ Fam := fun n => hFammax _ (hg0mem n) _ (hg1mem n)
+        set gc : ℕ → ↥D.compl → ℝ := fun n y ↦ max (g0 n y) (g1 n y) with hgc
+        have hgcmem : ∀ n, gc n ∈ Fam := fun n ↦ hFammax _ (hg0mem n) _ (hg1mem n)
         obtain ⟨Q, hQharm, hQprop, hQeq⟩ := hbuild gc hgcmem
         have hQcx : Q (ex x) = omeg x := by
           apply le_antisymm (hQprop x hxsrc hcxball).1
@@ -1057,7 +1057,7 @@ theorem hasGreenFunction_coordDisk_compl (D : CoordDisk M) (p : M)
         have hQgeV : ∀ w ∈ ball cx ρ, V w ≤ Q w := by
           intro w hw
           rw [hVeq, hQeq]
-          have hbdd2 : BddAbove (Set.range fun k =>
+          have hbdd2 : BddAbove (Set.range fun k ↦
               RiemannDynamics.poissonModify (rmax gc k ∘ ex.symm) cx ρ w) := by
             refine ⟨omeg (ex.symm w), ?_⟩
             rintro b ⟨k, rfl⟩
@@ -1066,15 +1066,15 @@ theorem hasGreenFunction_coordDisk_compl (D : CoordDisk M) (p : M)
             rw [← hmdfval (rmax gc k) w hw]
             exact homegge _ (hballW w (ball_subset_ball hρlt.le hw)) _
               (hmdfmem _ (hrmax_mem gc hgcmem k))
-          refine ciSup_mono hbdd2 fun k => ?_
+          refine ciSup_mono hbdd2 fun k ↦ ?_
           apply hpmono _ _ ((hread _ (hrmax_mem g0 hg0mem k).1).1.mono hsphρ)
             ((hread _ (hrmax_mem gc hgcmem k).1).1.mono hsphρ) _ w hw
           intro s _
-          exact hrmax_data_mono g0 gc (fun n y => le_max_left _ _) k (ex.symm s)
-        have hDharm : HarmonicOnNhd (fun w => Q w - V w) (ball cx ρ) := by
+          exact hrmax_data_mono g0 gc (fun n y ↦ le_max_left _ _) k (ex.symm s)
+        have hDharm : HarmonicOnNhd (fun w ↦ Q w - V w) (ball cx ρ) := by
           have := hQharm.sub hVharm
           convert this using 1
-        have hDnn : ∀ w ∈ ball cx ρ, 0 ≤ Q w - V w := fun w hw => by
+        have hDnn : ∀ w ∈ ball cx ρ, 0 ≤ Q w - V w := fun w hw ↦ by
           linarith [hQgeV w hw]
         have hD0 : Q (ex x) - V (ex x) = 0 := by rw [hQcx, hVcx, sub_self]
         have hzero := harmonic_eq_zero_of_nonneg_eq_zero isOpen_ball
@@ -1104,7 +1104,7 @@ theorem hasGreenFunction_coordDisk_compl (D : CoordDisk M) (p : M)
     sub_pos.2 (Real.log_lt_log hρ₀pos hρ₁gt)
   have ha1pos : 0 < a1 := inv_pos.2 hloggap
   set hbar : ↥D.compl → ℝ :=
-    fun q => a1 * (Real.log (dist (e₀ (q : M)) c₀) - Real.log D.radius) with hhbar
+    fun q ↦ a1 * (Real.log (dist (e₀ (q : M)) c₀) - Real.log D.radius) with hhbar
   -- The open annulus region between the removed circle and the enlarged circle.
   set Aann : Set ↥D.compl :=
     Subtype.val ⁻¹' (e₀.source ∩ e₀ ⁻¹' (ball c₀ ρ₁ \ closedBall c₀ D.radius))
@@ -1130,7 +1130,7 @@ theorem hasGreenFunction_coordDisk_compl (D : CoordDisk M) (p : M)
     rw [mem_ball, not_lt]
     exact h2.le
   have hAannW : Aann ⊆ Wset := hAannChat.trans hChatW
-  have hp₀Aann : p₀ ∉ Aann := fun h => hp₀Chat (hAannChat h)
+  have hp₀Aann : p₀ ∉ Aann := fun h ↦ hp₀Chat (hAannChat h)
   have hAannne : Aann ≠ Set.univ := by
     intro hcon
     apply hp₀Aann
@@ -1144,7 +1144,7 @@ theorem hasGreenFunction_coordDisk_compl (D : CoordDisk M) (p : M)
     have hsrc : (y : M) ∈ e₀.source := hwy ▸ e₀.map_target hwt
     have hval : e₀ (y : M) = w := by rw [← hwy, e₀.right_inv hwt]
     have hne : D.radius < dist w c₀ := by
-      rcases lt_or_eq_of_le (not_lt.1 (fun h => hw2 (mem_ball.2 h))) with h | h
+      rcases lt_or_eq_of_le (not_lt.1 (fun h ↦ hw2 (mem_ball.2 h))) with h | h
       · exact h
       · exfalso
         have hyD : (y : M) ∈ D.closedCarrier :=
@@ -1159,11 +1159,11 @@ theorem hasGreenFunction_coordDisk_compl (D : CoordDisk M) (p : M)
       (chartAt ℂ y).left_inv (mem_chart_source ℂ y)
     -- the chart reading of the base coordinate is analytic
     have hTan : AnalyticAt ℂ
-        (fun w => e₀ (((chartAt ℂ y).symm w : ↥D.compl) : M)) (chartAt ℂ y y) := by
+        (fun w ↦ e₀ (((chartAt ℂ y).symm w : ↥D.compl) : M)) (chartAt ℂ y y) := by
       have hs1 : ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω (chartAt ℂ y).symm (chartAt ℂ y y) :=
         contMDiffAt_symm_of_mem_maximalAtlas
           (IsManifold.chart_mem_maximalAtlas y) (mem_chart_target ℂ y)
-      have hs2 : ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω (fun q : ↥D.compl => (q : M))
+      have hs2 : ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω (fun q : ↥D.compl ↦ (q : M))
           ((chartAt ℂ y).symm (chartAt ℂ y y)) := contMDiff_subtype_val.contMDiffAt
       have hs3 : ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω (⇑e₀)
           ((((chartAt ℂ y).symm (chartAt ℂ y y) : ↥D.compl)) : M) := by
@@ -1177,13 +1177,13 @@ theorem hasGreenFunction_coordDisk_compl (D : CoordDisk M) (p : M)
       intro hcon
       rw [hcon, dist_self] at h2
       exact absurd h2 (not_lt.2 hρ₀pos.le)
-    have hlog : HarmonicAt (fun w =>
+    have hlog : HarmonicAt (fun w ↦
         Real.log ‖e₀ (((chartAt ℂ y).symm w : ↥D.compl) : M) - c₀‖) (chartAt ℂ y y) :=
       AnalyticAt.harmonicAt_log_norm (hTan.sub analyticAt_const) hne
     have haff := (hlog.sub (harmonicAt_const (Real.log D.radius))).const_smul (c := a1)
-    have heq : (a1 • ((fun w =>
+    have heq : (a1 • ((fun w ↦
         Real.log ‖e₀ (((chartAt ℂ y).symm w : ↥D.compl) : M) - c₀‖) -
-        fun _ => Real.log D.radius)) = hbar ∘ (chartAt ℂ y).symm := by
+        fun _ ↦ Real.log D.radius)) = hbar ∘ (chartAt ℂ y).symm := by
       funext w
       simp only [Pi.smul_apply, Pi.sub_apply, smul_eq_mul, Function.comp_apply, hhbar]
       rw [dist_eq_norm]
@@ -1193,9 +1193,9 @@ theorem hasGreenFunction_coordDisk_compl (D : CoordDisk M) (p : M)
   have hbarCont : ∀ y : ↥D.compl, (y : M) ∈ e₀.source → e₀ (y : M) ≠ c₀ →
       ContinuousAt hbar y := by
     intro y hys hyne
-    have h0 : ContinuousAt (fun q : ↥D.compl => e₀ (q : M)) y :=
+    have h0 : ContinuousAt (fun q : ↥D.compl ↦ e₀ (q : M)) y :=
       (e₀.continuousAt hys).comp continuous_subtype_val.continuousAt
-    have h1 : ContinuousAt (fun q : ↥D.compl => dist (e₀ (q : M)) c₀) y :=
+    have h1 : ContinuousAt (fun q : ↥D.compl ↦ dist (e₀ (q : M)) c₀) y :=
       h0.dist continuousAt_const
     have h2 : dist (e₀ (y : M)) c₀ ≠ 0 := dist_ne_zero.2 hyne
     exact continuousAt_const.mul ((h1.log h2).sub continuousAt_const)
@@ -1203,7 +1203,7 @@ theorem hasGreenFunction_coordDisk_compl (D : CoordDisk M) (p : M)
   have hdipFam : ∀ u ∈ Fam, ∀ y ∈ Aann, u y ≤ hbar y := by
     rintro u ⟨husub, hule, Ku, hKu, hKuz⟩ y hy
     have hkey : ∀ z ∈ Aann, u z - hbar z ≤ 0 := by
-      apply maxPrin Aann (fun z => u z - hbar z) 0 Ku hAannopen hAannne ?_ hKu ?_ ?_
+      apply maxPrin Aann (fun z ↦ u z - hbar z) 0 Ku hAannopen hAannne ?_ hKu ?_ ?_
       · -- subharmonicity of the difference
         intro z hz
         exact (husub z (hAannW hz)).sub_mharmonicAt (hbarHarm z hz)
@@ -1306,7 +1306,7 @@ theorem hasGreenFunction_coordDisk_compl (D : CoordDisk M) (p : M)
       rw [heq]
       exact homegle1 z hz
     have hconst := propagate Wset omeg y hWopen hWconn.isPreconnected hy
-      (fun z hz => (homegHarm z hz).msubharmonicAt) hmax
+      (fun z hz ↦ (homegHarm z hz).msubharmonicAt) hmax
     have h1 : omeg ymid = omeg y := hconst ymid hymidW
     rw [heq] at h1
     have := hdip
@@ -1314,7 +1314,7 @@ theorem hasGreenFunction_coordDisk_compl (D : CoordDisk M) (p : M)
     linarith
   -- The maximum of the envelope over the outer circle.
   have homegcont : ContinuousOn omeg Γout :=
-    fun y hy => ((homegHarm y (hΓoutW hy)).continuousAt).continuousWithinAt
+    fun y hy ↦ ((homegHarm y (hΓoutW hy)).continuousAt).continuousWithinAt
   obtain ⟨ystar, hystar, hystarmax⟩ := hΓoutcomp.exists_isMaxOn hΓoutne homegcont
   set tstar : ℝ := omeg ystar with htstar
   have htstarlt : tstar < 1 := homeglt1 ystar (hΓoutW hystar)
@@ -1338,13 +1338,13 @@ theorem hasGreenFunction_coordDisk_compl (D : CoordDisk M) (p : M)
       (isOpen_compl_singleton.mem_nhds (Set.mem_compl_singleton_iff.2 hy))
   -- ### Interior bound: `v ≤ max m 0` on the region
   have hIntB : ∀ y ∈ Wset, v y ≤ max m 0 := by
-    apply maxPrin Wset v (max m 0) Kv hWopen hWne (fun y hy => hvsub y (hWsub hy))
+    apply maxPrin Wset v (max m 0) Kv hWopen hWne (fun y hy ↦ hvsub y (hWsub hy))
       hKvcomp
     · intro y hy hyK
       rw [hKvzero y hyK]
       exact le_max_right _ _
     · rintro y ⟨hycl, hyW⟩
-      have hyD : y ∈ Dp.closedCarrier := not_not.1 (fun h => hyW h)
+      have hyD : y ∈ Dp.closedCarrier := not_not.1 (fun h ↦ hyW h)
       obtain ⟨hysrc, hyd⟩ := hcarmem y hyD
       have hydeq : dist (eN y) z₀ = R / 2 := by
         rcases lt_or_eq_of_le hyd with h | h
@@ -1443,35 +1443,35 @@ theorem hasGreenFunction_coordDisk_compl (D : CoordDisk M) (p : M)
       ((isCompact_closedBall z₀ R).diff isOpen_ball).image_of_continuousOn
         (eN.continuousOn_symm.mono (Set.diff_subset.trans hRtgt))
     have hΩσKσ : Ωσ ⊆ Kσ :=
-      Set.image_mono (fun w hw => ⟨ball_subset_closedBall hw.1,
-        fun h => hw.2 (ball_subset_closedBall h)⟩)
+      Set.image_mono (fun w hw ↦ ⟨ball_subset_closedBall hw.1,
+        fun h ↦ hw.2 (ball_subset_closedBall h)⟩)
     -- harmonicity of the logarithmic barrier at annulus points
     have hbharmN : ∀ z : ↥D.compl, z ∈ eN.source → eN z ≠ z₀ →
-        MHarmonicAt (fun q => Real.log (dist (eN q) z₀)) z := by
+        MHarmonicAt (fun q ↦ Real.log (dist (eN q) z₀)) z := by
       intro z hzs hzne
-      have h1 : MHarmonicAt (fun q => Real.log (dist (eN q) z₀)) z ↔
-          HarmonicAt ((fun q => Real.log (dist (eN q) z₀)) ∘ eN.symm) (eN z) :=
+      have h1 : MHarmonicAt (fun q ↦ Real.log (dist (eN q) z₀)) z ↔
+          HarmonicAt ((fun q ↦ Real.log (dist (eN q) z₀)) ∘ eN.symm) (eN z) :=
         mharmonicAt_iff_of_mem_maximalAtlas heNatlas hzs
       rw [h1]
-      have hharm : HarmonicAt (fun w : ℂ => Real.log ‖w - z₀‖) (eN z) := by
-        apply AnalyticAt.harmonicAt_log_norm (f := fun w : ℂ => w - z₀)
+      have hharm : HarmonicAt (fun w : ℂ ↦ Real.log ‖w - z₀‖) (eN z) := by
+        apply AnalyticAt.harmonicAt_log_norm (f := fun w : ℂ ↦ w - z₀)
         · exact analyticAt_id.sub analyticAt_const
         · exact sub_ne_zero.2 hzne
-      have heqv : (fun w : ℂ => Real.log ‖w - z₀‖) =ᶠ[𝓝 (eN z)]
-          ((fun q => Real.log (dist (eN q) z₀)) ∘ eN.symm) := by
+      have heqv : (fun w : ℂ ↦ Real.log ‖w - z₀‖) =ᶠ[𝓝 (eN z)]
+          ((fun q ↦ Real.log (dist (eN q) z₀)) ∘ eN.symm) := by
         filter_upwards [eN.open_target.mem_nhds (eN.map_source hzs)] with w hw
         simp only [Function.comp_apply, eN.right_inv hw, dist_eq_norm]
       exact (harmonicAt_congr_nhds heqv).1 hharm
     -- continuity of the logarithmic barrier
     have hbcont : ∀ z : ↥D.compl, z ∈ eN.source → eN z ≠ z₀ →
-        ContinuousAt (fun q => Real.log (dist (eN q) z₀)) z := by
+        ContinuousAt (fun q ↦ Real.log (dist (eN q) z₀)) z := by
       intro z hzs hzne
       have h2 : ContinuousAt eN z := eN.continuousAt hzs
       have h3 : dist (eN z) z₀ ≠ 0 := (dist_pos.2 hzne).ne'
       exact ((h2.dist continuousAt_const).log h3)
     -- the competitor and its subharmonicity
     set Wf : ↥D.compl → ℝ :=
-      fun q => v q + (1 + ε) * (Real.log (dist (eN q) z₀) - Real.log R) with hWf
+      fun q ↦ v q + (1 + ε) * (Real.log (dist (eN q) z₀) - Real.log R) with hWf
     have hWfsub : MSubharmonicOn Wf Ωσ := by
       intro z hz
       obtain ⟨hz1, hz2, hz3⟩ := hΩσmem z hz
@@ -1481,7 +1481,7 @@ theorem hasGreenFunction_coordDisk_compl (D : CoordDisk M) (p : M)
         exact absurd hz2 (not_lt.2 hσpos.le)
       have hznep : z ≠ p₀ := hnep z hz1 hzne
       have hu : MHarmonicAt
-          (fun q => (-(1 + ε)) * Real.log (dist (eN q) z₀) + (1 + ε) * Real.log R) z :=
+          (fun q ↦ (-(1 + ε)) * Real.log (dist (eN q) z₀) + (1 + ε) * Real.log R) z :=
         mharmAffine _ z _ _ (hbharmN z hz1 hzne)
       have h7 := (hvsub z (Set.mem_compl_singleton_iff.mpr hznep)).sub_mharmonicAt hu
       convert h7 using 2
@@ -1498,7 +1498,7 @@ theorem hasGreenFunction_coordDisk_compl (D : CoordDisk M) (p : M)
       have hzval : eN z = w := by rw [← hwz, eN.right_inv hwt]
       have hzd1 : σ ≤ dist (eN z) z₀ := by
         rw [hzval]
-        exact not_lt.1 (fun h => hw2 (mem_ball.2 h))
+        exact not_lt.1 (fun h ↦ hw2 (mem_ball.2 h))
       have hzd2 : dist (eN z) z₀ ≤ R := by rw [hzval]; exact mem_closedBall.1 hw1
       have hzne : eN z ≠ z₀ := by
         intro hcon
@@ -1564,7 +1564,7 @@ theorem hasGreenFunction_coordDisk_compl (D : CoordDisk M) (p : M)
   · exact le_trans hvx₀ (le_trans hm0 (le_max_right _ _))
   · -- the normalized candidate joins the harmonic-measure family
     have hmax0 : max m 0 = m := max_eq_left hm0.le
-    set u : ↥D.compl → ℝ := fun y => m⁻¹ * v y with hu
+    set u : ↥D.compl → ℝ := fun y ↦ m⁻¹ * v y with hu
     have humem : u ∈ Fam := by
       refine ⟨?_, ?_, Kv, hKvcomp, ?_⟩
       · intro y hy
@@ -1606,14 +1606,16 @@ theorem hasGreenFunction_coordDisk_compl (D : CoordDisk M) (p : M)
       exact hkey
     exact le_trans hvx₀ (le_trans hmfin (le_max_left _ _))
 
-/-! ## Symmetry-free Harnack and normal-families infrastructure
+/-!
+### Symmetry-free Harnack and normal-families infrastructure
 
 The two bricks below are themselves symmetry-free: the Harnack chain constant and
 the normal-families limit are obtained without any cross-symmetry input. The dipole
 limit is normalized at a third base point, so only the weakest consequence of the
 classical cross-symmetry of the piece Green's functions is needed — see
-`pieceGreen_drift_bound_core`, where it cancels the cross terms — and the rest of
-the shrink-uniform control comes from the Harnack chain bound. -/
+`exists_pieceGreen_drift_bound_core`, where it cancels the cross terms — and the rest of
+the shrink-uniform control comes from the Harnack chain bound.
+-/
 
 omit [IsManifold 𝓘(ℂ) ω M] in
 /-- The complement of two disjoint closed coordinate disks in a connected
@@ -1628,11 +1630,11 @@ theorem isConnected_two_coordDisk_compl
   have hann : ∀ (c : ℂ) (r R : ℝ), 0 < r → r < R →
       IsConnected (ball c R \ closedBall c r) := by
     intro c r R hr hrR
-    have hcont : Continuous fun p : ℝ × ℝ =>
+    have hcont : Continuous fun p : ℝ × ℝ ↦
         c + (p.1 : ℂ) * Complex.exp ((p.2 : ℂ) * Complex.I) :=
       continuous_const.add ((Complex.continuous_ofReal.comp continuous_fst).mul
         (((Complex.continuous_ofReal.comp continuous_snd).mul continuous_const).cexp))
-    have himg : (fun p : ℝ × ℝ => c + (p.1 : ℂ) * Complex.exp ((p.2 : ℂ) * Complex.I)) ''
+    have himg : (fun p : ℝ × ℝ ↦ c + (p.1 : ℂ) * Complex.exp ((p.2 : ℂ) * Complex.I)) ''
         (Set.Ioo r R ×ˢ (Set.univ : Set ℝ)) = ball c R \ closedBall c r := by
       apply Set.Subset.antisymm
       · rintro w ⟨⟨t, θ⟩, ⟨⟨hrt, htR⟩, -⟩, hw⟩
@@ -1649,7 +1651,7 @@ theorem isConnected_two_coordDisk_compl
       · rintro w ⟨hwb, hwc⟩
         have hrt : r < ‖w - c‖ := by
           rw [← dist_eq_norm]
-          exact not_le.1 fun h => hwc (mem_closedBall.2 h)
+          exact not_le.1 fun h ↦ hwc (mem_closedBall.2 h)
         have htR : ‖w - c‖ < R := by rw [← dist_eq_norm]; exact mem_ball.1 hwb
         refine ⟨(‖w - c‖, (w - c).arg), ⟨⟨hrt, htR⟩, Set.mem_univ _⟩, ?_⟩
         change c + (‖w - c‖ : ℂ) * Complex.exp (((w - c).arg : ℂ) * Complex.I) = w
@@ -1686,7 +1688,7 @@ theorem isConnected_two_coordDisk_compl
       have hmem : e.symm w ∈ D.closedCarrier := by
         rw [hcarrier]
         exact ⟨w, hw, rfl⟩
-      exact fun hS => Set.disjoint_left.1 hDS hmem hS
+      exact fun hS ↦ Set.disjoint_left.1 hDS hmem hS
     obtain ⟨δ, hδ0, hδsub⟩ :=
       (isCompact_closedBall c r).exists_thickening_subset_open hTopen hTsub
     set R : ℝ := δ + r with hRdef
@@ -1694,7 +1696,7 @@ theorem isConnected_two_coordDisk_compl
     have hballR : ball c R ⊆ T := by
       rw [hRdef, ← thickening_closedBall hδ0 hr.le c]
       exact hδsub
-    have hballtgt : ball c R ⊆ e.target := fun w hw => (hballR hw).1
+    have hballtgt : ball c R ⊆ e.target := fun w hw ↦ (hballR hw).1
     -- The half-collar radius.
     set Rh : ℝ := (r + R) / 2 with hRhdef
     have hrRh : r < Rh := by rw [hRhdef]; linarith
@@ -1728,7 +1730,7 @@ theorem isConnected_two_coordDisk_compl
     have hAconn : IsConnected A := by
       rw [hAdef]
       exact (hann c r Rh hr hrRh).image _
-        (e.continuousOn_symm.mono fun w hw => (hcbRh.trans hballtgt)
+        (e.continuousOn_symm.mono fun w hw ↦ (hcbRh.trans hballtgt)
           (ball_subset_closedBall hw.1))
     have hAeq : A = N \ D.closedCarrier := by
       rw [hAdef, hNdef, hcarrier]
@@ -1744,7 +1746,7 @@ theorem isConnected_two_coordDisk_compl
           exact hwc (h2 ▸ hw')
       · rintro x ⟨⟨hxsrc, hxb⟩, hxc⟩
         rw [Set.mem_preimage] at hxb
-        refine ⟨e x, ⟨hxb, fun hmem => hxc ?_⟩, e.left_inv hxsrc⟩
+        refine ⟨e x, ⟨hxb, fun hmem ↦ hxc ?_⟩, e.left_inv hxsrc⟩
         exact ⟨e x, hmem, e.left_inv hxsrc⟩
     have hAC : A ∩ D.closedCarrier = ∅ := by
       rw [hAeq, Set.eq_empty_iff_forall_notMem]
@@ -1814,11 +1816,11 @@ theorem isConnected_two_coordDisk_compl
   have hN₁Ω : N₁ ∩ (Cᶜ : Set M) ⊆ A₁ := by
     rintro y ⟨hyN, hyΩ⟩
     rw [hA₁eq]
-    exact ⟨hyN, fun h => hyΩ (Or.inl h)⟩
+    exact ⟨hyN, fun h ↦ hyΩ (Or.inl h)⟩
   have hN₂Ω : N₂ ∩ (Cᶜ : Set M) ⊆ A₂ := by
     rintro y ⟨hyN, hyΩ⟩
     rw [hA₂eq]
-    exact ⟨hyN, fun h => hyΩ (Or.inr h)⟩
+    exact ⟨hyN, fun h ↦ hyΩ (Or.inr h)⟩
   -- Nonemptiness of the complement.
   have hne : ((Cᶜ : Set M)).Nonempty := by
     obtain ⟨z, hz⟩ := hA₁conn.nonempty
@@ -1868,7 +1870,7 @@ theorem isConnected_two_coordDisk_compl
         · exact h
       · exfalso
         obtain ⟨z, -, hzu, hzv⟩ := hAconn.2 u' v' hu'o hv'o
-          (fun z hz => hcov (hAΩ hz)) hu1 hv1
+          (fun z hz ↦ hcov (hAΩ hz)) hu1 hv1
         have : z ∈ u' ∩ v' := ⟨hzu, hzv⟩
         rw [hu'v'] at this
         exact this
@@ -2009,7 +2011,7 @@ theorem exists_harnack_chain_const {Ω : Set M} (hΩ : IsOpen Ω)
       ∀ x ∈ K, ∀ y ∈ K, u x ≤ C * u y := by
   classical
   rcases Set.eq_empty_or_nonempty K with hKe | ⟨k₀, hk₀⟩
-  · refine ⟨1, one_pos, fun u _ _ x hx => ?_⟩
+  · refine ⟨1, one_pos, fun u _ _ x hx ↦ ?_⟩
     rw [hKe] at hx
     exact absurd hx (Set.notMem_empty x)
   have hk₀Ω : k₀ ∈ Ω := hKΩ hk₀
@@ -2045,7 +2047,7 @@ theorem exists_harnack_chain_const {Ω : Set M} (hΩ : IsOpen Ω)
         rwa [e.right_inv hwt] at h1
       refine ⟨e.source ∩ e ⁻¹' ball (e x) (ρ / 2),
         e.continuousOn.isOpen_inter_preimage e.open_source isOpen_ball,
-        fun _ => ⟨hxsrc, Set.mem_preimage.2 (mem_ball_self hr0)⟩, ?_, ?_⟩
+        fun _ ↦ ⟨hxsrc, Set.mem_preimage.2 (mem_ball_self hr0)⟩, ?_, ?_⟩
       · rintro a ⟨has, hab⟩
         have h1 : e a ∈ ball (e x) (2 * (ρ / 2)) :=
           ball_subset_ball (by linarith) (Set.mem_preimage.1 hab)
@@ -2053,9 +2055,9 @@ theorem exists_harnack_chain_const {Ω : Set M} (hΩ : IsOpen Ω)
         rwa [e.left_inv has] at h2
       · intro u hu hupos a ha b hb
         have hh : HarmonicOnNhd (u ∘ e.symm) (ball (e x) (2 * (ρ / 2))) :=
-          fun w hw => htrans u hu w hw
+          fun w hw ↦ htrans u hu w hw
         have hpos : ∀ z ∈ ball (e x) (2 * (ρ / 2)), 0 ≤ (u ∘ e.symm) z :=
-          fun z hz => hupos _ (h2r hz).2
+          fun z hz ↦ hupos _ (h2r hz).2
         obtain ⟨-, hup_a⟩ :=
           harnack_inequality_ball hr0 hh hpos (e a) (Set.mem_preimage.1 ha.2)
         obtain ⟨hlow_b, -⟩ :=
@@ -2065,8 +2067,8 @@ theorem exists_harnack_chain_const {Ω : Set M} (hΩ : IsOpen Ω)
         have hcx : e.symm (e x) = x := e.left_inv hxsrc
         simp only [Function.comp_apply, hca, hcb, hcx] at hup_a hlow_b
         linarith
-    · exact ⟨∅, isOpen_empty, fun h => absurd h hx, Set.empty_subset _,
-        fun u _ _ a ha => absurd ha (Set.notMem_empty a)⟩
+    · exact ⟨∅, isOpen_empty, fun h ↦ absurd h hx, Set.empty_subset _,
+        fun u _ _ a ha ↦ absurd ha (Set.notMem_empty a)⟩
   choose N hNopen hNmem hNsub hNkey using key
   -- Step 2: two-sided comparability with the base point propagates between any
   -- two points of a Harnack neighbourhood.
@@ -2077,7 +2079,7 @@ theorem exists_harnack_chain_const {Ω : Set M} (hΩ : IsOpen Ω)
         u p ≤ C * u k₀ ∧ u k₀ ≤ C * u p := by
     intro y hy p hp q hq hgq
     obtain ⟨C, hC, hCb⟩ := hgq
-    refine ⟨9 * C, by linarith, fun u hu hup => ?_⟩
+    refine ⟨9 * C, by linarith, fun u hu hup ↦ ?_⟩
     obtain ⟨h1, h2⟩ := hCb u hu hup
     have h3 := hNkey y u hu hup p hp q hq
     have h4 := hNkey y u hu hup q hq p hp
@@ -2091,8 +2093,8 @@ theorem exists_harnack_chain_const {Ω : Set M} (hΩ : IsOpen Ω)
       (∀ w ∈ Ω, 0 ≤ u w) → u z ≤ C * u k₀ ∧ u k₀ ≤ C * u z} with hS₁def
     set S₂ : Set M := {z | z ∈ Ω ∧ ¬∃ C, 0 < C ∧ ∀ u : M → ℝ, MHarmonicOn u Ω →
       (∀ w ∈ Ω, 0 ≤ u w) → u z ≤ C * u k₀ ∧ u k₀ ≤ C * u z} with hS₂def
-    have hU₁o : IsOpen (⋃ y ∈ S₁, N y) := isOpen_biUnion fun y _ => hNopen y
-    have hU₂o : IsOpen (⋃ y ∈ S₂, N y) := isOpen_biUnion fun y _ => hNopen y
+    have hU₁o : IsOpen (⋃ y ∈ S₁, N y) := isOpen_biUnion fun y _ ↦ hNopen y
+    have hU₂o : IsOpen (⋃ y ∈ S₂, N y) := isOpen_biUnion fun y _ ↦ hNopen y
     have hdisj : Disjoint (⋃ y ∈ S₁, N y) (⋃ y ∈ S₂, N y) := by
       rw [Set.disjoint_left]
       intro z hz₁ hz₂
@@ -2111,7 +2113,7 @@ theorem exists_harnack_chain_const {Ω : Set M} (hΩ : IsOpen Ω)
     have hne : (Ω ∩ ⋃ y ∈ S₁, N y).Nonempty := by
       refine ⟨k₀, hk₀Ω, ?_⟩
       have hk₀S : k₀ ∈ S₁ :=
-        ⟨hk₀Ω, 1, one_pos, fun u _ _ =>
+        ⟨hk₀Ω, 1, one_pos, fun u _ _ ↦
           ⟨le_of_eq (one_mul (u k₀)).symm, le_of_eq (one_mul (u k₀)).symm⟩⟩
       exact Set.mem_biUnion hk₀S (hNmem k₀ hk₀Ω)
     have hΩU₁ : Ω ⊆ ⋃ y ∈ S₁, N y :=
@@ -2123,21 +2125,21 @@ theorem exists_harnack_chain_const {Ω : Set M} (hΩ : IsOpen Ω)
   -- Step 4: extract a uniform constant on the compact `K` from a finite
   -- subcover by Harnack neighbourhoods.
   choose! Cc hCpos hCbd using main
-  have hcov : K ⊆ ⋃ i : K, N (i : M) := fun z hz =>
+  have hcov : K ⊆ ⋃ i : K, N (i : M) := fun z hz ↦
     Set.mem_iUnion.2 ⟨⟨z, hz⟩, hNmem z (hKΩ hz)⟩
-  obtain ⟨t, ht⟩ := hK.elim_finite_subcover (fun i : K => N (i : M))
-    (fun _ => hNopen _) hcov
+  obtain ⟨t, ht⟩ := hK.elim_finite_subcover (fun i : K ↦ N (i : M))
+    (fun _ ↦ hNopen _) hcov
   have htne : t.Nonempty := by
     obtain ⟨i, hit, -⟩ := Set.mem_iUnion₂.1 (ht hk₀)
     exact ⟨i, hit⟩
-  set B : ℝ := t.sup' htne (fun i => Cc (i : M)) with hBdef
+  set B : ℝ := t.sup' htne (fun i ↦ Cc (i : M)) with hBdef
   have hBle : ∀ i ∈ t, Cc (i : M) ≤ B :=
-    fun i hi => Finset.le_sup' (fun i : K => Cc (i : M)) hi
+    fun i hi ↦ Finset.le_sup' (fun i : K ↦ Cc (i : M)) hi
   have hBpos : 0 < B := by
     obtain ⟨i₀, hi₀⟩ := htne
     exact lt_of_lt_of_le (hCpos _ (hKΩ i₀.2)) (hBle i₀ hi₀)
   refine ⟨81 * B * B, mul_pos (mul_pos (by norm_num) hBpos) hBpos,
-    fun u hu hup x hx y hy => ?_⟩
+    fun u hu hup x hx y hy ↦ ?_⟩
   obtain ⟨i, hit, hxi⟩ := Set.mem_iUnion₂.1 (ht hx)
   obtain ⟨j, hjt, hyj⟩ := Set.mem_iUnion₂.1 (ht hy)
   have hiΩ : (i : M) ∈ Ω := hKΩ i.2
@@ -2170,11 +2172,11 @@ sequence of harmonic functions on an open set of a second-countable surface
 has a subsequence converging locally uniformly to a harmonic function. -/
 theorem exists_mharmonicOn_limit_of_locally_bounded [SecondCountableTopology M]
     {Ω : Set M} (hΩ : IsOpen Ω) {u : ℕ → M → ℝ}
-    (hu : ∀ n, MHarmonicOn (u n) Ω)
-    (hb : ∀ K, IsCompact K → K ⊆ Ω → ∃ B, ∀ n, ∀ x ∈ K, |u n x| ≤ B) :
+    (hu : ∀ n : ℕ, MHarmonicOn (u n) Ω)
+    (hb : ∀ K : Set M, IsCompact K → K ⊆ Ω → ∃ B : ℝ, ∀ n : ℕ, ∀ x ∈ K, |u n x| ≤ B) :
     ∃ φ : ℕ → ℕ, StrictMono φ ∧ ∃ G : M → ℝ, MHarmonicOn G Ω ∧
-      ∀ K, IsCompact K → K ⊆ Ω →
-        TendstoUniformlyOn (fun n => u (φ n)) G Filter.atTop K := by
+      ∀ K : Set M, IsCompact K → K ⊆ Ω →
+        TendstoUniformlyOn (fun n ↦ u (φ n)) G Filter.atTop K := by
   classical
   -- ### Brick 0: chart transfer.  The reading in the chart at `x` of any function
   -- harmonic on `Ω` is harmonic at every plane point of the chart image of `Ω`.
@@ -2232,11 +2234,11 @@ theorem exists_mharmonicOn_limit_of_locally_bounded [SecondCountableTopology M]
     intro F g c ρ A hρ hF hg hbd
     have hFi : CircleIntegrable F c ρ := hF.circleIntegrable hρ.le
     have hgi : CircleIntegrable g c ρ := hg.circleIntegrable hρ.le
-    have habsci : CircleIntegrable (fun ζ => |F ζ - g ζ|) c ρ :=
+    have habsci : CircleIntegrable (fun ζ ↦ |F ζ - g ζ|) c ρ :=
       ((hF.sub hg).abs).circleIntegrable hρ.le
     rw [← Real.circleAverage_fun_sub hFi hgi]
-    calc |Real.circleAverage (fun ζ => F ζ - g ζ) c ρ|
-        ≤ Real.circleAverage |fun ζ => F ζ - g ζ| c ρ :=
+    calc |Real.circleAverage (fun ζ ↦ F ζ - g ζ) c ρ|
+        ≤ Real.circleAverage |fun ζ ↦ F ζ - g ζ| c ρ :=
           Real.abs_circleAverage_le_circleAverage_abs
       _ ≤ A := by
           apply Real.circleAverage_mono_on_of_le_circle habsci
@@ -2255,12 +2257,12 @@ theorem exists_mharmonicOn_limit_of_locally_bounded [SecondCountableTopology M]
     -- Poisson representations at the two points.
     have hrz := hh.circleAverage_poissonKernel_smul hzball
     have hrw := hh.circleAverage_poissonKernel_smul hwball
-    have hrz' : Real.circleAverage (fun ζ => poissonKernel c z ζ * h ζ) c ρ = h z := by
+    have hrz' : Real.circleAverage (fun ζ ↦ poissonKernel c z ζ * h ζ) c ρ = h z := by
       rw [← hrz]
       apply Real.circleAverage_congr_sphere
       intro ζ _
       simp [smul_eq_mul]
-    have hrw' : Real.circleAverage (fun ζ => poissonKernel c w ζ * h ζ) c ρ = h w := by
+    have hrw' : Real.circleAverage (fun ζ ↦ poissonKernel c w ζ * h ζ) c ρ = h w := by
       rw [← hrw]
       apply Real.circleAverage_congr_sphere
       intro ζ _
@@ -2391,9 +2393,9 @@ theorem exists_mharmonicOn_limit_of_locally_bounded [SecondCountableTopology M]
         _ = 52 / ρ * ‖z - w‖ := by ring
     -- assemble via the circle-average difference bound
     have hhcont : ContinuousOn h (sphere c ρ) := hh.continuousOn.mono sphere_subset_closedBall
-    have hFzc : ContinuousOn (fun ζ => poissonKernel c z ζ * h ζ) (sphere c ρ) :=
+    have hFzc : ContinuousOn (fun ζ ↦ poissonKernel c z ζ * h ζ) (sphere c ρ) :=
       (hKcont c z ρ hzball).mul hhcont
-    have hFwc : ContinuousOn (fun ζ => poissonKernel c w ζ * h ζ) (sphere c ρ) :=
+    have hFwc : ContinuousOn (fun ζ ↦ poissonKernel c w ζ * h ζ) (sphere c ρ) :=
       (hKcont c w ρ hwball).mul hhcont
     have hptbd : ∀ ζ ∈ sphere c ρ,
         |poissonKernel c z ζ * h ζ - poissonKernel c w ζ * h ζ|
@@ -2439,7 +2441,7 @@ theorem exists_mharmonicOn_limit_of_locally_bounded [SecondCountableTopology M]
   have hΩne : Ω.Nonempty := Set.nonempty_iff_ne_empty.2 hne
   have : Nonempty ↥Ω := hΩne.to_subtype
   obtain ⟨dd, hdd⟩ := TopologicalSpace.exists_dense_seq ↥Ω
-  have hdΩ : ∀ j : ℕ, (dd j : M) ∈ Ω := fun j => (dd j).2
+  have hdΩ : ∀ j : ℕ, (dd j : M) ∈ Ω := fun j ↦ (dd j).2
   have hdense : ∀ O : Set M, IsOpen O → (O ∩ Ω).Nonempty → ∃ j : ℕ, (dd j : M) ∈ O := by
     intro O hO hOne
     obtain ⟨y, hyO, hyΩ⟩ := hOne
@@ -2453,19 +2455,19 @@ theorem exists_mharmonicOn_limit_of_locally_bounded [SecondCountableTopology M]
     intro j
     obtain ⟨B, hB⟩ := hb {(dd j : M)} isCompact_singleton
       (Set.singleton_subset_iff.2 (hdΩ j))
-    exact ⟨B, fun n => hB n _ rfl⟩
+    exact ⟨B, fun n ↦ hB n _ rfl⟩
   choose Bd hBd using hbdj
-  have hScomp : IsCompact (Set.univ.pi fun j : ℕ => Set.Icc (-(Bd j)) (Bd j)) :=
-    isCompact_univ_pi fun j => isCompact_Icc
-  have hmemS : ∀ n, (fun j => u n (dd j : M)) ∈
-      Set.univ.pi fun j : ℕ => Set.Icc (-(Bd j)) (Bd j) := by
+  have hScomp : IsCompact (Set.univ.pi fun j : ℕ ↦ Set.Icc (-(Bd j)) (Bd j)) :=
+    isCompact_univ_pi fun j ↦ isCompact_Icc
+  have hmemS : ∀ n, (fun j ↦ u n (dd j : M)) ∈
+      Set.univ.pi fun j : ℕ ↦ Set.Icc (-(Bd j)) (Bd j) := by
     intro n
     rw [Set.mem_univ_pi]
     intro j
     exact abs_le.1 (hBd j n)
   obtain ⟨a, -, φ, hφmono, hφtend⟩ := hScomp.tendsto_subseq hmemS
-  have hconv : ∀ j : ℕ, Tendsto (fun n => u (φ n) (dd j : M)) atTop (𝓝 (a j)) :=
-    fun j => tendsto_pi_nhds.1 hφtend j
+  have hconv : ∀ j : ℕ, Tendsto (fun n ↦ u (φ n) (dd j : M)) atTop (𝓝 (a j)) :=
+    fun j ↦ tendsto_pi_nhds.1 hφtend j
   refine ⟨φ, hφmono, ?_⟩
   -- ### The local uniform Cauchy property.
   have hlocal : ∀ x ∈ Ω, ∃ V : Set M, IsOpen V ∧ x ∈ V ∧ V ⊆ Ω ∧
@@ -2490,16 +2492,16 @@ theorem exists_mharmonicOn_limit_of_locally_bounded [SecondCountableTopology M]
     -- readings are harmonic on a neighborhood of the closed ball and bounded by B
     have hread : ∀ k : ℕ, HarmonicOnNhd (u k ∘ (chartAt ℂ x).symm)
         (closedBall (chartAt ℂ x x) ρ) :=
-      fun k ζ hζ => htransfer x (u k) (hu k) ζ (hsub hζ)
+      fun k ζ hζ ↦ htransfer x (u k) (hu k) ζ (hsub hζ)
     have hbound : ∀ k : ℕ, ∀ ζ ∈ closedBall (chartAt ℂ x x) ρ,
         |(u k ∘ (chartAt ℂ x).symm) ζ| ≤ B :=
-      fun k ζ hζ => hB k _ ⟨ζ, hζ, rfl⟩
+      fun k ζ hζ ↦ hB k _ ⟨ζ, hζ, rfl⟩
     -- the Lipschitz constant on the half ball
     have hlip : ∀ k : ℕ, ∀ z ∈ ball (chartAt ℂ x x) (ρ / 2),
         ∀ w ∈ ball (chartAt ℂ x x) (ρ / 2),
         |u k ((chartAt ℂ x).symm z) - u k ((chartAt ℂ x).symm w)|
           ≤ 52 * B / ρ * ‖z - w‖ :=
-      fun k z hz w hw =>
+      fun k z hz w hw ↦
         hplaneLip (chartAt ℂ x x) ρ B hρ hB0 (u k ∘ (chartAt ℂ x).symm)
           (hread k) (hbound k) z hz w hw
     -- the neighborhood
@@ -2521,7 +2523,7 @@ theorem exists_mharmonicOn_limit_of_locally_bounded [SecondCountableTopology M]
       -- finite δ/2-net of the quarter ball
       obtain ⟨t, -, htcover⟩ :=
         (isCompact_closedBall (chartAt ℂ x x) (ρ / 4)).elim_nhds_subcover
-          (fun ζ => ball ζ (δ / 2)) (fun ζ _ => ball_mem_nhds ζ (by positivity))
+          (fun ζ ↦ ball ζ (δ / 2)) (fun ζ _ ↦ ball_mem_nhds ζ (by positivity))
       -- representative points of the dense sequence in each net cell
       have hchoice : ∀ ζ : ℂ, ∃ j : ℕ,
           ((chartAt ℂ x).source ∩ ⇑(chartAt ℂ x) ⁻¹' ball (chartAt ℂ x x) (ρ / 4) ∩
@@ -2547,18 +2549,18 @@ theorem exists_mharmonicOn_limit_of_locally_bounded [SecondCountableTopology M]
             have h2 : (chartAt ℂ x).symm (chartAt ℂ x y) ∈ Ω := (hsub h1).2
             rwa [(chartAt ℂ x).left_inv hy.1.1] at h2
           obtain ⟨j, hj⟩ := hdense _ hWopen ⟨y, hy, hyΩ⟩
-          exact ⟨j, fun _ => hj⟩
-        · exact ⟨0, fun hcon => absurd hcon hne2⟩
+          exact ⟨j, fun _ ↦ hj⟩
+        · exact ⟨0, fun hcon ↦ absurd hcon hne2⟩
       choose jpt hjpt using hchoice
       -- Cauchy thresholds at the finitely many representatives
       have hCau : ∀ ζ : ℂ, ∃ N : ℕ, ∀ m ≥ N, ∀ n ≥ N,
           |u (φ m) (dd (jpt ζ) : M) - u (φ n) (dd (jpt ζ) : M)| < ε / 3 := by
         intro ζ
-        have hcs : CauchySeq (fun n => u (φ n) (dd (jpt ζ) : M)) :=
+        have hcs : CauchySeq (fun n ↦ u (φ n) (dd (jpt ζ) : M)) :=
           (hconv (jpt ζ)).cauchySeq
         rw [Metric.cauchySeq_iff] at hcs
         obtain ⟨N, hN⟩ := hcs (ε / 3) (by positivity)
-        exact ⟨N, fun m hm n hn => by
+        exact ⟨N, fun m hm n hn ↦ by
           have := hN m hm n hn
           rwa [Real.dist_eq] at this⟩
       choose Nf hNf using hCau
@@ -2624,21 +2626,21 @@ theorem exists_mharmonicOn_limit_of_locally_bounded [SecondCountableTopology M]
         (u (φ n) y)
       linarith [htri1, htri2, hlip_m, hlip_n', hmid, hLδ]
   -- ### The pointwise limit function.
-  have hGex : ∀ y ∈ Ω, ∃ l : ℝ, Tendsto (fun n => u (φ n) y) atTop (𝓝 l) := by
+  have hGex : ∀ y ∈ Ω, ∃ l : ℝ, Tendsto (fun n ↦ u (φ n) y) atTop (𝓝 l) := by
     intro y hy
     obtain ⟨V, -, hyV, -, hVc⟩ := hlocal y hy
-    have hcs : CauchySeq (fun n => u (φ n) y) := by
+    have hcs : CauchySeq (fun n ↦ u (φ n) y) := by
       rw [Metric.cauchySeq_iff]
       intro ε hε
       obtain ⟨N, hN⟩ := hVc ε hε
-      exact ⟨N, fun m hm n hn => by
+      exact ⟨N, fun m hm n hn ↦ by
         rw [Real.dist_eq]
         exact hN m hm n hn y hyV⟩
     exact cauchySeq_tendsto_of_complete hcs
-  set G : M → ℝ := fun y =>
-    if h : ∃ l : ℝ, Tendsto (fun n => u (φ n) y) atTop (𝓝 l) then h.choose else 0
+  set G : M → ℝ := fun y ↦
+    if h : ∃ l : ℝ, Tendsto (fun n ↦ u (φ n) y) atTop (𝓝 l) then h.choose else 0
     with hGdef
-  have hGtend : ∀ y ∈ Ω, Tendsto (fun n => u (φ n) y) atTop (𝓝 (G y)) := by
+  have hGtend : ∀ y ∈ Ω, Tendsto (fun n ↦ u (φ n) y) atTop (𝓝 (G y)) := by
     intro y hy
     have h := hGex y hy
     have hGy : G y = h.choose := by
@@ -2650,30 +2652,30 @@ theorem exists_mharmonicOn_limit_of_locally_bounded [SecondCountableTopology M]
   have hVunif : ∀ V : Set M, V ⊆ Ω →
       (∀ ε > 0, ∃ N : ℕ, ∀ m ≥ N, ∀ n ≥ N, ∀ y ∈ V,
         |u (φ m) y - u (φ n) y| < ε) →
-      TendstoUniformlyOn (fun n => u (φ n)) G atTop V := by
+      TendstoUniformlyOn (fun n ↦ u (φ n)) G atTop V := by
     intro V hVΩ hVc
     rw [Metric.tendstoUniformlyOn_iff]
     intro ε hε
     obtain ⟨N, hN⟩ := hVc (ε / 2) (by positivity)
     rw [Filter.eventually_atTop]
-    refine ⟨N, fun n hn y hy => ?_⟩
-    have h1 : Tendsto (fun m => dist (u (φ m) y) (u (φ n) y)) atTop
+    refine ⟨N, fun n hn y hy ↦ ?_⟩
+    have h1 : Tendsto (fun m ↦ dist (u (φ m) y) (u (φ n) y)) atTop
         (𝓝 (dist (G y) (u (φ n) y))) :=
       (hGtend y (hVΩ hy)).dist tendsto_const_nhds
     have h2 : ∀ᶠ m in atTop, dist (u (φ m) y) (u (φ n) y) ≤ ε / 2 := by
       rw [Filter.eventually_atTop]
-      exact ⟨N, fun m hm => by
+      exact ⟨N, fun m hm ↦ by
         rw [Real.dist_eq]
         exact (hN m hm n hn y hy).le⟩
     have h3 : dist (G y) (u (φ n) y) ≤ ε / 2 := le_of_tendsto h1 h2
     linarith
   -- ### Uniform convergence on compact subsets.
   have hKunif : ∀ K, IsCompact K → K ⊆ Ω →
-      TendstoUniformlyOn (fun n => u (φ n)) G atTop K := by
+      TendstoUniformlyOn (fun n ↦ u (φ n)) G atTop K := by
     intro K hK hKΩ
     choose V hVopen hVmem hVsub hVc using hlocal
-    obtain ⟨t, hts⟩ := hK.elim_nhds_subcover' (fun x hx => V x (hKΩ hx))
-      (fun x hx => (hVopen x (hKΩ hx)).mem_nhds (hVmem x (hKΩ hx)))
+    obtain ⟨t, hts⟩ := hK.elim_nhds_subcover' (fun x hx ↦ V x (hKΩ hx))
+      (fun x hx ↦ (hVopen x (hKΩ hx)).mem_nhds (hVmem x (hKΩ hx)))
     rw [Metric.tendstoUniformlyOn_iff]
     intro ε hε
     have hev : ∀ᶠ n in atTop, ∀ z ∈ t,
@@ -2703,15 +2705,15 @@ theorem exists_mharmonicOn_limit_of_locally_bounded [SecondCountableTopology M]
   -- readings of the subsequence, harmonic on a neighborhood of the closed ball
   have hread : ∀ n : ℕ, HarmonicOnNhd (u (φ n) ∘ (chartAt ℂ x).symm)
       (closedBall (chartAt ℂ x x) ρ) :=
-    fun n ζ hζ => htransfer x (u (φ n)) (hu (φ n)) ζ (hsub hζ)
+    fun n ζ hζ ↦ htransfer x (u (φ n)) (hu (φ n)) ζ (hsub hζ)
   -- uniform convergence of the readings on the closed chart ball
-  have hunif : TendstoUniformlyOn (fun n => u (φ n) ∘ (chartAt ℂ x).symm)
+  have hunif : TendstoUniformlyOn (fun n ↦ u (φ n) ∘ (chartAt ℂ x).symm)
       (G ∘ (chartAt ℂ x).symm) atTop (closedBall (chartAt ℂ x x) ρ) := by
     have h1 := (hKunif _ hKcomp hKΩ).comp (chartAt ℂ x).symm
-    exact h1.mono fun ζ hζ => ⟨ζ, hζ, rfl⟩
+    exact h1.mono fun ζ hζ ↦ ⟨ζ, hζ, rfl⟩
   have hcont_n : ∀ n : ℕ, ContinuousOn (u (φ n) ∘ (chartAt ℂ x).symm)
       (closedBall (chartAt ℂ x x) ρ) :=
-    fun n => (hread n).continuousOn
+    fun n ↦ (hread n).continuousOn
   have hGcont : ContinuousOn (G ∘ (chartAt ℂ x).symm) (closedBall (chartAt ℂ x x) ρ) :=
     hunif.continuousOn ((Filter.Eventually.of_forall hcont_n).frequently)
   -- the limit satisfies the Poisson identity on the open ball
@@ -2750,7 +2752,7 @@ theorem exists_mharmonicOn_limit_of_locally_bounded [SecondCountableTopology M]
       simp [smul_eq_mul]
     -- convergence of the Poisson integrals
     have hlimPI : Tendsto
-        (fun n => poissonIntegral (u (φ n) ∘ (chartAt ℂ x).symm) (chartAt ℂ x x) ρ z)
+        (fun n ↦ poissonIntegral (u (φ n) ∘ (chartAt ℂ x).symm) (chartAt ℂ x x) ρ z)
         atTop (𝓝 (poissonIntegral (G ∘ (chartAt ℂ x).symm) (chartAt ℂ x x) ρ z)) := by
       rw [Metric.tendsto_atTop]
       intro ε hε
@@ -2759,7 +2761,7 @@ theorem exists_mharmonicOn_limit_of_locally_bounded [SecondCountableTopology M]
       have hev := hsphunif (ε / (2 * (Kb + 1))) (by positivity)
       rw [Filter.eventually_atTop] at hev
       obtain ⟨N, hN⟩ := hev
-      refine ⟨N, fun n hn => ?_⟩
+      refine ⟨N, fun n hn ↦ ?_⟩
       rw [Real.dist_eq]
       have hbd : ∀ ζ ∈ sphere (chartAt ℂ x x) ρ,
           |poissonKernel (chartAt ℂ x x) z ζ * (u (φ n) ∘ (chartAt ℂ x).symm) ζ
@@ -2779,11 +2781,11 @@ theorem exists_mharmonicOn_limit_of_locally_bounded [SecondCountableTopology M]
           exact h3.le
         exact mul_le_mul (hKbound ζ hζ) h2 (abs_nonneg _) hKb0
       have hcF : ContinuousOn
-          (fun ζ => poissonKernel (chartAt ℂ x x) z ζ * (u (φ n) ∘ (chartAt ℂ x).symm) ζ)
+          (fun ζ ↦ poissonKernel (chartAt ℂ x x) z ζ * (u (φ n) ∘ (chartAt ℂ x).symm) ζ)
           (sphere (chartAt ℂ x x) ρ) :=
         (hKcont _ z ρ hz).mul ((hcont_n n).mono sphere_subset_closedBall)
       have hcG : ContinuousOn
-          (fun ζ => poissonKernel (chartAt ℂ x x) z ζ * (G ∘ (chartAt ℂ x).symm) ζ)
+          (fun ζ ↦ poissonKernel (chartAt ℂ x x) z ζ * (G ∘ (chartAt ℂ x).symm) ζ)
           (sphere (chartAt ℂ x x) ρ) :=
         (hKcont _ z ρ hz).mul (hGcont.mono sphere_subset_closedBall)
       have hkey := havg_diff _ _ (chartAt ℂ x x) ρ (Kb * (ε / (2 * (Kb + 1)))) hρ hcF hcG hbd
@@ -2798,7 +2800,7 @@ theorem exists_mharmonicOn_limit_of_locally_bounded [SecondCountableTopology M]
       exact lt_of_le_of_lt hkey hfin
     -- limits agree
     have hGz : Tendsto
-        (fun n => poissonIntegral (u (φ n) ∘ (chartAt ℂ x).symm) (chartAt ℂ x x) ρ z)
+        (fun n ↦ poissonIntegral (u (φ n) ∘ (chartAt ℂ x).symm) (chartAt ℂ x x) ρ z)
         atTop (𝓝 ((G ∘ (chartAt ℂ x).symm) z)) := by
       have h1 := hunif.tendsto_at (ball_subset_closedBall hz)
       exact h1.congr hrep
@@ -2816,7 +2818,7 @@ theorem exists_mharmonicOn_limit_of_locally_bounded [SecondCountableTopology M]
   exact (harmonicAt_congr_nhds hev).mpr (hPharm _ hcball)
 
 
-/-! ## The bipolar Green's function and the dipole map -/
+/-! ### The bipolar Green's function and the dipole map -/
 
 /-- **The drift bound for the piece Green's functions**, conditional form: when at
 least one of the two poles has an unbounded Green family at `p₃`, the two piece
@@ -2830,13 +2832,11 @@ maximum across the chart annulus, and a Harnack chain on a fixed compact
 containing the pole circles and `p₃` makes the same-pole two-point
 oscillations uniform in the shrink parameter; the symmetry of the Green's
 function of the pieces cancels the cross terms. -/
-theorem pieceGreen_drift_bound_core (D₀ : CoordDisk M) {p₁ p₂ p₃ : M}
+private theorem exists_pieceGreen_drift_bound_core (D₀ : CoordDisk M) {p₁ p₂ p₃ : M}
     (hp₁ : p₁ ∉ D₀.closedCarrier) (hp₂ : p₂ ∉ D₀.closedCarrier)
     (hp₃ : p₃ ∉ D₀.closedCarrier) (hne : p₁ ≠ p₂) (h₃₁ : p₃ ≠ p₁)
-    (h₃₂ : p₃ ≠ p₂)
-    (hnb : ¬ BddAbove ((fun v => v p₃) '' greenFamily p₁) ∨
-      ¬ BddAbove ((fun v => v p₃) '' greenFamily p₂)) :
-    ∃ t₀ C₀, 0 < t₀ ∧ t₀ ≤ 1 ∧ ∀ t (ht : 0 < t) (ht1 : t ≤ 1), t ≤ t₀ →
+    (h₃₂ : p₃ ≠ p₂) :
+    ∃ t₀ C₀ : ℝ, 0 < t₀ ∧ t₀ ≤ 1 ∧ ∀ t (ht : 0 < t) (ht1 : t ≤ 1), t ≤ t₀ →
       |pieceGreen (D₀.shrink t ht ht1).compl p₁ p₃ -
         pieceGreen (D₀.shrink t ht ht1).compl p₂ p₃| ≤ C₀ := by
   classical
@@ -2863,7 +2863,7 @@ theorem pieceGreen_drift_bound_core (D₀ : CoordDisk M) {p₁ p₂ p₃ : M}
     have hso : IsOpen {z | z ∈ Ω ∧ w z = w xm} := by
       rw [isOpen_iff_mem_nhds]
       rintro z ⟨hzΩ, hzw⟩
-      have hmax' : ∀ u ∈ Ω, w u ≤ w z := fun u hu => (hmax u hu).trans_eq hzw.symm
+      have hmax' : ∀ u ∈ Ω, w u ≤ w z := fun u hu ↦ (hmax u hu).trans_eq hzw.symm
       have hev := MSubharmonicAt.eventually_eq_of_le hΩo hzΩ hwsub hmax'
       filter_upwards [hev, hΩo.mem_nhds hzΩ] with u hu huΩ
       exact ⟨huΩ, hu.trans hzw⟩
@@ -2883,7 +2883,7 @@ theorem pieceGreen_drift_bound_core (D₀ : CoordDisk M) {p₁ p₂ p₃ : M}
       rintro z ⟨⟨-, h1⟩, -, h2⟩
       exact h2 h1
     have hres := hΩc.subset_left_of_subset_union hso hto hdisj hsub ⟨xm, hxm, hxm, rfl⟩
-    exact fun z hz => (hres hz).2
+    exact fun z hz ↦ (hres hz).2
   /- ## Maximum principle on an open set `Ω ≠ univ` with compact exceptional set. -/
   have maxPrin : ∀ (Ω : Set M) (w : M → ℝ) (m : ℝ) (Kc : Set M), IsOpen Ω →
       Ω ≠ Set.univ → MSubharmonicOn w Ω → IsCompact Kc →
@@ -2920,7 +2920,7 @@ theorem pieceGreen_drift_bound_core (D₀ : CoordDisk M) {p₁ p₂ p₃ : M}
     have hCcΩ : connectedComponentIn Ω xm ⊆ Ω := connectedComponentIn_subset _ _
     have hconst := propagate (connectedComponentIn Ω xm) w xm hCco
       isPreconnected_connectedComponentIn hCcx
-      (fun z hz => hwsub z (hCcΩ hz)) (fun z hz => hall z (hCcΩ hz))
+      (fun z hz ↦ hwsub z (hCcΩ hz)) (fun z hz ↦ hall z (hCcΩ hz))
     have hfrne :
         (closure (connectedComponentIn Ω xm) \ connectedComponentIn Ω xm).Nonempty := by
       by_contra hem
@@ -2978,10 +2978,10 @@ theorem pieceGreen_drift_bound_core (D₀ : CoordDisk M) {p₁ p₂ p₃ : M}
       rw [Set.mem_preimage, (chartAt ℂ y).left_inv (mem_chart_source ℂ y)]
       exact hyU
     obtain ⟨ρ, hρ, hρsub⟩ := Metric.isOpen_iff.mp hopen2 _ hmem2
-    have h0 : SubharmonicOn (fun _ : ℂ => (0 : ℝ)) (ball (chartAt ℂ y y) ρ) :=
-      HarmonicOnNhd.subharmonicOn fun z _ => harmonicAt_const 0
-    refine ⟨ρ, hρ, fun z hz => (hρsub hz).1, ?_⟩
-    exact transfer _ _ _ _ h0 subset_rfl fun z hz => (hf0 _ ((hρsub hz).2)).symm
+    have h0 : SubharmonicOn (fun _ : ℂ ↦ (0 : ℝ)) (ball (chartAt ℂ y y) ρ) :=
+      HarmonicOnNhd.subharmonicOn fun z _ ↦ harmonicAt_const 0
+    refine ⟨ρ, hρ, fun z hz ↦ (hρsub hz).1, ?_⟩
+    exact transfer _ _ _ _ h0 subset_rfl fun z hz ↦ (hf0 _ ((hρsub hz).2)).symm
   /- ## Harmonicity at a point respects eventual equality. -/
   have mharm_congr : ∀ (f g : M → ℝ) (y : M), (∀ᶠ z in 𝓝 y, f z = g z) →
       MHarmonicAt f y → MHarmonicAt g y := by
@@ -3035,9 +3035,9 @@ theorem pieceGreen_drift_bound_core (D₀ : CoordDisk M) {p₁ p₂ p₃ : M}
       obtain ⟨r', hr', hr'sub⟩ := Metric.isOpen_iff.mp hopen2 _ hmem2
       refine ⟨r', hr', ?_, ?_⟩
       · rw [hcenter, hct]
-        exact fun w hw => (hr'sub hw).1
+        exact fun w hw ↦ (hr'sub hw).1
       · rw [hcenter, hct]
-        refine transfer _ _ _ _ hsub (fun w hw => (hr'sub hw).2) ?_
+        refine transfer _ _ _ _ hsub (fun w hw ↦ (hr'sub hw).2) ?_
         intro w hw
         simp only [Function.comp_apply]
         rw [← hfg ((e'.subtypeRestr hnety).symm w)]
@@ -3085,12 +3085,12 @@ theorem pieceGreen_drift_bound_core (D₀ : CoordDisk M) {p₁ p₂ p₃ : M}
         exact hUsub hz
   /- ## Affine images of harmonic functions are harmonic. -/
   have mharmAffine : ∀ (g : M → ℝ) (x : M) (a c : ℝ), MHarmonicAt g x →
-      MHarmonicAt (fun y => a * g y + c) x := by
+      MHarmonicAt (fun y ↦ a * g y + c) x := by
     intro g x a c hg
     have h1 : HarmonicAt (g ∘ (chartAt ℂ x).symm) (chartAt ℂ x x) := hg
     have h2 := (h1.const_smul (c := a)).add (harmonicAt_const c)
-    have heq2 : (a • (g ∘ (chartAt ℂ x).symm) + fun _ => c) =
-        (fun y => a * g y + c) ∘ (chartAt ℂ x).symm := by
+    have heq2 : (a • (g ∘ (chartAt ℂ x).symm) + fun _ ↦ c) =
+        (fun y ↦ a * g y + c) ∘ (chartAt ℂ x).symm := by
       funext w
       simp [smul_eq_mul]
     rw [heq2] at h2
@@ -3147,9 +3147,9 @@ theorem pieceGreen_drift_bound_core (D₀ : CoordDisk M) {p₁ p₂ p₃ : M}
       intro hcon
       have hpΩ : p ∈ Ω := by rw [hcon]; trivial
       exact hpΩ.2 hpDh
-    have hΩp : Ω ⊆ {p}ᶜ := fun z hz => Set.mem_compl_singleton_iff.2
-      (fun hcon => hz.2 (hcon ▸ hpDh))
-    apply maxPrin Ω vE m KE hΩopen hΩne (fun z hz => hvsub z (hΩp hz)) hKE
+    have hΩp : Ω ⊆ {p}ᶜ := fun z hz ↦ Set.mem_compl_singleton_iff.2
+      (fun hcon ↦ hz.2 (hcon ▸ hpDh))
+    apply maxPrin Ω vE m KE hΩopen hΩne (fun z hz ↦ hvsub z (hΩp hz)) hKE
     · intro z hz hzK
       rw [hKE0 z hzK]
       exact hm0
@@ -3194,8 +3194,8 @@ theorem pieceGreen_drift_bound_core (D₀ : CoordDisk M) {p₁ p₂ p₃ : M}
           (Set.mem_compl_singleton_iff.2 hznp)), ?_⟩
         exact hcirc z hzΓ
       · -- frontier point off the open set: the candidate vanishes on a neighborhood
-        have hzK : z ∉ KE := fun h => hzW (hKEW h)
-        have hev : vE =ᶠ[𝓝 z] fun _ => (0 : ℝ) := by
+        have hzK : z ∉ KE := fun h ↦ hzW (hKEW h)
+        have hev : vE =ᶠ[𝓝 z] fun _ ↦ (0 : ℝ) := by
           filter_upwards [hKE.isClosed.isOpen_compl.mem_nhds hzK] with q hq
           exact hKE0 q hq
         refine ⟨continuousAt_const.congr_of_eventuallyEq hev, ?_⟩
@@ -3215,11 +3215,11 @@ theorem pieceGreen_drift_bound_core (D₀ : CoordDisk M) {p₁ p₂ p₃ : M}
     exact hy h2
   /- ## The zero function belongs to every piece Green family. -/
   have zeroFam : ∀ (P : Opens M) (p : M) (hp : p ∈ P),
-      (fun _ : ↥P => (0 : ℝ)) ∈ greenFamily (⟨p, hp⟩ : ↥P) := by
+      (fun _ : ↥P ↦ (0 : ℝ)) ∈ greenFamily (⟨p, hp⟩ : ↥P) := by
     intro P p hp
     haveI : Nonempty ↥P := ⟨⟨p, hp⟩⟩
-    refine ⟨fun z _ => (mharmonicAt_const (a := (0 : ℝ))).msubharmonicAt,
-      continuousOn_const, ⟨∅, isCompact_empty, Set.empty_ne_univ, fun z _ => rfl⟩,
+    refine ⟨fun z _ ↦ (mharmonicAt_const (a := (0 : ℝ))).msubharmonicAt,
+      continuousOn_const, ⟨∅, isCompact_empty, Set.empty_ne_univ, fun z _ ↦ rfl⟩,
       ⟨0, ?_⟩⟩
     have hcont : ContinuousAt (poleCoord (⟨p, hp⟩ : ↥P)) (⟨p, hp⟩ : ↥P) := by
       have h1 : ContinuousAt (chartAt ℂ (⟨p, hp⟩ : ↥P)) (⟨p, hp⟩ : ↥P) :=
@@ -3246,7 +3246,7 @@ theorem pieceGreen_drift_bound_core (D₀ : CoordDisk M) {p₁ p₂ p₃ : M}
         ∀ᶠ y in 𝓝[≠] p, vE y + Real.log ‖poleCoord p y‖ ≤ Cv := by
     intro P p hp v hv
     obtain ⟨hvsub, hvcont, ⟨K, hKcomp, -, hKzero⟩, ⟨C, hC⟩⟩ := hv
-    set w : M → ℝ := fun y => if h : y ∈ P then v ⟨y, h⟩ else 0 with hwdef
+    set w : M → ℝ := fun y ↦ if h : y ∈ P then v ⟨y, h⟩ else 0 with hwdef
     have hwval : ∀ z : ↥P, w z = v z := by
       intro z
       simp only [hwdef]
@@ -3273,7 +3273,7 @@ theorem pieceGreen_drift_bound_core (D₀ : CoordDisk M) {p₁ p₂ p₃ : M}
       by_cases hyP : y ∈ P
       · have hoe : IsOpenEmbedding (Subtype.val : ↥P → M) :=
           P.2.isOpenEmbedding_subtypeVal
-        have hnz : (⟨y, hyP⟩ : ↥P) ≠ ⟨p, hp⟩ := fun hcon =>
+        have hnz : (⟨y, hyP⟩ : ↥P) ≠ ⟨p, hp⟩ := fun hcon ↦
           (Set.mem_compl_singleton_iff.mp hy) (congrArg Subtype.val hcon)
         have hvat : ContinuousAt v (⟨y, hyP⟩ : ↥P) :=
           hvcont.continuousAt (isOpen_compl_singleton.mem_nhds
@@ -3281,27 +3281,27 @@ theorem pieceGreen_drift_bound_core (D₀ : CoordDisk M) {p₁ p₂ p₃ : M}
         have h1 : Tendsto (w ∘ Subtype.val) (𝓝 (⟨y, hyP⟩ : ↥P)) (𝓝 (w y)) := by
           have h2 : w y = v ⟨y, hyP⟩ := hwval ⟨y, hyP⟩
           rw [h2]
-          exact Filter.Tendsto.congr (fun u => (hwval u).symm) hvat
+          exact Filter.Tendsto.congr (fun u ↦ (hwval u).symm) hvat
         have h4 : Filter.map (Subtype.val : ↥P → M) (𝓝 (⟨y, hyP⟩ : ↥P)) = 𝓝 y :=
           hoe.map_nhds_eq ⟨y, hyP⟩
         have h5 : Tendsto w (𝓝 y) (𝓝 (w y)) := by
           rw [← h4, Filter.tendsto_map'_iff]
           exact h1
         exact h5
-      · have hev : w =ᶠ[𝓝 y] fun _ => (0 : ℝ) := by
+      · have hev : w =ᶠ[𝓝 y] fun _ ↦ (0 : ℝ) := by
           filter_upwards [hKwcl.isOpen_compl.mem_nhds
-            (fun hmem => hyP (hKwsub hmem))] with u hu
+            (fun hmem ↦ hyP (hKwsub hmem))] with u hu
           exact hKwzero u hu
         exact continuousAt_const.congr_of_eventuallyEq hev
     have hwsub : MSubharmonicOn w {p}ᶜ := by
       intro y hy
       by_cases hyP : y ∈ P
-      · have hnz : (⟨y, hyP⟩ : ↥P) ≠ ⟨p, hp⟩ := fun hcon =>
+      · have hnz : (⟨y, hyP⟩ : ↥P) ≠ ⟨p, hp⟩ := fun hcon ↦
           (Set.mem_compl_singleton_iff.mp hy) (congrArg Subtype.val hcon)
         exact (msub_val P w v hwval ⟨y, hyP⟩).mpr
           (hvsub ⟨y, hyP⟩ (Set.mem_compl_singleton_iff.mpr hnz))
       · exact msub_zero w Kwᶜ y hKwcl.isOpen_compl
-          (fun hmem => hyP (hKwsub hmem)) (fun z hz => hKwzero z hz)
+          (fun hmem ↦ hyP (hKwsub hmem)) (fun z hz ↦ hKwzero z hz)
     refine ⟨w, Kw, C, hwval, hwsub, hwcont, hKwcomp, hKwsub, hKwzero, ?_⟩
     rw [← mapval P p hp, Filter.eventually_map]
     filter_upwards [hC] with z hz
@@ -3318,9 +3318,9 @@ theorem pieceGreen_drift_bound_core (D₀ : CoordDisk M) {p₁ p₂ p₃ : M}
     have h1 := (mharmonicOn_greenEnvelope hGF).1
     have h2 : MHarmonicAt (greenEnvelope (⟨p, hp⟩ : ↥P)) ⟨y, hy⟩ :=
       h1 _ (Set.mem_compl_singleton_iff.mpr
-        (fun hcon => hyp (congrArg Subtype.val hcon)))
+        (fun hcon ↦ hyp (congrArg Subtype.val hcon)))
     exact (mharm_val P (pieceGreen P p) (greenEnvelope (⟨p, hp⟩ : ↥P))
-      (fun z => pgval P p hp z z.2) ⟨y, hy⟩).mpr h2
+      (fun z ↦ pgval P p hp z z.2) ⟨y, hy⟩).mpr h2
   /- ## Growth estimate ([M] (5)): a candidate gains at most `log 2` from the
   pole circle to the half circle, by the `ε`-excised annulus maximum principle. -/
   have growth : ∀ (p : M) (rr : ℝ), 0 < rr →
@@ -3337,7 +3337,7 @@ theorem pieceGreen_drift_bound_core (D₀ : CoordDisk M) {p₁ p₂ p₃ : M}
     have hpsrc : p ∈ ep.source := mem_chart_source ℂ p
     have hcptgt : cp ∈ ep.target := by rw [hcp]; exact ep.map_source hpsrc
     have hsymcp : ep.symm cp = p := by rw [hcp]; exact ep.left_inv hpsrc
-    have hsphtgt : ∀ ρ : ℝ, ρ ≤ rr → sphere cp ρ ⊆ ep.target := fun ρ hρ =>
+    have hsphtgt : ∀ ρ : ℝ, ρ ≤ rr → sphere cp ρ ⊆ ep.target := fun ρ hρ ↦
       sphere_subset_closedBall.trans ((closedBall_subset_closedBall hρ).trans htgt)
     obtain ⟨wy, hwy, hwyy⟩ := hyΓ
     have hwyt : wy ∈ ep.target := hsphtgt _ (by linarith only [hrr]) hwy
@@ -3424,40 +3424,40 @@ theorem pieceGreen_drift_bound_core (D₀ : CoordDisk M) {p₁ p₂ p₃ : M}
       ((isCompact_closedBall cp rr).diff isOpen_ball).image_of_continuousOn
         (ep.continuousOn_symm.mono (Set.diff_subset.trans htgt))
     have hΩσKσ : Ωσ ⊆ Kσ :=
-      Set.image_mono (fun w hw => ⟨ball_subset_closedBall hw.1,
-        fun h => hw.2 (ball_subset_closedBall h)⟩)
+      Set.image_mono (fun w hw ↦ ⟨ball_subset_closedBall hw.1,
+        fun h ↦ hw.2 (ball_subset_closedBall h)⟩)
     -- harmonicity and continuity of the logarithmic barrier
     have hepatlas : ep ∈ IsManifold.maximalAtlas 𝓘(ℂ) ω M := by
       rw [hep]
       exact IsManifold.chart_mem_maximalAtlas p
     have hbharm : ∀ z : M, z ∈ ep.source → ep z ≠ cp →
-        MHarmonicAt (fun q => Real.log (dist (ep q) cp)) z := by
+        MHarmonicAt (fun q ↦ Real.log (dist (ep q) cp)) z := by
       intro z hzs hzne
-      have h1 : MHarmonicAt (fun q => Real.log (dist (ep q) cp)) z ↔
-          HarmonicAt ((fun q => Real.log (dist (ep q) cp)) ∘ ep.symm) (ep z) :=
+      have h1 : MHarmonicAt (fun q ↦ Real.log (dist (ep q) cp)) z ↔
+          HarmonicAt ((fun q ↦ Real.log (dist (ep q) cp)) ∘ ep.symm) (ep z) :=
         mharmonicAt_iff_of_mem_maximalAtlas hepatlas hzs
       rw [h1]
-      have hharm : HarmonicAt (fun w : ℂ => Real.log ‖w - cp‖) (ep z) := by
-        apply AnalyticAt.harmonicAt_log_norm (f := fun w : ℂ => w - cp)
+      have hharm : HarmonicAt (fun w : ℂ ↦ Real.log ‖w - cp‖) (ep z) := by
+        apply AnalyticAt.harmonicAt_log_norm (f := fun w : ℂ ↦ w - cp)
         · exact analyticAt_id.sub analyticAt_const
         · exact sub_ne_zero.2 hzne
-      have heqv : (fun w : ℂ => Real.log ‖w - cp‖) =ᶠ[𝓝 (ep z)]
-          ((fun q => Real.log (dist (ep q) cp)) ∘ ep.symm) := by
+      have heqv : (fun w : ℂ ↦ Real.log ‖w - cp‖) =ᶠ[𝓝 (ep z)]
+          ((fun q ↦ Real.log (dist (ep q) cp)) ∘ ep.symm) := by
         filter_upwards [ep.open_target.mem_nhds (ep.map_source hzs)] with w hw
         simp only [Function.comp_apply, ep.right_inv hw, dist_eq_norm]
       exact (harmonicAt_congr_nhds heqv).1 hharm
     have hbcont : ∀ z : M, z ∈ ep.source → ep z ≠ cp →
-        ContinuousAt (fun q => Real.log (dist (ep q) cp)) z := by
+        ContinuousAt (fun q ↦ Real.log (dist (ep q) cp)) z := by
       intro z hzs hzne
       have h2 : ContinuousAt ep z := ep.continuousAt hzs
       have h3 : dist (ep z) cp ≠ 0 := (dist_pos.2 hzne).ne'
       exact (h2.dist continuousAt_const).log h3
-    have hvCA : ∀ z : M, z ≠ p → ContinuousAt vE z := fun z hz =>
+    have hvCA : ∀ z : M, z ≠ p → ContinuousAt vE z := fun z hz ↦
       hvcont.continuousAt (isOpen_compl_singleton.mem_nhds
         (Set.mem_compl_singleton_iff.2 hz))
     -- the competitor and its subharmonicity
     set Wf : M → ℝ :=
-      fun q => vE q + (1 + ε) * (Real.log (dist (ep q) cp) - Real.log rr) with hWf
+      fun q ↦ vE q + (1 + ε) * (Real.log (dist (ep q) cp) - Real.log rr) with hWf
     have hWfsub : MSubharmonicOn Wf Ωσ := by
       intro z hz
       obtain ⟨hz1, hz2, hz3⟩ := hΩσmem z hz
@@ -3470,10 +3470,10 @@ theorem pieceGreen_drift_bound_core (D₀ : CoordDisk M) {p₁ p₂ p₃ : M}
         rw [hcon, ← hcp] at hzne
         exact hzne rfl
       have hu : MHarmonicAt
-          (fun q => (-(1 + ε)) * Real.log (dist (ep q) cp) + (1 + ε) * Real.log rr)
+          (fun q ↦ (-(1 + ε)) * Real.log (dist (ep q) cp) + (1 + ε) * Real.log rr)
           z := mharmAffine _ z _ _ (hbharm z hz1 hzne)
       have h7 := (hvsub z (Set.mem_compl_singleton_iff.mpr hznep)).sub_mharmonicAt hu
-      have h9 : Wf = fun q => vE q -
+      have h9 : Wf = fun q ↦ vE q -
           ((-(1 + ε)) * Real.log (dist (ep q) cp) + (1 + ε) * Real.log rr) := by
         funext q
         simp only [hWf]
@@ -3490,7 +3490,7 @@ theorem pieceGreen_drift_bound_core (D₀ : CoordDisk M) {p₁ p₂ p₃ : M}
       have hzval : ep z = w := by rw [← hwz, ep.right_inv hwt]
       have hzd1 : σ ≤ dist (ep z) cp := by
         rw [hzval]
-        exact not_lt.1 (fun h => hw2 (mem_ball.2 h))
+        exact not_lt.1 (fun h ↦ hw2 (mem_ball.2 h))
       have hzd2 : dist (ep z) cp ≤ rr := by rw [hzval]; exact mem_closedBall.1 hw1
       have hzne : ep z ≠ cp := by
         intro hcon
@@ -3620,7 +3620,7 @@ theorem pieceGreen_drift_bound_core (D₀ : CoordDisk M) {p₁ p₂ p₃ : M}
       obtain ⟨-, -, hnep2, hP2⟩ := hΓread (rr / 2) (by linarith only [hrr])
         (by linarith only [hrr]) xin hxinΓ
       rw [hMt, pgval P p hp xin hP2]
-      exact greenEnvelope_pos hGF _ (fun hcon => hnep2 (congrArg Subtype.val hcon))
+      exact greenEnvelope_pos hGF _ (fun hcon ↦ hnep2 (congrArg Subtype.val hcon))
     -- per-candidate circle bounds against the envelope maxima
     have hcircGen : ∀ (ρ : ℝ) (hρ0 : 0 < ρ) (hρrr : ρ ≤ rr) (xm : M)
         (hxm : IsMaxOn (pieceGreen P p) (ep.symm '' sphere cp ρ) xm)
@@ -3631,7 +3631,7 @@ theorem pieceGreen_drift_bound_core (D₀ : CoordDisk M) {p₁ p₂ p₃ : M}
       obtain ⟨-, -, hznep, hzP⟩ := hΓread ρ hρ0 hρrr z hz
       calc vE z = v ⟨z, hzP⟩ := hvEval ⟨z, hzP⟩
         _ ≤ greenEnvelope (⟨p, hp⟩ : ↥P) ⟨z, hzP⟩ :=
-            le_csSup (hBdd _ (fun hcon => hznep (congrArg Subtype.val hcon)))
+            le_csSup (hBdd _ (fun hcon ↦ hznep (congrArg Subtype.val hcon)))
               ⟨v, hv, rfl⟩
         _ = pieceGreen P p z := (pgval P p hp z hzP).symm
         _ ≤ pieceGreen P p xm := hxm hz
@@ -3642,7 +3642,7 @@ theorem pieceGreen_drift_bound_core (D₀ : CoordDisk M) {p₁ p₂ p₃ : M}
       have hyP : y ∈ P := hy.1
       rw [pgval P p hp y hyP]
       simp only [greenEnvelope]
-      refine csSup_le ⟨0, (fun _ : ↥P => (0 : ℝ)), zeroFam P p hp, rfl⟩ ?_
+      refine csSup_le ⟨0, (fun _ : ↥P ↦ (0 : ℝ)), zeroFam P p hp, rfl⟩ ?_
       rintro b ⟨v, hv, rfl⟩
       obtain ⟨vE, KE, Cv, hvEval, hvEsub, hvEcont, hKEc, hKEP, hKE0, hCv⟩ :=
         extendC P p hp v hv
@@ -3661,7 +3661,7 @@ theorem pieceGreen_drift_bound_core (D₀ : CoordDisk M) {p₁ p₂ p₃ : M}
         (by linarith only [hrr]) y hy
       rw [pgval P p hp y hyP]
       simp only [greenEnvelope]
-      refine csSup_le ⟨0, (fun _ : ↥P => (0 : ℝ)), zeroFam P p hp, rfl⟩ ?_
+      refine csSup_le ⟨0, (fun _ : ↥P ↦ (0 : ℝ)), zeroFam P p hp, rfl⟩ ?_
       rintro b ⟨v, hv, rfl⟩
       obtain ⟨vE, KE, Cv, hvEval, hvEsub, hvEcont, hKEc, hKEP, hKE0, hCv⟩ :=
         extendC P p hp v hv
@@ -3706,13 +3706,13 @@ theorem pieceGreen_drift_bound_core (D₀ : CoordDisk M) {p₁ p₂ p₃ : M}
     have hpahalf : pa ∈ (chartAt ℂ pa).symm '' closedBall (chartAt ℂ pa pa) (ra / 2) :=
       ⟨chartAt ℂ pa pa, mem_closedBall_self (by linarith only [hra]),
         (chartAt ℂ pa).left_inv (mem_chart_source ℂ pa)⟩
-    set u : M → ℝ := fun q => Nt + Real.log 2 - pieceGreen P pa q with hu
+    set u : M → ℝ := fun q ↦ Nt + Real.log 2 - pieceGreen P pa q with hu
     have huharm : MHarmonicOn u ΩA := by
       intro q hq
-      have hqnepa : q ≠ pa := fun hcon => hΩA2 q hq (hcon ▸ hpahalf)
+      have hqnepa : q ≠ pa := fun hcon ↦ hΩA2 q hq (hcon ▸ hpahalf)
       have h1 : MHarmonicAt (pieceGreen P pa) q :=
         pgharm P pa hpaP hcs hnc hGFa q (hΩA1 q hq) hqnepa
-      refine mharm_congr _ _ q (Filter.Eventually.of_forall fun y => ?_)
+      refine mharm_congr _ _ q (Filter.Eventually.of_forall fun y ↦ ?_)
         (mharmAffine _ q (-1) (Nt + Real.log 2) h1)
       simp only [hu]
       ring
@@ -3761,7 +3761,7 @@ theorem pieceGreen_drift_bound_core (D₀ : CoordDisk M) {p₁ p₂ p₃ : M}
       exact ⟨hp₁, Set.mem_compl_singleton_iff.2 hne,
         Set.mem_compl_singleton_iff.2 (Ne.symm h₃₁)⟩
     obtain ⟨S, hS0, hSsub⟩ := nhds_basis_closedBall.mem_iff.1 (hopen.mem_nhds hmem)
-    refine ⟨S, hS0, fun w hw => (hSsub hw).1, fun w hw => ?_⟩
+    refine ⟨S, hS0, fun w hw ↦ (hSsub hw).1, fun w hw ↦ ?_⟩
     have h2 := (hSsub hw).2
     rw [Set.mem_preimage] at h2
     exact ⟨h2.1, Set.mem_compl_singleton_iff.1 h2.2.1,
@@ -3793,10 +3793,10 @@ theorem pieceGreen_drift_bound_core (D₀ : CoordDisk M) {p₁ p₂ p₃ : M}
         e₂.symm ⁻¹' (D₀.closedCarrierᶜ ∩ (Car1ᶜ ∩ {p₃}ᶜ)) := by
       refine ⟨by rw [hc₂]; exact e₂.map_source hp₂src, ?_⟩
       rw [Set.mem_preimage, hc₂, e₂.left_inv hp₂src]
-      exact ⟨hp₂, fun hmem2 => (hCar1av p₂ hmem2).2.1 rfl,
+      exact ⟨hp₂, fun hmem2 ↦ (hCar1av p₂ hmem2).2.1 rfl,
         Set.mem_compl_singleton_iff.2 (Ne.symm h₃₂)⟩
     obtain ⟨S, hS0, hSsub⟩ := nhds_basis_closedBall.mem_iff.1 (hopen.mem_nhds hmem)
-    refine ⟨S, hS0, fun w hw => (hSsub hw).1, fun w hw => ?_⟩
+    refine ⟨S, hS0, fun w hw ↦ (hSsub hw).1, fun w hw ↦ ?_⟩
     have h2 := (hSsub hw).2
     rw [Set.mem_preimage] at h2
     exact ⟨h2.1, h2.2.1, Set.mem_compl_singleton_iff.1 h2.2.2⟩
@@ -3935,8 +3935,8 @@ theorem pieceGreen_drift_bound_core (D₀ : CoordDisk M) {p₁ p₂ p₃ : M}
     rw [h1, h2]
     exact Set.image_mono (closedBall_subset_closedBall
       (mul_le_of_le_one_left D₀.radius_pos.le ht1))
-  have hp₁t : p₁ ∈ Pt := fun hmem => hp₁ (hcarsubt hmem)
-  have hp₂t : p₂ ∈ Pt := fun hmem => hp₂ (hcarsubt hmem)
+  have hp₁t : p₁ ∈ Pt := fun hmem ↦ hp₁ (hcarsubt hmem)
+  have hp₂t : p₂ ∈ Pt := fun hmem ↦ hp₂ (hcarsubt hmem)
   haveI hconnT : ConnectedSpace ↥Pt :=
     isConnected_iff_connectedSpace.mp (isConnected_coordDisk_compl _)
   haveI hncT : NoncompactSpace ↥Pt := noncompactSpace_coordDisk_compl _
@@ -3976,7 +3976,7 @@ theorem pieceGreen_drift_bound_core (D₀ : CoordDisk M) {p₁ p₂ p₃ : M}
   /- ## Symmetry of the piece Green's function at the two poles. -/
   have hsymm : pieceGreen Pt p₁ p₂ = pieceGreen Pt p₂ p₁ := by
     rw [pgval Pt p₁ hp₁t p₂ hp₂t, pgval Pt p₂ hp₂t p₁ hp₁t]
-    exact greenEnvelope_symm hGF1t (fun hcon => hne (congrArg Subtype.val hcon))
+    exact greenEnvelope_symm hGF1t (fun hcon ↦ hne (congrArg Subtype.val hcon))
   /- ## Assembly: the cross terms cancel by symmetry. -/
   have h1 := abs_le.1 osc1
   have h2 := abs_le.1 osc2
@@ -3993,7 +3993,7 @@ theorem exists_pieceGreen_drift_bound (D₀ : CoordDisk M) {p₁ p₂ p₃ : M}
     (hp₁ : p₁ ∉ D₀.closedCarrier) (hp₂ : p₂ ∉ D₀.closedCarrier)
     (hp₃ : p₃ ∉ D₀.closedCarrier) (hne : p₁ ≠ p₂) (h₃₁ : p₃ ≠ p₁)
     (h₃₂ : p₃ ≠ p₂) :
-    ∃ C, ∀ t (ht : 0 < t) (ht1 : t ≤ 1),
+    ∃ C : ℝ, ∀ t (ht : 0 < t) (ht1 : t ≤ 1),
       |pieceGreen (D₀.shrink t ht ht1).compl p₁ p₃ -
         pieceGreen (D₀.shrink t ht ht1).compl p₂ p₃| ≤ C := by
   classical
@@ -4072,10 +4072,10 @@ theorem exists_pieceGreen_drift_bound (D₀ : CoordDisk M) {p₁ p₂ p₃ : M}
       rw [Set.mem_preimage, (chartAt ℂ y).left_inv (mem_chart_source ℂ y)]
       exact hyU
     obtain ⟨ρ, hρ, hρsub⟩ := Metric.isOpen_iff.mp hopen2 _ hmem2
-    have h0 : SubharmonicOn (fun _ : ℂ => (0 : ℝ)) (ball (chartAt ℂ y y) ρ) :=
-      HarmonicOnNhd.subharmonicOn fun z _ => harmonicAt_const 0
-    refine ⟨ρ, hρ, fun z hz => (hρsub hz).1, ?_⟩
-    exact transfer _ _ _ _ h0 subset_rfl fun z hz => (hf0 _ ((hρsub hz).2)).symm
+    have h0 : SubharmonicOn (fun _ : ℂ ↦ (0 : ℝ)) (ball (chartAt ℂ y y) ρ) :=
+      HarmonicOnNhd.subharmonicOn fun z _ ↦ harmonicAt_const 0
+    refine ⟨ρ, hρ, fun z hz ↦ (hρsub hz).1, ?_⟩
+    exact transfer _ _ _ _ h0 subset_rfl fun z hz ↦ (hf0 _ ((hρsub hz).2)).symm
   /- ## Subharmonicity at a point transfers between the surface and a piece. -/
   have msub_val : ∀ (P : Opens M) (f : M → ℝ) (g : ↥P → ℝ),
       (∀ z : ↥P, f z = g z) →
@@ -4103,9 +4103,9 @@ theorem exists_pieceGreen_drift_bound (D₀ : CoordDisk M) {p₁ p₂ p₃ : M}
       obtain ⟨r', hr', hr'sub⟩ := Metric.isOpen_iff.mp hopen2 _ hmem2
       refine ⟨r', hr', ?_, ?_⟩
       · rw [hcenter, hct]
-        exact fun w hw => (hr'sub hw).1
+        exact fun w hw ↦ (hr'sub hw).1
       · rw [hcenter, hct]
-        refine transfer _ _ _ _ hsub (fun w hw => (hr'sub hw).2) ?_
+        refine transfer _ _ _ _ hsub (fun w hw ↦ (hr'sub hw).2) ?_
         intro w hw
         simp only [Function.comp_apply]
         rw [← hfg ((e'.subtypeRestr hnem).symm w)]
@@ -4155,11 +4155,11 @@ theorem exists_pieceGreen_drift_bound (D₀ : CoordDisk M) {p₁ p₂ p₃ : M}
         exact hUsub hz
   /- ## The zero function belongs to the Green's family of a piece. -/
   have hbaseP : ∀ (P : Opens M) (p : M) (hpP : p ∈ P),
-      (fun _ : ↥P => (0 : ℝ)) ∈ greenFamily (⟨p, hpP⟩ : ↥P) := by
+      (fun _ : ↥P ↦ (0 : ℝ)) ∈ greenFamily (⟨p, hpP⟩ : ↥P) := by
     intro P p hpP
     haveI : Nonempty ↥P := ⟨⟨p, hpP⟩⟩
-    refine ⟨fun x _ => mharmonicAt_const.msubharmonicAt, continuousOn_const,
-      ⟨∅, isCompact_empty, Set.empty_ne_univ, fun x _ => rfl⟩, ⟨0, ?_⟩⟩
+    refine ⟨fun x _ ↦ mharmonicAt_const.msubharmonicAt, continuousOn_const,
+      ⟨∅, isCompact_empty, Set.empty_ne_univ, fun x _ ↦ rfl⟩, ⟨0, ?_⟩⟩
     set q₀ : ↥P := ⟨p, hpP⟩ with hq₀
     have hpc : ContinuousAt (poleCoord q₀) q₀ := by
       have h1 : ContinuousAt (chartAt ℂ q₀) q₀ :=
@@ -4174,11 +4174,11 @@ theorem exists_pieceGreen_drift_bound (D₀ : CoordDisk M) {p₁ p₂ p₃ : M}
       Real.log_nonpos (norm_nonneg _) hx1.le
     simpa using h6
   /- ## The zero function belongs to the Green's family of the surface. -/
-  have hbaseM : ∀ p : M, (fun _ : M => (0 : ℝ)) ∈ greenFamily p := by
+  have hbaseM : ∀ p : M, (fun _ : M ↦ (0 : ℝ)) ∈ greenFamily p := by
     intro p
     haveI : Nonempty M := ⟨p⟩
-    refine ⟨fun x _ => mharmonicAt_const.msubharmonicAt, continuousOn_const,
-      ⟨∅, isCompact_empty, Set.empty_ne_univ, fun x _ => rfl⟩, ⟨0, ?_⟩⟩
+    refine ⟨fun x _ ↦ mharmonicAt_const.msubharmonicAt, continuousOn_const,
+      ⟨∅, isCompact_empty, Set.empty_ne_univ, fun x _ ↦ rfl⟩, ⟨0, ?_⟩⟩
     have hpc : ContinuousAt (poleCoord p) p := by
       have h1 : ContinuousAt (chartAt ℂ p) p :=
         (chartAt ℂ p).continuousAt (mem_chart_source ℂ p)
@@ -4195,7 +4195,7 @@ theorem exists_pieceGreen_drift_bound (D₀ : CoordDisk M) {p₁ p₂ p₃ : M}
   have hEnvB : ∀ t (ht : 0 < t) (ht1 : t ≤ 1) (p : M)
       (hpW : p ∈ (D₀.shrink t ht ht1).compl)
       (z : ↥(D₀.shrink t ht ht1).compl), z ≠ ⟨p, hpW⟩ →
-      BddAbove ((fun v => v z) ''
+      BddAbove ((fun v ↦ v z) ''
         greenFamily (⟨p, hpW⟩ : ↥(D₀.shrink t ht ht1).compl)) := by
     intro t ht ht1 p hpW z hz
     haveI : ConnectedSpace ↥(D₀.shrink t ht ht1).compl :=
@@ -4217,7 +4217,7 @@ theorem exists_pieceGreen_drift_bound (D₀ : CoordDisk M) {p₁ p₂ p₃ : M}
         ∃ Kw : Set M, IsCompact Kw ∧ Kw ⊆ (P : Set M) ∧ ∀ y, y ∉ Kw → w y = 0 := by
     intro P hPne p hpP v hv
     obtain ⟨hvsub, hvcont, ⟨K, hKcomp, -, hKzero⟩, ⟨C, hC⟩⟩ := hv
-    set w : M → ℝ := fun y => if h : y ∈ P then v ⟨y, h⟩ else 0 with hwdef
+    set w : M → ℝ := fun y ↦ if h : y ∈ P then v ⟨y, h⟩ else 0 with hwdef
     have hwval : ∀ z : ↥P, w z = v z := by
       intro z
       simp only [hwdef]
@@ -4250,7 +4250,7 @@ theorem exists_pieceGreen_drift_bound (D₀ : CoordDisk M) {p₁ p₂ p₃ : M}
       by_cases hyP : y ∈ P
       · have hoe : IsOpenEmbedding (Subtype.val : ↥P → M) :=
           P.2.isOpenEmbedding_subtypeVal
-        have hnz : (⟨y, hyP⟩ : ↥P) ≠ ⟨p, hpP⟩ := fun hcon =>
+        have hnz : (⟨y, hyP⟩ : ↥P) ≠ ⟨p, hpP⟩ := fun hcon ↦
           (Set.mem_compl_singleton_iff.mp hy) (congrArg Subtype.val hcon)
         have hvat : ContinuousAt v (⟨y, hyP⟩ : ↥P) :=
           hvcont.continuousAt (isOpen_compl_singleton.mem_nhds
@@ -4258,27 +4258,27 @@ theorem exists_pieceGreen_drift_bound (D₀ : CoordDisk M) {p₁ p₂ p₃ : M}
         have h1 : Tendsto (w ∘ Subtype.val) (𝓝 (⟨y, hyP⟩ : ↥P)) (𝓝 (w y)) := by
           have h2 : w y = v ⟨y, hyP⟩ := hwval ⟨y, hyP⟩
           rw [h2]
-          exact Filter.Tendsto.congr (fun u => (hwval u).symm) hvat
+          exact Filter.Tendsto.congr (fun u ↦ (hwval u).symm) hvat
         have h4 : Filter.map (Subtype.val : ↥P → M) (𝓝 (⟨y, hyP⟩ : ↥P)) =
             𝓝 y := hoe.map_nhds_eq ⟨y, hyP⟩
         have h5 : Tendsto w (𝓝 y) (𝓝 (w y)) := by
           rw [← h4, Filter.tendsto_map'_iff]
           exact h1
         exact h5
-      · have hev : w =ᶠ[𝓝 y] fun _ => (0 : ℝ) := by
+      · have hev : w =ᶠ[𝓝 y] fun _ ↦ (0 : ℝ) := by
           filter_upwards [hKwcl.isOpen_compl.mem_nhds
-            (fun hmem => hyP (hKwsub hmem))] with u hu
+            (fun hmem ↦ hyP (hKwsub hmem))] with u hu
           exact hKwzero u hu
         exact continuousAt_const.congr_of_eventuallyEq hev
     have hwsub : MSubharmonicOn w {p}ᶜ := by
       intro y hy
       by_cases hyP : y ∈ P
-      · have hnz : (⟨y, hyP⟩ : ↥P) ≠ ⟨p, hpP⟩ := fun hcon =>
+      · have hnz : (⟨y, hyP⟩ : ↥P) ≠ ⟨p, hpP⟩ := fun hcon ↦
           (Set.mem_compl_singleton_iff.mp hy) (congrArg Subtype.val hcon)
         exact (msub_val P w v hwval ⟨y, hyP⟩).mpr
           (hvsub ⟨y, hyP⟩ (Set.mem_compl_singleton_iff.mpr hnz))
       · exact msub_zero w Kwᶜ y hKwcl.isOpen_compl
-          (fun hmem => hyP (hKwsub hmem)) (fun z hz => hKwzero z hz)
+          (fun hmem ↦ hyP (hKwsub hmem)) (fun z hz ↦ hKwzero z hz)
     have hwpole : ∃ C', ∀ᶠ y' in 𝓝[≠] p,
         w y' + Real.log ‖poleCoord p y'‖ ≤ C' := by
       refine ⟨C, ?_⟩
@@ -4296,13 +4296,13 @@ theorem exists_pieceGreen_drift_bound (D₀ : CoordDisk M) {p₁ p₂ p₃ : M}
       MSubharmonicOn w {p}ᶜ → ContinuousOn w {p}ᶜ →
       IsCompact Kw → Kw ⊆ (P : Set M) → (∀ y, y ∉ Kw → w y = 0) →
       (∃ C, ∀ᶠ y' in 𝓝[≠] p, w y' + Real.log ‖poleCoord p y'‖ ≤ C) →
-      (fun z : ↥P => w z) ∈ greenFamily (⟨p, hpP⟩ : ↥P) := by
+      (fun z : ↥P ↦ w z) ∈ greenFamily (⟨p, hpP⟩ : ↥P) := by
     intro P hnc p hpP w Kw hwsub hwcont hKwcomp hKwsub hKwzero hwpole
     haveI := hnc
     have hKpre : IsCompact (Subtype.val ⁻¹' Kw : Set ↥P) := by
       haveI : CompactSpace ↥Kw := isCompact_iff_compactSpace.mp hKwcomp
       have himgK : (Subtype.val ⁻¹' Kw : Set ↥P) =
-          (fun z : ↥Kw => (⟨z.1, hKwsub z.2⟩ : ↥P)) '' Set.univ := by
+          (fun z : ↥Kw ↦ (⟨z.1, hKwsub z.2⟩ : ↥P)) '' Set.univ := by
         ext z
         constructor
         · intro hz
@@ -4311,14 +4311,14 @@ theorem exists_pieceGreen_drift_bound (D₀ : CoordDisk M) {p₁ p₂ p₃ : M}
           exact u.2
       rw [himgK]
       exact isCompact_univ.image (continuous_subtype_val.subtype_mk _)
-    refine ⟨?_, ?_, ⟨Subtype.val ⁻¹' Kw, hKpre, ?_, fun z hz => hKwzero z hz⟩, ?_⟩
+    refine ⟨?_, ?_, ⟨Subtype.val ⁻¹' Kw, hKpre, ?_, fun z hz ↦ hKwzero z hz⟩, ?_⟩
     · intro z hz
-      have hzp : (z : M) ≠ p := fun hcon =>
+      have hzp : (z : M) ≠ p := fun hcon ↦
         (Set.mem_compl_singleton_iff.mp hz) (Subtype.ext hcon)
-      exact (msub_val P w _ (fun _ => rfl) z).mp
+      exact (msub_val P w _ (fun _ ↦ rfl) z).mp
         (hwsub z (Set.mem_compl_singleton_iff.mpr hzp))
     · intro z hz
-      have hzp : (z : M) ≠ p := fun hcon =>
+      have hzp : (z : M) ≠ p := fun hcon ↦
         (Set.mem_compl_singleton_iff.mp hz) (Subtype.ext hcon)
       have h1 : ContinuousAt w (z : M) :=
         hwcont.continuousAt (isOpen_compl_singleton.mem_nhds hzp)
@@ -4346,7 +4346,7 @@ theorem exists_pieceGreen_drift_bound (D₀ : CoordDisk M) {p₁ p₂ p₃ : M}
     have hxW := hWmem t ht ht1 hx
     rw [hPG _ p x hpW hxW]
     have hzx : (⟨x, hxW⟩ : ↥(D₀.shrink t ht ht1).compl) ≠ ⟨p, hpW⟩ :=
-      fun hcon => hxp (congrArg Subtype.val hcon)
+      fun hcon ↦ hxp (congrArg Subtype.val hcon)
     simp only [greenEnvelope]
     exact le_csSup (hEnvB t ht ht1 p hpW ⟨x, hxW⟩ hzx) ⟨_, hbaseP _ p hpW, rfl⟩
   /- ## Monotonicity of the piece Green's function under shrinking. -/
@@ -4363,12 +4363,12 @@ theorem exists_pieceGreen_drift_bound (D₀ : CoordDisk M) {p₁ p₂ p₃ : M}
     rw [hPG _ p x hpW hxW, hPG _ p x hpW' hxW']
     simp only [greenEnvelope]
     have hzx' : (⟨x, hxW'⟩ : ↥(D₀.shrink t' ht' ht1').compl) ≠ ⟨p, hpW'⟩ :=
-      fun hcon => hxp (congrArg Subtype.val hcon)
+      fun hcon ↦ hxp (congrArg Subtype.val hcon)
     refine Real.sSup_le ?_ ?_
     · rintro a ⟨v, hv, rfl⟩
       obtain ⟨w, hwfam, hwval, Kw, hKwc, hKws, hKw0⟩ :=
         brickE _ (hWne t ht ht1) p hpW v hv
-      have hwmem' : (fun z : ↥(D₀.shrink t' ht' ht1').compl => w z) ∈
+      have hwmem' : (fun z : ↥(D₀.shrink t' ht' ht1').compl ↦ w z) ∈
           greenFamily (⟨p, hpW'⟩ : ↥(D₀.shrink t' ht' ht1').compl) :=
         brickR _ (noncompactSpace_coordDisk_compl _) p hpW' w Kw hwfam.1
           hwfam.2.1 hKwc (hKws.trans (hWsub t t' ht ht1 ht' ht1' htt)) hKw0
@@ -4380,7 +4380,7 @@ theorem exists_pieceGreen_drift_bound (D₀ : CoordDisk M) {p₁ p₂ p₃ : M}
         ⟨_, hbaseP _ p hpW', rfl⟩
   /- ## Hyperbolic bound: the ambient envelope dominates every piece. -/
   have hPGle : ∀ (p x : M), p ∉ D₀.closedCarrier → x ∉ D₀.closedCarrier →
-      BddAbove ((fun v => v x) '' greenFamily p) →
+      BddAbove ((fun v ↦ v x) '' greenFamily p) →
       ∀ t (ht : 0 < t) (ht1 : t ≤ 1),
       pieceGreen (D₀.shrink t ht ht1).compl p x ≤ greenEnvelope p x := by
     intro p x hp hx hbdd t ht ht1
@@ -4403,7 +4403,7 @@ theorem exists_pieceGreen_drift_bound (D₀ : CoordDisk M) {p₁ p₂ p₃ : M}
           pieceGreen (D₀.shrink t ht ht1).compl p₂ p₃| ≤ C := by
     rintro ⟨t₀, C₀, ht₀, ht₀1, hC₀⟩
     refine ⟨max C₀ (pieceGreen (D₀.shrink t₀ ht₀ ht₀1).compl p₁ p₃ +
-      pieceGreen (D₀.shrink t₀ ht₀ ht₀1).compl p₂ p₃), fun t ht ht1 => ?_⟩
+      pieceGreen (D₀.shrink t₀ ht₀ ht₀1).compl p₂ p₃), fun t ht ht1 ↦ ?_⟩
     rcases le_total t t₀ with h | h
     · exact (hC₀ t ht ht1 h).trans (le_max_left _ _)
     · have m1 := hPGmono p₁ p₃ hp₁ hp₃ h₃₁ t t₀ ht ht1 ht₀ ht₀1 h
@@ -4418,11 +4418,11 @@ theorem exists_pieceGreen_drift_bound (D₀ : CoordDisk M) {p₁ p₂ p₃ : M}
       · linarith
       · linarith
   /- ## Assembly: dichotomy on the ambient boundedness at the base point. -/
-  by_cases hb : BddAbove ((fun v => v p₃) '' greenFamily p₁) ∧
-      BddAbove ((fun v => v p₃) '' greenFamily p₂)
+  by_cases hb : BddAbove ((fun v ↦ v p₃) '' greenFamily p₁) ∧
+      BddAbove ((fun v ↦ v p₃) '' greenFamily p₂)
   · -- Ambient-hyperbolic regime: both piece families are dominated, at the
     -- base point, by the corresponding ambient envelopes.
-    refine ⟨greenEnvelope p₁ p₃ + greenEnvelope p₂ p₃, fun t ht ht1 => ?_⟩
+    refine ⟨greenEnvelope p₁ p₃ + greenEnvelope p₂ p₃, fun t ht ht1 ↦ ?_⟩
     have h1 := hPGle p₁ p₃ hp₁ hp₃ hb.1 t ht ht1
     have h2 := hPGle p₂ p₃ hp₂ hp₃ hb.2 t ht ht1
     have h3 := hPGnonneg p₁ p₃ hp₁ hp₃ h₃₁ t ht ht1
@@ -4441,8 +4441,7 @@ theorem exists_pieceGreen_drift_bound (D₀ : CoordDisk M) {p₁ p₂ p₃ : M}
     -- No soft (Harnack/monotonicity/per-candidate) argument can close it; it
     -- requires either a surface Green-identity (Stokes/flux on chart annuli)
     -- or the universal-cover transfer.
-    exact tail (pieceGreen_drift_bound_core D₀ hp₁ hp₂ hp₃ hne h₃₁ h₃₂
-      (not_and_or.mp hb))
+    exact tail (exists_pieceGreen_drift_bound_core D₀ hp₁ hp₂ hp₃ hne h₃₁ h₃₂)
 
 /-- The shrink-uniform master bound: around two marked points off a closed coordinate
 disk there are pole radii, with doubled closed chart balls avoiding the disk and each
@@ -4450,7 +4449,7 @@ other, and a constant bounding the dipole difference of the Green's functions of
 sufficiently shrunken piece outside the two pole balls — by the interior and growth
 estimates, the chain Harnack comparison pinned at the drift base point, and the
 one-sided extension bound. -/
-private theorem bipolarGreen_aux1 (D₀ : CoordDisk M) {p₁ p₂ : M}
+private theorem exists_pieceGreen_dipole_exterior_bound (D₀ : CoordDisk M) {p₁ p₂ : M}
     (hp₁ : p₁ ∉ D₀.closedCarrier) (hp₂ : p₂ ∉ D₀.closedCarrier) (hne : p₁ ≠
         p₂) :
     ∃ r₁ r₂ C₀ : ℝ, 0 < r₁ ∧ 0 < r₂ ∧ 1 ≤ C₀ ∧
@@ -4493,7 +4492,7 @@ private theorem bipolarGreen_aux1 (D₀ : CoordDisk M) {p₁ p₂ : M}
     have hso : IsOpen {z | z ∈ Ω ∧ w z = w xm} := by
       rw [isOpen_iff_mem_nhds]
       rintro z ⟨hzΩ, hzw⟩
-      have hmax' : ∀ u ∈ Ω, w u ≤ w z := fun u hu => (hmax u hu).trans_eq hzw.symm
+      have hmax' : ∀ u ∈ Ω, w u ≤ w z := fun u hu ↦ (hmax u hu).trans_eq hzw.symm
       have hev := MSubharmonicAt.eventually_eq_of_le hΩo hzΩ hwsub hmax'
       filter_upwards [hev, hΩo.mem_nhds hzΩ] with u hu huΩ
       exact ⟨huΩ, hu.trans hzw⟩
@@ -4513,7 +4512,7 @@ private theorem bipolarGreen_aux1 (D₀ : CoordDisk M) {p₁ p₂ : M}
       rintro z ⟨⟨-, h1⟩, -, h2⟩
       exact h2 h1
     have hres := hΩc.subset_left_of_subset_union hso hto hdisj hsub ⟨xm, hxm, hxm, rfl⟩
-    exact fun z hz => (hres hz).2
+    exact fun z hz ↦ (hres hz).2
   /- ## Maximum principle on an open set `Ω ≠ univ` with compact exceptional set. -/
   have maxPrin : ∀ (Ω : Set M) (w : M → ℝ) (m : ℝ) (Kc : Set M), IsOpen Ω →
       Ω ≠ Set.univ → MSubharmonicOn w Ω → IsCompact Kc →
@@ -4550,7 +4549,7 @@ private theorem bipolarGreen_aux1 (D₀ : CoordDisk M) {p₁ p₂ : M}
     have hCcΩ : connectedComponentIn Ω xm ⊆ Ω := connectedComponentIn_subset _ _
     have hconst := propagate (connectedComponentIn Ω xm) w xm hCco
       isPreconnected_connectedComponentIn hCcx
-      (fun z hz => hwsub z (hCcΩ hz)) (fun z hz => hall z (hCcΩ hz))
+      (fun z hz ↦ hwsub z (hCcΩ hz)) (fun z hz ↦ hall z (hCcΩ hz))
     have hfrne :
         (closure (connectedComponentIn Ω xm) \ connectedComponentIn Ω xm).Nonempty := by
       by_contra hem
@@ -4608,10 +4607,10 @@ private theorem bipolarGreen_aux1 (D₀ : CoordDisk M) {p₁ p₂ : M}
       rw [Set.mem_preimage, (chartAt ℂ y).left_inv (mem_chart_source ℂ y)]
       exact hyU
     obtain ⟨ρ, hρ, hρsub⟩ := Metric.isOpen_iff.mp hopen2 _ hmem2
-    have h0 : SubharmonicOn (fun _ : ℂ => (0 : ℝ)) (ball (chartAt ℂ y y) ρ) :=
-      HarmonicOnNhd.subharmonicOn fun z _ => harmonicAt_const 0
-    refine ⟨ρ, hρ, fun z hz => (hρsub hz).1, ?_⟩
-    exact transfer _ _ _ _ h0 subset_rfl fun z hz => (hf0 _ ((hρsub hz).2)).symm
+    have h0 : SubharmonicOn (fun _ : ℂ ↦ (0 : ℝ)) (ball (chartAt ℂ y y) ρ) :=
+      HarmonicOnNhd.subharmonicOn fun z _ ↦ harmonicAt_const 0
+    refine ⟨ρ, hρ, fun z hz ↦ (hρsub hz).1, ?_⟩
+    exact transfer _ _ _ _ h0 subset_rfl fun z hz ↦ (hf0 _ ((hρsub hz).2)).symm
   /- ## Harmonicity at a point respects eventual equality. -/
   have mharm_congr : ∀ (f g : M → ℝ) (y : M), (∀ᶠ z in 𝓝 y, f z = g z) →
       MHarmonicAt f y → MHarmonicAt g y := by
@@ -4665,9 +4664,9 @@ private theorem bipolarGreen_aux1 (D₀ : CoordDisk M) {p₁ p₂ : M}
       obtain ⟨r', hr', hr'sub⟩ := Metric.isOpen_iff.mp hopen2 _ hmem2
       refine ⟨r', hr', ?_, ?_⟩
       · rw [hcenter, hct]
-        exact fun w hw => (hr'sub hw).1
+        exact fun w hw ↦ (hr'sub hw).1
       · rw [hcenter, hct]
-        refine transfer _ _ _ _ hsub (fun w hw => (hr'sub hw).2) ?_
+        refine transfer _ _ _ _ hsub (fun w hw ↦ (hr'sub hw).2) ?_
         intro w hw
         simp only [Function.comp_apply]
         rw [← hfg ((e'.subtypeRestr hnety).symm w)]
@@ -4715,12 +4714,12 @@ private theorem bipolarGreen_aux1 (D₀ : CoordDisk M) {p₁ p₂ : M}
         exact hUsub hz
   /- ## Affine images of harmonic functions are harmonic. -/
   have mharmAffine : ∀ (g : M → ℝ) (x : M) (a c : ℝ), MHarmonicAt g x →
-      MHarmonicAt (fun y => a * g y + c) x := by
+      MHarmonicAt (fun y ↦ a * g y + c) x := by
     intro g x a c hg
     have h1 : HarmonicAt (g ∘ (chartAt ℂ x).symm) (chartAt ℂ x x) := hg
     have h2 := (h1.const_smul (c := a)).add (harmonicAt_const c)
-    have heq2 : (a • (g ∘ (chartAt ℂ x).symm) + fun _ => c) =
-        (fun y => a * g y + c) ∘ (chartAt ℂ x).symm := by
+    have heq2 : (a • (g ∘ (chartAt ℂ x).symm) + fun _ ↦ c) =
+        (fun y ↦ a * g y + c) ∘ (chartAt ℂ x).symm := by
       funext w
       simp [smul_eq_mul]
     rw [heq2] at h2
@@ -4777,9 +4776,9 @@ private theorem bipolarGreen_aux1 (D₀ : CoordDisk M) {p₁ p₂ : M}
       intro hcon
       have hpΩ : p ∈ Ω := by rw [hcon]; trivial
       exact hpΩ.2 hpDh
-    have hΩp : Ω ⊆ {p}ᶜ := fun z hz => Set.mem_compl_singleton_iff.2
-      (fun hcon => hz.2 (hcon ▸ hpDh))
-    apply maxPrin Ω vE m KE hΩopen hΩne (fun z hz => hvsub z (hΩp hz)) hKE
+    have hΩp : Ω ⊆ {p}ᶜ := fun z hz ↦ Set.mem_compl_singleton_iff.2
+      (fun hcon ↦ hz.2 (hcon ▸ hpDh))
+    apply maxPrin Ω vE m KE hΩopen hΩne (fun z hz ↦ hvsub z (hΩp hz)) hKE
     · intro z hz hzK
       rw [hKE0 z hzK]
       exact hm0
@@ -4824,8 +4823,8 @@ private theorem bipolarGreen_aux1 (D₀ : CoordDisk M) {p₁ p₂ : M}
           (Set.mem_compl_singleton_iff.2 hznp)), ?_⟩
         exact hcirc z hzΓ
       · -- frontier point off the open set: the candidate vanishes on a neighborhood
-        have hzK : z ∉ KE := fun h => hzW (hKEW h)
-        have hev : vE =ᶠ[𝓝 z] fun _ => (0 : ℝ) := by
+        have hzK : z ∉ KE := fun h ↦ hzW (hKEW h)
+        have hev : vE =ᶠ[𝓝 z] fun _ ↦ (0 : ℝ) := by
           filter_upwards [hKE.isClosed.isOpen_compl.mem_nhds hzK] with q hq
           exact hKE0 q hq
         refine ⟨continuousAt_const.congr_of_eventuallyEq hev, ?_⟩
@@ -4845,11 +4844,11 @@ private theorem bipolarGreen_aux1 (D₀ : CoordDisk M) {p₁ p₂ : M}
     exact hy h2
   /- ## The zero function belongs to every piece Green family. -/
   have zeroFam : ∀ (P : Opens M) (p : M) (hp : p ∈ P),
-      (fun _ : ↥P => (0 : ℝ)) ∈ greenFamily (⟨p, hp⟩ : ↥P) := by
+      (fun _ : ↥P ↦ (0 : ℝ)) ∈ greenFamily (⟨p, hp⟩ : ↥P) := by
     intro P p hp
     haveI : Nonempty ↥P := ⟨⟨p, hp⟩⟩
-    refine ⟨fun z _ => (mharmonicAt_const (a := (0 : ℝ))).msubharmonicAt,
-      continuousOn_const, ⟨∅, isCompact_empty, Set.empty_ne_univ, fun z _ => rfl⟩,
+    refine ⟨fun z _ ↦ (mharmonicAt_const (a := (0 : ℝ))).msubharmonicAt,
+      continuousOn_const, ⟨∅, isCompact_empty, Set.empty_ne_univ, fun z _ ↦ rfl⟩,
       ⟨0, ?_⟩⟩
     have hcont : ContinuousAt (poleCoord (⟨p, hp⟩ : ↥P)) (⟨p, hp⟩ : ↥P) := by
       have h1 : ContinuousAt (chartAt ℂ (⟨p, hp⟩ : ↥P)) (⟨p, hp⟩ : ↥P) :=
@@ -4876,7 +4875,7 @@ private theorem bipolarGreen_aux1 (D₀ : CoordDisk M) {p₁ p₂ : M}
         ∀ᶠ y in 𝓝[≠] p, vE y + Real.log ‖poleCoord p y‖ ≤ Cv := by
     intro P p hp v hv
     obtain ⟨hvsub, hvcont, ⟨K, hKcomp, -, hKzero⟩, ⟨C, hC⟩⟩ := hv
-    set w : M → ℝ := fun y => if h : y ∈ P then v ⟨y, h⟩ else 0 with hwdef
+    set w : M → ℝ := fun y ↦ if h : y ∈ P then v ⟨y, h⟩ else 0 with hwdef
     have hwval : ∀ z : ↥P, w z = v z := by
       intro z
       simp only [hwdef]
@@ -4903,7 +4902,7 @@ private theorem bipolarGreen_aux1 (D₀ : CoordDisk M) {p₁ p₂ : M}
       by_cases hyP : y ∈ P
       · have hoe : IsOpenEmbedding (Subtype.val : ↥P → M) :=
           P.2.isOpenEmbedding_subtypeVal
-        have hnz : (⟨y, hyP⟩ : ↥P) ≠ ⟨p, hp⟩ := fun hcon =>
+        have hnz : (⟨y, hyP⟩ : ↥P) ≠ ⟨p, hp⟩ := fun hcon ↦
           (Set.mem_compl_singleton_iff.mp hy) (congrArg Subtype.val hcon)
         have hvat : ContinuousAt v (⟨y, hyP⟩ : ↥P) :=
           hvcont.continuousAt (isOpen_compl_singleton.mem_nhds
@@ -4911,27 +4910,27 @@ private theorem bipolarGreen_aux1 (D₀ : CoordDisk M) {p₁ p₂ : M}
         have h1 : Tendsto (w ∘ Subtype.val) (𝓝 (⟨y, hyP⟩ : ↥P)) (𝓝 (w y)) := by
           have h2 : w y = v ⟨y, hyP⟩ := hwval ⟨y, hyP⟩
           rw [h2]
-          exact Filter.Tendsto.congr (fun u => (hwval u).symm) hvat
+          exact Filter.Tendsto.congr (fun u ↦ (hwval u).symm) hvat
         have h4 : Filter.map (Subtype.val : ↥P → M) (𝓝 (⟨y, hyP⟩ : ↥P)) = 𝓝 y :=
           hoe.map_nhds_eq ⟨y, hyP⟩
         have h5 : Tendsto w (𝓝 y) (𝓝 (w y)) := by
           rw [← h4, Filter.tendsto_map'_iff]
           exact h1
         exact h5
-      · have hev : w =ᶠ[𝓝 y] fun _ => (0 : ℝ) := by
+      · have hev : w =ᶠ[𝓝 y] fun _ ↦ (0 : ℝ) := by
           filter_upwards [hKwcl.isOpen_compl.mem_nhds
-            (fun hmem => hyP (hKwsub hmem))] with u hu
+            (fun hmem ↦ hyP (hKwsub hmem))] with u hu
           exact hKwzero u hu
         exact continuousAt_const.congr_of_eventuallyEq hev
     have hwsub : MSubharmonicOn w {p}ᶜ := by
       intro y hy
       by_cases hyP : y ∈ P
-      · have hnz : (⟨y, hyP⟩ : ↥P) ≠ ⟨p, hp⟩ := fun hcon =>
+      · have hnz : (⟨y, hyP⟩ : ↥P) ≠ ⟨p, hp⟩ := fun hcon ↦
           (Set.mem_compl_singleton_iff.mp hy) (congrArg Subtype.val hcon)
         exact (msub_val P w v hwval ⟨y, hyP⟩).mpr
           (hvsub ⟨y, hyP⟩ (Set.mem_compl_singleton_iff.mpr hnz))
       · exact msub_zero w Kwᶜ y hKwcl.isOpen_compl
-          (fun hmem => hyP (hKwsub hmem)) (fun z hz => hKwzero z hz)
+          (fun hmem ↦ hyP (hKwsub hmem)) (fun z hz ↦ hKwzero z hz)
     refine ⟨w, Kw, C, hwval, hwsub, hwcont, hKwcomp, hKwsub, hKwzero, ?_⟩
     rw [← mapval P p hp, Filter.eventually_map]
     filter_upwards [hC] with z hz
@@ -4948,9 +4947,9 @@ private theorem bipolarGreen_aux1 (D₀ : CoordDisk M) {p₁ p₂ : M}
     have h1 := (mharmonicOn_greenEnvelope hGF).1
     have h2 : MHarmonicAt (greenEnvelope (⟨p, hp⟩ : ↥P)) ⟨y, hy⟩ :=
       h1 _ (Set.mem_compl_singleton_iff.mpr
-        (fun hcon => hyp (congrArg Subtype.val hcon)))
+        (fun hcon ↦ hyp (congrArg Subtype.val hcon)))
     exact (mharm_val P (pieceGreen P p) (greenEnvelope (⟨p, hp⟩ : ↥P))
-      (fun z => pgval P p hp z z.2) ⟨y, hy⟩).mpr h2
+      (fun z ↦ pgval P p hp z z.2) ⟨y, hy⟩).mpr h2
   have pgnonneg : ∀ (P : Opens M) (p : M) (hp : p ∈ P), ConnectedSpace ↥P →
       NoncompactSpace ↥P → HasGreenFunction (⟨p, hp⟩ : ↥P) →
       ∀ y, y ≠ p → 0 ≤ pieceGreen P p y := by
@@ -4960,7 +4959,7 @@ private theorem bipolarGreen_aux1 (D₀ : CoordDisk M) {p₁ p₂ : M}
     by_cases hy : y ∈ P
     · rw [pgval P p hp y hy]
       exact (greenEnvelope_pos hGF _
-        (fun hcon => hyp (congrArg Subtype.val hcon))).le
+        (fun hcon ↦ hyp (congrArg Subtype.val hcon))).le
     · rw [pgzero P p y hy]
   /- ## Growth estimate ([M] (5)): a candidate gains at most `log 2` from the
   pole circle to the half circle, by the `ε`-excised annulus maximum principle. -/
@@ -4978,7 +4977,7 @@ private theorem bipolarGreen_aux1 (D₀ : CoordDisk M) {p₁ p₂ : M}
     have hpsrc : p ∈ ep.source := mem_chart_source ℂ p
     have hcptgt : cp ∈ ep.target := by rw [hcp]; exact ep.map_source hpsrc
     have hsymcp : ep.symm cp = p := by rw [hcp]; exact ep.left_inv hpsrc
-    have hsphtgt : ∀ ρ : ℝ, ρ ≤ rr → sphere cp ρ ⊆ ep.target := fun ρ hρ =>
+    have hsphtgt : ∀ ρ : ℝ, ρ ≤ rr → sphere cp ρ ⊆ ep.target := fun ρ hρ ↦
       sphere_subset_closedBall.trans ((closedBall_subset_closedBall hρ).trans htgt)
     obtain ⟨wy, hwy, hwyy⟩ := hyΓ
     have hwyt : wy ∈ ep.target := hsphtgt _ (by linarith only [hrr]) hwy
@@ -5065,40 +5064,40 @@ private theorem bipolarGreen_aux1 (D₀ : CoordDisk M) {p₁ p₂ : M}
       ((isCompact_closedBall cp rr).diff isOpen_ball).image_of_continuousOn
         (ep.continuousOn_symm.mono (Set.diff_subset.trans htgt))
     have hΩσKσ : Ωσ ⊆ Kσ :=
-      Set.image_mono (fun w hw => ⟨ball_subset_closedBall hw.1,
-        fun h => hw.2 (ball_subset_closedBall h)⟩)
+      Set.image_mono (fun w hw ↦ ⟨ball_subset_closedBall hw.1,
+        fun h ↦ hw.2 (ball_subset_closedBall h)⟩)
     -- harmonicity and continuity of the logarithmic barrier
     have hepatlas : ep ∈ IsManifold.maximalAtlas 𝓘(ℂ) ω M := by
       rw [hep]
       exact IsManifold.chart_mem_maximalAtlas p
     have hbharm : ∀ z : M, z ∈ ep.source → ep z ≠ cp →
-        MHarmonicAt (fun q => Real.log (dist (ep q) cp)) z := by
+        MHarmonicAt (fun q ↦ Real.log (dist (ep q) cp)) z := by
       intro z hzs hzne
-      have h1 : MHarmonicAt (fun q => Real.log (dist (ep q) cp)) z ↔
-          HarmonicAt ((fun q => Real.log (dist (ep q) cp)) ∘ ep.symm) (ep z) :=
+      have h1 : MHarmonicAt (fun q ↦ Real.log (dist (ep q) cp)) z ↔
+          HarmonicAt ((fun q ↦ Real.log (dist (ep q) cp)) ∘ ep.symm) (ep z) :=
         mharmonicAt_iff_of_mem_maximalAtlas hepatlas hzs
       rw [h1]
-      have hharm : HarmonicAt (fun w : ℂ => Real.log ‖w - cp‖) (ep z) := by
-        apply AnalyticAt.harmonicAt_log_norm (f := fun w : ℂ => w - cp)
+      have hharm : HarmonicAt (fun w : ℂ ↦ Real.log ‖w - cp‖) (ep z) := by
+        apply AnalyticAt.harmonicAt_log_norm (f := fun w : ℂ ↦ w - cp)
         · exact analyticAt_id.sub analyticAt_const
         · exact sub_ne_zero.2 hzne
-      have heqv : (fun w : ℂ => Real.log ‖w - cp‖) =ᶠ[𝓝 (ep z)]
-          ((fun q => Real.log (dist (ep q) cp)) ∘ ep.symm) := by
+      have heqv : (fun w : ℂ ↦ Real.log ‖w - cp‖) =ᶠ[𝓝 (ep z)]
+          ((fun q ↦ Real.log (dist (ep q) cp)) ∘ ep.symm) := by
         filter_upwards [ep.open_target.mem_nhds (ep.map_source hzs)] with w hw
         simp only [Function.comp_apply, ep.right_inv hw, dist_eq_norm]
       exact (harmonicAt_congr_nhds heqv).1 hharm
     have hbcont : ∀ z : M, z ∈ ep.source → ep z ≠ cp →
-        ContinuousAt (fun q => Real.log (dist (ep q) cp)) z := by
+        ContinuousAt (fun q ↦ Real.log (dist (ep q) cp)) z := by
       intro z hzs hzne
       have h2 : ContinuousAt ep z := ep.continuousAt hzs
       have h3 : dist (ep z) cp ≠ 0 := (dist_pos.2 hzne).ne'
       exact (h2.dist continuousAt_const).log h3
-    have hvCA : ∀ z : M, z ≠ p → ContinuousAt vE z := fun z hz =>
+    have hvCA : ∀ z : M, z ≠ p → ContinuousAt vE z := fun z hz ↦
       hvcont.continuousAt (isOpen_compl_singleton.mem_nhds
         (Set.mem_compl_singleton_iff.2 hz))
     -- the competitor and its subharmonicity
     set Wf : M → ℝ :=
-      fun q => vE q + (1 + ε) * (Real.log (dist (ep q) cp) - Real.log rr) with hWf
+      fun q ↦ vE q + (1 + ε) * (Real.log (dist (ep q) cp) - Real.log rr) with hWf
     have hWfsub : MSubharmonicOn Wf Ωσ := by
       intro z hz
       obtain ⟨hz1, hz2, hz3⟩ := hΩσmem z hz
@@ -5111,10 +5110,10 @@ private theorem bipolarGreen_aux1 (D₀ : CoordDisk M) {p₁ p₂ : M}
         rw [hcon, ← hcp] at hzne
         exact hzne rfl
       have hu : MHarmonicAt
-          (fun q => (-(1 + ε)) * Real.log (dist (ep q) cp) + (1 + ε) * Real.log rr)
+          (fun q ↦ (-(1 + ε)) * Real.log (dist (ep q) cp) + (1 + ε) * Real.log rr)
           z := mharmAffine _ z _ _ (hbharm z hz1 hzne)
       have h7 := (hvsub z (Set.mem_compl_singleton_iff.mpr hznep)).sub_mharmonicAt hu
-      have h9 : Wf = fun q => vE q -
+      have h9 : Wf = fun q ↦ vE q -
           ((-(1 + ε)) * Real.log (dist (ep q) cp) + (1 + ε) * Real.log rr) := by
         funext q
         simp only [hWf]
@@ -5131,7 +5130,7 @@ private theorem bipolarGreen_aux1 (D₀ : CoordDisk M) {p₁ p₂ : M}
       have hzval : ep z = w := by rw [← hwz, ep.right_inv hwt]
       have hzd1 : σ ≤ dist (ep z) cp := by
         rw [hzval]
-        exact not_lt.1 (fun h => hw2 (mem_ball.2 h))
+        exact not_lt.1 (fun h ↦ hw2 (mem_ball.2 h))
       have hzd2 : dist (ep z) cp ≤ rr := by rw [hzval]; exact mem_closedBall.1 hw1
       have hzne : ep z ≠ cp := by
         intro hcon
@@ -5261,7 +5260,7 @@ private theorem bipolarGreen_aux1 (D₀ : CoordDisk M) {p₁ p₂ : M}
       obtain ⟨-, -, hnep2, hP2⟩ := hΓread (rr / 2) (by linarith only [hrr])
         (by linarith only [hrr]) xin hxinΓ
       rw [hMt, pgval P p hp xin hP2]
-      exact greenEnvelope_pos hGF _ (fun hcon => hnep2 (congrArg Subtype.val hcon))
+      exact greenEnvelope_pos hGF _ (fun hcon ↦ hnep2 (congrArg Subtype.val hcon))
     -- per-candidate circle bounds against the envelope maxima
     have hcircGen : ∀ (ρ : ℝ) (hρ0 : 0 < ρ) (hρrr : ρ ≤ rr) (xm : M)
         (hxm : IsMaxOn (pieceGreen P p) (ep.symm '' sphere cp ρ) xm)
@@ -5272,7 +5271,7 @@ private theorem bipolarGreen_aux1 (D₀ : CoordDisk M) {p₁ p₂ : M}
       obtain ⟨-, -, hznep, hzP⟩ := hΓread ρ hρ0 hρrr z hz
       calc vE z = v ⟨z, hzP⟩ := hvEval ⟨z, hzP⟩
         _ ≤ greenEnvelope (⟨p, hp⟩ : ↥P) ⟨z, hzP⟩ :=
-            le_csSup (hBdd _ (fun hcon => hznep (congrArg Subtype.val hcon)))
+            le_csSup (hBdd _ (fun hcon ↦ hznep (congrArg Subtype.val hcon)))
               ⟨v, hv, rfl⟩
         _ = pieceGreen P p z := (pgval P p hp z hzP).symm
         _ ≤ pieceGreen P p xm := hxm hz
@@ -5283,7 +5282,7 @@ private theorem bipolarGreen_aux1 (D₀ : CoordDisk M) {p₁ p₂ : M}
       have hyP : y ∈ P := hy.1
       rw [pgval P p hp y hyP]
       simp only [greenEnvelope]
-      refine csSup_le ⟨0, (fun _ : ↥P => (0 : ℝ)), zeroFam P p hp, rfl⟩ ?_
+      refine csSup_le ⟨0, (fun _ : ↥P ↦ (0 : ℝ)), zeroFam P p hp, rfl⟩ ?_
       rintro b ⟨v, hv, rfl⟩
       obtain ⟨vE, KE, Cv, hvEval, hvEsub, hvEcont, hKEc, hKEP, hKE0, hCv⟩ :=
         extendC P p hp v hv
@@ -5302,7 +5301,7 @@ private theorem bipolarGreen_aux1 (D₀ : CoordDisk M) {p₁ p₂ : M}
         (by linarith only [hrr]) y hy
       rw [pgval P p hp y hyP]
       simp only [greenEnvelope]
-      refine csSup_le ⟨0, (fun _ : ↥P => (0 : ℝ)), zeroFam P p hp, rfl⟩ ?_
+      refine csSup_le ⟨0, (fun _ : ↥P ↦ (0 : ℝ)), zeroFam P p hp, rfl⟩ ?_
       rintro b ⟨v, hv, rfl⟩
       obtain ⟨vE, KE, Cv, hvEval, hvEsub, hvEcont, hKEc, hKEP, hKE0, hCv⟩ :=
         extendC P p hp v hv
@@ -5358,11 +5357,11 @@ private theorem bipolarGreen_aux1 (D₀ : CoordDisk M) {p₁ p₂ : M}
       ⟨ca, mem_closedBall_self hra.le, by rw [hca]; exact ea.left_inv hpasrc⟩
     have hpbDb : pb ∈ eb.symm '' closedBall cb rb :=
       ⟨cb, mem_closedBall_self hrb.le, by rw [hcb]; exact eb.left_inv hpbsrc⟩
-    have hpanb : pa ≠ pb := fun hcon => hdisjab pa hpaDa (hcon ▸ hpbDb)
+    have hpanb : pa ≠ pb := fun hcon ↦ hdisjab pa hpaDa (hcon ▸ hpbDb)
     have hgb_nonneg : ∀ z : M, z ≠ pb → 0 ≤ pieceGreen P pb z :=
       pgnonneg P pb hpb hcs hnc hGb
     have hgb_harm : ∀ z : M, z ∈ P → z ≠ pb → MHarmonicAt (pieceGreen P pb) z :=
-      fun z h1 h2 => pgharm P pb hpb hcs hnc hGb z h1 h2
+      fun z h1 h2 ↦ pgharm P pb hpb hcs hnc hGb z h1 h2
     have hsymcb : eb.symm cb = pb := by rw [hcb]; exact eb.left_inv hpbsrc
     -- per-candidate bound at the point `x`
     have percand : ∀ (v : ↥P → ℝ), v ∈ greenFamily (⟨pa, hpa⟩ : ↥P) →
@@ -5487,15 +5486,15 @@ private theorem bipolarGreen_aux1 (D₀ : CoordDisk M) {p₁ p₂ : M}
         intro hcon
         have hpaΩ : pa ∈ Ω := by rw [hcon]; trivial
         exact hpaΩ.1.2 hpaDa
-      set wc : M → ℝ := fun z => max (vE z - pieceGreen P pb z) 0 with hwc
-      have hΩnepa : ∀ z ∈ Ω, z ≠ pa := fun z hz hcon => hz.1.2 (hcon ▸ hpaDa)
-      have hΩnepb : ∀ z ∈ Ω, z ≠ pb := fun z hz hcon => hz.2 (hcon ▸ hpbDδ)
+      set wc : M → ℝ := fun z ↦ max (vE z - pieceGreen P pb z) 0 with hwc
+      have hΩnepa : ∀ z ∈ Ω, z ≠ pa := fun z hz hcon ↦ hz.1.2 (hcon ▸ hpaDa)
+      have hΩnepb : ∀ z ∈ Ω, z ≠ pb := fun z hz hcon ↦ hz.2 (hcon ▸ hpbDδ)
       have hwcsub : MSubharmonicOn wc Ω := by
         intro z hz
-        have h1 : MSubharmonicAt (fun q => vE q - pieceGreen P pb q) z :=
+        have h1 : MSubharmonicAt (fun q ↦ vE q - pieceGreen P pb q) z :=
           (hvEsub z (Set.mem_compl_singleton_iff.2 (hΩnepa z hz))).sub_mharmonicAt
             (hgb_harm z hz.1.1 (hΩnepb z hz))
-        have h2 : MSubharmonicAt (fun _ : M => (0 : ℝ)) z :=
+        have h2 : MSubharmonicAt (fun _ : M ↦ (0 : ℝ)) z :=
           (mharmonicAt_const (a := (0 : ℝ))).msubharmonicAt
         rw [hwc]
         exact h1.max h2
@@ -5539,7 +5538,7 @@ private theorem bipolarGreen_aux1 (D₀ : CoordDisk M) {p₁ p₂ : M}
               rw [hcon, ← hca, dist_self] at hyd
               rw [← hyd] at hra
               exact lt_irrefl _ hra
-            have hynepb : y ≠ pb := fun hcon =>
+            have hynepb : y ≠ pb := fun hcon ↦
               hdisjab y ⟨w, hw, hwz⟩ (by rw [hcon]; exact hpbDb)
             have hcg : ContinuousAt (pieceGreen P pb) y :=
               (hgb_harm y hyP hynepb).continuousAt
@@ -5550,7 +5549,7 @@ private theorem bipolarGreen_aux1 (D₀ : CoordDisk M) {p₁ p₂ : M}
             simp only
             have h2 : vE y ≤ pieceGreen P pa y := by
               have h3 : v ⟨y, hyP⟩ ≤ greenEnvelope (⟨pa, hpa⟩ : ↥P) ⟨y, hyP⟩ :=
-                le_csSup (hBdda _ (fun hcon => hynepa (congrArg Subtype.val hcon)))
+                le_csSup (hBdda _ (fun hcon ↦ hynepa (congrArg Subtype.val hcon)))
                   ⟨v, hv, rfl⟩
               have h3' : vE y = v ⟨y, hyP⟩ := hvEval ⟨y, hyP⟩
               rw [h3', pgval P pa hpa y hyP]
@@ -5598,12 +5597,12 @@ private theorem bipolarGreen_aux1 (D₀ : CoordDisk M) {p₁ p₂ : M}
             simp only
             exact max_le (by linarith only [hb1, hb2, hCc0]) hCc0
         · -- off the piece: the competitor vanishes on a neighborhood
-          have hyKE : y ∉ KE := fun hmem => hyP (hKEP hmem)
-          have hynepb : y ≠ pb := fun hcon => hyP (by rw [hcon]; exact hpb)
+          have hyKE : y ∉ KE := fun hmem ↦ hyP (hKEP hmem)
+          have hynepb : y ≠ pb := fun hcon ↦ hyP (by rw [hcon]; exact hpb)
           have hOn : IsOpen (KEᶜ ∩ {pb}ᶜ) := hKEc.isClosed.isOpen_compl.inter
             isOpen_compl_singleton
           have hyO : y ∈ KEᶜ ∩ {pb}ᶜ := ⟨hyKE, Set.mem_compl_singleton_iff.2 hynepb⟩
-          have hev0 : wc =ᶠ[𝓝 y] fun _ => (0 : ℝ) := by
+          have hev0 : wc =ᶠ[𝓝 y] fun _ ↦ (0 : ℝ) := by
             filter_upwards [hOn.mem_nhds hyO] with q hq
             rw [hwc]
             simp only
@@ -5638,14 +5637,14 @@ private theorem bipolarGreen_aux1 (D₀ : CoordDisk M) {p₁ p₂ : M}
           rw [← hxd] at hra
           exact lt_irrefl _ hra
         have h3 : v ⟨x, hxP⟩ ≤ greenEnvelope (⟨pa, hpa⟩ : ↥P) ⟨x, hxP⟩ :=
-          le_csSup (hBdda _ (fun hcon => hxnepa (congrArg Subtype.val hcon)))
+          le_csSup (hBdda _ (fun hcon ↦ hxnepa (congrArg Subtype.val hcon)))
             ⟨v, hv, rfl⟩
         have h4 := hcirc x hxΓa
         have h5 : greenEnvelope (⟨pa, hpa⟩ : ↥P) ⟨x, hxP⟩ = pieceGreen P pa x :=
           (pgval P pa hpa x hxP).symm
         rw [h5] at h3
         linarith only [h3, h4]
-      · have hxDδ : x ∉ Dδ := fun hmem => hxVb (hDδVb hmem)
+      · have hxDδ : x ∉ Dδ := fun hmem ↦ hxVb (hDδVb hmem)
         have hxΩ : x ∈ Ω := ⟨⟨hxP, hxDa⟩, hxDδ⟩
         have h5 := hwcle x hxΩ
         rw [hwc] at h5
@@ -5656,7 +5655,7 @@ private theorem bipolarGreen_aux1 (D₀ : CoordDisk M) {p₁ p₂ : M}
     -- close the supremum over the family
     rw [pgval P pa hpa x hxP]
     simp only [greenEnvelope]
-    refine csSup_le ⟨0, (fun _ : ↥P => (0 : ℝ)), zeroFam P pa hpa, rfl⟩ ?_
+    refine csSup_le ⟨0, (fun _ : ↥P ↦ (0 : ℝ)), zeroFam P pa hpa, rfl⟩ ?_
     rintro b ⟨v, hv, rfl⟩
     exact percand v hv
   /- ## The center chart. -/
@@ -5686,7 +5685,7 @@ private theorem bipolarGreen_aux1 (D₀ : CoordDisk M) {p₁ p₂ : M}
       rw [Set.mem_preimage, hc₁, e₁.left_inv hp₁src]
       exact ⟨hp₁, Set.mem_compl_singleton_iff.2 hne⟩
     obtain ⟨S, hS0, hSsub⟩ := nhds_basis_closedBall.mem_iff.1 (hopen.mem_nhds hmem)
-    refine ⟨S, hS0, fun w hw => (hSsub hw).1, fun w hw => ?_⟩
+    refine ⟨S, hS0, fun w hw ↦ (hSsub hw).1, fun w hw ↦ ?_⟩
     have h2 := (hSsub hw).2
     rw [Set.mem_preimage] at h2
     exact ⟨h2.1, Set.mem_compl_singleton_iff.1 h2.2⟩
@@ -5714,9 +5713,9 @@ private theorem bipolarGreen_aux1 (D₀ : CoordDisk M) {p₁ p₂ : M}
     have hmem : c₂ ∈ e₂.target ∩ e₂.symm ⁻¹' (D₀.closedCarrierᶜ ∩ Car1ᶜ) := by
       refine ⟨by rw [hc₂]; exact e₂.map_source hp₂src, ?_⟩
       rw [Set.mem_preimage, hc₂, e₂.left_inv hp₂src]
-      exact ⟨hp₂, fun hmem2 => (hCar1av p₂ hmem2).2 rfl⟩
+      exact ⟨hp₂, fun hmem2 ↦ (hCar1av p₂ hmem2).2 rfl⟩
     obtain ⟨S, hS0, hSsub⟩ := nhds_basis_closedBall.mem_iff.1 (hopen.mem_nhds hmem)
-    refine ⟨S, hS0, fun w hw => (hSsub hw).1, fun w hw => ?_⟩
+    refine ⟨S, hS0, fun w hw ↦ (hSsub hw).1, fun w hw ↦ ?_⟩
     have h2 := (hSsub hw).2
     rw [Set.mem_preimage] at h2
     exact ⟨h2.1, h2.2⟩
@@ -5735,7 +5734,7 @@ private theorem bipolarGreen_aux1 (D₀ : CoordDisk M) {p₁ p₂ : M}
   have hp₂Car2 : p₂ ∈ Car2 :=
     ⟨c₂, mem_closedBall_self (by linarith only [hr₂]),
       by rw [hc₂]; exact e₂.left_inv hp₂src⟩
-  have hp₁ne₂ : p₁ ∉ Car2 := fun hmem => (hCar2av p₁ hmem).2 hp₁Car1
+  have hp₁ne₂ : p₁ ∉ Car2 := fun hmem ↦ (hCar2av p₁ hmem).2 hp₁Car1
   /- ## The interior pole balls. -/
   set B₁ : Set M := e₁.source ∩ e₁ ⁻¹' ball c₁ r₁ with hB₁
   set B₂ : Set M := e₂.source ∩ e₂ ⁻¹' ball c₂ r₂ with hB₂
@@ -5785,8 +5784,8 @@ private theorem bipolarGreen_aux1 (D₀ : CoordDisk M) {p₁ p₂ : M}
     rw [huniv]
     trivial
   obtain ⟨p₃, hp₃car, hp₃C1, hp₃C2⟩ := hp₃ex
-  have h₃₁ : p₃ ≠ p₁ := fun hcon => hp₃C1 (hcon ▸ hp₁Car1)
-  have h₃₂ : p₃ ≠ p₂ := fun hcon => hp₃C2 (hcon ▸ hp₂Car2)
+  have h₃₁ : p₃ ≠ p₁ := fun hcon ↦ hp₃C1 (hcon ▸ hp₁Car1)
+  have h₃₂ : p₃ ≠ p₂ := fun hcon ↦ hp₃C2 (hcon ▸ hp₂Car2)
   /- ## The Harnack chain domains, the chain compact and the constants. -/
   set Dq : CoordDisk M := D₀.shrink (1 / 4) (by norm_num) (by norm_num) with hDq
   have hDqcar : Dq.closedCarrier = e₀.symm '' closedBall c₀ (1 / 4 * r₀) := rfl
@@ -5919,13 +5918,13 @@ private theorem bipolarGreen_aux1 (D₀ : CoordDisk M) {p₁ p₂ : M}
     have hpahalf : pa ∈ (chartAt ℂ pa).symm '' closedBall (chartAt ℂ pa pa) (ra / 2) :=
       ⟨chartAt ℂ pa pa, mem_closedBall_self (by linarith only [hra]),
         (chartAt ℂ pa).left_inv (mem_chart_source ℂ pa)⟩
-    set u : M → ℝ := fun q => Nt + Real.log 2 - pieceGreen P pa q with hu
+    set u : M → ℝ := fun q ↦ Nt + Real.log 2 - pieceGreen P pa q with hu
     have huharm : MHarmonicOn u ΩA := by
       intro q hq
-      have hqnepa : q ≠ pa := fun hcon => hΩA2 q hq (hcon ▸ hpahalf)
+      have hqnepa : q ≠ pa := fun hcon ↦ hΩA2 q hq (hcon ▸ hpahalf)
       have h1 : MHarmonicAt (pieceGreen P pa) q :=
         pgharm P pa hpaP hcs hnc hGFa q (hΩA1 q hq) hqnepa
-      refine mharm_congr _ _ q (Filter.Eventually.of_forall fun y => ?_)
+      refine mharm_congr _ _ q (Filter.Eventually.of_forall fun y ↦ ?_)
         (mharmAffine _ q (-1) (Nt + Real.log 2) h1)
       simp only [hu]
       ring
@@ -5959,8 +5958,8 @@ private theorem bipolarGreen_aux1 (D₀ : CoordDisk M) {p₁ p₂ : M}
   have hC₀1 : (1 : ℝ) ≤ C₀ := le_max_right _ _
   have hC₀0 : (0 : ℝ) ≤ C₀ := by linarith only [hC₀1]
   refine ⟨r₁, r₂, C₀, hr₁, hr₂, hC₀1, htgt1, htgt2,
-    (fun w hw => hS₁av w (closedBall_subset_closedBall h2r₁ hw)),
-    (fun w hw => hS₂av w (closedBall_subset_closedBall h2r₂ hw)), ?_⟩
+    (fun w hw ↦ hS₁av w (closedBall_subset_closedBall h2r₁ hw)),
+    (fun w hw ↦ hS₂av w (closedBall_subset_closedBall h2r₂ hw)), ?_⟩
   intro tt htt htt1 htt4 x hx1 hx2
   /- ## The piece for the given shrink parameter. -/
   set Pt : Opens M := (D₀.shrink tt htt htt1).compl with hPt
@@ -5974,8 +5973,8 @@ private theorem bipolarGreen_aux1 (D₀ : CoordDisk M) {p₁ p₂ : M}
     rw [hcart, hDqcar]
     exact Set.image_mono (closedBall_subset_closedBall
       (mul_le_mul_of_nonneg_right htt4 hr₀.le))
-  have hp₁t : p₁ ∈ Pt := fun hmem => hp₁ (hcarsubt hmem)
-  have hp₂t : p₂ ∈ Pt := fun hmem => hp₂ (hcarsubt hmem)
+  have hp₁t : p₁ ∈ Pt := fun hmem ↦ hp₁ (hcarsubt hmem)
+  have hp₂t : p₂ ∈ Pt := fun hmem ↦ hp₂ (hcarsubt hmem)
   haveI hconnT : ConnectedSpace ↥Pt :=
     isConnected_iff_connectedSpace.mp (isConnected_coordDisk_compl _)
   haveI hncT : NoncompactSpace ↥Pt := noncompactSpace_coordDisk_compl _
@@ -6087,11 +6086,14 @@ private theorem bipolarGreen_aux1 (D₀ : CoordDisk M) {p₁ p₂ : M}
 subtracting the logarithmic pole at the first point, the difference extends to a
 harmonic function on a fixed chart ball, bounded by the exterior bound plus the
 logarithms of the two ball radii. -/
-private theorem bipolarGreen_aux2 (D₀ : CoordDisk M) {pa pb : M} {ra rb C₀ : ℝ}
+private theorem exists_harmonicOnNhd_pieceGreen_dipole_add_log (D₀ : CoordDisk M)
+    {pa pb : M} {ra rb C₀ : ℝ}
     (hra : 0 < ra) (hrb : 0 < rb)
     (htga : closedBall (chartAt ℂ pa pa) (2 * ra) ⊆ (chartAt ℂ pa).target)
-    (hava : ∀ w ∈ closedBall (chartAt ℂ pa pa) (2 * ra),
-      (chartAt ℂ pa).symm w ∉ D₀.closedCarrier ∧ (chartAt ℂ pa).symm w ≠ pb)
+    (havaCar : ∀ w ∈ closedBall (chartAt ℂ pa pa) (2 * ra),
+      (chartAt ℂ pa).symm w ∉ D₀.closedCarrier)
+    (havaNe : ∀ w ∈ closedBall (chartAt ℂ pa pa) (2 * ra),
+      (chartAt ℂ pa).symm w ≠ pb)
     (havb : ∀ w ∈ closedBall (chartAt ℂ pb pb) (2 * rb),
       (chartAt ℂ pb).symm w ∉ D₀.closedCarrier)
     (hdisj : ∀ w ∈ closedBall (chartAt ℂ pa pa) (2 * ra),
@@ -6173,17 +6175,17 @@ private theorem bipolarGreen_aux2 (D₀ : CoordDisk M) {pa pb : M} {ra rb C₀ :
       rw [(chartAt ℂ ((chartAt ℂ x).symm w)).left_inv hζ.2]
     exact (harmonicAt_congr_nhds hev).mp hcomp
   have mharmSub : ∀ (f g : M → ℝ) (z : M), MHarmonicAt f z → MHarmonicAt g z →
-      MHarmonicAt (fun y => f y - g y) z := by
+      MHarmonicAt (fun y ↦ f y - g y) z := by
     intro f g z hf hg
-    refine mharm_congr (f + -g) _ z (Filter.Eventually.of_forall fun y => ?_) (hf.add hg.neg)
+    refine mharm_congr (f + -g) _ z (Filter.Eventually.of_forall fun y ↦ ?_) (hf.add hg.neg)
     simp only [Pi.add_apply, Pi.neg_apply]
     exact (sub_eq_add_neg (f y) (g y)).symm
   /- ## Negation of a plane-harmonic function. -/
   have harmNeg : ∀ (h : ℂ → ℝ) (s : Set ℂ), HarmonicOnNhd h s →
-      HarmonicOnNhd (fun w => -h w) s := by
+      HarmonicOnNhd (fun w ↦ -h w) s := by
     intro h s hh z hz
     have h1 := (hh z hz).const_smul (c := (-1 : ℝ))
-    have hev : ((-1 : ℝ) • h) =ᶠ[𝓝 z] fun w => -h w := by
+    have hev : ((-1 : ℝ) • h) =ᶠ[𝓝 z] fun w ↦ -h w := by
       filter_upwards with w
       simp only [Pi.smul_apply, smul_eq_mul]
       ring
@@ -6210,9 +6212,9 @@ private theorem bipolarGreen_aux2 (D₀ : CoordDisk M) {pa pb : M} {ra rb C₀ :
     have h1 := (mharmonicOn_greenEnvelope hGF).1
     have h2 : MHarmonicAt (greenEnvelope (⟨p, hp⟩ : ↥P)) ⟨y, hy⟩ :=
       h1 _ (Set.mem_compl_singleton_iff.mpr
-        (fun hcon => hyp (congrArg Subtype.val hcon)))
+        (fun hcon ↦ hyp (congrArg Subtype.val hcon)))
     exact (mharm_val P (pieceGreen P p) (greenEnvelope (⟨p, hp⟩ : ↥P))
-      (fun z => pgval P p hp z z.2) ⟨y, hy⟩).mpr h2
+      (fun z ↦ pgval P p hp z z.2) ⟨y, hy⟩).mpr h2
   /- ## The piece, its instances and the Green data. -/
   set P : Opens M := (D₀.shrink t ht ht1).compl with hPdef
   have hcarsub : (D₀.shrink t ht ht1).closedCarrier ⊆ D₀.closedCarrier := by
@@ -6232,14 +6234,14 @@ private theorem bipolarGreen_aux2 (D₀ : CoordDisk M) {pa pb : M} {ra rb C₀ :
   have hpbcb : (chartAt ℂ pb).symm (chartAt ℂ pb pb) = pb :=
     (chartAt ℂ pb).left_inv hpbsrc
   have hpacar : pa ∉ D₀.closedCarrier := by
-    have h1 := (hava (chartAt ℂ pa pa)
-      (mem_closedBall_self (by linarith only [hra]))).1
+    have h1 := havaCar (chartAt ℂ pa pa)
+      (mem_closedBall_self (by linarith only [hra]))
     rwa [hpaca] at h1
   have hpbcar : pb ∉ D₀.closedCarrier := by
     have h1 := havb (chartAt ℂ pb pb) (mem_closedBall_self (by linarith only [hrb]))
     rwa [hpbcb] at h1
-  have hpaP : pa ∈ P := fun hmem => hpacar (hcarsub hmem)
-  have hpbP : pb ∈ P := fun hmem => hpbcar (hcarsub hmem)
+  have hpaP : pa ∈ P := fun hmem ↦ hpacar (hcarsub hmem)
+  have hpbP : pb ∈ P := fun hmem ↦ hpbcar (hcarsub hmem)
   haveI hPconn : ConnectedSpace ↥P :=
     isConnected_iff_connectedSpace.mp (isConnected_coordDisk_compl _)
   haveI hPnc : NoncompactSpace ↥P := noncompactSpace_coordDisk_compl _
@@ -6302,10 +6304,10 @@ private theorem bipolarGreen_aux2 (D₀ : CoordDisk M) {pa pb : M} {ra rb C₀ :
       rw [← h2]
       exact hBE w (ball_subset_closedBall hwball)
   /- ## The dipole difference and its data on the piece. -/
-  set Fd : M → ℝ := fun z => pieceGreen P pa z - pieceGreen P pb z with hFdd
+  set Fd : M → ℝ := fun z ↦ pieceGreen P pa z - pieceGreen P pb z with hFdd
   have hcarin : ∀ w ∈ closedBall (chartAt ℂ pa pa) (2 * ra),
       (chartAt ℂ pa).symm w ∈ P :=
-    fun w hw hmem => (hava w hw).1 (hcarsub hmem)
+    fun w hw hmem ↦ havaCar w hw (hcarsub hmem)
   have hnp : ∀ w ∈ closedBall (chartAt ℂ pa pa) (2 * ra), w ≠ chartAt ℂ pa pa →
       (chartAt ℂ pa).symm w ≠ pa ∧ (chartAt ℂ pa).symm w ≠ pb := by
     intro w hw hwne
@@ -6316,7 +6318,7 @@ private theorem bipolarGreen_aux2 (D₀ : CoordDisk M) {pa pb : M} {ra rb C₀ :
         (chartAt ℂ pa).right_inv hwt
       rw [hcon] at h1
       exact hwne h1.symm
-    · exact (hava w hw).2
+    · exact havaNe w hw
   have hsB : ∀ w ∈ closedBall (chartAt ℂ pa pa) (2 * ra),
       ra ≤ dist w (chartAt ℂ pa pa) →
       (chartAt ℂ pa).symm w ∉
@@ -6346,7 +6348,7 @@ private theorem bipolarGreen_aux2 (D₀ : CoordDisk M) {pa pb : M} {ra rb C₀ :
   have hFbd : ∀ (z : M),
       z ∉ (chartAt ℂ pa).source ∩ ⇑(chartAt ℂ pa) ⁻¹' ball (chartAt ℂ pa pa) ra →
       z ∉ (chartAt ℂ pb).source ∩ ⇑(chartAt ℂ pb) ⁻¹' ball (chartAt ℂ pb pb) rb →
-      |Fd z| ≤ C₀ := fun z h1 h2 => hbd z h1 h2
+      |Fd z| ≤ C₀ := fun z h1 h2 ↦ hbd z h1 h2
   /- ## The pole structure of the difference near `pa`. -/
   have hFpole : ∃ ρ B : ℝ, 0 < ρ ∧
       ∀ w ∈ ball (chartAt ℂ pa pa) ρ \ {chartAt ℂ pa pa},
@@ -6354,7 +6356,7 @@ private theorem bipolarGreen_aux2 (D₀ : CoordDisk M) {pa pb : M} {ra rb C₀ :
     obtain ⟨ρE, BE, hρE0, hballE, hEbd⟩ := poleData
     set ρ2 : ℝ := min ρE (2 * ra) with hρ2
     have hρ20 : 0 < ρ2 := lt_min hρE0 (by linarith only [hra])
-    have hcont2 : ContinuousOn (fun w => pieceGreen P pb ((chartAt ℂ pa).symm w))
+    have hcont2 : ContinuousOn (fun w ↦ pieceGreen P pb ((chartAt ℂ pa).symm w))
         (closedBall (chartAt ℂ pa pa) ρ2) := by
       intro w hw
       have hwcb : w ∈ closedBall (chartAt ℂ pa pa) (2 * ra) :=
@@ -6366,7 +6368,7 @@ private theorem bipolarGreen_aux2 (D₀ : CoordDisk M) {pa pb : M} {ra rb C₀ :
           exact pgharm P pb hpbP hPconn hPnc hGFb z hz.1
             (Set.mem_compl_singleton_iff.1 hz.2)
         · rw [Set.mem_preimage]
-          exact ⟨hcarin w hwcb, Set.mem_compl_singleton_iff.2 (hava w hwcb).2⟩
+          exact ⟨hcarin w hwcb, Set.mem_compl_singleton_iff.2 (havaNe w hwcb)⟩
       exact (hHA.1.continuousAt).continuousWithinAt
     obtain ⟨B2c, hB2c⟩ :=
       (isCompact_closedBall (chartAt ℂ pa pa) ρ2).exists_bound_of_continuousOn hcont2
@@ -6396,7 +6398,7 @@ private theorem bipolarGreen_aux2 (D₀ : CoordDisk M) {pa pb : M} {ra rb C₀ :
   set ea : OpenPartialHomeomorph M ℂ := chartAt ℂ pa with hea
   set ca : ℂ := ea pa with hca
   have hpasrc : pa ∈ ea.source := mem_chart_source ℂ pa
-  set u : ℂ → ℝ := fun w => Fd (ea.symm w) + Real.log ‖w - ca‖ with hu
+  set u : ℂ → ℝ := fun w ↦ Fd (ea.symm w) + Real.log ‖w - ca‖ with hu
   have huharm : ∀ w ∈ ball ca (2 * ra) \ {ca}, HarmonicAt u w := by
     intro w hw
     obtain ⟨hwb, hwne⟩ := hw
@@ -6412,8 +6414,8 @@ private theorem bipolarGreen_aux2 (D₀ : CoordDisk M) {pa pb : M} {ra rb C₀ :
       · rw [Set.mem_preimage]
         exact ⟨hcarin w hwcb, Set.mem_compl_singleton_iff.2 hnpw.1,
           Set.mem_compl_singleton_iff.2 hnpw.2⟩
-    have h2 : HarmonicAt (fun v : ℂ => Real.log ‖v - ca‖) w := by
-      apply AnalyticAt.harmonicAt_log_norm (f := fun v : ℂ => v - ca)
+    have h2 : HarmonicAt (fun v : ℂ ↦ Real.log ‖v - ca‖) w := by
+      apply AnalyticAt.harmonicAt_log_norm (f := fun v : ℂ ↦ v - ca)
       · exact analyticAt_id.sub analyticAt_const
       · exact sub_ne_zero.2 hwne'
     refine (harmonicAt_congr_nhds ?_).mp (h1.add h2)
@@ -6431,7 +6433,7 @@ private theorem bipolarGreen_aux2 (D₀ : CoordDisk M) {pa pb : M} {ra rb C₀ :
     exact hEbd w ⟨ball_subset_ball (min_le_left _ _) hw.1, hw.2⟩
   obtain ⟨vloc, hvlocharm, hvloceq⟩ := exists_harmonicOnNhd_of_bounded_punctured
     hρm0 huharm' ⟨BE, hub⟩
-  set hcomp : ℂ → ℝ := fun z => if z = ca then vloc ca else u z with hhc
+  set hcomp : ℂ → ℝ := fun z ↦ if z = ca then vloc ca else u z with hhc
   have hcompharm : ∀ v ∈ ball ca (2 * ra), HarmonicAt hcomp v := by
     intro v hv
     by_cases hvc : v = ca
@@ -6479,7 +6481,7 @@ private theorem bipolarGreen_aux2 (D₀ : CoordDisk M) {pa pb : M} {ra rb C₀ :
       rw [mem_ball, hρ']
       have h1 : dist w ca ≤ max (dist w ca) ra := le_max_left _ _
       linarith only [h1, hd2, hra]
-    have hsubH : HarmonicOnNhd hcomp (closedBall ca ρ') := fun v hv =>
+    have hsubH : HarmonicOnNhd hcomp (closedBall ca ρ') := fun v hv ↦
       hcompharm v (mem_ball.2 (lt_of_le_of_lt (mem_closedBall.1 hv) hρ'lt))
     have hcl : ContinuousOn hcomp (closure (ball ca ρ')) := by
       rw [closure_ball ca hρ'0.ne']
@@ -6518,35 +6520,38 @@ private theorem bipolarGreen_aux2 (D₀ : CoordDisk M) {pa pb : M} {ra rb C₀ :
             linarith only [h1, hlogv]
     have hup := SubharmonicOn.le_of_frontier_le isOpen_ball isBounded_ball
       (HarmonicOnNhd.subharmonicOn
-        (fun v hv => hsubH v (ball_subset_closedBall hv)))
-      hcl (fun ζ hζ => le_trans (le_abs_self _) (hfrbd ζ hζ)) w hwρ'
+        (fun v hv ↦ hsubH v (ball_subset_closedBall hv)))
+      hcl (fun ζ hζ ↦ le_trans (le_abs_self _) (hfrbd ζ hζ)) w hwρ'
     have hlow := SubharmonicOn.le_of_frontier_le isOpen_ball isBounded_ball
       (HarmonicOnNhd.subharmonicOn
-        (harmNeg _ _ (fun v hv => hsubH v (ball_subset_closedBall hv))))
+        (harmNeg _ _ (fun v hv ↦ hsubH v (ball_subset_closedBall hv))))
       (by
         rw [closure_ball ca hρ'0.ne']
         exact (hsubH.continuousOn).neg)
-      (fun ζ hζ => le_trans (neg_le_abs _) (hfrbd ζ hζ)) w hwρ'
+      (fun ζ hζ ↦ le_trans (neg_le_abs _) (hfrbd ζ hζ)) w hwρ'
     rw [abs_le]
     constructor
     · linarith only [hlow]
     · exact hup
-  exact ⟨hcomp, fun v hv => hcompharm v hv, hcompval, hcompbd⟩
+  exact ⟨hcomp, fun v hv ↦ hcompharm v hv, hcompval, hcompbd⟩
 
 /-- The annulus log-barrier estimate: on the annulus between a shrunken disk and the fixed
 three-quarter circle of the base disk, one dipole difference of piece Green's functions
 exceeds another by at most the outer-circle gap plus a logarithmic barrier whose constant
 is controlled by the exterior bound. -/
-private theorem bipolarGreen_aux3 (D₀ : CoordDisk M) {p₁ p₂ : M} {r₁ r₂ C₀ : ℝ}
+private theorem pieceGreen_dipole_sub_le_log_barrier (D₀ : CoordDisk M) {p₁ p₂ : M} {r₁ r₂ C₀ : ℝ}
     (hr₁ : 0 < r₁) (hr₂ : 0 < r₂) (hC₀1 : 1 ≤ C₀)
     (htgt1 : closedBall (chartAt ℂ p₁ p₁) (2 * r₁) ⊆ (chartAt ℂ p₁).target)
     (htgt2 : closedBall (chartAt ℂ p₂ p₂) (2 * r₂) ⊆ (chartAt ℂ p₂).target)
-    (hav1 : ∀ w ∈ closedBall (chartAt ℂ p₁ p₁) (2 * r₁),
-      (chartAt ℂ p₁).symm w ∉ D₀.closedCarrier ∧ (chartAt ℂ p₁).symm w ≠ p₂)
-    (hav2 : ∀ w ∈ closedBall (chartAt ℂ p₂ p₂) (2 * r₂),
-      (chartAt ℂ p₂).symm w ∉ D₀.closedCarrier ∧
-        (chartAt ℂ p₂).symm w ∉
-          (chartAt ℂ p₁).symm '' closedBall (chartAt ℂ p₁ p₁) (2 * r₁))
+    (hav1Car : ∀ w ∈ closedBall (chartAt ℂ p₁ p₁) (2 * r₁),
+      (chartAt ℂ p₁).symm w ∉ D₀.closedCarrier)
+    (hav1Ne : ∀ w ∈ closedBall (chartAt ℂ p₁ p₁) (2 * r₁),
+      (chartAt ℂ p₁).symm w ≠ p₂)
+    (hav2Car : ∀ w ∈ closedBall (chartAt ℂ p₂ p₂) (2 * r₂),
+      (chartAt ℂ p₂).symm w ∉ D₀.closedCarrier)
+    (hav2Disj : ∀ w ∈ closedBall (chartAt ℂ p₂ p₂) (2 * r₂),
+      (chartAt ℂ p₂).symm w ∉
+        (chartAt ℂ p₁).symm '' closedBall (chartAt ℂ p₁ p₁) (2 * r₁))
     {tA tC tD : ℝ} (htA : 0 < tA) (htA1 : tA ≤ 1) (htA4 : tA ≤ 1 / 4)
     (htC : 0 < tC) (htC1 : tC ≤ 1) (htD : 0 < tD) (htD1 : tD ≤ 1)
     (hCA : (D₀.shrink tC htC htC1).closedCarrier ⊆
@@ -6573,12 +6578,12 @@ private theorem bipolarGreen_aux3 (D₀ : CoordDisk M) {p₁ p₂ : M} {r₁ r�
       pieceGreen (D₀.shrink tC htC htC1).compl p₁ z -
         pieceGreen (D₀.shrink tC htC htC1).compl p₂ z -
         (pieceGreen (D₀.shrink tD htD htD1).compl p₁ z -
-          pieceGreen (D₀.shrink tD htD htD1).compl p₂ z) ≤ ε) :
-    ∀ x : M, x ∈ (chartAt ℂ D₀.center).source →
-      tA * D₀.radius <
-        dist (chartAt ℂ D₀.center x) (chartAt ℂ D₀.center D₀.center) →
-      dist (chartAt ℂ D₀.center x) (chartAt ℂ D₀.center D₀.center) <
-        3 * D₀.radius / 4 →
+          pieceGreen (D₀.shrink tD htD htD1).compl p₂ z) ≤ ε)
+    (x : M) (hxsrc : x ∈ (chartAt ℂ D₀.center).source)
+    (hxlo : tA * D₀.radius <
+      dist (chartAt ℂ D₀.center x) (chartAt ℂ D₀.center D₀.center))
+    (hxhi : dist (chartAt ℂ D₀.center x) (chartAt ℂ D₀.center D₀.center) <
+      3 * D₀.radius / 4) :
       pieceGreen (D₀.shrink tC htC htC1).compl p₁ x -
         pieceGreen (D₀.shrink tC htC htC1).compl p₂ x -
         (pieceGreen (D₀.shrink tD htD htD1).compl p₁ x -
@@ -6610,7 +6615,7 @@ private theorem bipolarGreen_aux3 (D₀ : CoordDisk M) {p₁ p₂ : M} {r₁ r�
     have hso : IsOpen {z | z ∈ Ω ∧ w z = w xm} := by
       rw [isOpen_iff_mem_nhds]
       rintro z ⟨hzΩ, hzw⟩
-      have hmax' : ∀ u ∈ Ω, w u ≤ w z := fun u hu => (hmax u hu).trans_eq hzw.symm
+      have hmax' : ∀ u ∈ Ω, w u ≤ w z := fun u hu ↦ (hmax u hu).trans_eq hzw.symm
       have hev := MSubharmonicAt.eventually_eq_of_le hΩo hzΩ hwsub hmax'
       filter_upwards [hev, hΩo.mem_nhds hzΩ] with u hu huΩ
       exact ⟨huΩ, hu.trans hzw⟩
@@ -6630,7 +6635,7 @@ private theorem bipolarGreen_aux3 (D₀ : CoordDisk M) {p₁ p₂ : M} {r₁ r�
       rintro z ⟨⟨-, h1⟩, -, h2⟩
       exact h2 h1
     have hres := hΩc.subset_left_of_subset_union hso hto hdisj hsub ⟨xm, hxm, hxm, rfl⟩
-    exact fun z hz => (hres hz).2
+    exact fun z hz ↦ (hres hz).2
   /- ## Maximum principle on an open set `Ω ≠ univ` with compact exceptional set. -/
   have maxPrin : ∀ (Ω : Set M) (w : M → ℝ) (m : ℝ) (Kc : Set M), IsOpen Ω →
       Ω ≠ Set.univ → MSubharmonicOn w Ω → IsCompact Kc →
@@ -6667,7 +6672,7 @@ private theorem bipolarGreen_aux3 (D₀ : CoordDisk M) {p₁ p₂ : M} {r₁ r�
     have hCcΩ : connectedComponentIn Ω xm ⊆ Ω := connectedComponentIn_subset _ _
     have hconst := propagate (connectedComponentIn Ω xm) w xm hCco
       isPreconnected_connectedComponentIn hCcx
-      (fun z hz => hwsub z (hCcΩ hz)) (fun z hz => hall z (hCcΩ hz))
+      (fun z hz ↦ hwsub z (hCcΩ hz)) (fun z hz ↦ hall z (hCcΩ hz))
     have hfrne :
         (closure (connectedComponentIn Ω xm) \ connectedComponentIn Ω xm).Nonempty := by
       by_contra hem
@@ -6725,10 +6730,10 @@ private theorem bipolarGreen_aux3 (D₀ : CoordDisk M) {p₁ p₂ : M} {r₁ r�
       rw [Set.mem_preimage, (chartAt ℂ y).left_inv (mem_chart_source ℂ y)]
       exact hyU
     obtain ⟨ρ, hρ, hρsub⟩ := Metric.isOpen_iff.mp hopen2 _ hmem2
-    have h0 : SubharmonicOn (fun _ : ℂ => (0 : ℝ)) (ball (chartAt ℂ y y) ρ) :=
-      HarmonicOnNhd.subharmonicOn fun z _ => harmonicAt_const 0
-    refine ⟨ρ, hρ, fun z hz => (hρsub hz).1, ?_⟩
-    exact transfer _ _ _ _ h0 subset_rfl fun z hz => (hf0 _ ((hρsub hz).2)).symm
+    have h0 : SubharmonicOn (fun _ : ℂ ↦ (0 : ℝ)) (ball (chartAt ℂ y y) ρ) :=
+      HarmonicOnNhd.subharmonicOn fun z _ ↦ harmonicAt_const 0
+    refine ⟨ρ, hρ, fun z hz ↦ (hρsub hz).1, ?_⟩
+    exact transfer _ _ _ _ h0 subset_rfl fun z hz ↦ (hf0 _ ((hρsub hz).2)).symm
   /- ## Harmonicity at a point respects eventual equality. -/
   have mharm_congr : ∀ (f g : M → ℝ) (y : M), (∀ᶠ z in 𝓝 y, f z = g z) →
       MHarmonicAt f y → MHarmonicAt g y := by
@@ -6782,9 +6787,9 @@ private theorem bipolarGreen_aux3 (D₀ : CoordDisk M) {p₁ p₂ : M} {r₁ r�
       obtain ⟨r', hr', hr'sub⟩ := Metric.isOpen_iff.mp hopen2 _ hmem2
       refine ⟨r', hr', ?_, ?_⟩
       · rw [hcenter, hct]
-        exact fun w hw => (hr'sub hw).1
+        exact fun w hw ↦ (hr'sub hw).1
       · rw [hcenter, hct]
-        refine transfer _ _ _ _ hsub (fun w hw => (hr'sub hw).2) ?_
+        refine transfer _ _ _ _ hsub (fun w hw ↦ (hr'sub hw).2) ?_
         intro w hw
         simp only [Function.comp_apply]
         rw [← hfg ((e'.subtypeRestr hnety).symm w)]
@@ -6832,42 +6837,42 @@ private theorem bipolarGreen_aux3 (D₀ : CoordDisk M) {p₁ p₂ : M} {r₁ r�
         exact hUsub hz
   /- ## Affine images of harmonic functions are harmonic. -/
   have mharmAffine : ∀ (g : M → ℝ) (x : M) (a c : ℝ), MHarmonicAt g x →
-      MHarmonicAt (fun y => a * g y + c) x := by
+      MHarmonicAt (fun y ↦ a * g y + c) x := by
     intro g x a c hg
     have h1 : HarmonicAt (g ∘ (chartAt ℂ x).symm) (chartAt ℂ x x) := hg
     have h2 := (h1.const_smul (c := a)).add (harmonicAt_const c)
-    have heq2 : (a • (g ∘ (chartAt ℂ x).symm) + fun _ => c) =
-        (fun y => a * g y + c) ∘ (chartAt ℂ x).symm := by
+    have heq2 : (a • (g ∘ (chartAt ℂ x).symm) + fun _ ↦ c) =
+        (fun y ↦ a * g y + c) ∘ (chartAt ℂ x).symm := by
       funext w
       simp [smul_eq_mul]
     rw [heq2] at h2
     exact h2
   have mharmLin : ∀ (f g : M → ℝ) (a b : ℝ) (z : M), MHarmonicAt f z → MHarmonicAt g z →
-      MHarmonicAt (fun y => a * f y + b * g y) z := by
+      MHarmonicAt (fun y ↦ a * f y + b * g y) z := by
     intro f g a b z hf hg
     have h3 := (mharmAffine f z a 0 hf).add (mharmAffine g z b 0 hg)
-    refine mharm_congr _ _ z (Filter.Eventually.of_forall fun y => ?_) h3
+    refine mharm_congr _ _ z (Filter.Eventually.of_forall fun y ↦ ?_) h3
     simp only [Pi.add_apply]
     ring
   /- ## The chart logarithm barrier: harmonicity and continuity off the singularity. -/
   have logHarm : ∀ (x₀ : M) (c : ℂ) (z : M), z ∈ (chartAt ℂ x₀).source →
       chartAt ℂ x₀ z ≠ c →
-      MHarmonicAt (fun q => Real.log (dist (chartAt ℂ x₀ q) c)) z := by
+      MHarmonicAt (fun q ↦ Real.log (dist (chartAt ℂ x₀ q) c)) z := by
     intro x₀ c z hzs hzne
     rw [mharmonicAt_iff_of_mem_maximalAtlas (IsManifold.chart_mem_maximalAtlas x₀) hzs]
-    have hharm : HarmonicAt (fun w : ℂ => Real.log ‖w - c‖) (chartAt ℂ x₀ z) := by
-      apply AnalyticAt.harmonicAt_log_norm (f := fun w : ℂ => w - c)
+    have hharm : HarmonicAt (fun w : ℂ ↦ Real.log ‖w - c‖) (chartAt ℂ x₀ z) := by
+      apply AnalyticAt.harmonicAt_log_norm (f := fun w : ℂ ↦ w - c)
       · exact analyticAt_id.sub analyticAt_const
       · exact sub_ne_zero.2 hzne
-    have heqv : (fun w : ℂ => Real.log ‖w - c‖) =ᶠ[𝓝 (chartAt ℂ x₀ z)]
-        ((fun q => Real.log (dist (chartAt ℂ x₀ q) c)) ∘ (chartAt ℂ x₀).symm) := by
+    have heqv : (fun w : ℂ ↦ Real.log ‖w - c‖) =ᶠ[𝓝 (chartAt ℂ x₀ z)]
+        ((fun q ↦ Real.log (dist (chartAt ℂ x₀ q) c)) ∘ (chartAt ℂ x₀).symm) := by
       filter_upwards [(chartAt ℂ x₀).open_target.mem_nhds
         ((chartAt ℂ x₀).map_source hzs)] with w hw
       simp only [Function.comp_apply, (chartAt ℂ x₀).right_inv hw, dist_eq_norm]
     exact (harmonicAt_congr_nhds heqv).1 hharm
   have logCont : ∀ (x₀ : M) (c : ℂ) (z : M), z ∈ (chartAt ℂ x₀).source →
       chartAt ℂ x₀ z ≠ c →
-      ContinuousAt (fun q => Real.log (dist (chartAt ℂ x₀ q) c)) z := by
+      ContinuousAt (fun q ↦ Real.log (dist (chartAt ℂ x₀ q) c)) z := by
     intro x₀ c z hzs hzne
     have h2 : ContinuousAt (chartAt ℂ x₀) z := (chartAt ℂ x₀).continuousAt hzs
     have h3 : dist (chartAt ℂ x₀ z) c ≠ 0 := (dist_pos.2 hzne).ne'
@@ -6899,11 +6904,11 @@ private theorem bipolarGreen_aux3 (D₀ : CoordDisk M) {p₁ p₂ : M} {r₁ r�
     exact hy h2
   /- ## The zero function belongs to every piece Green family. -/
   have zeroFam : ∀ (P : Opens M) (p : M) (hp : p ∈ P),
-      (fun _ : ↥P => (0 : ℝ)) ∈ greenFamily (⟨p, hp⟩ : ↥P) := by
+      (fun _ : ↥P ↦ (0 : ℝ)) ∈ greenFamily (⟨p, hp⟩ : ↥P) := by
     intro P p hp
     haveI : Nonempty ↥P := ⟨⟨p, hp⟩⟩
-    refine ⟨fun z _ => (mharmonicAt_const (a := (0 : ℝ))).msubharmonicAt,
-      continuousOn_const, ⟨∅, isCompact_empty, Set.empty_ne_univ, fun z _ => rfl⟩,
+    refine ⟨fun z _ ↦ (mharmonicAt_const (a := (0 : ℝ))).msubharmonicAt,
+      continuousOn_const, ⟨∅, isCompact_empty, Set.empty_ne_univ, fun z _ ↦ rfl⟩,
       ⟨0, ?_⟩⟩
     have hcont : ContinuousAt (poleCoord (⟨p, hp⟩ : ↥P)) (⟨p, hp⟩ : ↥P) := by
       have h1 : ContinuousAt (chartAt ℂ (⟨p, hp⟩ : ↥P)) (⟨p, hp⟩ : ↥P) :=
@@ -6930,7 +6935,7 @@ private theorem bipolarGreen_aux3 (D₀ : CoordDisk M) {p₁ p₂ : M} {r₁ r�
         ∀ᶠ y in 𝓝[≠] p, vE y + Real.log ‖poleCoord p y‖ ≤ Cv := by
     intro P p hp v hv
     obtain ⟨hvsub, hvcont, ⟨K, hKcomp, -, hKzero⟩, ⟨C, hC⟩⟩ := hv
-    set w : M → ℝ := fun y => if h : y ∈ P then v ⟨y, h⟩ else 0 with hwdef
+    set w : M → ℝ := fun y ↦ if h : y ∈ P then v ⟨y, h⟩ else 0 with hwdef
     have hwval : ∀ z : ↥P, w z = v z := by
       intro z
       simp only [hwdef]
@@ -6957,7 +6962,7 @@ private theorem bipolarGreen_aux3 (D₀ : CoordDisk M) {p₁ p₂ : M} {r₁ r�
       by_cases hyP : y ∈ P
       · have hoe : IsOpenEmbedding (Subtype.val : ↥P → M) :=
           P.2.isOpenEmbedding_subtypeVal
-        have hnz : (⟨y, hyP⟩ : ↥P) ≠ ⟨p, hp⟩ := fun hcon =>
+        have hnz : (⟨y, hyP⟩ : ↥P) ≠ ⟨p, hp⟩ := fun hcon ↦
           (Set.mem_compl_singleton_iff.mp hy) (congrArg Subtype.val hcon)
         have hvat : ContinuousAt v (⟨y, hyP⟩ : ↥P) :=
           hvcont.continuousAt (isOpen_compl_singleton.mem_nhds
@@ -6965,27 +6970,27 @@ private theorem bipolarGreen_aux3 (D₀ : CoordDisk M) {p₁ p₂ : M} {r₁ r�
         have h1 : Tendsto (w ∘ Subtype.val) (𝓝 (⟨y, hyP⟩ : ↥P)) (𝓝 (w y)) := by
           have h2 : w y = v ⟨y, hyP⟩ := hwval ⟨y, hyP⟩
           rw [h2]
-          exact Filter.Tendsto.congr (fun u => (hwval u).symm) hvat
+          exact Filter.Tendsto.congr (fun u ↦ (hwval u).symm) hvat
         have h4 : Filter.map (Subtype.val : ↥P → M) (𝓝 (⟨y, hyP⟩ : ↥P)) = 𝓝 y :=
           hoe.map_nhds_eq ⟨y, hyP⟩
         have h5 : Tendsto w (𝓝 y) (𝓝 (w y)) := by
           rw [← h4, Filter.tendsto_map'_iff]
           exact h1
         exact h5
-      · have hev : w =ᶠ[𝓝 y] fun _ => (0 : ℝ) := by
+      · have hev : w =ᶠ[𝓝 y] fun _ ↦ (0 : ℝ) := by
           filter_upwards [hKwcl.isOpen_compl.mem_nhds
-            (fun hmem => hyP (hKwsub hmem))] with u hu
+            (fun hmem ↦ hyP (hKwsub hmem))] with u hu
           exact hKwzero u hu
         exact continuousAt_const.congr_of_eventuallyEq hev
     have hwsub : MSubharmonicOn w {p}ᶜ := by
       intro y hy
       by_cases hyP : y ∈ P
-      · have hnz : (⟨y, hyP⟩ : ↥P) ≠ ⟨p, hp⟩ := fun hcon =>
+      · have hnz : (⟨y, hyP⟩ : ↥P) ≠ ⟨p, hp⟩ := fun hcon ↦
           (Set.mem_compl_singleton_iff.mp hy) (congrArg Subtype.val hcon)
         exact (msub_val P w v hwval ⟨y, hyP⟩).mpr
           (hvsub ⟨y, hyP⟩ (Set.mem_compl_singleton_iff.mpr hnz))
       · exact msub_zero w Kwᶜ y hKwcl.isOpen_compl
-          (fun hmem => hyP (hKwsub hmem)) (fun z hz => hKwzero z hz)
+          (fun hmem ↦ hyP (hKwsub hmem)) (fun z hz ↦ hKwzero z hz)
     refine ⟨w, Kw, C, hwval, hwsub, hwcont, hKwcomp, hKwsub, hKwzero, ?_⟩
     rw [← mapval P p hp, Filter.eventually_map]
     filter_upwards [hC] with z hz
@@ -7002,9 +7007,9 @@ private theorem bipolarGreen_aux3 (D₀ : CoordDisk M) {p₁ p₂ : M} {r₁ r�
     have h1 := (mharmonicOn_greenEnvelope hGF).1
     have h2 : MHarmonicAt (greenEnvelope (⟨p, hp⟩ : ↥P)) ⟨y, hy⟩ :=
       h1 _ (Set.mem_compl_singleton_iff.mpr
-        (fun hcon => hyp (congrArg Subtype.val hcon)))
+        (fun hcon ↦ hyp (congrArg Subtype.val hcon)))
     exact (mharm_val P (pieceGreen P p) (greenEnvelope (⟨p, hp⟩ : ↥P))
-      (fun z => pgval P p hp z z.2) ⟨y, hy⟩).mpr h2
+      (fun z ↦ pgval P p hp z z.2) ⟨y, hy⟩).mpr h2
   /- ## The center chart, the pieces and the pole-ball geometry. -/
   set e₀ : OpenPartialHomeomorph M ℂ := chartAt ℂ D₀.center with he₀
   set c₀ : ℂ := e₀ D₀.center with hc₀
@@ -7032,10 +7037,10 @@ private theorem bipolarGreen_aux3 (D₀ : CoordDisk M) {p₁ p₂ : M} {r₁ r�
     (e₂.continuousOn_symm.mono htgt2)
   have hCar1av : ∀ z ∈ Car1, z ∉ D₀.closedCarrier ∧ z ≠ p₂ := by
     rintro z ⟨w, hw, rfl⟩
-    exact hav1 w hw
+    exact ⟨hav1Car w hw, hav1Ne w hw⟩
   have hCar2av : ∀ z ∈ Car2, z ∉ D₀.closedCarrier ∧ z ∉ Car1 := by
     rintro z ⟨w, hw, rfl⟩
-    exact hav2 w hw
+    exact ⟨hav2Car w hw, hav2Disj w hw⟩
   have hp₁Car1 : p₁ ∈ Car1 :=
     ⟨c₁, mem_closedBall_self (by linarith only [hr₁]),
       by rw [hc₁]; exact e₁.left_inv hp₁src⟩
@@ -7058,16 +7063,16 @@ private theorem bipolarGreen_aux3 (D₀ : CoordDisk M) {p₁ p₂ : M} {r₁ r�
     rw [Set.mem_preimage] at hxpre
     exact ⟨e₂ x, ball_subset_closedBall (ball_subset_ball (by linarith only [hr₂]) hxpre),
       e₂.left_inv hxsrc⟩
-  have hp₁C : p₁ ∈ PC := fun hmem => (hCar1av p₁ hp₁Car1).1
+  have hp₁C : p₁ ∈ PC := fun hmem ↦ (hCar1av p₁ hp₁Car1).1
     ((Set.image_mono (closedBall_subset_closedBall
       (mul_le_of_le_one_left hr₀.le htC1))) hmem)
-  have hp₂C : p₂ ∈ PC := fun hmem => (hCar2av p₂ hp₂Car2).1
+  have hp₂C : p₂ ∈ PC := fun hmem ↦ (hCar2av p₂ hp₂Car2).1
     ((Set.image_mono (closedBall_subset_closedBall
       (mul_le_of_le_one_left hr₀.le htC1))) hmem)
-  have hp₁D : p₁ ∈ PD := fun hmem => (hCar1av p₁ hp₁Car1).1
+  have hp₁D : p₁ ∈ PD := fun hmem ↦ (hCar1av p₁ hp₁Car1).1
     ((Set.image_mono (closedBall_subset_closedBall
       (mul_le_of_le_one_left hr₀.le htD1))) hmem)
-  have hp₂D : p₂ ∈ PD := fun hmem => (hCar2av p₂ hp₂Car2).1
+  have hp₂D : p₂ ∈ PD := fun hmem ↦ (hCar2av p₂ hp₂Car2).1
     ((Set.image_mono (closedBall_subset_closedBall
       (mul_le_of_le_one_left hr₀.le htD1))) hmem)
   haveI hconnC : ConnectedSpace ↥PC :=
@@ -7103,7 +7108,6 @@ private theorem bipolarGreen_aux3 (D₀ : CoordDisk M) {p₁ p₂ : M} {r₁ r�
       · exact mul_pos htA hr₀
       · exact hδltA
     linarith only [h1]
-  intro x hxsrc hxlo hxhi
   set δA : ℝ := tA * r₀ with hδA
   have hδA0 : 0 < δA := by
     rw [hδA]
@@ -7117,8 +7121,8 @@ private theorem bipolarGreen_aux3 (D₀ : CoordDisk M) {p₁ p₂ : M} {r₁ r�
   have hcancel : η * (Real.log ρs - Real.log δA) = 4 * C₀ := by
     rw [hη]
     exact div_mul_cancel₀ _ hdenA.ne'
-  set L : M → ℝ := fun q => Real.log ρs - Real.log (dist (e₀ q) c₀) with hL
-  set W : M → ℝ := fun q => pieceGreen (PC) p₂ q +
+  set L : M → ℝ := fun q ↦ Real.log ρs - Real.log (dist (e₀ q) c₀) with hL
+  set W : M → ℝ := fun q ↦ pieceGreen (PC) p₂ q +
     (pieceGreen (PD) p₁ q - pieceGreen (PD) p₂ q) + (ε + η * L q) with hW
   set Ωσ : Set M := e₀.symm '' (ball c₀ ρs \ closedBall c₀ δA) with hΩσ
   have hΩσsub : ball c₀ ρs \ closedBall c₀ δA ⊆ e₀.target :=
@@ -7149,8 +7153,8 @@ private theorem bipolarGreen_aux3 (D₀ : CoordDisk M) {p₁ p₂ : M} {r₁ r�
       (e₀.continuousOn_symm.mono hKσtgt)
   have hΩσKσ : Ωσ ⊆ Kσ := by
     rw [hΩσ, hKσ]
-    exact Set.image_mono (fun w hw => ⟨ball_subset_closedBall hw.1,
-      fun h => hw.2 (ball_subset_closedBall h)⟩)
+    exact Set.image_mono (fun w hw ↦ ⟨ball_subset_closedBall hw.1,
+      fun h ↦ hw.2 (ball_subset_closedBall h)⟩)
   have hcenΩσ : D₀.center ∉ Ωσ := by
     intro hcon
     obtain ⟨-, h2, -⟩ := hΩσmem _ hcon
@@ -7187,7 +7191,7 @@ private theorem bipolarGreen_aux3 (D₀ : CoordDisk M) {p₁ p₂ : M} {r₁ r�
       intro hmem
       have h3 := ((hcarmemA z).1 hmem).2
       linarith only [hδA, h3, hz2]
-    exact ⟨fun hmem => hnotA (hCA hmem), fun hmem => hnotA (hDA hmem)⟩
+    exact ⟨fun hmem ↦ hnotA (hCA hmem), fun hmem ↦ hnotA (hDA hmem)⟩
   have hWharm : ∀ z ∈ Ωσ, MHarmonicAt W z := by
     intro z hz
     obtain ⟨hzsrc, hzlo, hzhi⟩ := hΩσmem z hz
@@ -7203,13 +7207,13 @@ private theorem bipolarGreen_aux3 (D₀ : CoordDisk M) {p₁ p₂ : M} {r₁ r�
       intro hcon
       rw [hcon, dist_self] at hzlo
       exact absurd hzlo (not_lt.2 hδA0.le)
-    have h4 : MHarmonicAt (fun q => Real.log (dist (e₀ q) c₀)) z :=
+    have h4 : MHarmonicAt (fun q ↦ Real.log (dist (e₀ q) c₀)) z :=
       logHarm D₀.center c₀ z hzsrc hzcne
     have h5 := mharmLin _ _ 1 (-1) z h2 h3
     have h6 := mharmLin _ _ 1 1 z h1 h5
     have h7 := mharmAffine _ z (-η) (ε + η * Real.log ρs) h4
     have h8 := mharmLin _ _ 1 1 z h6 h7
-    refine mharm_congr _ _ z (Filter.Eventually.of_forall fun y => ?_) h8
+    refine mharm_congr _ _ z (Filter.Eventually.of_forall fun y ↦ ?_) h8
     simp only [hW, hL]
     ring
   have hxΩσ : x ∈ Ωσ := hΩσmem' x hxsrc (by linarith only [hδA, hxlo]) hxhi
@@ -7219,35 +7223,35 @@ private theorem bipolarGreen_aux3 (D₀ : CoordDisk M) {p₁ p₂ : M} {r₁ r�
     rw [pgval (PC) p₁ hp₁C x hxWC]
     simp only [greenEnvelope]
     refine csSup_le
-      ⟨0, (fun _ : ↥(PC) => (0 : ℝ)), zeroFam (PC) p₁ hp₁C, rfl⟩ ?_
+      ⟨0, (fun _ : ↥(PC) ↦ (0 : ℝ)), zeroFam (PC) p₁ hp₁C, rfl⟩ ?_
     rintro b ⟨v, hv, rfl⟩
     obtain ⟨vE, KE, Cv, hvEval, hvEsub, hvEcont, hKEc, hKEP, hKE0, hCv⟩ :=
       extendC (PC) p₁ hp₁C v hv
     have hpairv : ∀ z : M, z ∉ B₁ → z ∉ B₂ →
         vE z - pieceGreen (PC) p₂ z ≤ C₀ := by
       intro z hz1 hz2
-      have hznp₁ : z ≠ p₁ := fun hcon => hz1 (hcon ▸ hp₁B₁)
+      have hznp₁ : z ≠ p₁ := fun hcon ↦ hz1 (hcon ▸ hp₁B₁)
       by_cases hzP : z ∈ PC
       · have h1 : vE z ≤ pieceGreen (PC) p₁ z := by
           have h2 : v ⟨z, hzP⟩ ≤ greenEnvelope (⟨p₁, hp₁C⟩ : ↥PC) ⟨z, hzP⟩ :=
-            le_csSup (hbddCC _ (fun hcon => hznp₁ (congrArg Subtype.val hcon)))
+            le_csSup (hbddCC _ (fun hcon ↦ hznp₁ (congrArg Subtype.val hcon)))
               ⟨v, hv, rfl⟩
           rw [pgval (PC) p₁ hp₁C z hzP]
           calc vE z = v ⟨z, hzP⟩ := hvEval ⟨z, hzP⟩
             _ ≤ _ := h2
         have h3 := (abs_le.1 (hbdC z hz1 hz2)).2
         linarith only [h1, h3]
-      · have h1 : vE z = 0 := hKE0 z (fun hmem => hzP (hKEP hmem))
+      · have h1 : vE z = 0 := hKE0 z (fun hmem ↦ hzP (hKEP hmem))
         have h2 : pieceGreen (PC) p₂ z = 0 := pgzero _ _ _ hzP
         rw [h1, h2]
         linarith only [hC₀1]
-    set wc : M → ℝ := fun z => max (vE z - W z) 0 with hwc
+    set wc : M → ℝ := fun z ↦ max (vE z - W z) 0 with hwc
     have hwcsub : MSubharmonicOn wc Ωσ := by
       intro z hz
-      have h1 : MSubharmonicAt (fun q => vE q - W q) z :=
+      have h1 : MSubharmonicAt (fun q ↦ vE q - W q) z :=
         (hvEsub z (Set.mem_compl_singleton_iff.2 (hΩσnp z hz).1)).sub_mharmonicAt
           (hWharm z hz)
-      have h2 : MSubharmonicAt (fun _ : M => (0 : ℝ)) z :=
+      have h2 : MSubharmonicAt (fun _ : M ↦ (0 : ℝ)) z :=
         (mharmonicAt_const (a := (0 : ℝ))).msubharmonicAt
       rw [hwc]
       exact h1.max h2
@@ -7264,7 +7268,7 @@ private theorem bipolarGreen_aux3 (D₀ : CoordDisk M) {p₁ p₂ : M} {r₁ r�
       have hyval : e₀ y = w := by rw [← hwy, e₀.right_inv hwt]
       have hyd1 : δA ≤ dist (e₀ y) c₀ := by
         rw [hyval]
-        exact not_lt.1 (fun h => hw2 (mem_ball.2 h))
+        exact not_lt.1 (fun h ↦ hw2 (mem_ball.2 h))
       have hyd2 : dist (e₀ y) c₀ ≤ ρs := by
         rw [hyval]
         exact mem_closedBall.1 hw1
@@ -7272,10 +7276,10 @@ private theorem bipolarGreen_aux3 (D₀ : CoordDisk M) {p₁ p₂ : M} {r₁ r�
         rw [hcar₀]
         exact ⟨e₀ y, mem_closedBall.2 (by linarith only [hyd2, hρsr₀]),
           e₀.left_inv hysrc⟩
-      have hyB₁ : y ∉ B₁ := fun hmem => (hCar1av y (hB₁Car hmem)).1 hyCar
-      have hyB₂ : y ∉ B₂ := fun hmem => (hCar2av y (hB₂Car hmem)).1 hyCar
-      have hynp₁ : y ≠ p₁ := fun hcon => hyB₁ (hcon ▸ hp₁B₁)
-      have hynp₂ : y ≠ p₂ := fun hcon => hyB₂ (hcon ▸ hp₂B₂)
+      have hyB₁ : y ∉ B₁ := fun hmem ↦ (hCar1av y (hB₁Car hmem)).1 hyCar
+      have hyB₂ : y ∉ B₂ := fun hmem ↦ (hCar2av y (hB₂Car hmem)).1 hyCar
+      have hynp₁ : y ≠ p₁ := fun hcon ↦ hyB₁ (hcon ▸ hp₁B₁)
+      have hynp₂ : y ≠ p₂ := fun hcon ↦ hyB₂ (hcon ▸ hp₂B₂)
       have hycne : e₀ y ≠ c₀ := by
         intro hcon
         rw [hcon, dist_self] at hyd1
@@ -7286,11 +7290,11 @@ private theorem bipolarGreen_aux3 (D₀ : CoordDisk M) {p₁ p₂ : M} {r₁ r�
           · exact absurd (hΩσmem' y hysrc h1 h2) hyΩ
           · exact Or.inr h2
         · exact Or.inl h1.symm
-      have hLcont : ContinuousAt (fun q => Real.log (dist (e₀ q) c₀)) y :=
+      have hLcont : ContinuousAt (fun q ↦ Real.log (dist (e₀ q) c₀)) y :=
         logCont D₀.center c₀ y hysrc hycne
       rcases hydisj with hyd | hyd
       · -- the inner circle: the capped competitor vanishes on a neighbourhood
-        have hcbar : ContinuousAt (fun q : M => 2 * C₀ - ε - η *
+        have hcbar : ContinuousAt (fun q : M ↦ 2 * C₀ - ε - η *
             (Real.log ρs - Real.log (dist (e₀ q) c₀))) y :=
           continuousAt_const.sub
             (continuousAt_const.mul (continuousAt_const.sub hLcont))
@@ -7307,8 +7311,8 @@ private theorem bipolarGreen_aux3 (D₀ : CoordDisk M) {p₁ p₂ : M} {r₁ r�
         have hev : ∀ᶠ z in 𝓝 y, wc z = 0 := by
           filter_upwards [havoid.mem_nhds hyav,
             hcbar.tendsto.eventually_lt_const hcbarneg] with z hzav hzneg
-          have hz1 : z ∉ B₁ := fun hmem => hzav (Or.inl (hB₁Car hmem))
-          have hz2 : z ∉ B₂ := fun hmem => hzav (Or.inr (hB₂Car hmem))
+          have hz1 : z ∉ B₁ := fun hmem ↦ hzav (Or.inl (hB₁Car hmem))
+          have hz2 : z ∉ B₂ := fun hmem ↦ hzav (Or.inr (hB₂Car hmem))
           have h1 := hpairv z hz1 hz2
           have h2 := (abs_le.1 (hbdD z hz1 hz2)).1
           have hle : vE z - W z ≤ 0 := by
@@ -7328,8 +7332,8 @@ private theorem bipolarGreen_aux3 (D₀ : CoordDisk M) {p₁ p₂ : M} {r₁ r�
           have h3 := ((hcarmemA y).1 hmem).2
           rw [hyd] at h3
           linarith only [hδA, h3, hδAρ]
-        have hyWC : y ∈ PC := fun hmem => hnotA (hCA hmem)
-        have hyWD : y ∈ PD := fun hmem => hnotA (hDA hmem)
+        have hyWC : y ∈ PC := fun hmem ↦ hnotA (hCA hmem)
+        have hyWD : y ∈ PD := fun hmem ↦ hnotA (hDA hmem)
         have hcv : ContinuousAt vE y := hvEcont.continuousAt
           (isOpen_compl_singleton.mem_nhds (Set.mem_compl_singleton_iff.2 hynp₁))
         have hcg1 : ContinuousAt (pieceGreen (PC) p₂) y :=
@@ -7347,7 +7351,7 @@ private theorem bipolarGreen_aux3 (D₀ : CoordDisk M) {p₁ p₂ : M} {r₁ r�
               (continuousAt_const.mul (continuousAt_const.sub hLcont)))
         have h1 : vE y ≤ pieceGreen (PC) p₁ y := by
           have h2 : v ⟨y, hyWC⟩ ≤ greenEnvelope (⟨p₁, hp₁C⟩ : ↥PC) ⟨y, hyWC⟩ :=
-            le_csSup (hbddCC _ (fun hcon => hynp₁ (congrArg Subtype.val hcon)))
+            le_csSup (hbddCC _ (fun hcon ↦ hynp₁ (congrArg Subtype.val hcon)))
               ⟨v, hv, rfl⟩
           rw [pgval (PC) p₁ hp₁C y hyWC]
           calc vE y = v ⟨y, hyWC⟩ := hvEval ⟨y, hyWC⟩
@@ -7380,13 +7384,14 @@ private theorem bipolarGreen_aux3 (D₀ : CoordDisk M) {p₁ p₂ : M} {r₁ r�
 /-- A sequence of harmonic functions on a disk which is uniformly Cauchy on an interior
 circle converges on the enclosed disk, with harmonic limit: the Poisson kernel bounds
 propagate the circle oscillation inward with a two-point comparison constant. -/
-private theorem bipolarGreen_aux4 {ca : ℂ} {ra : ℝ} (hs : ℕ → ℂ → ℝ) (hra : 0 < ra)
-    (hharm : ∀ n, HarmonicOnNhd (hs n) (ball ca (2 * ra)))
-    (hcau : ∀ ε : ℝ, 0 < ε → ∃ N, ∀ m ≥ N, ∀ n ≥ N, ∀ ζ ∈ sphere ca (3 * ra /
+private theorem exists_harmonicOnNhd_tendsto_of_cauchy_sphere {ca : ℂ} {ra : ℝ}
+    (hs : ℕ → ℂ → ℝ) (hra : 0 < ra)
+    (hharm : ∀ n : ℕ, HarmonicOnNhd (hs n) (ball ca (2 * ra)))
+    (hcau : ∀ ε : ℝ, 0 < ε → ∃ N : ℕ, ∀ m ≥ N, ∀ n ≥ N, ∀ ζ ∈ sphere ca (3 * ra /
         2),
       |hs m ζ - hs n ζ| ≤ ε) :
     ∃ H : ℂ → ℝ, HarmonicOnNhd H (ball ca (3 * ra / 2)) ∧
-      ∀ w ∈ ball ca (3 * ra / 2), Tendsto (fun n => hs n w) atTop (𝓝 (H w)) := by
+      ∀ w ∈ ball ca (3 * ra / 2), Tendsto (fun n ↦ hs n w) atTop (𝓝 (H w)) := by
   classical
   /- ## The Poisson kernel is continuous on the circle, for interior points. -/
   have hKcont : ∀ (c z : ℂ) (ρ : ℝ), z ∈ ball c ρ →
@@ -7411,11 +7416,11 @@ private theorem bipolarGreen_aux4 {ca : ℂ} {ra : ℝ} (hs : ℕ → ℂ → �
     intro F g c ρ A hρ hF hg hbd
     have hFi : CircleIntegrable F c ρ := hF.circleIntegrable hρ.le
     have hgi : CircleIntegrable g c ρ := hg.circleIntegrable hρ.le
-    have habsci : CircleIntegrable (fun ζ => |F ζ - g ζ|) c ρ :=
+    have habsci : CircleIntegrable (fun ζ ↦ |F ζ - g ζ|) c ρ :=
       ((hF.sub hg).abs).circleIntegrable hρ.le
     rw [← Real.circleAverage_fun_sub hFi hgi]
-    calc |Real.circleAverage (fun ζ => F ζ - g ζ) c ρ|
-        ≤ Real.circleAverage |fun ζ => F ζ - g ζ| c ρ :=
+    calc |Real.circleAverage (fun ζ ↦ F ζ - g ζ) c ρ|
+        ≤ Real.circleAverage |fun ζ ↦ F ζ - g ζ| c ρ :=
           Real.abs_circleAverage_le_circleAverage_abs
       _ ≤ A := by
           apply Real.circleAverage_mono_on_of_le_circle habsci
@@ -7448,19 +7453,19 @@ private theorem bipolarGreen_aux4 {ca : ℂ} {ra : ℝ} (hs : ℕ → ℂ → �
       exact hup
     have hrep1 := hh₁.circleAverage_poissonKernel_smul hw
     have hrep2 := hh₂.circleAverage_poissonKernel_smul hw
-    have hrep1' : Real.circleAverage (fun ζ => poissonKernel c w ζ * h₁ ζ) c ρ = h₁ w := by
+    have hrep1' : Real.circleAverage (fun ζ ↦ poissonKernel c w ζ * h₁ ζ) c ρ = h₁ w := by
       rw [← hrep1]
       apply Real.circleAverage_congr_sphere
       intro ζ _
       simp [smul_eq_mul]
-    have hrep2' : Real.circleAverage (fun ζ => poissonKernel c w ζ * h₂ ζ) c ρ = h₂ w := by
+    have hrep2' : Real.circleAverage (fun ζ ↦ poissonKernel c w ζ * h₂ ζ) c ρ = h₂ w := by
       rw [← hrep2]
       apply Real.circleAverage_congr_sphere
       intro ζ _
       simp [smul_eq_mul]
-    have hc₁ : ContinuousOn (fun ζ => poissonKernel c w ζ * h₁ ζ) (sphere c ρ) :=
+    have hc₁ : ContinuousOn (fun ζ ↦ poissonKernel c w ζ * h₁ ζ) (sphere c ρ) :=
       (hKcont c w ρ hw).mul (hh₁.continuousOn.mono sphere_subset_closedBall)
-    have hc₂ : ContinuousOn (fun ζ => poissonKernel c w ζ * h₂ ζ) (sphere c ρ) :=
+    have hc₂ : ContinuousOn (fun ζ ↦ poissonKernel c w ζ * h₂ ζ) (sphere c ρ) :=
       (hKcont c w ρ hw).mul (hh₂.continuousOn.mono sphere_subset_closedBall)
     have hptbd : ∀ ζ ∈ sphere c ρ,
         |poissonKernel c w ζ * h₁ ζ - poissonKernel c w ζ * h₂ ζ|
@@ -7482,7 +7487,7 @@ private theorem bipolarGreen_aux4 {ca : ℂ} {ra : ℝ} (hs : ℕ → ℂ → �
       TendstoUniformlyOn F g atTop (closedBall c ρ) →
       HarmonicOnNhd g (ball c ρ) := by
     intro F g c ρ hρ hF hunif
-    have hcont_n : ∀ n, ContinuousOn (F n) (closedBall c ρ) := fun n => (hF n).continuousOn
+    have hcont_n : ∀ n, ContinuousOn (F n) (closedBall c ρ) := fun n ↦ (hF n).continuousOn
     have hGcont : ContinuousOn g (closedBall c ρ) :=
       hunif.continuousOn ((Filter.Eventually.of_forall hcont_n).frequently)
     have hPI : ∀ z ∈ ball c ρ, g z = poissonIntegral g c ρ z := by
@@ -7514,7 +7519,7 @@ private theorem bipolarGreen_aux4 {ca : ℂ} {ra : ℝ} (hs : ℕ → ℂ → �
         apply Real.circleAverage_congr_sphere
         intro ζ _
         simp [smul_eq_mul]
-      have hlimPI : Tendsto (fun n => poissonIntegral (F n) c ρ z)
+      have hlimPI : Tendsto (fun n ↦ poissonIntegral (F n) c ρ z)
           atTop (𝓝 (poissonIntegral g c ρ z)) := by
         rw [Metric.tendsto_atTop]
         intro ε hε
@@ -7524,7 +7529,7 @@ private theorem bipolarGreen_aux4 {ca : ℂ} {ra : ℝ} (hs : ℕ → ℂ → �
           (div_pos hε (by linarith only [hKb0]))
         rw [Filter.eventually_atTop] at hev
         obtain ⟨N, hN⟩ := hev
-        refine ⟨N, fun n hn => ?_⟩
+        refine ⟨N, fun n hn ↦ ?_⟩
         rw [Real.dist_eq]
         have hbd : ∀ ζ ∈ sphere c ρ,
             |poissonKernel c z ζ * F n ζ - poissonKernel c z ζ * g ζ|
@@ -7539,9 +7544,9 @@ private theorem bipolarGreen_aux4 {ca : ℂ} {ra : ℝ} (hs : ℕ → ℂ → �
             rw [Real.dist_eq, abs_sub_comm] at h3
             exact h3.le
           exact mul_le_mul (hKbound ζ hζ) h2 (abs_nonneg _) hKb0
-        have hcF : ContinuousOn (fun ζ => poissonKernel c z ζ * F n ζ) (sphere c ρ) :=
+        have hcF : ContinuousOn (fun ζ ↦ poissonKernel c z ζ * F n ζ) (sphere c ρ) :=
           (hKcont c z ρ hz).mul ((hcont_n n).mono sphere_subset_closedBall)
-        have hcG : ContinuousOn (fun ζ => poissonKernel c z ζ * g ζ) (sphere c ρ) :=
+        have hcG : ContinuousOn (fun ζ ↦ poissonKernel c z ζ * g ζ) (sphere c ρ) :=
           (hKcont c z ρ hz).mul (hGcont.mono sphere_subset_closedBall)
         have hkey := havg_diff _ _ c ρ (Kb * (ε / (2 * (Kb + 1)))) hρ hcF hcG hbd
         have hfin : Kb * (ε / (2 * (Kb + 1))) < ε := by
@@ -7554,7 +7559,7 @@ private theorem bipolarGreen_aux4 {ca : ℂ} {ra : ℝ} (hs : ℕ → ℂ → �
           rw [h5] at h4
           linarith only [h4, hε]
         exact lt_of_le_of_lt hkey hfin
-      have hGz : Tendsto (fun n => poissonIntegral (F n) c ρ z)
+      have hGz : Tendsto (fun n ↦ poissonIntegral (F n) c ρ z)
           atTop (𝓝 (g z)) := by
         have h1 := hunif.tendsto_at (ball_subset_closedBall hz)
         exact h1.congr hrep
@@ -7570,16 +7575,16 @@ private theorem bipolarGreen_aux4 {ca : ℂ} {ra : ℝ} (hs : ℕ → ℂ → �
         |hs m w - hs n w| ≤ (3 * ra / 2 + ρ) / (3 * ra / 2 - ρ) * ε := by
     intro ρ hρ0 hρlt ε hε
     obtain ⟨N, hN⟩ := hcau ε hε
-    refine ⟨N, fun m hm n hn w hw => ?_⟩
+    refine ⟨N, fun m hm n hn w hw ↦ ?_⟩
     have hsub : closedBall ca (3 * ra / 2) ⊆ ball ca (2 * ra) :=
       closedBall_subset_ball (by linarith only [hra])
     have hwball : w ∈ ball ca (3 * ra / 2) :=
       mem_ball.2 (lt_of_le_of_lt (mem_closedBall.1 hw) hρlt)
     have hcmp := poissonDiff (hs m) (hs n) ca (3 * ra / 2) ε
       (by linarith only [hra])
-      hε.le (fun v hv => hharm m v (hsub hv))
-      (fun v hv => hharm n v (hsub hv))
-      (fun ζ hζ => hN m hm n hn ζ hζ) w hwball
+      hε.le (fun v hv ↦ hharm m v (hsub hv))
+      (fun v hv ↦ hharm n v (hsub hv))
+      (fun ζ hζ ↦ hN m hm n hn ζ hζ) w hwball
     have h1 : ‖w - ca‖ ≤ ρ := by
       rw [← dist_eq_norm]
       exact mem_closedBall.1 hw
@@ -7596,7 +7601,7 @@ private theorem bipolarGreen_aux4 {ca : ℂ} {ra : ℝ} (hs : ℕ → ℂ → �
       _ ≤ (3 * ra / 2 + ρ) / (3 * ra / 2 - ρ) * ε :=
           mul_le_mul_of_nonneg_right hK hε.le
   have hptw : ∀ w ∈ ball ca (3 * ra / 2),
-      ∃ l, Tendsto (fun n => hs n w) atTop (𝓝 l) := by
+      ∃ l, Tendsto (fun n ↦ hs n w) atTop (𝓝 l) := by
     intro w hw
     apply cauchySeq_tendsto_of_complete
     rw [Metric.cauchySeq_iff]
@@ -7612,7 +7617,7 @@ private theorem bipolarGreen_aux4 {ca : ℂ} {ra : ℝ} (hs : ℕ → ℂ → �
       exact div_pos (by linarith only [hρ0, hra]) (by linarith only [hρlt])
     obtain ⟨N, hN⟩ := hkey ρ hρ0 hρlt (ε / (2 * κ))
       (div_pos hε (by linarith only [hκ0]))
-    refine ⟨N, fun m hm n hn => ?_⟩
+    refine ⟨N, fun m hm n hn ↦ ?_⟩
     rw [Real.dist_eq]
     have h1 := hN m hm n hn w
       (by rw [mem_closedBall, hρdef]; linarith only [hd, hdnn])
@@ -7621,9 +7626,9 @@ private theorem bipolarGreen_aux4 {ca : ℂ} {ra : ℝ} (hs : ℕ → ℂ → �
     calc |hs m w - hs n w| ≤ κ * (ε / (2 * κ)) := h1
       _ = ε / 2 := h2
       _ < ε := by linarith only [hε]
-  set H : ℂ → ℝ := fun w => limUnder atTop (fun n => hs n w) with hH
+  set H : ℂ → ℝ := fun w ↦ limUnder atTop (fun n ↦ hs n w) with hH
   have hHtend : ∀ w ∈ ball ca (3 * ra / 2),
-      Tendsto (fun n => hs n w) atTop (𝓝 (H w)) := by
+      Tendsto (fun n ↦ hs n w) atTop (𝓝 (H w)) := by
     intro w hw
     obtain ⟨l, hl⟩ := hptw w hw
     have h1 : H w = l := hl.limUnder_eq
@@ -7641,7 +7646,7 @@ private theorem bipolarGreen_aux4 {ca : ℂ} {ra : ℝ} (hs : ℕ → ℂ → �
     rw [mem_ball]
     rw [hρw] at h2
     linarith only [h1, h2, hd0]
-  have hunif : TendstoUniformlyOn (fun n => hs n) H atTop (closedBall w₀ ρw) := by
+  have hunif : TendstoUniformlyOn (fun n ↦ hs n) H atTop (closedBall w₀ ρw) := by
     rw [Metric.tendstoUniformlyOn_iff]
     intro ε hε
     set ρ : ℝ := dist w₀ ca + ρw with hρdef2
@@ -7655,15 +7660,15 @@ private theorem bipolarGreen_aux4 {ca : ℂ} {ra : ℝ} (hs : ℕ → ℂ → �
     obtain ⟨N, hN⟩ := hkey ρ hρ0 hρlt (ε / (4 * κ))
       (div_pos hε (by linarith only [hκ0]))
     rw [Filter.eventually_atTop]
-    refine ⟨N, fun n hn v hv => ?_⟩
+    refine ⟨N, fun n hn v hv ↦ ?_⟩
     have hvcb : v ∈ closedBall ca ρ := by
       rw [mem_closedBall, hρdef2]
       have h1 := dist_triangle v w₀ ca
       have h2 := mem_closedBall.1 hv
       linarith only [h1, h2]
     have h3 : ∀ m ≥ N, |hs m v - hs n v| ≤ κ * (ε / (4 * κ)) :=
-      fun m hm => hN m hm n hn v hvcb
-    have h4 : Tendsto (fun m => |hs m v - hs n v|) atTop
+      fun m hm ↦ hN m hm n hn v hvcb
+    have h4 : Tendsto (fun m ↦ |hs m v - hs n v|) atTop
         (𝓝 |H v - hs n v|) :=
       ((hHtend v (hsubw hv)).sub tendsto_const_nhds).abs
     have h5 : |H v - hs n v| ≤ κ * (ε / (4 * κ)) := by
@@ -7675,8 +7680,8 @@ private theorem bipolarGreen_aux4 {ca : ℂ} {ra : ℝ} (hs : ℕ → ℂ → �
     rw [Real.dist_eq]
     calc |H v - hs n v| ≤ ε / 4 := by rw [← h6]; exact h5
       _ < ε := by linarith only [hε]
-  have hHharm := planeLimitHarm (fun n => hs n) H w₀ ρw hρw0
-    (fun n v hv => hharm n v
+  have hHharm := planeLimitHarm (fun n ↦ hs n) H w₀ ρw hρw0
+    (fun n v hv ↦ hharm n v
       (mem_ball.2 (lt_of_lt_of_le (mem_ball.1 (hsubw hv))
         (by linarith only [hra]))))
     hunif
@@ -7686,7 +7691,7 @@ private theorem bipolarGreen_aux4 {ca : ℂ} {ra : ℝ} (hs : ℕ → ℂ → �
 function differences along the shrinking exhaustion — harmonic off the two
 poles, with a positive logarithmic pole at `p₁` and a negative one at
 `p₂`. -/
-theorem exists_bipolarGreen [SecondCountableTopology M] (D₀ : CoordDisk M)
+theorem exists_bipolar_green [SecondCountableTopology M] (D₀ : CoordDisk M)
     {p₁ p₂ : M} (hp₁ : p₁ ∉ D₀.closedCarrier) (hp₂ : p₂ ∉ D₀.closedCarrier)
     (hne : p₁ ≠ p₂) :
     ∃ G : M → ℝ, MHarmonicOn G ({p₁, p₂}ᶜ) ∧
@@ -7699,7 +7704,7 @@ theorem exists_bipolarGreen [SecondCountableTopology M] (D₀ : CoordDisk M)
           ∀ w ∈ ball (chartAt ℂ p₂ p₂) r \ {chartAt ℂ p₂ p₂},
             h w = G ((chartAt ℂ p₂).symm w) -
               Real.log ‖w - chartAt ℂ p₂ p₂‖) ∧
-      (∃ C, ∃ V₁ ∈ 𝓝 p₁, ∃ V₂ ∈ 𝓝 p₂, IsCompact (closure V₁) ∧
+      (∃ C : ℝ, ∃ V₁ ∈ 𝓝 p₁, ∃ V₂ ∈ 𝓝 p₂, IsCompact (closure V₁) ∧
         IsCompact (closure V₂) ∧ ∀ x ∉ V₁ ∪ V₂, |G x| ≤ C) := by
   classical
   haveI : LocallyConnectedSpace M := ChartedSpace.locallyConnectedSpace ℂ M
@@ -7777,51 +7782,51 @@ theorem exists_bipolarGreen [SecondCountableTopology M] (D₀ : CoordDisk M)
     exact (harmonicAt_congr_nhds hev).mp hcomp
   /- ## A plane-harmonic function reads back through a chart as surface-harmonic. -/
   have pullback : ∀ (x₀ : M) (H : ℂ → ℝ) (x : M), x ∈ (chartAt ℂ x₀).source →
-      HarmonicAt H (chartAt ℂ x₀ x) → MHarmonicAt (fun y => H (chartAt ℂ x₀ y)) x := by
+      HarmonicAt H (chartAt ℂ x₀ x) → MHarmonicAt (fun y ↦ H (chartAt ℂ x₀ y)) x := by
     intro x₀ H x hx hH
     rw [mharmonicAt_iff_of_mem_maximalAtlas (IsManifold.chart_mem_maximalAtlas x₀) hx]
     have hev : H =ᶠ[𝓝 (chartAt ℂ x₀ x)]
-        ((fun y => H (chartAt ℂ x₀ y)) ∘ (chartAt ℂ x₀).symm) := by
+        ((fun y ↦ H (chartAt ℂ x₀ y)) ∘ (chartAt ℂ x₀).symm) := by
       filter_upwards [(chartAt ℂ x₀).open_target.mem_nhds
         ((chartAt ℂ x₀).map_source hx)] with w hw
       simp only [Function.comp_apply]
       rw [(chartAt ℂ x₀).right_inv hw]
     exact (harmonicAt_congr_nhds hev).mp hH
   have mharmSub : ∀ (f g : M → ℝ) (z : M), MHarmonicAt f z → MHarmonicAt g z →
-      MHarmonicAt (fun y => f y - g y) z := by
+      MHarmonicAt (fun y ↦ f y - g y) z := by
     intro f g z hf hg
-    refine mharm_congr (f + -g) _ z (Filter.Eventually.of_forall fun y => ?_) (hf.add hg.neg)
+    refine mharm_congr (f + -g) _ z (Filter.Eventually.of_forall fun y ↦ ?_) (hf.add hg.neg)
     simp only [Pi.add_apply, Pi.neg_apply]
     exact (sub_eq_add_neg (f y) (g y)).symm
   /- ## The chart logarithm barrier: harmonicity and continuity off the singularity. -/
   have logHarm : ∀ (x₀ : M) (c : ℂ) (z : M), z ∈ (chartAt ℂ x₀).source →
       chartAt ℂ x₀ z ≠ c →
-      MHarmonicAt (fun q => Real.log (dist (chartAt ℂ x₀ q) c)) z := by
+      MHarmonicAt (fun q ↦ Real.log (dist (chartAt ℂ x₀ q) c)) z := by
     intro x₀ c z hzs hzne
     rw [mharmonicAt_iff_of_mem_maximalAtlas (IsManifold.chart_mem_maximalAtlas x₀) hzs]
-    have hharm : HarmonicAt (fun w : ℂ => Real.log ‖w - c‖) (chartAt ℂ x₀ z) := by
-      apply AnalyticAt.harmonicAt_log_norm (f := fun w : ℂ => w - c)
+    have hharm : HarmonicAt (fun w : ℂ ↦ Real.log ‖w - c‖) (chartAt ℂ x₀ z) := by
+      apply AnalyticAt.harmonicAt_log_norm (f := fun w : ℂ ↦ w - c)
       · exact analyticAt_id.sub analyticAt_const
       · exact sub_ne_zero.2 hzne
-    have heqv : (fun w : ℂ => Real.log ‖w - c‖) =ᶠ[𝓝 (chartAt ℂ x₀ z)]
-        ((fun q => Real.log (dist (chartAt ℂ x₀ q) c)) ∘ (chartAt ℂ x₀).symm) := by
+    have heqv : (fun w : ℂ ↦ Real.log ‖w - c‖) =ᶠ[𝓝 (chartAt ℂ x₀ z)]
+        ((fun q ↦ Real.log (dist (chartAt ℂ x₀ q) c)) ∘ (chartAt ℂ x₀).symm) := by
       filter_upwards [(chartAt ℂ x₀).open_target.mem_nhds
         ((chartAt ℂ x₀).map_source hzs)] with w hw
       simp only [Function.comp_apply, (chartAt ℂ x₀).right_inv hw, dist_eq_norm]
     exact (harmonicAt_congr_nhds heqv).1 hharm
   have logCont : ∀ (x₀ : M) (c : ℂ) (z : M), z ∈ (chartAt ℂ x₀).source →
       chartAt ℂ x₀ z ≠ c →
-      ContinuousAt (fun q => Real.log (dist (chartAt ℂ x₀ q) c)) z := by
+      ContinuousAt (fun q ↦ Real.log (dist (chartAt ℂ x₀ q) c)) z := by
     intro x₀ c z hzs hzne
     have h2 : ContinuousAt (chartAt ℂ x₀) z := (chartAt ℂ x₀).continuousAt hzs
     have h3 : dist (chartAt ℂ x₀ z) c ≠ 0 := (dist_pos.2 hzne).ne'
     exact (h2.dist continuousAt_const).log h3
   /- ## Negation of a plane-harmonic function. -/
   have harmNeg : ∀ (h : ℂ → ℝ) (s : Set ℂ), HarmonicOnNhd h s →
-      HarmonicOnNhd (fun w => -h w) s := by
+      HarmonicOnNhd (fun w ↦ -h w) s := by
     intro h s hh z hz
     have h1 := (hh z hz).const_smul (c := (-1 : ℝ))
-    have hev : ((-1 : ℝ) • h) =ᶠ[𝓝 z] fun w => -h w := by
+    have hev : ((-1 : ℝ) • h) =ᶠ[𝓝 z] fun w ↦ -h w := by
       filter_upwards with w
       simp only [Pi.smul_apply, smul_eq_mul]
       ring
@@ -7861,12 +7866,12 @@ theorem exists_bipolarGreen [SecondCountableTopology M] (D₀ : CoordDisk M)
     have h1 := (mharmonicOn_greenEnvelope hGF).1
     have h2 : MHarmonicAt (greenEnvelope (⟨p, hp⟩ : ↥P)) ⟨y, hy⟩ :=
       h1 _ (Set.mem_compl_singleton_iff.mpr
-        (fun hcon => hyp (congrArg Subtype.val hcon)))
+        (fun hcon ↦ hyp (congrArg Subtype.val hcon)))
     exact (mharm_val P (pieceGreen P p) (greenEnvelope (⟨p, hp⟩ : ↥P))
-      (fun z => pgval P p hp z z.2) ⟨y, hy⟩).mpr h2
+      (fun z ↦ pgval P p hp z z.2) ⟨y, hy⟩).mpr h2
   /- ## The pole radii and the master bound. -/
   obtain ⟨r₁, r₂, C₀, hr₁, hr₂, hC₀1, htgt1', htgt2', hav1', hav2', hGBraw⟩ :=
-    bipolarGreen_aux1 D₀ hp₁ hp₂ hne
+    exists_pieceGreen_dipole_exterior_bound D₀ hp₁ hp₂ hne
   have hC₀0 : (0 : ℝ) ≤ C₀ := by linarith only [hC₀1]
   /- ## The center chart and the shrinking pieces. -/
   set e₀ : OpenPartialHomeomorph M ℂ := chartAt ℂ D₀.center with he₀
@@ -7878,26 +7883,26 @@ theorem exists_bipolarGreen [SecondCountableTopology M] (D₀ : CoordDisk M)
   have hcen₀src : D₀.center ∈ e₀.source := mem_chart_source ℂ D₀.center
   have hcen₀car : D₀.center ∈ D₀.closedCarrier :=
     ⟨c₀, mem_closedBall_self hr₀.le, e₀.left_inv hcen₀src⟩
-  set t : ℕ → ℝ := fun n => (1 / 2 : ℝ) ^ (n + 2) with ht
-  have ht0 : ∀ n, 0 < t n := fun n => by rw [ht]; positivity
-  have ht1 : ∀ n, t n ≤ 1 := fun n => pow_le_one₀ (by norm_num) (by norm_num)
+  set t : ℕ → ℝ := fun n ↦ (1 / 2 : ℝ) ^ (n + 2) with ht
+  have ht0 : ∀ n, 0 < t n := fun n ↦ by rw [ht]; positivity
+  have ht1 : ∀ n, t n ≤ 1 := fun n ↦ pow_le_one₀ (by norm_num) (by norm_num)
   have htq : ∀ n, t n ≤ 1 / 4 := by
     intro n
     calc t n = (1 / 2 : ℝ) ^ (n + 2) := rfl
       _ ≤ (1 / 2 : ℝ) ^ 2 :=
         pow_le_pow_of_le_one (by norm_num) (by norm_num) (by omega)
       _ = 1 / 4 := by norm_num
-  have htanti : ∀ n m, n ≤ m → t m ≤ t n := fun n m h =>
+  have htanti : ∀ n m, n ≤ m → t m ≤ t n := fun n m h ↦
     pow_le_pow_of_le_one (by norm_num) (by norm_num) (by omega)
   have htlim : ∀ δ : ℝ, 0 < δ → ∃ n, t n < δ := by
     intro δ hδ
     obtain ⟨n, hn⟩ := exists_pow_lt_of_lt_one hδ (by norm_num : (1 / 2 : ℝ) < 1)
     exact ⟨n, lt_of_le_of_lt
       (pow_le_pow_of_le_one (by norm_num) (by norm_num) (by omega)) hn⟩
-  set DN : ℕ → CoordDisk M := fun n => D₀.shrink (t n) (ht0 n) (ht1 n) with hDN
-  set Wp : ℕ → Opens M := fun n => (DN n).compl with hWp
+  set DN : ℕ → CoordDisk M := fun n ↦ D₀.shrink (t n) (ht0 n) (ht1 n) with hDN
+  set Wp : ℕ → Opens M := fun n ↦ (DN n).compl with hWp
   have hcarN : ∀ n, (DN n).closedCarrier = e₀.symm '' closedBall c₀ (t n * r₀) :=
-    fun n => rfl
+    fun n ↦ rfl
   have hcarNsub : ∀ n, (DN n).closedCarrier ⊆ D₀.closedCarrier := by
     intro n
     rw [hcarN n, hcar₀]
@@ -7908,25 +7913,25 @@ theorem exists_bipolarGreen [SecondCountableTopology M] (D₀ : CoordDisk M)
     rw [hcarN n, hcarN m]
     exact Set.image_mono (closedBall_subset_closedBall
       (mul_le_mul_of_nonneg_right (htanti n m hnm) hr₀.le))
-  have hcbtgtN : ∀ n, closedBall c₀ (t n * r₀) ⊆ e₀.target := fun n =>
+  have hcbtgtN : ∀ n, closedBall c₀ (t n * r₀) ⊆ e₀.target := fun n ↦
     (closedBall_subset_closedBall (mul_le_of_le_one_left hr₀.le (ht1 n))).trans hcb₀tgt
   have hcarmem : ∀ n (z : M), z ∈ (DN n).closedCarrier ↔
       z ∈ e₀.source ∧ dist (e₀ z) c₀ ≤ t n * r₀ := by
     intro n z
     rw [hcarN n]
     exact hmemCB e₀ c₀ (t n * r₀) (hcbtgtN n) z
-  have hp₁W : ∀ n, p₁ ∈ Wp n := fun n hmem => hp₁ (hcarNsub n hmem)
-  have hp₂W : ∀ n, p₂ ∈ Wp n := fun n hmem => hp₂ (hcarNsub n hmem)
-  have hConnW : ∀ n, ConnectedSpace ↥(Wp n) := fun n =>
+  have hp₁W : ∀ n, p₁ ∈ Wp n := fun n hmem ↦ hp₁ (hcarNsub n hmem)
+  have hp₂W : ∀ n, p₂ ∈ Wp n := fun n hmem ↦ hp₂ (hcarNsub n hmem)
+  have hConnW : ∀ n, ConnectedSpace ↥(Wp n) := fun n ↦
     isConnected_iff_connectedSpace.mp (isConnected_coordDisk_compl (DN n))
-  have hNcW : ∀ n, NoncompactSpace ↥(Wp n) := fun n =>
+  have hNcW : ∀ n, NoncompactSpace ↥(Wp n) := fun n ↦
     noncompactSpace_coordDisk_compl (DN n)
-  have hGF1 : ∀ n, HasGreenFunction (⟨p₁, hp₁W n⟩ : ↥(Wp n)) := fun n =>
+  have hGF1 : ∀ n, HasGreenFunction (⟨p₁, hp₁W n⟩ : ↥(Wp n)) := fun n ↦
     hasGreenFunction_coordDisk_compl (DN n) p₁ (hp₁W n)
-  have hGF2 : ∀ n, HasGreenFunction (⟨p₂, hp₂W n⟩ : ↥(Wp n)) := fun n =>
+  have hGF2 : ∀ n, HasGreenFunction (⟨p₂, hp₂W n⟩ : ↥(Wp n)) := fun n ↦
     hasGreenFunction_coordDisk_compl (DN n) p₂ (hp₂W n)
   set Gs : ℕ → M → ℝ :=
-    fun n x => pieceGreen (Wp n) p₁ x - pieceGreen (Wp n) p₂ x with hGs
+    fun n x ↦ pieceGreen (Wp n) p₁ x - pieceGreen (Wp n) p₂ x with hGs
   /- ## The pole charts, the avoidance sets and the pole balls. -/
   set e₁ : OpenPartialHomeomorph M ℂ := chartAt ℂ p₁ with he₁
   set c₁ : ℂ := e₁ p₁ with hc₁
@@ -8010,7 +8015,7 @@ theorem exists_bipolarGreen [SecondCountableTopology M] (D₀ : CoordDisk M)
       by rw [hc₂]; exact e₂.left_inv hp₂src⟩
   /- ## The master bound along the shrinking sequence. -/
   have hGB : ∀ n, ∀ x : M, x ∉ B₁ → x ∉ B₂ → |Gs n x| ≤ C₀ :=
-    fun n x h1 h2 => hGBraw (t n) (ht0 n) (ht1 n) (htq n) x h1 h2
+    fun n x h1 h2 ↦ hGBraw (t n) (ht0 n) (ht1 n) (htq n) x h1 h2
   /- ## The pole companion sequences from the per-piece companions. -/
   have hdisj12' : ∀ w ∈ closedBall c₁ (2 * r₁),
       e₁.symm w ∉ e₂.symm '' closedBall c₂ (2 * r₂) := by
@@ -8024,26 +8029,27 @@ theorem exists_bipolarGreen [SecondCountableTopology M] (D₀ : CoordDisk M)
         h w = Gs n (e₁.symm w) + Real.log ‖w - c₁‖) ∧
       ∀ w ∈ ball c₁ (2 * r₁), |h w| ≤ C₀ + (|Real.log r₁| + |Real.log (2 * r₁)|) := by
     intro n
-    obtain ⟨h, hharm, hval, hbd⟩ := bipolarGreen_aux2 D₀ hr₁ hr₂ htgt1 hav1
-      (fun w hw => (hav2 w hw).1) hdisj12' (t n) (ht0 n) (ht1 n)
-      (fun x h1 h2 => hGB n x h1 h2)
-    exact ⟨h, hharm, fun w hw => hval w hw, hbd⟩
+    obtain ⟨h, hharm, hval, hbd⟩ := exists_harmonicOnNhd_pieceGreen_dipole_add_log
+      D₀ hr₁ hr₂ htgt1 (fun w hw ↦ (hav1 w hw).1) (fun w hw ↦ (hav1 w hw).2)
+      (fun w hw ↦ (hav2 w hw).1) hdisj12' (t n) (ht0 n) (ht1 n)
+      (fun x h1 h2 ↦ hGB n x h1 h2)
+    exact ⟨h, hharm, fun w hw ↦ hval w hw, hbd⟩
   have hpole2 : ∀ n, ∃ h : ℂ → ℝ, HarmonicOnNhd h (ball c₂ (2 * r₂)) ∧
       (∀ w ∈ ball c₂ (2 * r₂) \ {c₂},
         h w = -Gs n (e₂.symm w) + Real.log ‖w - c₂‖) ∧
       ∀ w ∈ ball c₂ (2 * r₂), |h w| ≤ C₀ + (|Real.log r₂| + |Real.log (2 * r₂)|) := by
     intro n
-    obtain ⟨h, hharm, hval, hbd⟩ := bipolarGreen_aux2 D₀ hr₂ hr₁ htgt2
-      (fun w hw => ⟨(hav2 w hw).1,
-        fun hcon => (hav2 w hw).2 (hcon ▸ hp₁Car1)⟩)
-      (fun w hw => (hav1 w hw).1) (fun w hw => (hav2 w hw).2) (t n) (ht0 n) (ht1 n)
-      (fun x h1 h2 => by
+    obtain ⟨h, hharm, hval, hbd⟩ := exists_harmonicOnNhd_pieceGreen_dipole_add_log D₀ hr₂ hr₁ htgt2
+      (fun w hw ↦ (hav2 w hw).1)
+      (fun w hw ↦ fun hcon ↦ (hav2 w hw).2 (hcon ▸ hp₁Car1))
+      (fun w hw ↦ (hav1 w hw).1) (fun w hw ↦ (hav2 w hw).2) (t n) (ht0 n) (ht1 n)
+      (fun x h1 h2 ↦ by
         have h3 := hGB n x h2 h1
         have h4 := abs_sub_comm (pieceGreen (Wp n) p₁ x) (pieceGreen (Wp n) p₂ x)
         simp only [hGs] at h3
         rw [← h4]
         exact h3)
-    refine ⟨h, hharm, fun w hw => ?_, hbd⟩
+    refine ⟨h, hharm, fun w hw ↦ ?_, hbd⟩
     have h5 := hval w hw
     simp only [hGs]
     linarith only [h5]
@@ -8102,7 +8108,7 @@ theorem exists_bipolarGreen [SecondCountableTopology M] (D₀ : CoordDisk M)
   have hΩqqp₂ : ∀ x ∈ Ωqq, x ≠ p₂ := by
     intro x hx hcon
     exact hx (Or.inr (hcon ▸ hp₂half))
-  have hGsharmΩqq : ∀ n, MHarmonicOn (Gs n) Ωqq := fun n x hx =>
+  have hGsharmΩqq : ∀ n, MHarmonicOn (Gs n) Ωqq := fun n x hx ↦
     hGsharmAt n x (hΩqqW x hx n) (hΩqqp₁ x hx) (hΩqqp₂ x hx)
   /- ## The dipole differences read through the pole companions inside the balls. -/
   have hGsB₁ : ∀ n, ∀ x ∈ B₁, x ≠ p₁ →
@@ -8154,7 +8160,7 @@ theorem exists_bipolarGreen [SecondCountableTopology M] (D₀ : CoordDisk M)
         (add_nonneg (abs_nonneg _) (abs_nonneg _))
     by_cases hx1 : x ∈ B₁
     · have hxne : x ≠ p₁ := hΩqqp₁ x hx
-      have hxnothalf : x ∉ half1.closedCarrier := fun hmem => hx (Or.inl (Or.inr hmem))
+      have hxnothalf : x ∉ half1.closedCarrier := fun hmem ↦ hx (Or.inl (Or.inr hmem))
       have hcbsub1 : closedBall c₁ (r₁ / 2) ⊆ closedBall c₁ (2 * r₁) :=
         closedBall_subset_closedBall (by linarith only [hr₁])
       have hd : r₁ / 2 < dist (e₁ x) c₁ := by
@@ -8184,7 +8190,7 @@ theorem exists_bipolarGreen [SecondCountableTopology M] (D₀ : CoordDisk M)
             linarith only [hb, hlog, hC₀0, hpad2]
     · by_cases hx2 : x ∈ B₂
       · have hxne : x ≠ p₂ := hΩqqp₂ x hx
-        have hxnothalf : x ∉ half2.closedCarrier := fun hmem => hx (Or.inr hmem)
+        have hxnothalf : x ∉ half2.closedCarrier := fun hmem ↦ hx (Or.inr hmem)
         have hcbsub2 : closedBall c₂ (r₂ / 2) ⊆ closedBall c₂ (2 * r₂) :=
           closedBall_subset_closedBall (by linarith only [hr₂])
         have hd : r₂ / 2 < dist (e₂ x) c₂ := by
@@ -8218,7 +8224,7 @@ theorem exists_bipolarGreen [SecondCountableTopology M] (D₀ : CoordDisk M)
   /- ## The normal-families extraction on the fixed domain. -/
   obtain ⟨φ, hφmono, Gout, hGoutharm, hGoutunif⟩ :=
     exists_mharmonicOn_limit_of_locally_bounded hΩqqopen hGsharmΩqq
-      (fun K hK hKsub => ⟨Cq, fun n x hx => hΩqqbd n x (hKsub hx)⟩)
+      (fun K hK hKsub ↦ ⟨Cq, fun n x hx ↦ hΩqqbd n x (hKsub hx)⟩)
   /- ## Uniform Cauchy control on compact subsets of the extraction domain. -/
   have hcompCau : ∀ (T : Set M), IsCompact T → T ⊆ Ωqq → ∀ ε : ℝ, 0 < ε →
       ∃ N, ∀ m ≥ N, ∀ n ≥ N, ∀ z ∈ T, |Gs (φ m) z - Gs (φ n) z| ≤ ε := by
@@ -8226,7 +8232,7 @@ theorem exists_bipolarGreen [SecondCountableTopology M] (D₀ : CoordDisk M)
     have h1 := hGoutunif T hT hTsub
     rw [Metric.tendstoUniformlyOn_iff] at h1
     obtain ⟨N, hN⟩ := Filter.eventually_atTop.1 (h1 (ε / 2) (half_pos hε))
-    refine ⟨N, fun m hm n hn z hz => ?_⟩
+    refine ⟨N, fun m hm n hn z hz ↦ ?_⟩
     have hm1 := hN m hm z hz
     have hn1 := hN n hn z hz
     rw [Real.dist_eq] at hm1 hn1
@@ -8265,7 +8271,7 @@ theorem exists_bipolarGreen [SecondCountableTopology M] (D₀ : CoordDisk M)
         linarith only [hd2, hr₁]
       · exact (hCar2av _ (hhalf2Car hmem)).2 hzcar
     obtain ⟨N, hN⟩ := hcompCau _ hΓcp hΓsub ε hε
-    refine ⟨N, fun m hm n hn ζ hζ => ?_⟩
+    refine ⟨N, fun m hm n hn ζ hζ ↦ ?_⟩
     have hz : e₁.symm ζ ∈ e₁.symm '' sphere c₁ (3 * r₁ / 2) := ⟨ζ, hζ, rfl⟩
     have hζball : ζ ∈ ball c₁ (2 * r₁) \ {c₁} := by
       have hd : dist ζ c₁ = 3 * r₁ / 2 := mem_sphere.1 hζ
@@ -8308,7 +8314,7 @@ theorem exists_bipolarGreen [SecondCountableTopology M] (D₀ : CoordDisk M)
         rw [hd3] at hd2
         linarith only [hd2, hr₂]
     obtain ⟨N, hN⟩ := hcompCau _ hΓcp hΓsub ε hε
-    refine ⟨N, fun m hm n hn ζ hζ => ?_⟩
+    refine ⟨N, fun m hm n hn ζ hζ ↦ ?_⟩
     have hz : e₂.symm ζ ∈ e₂.symm '' sphere c₂ (3 * r₂ / 2) := ⟨ζ, hζ, rfl⟩
     have hζball : ζ ∈ ball c₂ (2 * r₂) \ {c₂} := by
       have hd : dist ζ c₂ = 3 * r₂ / 2 := mem_sphere.1 hζ
@@ -8327,10 +8333,12 @@ theorem exists_bipolarGreen [SecondCountableTopology M] (D₀ : CoordDisk M)
       ring
     rw [heq, abs_neg]
     exact hN m hm n hn _ hz
-  obtain ⟨H1, hH1harm, hH1tend⟩ := bipolarGreen_aux4 (fun n => h1s (φ n)) hr₁
-    (fun n => hh1harm (φ n)) hcau1
-  obtain ⟨H2, hH2harm, hH2tend⟩ := bipolarGreen_aux4 (fun n => h2s (φ n)) hr₂
-    (fun n => hh2harm (φ n)) hcau2
+  obtain ⟨H1, hH1harm, hH1tend⟩ := exists_harmonicOnNhd_tendsto_of_cauchy_sphere
+    (fun n ↦ h1s (φ n)) hr₁
+    (fun n ↦ hh1harm (φ n)) hcau1
+  obtain ⟨H2, hH2harm, hH2tend⟩ := exists_harmonicOnNhd_tendsto_of_cauchy_sphere
+    (fun n ↦ h2s (φ n)) hr₂
+    (fun n ↦ hh2harm (φ n)) hcau2
   /- ## The outer circle sits inside the extraction domain. -/
   have hQtgt : closedBall c₀ (1 / 4 * r₀) ⊆ e₀.target :=
     (closedBall_subset_closedBall (by linarith only [hr₀])).trans hcb₀tgt
@@ -8371,7 +8379,7 @@ theorem exists_bipolarGreen [SecondCountableTopology M] (D₀ : CoordDisk M)
       ring
     obtain ⟨N, hN⟩ := exists_nat_gt
       ((4 * C₀ * Lx / ε - (Real.log ρs - Real.log r₀)) / Real.log 2 - 2)
-    refine ⟨N, fun k hk => ?_⟩
+    refine ⟨N, fun k hk ↦ ?_⟩
     have hden' := hden k
     rw [div_mul_eq_mul_div, div_le_iff₀ hden']
     have hkN : (N : ℝ) ≤ (k : ℝ) := Nat.cast_le.2 hk
@@ -8402,7 +8410,7 @@ theorem exists_bipolarGreen [SecondCountableTopology M] (D₀ : CoordDisk M)
       obtain ⟨N₂, hN₂⟩ := hbarrier (ε / 3) (Real.log ρs - Real.log a)
         (by linarith only [hε]) hLm0
       obtain ⟨N₃, hN₃⟩ := htlim (a / r₀) (div_pos ha hr₀)
-      refine ⟨max N₁ (max N₂ N₃), fun m hm n hn x hxsrc hxa hxρ => ?_⟩
+      refine ⟨max N₁ (max N₂ N₃), fun m hm n hn x hxsrc hxa hxρ ↦ ?_⟩
       have hmn : max N₁ (max N₂ N₃) ≤ min m n := le_min hm hn
       have hAk : min m n ≤ φ (min m n) := hφmono.le_apply
       have hN₂A : N₂ ≤ φ (min m n) :=
@@ -8441,49 +8449,53 @@ theorem exists_bipolarGreen [SecondCountableTopology M] (D₀ : CoordDisk M)
       have he1 : Gs (φ m) x - Gs (φ n) x ≤ ε / 3 +
           4 * C₀ / (Real.log ρs - Real.log (t (φ (min m n)) * r₀)) *
           (Real.log ρs - Real.log (dist (e₀ x) c₀)) :=
-        bipolarGreen_aux3 D₀ hr₁ hr₂ hC₀1 htgt1 htgt2 hav1 hav2
+        pieceGreen_dipole_sub_le_log_barrier D₀ hr₁ hr₂ hC₀1 htgt1 htgt2
+          (fun w hw ↦ (hav1 w hw).1) (fun w hw ↦ (hav1 w hw).2)
+          (fun w hw ↦ (hav2 w hw).1) (fun w hw ↦ (hav2 w hw).2)
           (ht0 (φ (min m n))) (ht1 (φ (min m n))) (htq (φ (min m n)))
           (ht0 (φ m)) (ht1 (φ m)) (ht0 (φ n)) (ht1 (φ n)) hsub1 hsub2
           (ε := ε / 3) (by linarith only [hε])
-          (fun y hy1 hy2 => hGB (φ m) y hy1 hy2)
-          (fun y hy1 hy2 => hGB (φ n) y hy1 hy2) hsph1 x hxsrc hδsm hxρ
+          (fun y hy1 hy2 ↦ hGB (φ m) y hy1 hy2)
+          (fun y hy1 hy2 ↦ hGB (φ n) y hy1 hy2) hsph1 x hxsrc hδsm hxρ
       have he2 : Gs (φ n) x - Gs (φ m) x ≤ ε / 3 +
           4 * C₀ / (Real.log ρs - Real.log (t (φ (min m n)) * r₀)) *
           (Real.log ρs - Real.log (dist (e₀ x) c₀)) :=
-        bipolarGreen_aux3 D₀ hr₁ hr₂ hC₀1 htgt1 htgt2 hav1 hav2
+        pieceGreen_dipole_sub_le_log_barrier D₀ hr₁ hr₂ hC₀1 htgt1 htgt2
+          (fun w hw ↦ (hav1 w hw).1) (fun w hw ↦ (hav1 w hw).2)
+          (fun w hw ↦ (hav2 w hw).1) (fun w hw ↦ (hav2 w hw).2)
           (ht0 (φ (min m n))) (ht1 (φ (min m n))) (htq (φ (min m n)))
           (ht0 (φ n)) (ht1 (φ n)) (ht0 (φ m)) (ht1 (φ m)) hsub2 hsub1
           (ε := ε / 3) (by linarith only [hε])
-          (fun y hy1 hy2 => hGB (φ n) y hy1 hy2)
-          (fun y hy1 hy2 => hGB (φ m) y hy1 hy2) hsph2 x hxsrc hδsm hxρ
+          (fun y hy1 hy2 ↦ hGB (φ n) y hy1 hy2)
+          (fun y hy1 hy2 ↦ hGB (φ m) y hy1 hy2) hsph2 x hxsrc hδsm hxρ
       rw [abs_le]
       constructor
       · linarith only [he2, hbar, hmono, hε]
       · linarith only [he1, hbar, hmono, hε]
-    · refine ⟨0, fun m _ n _ x _ hxa hxρ => ?_⟩
+    · refine ⟨0, fun m _ n _ x _ hxa hxρ ↦ ?_⟩
       exact absurd (lt_of_lt_of_le hxρ (le_trans haρ hxa)) (lt_irrefl _)
   /- ## The pointwise center limit. -/
   have hcen : ∀ x : M, x ∈ e₀.source → 0 < dist (e₀ x) c₀ → dist (e₀ x) c₀ < ρs
       →
-      ∃ l, Tendsto (fun n => Gs (φ n) x) atTop (𝓝 l) := by
+      ∃ l, Tendsto (fun n ↦ Gs (φ n) x) atTop (𝓝 l) := by
     intro x hxsrc hx0 hxρ
     apply cauchySeq_tendsto_of_complete
     rw [Metric.cauchySeq_iff]
     intro ε hε
     obtain ⟨N, hN⟩ := hcauAt (dist (e₀ x) c₀) hx0 (ε / 2) (half_pos hε)
-    refine ⟨N, fun m hm n hn => ?_⟩
+    refine ⟨N, fun m hm n hn ↦ ?_⟩
     rw [Real.dist_eq]
     have h1 := hN m hm n hn x hxsrc le_rfl hxρ
     linarith only [h1, hε]
   /- ## The limit function. -/
-  set ℓs : M → ℝ := fun x => limUnder atTop (fun n => Gs (φ n) x) with hℓs
+  set ℓs : M → ℝ := fun x ↦ limUnder atTop (fun n ↦ Gs (φ n) x) with hℓs
   have hhalftgt1 : closedBall c₁ (r₁ / 2) ⊆ e₁.target :=
     (closedBall_subset_closedBall (by linarith only [hr₁])).trans htgt1
   have hhalftgt2 : closedBall c₂ (r₂ / 2) ⊆ e₂.target :=
     (closedBall_subset_closedBall (by linarith only [hr₂])).trans htgt2
   have hρslt : 1 / 4 * r₀ < ρs := by linarith only [hr₀, hρs]
   have hℓtend : ∀ x : M, x ≠ p₁ → x ≠ p₂ → x ≠ D₀.center →
-      Tendsto (fun n => Gs (φ n) x) atTop (𝓝 (ℓs x)) := by
+      Tendsto (fun n ↦ Gs (φ n) x) atTop (𝓝 (ℓs x)) := by
     intro x hx1 hx2 hx0
     by_cases hΩ : x ∈ Ωqq
     · have h2 := (hGoutunif {x} isCompact_singleton
@@ -8517,12 +8529,12 @@ theorem exists_bipolarGreen [SecondCountableTopology M] (D₀ : CoordDisk M)
           rw [Set.mem_preimage, mem_ball] at h1
           rw [mem_ball]
           linarith only [h1, hr₁]
-        have h4 : Tendsto (fun n => h1s (φ n) (e₁ x) - Real.log ‖e₁ x - c₁‖) atTop
+        have h4 : Tendsto (fun n ↦ h1s (φ n) (e₁ x) - Real.log ‖e₁ x - c₁‖) atTop
             (𝓝 (H1 (e₁ x) - Real.log ‖e₁ x - c₁‖)) :=
           (hH1tend (e₁ x) hw).sub tendsto_const_nhds
-        have h5 : Tendsto (fun n => Gs (φ n) x) atTop
+        have h5 : Tendsto (fun n ↦ Gs (φ n) x) atTop
             (𝓝 (H1 (e₁ x) - Real.log ‖e₁ x - c₁‖)) :=
-          h4.congr fun n => (hGsB₁ (φ n) x hxB hx1).symm
+          h4.congr fun n ↦ (hGsB₁ (φ n) x hxB hx1).symm
         have h6 : ℓs x = H1 (e₁ x) - Real.log ‖e₁ x - c₁‖ := h5.limUnder_eq
         rw [h6]
         exact h5
@@ -8535,12 +8547,12 @@ theorem exists_bipolarGreen [SecondCountableTopology M] (D₀ : CoordDisk M)
           rw [Set.mem_preimage, mem_ball] at h1
           rw [mem_ball]
           linarith only [h1, hr₂]
-        have h4 : Tendsto (fun n => Real.log ‖e₂ x - c₂‖ - h2s (φ n) (e₂ x)) atTop
+        have h4 : Tendsto (fun n ↦ Real.log ‖e₂ x - c₂‖ - h2s (φ n) (e₂ x)) atTop
             (𝓝 (Real.log ‖e₂ x - c₂‖ - H2 (e₂ x))) :=
           tendsto_const_nhds.sub (hH2tend (e₂ x) hw)
-        have h5 : Tendsto (fun n => Gs (φ n) x) atTop
+        have h5 : Tendsto (fun n ↦ Gs (φ n) x) atTop
             (𝓝 (Real.log ‖e₂ x - c₂‖ - H2 (e₂ x))) := by
-          refine h4.congr fun n => ?_
+          refine h4.congr fun n ↦ ?_
           have h7 := hh2val (φ n) (e₂ x) ?_
           · have h8 := hGsB₂ (φ n) x hxB hx2
             linarith only [h8]
@@ -8557,7 +8569,7 @@ theorem exists_bipolarGreen [SecondCountableTopology M] (D₀ : CoordDisk M)
         rw [h6]
         exact h5
   /- ## The plane limit near the center: harmonicity and boundedness. -/
-  have hcenharm : ∀ w₀ ∈ ball c₀ ρs \ {c₀}, HarmonicAt (fun w => ℓs (e₀.symm w)) w₀
+  have hcenharm : ∀ w₀ ∈ ball c₀ ρs \ {c₀}, HarmonicAt (fun w ↦ ℓs (e₀.symm w)) w₀
       := by
     intro w₀ hw₀
     obtain ⟨hw₀b, hw₀ne⟩ := hw₀
@@ -8593,13 +8605,13 @@ theorem exists_bipolarGreen [SecondCountableTopology M] (D₀ : CoordDisk M)
         |Gs (φ m) (e₀.symm ζ) - Gs (φ n) (e₀.symm ζ)| ≤ ε := by
       intro ε hε
       obtain ⟨N, hN⟩ := hcauAt (dist w₀ c₀ / 2) (by linarith only [hd0]) ε hε
-      refine ⟨N, fun m hm n hn ζ hζ => ?_⟩
+      refine ⟨N, fun m hm n hn ζ hζ ↦ ?_⟩
       obtain ⟨hs1, hs2⟩ := hsymm ζ hζ
       obtain ⟨hb1, hb2, hb3⟩ := hball ζ hζ
       exact hN m hm n hn (e₀.symm ζ) hs1 (by rw [hs2]; exact hb2)
         (by rw [hs2]; exact hb3)
     have hptw : ∀ ζ ∈ closedBall w₀ ρw,
-        Tendsto (fun n => Gs (φ n) (e₀.symm ζ)) atTop (𝓝 (ℓs (e₀.symm ζ))) := by
+        Tendsto (fun n ↦ Gs (φ n) (e₀.symm ζ)) atTop (𝓝 (ℓs (e₀.symm ζ))) := by
       intro ζ hζ
       obtain ⟨hs1, hs2⟩ := hsymm ζ hζ
       obtain ⟨hb1, hb2, hb3⟩ := hball ζ hζ
@@ -8616,7 +8628,7 @@ theorem exists_bipolarGreen [SecondCountableTopology M] (D₀ : CoordDisk M)
     obtain ⟨n₀, hn₀t⟩ := htlim (dist w₀ c₀ / 2 / r₀)
       (div_pos (by linarith only [hd0]) hr₀)
     have hshift_harm : ∀ j : ℕ,
-        HarmonicOnNhd (fun w => Gs (φ (j + n₀)) (e₀.symm w))
+        HarmonicOnNhd (fun w ↦ Gs (φ (j + n₀)) (e₀.symm w))
           (ball w₀ (2 * (ρw / 2))) := by
       intro j ζ hζ
       have hζcb : ζ ∈ closedBall w₀ ρw := by
@@ -8641,9 +8653,9 @@ theorem exists_bipolarGreen [SecondCountableTopology M] (D₀ : CoordDisk M)
         rw [hs2] at h7
         linarith only [h3, h6, h7, hb2]
       have hcar := hcarζ ζ hζcb
-      have hnp1 : e₀.symm ζ ≠ p₁ := fun hcon =>
+      have hnp1 : e₀.symm ζ ≠ p₁ := fun hcon ↦
         (hCar1av p₁ hp₁Car1).1 (hcon ▸ hcar)
-      have hnp2 : e₀.symm ζ ≠ p₂ := fun hcon =>
+      have hnp2 : e₀.symm ζ ≠ p₂ := fun hcon ↦
         (hCar2av p₂ hp₂Car2).1 (hcon ▸ hcar)
       refine htransfer D₀.center ((Wp (φ (j + n₀)) : Set M) ∩ ({p₁}ᶜ ∩ {p₂}ᶜ))
         (Gs (φ (j + n₀))) ?_ ζ ⟨hb1, ?_⟩
@@ -8658,24 +8670,24 @@ theorem exists_bipolarGreen [SecondCountableTopology M] (D₀ : CoordDisk M)
         |Gs (φ (m + n₀)) (e₀.symm ζ) - Gs (φ (n + n₀)) (e₀.symm ζ)| ≤ ε := by
       intro ε hε
       obtain ⟨N, hN⟩ := hunifC ε hε
-      refine ⟨N, fun m hm n hn ζ hζ => ?_⟩
+      refine ⟨N, fun m hm n hn ζ hζ ↦ ?_⟩
       have hζcb : ζ ∈ closedBall w₀ ρw := by
         have h1 : dist ζ w₀ = 3 * (ρw / 2) / 2 := mem_sphere.1 hζ
         rw [mem_closedBall, h1]
         linarith only [hρw0]
       exact hN (m + n₀) (le_trans hm (Nat.le_add_right m n₀)) (n + n₀)
         (le_trans hn (Nat.le_add_right n n₀)) ζ hζcb
-    obtain ⟨Hw, hHwharm, hHwtend⟩ := bipolarGreen_aux4
-      (fun j w => Gs (φ (j + n₀)) (e₀.symm w)) (half_pos hρw0) hshift_harm hcauw
+    obtain ⟨Hw, hHwharm, hHwtend⟩ := exists_harmonicOnNhd_tendsto_of_cauchy_sphere
+      (fun j w ↦ Gs (φ (j + n₀)) (e₀.symm w)) (half_pos hρw0) hshift_harm hcauw
     have hq0 : (0 : ℝ) < 3 * (ρw / 2) / 2 := by linarith only [hρw0]
-    have hev : (fun w => ℓs (e₀.symm w)) =ᶠ[𝓝 w₀] Hw := by
+    have hev : (fun w ↦ ℓs (e₀.symm w)) =ᶠ[𝓝 w₀] Hw := by
       filter_upwards [isOpen_ball.mem_nhds (mem_ball_self hq0)] with v hv
       have hvcb : v ∈ closedBall w₀ ρw := by
         have h1 : dist v w₀ < 3 * (ρw / 2) / 2 := mem_ball.1 hv
         rw [mem_closedBall]
         linarith only [h1, hρw0]
       have h1 := hptw v hvcb
-      have h2 : Tendsto (fun j => Gs (φ (j + n₀)) (e₀.symm v)) atTop
+      have h2 : Tendsto (fun j ↦ Gs (φ (j + n₀)) (e₀.symm v)) atTop
           (𝓝 (ℓs (e₀.symm v))) := h1.comp (tendsto_add_atTop_nat n₀)
       exact tendsto_nhds_unique h2 (hHwtend v hv)
     exact (harmonicAt_congr_nhds hev).mpr (hHwharm w₀ (mem_ball_self hq0))
@@ -8695,15 +8707,15 @@ theorem exists_bipolarGreen [SecondCountableTopology M] (D₀ : CoordDisk M)
     have hcar : e₀.symm ζ ∈ D₀.closedCarrier := by
       rw [hcar₀]
       exact ⟨ζ, mem_closedBall.2 (by linarith only [hζρ, hρsr₀]), rfl⟩
-    have hB1 : e₀.symm ζ ∉ B₁ := fun hmem => (hCar1av _ (hB₁Car hmem)).1 hcar
-    have hB2 : e₀.symm ζ ∉ B₂ := fun hmem => (hCar2av _ (hB₂Car hmem)).1 hcar
+    have hB1 : e₀.symm ζ ∉ B₁ := fun hmem ↦ (hCar1av _ (hB₁Car hmem)).1 hcar
+    have hB2 : e₀.symm ζ ∉ B₂ := fun hmem ↦ (hCar2av _ (hB₂Car hmem)).1 hcar
     rw [heq]
     apply le_of_tendsto hl.abs
-    exact Filter.Eventually.of_forall fun n => hGB (φ n) _ hB1 hB2
+    exact Filter.Eventually.of_forall fun n ↦ hGB (φ n) _ hB1 hB2
   obtain ⟨Hc, hHcharm, hHceq⟩ := exists_harmonicOnNhd_of_bounded_punctured hρs0
-    (fun w hw => hcenharm w hw) ⟨C₀, hcenbd⟩
+    (fun w hw ↦ hcenharm w hw) ⟨C₀, hcenbd⟩
   /- ## Assembly of the bipolar Green's function. -/
-  set Gfin : M → ℝ := fun x => if x = D₀.center then Hc c₀ else ℓs x with hGfin
+  set Gfin : M → ℝ := fun x ↦ if x = D₀.center then Hc c₀ else ℓs x with hGfin
   have hballtgt1 : ball c₁ (3 * r₁ / 2) ⊆ e₁.target :=
     (ball_subset_closedBall.trans
       (closedBall_subset_closedBall (by linarith only [hr₁]))).trans htgt1
@@ -8736,10 +8748,10 @@ theorem exists_bipolarGreen [SecondCountableTopology M] (D₀ : CoordDisk M)
       intro n
       have h5 := hh1val (φ n) w ⟨hwball2, by simpa using hwne'⟩
       linarith only [h5]
-    have h6 : Tendsto (fun n => h1s (φ n) w - Real.log ‖w - c₁‖) atTop
+    have h6 : Tendsto (fun n ↦ h1s (φ n) w - Real.log ‖w - c₁‖) atTop
         (𝓝 (H1 w - Real.log ‖w - c₁‖)) := (hH1tend w hwb).sub tendsto_const_nhds
-    have h7 : Tendsto (fun n => Gs (φ n) (e₁.symm w)) atTop
-        (𝓝 (H1 w - Real.log ‖w - c₁‖)) := h6.congr fun n => (h4 n).symm
+    have h7 : Tendsto (fun n ↦ Gs (φ n) (e₁.symm w)) atTop
+        (𝓝 (H1 w - Real.log ‖w - c₁‖)) := h6.congr fun n ↦ (h4 n).symm
     exact ⟨hnc, tendsto_nhds_unique h3 h7⟩
   have hval2 : ∀ w ∈ ball c₂ (3 * r₂ / 2) \ {c₂},
       e₂.symm w ≠ D₀.center ∧ ℓs (e₂.symm w) = Real.log ‖w - c₂‖ - H2 w := by
@@ -8755,7 +8767,7 @@ theorem exists_bipolarGreen [SecondCountableTopology M] (D₀ : CoordDisk M)
       rw [hcon] at h1
       have h2 : c₂ = w := by rw [hc₂, h1]
       exact hwne' h2.symm
-    have hnp1 : e₂.symm w ≠ p₁ := fun hcon => (hCar2av _ hcarw).2 (hcon ▸ hp₁Car1)
+    have hnp1 : e₂.symm w ≠ p₁ := fun hcon ↦ (hCar2av _ hcarw).2 (hcon ▸ hp₁Car1)
     have hnc : e₂.symm w ≠ D₀.center := by
       intro hcon
       exact (hCar2av _ hcarw).1 (hcon ▸ hcen₀car)
@@ -8766,19 +8778,19 @@ theorem exists_bipolarGreen [SecondCountableTopology M] (D₀ : CoordDisk M)
       intro n
       have h5 := hh2val (φ n) w ⟨hwball2, by simpa using hwne'⟩
       linarith only [h5]
-    have h6 : Tendsto (fun n => Real.log ‖w - c₂‖ - h2s (φ n) w) atTop
+    have h6 : Tendsto (fun n ↦ Real.log ‖w - c₂‖ - h2s (φ n) w) atTop
         (𝓝 (Real.log ‖w - c₂‖ - H2 w)) := tendsto_const_nhds.sub (hH2tend w hwb)
-    have h7 : Tendsto (fun n => Gs (φ n) (e₂.symm w)) atTop
-        (𝓝 (Real.log ‖w - c₂‖ - H2 w)) := h6.congr fun n => (h4 n).symm
+    have h7 : Tendsto (fun n ↦ Gs (φ n) (e₂.symm w)) atTop
+        (𝓝 (Real.log ‖w - c₂‖ - H2 w)) := h6.congr fun n ↦ (h4 n).symm
     exact ⟨hnc, tendsto_nhds_unique h3 h7⟩
   refine ⟨Gfin, ?_, ⟨3 * r₁ / 2, by linarith only [hr₁], hballtgt1, H1, hH1harm, ?_⟩,
-    ⟨3 * r₂ / 2, by linarith only [hr₂], hballtgt2, fun w => -H2 w,
+    ⟨3 * r₂ / 2, by linarith only [hr₂], hballtgt2, fun w ↦ -H2 w,
       harmNeg H2 _ hH2harm, ?_⟩, ⟨C₀, B₁, hB₁open.mem_nhds hp₁B₁, B₂,
       hB₂open.mem_nhds hp₂B₂, ?_, ?_, ?_⟩⟩
   · -- harmonicity on the doubly punctured surface
     intro x hx
-    have hx1 : x ≠ p₁ := fun hcon => hx (by rw [hcon]; exact Set.mem_insert _ _)
-    have hx2 : x ≠ p₂ := fun hcon => hx (by rw [hcon]; exact Set.mem_insert_of_mem _ rfl)
+    have hx1 : x ≠ p₁ := fun hcon ↦ hx (by rw [hcon]; exact Set.mem_insert _ _)
+    have hx2 : x ≠ p₂ := fun hcon ↦ hx (by rw [hcon]; exact Set.mem_insert_of_mem _ rfl)
     by_cases hΩ : x ∈ Ωqq
     · have hev : ∀ᶠ z in 𝓝 x, Gout z = Gfin z := by
         filter_upwards [hΩqqopen.mem_nhds hΩ] with z hz
@@ -8868,13 +8880,13 @@ theorem exists_bipolarGreen [SecondCountableTopology M] (D₀ : CoordDisk M)
           simp only [hGfin]
           rw [if_neg h5.1]
           exact h5.2.symm
-        have hharm1 : MHarmonicAt (fun z => H1 (e₁ z) -
+        have hharm1 : MHarmonicAt (fun z ↦ H1 (e₁ z) -
             Real.log (dist (e₁ z) c₁)) x :=
           mharmSub _ _ x (pullback p₁ H1 x hxB.1 (hH1harm (e₁ x) hw))
             (logHarm p₁ c₁ x hxB.1 hxcne)
-        have hharm2 : MHarmonicAt (fun z => H1 (e₁ z) - Real.log ‖e₁ z - c₁‖) x :=
+        have hharm2 : MHarmonicAt (fun z ↦ H1 (e₁ z) - Real.log ‖e₁ z - c₁‖) x :=
           mharm_congr _ _ x
-            (Filter.Eventually.of_forall fun z => by rw [dist_eq_norm]) hharm1
+            (Filter.Eventually.of_forall fun z ↦ by rw [dist_eq_norm]) hharm1
         exact mharm_congr _ _ x hev hharm2
       · -- across the second half disk
         have hxB : x ∈ B₂ := by
@@ -8913,13 +8925,13 @@ theorem exists_bipolarGreen [SecondCountableTopology M] (D₀ : CoordDisk M)
           simp only [hGfin]
           rw [if_neg h5.1]
           exact h5.2.symm
-        have hharm1 : MHarmonicAt (fun z => Real.log (dist (e₂ z) c₂) -
+        have hharm1 : MHarmonicAt (fun z ↦ Real.log (dist (e₂ z) c₂) -
             H2 (e₂ z)) x :=
           mharmSub _ _ x (logHarm p₂ c₂ x hxB.1 hxcne)
             (pullback p₂ H2 x hxB.1 (hH2harm (e₂ x) hw))
-        have hharm2 : MHarmonicAt (fun z => Real.log ‖e₂ z - c₂‖ - H2 (e₂ z)) x :=
+        have hharm2 : MHarmonicAt (fun z ↦ Real.log ‖e₂ z - c₂‖ - H2 (e₂ z)) x :=
           mharm_congr _ _ x
-            (Filter.Eventually.of_forall fun z => by rw [dist_eq_norm]) hharm1
+            (Filter.Eventually.of_forall fun z ↦ by rw [dist_eq_norm]) hharm1
         exact mharm_congr _ _ x hev hharm2
   · -- the pole identity at `p₁`
     intro w hw
@@ -8955,8 +8967,8 @@ theorem exists_bipolarGreen [SecondCountableTopology M] (D₀ : CoordDisk M)
     exact Set.image_mono ball_subset_closedBall
   · -- the global bound off the pole balls
     intro x hx
-    have hx1 : x ∉ B₁ := fun h => hx (Or.inl h)
-    have hx2 : x ∉ B₂ := fun h => hx (Or.inr h)
+    have hx1 : x ∉ B₁ := fun h ↦ hx (Or.inl h)
+    have hx2 : x ∉ B₂ := fun h ↦ hx (Or.inr h)
     by_cases hxc : x = D₀.center
     · simp only [hGfin]
       rw [if_pos hxc]
@@ -8971,16 +8983,16 @@ theorem exists_bipolarGreen [SecondCountableTopology M] (D₀ : CoordDisk M)
       exact hcenbd w hw3
     · simp only [hGfin]
       rw [if_neg hxc]
-      have hxp1 : x ≠ p₁ := fun hcon => hx1 (hcon ▸ hp₁B₁)
-      have hxp2 : x ≠ p₂ := fun hcon => hx2 (hcon ▸ hp₂B₂)
+      have hxp1 : x ≠ p₁ := fun hcon ↦ hx1 (hcon ▸ hp₁B₁)
+      have hxp2 : x ≠ p₂ := fun hcon ↦ hx2 (hcon ▸ hp₂B₂)
       apply le_of_tendsto (hℓtend x hxp1 hxp2 hxc).abs
-      exact Filter.Eventually.of_forall fun n => hGB (φ n) x hx1 hx2
+      exact Filter.Eventually.of_forall fun n ↦ hGB (φ n) x hx1 hx2
 
 omit [ConnectedSpace M] in
 /-- **The dipole map**: on a simply connected surface the bipolar Green's
 function integrates to a holomorphic map to the sphere with a simple zero at
 `p₁` and a pole at `p₂`, of modulus `e^{−G}` elsewhere. -/
-theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
+theorem exists_bipolar_map [SimplyConnectedSpace M]
     {p₁ p₂ : M} (hne : p₁ ≠ p₂) {G : M → ℝ} (hG : MHarmonicOn G ({p₁, p₂}ᶜ))
     (hpole₁ : ∃ r > 0, ball (chartAt ℂ p₁ p₁) r ⊆ (chartAt ℂ p₁).target ∧
       ∃ h : ℂ → ℝ, HarmonicOnNhd h (ball (chartAt ℂ p₁ p₁) r) ∧
@@ -8992,17 +9004,17 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
           h w = G ((chartAt ℂ p₂).symm w) - Real.log ‖w - chartAt ℂ p₂ p₂‖) :
     ∃ φ : M → ℂ̂, ContMDiff 𝓘(ℂ) 𝓘(ℂ) ω φ ∧ φ p₁ = ((0 : ℂ) : ℂ̂) ∧
       φ p₂ = OnePoint.infty ∧
-      ∀ x, x ≠ p₁ → x ≠ p₂ →
+      ∀ x : M, x ≠ p₁ → x ≠ p₂ →
         ∃ w : ℂ, φ x = (w : ℂ̂) ∧ ‖w‖ = Real.exp (-(G x)) := by
   classical
   -- ## §0 Plane bricks: punctured-ball connectivity and constant-ratio rigidity.
   have hpunc : ∀ (c : ℂ) (r : ℝ), 0 < r → IsPreconnected (ball c r \ {c}) := by
     intro c r hr
-    have hcont : Continuous fun p : ℝ × ℝ =>
+    have hcont : Continuous fun p : ℝ × ℝ ↦
         c + (p.1 : ℂ) * Complex.exp ((p.2 : ℂ) * Complex.I) :=
       continuous_const.add ((Complex.continuous_ofReal.comp continuous_fst).mul
         (((Complex.continuous_ofReal.comp continuous_snd).mul continuous_const).cexp))
-    have himg : (fun p : ℝ × ℝ => c + (p.1 : ℂ) * Complex.exp ((p.2 : ℂ) * Complex.I)) ''
+    have himg : (fun p : ℝ × ℝ ↦ c + (p.1 : ℂ) * Complex.exp ((p.2 : ℂ) * Complex.I)) ''
         (Set.Ioo 0 r ×ˢ (Set.univ : Set ℝ)) = ball c r \ {c} := by
       apply Set.Subset.antisymm
       · rintro w ⟨⟨t, θ⟩, ⟨⟨ht0, htr⟩, -⟩, hw⟩
@@ -9031,7 +9043,7 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
       AnalyticOnNhd ℂ f (ball z₀ ρ) → AnalyticOnNhd ℂ g (ball z₀ ρ) →
       (∀ w ∈ ball z₀ ρ, ‖f w‖ = ‖g w‖) →
       (∀ w ∈ ball z₀ ρ, w ≠ z₀ → g w ≠ 0) →
-      ∃ c : ℂ, ‖c‖ = 1 ∧ Set.EqOn f (fun w => c * g w) (ball z₀ ρ) := by
+      ∃ c : ℂ, ‖c‖ = 1 ∧ Set.EqOn f (fun w ↦ c * g w) (ball z₀ ρ) := by
     intro f g z₀ ρ hρ hf hg hnorm hgne
     set U : Set ℂ := ball z₀ ρ \ {z₀} with hU
     have hUopen : IsOpen U := isOpen_ball.sdiff isClosed_singleton
@@ -9046,8 +9058,8 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
         rw [Set.mem_singleton_iff, hz₁, add_eq_left] at h
         have h2 : (ρ / 2 : ℝ) = 0 := by exact_mod_cast h
         linarith
-    have hgU : ∀ w ∈ U, g w ≠ 0 := fun w hw => hgne w hw.1 hw.2
-    have hr : AnalyticOnNhd ℂ (f / g) U := fun w hw =>
+    have hgU : ∀ w ∈ U, g w ≠ 0 := fun w hw ↦ hgne w hw.1 hw.2
+    have hr : AnalyticOnNhd ℂ (f / g) U := fun w hw ↦
       (hf w hw.1).div (hg w hw.1) (hgU w hw)
     have hrnorm : ∀ w ∈ U, ‖(f / g) w‖ = 1 := by
       intro w hw
@@ -9055,7 +9067,7 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
         div_self (norm_ne_zero_iff.mpr (hgU w hw))]
     rcases (hr z₁ hz₁U).eventually_constant_or_nhds_le_map_nhds with hconst | hopen
     · -- the ratio is constant on the punctured ball
-      have heq : Set.EqOn (f / g) (fun _ => (f / g) z₁) U :=
+      have heq : Set.EqOn (f / g) (fun _ ↦ (f / g) z₁) U :=
         hr.eqOn_of_preconnected_of_eventuallyEq analyticOnNhd_const hUconn hz₁U hconst
       refine ⟨(f / g) z₁, hrnorm z₁ hz₁U, ?_⟩
       have hEqU : ∀ w ∈ U, f w = (f / g) z₁ * g w := by
@@ -9068,7 +9080,7 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
       · have hz₀b : z₀ ∈ ball z₀ ρ := mem_ball_self hρ
         have hfc : Filter.Tendsto f (𝓝[U] z₀) (𝓝 (f z₀)) :=
           ((hf z₀ hz₀b).continuousAt).continuousWithinAt
-        have hgc : Filter.Tendsto (fun v => (f / g) z₁ * g v) (𝓝[U] z₀)
+        have hgc : Filter.Tendsto (fun v ↦ (f / g) z₁ * g v) (𝓝[U] z₀)
             (𝓝 ((f / g) z₁ * g z₀)) :=
           (continuousAt_const.mul (hg z₀ hz₀b).continuousAt).continuousWithinAt
         haveI : (𝓝[U] z₀).NeBot := by
@@ -9076,7 +9088,7 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
           rw [h2,
             nhdsWithin_inter_of_mem' (nhdsWithin_le_nhds (isOpen_ball.mem_nhds hz₀b))]
           exact Module.punctured_nhds_neBot ℝ ℂ z₀
-        have h5 : f =ᶠ[𝓝[U] z₀] fun v => (f / g) z₁ * g v :=
+        have h5 : f =ᶠ[𝓝[U] z₀] fun v ↦ (f / g) z₁ * g v :=
           eventually_nhdsWithin_of_forall hEqU
         have hcenter := tendsto_nhds_unique (hfc.congr' h5) hgc
         rw [hwz]
@@ -9146,7 +9158,7 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
     IsManifold.subset_maximalAtlas (Set.mem_insert _ _)
   have hatlasI : sphereChartInfty ∈ IsManifold.maximalAtlas 𝓘(ℂ) ω ℂ̂ :=
     IsManifold.subset_maximalAtlas (Set.mem_insert_of_mem _ rfl)
-  have hcoeSm : ∀ w : ℂ, ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω (fun v : ℂ => ((v : ℂ) : ℂ̂))
+  have hcoeSm : ∀ w : ℂ, ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω (fun v : ℂ ↦ ((v : ℂ) : ℂ̂))
       w := by
     intro w
     have h1 : ContMDiffOn 𝓘(ℂ) 𝓘(ℂ) ω sphereChartFinite.symm sphereChartFinite.target :=
@@ -9155,7 +9167,7 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
       rw [show sphereChartFinite.target = Set.univ from rfl]
       exact Filter.univ_mem
     refine (h1.contMDiffAt h2).congr_of_eventuallyEq ?_
-    exact Filter.Eventually.of_forall fun v => (sphereChartFinite_symm_apply v).symm
+    exact Filter.Eventually.of_forall fun v ↦ (sphereChartFinite_symm_apply v).symm
   have hIsymmSm : ∀ w : ℂ, ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω sphereChartInfty.symm w := by
     intro w
     exact (contMDiffOn_symm_of_mem_maximalAtlas hatlasI).contMDiffAt
@@ -9180,7 +9192,7 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
       simpa using hc
     obtain ⟨e, he⟩ := exists_gl_smul_diffeomorph
       (Matrix.GeneralLinearGroup.mkOfDetNeZero !![c, 0; 0, (1 : ℂ)] hdet)
-    refine ⟨fun z => Matrix.GeneralLinearGroup.mkOfDetNeZero !![c, 0; 0, (1 : ℂ)] hdet • z,
+    refine ⟨fun z ↦ Matrix.GeneralLinearGroup.mkOfDetNeZero !![c, 0; 0, (1 : ℂ)] hdet • z,
       ?_, ?_, ?_⟩
     · rw [← he]
       exact e.contMDiff
@@ -9205,7 +9217,7 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
         (x ≠ p₁ → x ≠ p₂ → ∃ w : ℂ, ψ x = ((w : ℂ) : ℂ̂) ∧
           ‖w‖ = Real.exp (-(G x))) ∧
         (x = p₁ → ψ x = ((0 : ℂ) : ℂ̂)) ∧ (x = p₂ → ψ x = OnePoint.infty)) :=
-    ⟨_, fun _ _ => Iff.rfl⟩
+    ⟨_, fun _ _ ↦ Iff.rfl⟩
   have hfin : ∀ (ψ : M → ℂ̂) (y : M), Q ψ y → y ≠ p₂ → ψ y ≠ OnePoint.infty := by
     intro ψ y hq hy2
     rw [hQ] at hq
@@ -9231,27 +9243,27 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
   have hreadFin : ∀ (ψ : M → ℂ̂) (x₀ : M), ∀ z ∈ (chartAt ℂ x₀).target,
       ψ ((chartAt ℂ x₀).symm z) ≠ OnePoint.infty →
       ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω ψ ((chartAt ℂ x₀).symm z) →
-      AnalyticAt ℂ (fun w => sphereChartFinite (ψ ((chartAt ℂ x₀).symm w))) z := by
+      AnalyticAt ℂ (fun w ↦ sphereChartFinite (ψ ((chartAt ℂ x₀).symm w))) z := by
     intro ψ x₀ z hz hnei hψ
     have hsymm : ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω (chartAt ℂ x₀).symm z :=
       contMDiffOn_chart_symm.contMDiffAt ((chartAt ℂ x₀).open_target.mem_nhds hz)
     have hcomp : ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω
-        (fun w => sphereChartFinite (ψ ((chartAt ℂ x₀).symm w))) z :=
+        (fun w ↦ sphereChartFinite (ψ ((chartAt ℂ x₀).symm w))) z :=
       (hFSm _ hnei).comp z (hψ.comp z hsymm)
     exact (contMDiffAt_iff_contDiffAt.mp hcomp).analyticAt
   have hreadInf : ∀ (ψ : M → ℂ̂) (x₀ : M), ∀ z ∈ (chartAt ℂ x₀).target,
       ψ ((chartAt ℂ x₀).symm z) ≠ ((0 : ℂ) : ℂ̂) →
       ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω ψ ((chartAt ℂ x₀).symm z) →
-      AnalyticAt ℂ (fun w => sphereChartInfty (ψ ((chartAt ℂ x₀).symm w))) z := by
+      AnalyticAt ℂ (fun w ↦ sphereChartInfty (ψ ((chartAt ℂ x₀).symm w))) z := by
     intro ψ x₀ z hz hnez hψ
     have hsymm : ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω (chartAt ℂ x₀).symm z :=
       contMDiffOn_chart_symm.contMDiffAt ((chartAt ℂ x₀).open_target.mem_nhds hz)
     have hcomp : ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω
-        (fun w => sphereChartInfty (ψ ((chartAt ℂ x₀).symm w))) z :=
+        (fun w ↦ sphereChartInfty (ψ ((chartAt ℂ x₀).symm w))) z :=
       (hISm _ hnez).comp z (hψ.comp z hsymm)
     exact (contMDiffAt_iff_contDiffAt.mp hcomp).analyticAt
   have hQsmul : ∀ (c : ℂ), ‖c‖ = 1 → ∀ (ψ : M → ℂ̂) (y : M), Q ψ y →
-      Q (fun z => mulC c (ψ z)) y := by
+      Q (fun z ↦ mulC c (ψ z)) y := by
     intro c hc ψ y hq
     have hc0 : c ≠ 0 := by
       intro hcon
@@ -9280,8 +9292,8 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
     filter_upwards [hE, hW'open.mem_nhds hxW'] with y hy hyW'
     rw [hQ] at hy ⊢
     have heqy : ψ' =ᶠ[𝓝 y] ψ :=
-      eventuallyEq_of_mem (hW'open.mem_nhds hyW') (fun z hz => hWeq (hW'sub hz))
-    refine ⟨hy.1.congr_of_eventuallyEq heqy, fun h1 h2 => ?_, fun h => ?_, fun h => ?_⟩
+      eventuallyEq_of_mem (hW'open.mem_nhds hyW') (fun z hz ↦ hWeq (hW'sub hz))
+    refine ⟨hy.1.congr_of_eventuallyEq heqy, fun h1 h2 ↦ ?_, fun h ↦ ?_, fun h ↦ ?_⟩
     · obtain ⟨w, hw1, hw2⟩ := hy.2.1 h1 h2
       exact ⟨w, by rw [hWeq (hW'sub hyW')]; exact hw1, hw2⟩
     · rw [hWeq (hW'sub hyW')]
@@ -9299,7 +9311,7 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
       set c₁ : ℂ := e x with hc₁
       have hxs : x ∈ e.source := mem_chart_source ℂ x
       obtain ⟨F, hFa, hFre⟩ := hharm.exists_analyticOnNhd_ball_re_eq
-      refine ⟨fun y => (((e y - c₁) * Complex.exp (-F (e y)) : ℂ) : ℂ̂), ?_⟩
+      refine ⟨fun y ↦ (((e y - c₁) * Complex.exp (-F (e y)) : ℂ) : ℂ̂), ?_⟩
       have hVopen : IsOpen (e.source ∩ e ⁻¹' ball c₁ r ∩ {p₂}ᶜ) :=
         (e.continuousOn.isOpen_inter_preimage e.open_source isOpen_ball).inter
           isOpen_compl_singleton
@@ -9313,12 +9325,12 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
       have hyp2' : y ≠ p₂ := hyp2
       rw [hQ]
       refine ⟨?_, ?_, ?_, ?_⟩
-      · have houter : AnalyticAt ℂ (fun w : ℂ => (w - c₁) * Complex.exp (-F w)) (e y) := by
-          have h1 : AnalyticAt ℂ (fun w : ℂ => -F w) (e y) := (hFa _ hyb).neg
-          have h2 : AnalyticAt ℂ (Complex.exp ∘ fun w : ℂ => -F w) (e y) := h1.cexp
+      · have houter : AnalyticAt ℂ (fun w : ℂ ↦ (w - c₁) * Complex.exp (-F w)) (e y) := by
+          have h1 : AnalyticAt ℂ (fun w : ℂ ↦ -F w) (e y) := (hFa _ hyb).neg
+          have h2 : AnalyticAt ℂ (Complex.exp ∘ fun w : ℂ ↦ -F w) (e y) := h1.cexp
           exact (analyticAt_id.sub analyticAt_const).mul h2
         have h3 : ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω
-            (fun w : ℂ => (w - c₁) * Complex.exp (-F w)) (e y) :=
+            (fun w : ℂ ↦ (w - c₁) * Complex.exp (-F w)) (e y) :=
           contMDiffAt_iff_contDiffAt.mpr houter.contDiffAt
         have h4 : ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω e y :=
           contMDiffOn_chart.contMDiffAt (e.open_source.mem_nhds hys)
@@ -9349,12 +9361,12 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
       set c₂ : ℂ := e x with hc₂
       have hxs : x ∈ e.source := mem_chart_source ℂ x
       obtain ⟨F, hFa, hFre⟩ := hharm.exists_analyticOnNhd_ball_re_eq
-      refine ⟨fun y => sphereChartInfty.symm ((e y - c₂) * Complex.exp (F (e y))), ?_⟩
+      refine ⟨fun y ↦ sphereChartInfty.symm ((e y - c₂) * Complex.exp (F (e y))), ?_⟩
       have hVopen : IsOpen (e.source ∩ e ⁻¹' ball c₂ r ∩ {p₁}ᶜ) :=
         (e.continuousOn.isOpen_inter_preimage e.open_source isOpen_ball).inter
           isOpen_compl_singleton
       have hxV : x ∈ e.source ∩ e ⁻¹' ball c₂ r ∩ {p₁}ᶜ := by
-        refine ⟨⟨hxs, ?_⟩, fun hcon => hne hcon.symm⟩
+        refine ⟨⟨hxs, ?_⟩, fun hcon ↦ hne hcon.symm⟩
         rw [Set.mem_preimage, ← hc₂]
         exact mem_ball_self hr0
       filter_upwards [hVopen.mem_nhds hxV] with y hy
@@ -9363,11 +9375,11 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
       have hyp1' : y ≠ p₁ := hyp1
       rw [hQ]
       refine ⟨?_, ?_, ?_, ?_⟩
-      · have houter : AnalyticAt ℂ (fun w : ℂ => (w - c₂) * Complex.exp (F w)) (e y) := by
+      · have houter : AnalyticAt ℂ (fun w : ℂ ↦ (w - c₂) * Complex.exp (F w)) (e y) := by
           have h2 : AnalyticAt ℂ (Complex.exp ∘ F) (e y) := (hFa _ hyb).cexp
           exact (analyticAt_id.sub analyticAt_const).mul h2
         have h3 : ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω
-            (fun w : ℂ => (w - c₂) * Complex.exp (F w)) (e y) :=
+            (fun w : ℂ ↦ (w - c₂) * Complex.exp (F w)) (e y) :=
           contMDiffAt_iff_contDiffAt.mpr houter.contDiffAt
         have h4 : ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω e y :=
           contMDiffOn_chart.contMDiffAt (e.open_source.mem_nhds hys)
@@ -9414,7 +9426,7 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
           (IsManifold.chart_mem_maximalAtlas x) (e.map_target hwt)).mp h1
         rwa [e.right_inv hwt] at h2
       obtain ⟨F, hFa, hFre⟩ := hharm.exists_analyticOnNhd_ball_re_eq
-      refine ⟨fun y => ((Complex.exp (-F (e y)) : ℂ) : ℂ̂), ?_⟩
+      refine ⟨fun y ↦ ((Complex.exp (-F (e y)) : ℂ) : ℂ̂), ?_⟩
       have hVopen : IsOpen (e.source ∩ e ⁻¹' ball (e x) ρ) :=
         e.continuousOn.isOpen_inter_preimage e.open_source isOpen_ball
       have hxV : x ∈ e.source ∩ e ⁻¹' ball (e x) ρ :=
@@ -9427,11 +9439,11 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
         rw [Set.mem_preimage, e.left_inv hys, hpolemem] at h1
         exact h1
       rw [hQ]
-      refine ⟨?_, fun _ _ => ?_, fun hcon => absurd hcon hyp.1,
-        fun hcon => absurd hcon hyp.2⟩
-      · have houter : AnalyticAt ℂ (fun w : ℂ => Complex.exp (-F w)) (e y) :=
+      refine ⟨?_, fun _ _ ↦ ?_, fun hcon ↦ absurd hcon hyp.1,
+        fun hcon ↦ absurd hcon hyp.2⟩
+      · have houter : AnalyticAt ℂ (fun w : ℂ ↦ Complex.exp (-F w)) (e y) :=
           ((hFa _ hyb).neg).cexp
-        have h3 : ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω (fun w : ℂ => Complex.exp (-F w)) (e y) :=
+        have h3 : ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω (fun w : ℂ ↦ Complex.exp (-F w)) (e y) :=
           contMDiffAt_iff_contDiffAt.mpr houter.contDiffAt
         have h4 : ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω e y :=
           contMDiffOn_chart.contMDiffAt (e.open_source.mem_nhds hys)
@@ -9446,13 +9458,13 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
     intro f g x heq
     obtain ⟨S, hS, hSeq⟩ := eventuallyEq_iff_exists_mem.mp heq
     obtain ⟨O, hOS, hO, hxO⟩ := mem_nhds_iff.mp hS
-    exact ⟨O, hO, hxO, fun z hz => (hSeq.mono hOS).eventuallyEq_of_mem (hO.mem_nhds hz)⟩
+    exact ⟨O, hO, hxO, fun z hz ↦ (hSeq.mono hOS).eventuallyEq_of_mem (hO.mem_nhds hz)⟩
   have hQopen : ∀ (ψ : M → ℂ̂) (x : M), (∀ᶠ y in 𝓝 x, Q ψ y) →
       ∃ W : Set M, IsOpen W ∧ x ∈ W ∧ ∀ z ∈ W, Q ψ z ∧ ∀ᶠ y in 𝓝 z, Q ψ y := by
     intro ψ x h
     obtain ⟨S, hSnh, hSQ⟩ := eventually_iff_exists_mem.mp h
     obtain ⟨W, hWS, hWo, hxW⟩ := mem_nhds_iff.mp hSnh
-    refine ⟨W, hWo, hxW, fun z hz => ⟨hSQ z (hWS hz), ?_⟩⟩
+    refine ⟨W, hWo, hxW, fun z hz ↦ ⟨hSQ z (hWS hz), ?_⟩⟩
     filter_upwards [hWo.mem_nhds hz] with y hy using hSQ y (hWS hy)
   have hnear : ∀ (x : M) (O : Set M), IsOpen O → x ∈ O →
       ∃ z ∈ O, z ≠ p₁ ∧ z ≠ p₂ := by
@@ -9527,14 +9539,14 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
     have h1 : γ ⁻¹' O ∈ 𝓝[S] b :=
       (hγ b hbS).preimage_mem_nhdsWithin (hO.mem_nhds hbO)
     obtain ⟨δ, hδ0, hδ⟩ := mem_nhdsWithin_iff.mp h1
-    refine ⟨δ, hδ0, fun u huS hub => ?_⟩
+    refine ⟨δ, hδ0, fun u huS hub ↦ ?_⟩
     exact hδ ⟨by rwa [mem_ball, Real.dist_eq], huS⟩
   -- ## §4 Phase rigidity: two elements at a point differ by a unimodular Möbius
   -- scaling near it, read through the finite chart away from `p₂` and through the
   -- infinity chart at `p₂`.
   have hrigid : ∀ (ψ ψ' : M → ℂ̂) (x : M), (∀ᶠ y in 𝓝 x, Q ψ y) →
       (∀ᶠ y in 𝓝 x, Q ψ' y) →
-      ∃ c : ℂ, ‖c‖ = 1 ∧ ψ =ᶠ[𝓝 x] fun y => mulC c (ψ' y) := by
+      ∃ c : ℂ, ‖c‖ = 1 ∧ ψ =ᶠ[𝓝 x] fun y ↦ mulC c (ψ' y) := by
     intro ψ ψ' x hψ hψ'
     obtain ⟨W, hWnh, hWQ⟩ := eventually_iff_exists_mem.mp hψ
     obtain ⟨W1, hW1W, hW1o, hxW1⟩ := mem_nhds_iff.mp hWnh
@@ -9549,7 +9561,7 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
       have hxT : e x ∈ e.target ∩ e.symm ⁻¹' (W1 ∩ W1' ∩ {p₁}ᶜ) := by
         refine ⟨e.map_source hxs, ?_⟩
         rw [Set.mem_preimage, e.left_inv hxs]
-        exact ⟨⟨hxW1, hxW1'⟩, by rw [hx2]; exact fun hcon => hne hcon.symm⟩
+        exact ⟨⟨hxW1, hxW1'⟩, by rw [hx2]; exact fun hcon ↦ hne hcon.symm⟩
       obtain ⟨ρ, hρ0, hρsub⟩ := Metric.isOpen_iff.mp hT _ hxT
       have hmem : ∀ w ∈ ball (e x) ρ, w ∈ e.target ∧ e.symm w ∈ W1 ∧
           e.symm w ∈ W1' ∧ e.symm w ≠ p₁ := by
@@ -9570,7 +9582,7 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
           rw [e.symm_source]
           exact e.map_source hxs
         exact e.symm.injOn hw1 hw2 h9
-      have hfa : AnalyticOnNhd ℂ (fun z => sphereChartInfty (ψ (e.symm z)))
+      have hfa : AnalyticOnNhd ℂ (fun z ↦ sphereChartInfty (ψ (e.symm z)))
           (ball (e x) ρ) := by
         intro w hw
         have h5 := (hQmem w hw).1
@@ -9578,7 +9590,7 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
           hne0 ψ (e.symm w) h5 (hmem w hw).2.2.2
         rw [hQ] at h5
         exact hreadInf ψ x w (hmem w hw).1 h6 h5.1
-      have hga : AnalyticOnNhd ℂ (fun z => sphereChartInfty (ψ' (e.symm z)))
+      have hga : AnalyticOnNhd ℂ (fun z ↦ sphereChartInfty (ψ' (e.symm z)))
           (ball (e x) ρ) := by
         intro w hw
         have h5 := (hQmem w hw).2
@@ -9587,8 +9599,8 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
         rw [hQ] at h5
         exact hreadInf ψ' x w (hmem w hw).1 h6 h5.1
       have hnorm : ∀ w ∈ ball (e x) ρ,
-          ‖(fun z => sphereChartInfty (ψ (e.symm z))) w‖ =
-          ‖(fun z => sphereChartInfty (ψ' (e.symm z))) w‖ := by
+          ‖(fun z ↦ sphereChartInfty (ψ (e.symm z))) w‖ =
+          ‖(fun z ↦ sphereChartInfty (ψ' (e.symm z))) w‖ := by
         intro w hw
         obtain ⟨h5, h5'⟩ := hQmem w hw
         rw [hQ] at h5 h5'
@@ -9608,11 +9620,11 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
           rw [hv1, hv'1, hIapp_coe v hv0, hIapp_coe v' hv'0, norm_inv, norm_inv,
             hv2, hv'2]
       have hgne : ∀ w ∈ ball (e x) ρ, w ≠ e x →
-          (fun z => sphereChartInfty (ψ' (e.symm z))) w ≠ 0 := by
+          (fun z ↦ sphereChartInfty (ψ' (e.symm z))) w ≠ 0 := by
         intro w hw hwx
         have h5' := (hQmem w hw).2
         rw [hQ] at h5'
-        have h6 : e.symm w ≠ p₂ := fun hcon => hwx (hcenter w hw hcon)
+        have h6 : e.symm w ≠ p₂ := fun hcon ↦ hwx (hcenter w hw hcon)
         obtain ⟨v', hv'1, hv'2⟩ := h5'.2.1 (hmem w hw).2.2.2 h6
         have hv'0 : v' ≠ 0 := by
           intro hcon
@@ -9631,7 +9643,7 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
         e.continuousOn.isOpen_inter_preimage e.open_source isOpen_ball
       have hxN : x ∈ e.source ∩ e ⁻¹' ball (e x) ρ :=
         ⟨hxs, by rw [Set.mem_preimage]; exact mem_ball_self hρ0⟩
-      have hEq : Set.EqOn ψ (fun y => mulC cc⁻¹ (ψ' y))
+      have hEq : Set.EqOn ψ (fun y ↦ mulC cc⁻¹ (ψ' y))
           (e.source ∩ e ⁻¹' ball (e x) ρ) := by
         intro y hy
         have h1 : sphereChartInfty (ψ (e.symm (e y))) =
@@ -9710,7 +9722,7 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
           rw [e.symm_source]
           exact e.map_source hxs
         exact e.symm.injOn hw1 hw2 h9
-      have hfa : AnalyticOnNhd ℂ (fun z => sphereChartFinite (ψ (e.symm z)))
+      have hfa : AnalyticOnNhd ℂ (fun z ↦ sphereChartFinite (ψ (e.symm z)))
           (ball (e x) ρ) := by
         intro w hw
         have h5 := (hQmem w hw).1
@@ -9718,7 +9730,7 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
           hfin ψ (e.symm w) h5 (hmem w hw).2.2.2.1
         rw [hQ] at h5
         exact hreadFin ψ x w (hmem w hw).1 h6 h5.1
-      have hga : AnalyticOnNhd ℂ (fun z => sphereChartFinite (ψ' (e.symm z)))
+      have hga : AnalyticOnNhd ℂ (fun z ↦ sphereChartFinite (ψ' (e.symm z)))
           (ball (e x) ρ) := by
         intro w hw
         have h5 := (hQmem w hw).2
@@ -9727,8 +9739,8 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
         rw [hQ] at h5
         exact hreadFin ψ' x w (hmem w hw).1 h6 h5.1
       have hnorm : ∀ w ∈ ball (e x) ρ,
-          ‖(fun z => sphereChartFinite (ψ (e.symm z))) w‖ =
-          ‖(fun z => sphereChartFinite (ψ' (e.symm z))) w‖ := by
+          ‖(fun z ↦ sphereChartFinite (ψ (e.symm z))) w‖ =
+          ‖(fun z ↦ sphereChartFinite (ψ' (e.symm z))) w‖ := by
         intro w hw
         obtain ⟨h5, h5'⟩ := hQmem w hw
         rw [hQ] at h5 h5'
@@ -9739,13 +9751,13 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
           obtain ⟨v', hv'1, hv'2⟩ := h5'.2.1 h6 (hmem w hw).2.2.2.1
           rw [hv1, hv'1, sphereChartFinite_coe, sphereChartFinite_coe, hv2, hv'2]
       have hgne : ∀ w ∈ ball (e x) ρ, w ≠ e x →
-          (fun z => sphereChartFinite (ψ' (e.symm z))) w ≠ 0 := by
+          (fun z ↦ sphereChartFinite (ψ' (e.symm z))) w ≠ 0 := by
         intro w hw hwx
         have h5' := (hQmem w hw).2
         rw [hQ] at h5'
         have h6 : e.symm w ≠ p₁ := by
           by_cases hx1 : x = p₁
-          · exact fun hcon => hwx (hcenter w hw hcon hx1)
+          · exact fun hcon ↦ hwx (hcenter w hw hcon hx1)
           · exact (hmem w hw).2.2.2.2 hx1
         obtain ⟨v', hv'1, hv'2⟩ := h5'.2.1 h6 (hmem w hw).2.2.2.1
         have hv'0 : v' ≠ 0 := by
@@ -9765,7 +9777,7 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
         e.continuousOn.isOpen_inter_preimage e.open_source isOpen_ball
       have hxN : x ∈ e.source ∩ e ⁻¹' ball (e x) ρ :=
         ⟨hxs, by rw [Set.mem_preimage]; exact mem_ball_self hρ0⟩
-      have hEq : Set.EqOn ψ (fun y => mulC c (ψ' y))
+      have hEq : Set.EqOn ψ (fun y ↦ mulC c (ψ' y))
           (e.source ∩ e ⁻¹' ball (e x) ρ) := by
         intro y hy
         have h1 : sphereChartFinite (ψ (e.symm (e y))) =
@@ -9798,14 +9810,14 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
       intro hcon
       rw [hcon, norm_zero] at hc1
       exact one_ne_zero hc1.symm
-    obtain ⟨O₀, hO₀o, hxO₀, hO₀⟩ := hOpen ψ (fun y => mulC c (ψ' y)) x hcev
+    obtain ⟨O₀, hO₀o, hxO₀, hO₀⟩ := hOpen ψ (fun y ↦ mulC c (ψ' y)) x hcev
     obtain ⟨W', hW'nh, hW'Q⟩ := eventually_iff_exists_mem.mp hψ'
     obtain ⟨W1, hW1W, hW1o, hxW1⟩ := mem_nhds_iff.mp hW'nh
     obtain ⟨z, hz, hzeq⟩ := hclu (O₀ ∩ W1) (hO₀o.inter hW1o) ⟨hxO₀, hxW1⟩
     obtain ⟨O₁, hO₁o, hzO₁, hO₁⟩ := hOpen ψ ψ' z hzeq
     obtain ⟨w, hw, hwp1, hwp2⟩ := hnear z (O₀ ∩ W1 ∩ O₁)
       ((hO₀o.inter hW1o).inter hO₁o) ⟨hz, hzO₁⟩
-    have h1 : ψ =ᶠ[𝓝 w] fun y => mulC c (ψ' y) := hO₀ w hw.1.1
+    have h1 : ψ =ᶠ[𝓝 w] fun y ↦ mulC c (ψ' y) := hO₀ w hw.1.1
     have h2 : ψ =ᶠ[𝓝 w] ψ' := hO₁ w hw.2
     have h3 : Q ψ' w := hW'Q w (hW1W hw.1.2)
     rw [hQ] at h3
@@ -9825,8 +9837,8 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
         rw [one_mul]
         exact h8
       exact (mul_right_cancel₀ hv'0 h9).symm
-    have h9 : (fun y => mulC c (ψ' y)) =ᶠ[𝓝 x] ψ' := by
-      refine Filter.Eventually.of_forall fun y => ?_
+    have h9 : (fun y ↦ mulC c (ψ' y)) =ᶠ[𝓝 x] ψ' := by
+      refine Filter.Eventually.of_forall fun y ↦ ?_
       change mulC c (ψ' y) = ψ' y
       rw [h7, hmulC1]
     exact hcev.trans h9
@@ -9838,7 +9850,7 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
           Ψ ∧
         ∀ t ∈ Set.Icc (0:ℝ) b, ∃ ε > 0, ∀ u ∈ Set.Icc (0:ℝ) b, |u - t| < ε →
           Φ u =ᶠ[𝓝 (γ u)] Φ t) :=
-    ⟨_, fun _ _ _ => Iff.rfl⟩
+    ⟨_, fun _ _ _ ↦ Iff.rfl⟩
   -- ## §6b Real-interval induction: nonempty at the left end, closed from the left,
   -- open to the right, forces membership of the right end.
   have hind : ∀ (a b : ℝ) (A : Set ℝ), a ≤ b → (∀ x ∈ A, x ∈ Set.Icc a b) → a ∈
@@ -9849,9 +9861,9 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
       b ∈ A := by
     intro a b A hab hsub haA hclosed hopen
     have hne : A.Nonempty := ⟨a, haA⟩
-    have hbdd : BddAbove A := ⟨b, fun x hx => (hsub x hx).2⟩
+    have hbdd : BddAbove A := ⟨b, fun x hx ↦ (hsub x hx).2⟩
     have hcIcc : sSup A ∈ Set.Icc a b :=
-      ⟨le_csSup hbdd haA, csSup_le hne fun x hx => (hsub x hx).2⟩
+      ⟨le_csSup hbdd haA, csSup_le hne fun x hx ↦ (hsub x hx).2⟩
     have hcA : sSup A ∈ A := by
       refine hclosed _ hcIcc ?_
       intro δ hδ0
@@ -9891,8 +9903,8 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
       have hγaW : γ a ∈ W := hδW a ha hac
       obtain ⟨u₀, hu₀, hu₀ev⟩ := hrigid (Φ a) ψ (γ a)
         (hΦa a ⟨ha.1, le_refl a⟩) (hWQ (γ a) hγaW).2
-      obtain ⟨Oa, hOao, hγaOa, hOa⟩ := hOpen (Φ a) (fun y => mulC u₀ (ψ y)) (γ a) hu₀ev
-      refine ⟨fun t => if t ≤ a then Φ t else fun y => mulC u₀ (ψ y), ?_⟩
+      obtain ⟨Oa, hOao, hγaOa, hOa⟩ := hOpen (Φ a) (fun y ↦ mulC u₀ (ψ y)) (γ a) hu₀ev
+      refine ⟨fun t ↦ if t ≤ a then Φ t else fun y ↦ mulC u₀ (ψ y), ?_⟩
       rw [hIC]
       refine ⟨?_, ?_, ?_⟩
       · intro t ht
@@ -9941,8 +9953,8 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
           have hua : a < u := by linarith [huε.2]
           rw [if_neg (not_le.mpr hua), if_neg (not_le.mpr hta)]
     have h1A : (1:ℝ) ∈ {b | b ∈ Set.Icc (0:ℝ) 1 ∧ ∃ Φ, IsCont γ b Φ} := by
-      refine hind 0 1 _ zero_le_one (fun x hx => hx.1) ⟨⟨le_refl 0, zero_le_one⟩, ?_⟩ ?_ ?_
-      · refine ⟨fun _ => Ψ, ?_⟩
+      refine hind 0 1 _ zero_le_one (fun x hx ↦ hx.1) ⟨⟨le_refl 0, zero_le_one⟩, ?_⟩ ?_ ?_
+      · refine ⟨fun _ ↦ Ψ, ?_⟩
         rw [hIC]
         refine ⟨?_, Filter.EventuallyEq.refl _ _, ?_⟩
         · intro t ht
@@ -9950,7 +9962,7 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
           rw [ht0, hγ0]
           exact hΨ
         · intro t ht
-          exact ⟨1, one_pos, fun u hu _ => Filter.EventuallyEq.refl _ _⟩
+          exact ⟨1, one_pos, fun u hu _ ↦ Filter.EventuallyEq.refl _ _⟩
       · intro c hc hap
         obtain ⟨δ, hδ0, hglued⟩ := hglue c hc
         obtain ⟨x, hxA, hxgt, hxle⟩ := hap δ hδ0
@@ -9979,7 +9991,7 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
     obtain ⟨hΦ'a, hΦ'0, hΦ'c⟩ := hΦ'
     have h1A : (1:ℝ) ∈ {b | b ∈ Set.Icc (0:ℝ) 1 ∧
         ∀ t ∈ Set.Icc (0:ℝ) b, Φ t =ᶠ[𝓝 (γ t)] Φ' t} := by
-      refine hind 0 1 _ zero_le_one (fun x hx => hx.1) ⟨⟨le_refl 0, zero_le_one⟩, ?_⟩ ?_ ?_
+      refine hind 0 1 _ zero_le_one (fun x hx ↦ hx.1) ⟨⟨le_refl 0, zero_le_one⟩, ?_⟩ ?_ ?_
       · intro t ht
         have ht0 : t = 0 := le_antisymm ht.2 ht.1
         rw [ht0, hγ0]
@@ -10053,7 +10065,7 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
     intro ψ ψ' ζ a b hab hζ hQ1 hQ2 heq0
     have hbA : b ∈ {σ | σ ∈ Set.Icc a b ∧ ∀ τ ∈ Set.Icc a σ, ψ =ᶠ[𝓝 (ζ τ)]
         ψ'} := by
-      refine hind a b _ hab (fun x hx => hx.1) ⟨⟨le_refl a, hab⟩, ?_⟩ ?_ ?_
+      refine hind a b _ hab (fun x hx ↦ hx.1) ⟨⟨le_refl a, hab⟩, ?_⟩ ?_ ?_
       · intro τ hτ
         have hτa : τ = a := le_antisymm hτ.2 hτ.1
         rw [hτa]
@@ -10091,14 +10103,14 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
             · linarith [hτ.2]
             · linarith
           exact hOc (ζ τ) (hδ₁ τ hτI hτd)
-    exact fun σ hσ => hbA.2 σ hσ
+    exact fun σ hσ ↦ hbA.2 σ hσ
   -- ## §9 The adjacent-path lemma (fixed endpoints).
   have hadj : ∀ (η : ℝ × ℝ → M), Continuous η → (∀ s ∈ Set.Icc (0:ℝ) 1, η (s, 0)
       = p₁) →
       (∀ s ∈ Set.Icc (0:ℝ) 1, η (s, 1) = η (0, 1)) →
-      ∀ s₀ ∈ Set.Icc (0:ℝ) 1, ∀ Φ, IsCont (fun t => η (s₀, t)) 1 Φ →
+      ∀ s₀ ∈ Set.Icc (0:ℝ) 1, ∀ Φ, IsCont (fun t ↦ η (s₀, t)) 1 Φ →
       ∃ ε > 0, ∀ s' ∈ Set.Icc (0:ℝ) 1, |s' - s₀| < ε →
-        ∃ Φ', IsCont (fun t => η (s', t)) 1 Φ' ∧ Φ' 1 =ᶠ[𝓝 (η (0, 1))] Φ 1 := by
+        ∃ Φ', IsCont (fun t ↦ η (s', t)) 1 Φ' ∧ Φ' 1 =ᶠ[𝓝 (η (0, 1))] Φ 1 := by
     intro η hη hη0 hη1 s₀ hs₀ Φ hΦ
     rw [hIC] at hΦ
     obtain ⟨hΦa, hΦ0, hΦc⟩ := hΦ
@@ -10113,7 +10125,7 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
       have hpre : η ⁻¹' W ∈ 𝓝 (s₀, t) :=
         hη.continuousAt.preimage_mem_nhds (hWo.mem_nhds hWmem)
       obtain ⟨r, hr0, hrsub⟩ := Metric.mem_nhds_iff.mp hpre
-      refine ⟨min r ε₁, lt_min hr0 hε₁0, W, hWo, fun z hz => (hWall z hz).1, ?_, ?_⟩
+      refine ⟨min r ε₁, lt_min hr0 hε₁0, W, hWo, fun z hz ↦ (hWall z hz).1, ?_, ?_⟩
       · intro p hp1 hp2
         apply hrsub
         rw [mem_ball, Prod.dist_eq, Real.dist_eq, Real.dist_eq]
@@ -10130,20 +10142,20 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
       have h1 := hd0 x hx
       linarith
     obtain ⟨T, hTcov⟩ := isCompact_Icc.elim_finite_subcover
-      (fun t : ↥(Set.Icc (0:ℝ) 1) => ball (t : ℝ) (dfun (t : ℝ) / 2))
-      (fun _ => isOpen_ball) hcover
+      (fun t : ↥(Set.Icc (0:ℝ) 1) ↦ ball (t : ℝ) (dfun (t : ℝ) / 2))
+      (fun _ ↦ isOpen_ball) hcover
     have hTne : T.Nonempty := by
       by_contra hemp
       rw [Finset.not_nonempty_iff_eq_empty] at hemp
       have h0 := hTcov (Set.left_mem_Icc.mpr zero_le_one)
       rw [hemp] at h0
       simp at h0
-    have hε0 : 0 < T.inf' hTne (fun t => dfun (t : ℝ) / 2) := by
+    have hε0 : 0 < T.inf' hTne (fun t ↦ dfun (t : ℝ) / 2) := by
       rw [Finset.lt_inf'_iff]
       intro t htT
       have h1 := hd0 (t : ℝ) t.2
       linarith
-    refine ⟨T.inf' hTne (fun t => dfun (t : ℝ) / 2), hε0, ?_⟩
+    refine ⟨T.inf' hTne (fun t ↦ dfun (t : ℝ) / 2), hε0, ?_⟩
     intro s' hs' hss
     -- the grid: N₀ with 1 / (N₀ + 1) below the uniform radius
     obtain ⟨N₀, hN₀⟩ := exists_nat_one_div_lt hε0
@@ -10162,7 +10174,7 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
       have hmem := hTcov hgi
       rw [Set.mem_iUnion₂] at hmem
       obtain ⟨t, htT, hgt⟩ := hmem
-      have hεle : T.inf' hTne (fun t => dfun (t : ℝ) / 2) ≤ dfun (t : ℝ) / 2 :=
+      have hεle : T.inf' hTne (fun t ↦ dfun (t : ℝ) / 2) ≤ dfun (t : ℝ) / 2 :=
         Finset.inf'_le _ htT
       have hdt0 : 0 < dfun (t : ℝ) := hd0 (t : ℝ) t.2
       have hdist : |(i : ℝ) / ((N₀ : ℝ) + 1) - (t : ℝ)| < dfun (t : ℝ) / 2 := by
@@ -10178,7 +10190,7 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
         constructor
         · linarith [hdist.1, hN₀, hεle]
         · linarith [hdist.2, hu1]
-      · calc |s' - s₀| < T.inf' hTne (fun t => dfun (t : ℝ) / 2) := hss
+      · calc |s' - s₀| < T.inf' hTne (fun t ↦ dfun (t : ℝ) / 2) := hss
           _ ≤ dfun (t : ℝ) / 2 := hεle
           _ < dfun (t : ℝ) := by linarith
     choose! tc htcI htcwin htcs using hassign
@@ -10212,22 +10224,22 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
         ψ =ᶠ[𝓝 (η (s₀, u))] ψ' → ψ =ᶠ[𝓝 (η (s', u))] ψ' := by
       intro u ψ ψ' hq1 hq2 heq
       rcases le_total s₀ s' with hle | hle
-      · have hcont1 : Continuous fun σ : ℝ => η (σ, u) :=
+      · have hcont1 : Continuous fun σ : ℝ ↦ η (σ, u) :=
           hη.comp (continuous_id.prodMk continuous_const)
-        exact htransport ψ ψ' (fun σ => η (σ, u)) s₀ s' hle hcont1.continuousOn
-          (fun σ hσ => hq1 σ (by rw [min_eq_left hle]; exact hσ.1)
+        exact htransport ψ ψ' (fun σ ↦ η (σ, u)) s₀ s' hle hcont1.continuousOn
+          (fun σ hσ ↦ hq1 σ (by rw [min_eq_left hle]; exact hσ.1)
             (by rw [max_eq_right hle]; exact hσ.2))
-          (fun σ hσ => hq2 σ (by rw [min_eq_left hle]; exact hσ.1)
+          (fun σ hσ ↦ hq2 σ (by rw [min_eq_left hle]; exact hσ.1)
             (by rw [max_eq_right hle]; exact hσ.2))
           heq s' ⟨hle, le_refl s'⟩
-      · have hcont2 : Continuous fun σ : ℝ => η (s₀ + s' - σ, u) :=
+      · have hcont2 : Continuous fun σ : ℝ ↦ η (s₀ + s' - σ, u) :=
           hη.comp ((continuous_const.sub continuous_id).prodMk continuous_const)
-        have h1 := htransport ψ ψ' (fun σ => η (s₀ + s' - σ, u)) s' s₀ hle
+        have h1 := htransport ψ ψ' (fun σ ↦ η (s₀ + s' - σ, u)) s' s₀ hle
           hcont2.continuousOn
-          (fun σ hσ => hq1 (s₀ + s' - σ)
+          (fun σ hσ ↦ hq1 (s₀ + s' - σ)
             (by rw [min_eq_right hle]; linarith [hσ.2])
             (by rw [max_eq_left hle]; linarith [hσ.1]))
-          (fun σ hσ => hq2 (s₀ + s' - σ)
+          (fun σ hσ ↦ hq2 (s₀ + s' - σ)
             (by rw [min_eq_right hle]; linarith [hσ.2])
             (by rw [max_eq_left hle]; linarith [hσ.1]))
           (by
@@ -10239,7 +10251,7 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
     -- grid induction: continuation along the s'-path up to each grid point,
     -- with the terminal germ locked to that of the s₀-continuation
     have hkey : ∀ i : ℕ, i ≤ N₀ + 1 →
-        ∃ Φ', IsCont (fun t => η (s', t)) ((i : ℝ) / ((N₀ : ℝ) + 1)) Φ' ∧
+        ∃ Φ', IsCont (fun t ↦ η (s', t)) ((i : ℝ) / ((N₀ : ℝ) + 1)) Φ' ∧
         ∀ ψtar : M → ℂ̂,
           Φ ((i : ℝ) / ((N₀ : ℝ) + 1)) =ᶠ[𝓝 (η (s₀, (i : ℝ) / ((N₀ : ℝ) + 1)))]
               ψtar →
@@ -10255,7 +10267,7 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
         rw [h00]
         have hp0' : η (s', 0) = p₁ := hη0 s' hs'
         have hp0 : η (s₀, 0) = p₁ := hη0 s₀ hs₀
-        refine ⟨fun _ => Φ 0, ?_, ?_⟩
+        refine ⟨fun _ ↦ Φ 0, ?_, ?_⟩
         · rw [hIC]
           refine ⟨?_, ?_, ?_⟩
           · intro t ht
@@ -10266,7 +10278,7 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
             exact h1
           · exact hΦ0
           · intro t ht
-            exact ⟨1, one_pos, fun u hu _ => Filter.EventuallyEq.refl _ _⟩
+            exact ⟨1, one_pos, fun u hu _ ↦ Filter.EventuallyEq.refl _ _⟩
         · intro ψtar htar hQtar
           rw [hp0] at htar
           rw [hp0']
@@ -10322,7 +10334,7 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
             hK1 σ hσ1 hσ2 _ (le_refl _) hgilt.le
           filter_upwards [(hWo (tc i) hIci).mem_nhds hmem] with y hy using
             hWQ (tc i) hIci y hy
-        refine ⟨fun u => if u ≤ (i : ℝ) / ((N₀ : ℝ) + 1) then Φ' u else Φ (tc i), ?_,
+        refine ⟨fun u ↦ if u ≤ (i : ℝ) / ((N₀ : ℝ) + 1) then Φ' u else Φ (tc i), ?_,
             ?_⟩
         · rw [hIC] at hΦ'IC ⊢
           obtain ⟨hpa, hp0, hpc⟩ := hΦ'IC
@@ -10356,9 +10368,9 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
               obtain ⟨ε', hε'0, hε'p⟩ := hpc ((i : ℝ) / ((N₀ : ℝ) + 1))
                 ⟨by positivity, le_refl _⟩
               obtain ⟨O₂, hO₂o, hO₂mem, hO₂⟩ := hOpen _ _ _ hjunc
-              have hcont' : Continuous fun t : ℝ => η (s', t) :=
+              have hcont' : Continuous fun t : ℝ ↦ η (s', t) :=
                 hη.comp (continuous_const.prodMk continuous_id)
-              obtain ⟨δ₂, hδ₂0, hδ₂⟩ := hγnb (fun t => η (s', t)) (Set.Icc 0 1)
+              obtain ⟨δ₂, hδ₂0, hδ₂⟩ := hγnb (fun t ↦ η (s', t)) (Set.Icc 0 1)
                 ((i : ℝ) / ((N₀ : ℝ) + 1)) hcont'.continuousOn hgiI O₂ hO₂o hO₂mem
               refine ⟨min ε' δ₂, lt_min hε'0 hδ₂0, ?_⟩
               intro u hu huε
@@ -10379,7 +10391,7 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
         · intro ψtar htar hQtar
           have hne1 : ¬(((i : ℝ) + 1) / ((N₀ : ℝ) + 1) ≤ (i : ℝ) / ((N₀ : ℝ) + 1)) :=
             not_le.mpr hgilt
-          have hval : (fun u => if u ≤ (i : ℝ) / ((N₀ : ℝ) + 1) then Φ' u else Φ (tc i))
+          have hval : (fun u ↦ if u ≤ (i : ℝ) / ((N₀ : ℝ) + 1) then Φ' u else Φ (tc i))
               (((i : ℝ) + 1) / ((N₀ : ℝ) + 1)) = Φ (tc i) := if_neg hne1
           rw [hval]
           have h1 : Φ (tc i) =ᶠ[𝓝 (η (s₀, ((i : ℝ) + 1) / ((N₀ : ℝ) + 1)))] ψtar :=
@@ -10410,20 +10422,20 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
   have hhomo : ∀ (η : ℝ × ℝ → M), Continuous η → (∀ s ∈ Set.Icc (0:ℝ) 1, η (s,
       0) = p₁) →
       (∀ s ∈ Set.Icc (0:ℝ) 1, η (s, 1) = η (0, 1)) →
-      ∀ Φ₀ Φ₁, IsCont (fun t => η (0, t)) 1 Φ₀ → IsCont (fun t => η (1, t)) 1 Φ₁
+      ∀ Φ₀ Φ₁, IsCont (fun t ↦ η (0, t)) 1 Φ₀ → IsCont (fun t ↦ η (1, t)) 1 Φ₁
           →
         Φ₁ 1 =ᶠ[𝓝 (η (0, 1))] Φ₀ 1 := by
     intro η hη hη0 hη1 Φ₀ Φ₁ hΦ₀ hΦ₁
-    have h1A : (1:ℝ) ∈ {s | s ∈ Set.Icc (0:ℝ) 1 ∧ ∃ Φ, IsCont (fun t => η (s, t)) 1 Φ
+    have h1A : (1:ℝ) ∈ {s | s ∈ Set.Icc (0:ℝ) 1 ∧ ∃ Φ, IsCont (fun t ↦ η (s, t)) 1 Φ
         ∧
         Φ 1 =ᶠ[𝓝 (η (0, 1))] Φ₀ 1} := by
-      refine hind 0 1 _ zero_le_one (fun x hx => hx.1)
+      refine hind 0 1 _ zero_le_one (fun x hx ↦ hx.1)
         ⟨⟨le_refl 0, zero_le_one⟩, Φ₀, hΦ₀, Filter.EventuallyEq.refl _ _⟩ ?_ ?_
       · -- closed from the left: adjacency at the limit parameter
         intro c hc hap
-        have hγc : ContinuousOn (fun t => η (c, t)) (Set.Icc 0 1) :=
+        have hγc : ContinuousOn (fun t ↦ η (c, t)) (Set.Icc 0 1) :=
           (hη.comp (continuous_const.prodMk continuous_id)).continuousOn
-        obtain ⟨Φc, hΦc⟩ := hexist (fun t => η (c, t)) hγc (hη0 c hc)
+        obtain ⟨Φc, hΦc⟩ := hexist (fun t ↦ η (c, t)) hγc (hη0 c hc)
         obtain ⟨ε, hε0, hεadj⟩ := hadj η hη hη0 hη1 c hc Φc hΦc
         obtain ⟨x, hxA, hxgt, hxle⟩ := hap ε hε0
         obtain ⟨Φx, hΦx, hΦxeq⟩ := hxA.2
@@ -10431,7 +10443,7 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
           rw [abs_sub_lt_iff]
           constructor <;> linarith
         obtain ⟨Φ'x, hΦ'x, hΦ'xeq⟩ := hεadj x hxA.1 hxd
-        have huu := huniq (fun t => η (x, t))
+        have huu := huniq (fun t ↦ η (x, t))
           ((hη.comp (continuous_const.prodMk continuous_id)).continuousOn)
           (hη0 x hxA.1) Φx Φ'x hΦx hΦ'x 1 ⟨zero_le_one, le_refl 1⟩
         have hpt : η (x, 1) = η (0, 1) := hη1 x hxA.1
@@ -10451,7 +10463,7 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
         obtain ⟨Φ'x, hΦ'x, hΦ'xeq⟩ := hεadj x hx hxd
         exact ⟨hx, Φ'x, hΦ'x, hΦ'xeq.trans hΦceq⟩
     obtain ⟨-, Φ, hΦ, hΦeq⟩ := h1A
-    have huu := huniq (fun t => η (1, t))
+    have huu := huniq (fun t ↦ η (1, t))
       ((hη.comp (continuous_const.prodMk continuous_id)).continuousOn)
       (hη0 1 ⟨zero_le_one, le_refl 1⟩) Φ₁ Φ hΦ₁ hΦ 1 ⟨zero_le_one, le_refl 1⟩
     have hpt : η (1, 1) = η (0, 1) := hη1 1 ⟨zero_le_one, le_refl 1⟩
@@ -10461,7 +10473,7 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
     exact huu'.trans hΦeq
   -- ## §11 Global assembly along paths.
   have hsel : ∀ q : M,
-      ∃ Φ, IsCont (fun u => (PathConnectedSpace.somePath p₁ q).extend u) 1 Φ := by
+      ∃ Φ, IsCont (fun u ↦ (PathConnectedSpace.somePath p₁ q).extend u) 1 Φ := by
     intro q
     refine hexist _ (Path.continuous_extend _).continuousOn ?_
     exact Path.extend_zero _
@@ -10509,11 +10521,11 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
             mul_le_mul_of_nonneg_right h1 (norm_nonneg _)
         _ = ‖chartAt ℂ q q' - chartAt ℂ q q‖ := one_mul _
         _ < r := h3
-    have hinner : Continuous fun σ : ℝ =>
+    have hinner : Continuous fun σ : ℝ ↦
         (1 - (σ:ℂ)) * chartAt ℂ q q + (σ:ℂ) * chartAt ℂ q q' :=
       ((continuous_const.sub Complex.continuous_ofReal).mul continuous_const).add
         (Complex.continuous_ofReal.mul continuous_const)
-    have hρc : Continuous fun σ : unitInterval => (chartAt ℂ q).symm
+    have hρc : Continuous fun σ : unitInterval ↦ (chartAt ℂ q).symm
         ((1 - ((σ:ℝ):ℂ)) * chartAt ℂ q q + ((σ:ℝ):ℂ) * chartAt ℂ q q') := by
       refine (chartAt ℂ q).continuousOn_symm.comp_continuous
         (hinner.comp continuous_subtype_val) ?_
@@ -10521,7 +10533,7 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
       exact (hrsub (hsegmem (σ:ℝ) σ.2.1 σ.2.2)).1
     obtain ⟨ρpath, hρW⟩ : ∃ ρ : Path q q',
         ∀ σ : ℝ, σ ∈ Set.Icc (0:ℝ) 1 → ρ.extend σ ∈ W := by
-      refine ⟨{ toFun := fun σ => (chartAt ℂ q).symm
+      refine ⟨{ toFun := fun σ ↦ (chartAt ℂ q).symm
                   ((1 - ((σ:ℝ):ℂ)) * chartAt ℂ q q + ((σ:ℝ):ℂ) * chartAt ℂ q q'),
                 continuous_toFun := hρc,
                 source' := ?_,
@@ -10563,8 +10575,8 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
       have hcond : ¬(((⟨u, hu⟩ : unitInterval) : ℝ) ≤ 1/2) := hgt
       rw [dif_neg hcond]
     -- glued continuation along the concatenated path
-    have hICτ : IsCont (fun u => ((PathConnectedSpace.somePath p₁ q).trans ρpath).extend u)
-        1 (fun u => if u ≤ 1/2 then ΦF q (2*u) else ΦF q 1) := by
+    have hICτ : IsCont (fun u ↦ ((PathConnectedSpace.somePath p₁ q).trans ρpath).extend u)
+        1 (fun u ↦ if u ≤ 1/2 then ΦF q (2*u) else ΦF q 1) := by
       obtain ⟨hΦqa, hΦq0, hΦqc⟩ := (hIC _ _ _).mp (hΦF q)
       rw [hIC]
       refine ⟨?_, ?_, ?_⟩
@@ -10620,7 +10632,7 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
     -- the homotopy between the chosen path of q' and the concatenation
     obtain ⟨H⟩ := SimplyConnectedSpace.paths_homotopic
       (PathConnectedSpace.somePath p₁ q') ((PathConnectedSpace.somePath p₁ q).trans ρpath)
-    obtain ⟨η, hηeq⟩ : ∃ η' : ℝ × ℝ → M, η' = fun p =>
+    obtain ⟨η, hηeq⟩ : ∃ η' : ℝ × ℝ → M, η' = fun p ↦
         H (Set.projIcc 0 1 zero_le_one p.1, Set.projIcc 0 1 zero_le_one p.2) := ⟨_, rfl⟩
     have happ : ∀ a b : ℝ, η (a, b) =
         H (Set.projIcc 0 1 zero_le_one a, Set.projIcc 0 1 zero_le_one b) := by
@@ -10653,33 +10665,33 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
     have hη01 : η (0, 1) = q' := by
       rw [happ 0 1, h1I]
       exact Path.Homotopy.target H _
-    have hpath0 : (fun t : ℝ => η (0, t)) =
-        (fun t : ℝ => (PathConnectedSpace.somePath p₁ q').extend t) := by
+    have hpath0 : (fun t : ℝ ↦ η (0, t)) =
+        (fun t : ℝ ↦ (PathConnectedSpace.somePath p₁ q').extend t) := by
       funext t
       rw [happ, h0I]
       exact ContinuousMap.HomotopyWith.apply_zero H (Set.projIcc 0 1 zero_le_one t)
-    have hpath1 : (fun t : ℝ => η (1, t)) =
-        (fun t : ℝ => ((PathConnectedSpace.somePath p₁ q).trans ρpath).extend t) := by
+    have hpath1 : (fun t : ℝ ↦ η (1, t)) =
+        (fun t : ℝ ↦ ((PathConnectedSpace.somePath p₁ q).trans ρpath).extend t) := by
       funext t
       rw [happ, h1I]
       exact ContinuousMap.HomotopyWith.apply_one H (Set.projIcc 0 1 zero_le_one t)
-    have hIC0 : IsCont (fun t => η (0, t)) 1 (ΦF q') := by
+    have hIC0 : IsCont (fun t ↦ η (0, t)) 1 (ΦF q') := by
       rw [hpath0]
       exact hΦF q'
-    have hIC1 : IsCont (fun t => η (1, t)) 1
-        (fun u => if u ≤ 1/2 then ΦF q (2*u) else ΦF q 1) := by
+    have hIC1 : IsCont (fun t ↦ η (1, t)) 1
+        (fun u ↦ if u ≤ 1/2 then ΦF q (2*u) else ΦF q 1) := by
       rw [hpath1]
       exact hICτ
     have hfinal := hhomo η hηc hbdry0 hbdry1 (ΦF q')
-      (fun u => if u ≤ 1/2 then ΦF q (2*u) else ΦF q 1) hIC0 hIC1
+      (fun u ↦ if u ≤ 1/2 then ΦF q (2*u) else ΦF q 1) hIC0 hIC1
     rw [hη01] at hfinal
     have hn12 : ¬((1:ℝ) ≤ 1/2) := by norm_num
-    have hval1 : (fun u => if u ≤ (1:ℝ)/2 then ΦF q (2*u) else ΦF q 1) 1 = ΦF q 1 :=
+    have hval1 : (fun u ↦ if u ≤ (1:ℝ)/2 then ΦF q (2*u) else ΦF q 1) 1 = ΦF q 1 :=
       if_neg hn12
     rw [hval1] at hfinal
     exact hfinal.symm
   -- the global map and its four properties
-  refine ⟨fun q => ΦF q 1 q, ?_, ?_, ?_, ?_⟩
+  refine ⟨fun q ↦ ΦF q 1 q, ?_, ?_, ?_, ?_⟩
   · intro q
     obtain ⟨B, hBo, hqB, hBloc⟩ := hlocal q
     have h1 : ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω (ΦF q 1) q := by
@@ -10706,19 +10718,15 @@ Green's functions. -/
 theorem injective_bipolar_map [SimplyConnectedSpace M]
     [SecondCountableTopology M] (hnon : ∀ p₀ : M, ¬ HasGreenFunction p₀)
     {p₁ p₂ : M} (hne : p₁ ≠ p₂) {G : M → ℝ} {φ : M → ℂ̂}
-    (hpole₁ : ∃ r > 0, ball (chartAt ℂ p₁ p₁) r ⊆ (chartAt ℂ p₁).target ∧
-      ∃ h : ℂ → ℝ, HarmonicOnNhd h (ball (chartAt ℂ p₁ p₁) r) ∧
-        ∀ w ∈ ball (chartAt ℂ p₁ p₁) r \ {chartAt ℂ p₁ p₁},
-          h w = G ((chartAt ℂ p₁).symm w) + Real.log ‖w - chartAt ℂ p₁ p₁‖)
     (hpole₂ : ∃ r > 0, ball (chartAt ℂ p₂ p₂) r ⊆ (chartAt ℂ p₂).target ∧
       ∃ h : ℂ → ℝ, HarmonicOnNhd h (ball (chartAt ℂ p₂ p₂) r) ∧
         ∀ w ∈ ball (chartAt ℂ p₂ p₂) r \ {chartAt ℂ p₂ p₂},
           h w = G ((chartAt ℂ p₂).symm w) - Real.log ‖w - chartAt ℂ p₂ p₂‖)
-    (hbdd : ∃ C, ∃ V₁ ∈ 𝓝 p₁, ∃ V₂ ∈ 𝓝 p₂, IsCompact (closure V₁) ∧
+    (hbdd : ∃ C : ℝ, ∃ V₁ ∈ 𝓝 p₁, ∃ V₂ ∈ 𝓝 p₂, IsCompact (closure V₁) ∧
       IsCompact (closure V₂) ∧ ∀ x ∉ V₁ ∪ V₂, |G x| ≤ C)
     (hφ : ContMDiff 𝓘(ℂ) 𝓘(ℂ) ω φ) (h₁ : φ p₁ = ((0 : ℂ) : ℂ̂))
     (h₂ : φ p₂ = OnePoint.infty)
-    (habs : ∀ x, x ≠ p₁ → x ≠ p₂ →
+    (habs : ∀ x : M, x ≠ p₁ → x ≠ p₂ →
       ∃ w : ℂ, φ x = (w : ℂ̂) ∧ ‖w‖ = Real.exp (-(G x))) :
     Function.Injective φ := by
   classical
@@ -10741,7 +10749,7 @@ theorem injective_bipolar_map [SimplyConnectedSpace M]
       ∀ e : OpenPartialHomeomorph ℂ̂ ℂ, e ∈ IsManifold.maximalAtlas 𝓘(ℂ) ω ℂ̂ →
       ∀ (x : M) (w : ℂ), w ∈ (chartAt ℂ x).target →
       f ((chartAt ℂ x).symm w) ∈ e.source →
-      AnalyticAt ℂ (fun v => e (f ((chartAt ℂ x).symm v))) w := by
+      AnalyticAt ℂ (fun v ↦ e (f ((chartAt ℂ x).symm v))) w := by
     intro f hf e hemax x w hw hsrc
     have hr1 : ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω (⇑(chartAt ℂ x).symm) w :=
       contMDiffAt_symm_of_mem_maximalAtlas (IsManifold.chart_mem_maximalAtlas x) hw
@@ -10796,20 +10804,20 @@ theorem injective_bipolar_map [SimplyConnectedSpace M]
       exact hxO
     obtain ⟨ρc, hρc, hρsubc⟩ := Metric.isOpen_iff.1 (isOpen_ball.inter hopen)
       (chartAt ℂ x x) ⟨mem_ball_self hr, hmem⟩
-    refine ⟨ρc, hρc, fun w hw => ((hρsubc hw).2).1, ?_⟩
-    refine htransfer _ _ _ _ hsub (fun w hw => (hρsubc hw).1) ?_
+    refine ⟨ρc, hρc, fun w hw ↦ ((hρsubc hw).2).1, ?_⟩
+    refine htransfer _ _ _ _ hsub (fun w hw ↦ (hρsubc hw).1) ?_
     intro w hw
     exact hFG ((hρsubc hw).2).2
   /- ## Sums of subharmonic functions are subharmonic. -/
   have haddM : ∀ (F₁ F₂ : M → ℝ) (x : M), MSubharmonicAt F₁ x → MSubharmonicAt F₂ x
       →
-      MSubharmonicAt (fun y => F₁ y + F₂ y) x := by
+      MSubharmonicAt (fun y ↦ F₁ y + F₂ y) x := by
     intro F₁ F₂ x hF hG2
     obtain ⟨r₁, hr₁, hb₁, hs₁⟩ := hF
     obtain ⟨r₂, hr₂, -, hs₂⟩ := hG2
     have hmono : ∀ (f : ℂ → ℝ) (U V : Set ℂ), SubharmonicOn f U → V ⊆ U →
-        SubharmonicOn f V := fun f U V hf hVU =>
-      ⟨hf.1.mono hVU, fun c hc ρc hρc hball => hf.2 c (hVU hc) ρc hρc (hball.trans hVU)⟩
+        SubharmonicOn f V := fun f U V hf hVU ↦
+      ⟨hf.1.mono hVU, fun c hc ρc hρc hball ↦ hf.2 c (hVU hc) ρc hρc (hball.trans hVU)⟩
     have hs₁' := hmono _ _ _ hs₁ (ball_subset_ball (min_le_left r₁ r₂))
     have hs₂' := hmono _ _ _ hs₂ (ball_subset_ball (min_le_right r₁ r₂))
     refine ⟨min r₁ r₂, lt_min hr₁ hr₂,
@@ -10825,19 +10833,19 @@ theorem injective_bipolar_map [SimplyConnectedSpace M]
       have havg := Real.circleAverage_fun_add hci₁ hci₂
       have hp₁' := hs₁'.2 c hc ρc hρc hb
       have hp₂' := hs₂'.2 c hc ρc hρc hb
-      calc ((fun y => F₁ y + F₂ y) ∘ (chartAt ℂ x).symm) c
+      calc ((fun y ↦ F₁ y + F₂ y) ∘ (chartAt ℂ x).symm) c
           = (F₁ ∘ (chartAt ℂ x).symm) c + (F₂ ∘ (chartAt ℂ x).symm) c := rfl
         _ ≤ Real.circleAverage (F₁ ∘ (chartAt ℂ x).symm) c ρc
             + Real.circleAverage (F₂ ∘ (chartAt ℂ x).symm) c ρc := add_le_add hp₁' hp₂'
         _ = Real.circleAverage
-            (fun w => (F₁ ∘ (chartAt ℂ x).symm) w + (F₂ ∘ (chartAt ℂ x).symm) w) c ρc
+            (fun w ↦ (F₁ ∘ (chartAt ℂ x).symm) w + (F₂ ∘ (chartAt ℂ x).symm) w) c ρc
                 :=
             havg.symm
-        _ = Real.circleAverage ((fun y => F₁ y + F₂ y) ∘ (chartAt ℂ x).symm) c ρc := rfl
+        _ = Real.circleAverage ((fun y ↦ F₁ y + F₂ y) ∘ (chartAt ℂ x).symm) c ρc := rfl
   /- ## The log-modulus of a nonvanishing holomorphic function is harmonic. -/
   have hlogM : ∀ Ψ : M → ℂ, (∀ y, ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω Ψ y) → ∀ x : M,
       Ψ x ≠ 0 →
-      MHarmonicAt (fun y => Real.log ‖Ψ y‖) x := by
+      MHarmonicAt (fun y ↦ Real.log ‖Ψ y‖) x := by
     intro Ψ hΨm x hx
     have hl1 : ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω (chartAt ℂ x).symm (chartAt ℂ x x) :=
       contMDiffAt_symm_of_mem_maximalAtlas (IsManifold.chart_mem_maximalAtlas x)
@@ -10879,7 +10887,7 @@ theorem injective_bipolar_map [SimplyConnectedSpace M]
     rcases (hreadM Ψ hΨm z).eventually_eq_zero_or_eventually_ne_zero with hcase | hcase
     · exfalso
       have hop : IsOpenMap Ψ := by
-        refine isOpenMap_of_contMDiff_of_not_const (fun y => hΨm y) ?_
+        refine isOpenMap_of_contMDiff_of_not_const (fun y ↦ hΨm y) ?_
         rintro ⟨c, hc⟩
         rw [hc z] at hz
         rw [hc y₀, hz] at hy₀
@@ -10927,12 +10935,12 @@ theorem injective_bipolar_map [SimplyConnectedSpace M]
       →
       DifferentiableAt ℂ (dslope F c) w := by
     intro F c w hFc hwc hFan
-    have hEq : (fun v => F v / (v - c)) =ᶠ[𝓝 w] dslope F c := by
+    have hEq : (fun v ↦ F v / (v - c)) =ᶠ[𝓝 w] dslope F c := by
       filter_upwards [isOpen_compl_singleton.mem_nhds
         (Set.mem_compl_singleton_iff.mpr hwc)] with v hv
       have hvc : v ≠ c := Set.mem_compl_singleton_iff.mp hv
       rw [dslope_of_ne F hvc, slope_def_field, hFc, sub_zero]
-    have hq : DifferentiableAt ℂ (fun v => F v / (v - c)) w :=
+    have hq : DifferentiableAt ℂ (fun v ↦ F v / (v - c)) w :=
       DifferentiableAt.div hFan.differentiableAt
         (differentiableAt_id.sub (differentiableAt_const c)) (sub_ne_zero_of_ne hwc)
     exact hq.congr_of_eventuallyEq hEq.symm
@@ -10950,16 +10958,16 @@ theorem injective_bipolar_map [SimplyConnectedSpace M]
     intro F c rF hF hrF hFc hFan hhc hFnorm hd0
     have hdiff : DifferentiableAt ℂ F c := (hFan c (mem_ball_self hrF)).differentiableAt
     have hcont : ContinuousAt (dslope F c) c := continuousAt_dslope_same.mpr hdiff
-    have hT1 : Tendsto (fun w => ‖dslope F c w‖) (𝓝[≠] c) (𝓝 0) := by
+    have hT1 : Tendsto (fun w ↦ ‖dslope F c w‖) (𝓝[≠] c) (𝓝 0) := by
       have hu1 : Tendsto (dslope F c) (𝓝 c) (𝓝 (dslope F c c)) := hcont
       rw [dslope_same, hd0] at hu1
       have hu2 := hu1.norm
       rw [norm_zero] at hu2
       exact hu2.mono_left nhdsWithin_le_nhds
-    have hT2 : Tendsto (fun w => Real.exp (hF w)) (𝓝[≠] c) (𝓝 (Real.exp (hF c))) :=
+    have hT2 : Tendsto (fun w ↦ Real.exp (hF w)) (𝓝[≠] c) (𝓝 (Real.exp (hF c))) :=
       Filter.Tendsto.mono_left (Real.continuous_exp.continuousAt.comp hhc)
         nhdsWithin_le_nhds
-    have hEq : (fun w => ‖dslope F c w‖) =ᶠ[𝓝[≠] c] fun w => Real.exp (hF w) := by
+    have hEq : (fun w ↦ ‖dslope F c w‖) =ᶠ[𝓝[≠] c] fun w ↦ Real.exp (hF w) := by
       filter_upwards [nhdsWithin_le_nhds (ball_mem_nhds c hrF), self_mem_nhdsWithin]
         with w hwb hwm
       have hwc : w ≠ c := Set.mem_compl_singleton_iff.mp hwm
@@ -10998,8 +11006,8 @@ theorem injective_bipolar_map [SimplyConnectedSpace M]
   by_cases hqi : φ q = OnePoint.infty
   · have hci : φ q' = OnePoint.infty := by rw [← hcol]; exact hqi
     exact hqq' ((hinfty q hqi).trans (hinfty q' hci).symm)
-  have hqp₁ : q ≠ p₁ := fun h => hq0 (by rw [h, h₁])
-  have hqp₂ : q ≠ p₂ := fun h => hqi (by rw [h, h₂])
+  have hqp₁ : q ≠ p₁ := fun h ↦ hq0 (by rw [h, h₁])
+  have hqp₂ : q ≠ p₂ := fun h ↦ hqi (by rw [h, h₂])
   obtain ⟨w₀, hφq, hw₀n⟩ := habs q hqp₁ hqp₂
   have hw₀0 : w₀ ≠ 0 := by
     intro h
@@ -11029,16 +11037,16 @@ theorem injective_bipolar_map [SimplyConnectedSpace M]
   have hrsub : closedBall (e₀ p₁) (εa / 2) ⊆ e₀.target ∩ ⇑e₀.symm ⁻¹' ({q'}ᶜ ∩
       {p₂}ᶜ) :=
     (Metric.closedBall_subset_ball (half_lt_self hεa)).trans hballa
-  set D₀ : CoordDisk M := ⟨p₁, εa / 2, hra0, fun w hw => (hrsub hw).1⟩ with hD₀def
+  set D₀ : CoordDisk M := ⟨p₁, εa / 2, hra0, fun w hw ↦ (hrsub hw).1⟩ with hD₀def
   have hD₀avoid : ∀ y ∈ D₀.closedCarrier, y ≠ q' ∧ y ≠ p₂ := by
     rintro y ⟨w, hw, rfl⟩
     have hav := (hrsub hw).2
     rw [Set.mem_preimage] at hav
     exact ⟨Set.mem_compl_singleton_iff.mp hav.1, Set.mem_compl_singleton_iff.mp hav.2⟩
-  have hq'D : q' ∉ D₀.closedCarrier := fun hmem => (hD₀avoid q' hmem).1 rfl
-  have hp₂D : p₂ ∉ D₀.closedCarrier := fun hmem => (hD₀avoid p₂ hmem).2 rfl
+  have hq'D : q' ∉ D₀.closedCarrier := fun hmem ↦ (hD₀avoid q' hmem).1 rfl
+  have hp₂D : p₂ ∉ D₀.closedCarrier := fun hmem ↦ (hD₀avoid p₂ hmem).2 rfl
   /- ## The second dipole at the pole pair `(q', p₂)`. -/
-  obtain ⟨G', hG'h, hpole₁', hpole₂', hbdd'⟩ := exists_bipolarGreen D₀ hq'D hp₂D hq'p₂
+  obtain ⟨G', hG'h, hpole₁', hpole₂', hbdd'⟩ := exists_bipolar_green D₀ hq'D hp₂D hq'p₂
   obtain ⟨φ', hφ', hφ'z, hφ'i, habs'⟩ := exists_bipolar_map hq'p₂ hG'h hpole₁' hpole₂'
   have hinfty' : ∀ x : M, φ' x = OnePoint.infty → x = p₂ := by
     intro x hx
@@ -11080,14 +11088,14 @@ theorem injective_bipolar_map [SimplyConnectedSpace M]
   obtain ⟨s₁, hs₁pos, hs₁sub, ηp, hηpharm, hηpval⟩ := hpole₂
   /- ## The finite-part ratio `H = (φ − w₀)/φ'` with its removable values. -/
   obtain ⟨g, hgdef⟩ : ∃ f : ℂ → ℂ,
-      f = fun w => sphereChartFinite (φ (χ₁.symm w)) - w₀ := ⟨_, rfl⟩
+      f = fun w ↦ sphereChartFinite (φ (χ₁.symm w)) - w₀ := ⟨_, rfl⟩
   obtain ⟨g', hg'def⟩ : ∃ f : ℂ → ℂ,
-      f = fun w => sphereChartFinite (φ' (χ₁.symm w)) := ⟨_, rfl⟩
+      f = fun w ↦ sphereChartFinite (φ' (χ₁.symm w)) := ⟨_, rfl⟩
   obtain ⟨ρ, hρdef⟩ : ∃ f : ℂ → ℂ,
-      f = fun w => sphereChartInfty (φ (χ₂.symm w)) := ⟨_, rfl⟩
+      f = fun w ↦ sphereChartInfty (φ (χ₂.symm w)) := ⟨_, rfl⟩
   obtain ⟨ρ', hρ'def⟩ : ∃ f : ℂ → ℂ,
-      f = fun w => sphereChartInfty (φ' (χ₂.symm w)) := ⟨_, rfl⟩
-  obtain ⟨H, hHdef⟩ : ∃ Hf : M → ℂ, Hf = fun x =>
+      f = fun w ↦ sphereChartInfty (φ' (χ₂.symm w)) := ⟨_, rfl⟩
+  obtain ⟨H, hHdef⟩ : ∃ Hf : M → ℂ, Hf = fun x ↦
       if x = q' then dslope g c₁ c₁ / dslope g' c₁ c₁
       else if x = p₂ then dslope ρ' c₂ c₂ / dslope ρ c₂ c₂
       else (sphereChartFinite (φ x) - w₀) / sphereChartFinite (φ' x) := ⟨_, rfl⟩
@@ -11105,8 +11113,8 @@ theorem injective_bipolar_map [SimplyConnectedSpace M]
   have hHsm_gen : ∀ x : M, x ≠ q' → x ≠ p₂ → ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω H x := by
     intro x hx1 hx2
     have hxsrc : x ∈ (chartAt ℂ x).source := mem_chart_source ℂ x
-    have hφfin : φ x ≠ OnePoint.infty := fun h => hx2 (hinfty x h)
-    have hφ'fin : φ' x ≠ OnePoint.infty := fun h => hx2 (hinfty' x h)
+    have hφfin : φ x ≠ OnePoint.infty := fun h ↦ hx2 (hinfty x h)
+    have hφ'fin : φ' x ≠ OnePoint.infty := fun h ↦ hx2 (hinfty' x h)
     obtain ⟨u', hu', hu'0, -⟩ := hφ'dat x hx1 hx2
     have hT : IsOpen ((chartAt ℂ x).target ∩ ⇑(chartAt ℂ x).symm ⁻¹'
         ((φ ⁻¹' sphereChartFinite.source ∩ φ' ⁻¹' sphereChartFinite.source) ∩
@@ -11122,14 +11130,14 @@ theorem injective_bipolar_map [SimplyConnectedSpace M]
       rw [Set.mem_preimage, (chartAt ℂ x).left_inv hxsrc]
       exact ⟨⟨hfinsrc _ hφfin, hfinsrc _ hφ'fin⟩,
         Set.mem_compl_singleton_iff.mpr hx1, Set.mem_compl_singleton_iff.mpr hx2⟩
-    obtain ⟨R₀, hR₀def⟩ : ∃ f : ℂ → ℂ, f = fun v =>
+    obtain ⟨R₀, hR₀def⟩ : ∃ f : ℂ → ℂ, f = fun v ↦
         (sphereChartFinite (φ ((chartAt ℂ x).symm v)) - w₀) /
           sphereChartFinite (φ' ((chartAt ℂ x).symm v)) := ⟨_, rfl⟩
-    have hnum : AnalyticAt ℂ (fun v => sphereChartFinite (φ ((chartAt ℂ x).symm v)))
+    have hnum : AnalyticAt ℂ (fun v ↦ sphereChartFinite (φ ((chartAt ℂ x).symm v)))
         (chartAt ℂ x x) :=
       hread φ hφ sphereChartFinite hfinmax x _ ((chartAt ℂ x).map_source hxsrc)
         (by rw [(chartAt ℂ x).left_inv hxsrc]; exact hfinsrc _ hφfin)
-    have hden : AnalyticAt ℂ (fun v => sphereChartFinite (φ' ((chartAt ℂ x).symm v)))
+    have hden : AnalyticAt ℂ (fun v ↦ sphereChartFinite (φ' ((chartAt ℂ x).symm v)))
         (chartAt ℂ x x) :=
       hread φ' hφ' sphereChartFinite hfinmax x _ ((chartAt ℂ x).map_source hxsrc)
         (by rw [(chartAt ℂ x).left_inv hxsrc]; exact hfinsrc _ hφ'fin)
@@ -11204,18 +11212,18 @@ theorem injective_bipolar_map [SimplyConnectedSpace M]
         simp only [hg'def]
         rw [hu, sphereChartFinite_coe]
       have hballm : w ∈ ball c₁ r₁ \ {c₁} :=
-        ⟨hrb₁ hw, fun h => hwc (Set.mem_singleton_iff.mp h)⟩
+        ⟨hrb₁ hw, fun h ↦ hwc (Set.mem_singleton_iff.mp h)⟩
       have hη := hηqval w hballm
       have hGval : -(G' (χ₁.symm w)) = -(ηq w) + Real.log ‖w - c₁‖ := by linarith
       have hpos : 0 < ‖w - c₁‖ := norm_pos_iff.mpr (sub_ne_zero_of_ne hwc)
       refine ⟨by rw [hval]; exact hu0, ?_⟩
       rw [hval, hun, hGval, Real.exp_add, Real.exp_log hpos]
     have hg'deriv : deriv g' c₁ ≠ 0 := by
-      refine hderiv_ne g' c₁ r (fun w => -(ηq w)) hr hg'0 hg'an ?_
-        (fun w hw hwc => (hg'dat w hw hwc).2)
+      refine hderiv_ne g' c₁ r (fun w ↦ -(ηq w)) hr hg'0 hg'an ?_
+        (fun w hw hwc ↦ (hg'dat w hw hwc).2)
       exact (hηqharm c₁ (mem_ball_self hr₁pos)).1.continuousAt.neg
     obtain ⟨A₁, hA₁def⟩ : ∃ f : ℂ → ℂ,
-        f = fun w => dslope g c₁ w / dslope g' c₁ w := ⟨_, rfl⟩
+        f = fun w ↦ dslope g c₁ w / dslope g' c₁ w := ⟨_, rfl⟩
     have hA₁cont : ContinuousAt A₁ c₁ := by
       have hc1 : ContinuousAt (dslope g c₁) c₁ :=
         continuousAt_dslope_same.mpr (hgan c₁ (mem_ball_self hr)).differentiableAt
@@ -11314,7 +11322,7 @@ theorem injective_bipolar_map [SimplyConnectedSpace M]
         simp only [hρdef]
         rw [hu, hinfval u hu0]
       have hballm : w ∈ ball c₂ s₁ \ {c₂} :=
-        ⟨hsb₁ hw, fun h => hwc (Set.mem_singleton_iff.mp h)⟩
+        ⟨hsb₁ hw, fun h ↦ hwc (Set.mem_singleton_iff.mp h)⟩
       have hη := hηpval w hballm
       have hpos : 0 < ‖w - c₂‖ := norm_pos_iff.mpr (sub_ne_zero_of_ne hwc)
       have hGx : G (χ₂.symm w) = ηp w + Real.log ‖w - c₂‖ := by linarith
@@ -11322,10 +11330,10 @@ theorem injective_bipolar_map [SimplyConnectedSpace M]
       rw [hval, norm_inv, hun, ← Real.exp_neg, neg_neg, hGx, Real.exp_add,
         Real.exp_log hpos]
     have hρderiv : deriv ρ c₂ ≠ 0 := by
-      refine hderiv_ne ρ c₂ s ηp hs hρ0 hρan ?_ (fun w hw hwc => (hρdat w hw hwc).2)
+      refine hderiv_ne ρ c₂ s ηp hs hρ0 hρan ?_ (fun w hw hwc ↦ (hρdat w hw hwc).2)
       exact (hηpharm c₂ (mem_ball_self hs₁pos)).1.continuousAt
     obtain ⟨A₂, hA₂def⟩ : ∃ f : ℂ → ℂ,
-        f = fun w => dslope ρ' c₂ w / dslope ρ c₂ w * (1 - w₀ * ρ w) := ⟨_, rfl⟩
+        f = fun w ↦ dslope ρ' c₂ w / dslope ρ c₂ w * (1 - w₀ * ρ w) := ⟨_, rfl⟩
     have hA₂cont : ContinuousAt A₂ c₂ := by
       have hc1 : ContinuousAt (dslope ρ' c₂) c₂ :=
         continuousAt_dslope_same.mpr (hρ'an c₂ (mem_ball_self hs)).differentiableAt
@@ -11334,7 +11342,7 @@ theorem injective_bipolar_map [SimplyConnectedSpace M]
       have hc3 : dslope ρ c₂ c₂ ≠ 0 := by
         rw [dslope_same]
         exact hρderiv
-      have hc4 : ContinuousAt (fun w => 1 - w₀ * ρ w) c₂ :=
+      have hc4 : ContinuousAt (fun w ↦ 1 - w₀ * ρ w) c₂ :=
         continuousAt_const.sub
           (continuousAt_const.mul (hρan c₂ (mem_ball_self hs)).continuousAt)
       simp only [hA₂def]
@@ -11347,7 +11355,7 @@ theorem injective_bipolar_map [SimplyConnectedSpace M]
       have hd2 := hdslope_diff ρ c₂ w hρ0 hwc (hρan w hwb)
       have hd3 : dslope ρ c₂ w ≠ 0 :=
         hdslope_ne ρ c₂ w hρ0 hwc (hρdat w hwb hwc).1
-      have hd4 : DifferentiableAt ℂ (fun v => 1 - w₀ * ρ v) w :=
+      have hd4 : DifferentiableAt ℂ (fun v ↦ 1 - w₀ * ρ v) w :=
         (differentiableAt_const _).sub
           ((differentiableAt_const _).mul (hρan w hwb).differentiableAt)
       simp only [hA₂def]
@@ -11419,9 +11427,9 @@ theorem injective_bipolar_map [SimplyConnectedSpace M]
     /- ## The per-candidate Blaschke-type comparison at the pole `q`. -/
     have MAIN : ∀ Ψ : M → ℂ, (∀ y, ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω Ψ y) →
         (∀ y, ‖Ψ y‖ < 1) → Ψ q = 0 → (∃ y₀, Ψ y₀ ≠ 0) →
-        ∀ x, x ≠ q → BddAbove ((fun v => v x) '' greenFamily q) := by
+        ∀ x, x ≠ q → BddAbove ((fun v ↦ v x) '' greenFamily q) := by
       intro Ψ hΨm hΨlt hΨq hΨex
-      have hΨc : Continuous Ψ := continuous_iff_continuousAt.mpr fun y => (hΨm y).continuousAt
+      have hΨc : Continuous Ψ := continuous_iff_continuousAt.mpr fun y ↦ (hΨm y).continuousAt
       have hqsrc : q ∈ (chartAt ℂ q).source := mem_chart_source ℂ q
       have hcq : (chartAt ℂ q).symm (chartAt ℂ q q) = q := (chartAt ℂ q).left_inv hqsrc
       -- Punctured-neighborhood nonvanishing at the pole, in the chart.
@@ -11491,7 +11499,7 @@ theorem injective_bipolar_map [SimplyConnectedSpace M]
           exact ⟨hysrc, by rw [Set.mem_preimage, hwch]; exact hwb⟩
         have hd : dist w (chartAt ℂ q q) = rr / 2 := by
           have h1 := mem_closedBall.1 hw
-          have h2 : ¬ dist w (chartAt ℂ q q) < rr / 2 := fun h => hnb (mem_ball.2 h)
+          have h2 : ¬ dist w (chartAt ℂ q q) < rr / 2 := fun h ↦ hnb (mem_ball.2 h)
           linarith [not_lt.mp h2]
         exact ⟨w, mem_sphere.2 hd, rfl⟩
       have hedge_ne : ∀ y ∈ (chartAt ℂ q).symm '' sphere (chartAt ℂ q q) (rr / 2), Ψ y ≠
@@ -11522,7 +11530,7 @@ theorem injective_bipolar_map [SimplyConnectedSpace M]
       obtain ⟨ym, hymS, hymmin⟩ := hS'cp.exists_isMinOn hS'ne (hΨc.norm.continuousOn)
       have hm0 : 0 < ‖Ψ ym‖ := norm_pos_iff.2 (hedge_ne ym hymS)
       -- The truncated pole-adapted logarithm family.
-      obtain ⟨Λ, hΛdef⟩ : ∃ Λ : ℝ → M → ℝ, Λ = fun N x =>
+      obtain ⟨Λ, hΛdef⟩ : ∃ Λ : ℝ → M → ℝ, Λ = fun N x ↦
           if x ∈ V' then Real.log ‖Ψ x‖
           else if Ψ x = 0 then -N else max (Real.log ‖Ψ x‖) (-N) := ⟨_, rfl⟩
       have hΛ1 : ∀ N (x : M), x ∈ V' → Λ N x = Real.log ‖Ψ x‖ := by
@@ -11557,7 +11565,7 @@ theorem injective_bipolar_map [SimplyConnectedSpace M]
         · -- near the pole: the truncation is the genuine `log‖Ψ‖`, harmonic there
           have hO : IsOpen (V' ∩ {q}ᶜ) := hV'open.inter isOpen_compl_singleton
           have hxO : x ∈ V' ∩ {q}ᶜ := ⟨hxV', hxq⟩
-          have hEq : Set.EqOn (fun y => Real.log ‖Ψ y‖) (Λ N) (V' ∩ {q}ᶜ) := by
+          have hEq : Set.EqOn (fun y ↦ Real.log ‖Ψ y‖) (Λ N) (V' ∩ {q}ᶜ) := by
             intro y hy
             exact (hΛ1 N y hy.1).symm
           exact hcongM _ _ x _ hO hxO hEq
@@ -11566,7 +11574,7 @@ theorem injective_bipolar_map [SimplyConnectedSpace M]
           · -- moderate modulus: the truncation agrees with the genuine `log‖Ψ‖`
             have hO : IsOpen {y : M | ‖Ψ ym‖ / 2 < ‖Ψ y‖} :=
               isOpen_lt continuous_const hΨc.norm
-            have hEq : Set.EqOn (fun y => Real.log ‖Ψ y‖) (Λ N)
+            have hEq : Set.EqOn (fun y ↦ Real.log ‖Ψ y‖) (Λ N)
                 {y : M | ‖Ψ ym‖ / 2 < ‖Ψ y‖} := by
               intro y hy
               have hy' : ‖Ψ ym‖ / 2 < ‖Ψ y‖ := hy
@@ -11605,10 +11613,10 @@ theorem injective_bipolar_map [SimplyConnectedSpace M]
                 refine ⟨hxK', ?_⟩
                 rw [Set.mem_preimage, hx0]
                 exact mem_ball_self (Real.exp_pos _)
-              have hEq : Set.EqOn (fun _ : M => (-N : ℝ)) (Λ N)
+              have hEq : Set.EqOn (fun _ : M ↦ (-N : ℝ)) (Λ N)
                   ((closure V')ᶜ ∩ Ψ ⁻¹' ball 0 (Real.exp (-N))) := by
                 rintro y ⟨hy1, hy2⟩
-                have hyV' : y ∉ V' := fun hcon => hy1 (subset_closure hcon)
+                have hyV' : y ∉ V' := fun hcon ↦ hy1 (subset_closure hcon)
                 by_cases hy0 : Ψ y = 0
                 · exact (hΛ2 N y hyV' hy0).symm
                 · rw [Set.mem_preimage, mem_ball_zero_iff] at hy2
@@ -11624,12 +11632,12 @@ theorem injective_bipolar_map [SimplyConnectedSpace M]
               have hO : IsOpen ((closure V')ᶜ ∩ Ψ ⁻¹' {(0 : ℂ)}ᶜ) :=
                 hOc.inter (isOpen_compl_singleton.preimage hΨc)
               have hxO : x ∈ (closure V')ᶜ ∩ Ψ ⁻¹' {(0 : ℂ)}ᶜ := ⟨hxK', hx0⟩
-              have hEq : Set.EqOn (fun y => max (Real.log ‖Ψ y‖) (-N)) (Λ N)
+              have hEq : Set.EqOn (fun y ↦ max (Real.log ‖Ψ y‖) (-N)) (Λ N)
                   ((closure V')ᶜ ∩ Ψ ⁻¹' {(0 : ℂ)}ᶜ) := by
                 rintro y ⟨hy1, hy2⟩
-                have hyV' : y ∉ V' := fun hcon => hy1 (subset_closure hcon)
+                have hyV' : y ∉ V' := fun hcon ↦ hy1 (subset_closure hcon)
                 exact (hΛ3 N y hyV' hy2).symm
-              have hmax : MSubharmonicAt (fun y => max (Real.log ‖Ψ y‖) (-N)) x :=
+              have hmax : MSubharmonicAt (fun y ↦ max (Real.log ‖Ψ y‖) (-N)) x :=
                 MSubharmonicAt.max ((hlogM Ψ hΨm x hx0).msubharmonicAt)
                   ((mharmonicAt_const (x := x) (a := (-N : ℝ))).msubharmonicAt)
               exact hcongM _ _ x _ hO hxO hEq hmax
@@ -11695,10 +11703,10 @@ theorem injective_bipolar_map [SimplyConnectedSpace M]
           ∀ v ∈ greenFamily q, ∀ x, x ≠ q → v x + Λ N x ≤ 0 := by
         intro N hN0 hNpos v hv x hx
         obtain ⟨hvsub, -, ⟨K, hKcp, -, hK0⟩, C, hC⟩ := hv
-        have h1 : MSubharmonicOn (fun y => v y + Λ N y) {q}ᶜ :=
-          fun y hy => haddM v (Λ N) y (hvsub y hy) (hΛsub N hN0 y hy)
+        have h1 : MSubharmonicOn (fun y ↦ v y + Λ N y) {q}ᶜ :=
+          fun y hy ↦ haddM v (Λ N) y (hvsub y hy) (hΛsub N hN0 y hy)
         have h2 : ∃ K' : Set M, IsCompact K' ∧ ∀ y ∉ K', v y + Λ N y ≤ 0 :=
-          ⟨K, hKcp, fun y hy => by rw [hK0 y hy, zero_add]; exact hΛle N hNpos y⟩
+          ⟨K, hKcp, fun y hy ↦ by rw [hK0 y hy, zero_add]; exact hΛle N hNpos y⟩
         have h3 : ∃ C', ∀ᶠ y in 𝓝[≠] q, v y + Λ N y ≤ C' := by
           refine ⟨C + Cs, ?_⟩
           have hV'mem : ∀ᶠ y in 𝓝[≠] q, y ∈ V' :=
@@ -11713,7 +11721,7 @@ theorem injective_bipolar_map [SimplyConnectedSpace M]
       rintro t ⟨v, hv, rfl⟩
       have h1 := key (max (-Real.log (‖Ψ ym‖ / 2)) 1) (le_max_left _ _)
         (lt_of_lt_of_le one_pos (le_max_right _ _)) v hv x hx
-      have h2 : (fun v : M → ℝ => v x) v = v x := rfl
+      have h2 : (fun v : M → ℝ ↦ v x) v = v x := rfl
       rw [h2]
       linarith
     /- ## A global bound on `H`: off the compact closures by the two modulus
@@ -11785,14 +11793,14 @@ theorem injective_bipolar_map [SimplyConnectedSpace M]
     have hDC0 : ((2 * B + 1 : ℝ) : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr hD0.ne'
     /- ## The normalized transplant `Ψ = (H − H q)/(2B + 1)`. -/
     obtain ⟨Ψ, hΨdef⟩ : ∃ f : M → ℂ,
-        f = fun x => (H x - H q) / ((2 * B + 1 : ℝ) : ℂ) := ⟨_, rfl⟩
+        f = fun x ↦ (H x - H q) / ((2 * B + 1 : ℝ) : ℂ) := ⟨_, rfl⟩
     have hΨm : ∀ y, ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω Ψ y := by
       intro y
       apply hbuild
       have hm1 : AnalyticAt ℂ (H ∘ ⇑(chartAt ℂ y).symm) (chartAt ℂ y y) :=
-        hreadM H (fun z => hHsm z) y
+        hreadM H (fun z ↦ hHsm z) y
       have hm2 : AnalyticAt ℂ
-          (fun w => (H ((chartAt ℂ y).symm w) - H q) / ((2 * B + 1 : ℝ) : ℂ))
+          (fun w ↦ (H ((chartAt ℂ y).symm w) - H q) / ((2 * B + 1 : ℝ) : ℂ))
           (chartAt ℂ y y) := (hm1.sub analyticAt_const).div analyticAt_const hDC0
       rw [hΨdef]
       exact hm2
@@ -11815,13 +11823,13 @@ theorem injective_bipolar_map [SimplyConnectedSpace M]
       exact div_ne_zero hHp₁ hDC0
     exact hnon q ⟨p₁, Ne.symm hqp₁, MAIN Ψ hΨm hΨlt hΨq hΨex p₁ (Ne.symm hqp₁)⟩
 
-/-! ## The compact case and the non-hyperbolic assembly -/
+/-! ### The compact case and the non-hyperbolic assembly -/
 
 /-- **Compact surfaces carry no Green's function**: the Perron family is
 unbounded at every point distinct from the pole. -/
-theorem not_bddAbove_greenFamily_of_compactSpace [CompactSpace M]
-    [SecondCountableTopology M] (p₀ x : M) (hx : x ≠ p₀) :
-    ¬ BddAbove ((fun v => v x) '' greenFamily p₀) := by
+theorem not_bddAbove_image_greenFamily_of_compactSpace [CompactSpace M]
+    (p₀ x : M) (hx : x ≠ p₀) :
+    ¬ BddAbove ((fun v ↦ v x) '' greenFamily p₀) := by
   classical
   haveI : LocallyConnectedSpace M := ChartedSpace.locallyConnectedSpace ℂ M
   intro hbdd
@@ -11850,7 +11858,7 @@ theorem not_bddAbove_greenFamily_of_compactSpace [CompactSpace M]
     have hso : IsOpen {z | z ∈ Ω ∧ w z = w xm} := by
       rw [isOpen_iff_mem_nhds]
       rintro z ⟨hzΩ, hzw⟩
-      have hmax' : ∀ u ∈ Ω, w u ≤ w z := fun u hu => (hmax u hu).trans_eq hzw.symm
+      have hmax' : ∀ u ∈ Ω, w u ≤ w z := fun u hu ↦ (hmax u hu).trans_eq hzw.symm
       have hev := MSubharmonicAt.eventually_eq_of_le hΩo hzΩ hwsub hmax'
       filter_upwards [hev, hΩo.mem_nhds hzΩ] with u hu huΩ
       exact ⟨huΩ, hu.trans hzw⟩
@@ -11870,7 +11878,7 @@ theorem not_bddAbove_greenFamily_of_compactSpace [CompactSpace M]
       rintro z ⟨⟨-, h1⟩, -, h2⟩
       exact h2 h1
     have hres := hΩc.subset_left_of_subset_union hso hto hdisj hsub ⟨xm, hxm, hxm, rfl⟩
-    exact fun z hz => (hres hz).2
+    exact fun z hz ↦ (hres hz).2
   /- ## Maximum principle on an open set `Ω ≠ univ` with compact exceptional set. -/
   have maxPrin : ∀ (Ω : Set M) (w : M → ℝ) (m : ℝ) (Kc : Set M), IsOpen Ω →
       Ω ≠ Set.univ → MSubharmonicOn w Ω → IsCompact Kc →
@@ -11907,7 +11915,7 @@ theorem not_bddAbove_greenFamily_of_compactSpace [CompactSpace M]
     have hCcΩ : connectedComponentIn Ω xm ⊆ Ω := connectedComponentIn_subset _ _
     have hconst := propagate (connectedComponentIn Ω xm) w xm hCco
       isPreconnected_connectedComponentIn hCcx
-      (fun z hz => hwsub z (hCcΩ hz)) (fun z hz => hall z (hCcΩ hz))
+      (fun z hz ↦ hwsub z (hCcΩ hz)) (fun z hz ↦ hall z (hCcΩ hz))
     have hfrne :
         (closure (connectedComponentIn Ω xm) \ connectedComponentIn Ω xm).Nonempty := by
       by_contra hem
@@ -11965,10 +11973,10 @@ theorem not_bddAbove_greenFamily_of_compactSpace [CompactSpace M]
       rw [Set.mem_preimage, (chartAt ℂ y).left_inv (mem_chart_source ℂ y)]
       exact hyU
     obtain ⟨ρ, hρ, hρsub⟩ := Metric.isOpen_iff.mp hopen2 _ hmem2
-    have h0 : SubharmonicOn (fun _ : ℂ => (0 : ℝ)) (ball (chartAt ℂ y y) ρ) :=
-      HarmonicOnNhd.subharmonicOn fun z _ => harmonicAt_const 0
-    refine ⟨ρ, hρ, fun z hz => (hρsub hz).1, ?_⟩
-    exact transfer _ _ _ _ h0 subset_rfl fun z hz => (hf0 _ ((hρsub hz).2)).symm
+    have h0 : SubharmonicOn (fun _ : ℂ ↦ (0 : ℝ)) (ball (chartAt ℂ y y) ρ) :=
+      HarmonicOnNhd.subharmonicOn fun z _ ↦ harmonicAt_const 0
+    refine ⟨ρ, hρ, fun z hz ↦ (hρsub hz).1, ?_⟩
+    exact transfer _ _ _ _ h0 subset_rfl fun z hz ↦ (hf0 _ ((hρsub hz).2)).symm
   /- ## Harmonicity at a point respects eventual equality. -/
   have mharm_congr : ∀ (f g : M → ℝ) (y : M), (∀ᶠ z in 𝓝 y, f z = g z) →
       MHarmonicAt f y → MHarmonicAt g y := by
@@ -12021,9 +12029,9 @@ theorem not_bddAbove_greenFamily_of_compactSpace [CompactSpace M]
       obtain ⟨r', hr', hr'sub⟩ := Metric.isOpen_iff.mp hopen2 _ hmem2
       refine ⟨r', hr', ?_, ?_⟩
       · rw [hcenter, hct]
-        exact fun w hw => (hr'sub hw).1
+        exact fun w hw ↦ (hr'sub hw).1
       · rw [hcenter, hct]
-        refine transfer _ _ _ _ hsub (fun w hw => (hr'sub hw).2) ?_
+        refine transfer _ _ _ _ hsub (fun w hw ↦ (hr'sub hw).2) ?_
         intro w hw
         simp only [Function.comp_apply]
         rw [← hfg ((e'.subtypeRestr hne).symm w)]
@@ -12121,7 +12129,7 @@ theorem not_bddAbove_greenFamily_of_compactSpace [CompactSpace M]
   have hr0 : 0 < r := by rw [hrdef]; linarith
   have hrsub : closedBall (e q) r ⊆ e.target ∩ e.symm ⁻¹' ({p₀}ᶜ ∩ {x}ᶜ) :=
     (Metric.closedBall_subset_ball (by rw [hrdef]; linarith)).trans hballa
-  set D : CoordDisk M := ⟨q, r, hr0, fun w hw => (hrsub hw).1⟩ with hD
+  set D : CoordDisk M := ⟨q, r, hr0, fun w hw ↦ (hrsub hw).1⟩ with hD
   have hDcar : D.closedCarrier = e.symm '' closedBall (e q) r := rfl
   have hDavoid : ∀ y ∈ D.closedCarrier, y ≠ p₀ ∧ y ≠ x := by
     rintro y ⟨w, hw, rfl⟩
@@ -12129,28 +12137,28 @@ theorem not_bddAbove_greenFamily_of_compactSpace [CompactSpace M]
     rw [Set.mem_preimage] at h2
     exact ⟨Set.mem_compl_singleton_iff.mp h2.1, Set.mem_compl_singleton_iff.mp h2.2⟩
   have hqD : q ∈ D.closedCarrier := ⟨e q, mem_closedBall_self hr0.le, e.left_inv hqsrc⟩
-  have hxq : x ≠ q := fun hcon => (hDavoid q hqD).2 hcon.symm
+  have hxq : x ≠ q := fun hcon ↦ (hDavoid q hqD).2 hcon.symm
   /- ## The shrinking pieces. -/
-  set t : ℕ → ℝ := fun n => (1 / 2 : ℝ) ^ (n + 2) with ht
-  have ht0 : ∀ n, 0 < t n := fun n => by rw [ht]; positivity
-  have ht1 : ∀ n, t n ≤ 1 := fun n => pow_le_one₀ (by norm_num) (by norm_num)
+  set t : ℕ → ℝ := fun n ↦ (1 / 2 : ℝ) ^ (n + 2) with ht
+  have ht0 : ∀ n, 0 < t n := fun n ↦ by rw [ht]; positivity
+  have ht1 : ∀ n, t n ≤ 1 := fun n ↦ pow_le_one₀ (by norm_num) (by norm_num)
   have htq : ∀ n, t n ≤ 1 / 4 := by
     intro n
     calc t n = (1 / 2 : ℝ) ^ (n + 2) := rfl
       _ ≤ (1 / 2 : ℝ) ^ 2 :=
         pow_le_pow_of_le_one (by norm_num) (by norm_num) (by omega)
       _ = 1 / 4 := by norm_num
-  have htanti : ∀ n m, n ≤ m → t m ≤ t n := fun n m h =>
+  have htanti : ∀ n m, n ≤ m → t m ≤ t n := fun n m h ↦
     pow_le_pow_of_le_one (by norm_num) (by norm_num) (by omega)
   have htlim : ∀ δ : ℝ, 0 < δ → ∃ n, t n < δ := by
     intro δ hδ
     obtain ⟨n, hn⟩ := exists_pow_lt_of_lt_one hδ (by norm_num : (1 / 2 : ℝ) < 1)
     exact ⟨n, lt_of_le_of_lt
       (pow_le_pow_of_le_one (by norm_num) (by norm_num) (by omega)) hn⟩
-  set DN : ℕ → CoordDisk M := fun n => D.shrink (t n) (ht0 n) (ht1 n) with hDN
-  set Wp : ℕ → Opens M := fun n => (DN n).compl with hWp
+  set DN : ℕ → CoordDisk M := fun n ↦ D.shrink (t n) (ht0 n) (ht1 n) with hDN
+  set Wp : ℕ → Opens M := fun n ↦ (DN n).compl with hWp
   have hcarN : ∀ n, (DN n).closedCarrier = e.symm '' closedBall (e q) (t n * r) :=
-    fun n => rfl
+    fun n ↦ rfl
   have hcarNsub : ∀ n, (DN n).closedCarrier ⊆ D.closedCarrier := by
     intro n
     rw [hcarN n, hDcar]
@@ -12161,20 +12169,20 @@ theorem not_bddAbove_greenFamily_of_compactSpace [CompactSpace M]
     rw [hcarN n, hcarN m]
     exact Set.image_mono (closedBall_subset_closedBall
       (mul_le_mul_of_nonneg_right (htanti n m hnm) hr0.le))
-  have hp₀W : ∀ n, p₀ ∈ Wp n := fun n hmem => (hDavoid p₀ (hcarNsub n hmem)).1 rfl
-  have hxW : ∀ n, x ∈ Wp n := fun n hmem => (hDavoid x (hcarNsub n hmem)).2 rfl
+  have hp₀W : ∀ n, p₀ ∈ Wp n := fun n hmem ↦ (hDavoid p₀ (hcarNsub n hmem)).1 rfl
+  have hxW : ∀ n, x ∈ Wp n := fun n hmem ↦ (hDavoid x (hcarNsub n hmem)).2 rfl
   have hqW : ∀ n, q ∉ (Wp n : Set M) := by
     intro n hmem
     exact hmem ⟨e q, mem_closedBall_self (mul_pos (ht0 n) hr0).le, e.left_inv hqsrc⟩
   have hWmono : ∀ n m, n ≤ m → (Wp n : Set M) ⊆ (Wp m : Set M) :=
-    fun n m hnm y hy hmem => hy (hcarmono n m hnm hmem)
+    fun n m hnm y hy hmem ↦ hy (hcarmono n m hnm hmem)
   have hWexh : ∀ y : M, y ≠ q → ∃ n, y ∈ Wp n := by
     intro y hyq
     by_cases hysrc : y ∈ e.source
-    · have hne2 : e y ≠ e q := fun hcon => hyq (e.injOn hysrc hqsrc hcon)
+    · have hne2 : e y ≠ e q := fun hcon ↦ hyq (e.injOn hysrc hqsrc hcon)
       have hd : 0 < ‖e y - e q‖ := norm_pos_iff.mpr (sub_ne_zero.mpr hne2)
       obtain ⟨n, hn⟩ := htlim (‖e y - e q‖ / r) (by positivity)
-      refine ⟨n, fun hmem => ?_⟩
+      refine ⟨n, fun hmem ↦ ?_⟩
       rw [hcarN n] at hmem
       obtain ⟨w, hw, hwy⟩ := hmem
       have hwt : w ∈ e.target := D.closedBall_subset
@@ -12185,27 +12193,27 @@ theorem not_bddAbove_greenFamily_of_compactSpace [CompactSpace M]
         calc t n * r < ‖e y - e q‖ / r * r := mul_lt_mul_of_pos_right hn hr0
           _ = ‖e y - e q‖ := div_mul_cancel₀ _ hr0.ne'
       linarith
-    · refine ⟨0, fun hmem => hysrc ?_⟩
+    · refine ⟨0, fun hmem ↦ hysrc ?_⟩
       rw [hcarN 0] at hmem
       obtain ⟨w, hw, hwy⟩ := hmem
       rw [← hwy]
       exact e.map_target (D.closedBall_subset
         (closedBall_subset_closedBall (mul_le_of_le_one_left hr0.le (ht1 0)) hw))
   /- ## Instances and Green data on the pieces. -/
-  have hConnW : ∀ n, ConnectedSpace ↥(Wp n) := fun n =>
+  have hConnW : ∀ n, ConnectedSpace ↥(Wp n) := fun n ↦
     isConnected_iff_connectedSpace.mp (isConnected_coordDisk_compl (DN n))
-  have hNcW : ∀ n, NoncompactSpace ↥(Wp n) := fun n => noncompactSpace_coordDisk_compl (DN n)
-  have hGF : ∀ n, HasGreenFunction (⟨p₀, hp₀W n⟩ : ↥(Wp n)) := fun n =>
+  have hNcW : ∀ n, NoncompactSpace ↥(Wp n) := fun n ↦ noncompactSpace_coordDisk_compl (DN n)
+  have hGF : ∀ n, HasGreenFunction (⟨p₀, hp₀W n⟩ : ↥(Wp n)) := fun n ↦
     hasGreenFunction_coordDisk_compl (DN n) p₀ (hp₀W n)
   have hEnvH : ∀ n, MHarmonicOn (greenEnvelope (⟨p₀, hp₀W n⟩ : ↥(Wp n)))
       ({(⟨p₀, hp₀W n⟩ : ↥(Wp n))}ᶜ) ∧
       ∀ z : ↥(Wp n), z ≠ ⟨p₀, hp₀W n⟩ →
-        BddAbove ((fun v => v z) '' greenFamily (⟨p₀, hp₀W n⟩ : ↥(Wp n))) := by
+        BddAbove ((fun v ↦ v z) '' greenFamily (⟨p₀, hp₀W n⟩ : ↥(Wp n))) := by
     intro n
     haveI := hConnW n
     haveI := hNcW n
     exact ⟨(mharmonicOn_greenEnvelope (hGF n)).1,
-      fun z hz => (mharmonicOn_greenEnvelope (hGF n)).2 z hz⟩
+      fun z hz ↦ (mharmonicOn_greenEnvelope (hGF n)).2 z hz⟩
   have hEnvPos : ∀ n (z : ↥(Wp n)), z ≠ ⟨p₀, hp₀W n⟩ →
       0 < greenEnvelope (⟨p₀, hp₀W n⟩ : ↥(Wp n)) z := by
     intro n
@@ -12213,7 +12221,7 @@ theorem not_bddAbove_greenFamily_of_compactSpace [CompactSpace M]
     haveI := hNcW n
     exact greenEnvelope_pos (hGF n)
   /- ## The piece Green's functions read on the surface. -/
-  set V : ℕ → M → ℝ := fun n y =>
+  set V : ℕ → M → ℝ := fun n y ↦
     if h : y ∈ Wp n then greenEnvelope (⟨p₀, hp₀W n⟩ : ↥(Wp n)) ⟨y, h⟩ else 0 with
         hV
   have hVmem : ∀ n (y : M) (h : y ∈ Wp n),
@@ -12232,7 +12240,7 @@ theorem not_bddAbove_greenFamily_of_compactSpace [CompactSpace M]
         ∃ Kw : Set M, IsCompact Kw ∧ Kw ⊆ (Wp n : Set M) ∧ ∀ y, y ∉ Kw → w y = 0 := by
     intro n v hv
     obtain ⟨hvsub, hvcont, ⟨K, hKcomp, -, hKzero⟩, ⟨C, hC⟩⟩ := hv
-    set w : M → ℝ := fun y => if h : y ∈ Wp n then v ⟨y, h⟩ else 0 with hwdef
+    set w : M → ℝ := fun y ↦ if h : y ∈ Wp n then v ⟨y, h⟩ else 0 with hwdef
     have hwval : ∀ z : ↥(Wp n), w z = v z := by
       intro z
       simp only [hwdef]
@@ -12263,7 +12271,7 @@ theorem not_bddAbove_greenFamily_of_compactSpace [CompactSpace M]
       by_cases hyP : y ∈ Wp n
       · have hoe : IsOpenEmbedding (Subtype.val : ↥(Wp n) → M) :=
           (Wp n).2.isOpenEmbedding_subtypeVal
-        have hnz : (⟨y, hyP⟩ : ↥(Wp n)) ≠ ⟨p₀, hp₀W n⟩ := fun hcon =>
+        have hnz : (⟨y, hyP⟩ : ↥(Wp n)) ≠ ⟨p₀, hp₀W n⟩ := fun hcon ↦
           (Set.mem_compl_singleton_iff.mp hy) (congrArg Subtype.val hcon)
         have hvat : ContinuousAt v (⟨y, hyP⟩ : ↥(Wp n)) :=
           hvcont.continuousAt (isOpen_compl_singleton.mem_nhds
@@ -12271,27 +12279,27 @@ theorem not_bddAbove_greenFamily_of_compactSpace [CompactSpace M]
         have h1 : Tendsto (w ∘ Subtype.val) (𝓝 (⟨y, hyP⟩ : ↥(Wp n))) (𝓝 (w y)) := by
           have h2 : w y = v ⟨y, hyP⟩ := hwval ⟨y, hyP⟩
           rw [h2]
-          exact Filter.Tendsto.congr (fun u => (hwval u).symm) hvat
+          exact Filter.Tendsto.congr (fun u ↦ (hwval u).symm) hvat
         have h4 : Filter.map (Subtype.val : ↥(Wp n) → M) (𝓝 (⟨y, hyP⟩ : ↥(Wp n))) =
             𝓝 y := hoe.map_nhds_eq ⟨y, hyP⟩
         have h5 : Tendsto w (𝓝 y) (𝓝 (w y)) := by
           rw [← h4, Filter.tendsto_map'_iff]
           exact h1
         exact h5
-      · have hev : w =ᶠ[𝓝 y] fun _ => (0 : ℝ) := by
+      · have hev : w =ᶠ[𝓝 y] fun _ ↦ (0 : ℝ) := by
           filter_upwards [hKwcl.isOpen_compl.mem_nhds
-            (fun hmem => hyP (hKwsub hmem))] with u hu
+            (fun hmem ↦ hyP (hKwsub hmem))] with u hu
           exact hKwzero u hu
         exact continuousAt_const.congr_of_eventuallyEq hev
     have hwsub : MSubharmonicOn w {p₀}ᶜ := by
       intro y hy
       by_cases hyP : y ∈ Wp n
-      · have hnz : (⟨y, hyP⟩ : ↥(Wp n)) ≠ ⟨p₀, hp₀W n⟩ := fun hcon =>
+      · have hnz : (⟨y, hyP⟩ : ↥(Wp n)) ≠ ⟨p₀, hp₀W n⟩ := fun hcon ↦
           (Set.mem_compl_singleton_iff.mp hy) (congrArg Subtype.val hcon)
         exact (msub_val (Wp n) w v hwval ⟨y, hyP⟩).mpr
           (hvsub ⟨y, hyP⟩ (Set.mem_compl_singleton_iff.mpr hnz))
       · exact msub_zero w Kwᶜ y hKwcl.isOpen_compl
-          (fun hmem => hyP (hKwsub hmem)) (fun z hz => hKwzero z hz)
+          (fun hmem ↦ hyP (hKwsub hmem)) (fun z hz ↦ hKwzero z hz)
     have hwpole : ∃ C', ∀ᶠ y' in 𝓝[≠] p₀, w y' + Real.log ‖poleCoord p₀ y'‖ ≤
         C' := by
       refine ⟨C, ?_⟩
@@ -12308,13 +12316,13 @@ theorem not_bddAbove_greenFamily_of_compactSpace [CompactSpace M]
       MSubharmonicOn w {p₀}ᶜ → ContinuousOn w {p₀}ᶜ →
       IsCompact Kw → Kw ⊆ (Wp m : Set M) → (∀ y, y ∉ Kw → w y = 0) →
       (∃ C, ∀ᶠ y' in 𝓝[≠] p₀, w y' + Real.log ‖poleCoord p₀ y'‖ ≤ C) →
-      (fun z : ↥(Wp m) => w z) ∈ greenFamily (⟨p₀, hp₀W m⟩ : ↥(Wp m)) := by
+      (fun z : ↥(Wp m) ↦ w z) ∈ greenFamily (⟨p₀, hp₀W m⟩ : ↥(Wp m)) := by
     intro m w Kw hwsub hwcont hKwcomp hKwsub hKwzero hwpole
     haveI := hNcW m
     have hKpre : IsCompact (Subtype.val ⁻¹' Kw : Set ↥(Wp m)) := by
       haveI : CompactSpace ↥Kw := isCompact_iff_compactSpace.mp hKwcomp
       have himgK : (Subtype.val ⁻¹' Kw : Set ↥(Wp m)) =
-          (fun z : ↥Kw => (⟨z.1, hKwsub z.2⟩ : ↥(Wp m))) '' Set.univ := by
+          (fun z : ↥Kw ↦ (⟨z.1, hKwsub z.2⟩ : ↥(Wp m))) '' Set.univ := by
         ext z
         constructor
         · intro hz
@@ -12323,14 +12331,14 @@ theorem not_bddAbove_greenFamily_of_compactSpace [CompactSpace M]
           exact u.2
       rw [himgK]
       exact isCompact_univ.image (continuous_subtype_val.subtype_mk _)
-    refine ⟨?_, ?_, ⟨Subtype.val ⁻¹' Kw, hKpre, ?_, fun z hz => hKwzero z hz⟩, ?_⟩
+    refine ⟨?_, ?_, ⟨Subtype.val ⁻¹' Kw, hKpre, ?_, fun z hz ↦ hKwzero z hz⟩, ?_⟩
     · intro z hz
-      have hzp : (z : M) ≠ p₀ := fun hcon =>
+      have hzp : (z : M) ≠ p₀ := fun hcon ↦
         (Set.mem_compl_singleton_iff.mp hz) (Subtype.ext hcon)
-      exact (msub_val (Wp m) w _ (fun _ => rfl) z).mp
+      exact (msub_val (Wp m) w _ (fun _ ↦ rfl) z).mp
         (hwsub z (Set.mem_compl_singleton_iff.mpr hzp))
     · intro z hz
-      have hzp : (z : M) ≠ p₀ := fun hcon =>
+      have hzp : (z : M) ≠ p₀ := fun hcon ↦
         (Set.mem_compl_singleton_iff.mp hz) (Subtype.ext hcon)
       have h1 : ContinuousAt w (z : M) :=
         hwcont.continuousAt (isOpen_compl_singleton.mem_nhds hzp)
@@ -12358,7 +12366,7 @@ theorem not_bddAbove_greenFamily_of_compactSpace [CompactSpace M]
     refine Real.sSup_le ?_ hB'0
     rintro a ⟨v, hvmem, rfl⟩
     obtain ⟨w, hwfam, hwval, -⟩ := brickE n v hvmem
-    have h1 : w x ∈ (fun v => v x) '' greenFamily p₀ := ⟨w, hwfam, rfl⟩
+    have h1 : w x ∈ (fun v ↦ v x) '' greenFamily p₀ := ⟨w, hwfam, rfl⟩
     have h2 : w x ≤ s := hs h1
     have h3 : w x = v ⟨x, hxW n⟩ := hwval ⟨x, hxW n⟩
     exact (le_of_eq h3.symm).trans (h2.trans (le_max_left s 0))
@@ -12366,9 +12374,9 @@ theorem not_bddAbove_greenFamily_of_compactSpace [CompactSpace M]
     intro n y hy
     by_cases hyP : y ∈ Wp n
     · rw [hVmem n y hyP]
-      exact (hEnvPos n ⟨y, hyP⟩ (fun hcon => hy (congrArg Subtype.val hcon))).le
+      exact (hEnvPos n ⟨y, hyP⟩ (fun hcon ↦ hy (congrArg Subtype.val hcon))).le
     · rw [hVzero n y hyP]
-  have hVmono : ∀ (y : M), y ≠ p₀ → Monotone fun n => V n y := by
+  have hVmono : ∀ (y : M), y ≠ p₀ → Monotone fun n ↦ V n y := by
     intro y hy n m hnm
     simp only
     by_cases hyn : y ∈ Wp n
@@ -12378,19 +12386,19 @@ theorem not_bddAbove_greenFamily_of_compactSpace [CompactSpace M]
       refine Real.sSup_le ?_ ?_
       · rintro a ⟨v, hvmem, rfl⟩
         obtain ⟨w, hwfam, hwval, Kw, hKwc, hKws, hKw0⟩ := brickE n v hvmem
-        have hwmem' : (fun z : ↥(Wp m) => w z) ∈ greenFamily (⟨p₀, hp₀W m⟩ : ↥(Wp m))
+        have hwmem' : (fun z : ↥(Wp m) ↦ w z) ∈ greenFamily (⟨p₀, hp₀W m⟩ : ↥(Wp m))
             :=
           brickR m w Kw hwfam.1 hwfam.2.1 hKwc (hKws.trans (hWmono n m hnm)) hKw0
             hwfam.2.2.2
-        have h4 : v ⟨y, hyn⟩ = (fun z : ↥(Wp m) => w z) ⟨y, hym⟩ := (hwval ⟨y,
+        have h4 : v ⟨y, hyn⟩ = (fun z : ↥(Wp m) ↦ w z) ⟨y, hym⟩ := (hwval ⟨y,
             hyn⟩).symm
         exact (le_of_eq h4).trans (le_csSup ((hEnvH m).2 ⟨y, hym⟩
-          (fun hcon => hy (congrArg Subtype.val hcon))) ⟨_, hwmem', rfl⟩)
-      · exact (hEnvPos m ⟨y, hym⟩ (fun hcon => hy (congrArg Subtype.val hcon))).le
+          (fun hcon ↦ hy (congrArg Subtype.val hcon))) ⟨_, hwmem', rfl⟩)
+      · exact (hEnvPos m ⟨y, hym⟩ (fun hcon ↦ hy (congrArg Subtype.val hcon))).le
     · rw [hVzero n y hyn]
       exact hVnonneg m y hy
   /- ## The monotone limit is harmonic away from the pole and the auxiliary point. -/
-  set gs : M → ℝ := fun y => ⨆ n, V n y with hgs
+  set gs : M → ℝ := fun y ↦ ⨆ n, V n y with hgs
   have hblock : ∀ (n₀ : ℕ) (y : M), y ∈ Wp n₀ → y ≠ p₀ →
       MHarmonicAt gs y ∧ ∀ n, V n y ≤ gs y := by
     intro n₀
@@ -12398,7 +12406,7 @@ theorem not_bddAbove_greenFamily_of_compactSpace [CompactSpace M]
       (Wp n₀).2.inter isOpen_compl_singleton⟩ with hΩ
     haveI := hConnW n₀
     have hnt : ∃ a b : ↥(Wp n₀), a ≠ b :=
-      ⟨⟨x, hxW n₀⟩, ⟨p₀, hp₀W n₀⟩, fun hcon => hx (congrArg Subtype.val hcon)⟩
+      ⟨⟨x, hxW n₀⟩, ⟨p₀, hp₀W n₀⟩, fun hcon ↦ hx (congrArg Subtype.val hcon)⟩
     have hpcn : IsConnected ({(⟨p₀, hp₀W n₀⟩ : ↥(Wp n₀))}ᶜ : Set ↥(Wp n₀)) :=
       isConnected_compl_singleton_of_connected hnt _
     have himgc : Subtype.val '' ({(⟨p₀, hp₀W n₀⟩ : ↥(Wp n₀))}ᶜ : Set ↥(Wp n₀)) =
@@ -12420,8 +12428,8 @@ theorem not_bddAbove_greenFamily_of_compactSpace [CompactSpace M]
       exact hpcn.image _ continuous_subtype_val.continuousOn
     haveI hΩcs : ConnectedSpace ↥Ω := isConnected_iff_connectedSpace.mp hΩconn
     have hzW : ∀ (k : ℕ) (z : ↥Ω), (z : M) ∈ Wp (n₀ + k) :=
-      fun k z => hWmono n₀ (n₀ + k) (Nat.le_add_right n₀ k) z.2.1
-    have hznp : ∀ z : ↥Ω, (z : M) ≠ p₀ := fun z => z.2.2
+      fun k z ↦ hWmono n₀ (n₀ + k) (Nat.le_add_right n₀ k) z.2.1
+    have hznp : ∀ z : ↥Ω, (z : M) ≠ p₀ := fun z ↦ z.2.2
     have hVharmAt : ∀ (k : ℕ) (y : M) (h1 : y ∈ Wp (n₀ + k)), y ≠ p₀ →
         MHarmonicAt (V (n₀ + k)) y := by
       intro k y h1 hyp
@@ -12429,15 +12437,15 @@ theorem not_bddAbove_greenFamily_of_compactSpace [CompactSpace M]
           (⟨y, h1⟩ : ↥(Wp (n₀ + k))) := by
         apply (hEnvH (n₀ + k)).1
         exact Set.mem_compl_singleton_iff.mpr
-          (fun hcon => hyp (congrArg Subtype.val hcon))
+          (fun hcon ↦ hyp (congrArg Subtype.val hcon))
       exact (mharm_val (Wp (n₀ + k)) (V (n₀ + k)) _
-        (fun u => hVmem (n₀ + k) u u.2) ⟨y, h1⟩).mpr h2
-    have hV'harm : ∀ k, MHarmonicOn (fun z : ↥Ω => V (n₀ + k) (z : M)) Set.univ := by
+        (fun u ↦ hVmem (n₀ + k) u u.2) ⟨y, h1⟩).mpr h2
+    have hV'harm : ∀ k, MHarmonicOn (fun z : ↥Ω ↦ V (n₀ + k) (z : M)) Set.univ := by
       intro k z _
-      exact (mharm_val Ω (V (n₀ + k)) _ (fun _ => rfl) z).mp
+      exact (mharm_val Ω (V (n₀ + k)) _ (fun _ ↦ rfl) z).mp
         (hVharmAt k z (hzW k z) (hznp z))
-    have hV'mono : ∀ z : ↥Ω, Monotone fun k => V (n₀ + k) (z : M) :=
-      fun z k k' hkk' => hVmono (z : M) (hznp z) (Nat.add_le_add_left hkk' n₀)
+    have hV'mono : ∀ z : ↥Ω, Monotone fun k ↦ V (n₀ + k) (z : M) :=
+      fun z k k' hkk' ↦ hVmono (z : M) (hznp z) (Nat.add_le_add_left hkk' n₀)
     rcases mharmonic_dichotomy_of_monotone hV'harm hV'mono with hup | hlim
     · exfalso
       have hxΩ : x ∈ (Wp n₀ : Set M) ∩ {p₀}ᶜ :=
@@ -12448,23 +12456,23 @@ theorem not_bddAbove_greenFamily_of_compactSpace [CompactSpace M]
     · obtain ⟨VL, hVLharm, hVLtend⟩ := hlim
       have hid : ∀ z : ↥Ω, gs (z : M) = VL z ∧ ∀ n, V n (z : M) ≤ VL z := by
         intro z
-        have hmonoz : Monotone fun n => V n (z : M) := hVmono _ (hznp z)
+        have hmonoz : Monotone fun n ↦ V n (z : M) := hVmono _ (hznp z)
         have htail : ∀ k, V (n₀ + k) (z : M) ≤ VL z :=
-          fun k => (hV'mono z).ge_of_tendsto (hVLtend z) k
-        have hall : ∀ n, V n (z : M) ≤ VL z := fun n =>
+          fun k ↦ (hV'mono z).ge_of_tendsto (hVLtend z) k
+        have hall : ∀ n, V n (z : M) ≤ VL z := fun n ↦
           (hmonoz (Nat.le_add_left n n₀)).trans (htail n)
-        have hbdd2 : BddAbove (Set.range fun n => V n (z : M)) := by
+        have hbdd2 : BddAbove (Set.range fun n ↦ V n (z : M)) := by
           refine ⟨VL z, ?_⟩
           rintro a ⟨n, rfl⟩
           exact hall n
-        have htends : Tendsto (fun n => V n (z : M)) atTop (𝓝 (⨆ n, V n (z : M))) :=
+        have htends : Tendsto (fun n ↦ V n (z : M)) atTop (𝓝 (⨆ n, V n (z : M))) :=
           tendsto_atTop_ciSup hmonoz hbdd2
-        have hcomp : Tendsto (fun k => V (n₀ + k) (z : M)) atTop
+        have hcomp : Tendsto (fun k ↦ V (n₀ + k) (z : M)) atTop
             (𝓝 (⨆ n, V n (z : M))) := by
-          have h6 : Tendsto (fun k : ℕ => k + n₀) atTop atTop := tendsto_add_atTop_nat n₀
+          have h6 : Tendsto (fun k : ℕ ↦ k + n₀) atTop atTop := tendsto_add_atTop_nat n₀
           have h7 := htends.comp h6
-          have h8 : ((fun n => V n (z : M)) ∘ fun k : ℕ => k + n₀) =
-              fun k => V (n₀ + k) (z : M) := by
+          have h8 : ((fun n ↦ V n (z : M)) ∘ fun k : ℕ ↦ k + n₀) =
+              fun k ↦ V (n₀ + k) (z : M) := by
             funext k
             simp only [Function.comp_apply, Nat.add_comm]
           rwa [h8] at h7
@@ -12474,7 +12482,7 @@ theorem not_bddAbove_greenFamily_of_compactSpace [CompactSpace M]
       have hyΩ : y ∈ (Wp n₀ : Set M) ∩ {p₀}ᶜ := ⟨hyW, Set.mem_compl_singleton_iff.mpr
           hyp⟩
       constructor
-      · exact (mharm_val Ω gs VL (fun u => (hid u).1) ⟨y, hyΩ⟩).mpr
+      · exact (mharm_val Ω gs VL (fun u ↦ (hid u).1) ⟨y, hyΩ⟩).mpr
           (hVLharm ⟨y, hyΩ⟩ (Set.mem_univ _))
       · intro n
         exact le_of_le_of_eq ((hid ⟨y, hyΩ⟩).2 n) ((hid ⟨y, hyΩ⟩).1).symm
@@ -12483,8 +12491,8 @@ theorem not_bddAbove_greenFamily_of_compactSpace [CompactSpace M]
     obtain ⟨n₀, hn₀⟩ := hWexh y hyq
     exact hblock n₀ y hn₀ hyp
   have hgs_nonneg : ∀ y : M, y ≠ p₀ → y ≠ q → 0 ≤ gs y :=
-    fun y hyp hyq => (hVnonneg 0 y hyp).trans ((hgs_all y hyp hyq).2 0)
-  have hgs_x : gs x ≤ B' := ciSup_le fun n => hVx n
+    fun y hyp hyq ↦ (hVnonneg 0 y hyp).trans ((hgs_all y hyp hyq).2 0)
+  have hgs_x : gs x ≤ B' := ciSup_le fun n ↦ hVx n
   /- ## The uniform bound near the auxiliary point, via the annulus maximum principle. -/
   set ρ : ℝ := r / 2 with hρdef
   have hρ0 : 0 < ρ := half_pos hr0
@@ -12523,7 +12531,7 @@ theorem not_bddAbove_greenFamily_of_compactSpace [CompactSpace M]
     rw [mem_sphere] at hw
     rw [← h1, dist_self] at hw
     exact hρ0.ne hw
-  have hSp₀ : ∀ y ∈ S, y ≠ p₀ := fun y hy => (hDavoid y (hSsub hy)).1
+  have hSp₀ : ∀ y ∈ S, y ≠ p₀ := fun y hy ↦ (hDavoid y (hSsub hy)).1
   have hSW : ∀ n, S ⊆ (Wp n : Set M) := by
     intro n
     rintro y ⟨w, hw, rfl⟩ hmem
@@ -12541,7 +12549,7 @@ theorem not_bddAbove_greenFamily_of_compactSpace [CompactSpace M]
       linarith
     rw [hρdef] at hw'
     linarith
-  have hgsScont : ContinuousOn gs S := fun y hy =>
+  have hgsScont : ContinuousOn gs S := fun y hy ↦
     ((hgs_all y (hSp₀ y hy) (hSq y hy)).1.continuousAt).continuousWithinAt
   obtain ⟨yS, hySmem, hySmax⟩ := hScomp.exists_isMaxOn hSne hgsScont
   set B₀ : ℝ := max (gs yS) 0 with hB₀
@@ -12555,23 +12563,23 @@ theorem not_bddAbove_greenFamily_of_compactSpace [CompactSpace M]
     obtain ⟨w, hwfam, hwval, Kw, hKwc, hKws, hKw0⟩ := brickE n v hvmem
     set A : Set M := Bimg \ (DN n).closedCarrier with hA
     have hAopen : IsOpen A := hBopen.sdiff (DN n).isCompact_closedCarrier.isClosed
-    have hAp₀ : p₀ ∉ A := fun hmem => (hDavoid p₀ (hBsub hmem.1)).1 rfl
-    have hAne : A ≠ Set.univ := fun hcon => hAp₀ (hcon ▸ Set.mem_univ p₀)
-    have hAsubp : A ⊆ ({p₀}ᶜ : Set M) := fun z hz =>
+    have hAp₀ : p₀ ∉ A := fun hmem ↦ (hDavoid p₀ (hBsub hmem.1)).1 rfl
+    have hAne : A ≠ Set.univ := fun hcon ↦ hAp₀ (hcon ▸ Set.mem_univ p₀)
+    have hAsubp : A ⊆ ({p₀}ᶜ : Set M) := fun z hz ↦
       Set.mem_compl_singleton_iff.mpr (hDavoid z (hBsub hz.1)).1
     have hfr : ∀ z ∈ closure A \ A, ContinuousAt w z ∧ w z ≤ B₀ := by
       rintro z ⟨hzc, hzA⟩
       have hzD : z ∈ Dρ := hDρcl.closure_subset_iff.mpr
-        (fun u hu => hBDρ hu.1) hzc
+        (fun u hu ↦ hBDρ hu.1) hzc
       by_cases hzcar : z ∈ (DN n).closedCarrier
-      · have hzKw : z ∉ Kw := fun hmem => (hKws hmem) hzcar
-        have hev : w =ᶠ[𝓝 z] fun _ => (0 : ℝ) := by
+      · have hzKw : z ∉ Kw := fun hmem ↦ (hKws hmem) hzcar
+        have hev : w =ᶠ[𝓝 z] fun _ ↦ (0 : ℝ) := by
           filter_upwards [hKwc.isClosed.isOpen_compl.mem_nhds hzKw] with u hu
           exact hKw0 u hu
         refine ⟨continuousAt_const.congr_of_eventuallyEq hev, ?_⟩
         rw [hKw0 z hzKw]
         exact hB₀0
-      · have hzB : z ∉ Bimg := fun hmem => hzA ⟨hmem, hzcar⟩
+      · have hzB : z ∉ Bimg := fun hmem ↦ hzA ⟨hmem, hzcar⟩
         have hzS : z ∈ S := by
           rw [hDρ] at hzD
           obtain ⟨ζ, hζ, hζz⟩ := hzD
@@ -12586,24 +12594,24 @@ theorem not_bddAbove_greenFamily_of_compactSpace [CompactSpace M]
         have h2 : v ⟨z, hzW⟩ ≤ V n z := by
           rw [hVmem n z hzW]
           exact le_csSup ((hEnvH n).2 ⟨z, hzW⟩
-            (fun hcon => hzp (congrArg Subtype.val hcon))) ⟨v, hvmem, rfl⟩
+            (fun hcon ↦ hzp (congrArg Subtype.val hcon))) ⟨v, hvmem, rfl⟩
         have h3 : V n z ≤ gs z := (hgs_all z hzp (hSq z hzS)).2 n
         have h4 : gs z ≤ gs yS := hySmax hzS
         rw [h1]
         exact ((h2.trans h3).trans h4).trans (le_max_left _ _)
     have hwA := maxPrin A w B₀ Kw hAopen hAne
-      (fun z hz => hwfam.1 z (hAsubp hz)) hKwc
-      (fun z _ hzK => (hKw0 z hzK).le.trans hB₀0) hfr
+      (fun z hz ↦ hwfam.1 z (hAsubp hz)) hKwc
+      (fun z _ hzK ↦ (hKw0 z hzK).le.trans hB₀0) hfr
     exact (le_of_eq (hwval ⟨y₀, hy₀W⟩).symm).trans (hwA y₀ ⟨hy₀B, hy₀W⟩)
   have hgsB : ∀ y ∈ Bimg, y ≠ q → gs y ≤ B₀ := by
     intro y hyB hyq
-    refine ciSup_le fun n => ?_
+    refine ciSup_le fun n ↦ ?_
     by_cases hyW : y ∈ Wp n
     · exact hVann n y hyB hyW
     · rw [hVzero n y hyW]
       exact hB₀0
   /- ## Removability at the auxiliary point. -/
-  have hharmU : HarmonicOnNhd (fun ζ => gs (e.symm ζ)) (ball (e q) ρ \ {e q}) := by
+  have hharmU : HarmonicOnNhd (fun ζ ↦ gs (e.symm ζ)) (ball (e q) ρ \ {e q}) := by
     rintro ζ ⟨hζ, hζq⟩
     have hζt : ζ ∈ e.target := hballρ hζ
     have hysrc : e.symm ζ ∈ e.source := e.map_target hζt
@@ -12631,7 +12639,7 @@ theorem not_bddAbove_greenFamily_of_compactSpace [CompactSpace M]
     · exact hgsB _ ⟨ζ, hζ, rfl⟩ hyq
   obtain ⟨hf, hfharm, hfeq⟩ :=
     exists_harmonicOnNhd_of_bounded_punctured hρ0 hharmU ⟨B₀, hbddU⟩
-  set gh : M → ℝ := fun y => if y = q then hf (e q) else gs y with hgh
+  set gh : M → ℝ := fun y ↦ if y = q then hf (e q) else gs y with hgh
   have ghq : ∀ y : M, y ≠ q → gh y = gs y := by
     intro y hy
     simp only [hgh]
@@ -12641,15 +12649,15 @@ theorem not_bddAbove_greenFamily_of_compactSpace [CompactSpace M]
     intro y hy
     have hyp : y ≠ p₀ := Set.mem_compl_singleton_iff.mp hy
     by_cases hyq : y = q
-    · have hMH : MHarmonicAt (fun z => hf (e z)) q := by
+    · have hMH : MHarmonicAt (fun z ↦ hf (e z)) q := by
         have h2 : HarmonicAt hf (e q) := hfharm _ (mem_ball_self hρ0)
-        have h3 : ((fun z => hf (e z)) ∘ (e.symm : ℂ → M)) =ᶠ[𝓝 (e q)] hf := by
+        have h3 : ((fun z ↦ hf (e z)) ∘ (e.symm : ℂ → M)) =ᶠ[𝓝 (e q)] hf := by
           filter_upwards [e.open_target.mem_nhds (e.map_source hqsrc)] with ζ hζ
           simp only [Function.comp_apply]
           rw [e.right_inv hζ]
         exact (harmonicAt_congr_nhds h3).mpr h2
       rw [hyq]
-      refine mharm_congr (fun z => hf (e z)) gh q ?_ hMH
+      refine mharm_congr (fun z ↦ hf (e z)) gh q ?_ hMH
       filter_upwards [hBopen.mem_nhds hqB] with z hz
       obtain ⟨ζ, hζ, rfl⟩ := hz
       have hζt : ζ ∈ e.target := hballρ hζ
@@ -12679,14 +12687,14 @@ theorem not_bddAbove_greenFamily_of_compactSpace [CompactSpace M]
   have hcpU : cp ∈ ep.target ∩ ep.symm ⁻¹' (D.closedCarrierᶜ ∩ {x}ᶜ) := by
     refine ⟨ep.map_source hpsrc, ?_⟩
     rw [Set.mem_preimage, hcp, ep.left_inv hpsrc]
-    exact ⟨fun hmem => (hDavoid p₀ hmem).1 rfl,
+    exact ⟨fun hmem ↦ (hDavoid p₀ hmem).1 rfl,
       Set.mem_compl_singleton_iff.mpr (Ne.symm hx)⟩
   obtain ⟨εp, hεp, hεpsub⟩ := Metric.isOpen_iff.mp hUp _ hcpU
   set rp : ℝ := εp / 2 with hrp
   have hrp0 : 0 < rp := half_pos hεp
   have hrpsub : closedBall cp rp ⊆ ep.target ∩ ep.symm ⁻¹' (D.closedCarrierᶜ ∩ {x}ᶜ) :=
     (Metric.closedBall_subset_ball (half_lt_self hεp)).trans hεpsub
-  have hrpt : closedBall cp rp ⊆ ep.target := fun w hw => (hrpsub hw).1
+  have hrpt : closedBall cp rp ⊆ ep.target := fun w hw ↦ (hrpsub hw).1
   set Kp : Set M := ep.symm '' closedBall cp rp with hKpdef
   have hKpcomp : IsCompact Kp := (isCompact_closedBall _ _).image_of_continuousOn
     (ep.continuousOn_symm.mono hrpt)
@@ -12696,22 +12704,22 @@ theorem not_bddAbove_greenFamily_of_compactSpace [CompactSpace M]
     rw [Set.mem_preimage] at h2
     exact ⟨h2.1, Set.mem_compl_singleton_iff.mp h2.2⟩
   have hKpW : ∀ n, Kp ⊆ (Wp n : Set M) :=
-    fun n y hy hmem => (hKpavoid y hy).1 (hcarNsub n hmem)
+    fun n y hy hmem ↦ (hKpavoid y hy).1 (hcarNsub n hmem)
   have hKpsrc : Kp ⊆ ep.source := by
     rintro y ⟨w, hw, rfl⟩
     exact ep.map_target (hrpt hw)
   have hexc : ∀ y, y ∈ ep.source → y ≠ p₀ → ep y ≠ cp := by
     intro y hys hyp heq
     exact hyp (ep.injOn hys hpsrc (by rw [← hcp]; exact heq))
-  set gp : ℂ → ℝ := fun z => max (Real.log rp - Real.log ‖z - cp‖) 0 with hgp
-  have hgpharm : HarmonicOnNhd (fun z => Real.log rp - Real.log ‖z - cp‖) {cp}ᶜ := by
+  set gp : ℂ → ℝ := fun z ↦ max (Real.log rp - Real.log ‖z - cp‖) 0 with hgp
+  have hgpharm : HarmonicOnNhd (fun z ↦ Real.log rp - Real.log ‖z - cp‖) {cp}ᶜ := by
     intro z hz
-    have hana : AnalyticAt ℂ (fun u : ℂ => u - cp) z := analyticAt_id.sub analyticAt_const
+    have hana : AnalyticAt ℂ (fun u : ℂ ↦ u - cp) z := analyticAt_id.sub analyticAt_const
     have hne2 : z - cp ≠ 0 := sub_ne_zero.mpr (Set.mem_compl_singleton_iff.mp hz)
     exact (harmonicAt_const (Real.log rp)).sub (hana.harmonicAt_log_norm hne2)
   have hgpsub : SubharmonicOn gp {cp}ᶜ := by
-    have h0 : SubharmonicOn (fun _ : ℂ => (0 : ℝ)) {cp}ᶜ :=
-      HarmonicOnNhd.subharmonicOn fun z _ => harmonicAt_const 0
+    have h0 : SubharmonicOn (fun _ : ℂ ↦ (0 : ℝ)) {cp}ᶜ :=
+      HarmonicOnNhd.subharmonicOn fun z _ ↦ harmonicAt_const 0
     exact subharmonicOn_max (HarmonicOnNhd.subharmonicOn hgpharm) h0
   have hgpzero : ∀ z, z ∉ ball cp rp → gp z = 0 := by
     intro z hz
@@ -12721,7 +12729,7 @@ theorem not_bddAbove_greenFamily_of_compactSpace [CompactSpace M]
     have hle : Real.log rp ≤ Real.log ‖z - cp‖ := Real.log_le_log hrp0 hzr
     simp only [hgp]
     exact max_eq_right (by linarith)
-  set v₀ : M → ℝ := fun y => if y ∈ ep.source then gp (ep y) else 0 with hv₀def
+  set v₀ : M → ℝ := fun y ↦ if y ∈ ep.source then gp (ep y) else 0 with hv₀def
   have hv₀zero : ∀ y, y ∉ Kp → v₀ y = 0 := by
     intro y hy
     by_cases hys : y ∈ ep.source
@@ -12749,11 +12757,11 @@ theorem not_bddAbove_greenFamily_of_compactSpace [CompactSpace M]
         have hzs : ep.symm z ∈ ep.source := ep.map_target hzt
         simp only [Function.comp_apply, hv₀def]
         rw [if_pos hzs, ep.right_inv hzt]
-      exact ⟨ρ', hρ', fun z hz => (hρ'sub hz).1,
-        transfer _ _ _ _ hgpsub (fun z hz => (hρ'sub hz).2) heqon⟩
-    · have hyK : y ∉ Kp := fun hmem => hys (hKpsrc hmem)
+      exact ⟨ρ', hρ', fun z hz ↦ (hρ'sub hz).1,
+        transfer _ _ _ _ hgpsub (fun z hz ↦ (hρ'sub hz).2) heqon⟩
+    · have hyK : y ∉ Kp := fun hmem ↦ hys (hKpsrc hmem)
       exact msub_zero v₀ Kpᶜ y hKpcomp.isClosed.isOpen_compl hyK
-        (fun z hz => hv₀zero z hz)
+        (fun z hz ↦ hv₀zero z hz)
   have hv₀cont : ContinuousOn v₀ {p₀}ᶜ := by
     intro y hy
     have hyp : y ≠ p₀ := Set.mem_compl_singleton_iff.mp hy
@@ -12766,8 +12774,8 @@ theorem not_bddAbove_greenFamily_of_compactSpace [CompactSpace M]
       filter_upwards [ep.open_source.mem_nhds hys] with u hu
       simp only [Function.comp_apply, hv₀def]
       rw [if_pos hu]
-    · have hyK : y ∉ Kp := fun hmem => hys (hKpsrc hmem)
-      have hev : v₀ =ᶠ[𝓝 y] fun _ => (0 : ℝ) := by
+    · have hyK : y ∉ Kp := fun hmem ↦ hys (hKpsrc hmem)
+      have hev : v₀ =ᶠ[𝓝 y] fun _ ↦ (0 : ℝ) := by
         filter_upwards [hKpcomp.isClosed.isOpen_compl.mem_nhds hyK] with u hu
         exact hv₀zero u hu
       exact continuousAt_const.congr_of_eventuallyEq hev
@@ -12797,17 +12805,17 @@ theorem not_bddAbove_greenFamily_of_compactSpace [CompactSpace M]
     simp only [hgp]
     rw [max_eq_left (by linarith)]
     linarith
-  have hv₀piece : ∀ n, (fun z : ↥(Wp n) => v₀ z) ∈
-      greenFamily (⟨p₀, hp₀W n⟩ : ↥(Wp n)) := fun n =>
+  have hv₀piece : ∀ n, (fun z : ↥(Wp n) ↦ v₀ z) ∈
+      greenFamily (⟨p₀, hp₀W n⟩ : ↥(Wp n)) := fun n ↦
     brickR n v₀ Kp hv₀sub hv₀cont hKpcomp (hKpW n) hv₀zero ⟨Real.log rp, hv₀pole⟩
   have hgs_ge : ∀ y : M, y ≠ p₀ → y ∈ Kp → v₀ y ≤ gs y := by
     intro y hyp hyK
-    have hyq : y ≠ q := fun hcon => (hKpavoid y hyK).1 (hcon ▸ hqD)
+    have hyq : y ≠ q := fun hcon ↦ (hKpavoid y hyK).1 (hcon ▸ hqD)
     have hyW : y ∈ Wp 0 := hKpW 0 hyK
     have h1 : v₀ y ≤ V 0 y := by
       rw [hVmem 0 y hyW]
       exact le_csSup ((hEnvH 0).2 ⟨y, hyW⟩
-        (fun hcon => hyp (congrArg Subtype.val hcon))) ⟨_, hv₀piece 0, rfl⟩
+        (fun hcon ↦ hyp (congrArg Subtype.val hcon))) ⟨_, hv₀piece 0, rfl⟩
     exact h1.trans ((hgs_all y hyp hyq).2 0)
   /- ## The endgame: minimum principle on the compact surface. -/
   set σ : ℝ := rp * Real.exp (-(B' + 1)) with hσdef
@@ -12852,9 +12860,9 @@ theorem not_bddAbove_greenFamily_of_compactSpace [CompactSpace M]
     exact Set.image_mono (closedBall_subset_closedBall hσrp.le)
   set Kσ : Set M := Uσᶜ with hKσ
   have hKσcomp : IsCompact Kσ := hUσopen.isClosed_compl.isCompact
-  have hKσp₀ : ∀ z ∈ Kσ, z ≠ p₀ := fun z hz hcon => hz (hcon ▸ hp₀Uσ)
-  have hxKσ : x ∈ Kσ := fun hmem => (hKpavoid x (hCKp (hUσC hmem))).2 rfl
-  have hKσcont : ContinuousOn gh Kσ := fun z hz =>
+  have hKσp₀ : ∀ z ∈ Kσ, z ≠ p₀ := fun z hz hcon ↦ hz (hcon ▸ hp₀Uσ)
+  have hxKσ : x ∈ Kσ := fun hmem ↦ (hKpavoid x (hCKp (hUσC hmem))).2 rfl
+  have hKσcont : ContinuousOn gh Kσ := fun z hz ↦
     ((hghharm z (Set.mem_compl_singleton_iff.mpr (hKσp₀ z hz))).continuousAt).continuousWithinAt
   obtain ⟨ym, hymK, hymmin⟩ := hKσcomp.exists_isMinOn ⟨x, hxKσ⟩ hKσcont
   have hymB : gh ym ≤ B' := (hymmin hxKσ).trans hghx
@@ -12872,7 +12880,7 @@ theorem not_bddAbove_greenFamily_of_compactSpace [CompactSpace M]
     have h1 : ep p₀ = cp := rfl
     rw [hcon, h1, sub_self, norm_zero] at hzstnorm
     exact hτ0.ne hzstnorm
-  have hzstq : zst ≠ q := fun hcon => (hKpavoid zst hzstK).1 (hcon ▸ hqD)
+  have hzstq : zst ≠ q := fun hcon ↦ (hKpavoid zst hzstK).1 (hcon ▸ hqD)
   have hzstCσ : zst ∉ Dp.closedCarrier := by
     rintro ⟨w, hw, hweq⟩
     have hwt : w ∈ ep.target := hσt hw
@@ -12895,14 +12903,14 @@ theorem not_bddAbove_greenFamily_of_compactSpace [CompactSpace M]
     obtain ⟨w, hw, hweq⟩ := hymC
     have hwt : w ∈ ep.target := hσt hw
     have hymval : ep ym = w := by rw [← hweq, ep.right_inv hwt]
-    have hwnb : w ∉ ball cp σ := fun hcon => hymK ⟨w, hcon, hweq⟩
+    have hwnb : w ∉ ball cp σ := fun hcon ↦ hymK ⟨w, hcon, hweq⟩
     have hwσ : ‖w - cp‖ = σ := by
       rw [mem_closedBall, dist_eq_norm] at hw
       rw [mem_ball, dist_eq_norm, not_lt] at hwnb
       linarith
     have hymp₀ : ym ≠ p₀ := hKσp₀ ym hymK
     have hymKp : ym ∈ Kp := hCKp ⟨w, hw, hweq⟩
-    have hymq : ym ≠ q := fun hcon => (hKpavoid ym hymKp).1 (hcon ▸ hqD)
+    have hymq : ym ≠ q := fun hcon ↦ (hKpavoid ym hymKp).1 (hcon ▸ hqD)
     have hymsrc : ym ∈ ep.source := by
       rw [← hweq]
       exact ep.map_target hwt
@@ -12928,12 +12936,12 @@ theorem not_bddAbove_greenFamily_of_compactSpace [CompactSpace M]
     have hΩσp₀ : ∀ z ∈ (Dp.compl : Set M), z ≠ p₀ := by
       intro z hz hcon
       exact hz (hcon ▸ hUσC hp₀Uσ)
-    have hsubΩ : MSubharmonicOn (-gh) (Dp.compl : Set M) := fun z hz =>
+    have hsubΩ : MSubharmonicOn (-gh) (Dp.compl : Set M) := fun z hz ↦
       ((hghharm z (Set.mem_compl_singleton_iff.mpr (hΩσp₀ z hz))).neg).msubharmonicAt
     have hmaxΩ : ∀ z ∈ (Dp.compl : Set M), (-gh) z ≤ (-gh) ym := by
       intro z hz
       simp only [Pi.neg_apply]
-      have h5 : gh ym ≤ gh z := hymmin (fun hmem => hz (hUσC hmem))
+      have h5 : gh ym ≤ gh z := hymmin (fun hmem ↦ hz (hUσC hmem))
       linarith
     have hconst := propagate (Dp.compl : Set M) (-gh) ym hΩσopen
       hΩσconn.isPreconnected hymΩ hsubΩ hmaxΩ
@@ -12981,9 +12989,9 @@ theorem exists_diffeomorph_opens_of_forall_not_hasGreenFunction
   set p₂ : M := (chartAt ℂ p₁).symm (chartAt ℂ p₁ p₁ + ((r₀ / 2 : ℝ) : ℂ)) with
       hp₂def
   set q : M := (chartAt ℂ p₁).symm (chartAt ℂ p₁ p₁ + ((r₀ / 4 : ℝ) : ℂ)) with hqdef
-  have hp₁p₂ : p₁ ≠ p₂ := fun hcon =>
+  have hp₁p₂ : p₁ ≠ p₂ := fun hcon ↦
     hsymmne (r₀ / 2) (by linarith) (by linarith) hcon.symm
-  have hp₁q : p₁ ≠ q := fun hcon =>
+  have hp₁q : p₁ ≠ q := fun hcon ↦
     hsymmne (r₀ / 4) (by linarith) (by linarith) hcon.symm
   have hp₂q : p₂ ≠ q := by
     intro hcon
@@ -13008,20 +13016,20 @@ theorem exists_diffeomorph_opens_of_forall_not_hasGreenFunction
   have hrsub : closedBall (e₀ q) (εa / 2) ⊆ e₀.target ∩ ⇑e₀.symm ⁻¹' ({p₁}ᶜ ∩
       {p₂}ᶜ) :=
     (Metric.closedBall_subset_ball (half_lt_self hεa)).trans hballa
-  set D₀ : CoordDisk M := ⟨q, εa / 2, hra0, fun w hw => (hrsub hw).1⟩ with hD₀def
+  set D₀ : CoordDisk M := ⟨q, εa / 2, hra0, fun w hw ↦ (hrsub hw).1⟩ with hD₀def
   have hD₀car : D₀.closedCarrier = e₀.symm '' closedBall (e₀ q) (εa / 2) := rfl
   have hD₀avoid : ∀ y ∈ D₀.closedCarrier, y ≠ p₁ ∧ y ≠ p₂ := by
     rintro y ⟨w, hw, rfl⟩
     have h2 := (hrsub hw).2
     rw [Set.mem_preimage] at h2
     exact ⟨Set.mem_compl_singleton_iff.mp h2.1, Set.mem_compl_singleton_iff.mp h2.2⟩
-  have hp₁D : p₁ ∉ D₀.closedCarrier := fun hmem => (hD₀avoid p₁ hmem).1 rfl
-  have hp₂D : p₂ ∉ D₀.closedCarrier := fun hmem => (hD₀avoid p₂ hmem).2 rfl
+  have hp₁D : p₁ ∉ D₀.closedCarrier := fun hmem ↦ (hD₀avoid p₁ hmem).1 rfl
+  have hp₂D : p₂ ∉ D₀.closedCarrier := fun hmem ↦ (hD₀avoid p₂ hmem).2 rfl
   /- ## The bipolar Green's function and the injective dipole map. -/
-  obtain ⟨Gb, hGb, hpole₁, hpole₂, hbdd⟩ := exists_bipolarGreen D₀ hp₁D hp₂D hp₁p₂
+  obtain ⟨Gb, hGb, hpole₁, hpole₂, hbdd⟩ := exists_bipolar_green D₀ hp₁D hp₂D hp₁p₂
   obtain ⟨φ, hφ, hφ₁, hφ₂, habs⟩ := exists_bipolar_map hp₁p₂ hGb hpole₁ hpole₂
   have hinj : Function.Injective φ :=
-    injective_bipolar_map hnon hp₁p₂ hpole₁ hpole₂ hbdd hφ hφ₁ hφ₂ habs
+    injective_bipolar_map hnon hp₁p₂ hpole₂ hbdd hφ hφ₁ hφ₂ habs
   /- ## Plane-level helpers: an injective analytic map is locally open. -/
   have keyPlane : ∀ (g : ℂ → ℂ) (T : Set ℂ), IsOpen T → (∀ w ∈ T, AnalyticAt ℂ g
       w) →
@@ -13104,10 +13112,10 @@ theorem exists_diffeomorph_opens_of_forall_not_hasGreenFunction
   /- ## The image domain and the two structure maps. -/
   let U : Opens ℂ̂ := ⟨Set.range φ, hopenM.isOpen_range⟩
   have hF : ContMDiff 𝓘(ℂ) 𝓘(ℂ) ω
-      (fun x : M => (⟨φ x, Set.mem_range_self x⟩ : ↥U)) := by
+      (fun x : M ↦ (⟨φ x, Set.mem_range_self x⟩ : ↥U)) := by
     intro x
     have hcomp : ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω
-        (Subtype.val ∘ fun x : M => (⟨φ x, Set.mem_range_self x⟩ : ↥U)) x :=
+        (Subtype.val ∘ fun x : M ↦ (⟨φ x, Set.mem_range_self x⟩ : ↥U)) x :=
       hφ.contMDiffAt
     rw [contMDiffAt_iff_target]
     exact ⟨IsInducing.subtypeVal.continuousAt_iff.mpr hcomp.continuousAt,
@@ -13115,7 +13123,7 @@ theorem exists_diffeomorph_opens_of_forall_not_hasGreenFunction
   /- ## Inverse smoothness: read the inverse through the sphere chart at the
   image point and a surface chart at the preimage point, where it is the
   local inverse of an injective analytic plane map. -/
-  have hGsm : ContMDiff 𝓘(ℂ) 𝓘(ℂ) ω (fun y : ↥U => Function.invFun φ (y : ℂ̂)) := by
+  have hGsm : ContMDiff 𝓘(ℂ) 𝓘(ℂ) ω (fun y : ↥U ↦ Function.invFun φ (y : ℂ̂)) := by
     intro y₀
     obtain ⟨x₀, hφx₀⟩ : ∃ x, φ x = (y₀ : ℂ̂) := y₀.2
     obtain ⟨χ, hx₀src, hχmax⟩ : ∃ χ : OpenPartialHomeomorph M ℂ,
@@ -13156,7 +13164,7 @@ theorem exists_diffeomorph_opens_of_forall_not_hasGreenFunction
       rwa [χ.right_inv h₁.1, χ.right_inv h₂.1] at h5
     obtain ⟨r, hr, hBsub⟩ := Metric.isOpen_iff.mp hTopen (χ x₀) hχx₀T
     -- The inverse chart reading.
-    let η : ℂ → ℂ := fun ζ => χ (Function.invFun φ (e.symm ζ))
+    let η : ℂ → ℂ := fun ζ ↦ χ (Function.invFun φ (e.symm ζ))
     have hηg : ∀ w ∈ ball (χ x₀) r, η ((⇑e ∘ φ ∘ ⇑χ.symm) w) = w := by
       intro w hwB
       have hwT := hBsub hwB
@@ -13197,7 +13205,7 @@ theorem exists_diffeomorph_opens_of_forall_not_hasGreenFunction
         intro N hN
         obtain ⟨N', hN'sub, hN'open, hwN'⟩ :=
           _root_.mem_nhds_iff.mp (Filter.inter_mem hN (isOpen_ball.mem_nhds hwB))
-        have hsub' : N' ⊆ ball (χ x₀) r := fun z hz => (hN'sub hz).2
+        have hsub' : N' ⊆ ball (χ x₀) r := fun z hz ↦ (hN'sub hz).2
         have hopenimg : IsOpen ((⇑e ∘ φ ∘ ⇑χ.symm) '' N') :=
           imgOpen _ _ hTopen hgan hginjT _ (hsub'.trans hBsub) hN'open
         have hgmem : (⇑e ∘ φ ∘ ⇑χ.symm) w ∈ (⇑e ∘ φ ∘ ⇑χ.symm) '' N' :=
@@ -13223,7 +13231,7 @@ theorem exists_diffeomorph_opens_of_forall_not_hasGreenFunction
       exact (HasDerivAt.of_local_left_inverse (hηc ζ hζ) hfd hder hev).differentiableAt
     -- Critical points of the chart reading are isolated (injectivity).
     have hganN : AnalyticOnNhd ℂ (⇑e ∘ φ ∘ ⇑χ.symm)
-        (χ.target ∩ ⇑χ.symm ⁻¹' (φ ⁻¹' e.source)) := fun w hw => hgan w hw
+        (χ.target ∩ ⇑χ.symm ⁻¹' (φ ⁻¹' e.source)) := fun w hw ↦ hgan w hw
     have hcrit : ∀ w ∈ χ.target ∩ ⇑χ.symm ⁻¹' (φ ⁻¹' e.source),
         ∀ᶠ w' in 𝓝[≠] w, deriv (⇑e ∘ φ ∘ ⇑χ.symm) w' ≠ 0 := by
       intro w hw
@@ -13235,7 +13243,7 @@ theorem exists_diffeomorph_opens_of_forall_not_hasGreenFunction
             (⇑e ∘ φ ∘ ⇑χ.symm) w' = (⇑e ∘ φ ∘ ⇑χ.symm) w := by
           intro w' hw'
           refine Convex.is_const_of_fderivWithin_eq_zero (convex_ball w ρ)
-            (fun u hu => ((hgan u (hballρ u hu).2).differentiableAt).differentiableWithinAt)
+            (fun u hu ↦ ((hgan u (hballρ u hu).2).differentiableAt).differentiableWithinAt)
             ?_ hw' (mem_ball_self hρ0)
           intro u hu
           rw [fderivWithin_of_isOpen isOpen_ball hu]
@@ -13264,7 +13272,7 @@ theorem exists_diffeomorph_opens_of_forall_not_hasGreenFunction
       obtain ⟨ρ, hρ0, hballρ⟩ := Metric.eventually_nhds_iff_ball.mp
         ((eventually_nhdsWithin_iff.mp (hcrit (η ζ) (hBsub (hηB ζ hζ)))).and
           (isOpen_ball.eventually_mem (hηB ζ hζ)))
-      have hsub' : ball (η ζ) ρ ⊆ ball (χ x₀) r := fun z hz => (hballρ z hz).2
+      have hsub' : ball (η ζ) ρ ⊆ ball (χ x₀) r := fun z hz ↦ (hballρ z hz).2
       have hW'open : IsOpen ((⇑e ∘ φ ∘ ⇑χ.symm) '' ball (η ζ) ρ) :=
         imgOpen _ _ hTopen hgan hginjT _ (hsub'.trans hBsub) isOpen_ball
       have hζW' : ζ ∈ (⇑e ∘ φ ∘ ⇑χ.symm) '' ball (η ζ) ρ :=
@@ -13290,7 +13298,7 @@ theorem exists_diffeomorph_opens_of_forall_not_hasGreenFunction
       exact hW'diff.differentiableAt (hW'open.mem_nhds hζW')
     -- The inverse reading is analytic at the base point; assemble the composite.
     have hWdiff : DifferentiableOn ℂ η ((⇑e ∘ φ ∘ ⇑χ.symm) '' ball (χ x₀) r) :=
-      fun ζ hζ => (hdiff ζ hζ).differentiableWithinAt
+      fun ζ hζ ↦ (hdiff ζ hζ).differentiableWithinAt
     have hηan : AnalyticAt ℂ η (e (y₀ : ℂ̂)) := (hWdiff.analyticOnNhd hWopen) _ hy₀W
     have hval : ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω (Subtype.val : ↥U → ℂ̂) y₀ :=
       contMDiff_subtype_val.contMDiffAt
@@ -13331,10 +13339,10 @@ theorem exists_diffeomorph_opens_of_forall_not_hasGreenFunction
     change Function.invFun φ (y : ℂ̂) = χ.symm (η (e (y : ℂ̂)))
     rw [← hgw, hηg w hwB, h7, Function.leftInverse_invFun hinj (χ.symm w)]
   exact ⟨U, ⟨{
-    toFun := fun x => ⟨φ x, Set.mem_range_self x⟩
-    invFun := fun y => Function.invFun φ (y : ℂ̂)
-    left_inv := fun x => Function.leftInverse_invFun hinj x
-    right_inv := fun y => Subtype.ext (Function.invFun_eq y.2)
+    toFun := fun x ↦ ⟨φ x, Set.mem_range_self x⟩
+    invFun := fun y ↦ Function.invFun φ (y : ℂ̂)
+    left_inv := fun x ↦ Function.leftInverse_invFun hinj x
+    right_inv := fun y ↦ Subtype.ext (Function.invFun_eq y.2)
     contMDiff_toFun := hF
     contMDiff_invFun := hGsm }⟩⟩
 

@@ -167,7 +167,7 @@ theorem exists_diffeomorph_opens_sphere_of_simplyConnected (M : Type*)
   by_cases hcomp : CompactSpace M
   · refine exists_diffeomorph_opens_of_forall_not_hasGreenFunction fun p₀ hp₀ => ?_
     obtain ⟨x, hx, hbdd⟩ := hp₀
-    exact not_bddAbove_greenFamily_of_compactSpace p₀ x hx hbdd
+    exact not_bddAbove_image_greenFamily_of_compactSpace p₀ x hx hbdd
   · haveI : NoncompactSpace M := not_compactSpace_iff.mp hcomp
     by_cases hG : ∃ p₀ : M, HasGreenFunction p₀
     · obtain ⟨p₀, hp₀⟩ := hG
