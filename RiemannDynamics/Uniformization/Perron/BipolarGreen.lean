@@ -22,8 +22,8 @@ of `ℂ̂`.
 
 ## Main definitions
 
-* `CoordDisk` — a closed coordinate disk, with `shrink`, `closedCarrier`, and
-  the complementary piece `compl`;
+* `CoordDisk` — a closed coordinate disk, with `CoordDisk.shrink`,
+  `CoordDisk.closedCarrier`, and the complementary piece `CoordDisk.compl`;
 * `pieceGreen` — the Green's function of a piece, as a function on the
   surface.
 
@@ -32,8 +32,13 @@ of `ℂ̂`.
 * `hasGreenFunction_coordDisk_compl` — every piece is hyperbolic;
 * `exists_harnack_chain_const`, `exists_mharmonicOn_limit_of_locally_bounded`
   — the symmetry-free Harnack chain and harmonic normal-families bricks;
+* `pieceGreen_drift_bound_core`, `exists_pieceGreen_drift_bound` — the drift
+  bound: two piece Green's functions, evaluated at a fixed third base point,
+  differ by a shrink-independent constant;
 * `exists_bipolarGreen` — the dipole limit;
-* `exists_bipolar_map`, `injective_bipolar_map` — the meromorphic dipole map;
+* `exists_bipolar_map` — the meromorphic dipole map;
+* `injective_bipolar_map` — that map is injective, on a surface carrying no
+  Green's function at any point;
 * `not_bddAbove_greenFamily_of_compactSpace` — compact surfaces have no
   Green's function;
 * `exists_diffeomorph_opens_of_forall_not_hasGreenFunction` — the
@@ -54,7 +59,10 @@ structure CoordDisk (M : Type*) [TopologicalSpace M] [ChartedSpace ℂ M] where
   center : M
   /-- The chart radius of the disk. -/
   radius : ℝ
+  /-- The radius is positive, so the disk is not degenerate. -/
   radius_pos : 0 < radius
+  /-- The closed chart ball of the given radius lies inside the chart target, so the
+  inverse chart is defined on all of it. -/
   closedBall_subset :
     closedBall (chartAt ℂ center center) radius ⊆ (chartAt ℂ center).target
 
@@ -91,8 +99,14 @@ end CoordDisk
 
 variable [IsManifold 𝓘(ℂ) ω M]
 
-/-- The Green's function of an open piece of the surface, read as a function
-on the surface (zero when the pole or the argument leaves the piece). -/
+/-- The Green's function of an open piece of the surface, read as a function on the
+surface: the Perron upper envelope `greenEnvelope` computed inside `P`, extended by
+zero when the pole or the argument leaves the piece. It is the Green's function
+proper only where the piece is hyperbolic at `p`; on a non-hyperbolic piece the
+envelope is a supremum of an unbounded set (see
+`not_bddAbove_greenFamily_of_compactSpace`) and carries no such meaning. Every use
+below is on a `CoordDisk.compl`, which `hasGreenFunction_coordDisk_compl` shows is
+hyperbolic. -/
 noncomputable def pieceGreen [T2Space M] (P : Opens M) (p x : M) : ℝ :=
   open scoped Classical in
   if h : p ∈ P ∧ x ∈ P then greenEnvelope (⟨p, h.1⟩ : ↥P) ⟨x, h.2⟩ else 0
@@ -751,8 +765,7 @@ theorem hasGreenFunction_coordDisk_compl (D : CoordDisk M) (p : M)
     have hpmono : ∀ pf qf : ℂ → ℝ, ContinuousOn pf (sphere cx ρ) →
         ContinuousOn qf (sphere cx ρ) → (∀ s ∈ sphere cx ρ, pf s ≤ qf s) →
         ∀ w ∈ ball cx ρ,
-          RiemannDynamics.poissonModify pf cx ρ w ≤ RiemannDynamics.poissonModify qf cx ρ w :=
-              by
+          RiemannDynamics.poissonModify pf cx ρ w ≤ RiemannDynamics.poissonModify qf cx ρ w := by
       intro pf qf hpc hqc hpq w hw
       simp only [RiemannDynamics.poissonModify, if_pos hw, poissonIntegral]
       have hwlt : ‖w - cx‖ < ρ := by rw [← dist_eq_norm]; exact mem_ball.1 hw
@@ -1595,10 +1608,12 @@ theorem hasGreenFunction_coordDisk_compl (D : CoordDisk M) (p : M)
 
 /-! ## Symmetry-free Harnack and normal-families infrastructure
 
-The dipole limit below is normalized at a third base point, so the classical
-cross-symmetry constant of the two piece Green's functions never enters: the
-shrink-uniform control comes from the Harnack chain bound alone, and the limit
-is extracted by the normal-families principle for harmonic functions. -/
+The two bricks below are themselves symmetry-free: the Harnack chain constant and
+the normal-families limit are obtained without any cross-symmetry input. The dipole
+limit is normalized at a third base point, so only the weakest consequence of the
+classical cross-symmetry of the piece Green's functions is needed — see
+`pieceGreen_drift_bound_core`, where it cancels the cross terms — and the rest of
+the shrink-uniform control comes from the Harnack chain bound. -/
 
 omit [IsManifold 𝓘(ℂ) ω M] in
 /-- The complement of two disjoint closed coordinate disks in a connected
@@ -2348,8 +2363,7 @@ theorem exists_mharmonicOn_limit_of_locally_bounded [SecondCountableTopology M]
           _ = 48 / ρ * ‖z - w‖ := by
               field_simp
               ring
-      have h2 : |(‖w - c‖ ^ 2 - ‖z - c‖ ^ 2) / ‖ζ - w‖ ^ 2| ≤ 4 / ρ * ‖z - w‖ :=
-          by
+      have h2 : |(‖w - c‖ ^ 2 - ‖z - c‖ ^ 2) / ‖ζ - w‖ ^ 2| ≤ 4 / ρ * ‖z - w‖ := by
         rw [abs_div, abs_of_pos (by positivity : (0:ℝ) < ‖ζ - w‖ ^ 2)]
         have e5 : |‖w - c‖ ^ 2 - ‖z - c‖ ^ 2| ≤ ρ * ‖z - w‖ := by
           have h3 : ‖w - c‖ ^ 2 - ‖z - c‖ ^ 2
@@ -2426,8 +2440,7 @@ theorem exists_mharmonicOn_limit_of_locally_bounded [SecondCountableTopology M]
   have : Nonempty ↥Ω := hΩne.to_subtype
   obtain ⟨dd, hdd⟩ := TopologicalSpace.exists_dense_seq ↥Ω
   have hdΩ : ∀ j : ℕ, (dd j : M) ∈ Ω := fun j => (dd j).2
-  have hdense : ∀ O : Set M, IsOpen O → (O ∩ Ω).Nonempty → ∃ j : ℕ, (dd j : M) ∈ O :=
-      by
+  have hdense : ∀ O : Set M, IsOpen O → (O ∩ Ω).Nonempty → ∃ j : ℕ, (dd j : M) ∈ O := by
     intro O hO hOne
     obtain ⟨y, hyO, hyΩ⟩ := hOne
     have hpre : IsOpen ((↑) ⁻¹' O : Set ↥Ω) := hO.preimage continuous_subtype_val
@@ -2805,9 +2818,12 @@ theorem exists_mharmonicOn_limit_of_locally_bounded [SecondCountableTopology M]
 
 /-! ## The bipolar Green's function and the dipole map -/
 
-/-- **The drift bound for the piece Green's functions**: the two piece
-Green's functions with poles `p₁` and `p₂`, evaluated at the third point
-`p₃`, differ by a shrink-independent constant. The interior maximum
+/-- **The drift bound for the piece Green's functions**, conditional form: when at
+least one of the two poles has an unbounded Green family at `p₃`, the two piece
+Green's functions with poles `p₁` and `p₂`, evaluated at the third point `p₃`,
+differ by a shrink-independent constant for all small enough shrink parameters.
+`exists_pieceGreen_drift_bound` discharges the hypothesis and states the
+unconditional bound. The interior maximum
 principle bounds each piece Green's function off a pole ball by its maximum
 on the pole circle, the two-constants estimate limits the growth of that
 maximum across the chart annulus, and a Harnack chain on a fixed compact
@@ -5665,8 +5681,7 @@ private theorem bipolarGreen_aux1 (D₀ : CoordDisk M) {p₁ p₂ : M}
     have hopen : IsOpen (e₁.target ∩ e₁.symm ⁻¹' (D₀.closedCarrierᶜ ∩ {p₂}ᶜ)) :=
       e₁.isOpen_inter_preimage_symm
         (D₀.isCompact_closedCarrier.isClosed.isOpen_compl.inter isOpen_compl_singleton)
-    have hmem : c₁ ∈ e₁.target ∩ e₁.symm ⁻¹' (D₀.closedCarrierᶜ ∩ {p₂}ᶜ) :=
-        by
+    have hmem : c₁ ∈ e₁.target ∩ e₁.symm ⁻¹' (D₀.closedCarrierᶜ ∩ {p₂}ᶜ) := by
       refine ⟨by rw [hc₁]; exact e₁.map_source hp₁src, ?_⟩
       rw [Set.mem_preimage, hc₁, e₁.left_inv hp₁src]
       exact ⟨hp₁, Set.mem_compl_singleton_iff.2 hne⟩
@@ -6031,12 +6046,10 @@ private theorem bipolarGreen_aux1 (D₀ : CoordDisk M) {p₁ p₂ : M}
       intro z hz
       have h1 := (abs_le.1 (hKbd z (Or.inl (Or.inr hz)))).1
       linarith only [h1]
-    have hsubCar1 : (chartAt ℂ p₁).symm '' closedBall (chartAt ℂ p₁ p₁) r₁ ⊆ Car1 :=
-        by
+    have hsubCar1 : (chartAt ℂ p₁).symm '' closedBall (chartAt ℂ p₁ p₁) r₁ ⊆ Car1 := by
       rw [hCar1]
       exact Set.image_mono (closedBall_subset_closedBall (by linarith only [hr₁]))
-    have hsubCar2 : (chartAt ℂ p₂).symm '' closedBall (chartAt ℂ p₂ p₂) r₂ ⊆ Car2 :=
-        by
+    have hsubCar2 : (chartAt ℂ p₂).symm '' closedBall (chartAt ℂ p₂ p₂) r₂ ⊆ Car2 := by
       rw [hCar2]
       exact Set.image_mono (closedBall_subset_closedBall (by linarith only [hr₂]))
     have hdisj12 : ∀ y ∈ (chartAt ℂ p₁).symm '' closedBall (chartAt ℂ p₁ p₁) r₁,
@@ -8009,8 +8022,7 @@ theorem exists_bipolarGreen [SecondCountableTopology M] (D₀ : CoordDisk M)
   have hpole1 : ∀ n, ∃ h : ℂ → ℝ, HarmonicOnNhd h (ball c₁ (2 * r₁)) ∧
       (∀ w ∈ ball c₁ (2 * r₁) \ {c₁},
         h w = Gs n (e₁.symm w) + Real.log ‖w - c₁‖) ∧
-      ∀ w ∈ ball c₁ (2 * r₁), |h w| ≤ C₀ + (|Real.log r₁| + |Real.log (2 * r₁)|) :=
-          by
+      ∀ w ∈ ball c₁ (2 * r₁), |h w| ≤ C₀ + (|Real.log r₁| + |Real.log (2 * r₁)|) := by
     intro n
     obtain ⟨h, hharm, hval, hbd⟩ := bipolarGreen_aux2 D₀ hr₁ hr₂ htgt1 hav1
       (fun w hw => (hav2 w hw).1) hdisj12' (t n) (ht0 n) (ht1 n)
@@ -8019,8 +8031,7 @@ theorem exists_bipolarGreen [SecondCountableTopology M] (D₀ : CoordDisk M)
   have hpole2 : ∀ n, ∃ h : ℂ → ℝ, HarmonicOnNhd h (ball c₂ (2 * r₂)) ∧
       (∀ w ∈ ball c₂ (2 * r₂) \ {c₂},
         h w = -Gs n (e₂.symm w) + Real.log ‖w - c₂‖) ∧
-      ∀ w ∈ ball c₂ (2 * r₂), |h w| ≤ C₀ + (|Real.log r₂| + |Real.log (2 * r₂)|) :=
-          by
+      ∀ w ∈ ball c₂ (2 * r₂), |h w| ≤ C₀ + (|Real.log r₂| + |Real.log (2 * r₂)|) := by
     intro n
     obtain ⟨h, hharm, hval, hbd⟩ := bipolarGreen_aux2 D₀ hr₂ hr₁ htgt2
       (fun w hw => ⟨(hav2 w hw).1,
@@ -9195,8 +9206,7 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
           ‖w‖ = Real.exp (-(G x))) ∧
         (x = p₁ → ψ x = ((0 : ℂ) : ℂ̂)) ∧ (x = p₂ → ψ x = OnePoint.infty)) :=
     ⟨_, fun _ _ => Iff.rfl⟩
-  have hfin : ∀ (ψ : M → ℂ̂) (y : M), Q ψ y → y ≠ p₂ → ψ y ≠ OnePoint.infty :=
-      by
+  have hfin : ∀ (ψ : M → ℂ̂) (y : M), Q ψ y → y ≠ p₂ → ψ y ≠ OnePoint.infty := by
     intro ψ y hq hy2
     rw [hQ] at hq
     by_cases hy1 : y = p₁
@@ -9438,8 +9448,7 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
     obtain ⟨O, hOS, hO, hxO⟩ := mem_nhds_iff.mp hS
     exact ⟨O, hO, hxO, fun z hz => (hSeq.mono hOS).eventuallyEq_of_mem (hO.mem_nhds hz)⟩
   have hQopen : ∀ (ψ : M → ℂ̂) (x : M), (∀ᶠ y in 𝓝 x, Q ψ y) →
-      ∃ W : Set M, IsOpen W ∧ x ∈ W ∧ ∀ z ∈ W, Q ψ z ∧ ∀ᶠ y in 𝓝 z, Q ψ y :=
-          by
+      ∃ W : Set M, IsOpen W ∧ x ∈ W ∧ ∀ z ∈ W, Q ψ z ∧ ∀ᶠ y in 𝓝 z, Q ψ y := by
     intro ψ x h
     obtain ⟨S, hSnh, hSQ⟩ := eventually_iff_exists_mem.mp h
     obtain ⟨W, hWS, hWo, hxW⟩ := mem_nhds_iff.mp hSnh
@@ -10174,8 +10183,7 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
           _ < dfun (t : ℝ) := by linarith
     choose! tc htcI htcwin htcs using hassign
     -- segment membership and distance comparison
-    have hsegI : ∀ σ, min s₀ s' ≤ σ → σ ≤ max s₀ s' → σ ∈ Set.Icc (0:ℝ) 1 :=
-        by
+    have hsegI : ∀ σ, min s₀ s' ≤ σ → σ ≤ max s₀ s' → σ ∈ Set.Icc (0:ℝ) 1 := by
       intro σ h1 h2
       constructor
       · rcases le_total s₀ s' with h | h
@@ -10184,8 +10192,7 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
       · rcases le_total s₀ s' with h | h
         · rw [max_eq_right h] at h2; linarith [hs'.2]
         · rw [max_eq_left h] at h2; linarith [hs₀.2]
-    have habs : ∀ σ, min s₀ s' ≤ σ → σ ≤ max s₀ s' → |σ - s₀| ≤ |s' - s₀| :=
-        by
+    have habs : ∀ σ, min s₀ s' ≤ σ → σ ≤ max s₀ s' → |σ - s₀| ≤ |s' - s₀| := by
       intro σ h1 h2
       rcases le_total s₀ s' with hle | hle
       · rw [min_eq_left hle] at h1
@@ -10693,8 +10700,9 @@ theorem exists_bipolar_map [SimplyConnectedSpace M] [SecondCountableTopology M]
     rw [hQ] at h2
     exact h2.2.1 hx1 hx2
 
-/-- **Injectivity of the dipole map**, by the Blaschke comparison against the
-extremal property of the piece Green's functions. -/
+/-- **Injectivity of the dipole map** on a surface carrying no Green's function at
+any point, by the Blaschke comparison against the extremal property of the piece
+Green's functions. -/
 theorem injective_bipolar_map [SimplyConnectedSpace M]
     [SecondCountableTopology M] (hnon : ∀ p₀ : M, ¬ HasGreenFunction p₀)
     {p₁ p₂ : M} (hne : p₁ ≠ p₂) {G : M → ℝ} {φ : M → ℂ̂}
@@ -11094,8 +11102,7 @@ theorem injective_bipolar_map [SimplyConnectedSpace M]
       sphereChartFinite_coe, zero_sub]
     exact div_ne_zero (neg_ne_zero.mpr hw₀0) hu'0
   /- ## Holomorphy of `H` away from the two singular points. -/
-  have hHsm_gen : ∀ x : M, x ≠ q' → x ≠ p₂ → ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω H x :=
-      by
+  have hHsm_gen : ∀ x : M, x ≠ q' → x ≠ p₂ → ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω H x := by
     intro x hx1 hx2
     have hxsrc : x ∈ (chartAt ℂ x).source := mem_chart_source ℂ x
     have hφfin : φ x ≠ OnePoint.infty := fun h => hx2 (hinfty x h)
@@ -11424,8 +11431,7 @@ theorem injective_bipolar_map [SimplyConnectedSpace M]
       -- A chart ball around the pole inside the chart target whose pullback lies in `W0`.
       have hopen1 : IsOpen ((chartAt ℂ q).target ∩ (chartAt ℂ q).symm ⁻¹' W0) :=
         (chartAt ℂ q).isOpen_inter_preimage_symm hW0open
-      have hmem1 : chartAt ℂ q q ∈ (chartAt ℂ q).target ∩ (chartAt ℂ q).symm ⁻¹' W0 :=
-          by
+      have hmem1 : chartAt ℂ q q ∈ (chartAt ℂ q).target ∩ (chartAt ℂ q).symm ⁻¹' W0 := by
         refine ⟨(chartAt ℂ q).map_source hqsrc, ?_⟩
         rw [Set.mem_preimage, hcq]
         exact hqW0
@@ -12032,8 +12038,7 @@ theorem not_bddAbove_greenFamily_of_compactSpace [CompactSpace M]
       exact (congrArg f (heqOn (hball hw))).symm
   /- ## The punctured filter of a piece maps to the punctured filter of the surface. -/
   have hmapval : ∀ (P : Opens M) (hpP : p₀ ∈ P),
-      Filter.map (Subtype.val : ↥P → M) (𝓝[≠] (⟨p₀, hpP⟩ : ↥P)) = 𝓝[≠] p₀ :=
-          by
+      Filter.map (Subtype.val : ↥P → M) (𝓝[≠] (⟨p₀, hpP⟩ : ↥P)) = 𝓝[≠] p₀ := by
     intro P hpP
     apply le_antisymm
     · intro A hA
@@ -12473,8 +12478,7 @@ theorem not_bddAbove_greenFamily_of_compactSpace [CompactSpace M]
           (hVLharm ⟨y, hyΩ⟩ (Set.mem_univ _))
       · intro n
         exact le_of_le_of_eq ((hid ⟨y, hyΩ⟩).2 n) ((hid ⟨y, hyΩ⟩).1).symm
-  have hgs_all : ∀ y : M, y ≠ p₀ → y ≠ q → MHarmonicAt gs y ∧ ∀ n, V n y ≤ gs y :=
-      by
+  have hgs_all : ∀ y : M, y ≠ p₀ → y ≠ q → MHarmonicAt gs y ∧ ∀ n, V n y ≤ gs y := by
     intro y hyp hyq
     obtain ⟨n₀, hn₀⟩ := hWexh y hyq
     exact hblock n₀ y hn₀ hyp
@@ -13093,8 +13097,7 @@ theorem exists_diffeomorph_opens_of_forall_not_hasGreenFunction
         Filter.map (⇑e.symm) (Filter.map (⇑e ∘ φ ∘ ⇑χ.symm) (𝓝 (χ x))) := by
       rw [Filter.map_congr hev, ← χ.map_nhds_eq hxsrc, Filter.map_map, Filter.map_map]
       rfl
-    have h7 : 𝓝 (φ x) = Filter.map (⇑e.symm) (𝓝 ((⇑e ∘ φ ∘ ⇑χ.symm) (χ x))) :=
-        by
+    have h7 : 𝓝 (φ x) = Filter.map (⇑e.symm) (𝓝 ((⇑e ∘ φ ∘ ⇑χ.symm) (χ x))) := by
       rw [hgx, e.symm_map_nhds_eq hφxsrc]
     rw [h6, h7]
     exact Filter.map_mono hle
@@ -13112,8 +13115,7 @@ theorem exists_diffeomorph_opens_of_forall_not_hasGreenFunction
   /- ## Inverse smoothness: read the inverse through the sphere chart at the
   image point and a surface chart at the preimage point, where it is the
   local inverse of an injective analytic plane map. -/
-  have hGsm : ContMDiff 𝓘(ℂ) 𝓘(ℂ) ω (fun y : ↥U => Function.invFun φ (y : ℂ̂)) :=
-      by
+  have hGsm : ContMDiff 𝓘(ℂ) 𝓘(ℂ) ω (fun y : ↥U => Function.invFun φ (y : ℂ̂)) := by
     intro y₀
     obtain ⟨x₀, hφx₀⟩ : ∃ x, φ x = (y₀ : ℂ̂) := y₀.2
     obtain ⟨χ, hx₀src, hχmax⟩ : ∃ χ : OpenPartialHomeomorph M ℂ,
@@ -13187,8 +13189,7 @@ theorem exists_diffeomorph_opens_of_forall_not_hasGreenFunction
       rw [hηg w hwB]
       exact hwB
     -- Continuity of the inverse reading, from openness of the reading.
-    have hηc : ∀ ζ ∈ (⇑e ∘ φ ∘ ⇑χ.symm) '' ball (χ x₀) r, ContinuousAt η ζ :=
-        by
+    have hηc : ∀ ζ ∈ (⇑e ∘ φ ∘ ⇑χ.symm) '' ball (χ x₀) r, ContinuousAt η ζ := by
       intro ζ hζ
       obtain ⟨w, hwB, rfl⟩ := himg ζ hζ
       have hgoal : Filter.Tendsto η (𝓝 ((⇑e ∘ φ ∘ ⇑χ.symm) w)) (𝓝 w) := by

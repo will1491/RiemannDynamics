@@ -54,9 +54,12 @@ The degree of the resulting rational map is `max(deg P', deg Q')`.
   composition of the underlying maps, when the inner map is nonconstant.
 * `RationalData.composeRational_degree_eq` — the degree is multiplicative under
   composition of nonconstant maps.
-* `isRational_comp` — rational maps are closed under composition.
-* `degreeOfRational_comp` — degree multiplicativity: `degreeOfRational (f ∘ g)
-  = degreeOfRational f * degreeOfRational g`.
+* `isRational_comp` — rational maps are closed under composition, provided the
+  inner map is nonconstant.
+* `degreeOfRational_comp` — degree multiplicativity for nonconstant maps:
+  `degreeOfRational (f ∘ g) = degreeOfRational f * degreeOfRational g`.
+* `degreeOfRational_eq_of_witness` — `degreeOfRational` agrees with
+  `RationalData.degree` for any witness producing the map.
 
 ## Implementation notes
 
@@ -132,16 +135,17 @@ noncomputable def composeNum (r₁ r₂ : RationalData) : ℂ[X] :=
       r₂.numReduced ^ i * r₂.denReduced ^ (r₁.degree - i)
 
 /-- Denominator polynomial of the composition `r₁ ∘ r₂`: the homogenization of
-`r₁.denReduced` to degree `r₁.degree` substituted with `(N₂, D₂)`. -/
+`r₁.denReduced` to degree `r₁.degree` substituted with
+`(r₂.numReduced, r₂.denReduced)`. -/
 noncomputable def composeDen (r₁ r₂ : RationalData) : ℂ[X] :=
   ∑ i ∈ Finset.range (r₁.degree + 1),
     Polynomial.C (r₁.denReduced.coeff i) *
       r₂.numReduced ^ i * r₂.denReduced ^ (r₁.degree - i)
 
 /-- The composition of two rational data as a rational map. When the composed
-denominator is nonzero (which holds whenever `r₂.degree ≥ 1`), it is taken
+denominator is nonzero (which holds whenever `1 ≤ r₂.degree`), it is taken
 directly; otherwise we fall back to `r₁` to keep the type total. The
-`r₂.degree ≥ 1` case is the only one with meaningful semantics; see
+`1 ≤ r₂.degree` case is the only one with meaningful semantics; see
 `composeRational_toSphereMap_eq` and `composeRational_degree_eq`. -/
 noncomputable def composeRational (r₁ r₂ : RationalData) : RationalData :=
   if h : composeDen r₁ r₂ ≠ 0 then
@@ -299,8 +303,8 @@ noncomputable def degreeOfRational (f : ℂ̂ → ℂ̂) : ℕ :=
 
 /-! ## Basic theorems -/
 
-/-- A rational map extends uniquely from its `RationalData`: any two
-`RationalData` values producing the same `ℂ̂ → ℂ̂` map have equal `degree`. -/
+/-- The degree of a rational map is well defined: any two `RationalData` values
+producing the same map `ℂ̂ → ℂ̂` have equal `degree`. -/
 theorem RationalData.degree_eq_of_toSphereMap_eq
     (r₁ r₂ : RationalData) (h : r₁.toSphereMap = r₂.toSphereMap) :
     r₁.degree = r₂.degree := by
@@ -407,8 +411,8 @@ theorem degreeOfRational_eq_of_witness
   apply RationalData.degree_eq_of_toSphereMap_eq
   rw [← hf.choose_spec, ← h]
 
-/-- A rational map sends `ℂ̂` into `ℂ̂` and is `Continuous` for the
-one-point-compactification topology. -/
+/-- The extension of a rational map to `ℂ̂` is continuous for the topology of the
+one-point compactification. -/
 theorem RationalData.continuous_toSphereMap (r : RationalData) :
     Continuous r.toSphereMap := by
   -- Helpers used in multiple cases.
@@ -952,8 +956,8 @@ theorem RationalData.composeRational_toSphereMap_eq (r₁ r₂ : RationalData)
     exact congrFun heq_fn w
 
 /-- Lower bound on the natural degree of the composed polynomials: at least one
-of `composeNum r₁ r₂` or `composeDen r₁ r₂` achieves the product
-`r₁.degree * r₂.degree`. -/
+of `composeNum r₁ r₂` or `composeDen r₁ r₂` has natural degree at least the
+product `r₁.degree * r₂.degree`. -/
 theorem RationalData.mul_degree_le_max_natDegree_composeNum_composeDen
     (r₁ r₂ : RationalData) (h : 1 ≤ r₂.degree) :
     r₁.degree * r₂.degree ≤
