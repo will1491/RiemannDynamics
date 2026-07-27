@@ -76,6 +76,8 @@ def shrink (t : ℝ) (ht : 0 < t) (ht1 : t ≤ 1) : CoordDisk M where
     (closedBall_subset_closedBall
       (by nlinarith [D.radius_pos])).trans D.closedBall_subset
 
+/-- The closed disk of a coordinate disk is compact: it is the image of a compact closed ball of
+`ℂ` under the inverse chart, which is continuous on the chart target. -/
 theorem isCompact_closedCarrier : IsCompact D.closedCarrier :=
   (isCompact_closedBall _ _).image_of_continuousOn
     ((chartAt ℂ D.center).continuousOn_symm.mono D.closedBall_subset)

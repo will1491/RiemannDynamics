@@ -55,11 +55,15 @@ namespace RiemannDynamics
 
 variable {V : Type*} [NormedAddCommGroup V]
 
+/-- The square of the `ℝ≥0∞`-valued norm of a vector is `ENNReal.ofReal` of the squared real
+norm. -/
 theorem nnnorm_sq_eq (v : V) : (‖v‖₊ : ℝ≥0∞) ^ 2 = ENNReal.ofReal (‖v‖ ^ 2) := by
   have h1 : (‖v‖₊ : ℝ≥0∞) = ENNReal.ofReal ‖v‖ := by
     rw [← enorm_eq_nnnorm]; exact (ofReal_norm v).symm
   rw [h1, ENNReal.ofReal_pow (norm_nonneg v)]
 
+/-- Transfer to `ℝ≥0∞` of an inequality between two sums of squared real norms: since all four
+quantities are nonnegative, the real inequality survives `ENNReal.ofReal`. -/
 theorem enn_sq_add_le {a b c d : V} (h : ‖a‖ ^ 2 + ‖b‖ ^ 2 ≤ ‖c‖ ^ 2 + ‖d‖ ^ 2) :
     (‖a‖₊ : ℝ≥0∞) ^ 2 + (‖b‖₊ : ℝ≥0∞) ^ 2 ≤ (‖c‖₊ : ℝ≥0∞) ^ 2 + (‖d‖₊ : ℝ≥0∞) ^ 2 := by
   rw [nnnorm_sq_eq a, nnnorm_sq_eq b, nnnorm_sq_eq c, nnnorm_sq_eq d,
@@ -70,6 +74,13 @@ theorem enn_sq_add_le {a b c d : V} (h : ‖a‖ ^ 2 + ‖b‖ ^ 2 ≤ ‖c‖ ^
 section MasterPointwise
 variable {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E]
 
+/-- **Pointwise two-point derivative inequality.** For `f, g : E → ℝ` differentiable at `x`,
+replacing the pair `(f, g)` by `(max f g, min f g)` does not increase the sum of the squared
+derivative norms at `x`. If `f x ≠ g x` the two functions are locally ordered, so the pair of
+derivatives is `(fderiv f, fderiv g)` up to a swap. If `f x = g x`, then either `max` and `min`
+are both non-differentiable at `x` (their `fderiv` is then `0` by convention and the bound is
+trivial), or the nonnegative function `max - min` has a local minimum at `x`, forcing
+`fderiv max = fderiv min = ½ (fderiv f + fderiv g)`, and the triangle inequality closes it. -/
 theorem master_pointwise (f g : E → ℝ) (x : E)
     (hf : DifferentiableAt ℝ f x) (hg : DifferentiableAt ℝ g x) :
     ‖fderiv ℝ (fun y => max (f y) (g y)) x‖ ^ 2 + ‖fderiv ℝ (fun y => min (f y) (g y)) x‖ ^ 2
@@ -144,6 +155,8 @@ theorem master_pointwise (f g : E → ℝ) (x : E)
 
 end MasterPointwise
 
+/-- The real axis is Lebesgue-null in the plane: it is the kernel of the `ℝ`-linear map
+`Complex.imLm`, hence a proper `ℝ`-submodule of `ℂ`, and proper submodules are Haar-null. -/
 theorem axis_null : volume {z : ℂ | z.im = 0} = 0 := by
   have he : {z : ℂ | z.im = 0} = (LinearMap.ker Complex.imLm : Submodule ℝ ℂ) := by
     ext z; simp [Complex.imLm, LinearMap.mem_ker]
@@ -153,6 +166,8 @@ theorem axis_null : volume {z : ℂ | z.im = 0} = 0 := by
   have : (Complex.I : ℂ) ∈ (LinearMap.ker Complex.imLm : Submodule ℝ ℂ) := by rw [h]; trivial
   simp [LinearMap.mem_ker, Complex.imLm] at this
 
+/-- The closed lower half-plane and the open lower half-plane are almost everywhere equal: they
+differ exactly by the real axis, which is null. -/
 theorem lower_ae : ({z : ℂ | z.im ≤ 0} : Set ℂ) =ᵐ[volume] {z : ℂ | z.im < 0} := by
   refine (MeasureTheory.ae_eq_set.mpr ⟨?_, ?_⟩)
   · have hdiff : {z : ℂ | z.im ≤ 0} \ {z : ℂ | z.im < 0} ⊆ {z : ℂ | z.im = 0} := by
@@ -167,6 +182,9 @@ theorem lower_ae : ({z : ℂ | z.im ≤ 0} : Set ℂ) =ᵐ[volume] {z : ℂ | z.
       intro h; linarith
     rw [this]; simp
 
+/-- **Splitting the plane along the real axis.** Any `ℝ≥0∞`-valued integral over `ℂ` is the sum of
+the integrals over the open upper and the open lower half-plane; nothing is lost because the
+separating real axis is null. -/
 theorem split_plane (f : ℂ → ℝ≥0∞) :
     ∫⁻ w, f w = (∫⁻ w in {z : ℂ | 0 < z.im}, f w) + (∫⁻ w in {z : ℂ | z.im < 0}, f w) := by
   have hU : MeasurableSet {z : ℂ | 0 < z.im} :=
@@ -178,18 +196,25 @@ theorem split_plane (f : ℂ → ℝ≥0∞) :
     ext z; simp [not_lt]
   rw [hc]; exact lower_ae
 
+/-- Complex conjugation preserves planar Lebesgue measure: it is the linear isometry equivalence
+`Complex.conjLIE`, and linear isometry equivalences are measure preserving. -/
 theorem conj_mp : MeasurePreserving (starRingEnd ℂ) volume volume := by
   have : (starRingEnd ℂ : ℂ → ℂ) = (Complex.conjLIE : ℂ → ℂ) := by
     funext z; exact (Complex.conjLIE_apply z).symm
   rw [this]
   exact LinearIsometryEquiv.measurePreserving Complex.conjLIE
 
+/-- Complex conjugation is a measurable embedding of `ℂ`, being a homeomorphism of the plane. -/
 theorem conj_emb : MeasurableEmbedding (starRingEnd ℂ) := by
   have : (starRingEnd ℂ : ℂ → ℂ) = (Complex.conjLIE : ℂ → ℂ) := by
     funext z; exact (Complex.conjLIE_apply z).symm
   rw [this]
   exact Complex.conjLIE.toHomeomorph.measurableEmbedding
 
+/-- **Folding the lower half-plane onto the upper one.** Changing variables by conjugation,
+integrating `f ∘ conj` over the open upper half-plane gives the same value as integrating `f`
+over the open lower half-plane, since conjugation is a measure-preserving measurable embedding
+that maps one half-plane onto the other. -/
 theorem lower_sub_upper (f : ℂ → ℝ≥0∞) :
     ∫⁻ a in {z : ℂ | 0 < z.im}, f ((starRingEnd ℂ) a)
       = ∫⁻ b in {z : ℂ | z.im < 0}, f b := by

@@ -210,6 +210,9 @@ theorem msubharmonicAt_iff_of_mem_maximalAtlas {v : M → ℝ} {x : M}
 /-! ## Basic stability -/
 
 omit [IsManifold 𝓘(ℂ) ω M] in
+/-- A function harmonic at a point of a surface is subharmonic there: harmonicity of the chart
+reading propagates to a whole ball inside the chart target, and harmonic functions are
+subharmonic. -/
 theorem MHarmonicAt.msubharmonicAt {u : M → ℝ} {x : M} (hu : MHarmonicAt u x) :
     MSubharmonicAt u x := by
   have hu' : HarmonicAt (u ∘ (chartAt ℂ x).symm) (chartAt ℂ x x) := hu
@@ -223,6 +226,8 @@ theorem MHarmonicAt.msubharmonicAt {u : M → ℝ} {x : M} (hu : MHarmonicAt u x
 /- 2 -/
 
 omit [IsManifold 𝓘(ℂ) ω M] in
+/-- A function subharmonic at a point of a surface is continuous there: its chart reading is
+continuous on a ball around the chart image, and the chart itself is continuous at the point. -/
 theorem MSubharmonicAt.continuousAt {v : M → ℝ} {x : M}
     (hv : MSubharmonicAt v x) : ContinuousAt v x := by
   obtain ⟨r, hr, -, hsh⟩ := hv
@@ -237,6 +242,8 @@ theorem MSubharmonicAt.continuousAt {v : M → ℝ} {x : M}
 /- 3 -/
 
 omit [IsManifold 𝓘(ℂ) ω M] in
+/-- A function harmonic at a point of a surface is continuous there: its chart reading is
+continuous at the chart image, and the chart itself is continuous at the point. -/
 theorem MHarmonicAt.continuousAt {u : M → ℝ} {x : M} (hu : MHarmonicAt u x) :
     ContinuousAt u x := by
   have hu' : HarmonicAt (u ∘ (chartAt ℂ x).symm) (chartAt ℂ x x) := hu
@@ -268,6 +275,8 @@ theorem MSubharmonicAt.max {v w : M → ℝ} {x : M} (hv : MSubharmonicAt v x)
 /- 5 -/
 
 omit [IsManifold 𝓘(ℂ) ω M] in
+/-- The sum of two functions harmonic at a point of a surface is harmonic at that point, since
+the chart reading of `u + v` is the sum of the chart readings. -/
 theorem MHarmonicAt.add {u v : M → ℝ} {x : M} (hu : MHarmonicAt u x)
     (hv : MHarmonicAt v x) : MHarmonicAt (u + v) x := by
   have hu' : HarmonicAt (u ∘ (chartAt ℂ x).symm) (chartAt ℂ x x) := hu
@@ -277,6 +286,7 @@ theorem MHarmonicAt.add {u v : M → ℝ} {x : M} (hu : MHarmonicAt u x)
 /- 6 -/
 
 omit [IsManifold 𝓘(ℂ) ω M] in
+/-- The negative of a function harmonic at a point of a surface is harmonic at that point. -/
 theorem MHarmonicAt.neg {u : M → ℝ} {x : M} (hu : MHarmonicAt u x) :
     MHarmonicAt (-u) x := by
   have hu' : HarmonicAt (u ∘ (chartAt ℂ x).symm) (chartAt ℂ x x) := hu
@@ -285,6 +295,8 @@ theorem MHarmonicAt.neg {u : M → ℝ} {x : M} (hu : MHarmonicAt u x) :
 /- 7 -/
 
 omit [IsManifold 𝓘(ℂ) ω M] in
+/-- Constant functions are harmonic at every point of a surface: their chart reading is again a
+constant, which is harmonic in the plane. -/
 theorem mharmonicAt_const {x : M} {a : ℝ} : MHarmonicAt (fun _ => a) x := by
   exact harmonicAt_const a
 
