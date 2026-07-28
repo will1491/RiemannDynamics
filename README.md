@@ -13,69 +13,6 @@ sorry-free and depends only on the three standard Lean axioms (`propext`,
 5. **Covering property of the triply-punctured sphere by the unit disk** — [`modularLambda_isCoveringMapOn`](RiemannDynamics/Hyperbolic/ModularCoveringMap/CoveringAssembly.lean#L1498): the modular function `λ` is a covering map of `ℂ ∖ {0, 1}` (`= ℂ̂ ∖ {0, 1, ∞}`) from `𝔻`.
 6. **Schwarz–Pick inequality** — [`schwarzPick`](RiemannDynamics/Hyperbolic/DiskModel/SchwarzPick.lean#L89): a holomorphic self-map of the open unit disk is non-expansive for the Poincaré hyperbolic distance.
 
-## Project Structure
-```mermaid
-flowchart BT
-    subgraph Foundations [Inherited Foundations]
-        DirMathlib[Mathlib]
-        DirRMT4[RMT4]
-        DirCarleson[Carleson]
-        DirMathlib --> DirRMT4
-        DirMathlib --> DirCarleson
-    end
-
-    subgraph DynamicsLine [Dynamics Line]
-        DirSphere[Sphere]
-        DirNF[NormalFamilies]
-        DirHyp[Hyperbolic]
-        DirSM[StrongMontel]
-        DirJF[JuliaFatou]
-        DirFC[FatouComponents]
-
-        DirSphere --> DirNF
-        DirNF --> DirSM
-        DirHyp --> DirSM
-        DirSM --> DirJF
-        DirJF --> DirFC
-    end
-
-    subgraph AnalyticEngine [Analytic Engine]
-        DirSob[Sobolev]
-        DirSI[SingularIntegral]
-        DirQC[QC]
-        DirMRMT[QC/MRMT]
-
-        DirSob --> DirSI
-        DirSI --> DirQC
-        DirQC --> DirMRMT
-    end
-
-    DirNWD[NoWanderingDomains]
-    DirFC --> DirNWD
-    DirMRMT --> DirNWD
-
-    subgraph TeichPath [Teichmüller Path]
-        DirUnif[Uniformization]
-        DirSurf[Surface]
-        DirTeich[Teichmuller]
-        DirQD[QuadraticDifferential]
-        DirNT[NielsenThurston]
-
-        DirUnif --> DirTeich
-        DirSurf --> DirTeich
-        DirQD --> DirTeich
-        DirTeich --> DirNT
-    end
-
-    DirNWD --> DirUnif
-    DirMRMT --> DirTeich
-
-    DirRMT4 --> DirNF
-    DirRMT4 --> DirHyp
-    DirMathlib --> DirSob
-    DirCarleson --> DirSI
-```
-
 ## Foundations
 
 Built on Mathlib, plus two vendored projects consumed directly rather than re-derived:
