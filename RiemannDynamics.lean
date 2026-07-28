@@ -14,7 +14,10 @@ import RiemannDynamics.Analysis.GrotzschRing.GrotzschPotential
 import RiemannDynamics.Analysis.GrotzschRing.GrotzschTipRegularity
 import RiemannDynamics.Analysis.GrotzschRing.MetricExtraction
 import RiemannDynamics.Analysis.GrotzschRing.RingPotential
-import RiemannDynamics.Analysis.GrotzschRing.SequentialIBP
+import RiemannDynamics.Analysis.GrotzschRing.SequentialIBP.Basic
+import RiemannDynamics.Analysis.GrotzschRing.SequentialIBP.FluxFTC
+import RiemannDynamics.Analysis.GrotzschRing.SequentialIBP.LevelSetNullity
+import RiemannDynamics.Analysis.GrotzschRing.SequentialIBP.TruncatedFlux
 import RiemannDynamics.Analysis.Helpers.ArcLengthVariation
 import RiemannDynamics.Analysis.Helpers.MoreauYosida
 import RiemannDynamics.Analysis.Helpers.RectangleCrossing
