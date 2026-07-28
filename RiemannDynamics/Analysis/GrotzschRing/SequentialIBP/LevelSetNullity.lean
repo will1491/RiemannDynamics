@@ -1313,45 +1313,6 @@ theorem truncRoughFlux_sub_le_dirichletEnergy {u : ℂ → ℝ} {U : Set ℂ} {�
   have hEnn : ∀ ξ, 0 ≤ E ξ := fun ξ =>
     setIntegral_nonneg (isOpen_angularSlice hVopen ξ).measurableSet
       fun θ _ => Complex.normSq_nonneg _
-  -- The moving-domain flux-energy FTC for the truncated flux.
-  -- Route (absolute-continuity FTC, avoiding an every-point radial derivative):
-  --   (1) truncRoughFlux u U d . = the theta-integral of windowedTruncIntegrand (.+theta i) on the
-  --       window (windowedTruncIntegrand is continuous on the strip box, by
-  --       continuousOn_windowedTruncIntegrand, and its radial (u-d)^+ / Re expGrad factors are
-  --       Lipschitz on the compact slab K = closure(V cap window) subset U), so truncRoughFlux u U
-  --       d is Lipschitz, hence absolutely continuous on [z1, z2]
-  --       (LipschitzOnWith.absolutelyContinuousOnInterval);
-  --   (2) AbsolutelyContinuousOnInterval.integral_deriv_eq_sub gives
-  --       (integral of deriv (truncRoughFlux u U d)) = truncRoughFlux .. z2 - truncRoughFlux .. z1;
-  --   (3) for a.e. xi, the strip-box Lipschitz DUI
-  --       (hasDerivAt_integral_of_dominated_loc_of_lip) yields
-  --       HasDerivAt (truncRoughFlux u U d) (E xi) xi: its radial product rule gives
-  --       (Re expGrad)^2 + (u-d)^+ * Re (deriv expGrad) on the slice and 0 off it, whose slice
-  --       integral is E xi after setIntegral_slice_posPart_re_deriv_expGrad; therefore
-  --       deriv (truncRoughFlux u U d) = E a.e. and (integral of deriv) = (integral of E).
-  -- STEP A (LANDED): a.e.-xi angular slice nullity (`levelSet_volume_zero` +
-  -- `ae_angularSlice_levelSet_null`), which needs `u` nowhere locally gradient-constant on `U`.
-  -- STEP B (LANDED): `truncRoughFlux_eq_integral_windowedTruncIntegrand`.
-  -- STEP C (LANDED): the branch-cut-free theta-IBP
-  -- `setIntegral_slice_posPart_re_deriv_expGrad`:
-  --   `int_slice (u-d)^+ Re(deriv expGrad) = int_slice (Im expGrad)^2`, valid even when `{u>d}`
-  -- straddles the +-pi cut (full-circle case = periodic IBP
-  -- `integral_full_posPart_re_deriv_expGrad`; proper case = rotate to a window `(a, a+2pi)` whose
-  -- seam escapes `{u>d}`, arc-decompose via `setIntegral_windowSlice_posPart_re_deriv_expGrad`,
-  -- transfer back by 2pi-periodicity).
-  --
-  -- REMAINING (DUI + AC-FTC assembly, still to be built):
-  --   (i) `truncRoughFlux u U d` is Lipschitz on `[z1, z2]` (strip-box bound of the xi-partial of
-  --       `windowedTruncIntegrand` on the compact slab K = closure(V cap window) subset U), hence
-  --       AC (`LipschitzOnWith.absolutelyContinuousOnInterval`);
-  --   (ii) at a.e. xi the strip-box Lipschitz DUI
-  --       (`hasDerivAt_integral_of_dominated_loc_of_lip`) gives `HasDerivAt (truncRoughFlux u U d)`
-  --       with value `int_theta [1_{u>d}(Re expGrad)^2 + (u-d)^+ Re(deriv expGrad)]` (off the null
-  --       level slice from STEP A the posPart is locally smooth), which STEP C rewrites to `E xi`;
-  --   (iii) so `deriv (truncRoughFlux u U d) = E` a.e., and
-  --       `AbsolutelyContinuousOnInterval.integral_deriv_eq_sub` closes the FTC.
-  -- STEP A needs `u` nowhere locally gradient-constant on `U`, a hypothesis absent from this
-  -- theorem (it must be threaded from the ring data of `slope_le_energy_ringPotential'''`).
   have hFTC : truncRoughFlux u U δ ζ₂ - truncRoughFlux u U δ ζ₁ = ∫ ξ in ζ₁..ζ₂, E ξ := by
     -- level-set nullity: a.e.-ξ the angular slice meets `{u = δ}` in a null set
     have hLmeas : MeasurableSet {z : ℂ | z ∈ U ∧ u z = δ} := by

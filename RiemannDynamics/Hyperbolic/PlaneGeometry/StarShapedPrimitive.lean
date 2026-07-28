@@ -1,7 +1,7 @@
 /-
-Copyright (c) 2026 Will Li. All rights reserved.
+Copyright (c) 2026 Will (Ziang) Li. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Will Li
+Authors: Will (Ziang) Li
 -/
 import Mathlib.Analysis.Complex.CauchyIntegral
 import Mathlib.Analysis.Complex.HasPrimitives

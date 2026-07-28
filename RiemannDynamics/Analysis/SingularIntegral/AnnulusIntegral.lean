@@ -1,3 +1,8 @@
+/-
+Copyright (c) 2026 Will (Ziang) Li. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Will (Ziang) Li
+-/
 import Mathlib.MeasureTheory.Measure.Lebesgue.Complex
 import Mathlib.Analysis.SpecialFunctions.PolarCoord
 import Mathlib.Analysis.SpecialFunctions.Integrals.Basic
