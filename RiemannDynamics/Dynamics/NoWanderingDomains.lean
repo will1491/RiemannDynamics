@@ -445,11 +445,12 @@ theorem not_isWandering_of_injective_package
 /-! ## The theorem -/
 
 /-- **Sullivan's No Wandering Domains theorem.** No Fatou component of a
-rational map of degree at least two wanders: normalize by the eventual
-injectivity package, bridge the map to a `RationalData` witness, and apply
-the contradiction core — noting that if the relabeled component
-`fcOrbit f U N` were shown non-wandering while `U` wandered, the orbit
-disjointness of `U` would be violated. -/
+rational map of degree at least two wanders. Bridge the map to a
+`RationalData` witness, then normalize: `exists_wandering_injective_package`
+returns a later orbit component `fcOrbit f U N` that still wanders and on
+which every iterate is injective, its orbit avoiding `∞` and the critical
+points. The contradiction core refutes the wandering of *that* component,
+which the package supplies directly — no descent back to `U` is needed. -/
 theorem sullivan_no_wandering_domains {f : ℂ̂ → ℂ̂}
     (hf : IsRational f) (hd : 2 ≤ degreeOfRational f) :
     ∀ U : Set ℂ̂, IsFatouComponent f U → ¬ IsWandering f U := by
