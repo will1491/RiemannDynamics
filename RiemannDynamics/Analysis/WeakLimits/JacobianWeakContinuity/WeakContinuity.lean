@@ -17,7 +17,7 @@ lower semicontinuity of a weighted `L²` energy and shows that a weak directiona
 survives a locally uniform limit. Weak convergence is throughout the integral-pairing predicate
 `TendstoWeaklyL2` or its compactly supported form `TendstoWeaklyL2Loc`. The exported results feed
 `RiemannDynamics.QC.Calculus.AnalyticClosedness`, and `hasWeakDirDeriv_of_tendsto` also
-`RiemannDynamics.QC.MRMT.NeumannSeries`.
+`RiemannDynamics.QC.MRMT.NeumannSeries.PrincipalSolution`.
 
 ## Main results
 

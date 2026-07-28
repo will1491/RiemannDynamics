@@ -174,7 +174,8 @@ import RiemannDynamics.QC.LengthArea.ReverseLengthArea
 import RiemannDynamics.QC.LengthArea.ReverseLengthAreaEnergy
 import RiemannDynamics.QC.MRMT.AnalyticDependence
 import RiemannDynamics.QC.MRMT.Existence
-import RiemannDynamics.QC.MRMT.NeumannSeries
+import RiemannDynamics.QC.MRMT.NeumannSeries.CauchyTransform
+import RiemannDynamics.QC.MRMT.NeumannSeries.PrincipalSolution
 import RiemannDynamics.QC.MRMT.Uniqueness
 import RiemannDynamics.QC.Regularity.DirichletPrinciple
 import RiemannDynamics.QC.Regularity.GeometricConditionN
