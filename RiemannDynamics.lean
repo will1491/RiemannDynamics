@@ -67,7 +67,8 @@ import RiemannDynamics.Analysis.Symmetrization.CircularRearrangement
 import RiemannDynamics.Analysis.Symmetrization.Isoperimetric
 import RiemannDynamics.Analysis.Symmetrization.PolyaSzego1D
 import RiemannDynamics.Analysis.Symmetrization.Rearrangement1D
-import RiemannDynamics.Analysis.WeakLimits.JacobianWeakContinuity
+import RiemannDynamics.Analysis.WeakLimits.JacobianWeakContinuity.NullLagrangian
+import RiemannDynamics.Analysis.WeakLimits.JacobianWeakContinuity.WeakContinuity
 import RiemannDynamics.Analysis.WeakLimits.WeakCompactness
 import RiemannDynamics.Analysis.WeakLimits.WeakL2Limit
 import RiemannDynamics.Analysis.Winding.Basic
