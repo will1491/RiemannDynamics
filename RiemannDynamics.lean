@@ -1,6 +1,8 @@
 import RiemannDynamics.Analysis.Baernstein.BaernsteinComparison
 import RiemannDynamics.Analysis.Baernstein.BaernsteinN16
-import RiemannDynamics.Analysis.Baernstein.CircularPolyaSzego
+import RiemannDynamics.Analysis.Baernstein.CircularPolyaSzego.ArcComparison
+import RiemannDynamics.Analysis.Baernstein.CircularPolyaSzego.Basic
+import RiemannDynamics.Analysis.Baernstein.CircularPolyaSzego.Subharmonicity
 import RiemannDynamics.Analysis.Baernstein.CircularPolyaSzegoExtension
 import RiemannDynamics.Analysis.GrotzschRing.FluxEnergy
 import RiemannDynamics.Analysis.GrotzschRing.GrotzschEnergy
