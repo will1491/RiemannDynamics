@@ -115,8 +115,12 @@ theorem fcOrbit_zero {U : Set ℂ̂} (h : IsFatouComponent f U) :
     refine ⟨x, hxU, ?_⟩
     exact mem_connectedComponentIn (connectedComponentIn_subset F w₀ hxU)
 
-/-- On a Fatou component the orbit set collapses to the connected component
-of the Fatou set through the image of any representative point. -/
+/-- On a Fatou component of a nonconstant rational map the orbit set collapses to the
+connected component of the Fatou set through the image of any representative point — so
+`fcOrbit f U n` really is a single Fatou component, not a union of several. Rationality is
+needed, not incidental: the proof runs on `f` being an open map, which is what carries the
+connected set `f^[n] '' U` into one component and keeps it inside the Fatou set. For a
+general continuous `f` the union need not collapse. -/
 theorem fcOrbit_eq_connectedComponentIn {U : Set ℂ̂} {z : ℂ̂} (n : ℕ)
     (hf : IsRational f) (hd : 1 ≤ degreeOfRational f)
     (h : IsFatouComponent f U) (hz : z ∈ U) :
