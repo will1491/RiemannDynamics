@@ -1,5 +1,7 @@
 # Complex Dynamics, Teichmüller Theory & Hyperbolic Geometry in Lean 4
 
+An ongoing formalization following McMullen's course notes *Riemann surfaces, dynamics and geometry*.
+
 ## Highlighted Theorems
 
 Headline results formalized so far — click to jump to the Lean source. Each is
@@ -25,8 +27,8 @@ No new `axiom`, no `sorry`.
 ## Collaborators
 
 - **Will (Ziang) Li** — primary maintainer; design and formalization.
-- **Ziyang Qin** — Lean 4 expert; technical guidance on tactic infrastructure, Mathlib idioms, and large-scale proof engineering. (See also Ziyang's [differential geometry library](https://github.com/qinz1yang/differential-geometry).)
 - **Yusheng Luo** (Cornell, Department of Mathematics) — mathematical advisor; domain expert in complex dynamics, Teichmüller theory, and hyperbolic geometry.
+- **Ziyang Qin** — Lean 4 expert; technical guidance on tactic infrastructure, Mathlib idioms, and large-scale proof engineering. (See also Ziyang's [differential geometry library](https://github.com/qinz1yang/differential-geometry).)
 
 ## Installation
 
