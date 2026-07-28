@@ -27,7 +27,6 @@ set_option linter.unusedDecidableInType false
 
 /-! ## Eilenberg-Harrold rectifiable-path construction (polygon + chain helpers, inlined) -/
 
-
 /-- Clamp a real number into `[0,1]`. -/
 noncomputable def clmp (τ : ℝ) : ℝ := max 0 (min 1 τ)
 

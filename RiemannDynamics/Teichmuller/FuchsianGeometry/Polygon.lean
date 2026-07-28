@@ -849,8 +849,6 @@ theorem mem_of_strict_side {p q : UpperHalfPlane} (hpq : p ≠ q)
   calc m / 2 < m := by linarith
     _ ≤ ρ := min_le_left _ _
 
-/-! ## The targets: finiteness of sides, side determination, sides are segments -/
-
 /-! ## The structure of sides and vertices -/
 
 /-- The sides are finitely many: a side constrains the domain, so its element lies in the

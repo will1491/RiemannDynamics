@@ -100,8 +100,6 @@ theorem mem_oddSideFunctions {α : (↥Γ) → ℝ} :
       (∀ γ : ↥Γ, α γ⁻¹ = -α γ) ∧ ∀ γ δ : ↥Γ, γ • τ₀ = δ • τ₀ → α γ = α δ :=
   Iff.rfl
 
-/-! ## Generation by side elements -/
-
 /-! ## Tile paths and crossing sums -/
 
 /-- A **tile path**: a finite sequence of group elements in which consecutive tiles share a
@@ -191,8 +189,6 @@ theorem mem_cycleConstrained {α : (↥Γ) → ℝ} :
         IsVertexLoop Γ τ₀ v p → crossingSum α p = 0 :=
   Iff.rfl
 
-/-! ## Path reachability and path independence -/
-
 /-! ## Restriction of characters to side values -/
 
 /-- Restriction of an additive character to its values on side elements, extended by zero:
@@ -212,7 +208,6 @@ noncomputable def restrictSides (Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2
     · simp [Set.indicator_of_notMem h]
 
 /-! ## The rank identity -/
-
 
 /-- Under a translation-length gap, the square of an element moving the basepoint moves the
 basepoint: the element is hyperbolic, the square has trace `t² - 2 > 2`, hence is
@@ -775,7 +770,6 @@ theorem closure_sideElements_eq_top (hΓ : IsFuchsianGroup Γ)
 
 
 /-! ## Crossing-sum list calculus -/
-
 
 /-- The empty path has zero crossing sum. -/
 theorem crossingSum_nil (α : (↥Γ) → ℝ) : crossingSum α ([] : List ↥Γ) = 0 := by

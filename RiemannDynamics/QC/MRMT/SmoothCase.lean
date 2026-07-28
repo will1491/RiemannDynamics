@@ -3192,7 +3192,6 @@ theorem IsPrincipalSolution.inverse_principalSolution_of_contDiff
 
 /-! ## Uniform potential estimates -/
 
-
 /-- **Uniform Hölder bound for the Cauchy transform** — the family-uniform form
 of the proved `cauchyTransform_sub_le_holder`: a constant `C = C(p, R)` with
 

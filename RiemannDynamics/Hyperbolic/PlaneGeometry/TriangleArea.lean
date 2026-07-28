@@ -280,7 +280,7 @@ theorem volume_idealTriangle_norm :
   rw [← idealTriangle_eq_norm_form]
   exact volume_idealTriangle
 
-/-! ## The general wedge -/
+/-! ## Normalizing a wedge to the unit circle -/
 
 /-- The affine map `z ↦ (z - x₀)/r` with `r > 0`, packaged as the element
 `!![1/√r, -x₀/√r; 0, √r]` of `SL(2, ℝ)`. -/
@@ -409,8 +409,6 @@ theorem volume_wedge {x₀ r x₁ x₂ : ℝ} (hr : 0 < r) (h₁ : x₀ - r ≤ 
     _ = ENNReal.ofReal (arcsin ((x₂ - x₀) / r) - arcsin ((x₁ - x₀) / r)) := hU
 
 /-! ## Null carriers: vertical lines -/
-
-/-! ## Geodesic segments are null; triangles are compact -/
 
 /-- Vertical lines in `ℂ` are volume-null. -/
 theorem volume_complex_re_line_eq_zero (r : ℝ) : volume {w : ℂ | w.re = r} = 0 := by
@@ -614,9 +612,6 @@ theorem volume_geodSeg_eq_zero (a b : UpperHalfPlane) : volume (geodSeg a b) = 0
         (volume_vertLine (g • a).re)
     calc volume (geodSeg a b) = volume (g • geodSeg a b) := (volume_smul_sl2 g _).symm
       _ = 0 := by rw [himg]; exact h0
-
-/-! ## The Gauss–Bonnet angle deficit -/
-
 
 /-! ## Compactness -/
 
@@ -1741,6 +1736,8 @@ theorem volume_collinear {v₁ v₂ v₃ : UpperHalfPlane} (h1 : v₁.re = 0)
   rw [hvol0, show π - sectorAngle v₁ v₂ v₃ - sectorAngle v₂ v₁ v₃ - sectorAngle v₃ v₁ v₂
     = 0 from by linarith, ENNReal.ofReal_zero]
 
+/-! ## The Gauss–Bonnet angle deficit -/
+
 /-- Gauss-Bonnet with the base verticalized and the apex to the right. -/
 theorem volume_triangle_pos {w₁ w₂ w₃ : UpperHalfPlane} (h2 : w₂.re = 0)
     (h3 : w₃.re = 0) (hpos : 0 < w₁.re) (h23 : w₂ ≠ w₃) :
@@ -1810,7 +1807,6 @@ theorem volume_hyperbolicTriangle (v₁ v₂ v₃ : UpperHalfPlane) (h₁₂ : v
       (fun h => h23 (by rw [← J_J w₂, h, J_J]))
   · exact volume_collinear hzero h2 h3 h12 h13 h23
   · exact volume_triangle_pos h2 h3 hpos h23
-
 
 /-- The angle deficit of the normalized cone triangle is nonnegative: the wedge over the
 upper circle is contained in the wedge over the lower circle. -/
