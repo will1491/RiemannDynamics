@@ -4,7 +4,9 @@ import RiemannDynamics.Analysis.Baernstein.CircularPolyaSzego.ArcComparison
 import RiemannDynamics.Analysis.Baernstein.CircularPolyaSzego.Basic
 import RiemannDynamics.Analysis.Baernstein.CircularPolyaSzego.Subharmonicity
 import RiemannDynamics.Analysis.Baernstein.CircularPolyaSzegoExtension
-import RiemannDynamics.Analysis.GrotzschRing.FluxEnergy
+import RiemannDynamics.Analysis.GrotzschRing.FluxEnergy.BankRegularity
+import RiemannDynamics.Analysis.GrotzschRing.FluxEnergy.Basic
+import RiemannDynamics.Analysis.GrotzschRing.FluxEnergy.SlitFlux
 import RiemannDynamics.Analysis.GrotzschRing.GrotzschEnergy
 import RiemannDynamics.Analysis.GrotzschRing.GrotzschKeystone
 import RiemannDynamics.Analysis.GrotzschRing.GrotzschModulusComparison

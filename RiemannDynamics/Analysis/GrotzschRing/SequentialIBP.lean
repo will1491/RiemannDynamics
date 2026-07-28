@@ -1,4 +1,4 @@
-import RiemannDynamics.Analysis.GrotzschRing.FluxEnergy
+import RiemannDynamics.Analysis.GrotzschRing.FluxEnergy.SlitFlux
 
 /-!
 # Sequential integration-by-parts boundary term and the rough-ring flux FTC

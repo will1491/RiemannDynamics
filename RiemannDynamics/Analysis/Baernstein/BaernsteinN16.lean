@@ -6,7 +6,7 @@ Authors: Will (Ziang) Li
 import RiemannDynamics.Analysis.Baernstein.CircularPolyaSzegoExtension
 import RiemannDynamics.Analysis.Baernstein.BaernsteinComparison
 import RiemannDynamics.Analysis.GrotzschRing.GrotzschPotential
-import RiemannDynamics.Analysis.GrotzschRing.FluxEnergy
+import RiemannDynamics.Analysis.GrotzschRing.FluxEnergy.SlitFlux
 
 /-!
 # Baernstein N16: the star comparison `J ≤ 0` and circle-means comparison
