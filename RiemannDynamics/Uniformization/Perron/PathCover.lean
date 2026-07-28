@@ -77,6 +77,8 @@ noncomputable def pathCoverDeck (γ : Path.Homotopic.Quotient x₀ x₀) (pc : P
     PathCover x₀ :=
   ⟨pc.pt, γ.trans pc.cls⟩
 
+/-- Deck transformations move along the fibers: precomposing a path class by a loop at
+the basepoint leaves the endpoint, hence the projection, unchanged. -/
 theorem pathCoverProj_deck (γ : Path.Homotopic.Quotient x₀ x₀)
     (pc : PathCover x₀) :
     pathCoverProj x₀ (pathCoverDeck x₀ γ pc) = pathCoverProj x₀ pc := rfl

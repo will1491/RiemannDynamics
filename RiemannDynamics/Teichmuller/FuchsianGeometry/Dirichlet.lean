@@ -38,17 +38,23 @@ def dirichletDomain (Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ))
     (τ₀ : UpperHalfPlane) : Set UpperHalfPlane :=
   {τ | ∀ γ : Γ, dist τ τ₀ ≤ dist τ (γ • τ₀)}
 
+/-- Membership in the Dirichlet domain, unfolded: `τ` belongs exactly when no point of the
+`Γ`-orbit of `τ₀` is strictly closer to `τ` than `τ₀` itself. -/
 theorem mem_dirichletDomain {τ : UpperHalfPlane} :
     τ ∈ dirichletDomain Γ τ₀ ↔ ∀ γ : Γ, dist τ τ₀ ≤ dist τ (γ • τ₀) :=
   Iff.rfl
 
 /-! ## Basepoint membership, closedness, tiling -/
 
+/-- The center lies in its own Dirichlet domain: no orbit point can be closer to `τ₀` than
+the distance `0` from `τ₀` to itself. -/
 theorem basepoint_mem_dirichletDomain : τ₀ ∈ dirichletDomain Γ τ₀ := by
   intro γ
   rw [dist_self]
   exact dist_nonneg
 
+/-- The Dirichlet domain is closed: it is an intersection, over the group, of the closed
+half-planes `{τ | dist τ τ₀ ≤ dist τ (γ • τ₀)}`. -/
 theorem isClosed_dirichletDomain (Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ))
     (τ₀ : UpperHalfPlane) : IsClosed (dirichletDomain Γ τ₀) := by
   have h : dirichletDomain Γ τ₀ =
@@ -117,6 +123,8 @@ theorem dirichletDomain_subset_closedBall {R : ℝ}
     exact hτ γ
   exact le_trans hlb (hdense τ)
 
+/-- The Dirichlet domain is compact when the orbit of `τ₀` is `R`-dense: it is then a
+closed subset of the closed ball of radius `R` about `τ₀`. -/
 theorem isCompact_dirichletDomain {R : ℝ}
     (hdense : ∀ σ : UpperHalfPlane, Metric.infDist σ (MulAction.orbit Γ τ₀) ≤ R) :
     IsCompact (dirichletDomain Γ τ₀) :=
@@ -132,6 +140,8 @@ def dirichletSides (Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ))
     (τ₀ : UpperHalfPlane) (R : ℝ) : Set ↥Γ :=
   {γ : ↥Γ | dist τ₀ (γ • τ₀) ≤ 2 * R + 1}
 
+/-- A Fuchsian group has only finitely many side elements: proper discontinuity bounds the
+number of `γ` carrying `τ₀` to within `2R + 1` of itself. -/
 theorem finite_dirichletSides (hΓ : IsFuchsianGroup Γ) (τ₀ : UpperHalfPlane) (R : ℝ) :
     (dirichletSides Γ τ₀ R).Finite := by
   haveI hPD : ProperlyDiscontinuousSMul Γ UpperHalfPlane := hΓ
@@ -338,6 +348,8 @@ def activeSides (Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ))
     (τ₀ : UpperHalfPlane) (R : ℝ) : Set ↥Γ :=
   {γ : ↥Γ | dist τ₀ (γ • τ₀) ≤ 2 * R + 1 ∧ γ • τ₀ ≠ τ₀}
 
+/-- There are only finitely many active sides: they form a subset of the finitely many
+side elements. -/
 theorem finite_activeSides (hΓ : IsFuchsianGroup Γ) (τ₀ : UpperHalfPlane) (R : ℝ) :
     (activeSides Γ τ₀ R).Finite :=
   (finite_dirichletSides hΓ τ₀ R).subset fun _ hγ => hγ.1

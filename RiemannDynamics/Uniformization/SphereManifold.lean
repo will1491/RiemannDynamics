@@ -66,10 +66,13 @@ noncomputable def inversionHomeomorph : ℂ̂ ≃ₜ ℂ̂ :=
     continuous_toFun := continuous_gl_smul inversionGL
     continuous_invFun := continuous_gl_smul inversionGL }
 
+/-- The inversion homeomorphism acts by the Möbius element `inversionGL`. -/
 @[simp]
 theorem inversionHomeomorph_apply (z : ℂ̂) :
     inversionHomeomorph z = inversionGL • z := rfl
 
+/-- The inversion homeomorphism is its own inverse, since `inversionGL` is an
+involution of the sphere. -/
 @[simp]
 theorem inversionHomeomorph_symm_apply (z : ℂ̂) :
     inversionHomeomorph.symm z = inversionGL • z := rfl
@@ -107,6 +110,8 @@ finite chart, with source `ℂ̂ ∖ {0}` and target `ℂ`. -/
 noncomputable def sphereChartInfty : OpenPartialHomeomorph ℂ̂ ℂ :=
   inversionHomeomorph.toOpenPartialHomeomorph.trans sphereChartFinite
 
+/-- The source of the bundled finite chart is the unbundled finite-chart source
+`ℂ̂ ∖ {∞}`. -/
 theorem sphereChartFinite_source : sphereChartFinite.source = chartFiniteSource := by
   have hrange : chartFiniteSource = Set.range ((↑) : ℂ → ℂ̂) := by
     ext z
@@ -115,12 +120,15 @@ theorem sphereChartFinite_source : sphereChartFinite.source = chartFiniteSource 
   rw [hrange]
   simp [sphereChartFinite, coeSpherePartialHomeomorph]
 
+/-- The finite chart inverts the coercion `ℂ → ℂ̂`: it sends a finite point back to the
+complex number naming it. -/
 @[simp]
 theorem sphereChartFinite_coe (w : ℂ) : sphereChartFinite ((w : ℂ̂)) = w := by
   have h : coeSpherePartialHomeomorph w = (w : ℂ̂) := rfl
   rw [sphereChartFinite, ← h]
   exact coeSpherePartialHomeomorph.left_inv (by simp [coeSpherePartialHomeomorph])
 
+/-- The inverse of the finite chart is the coercion `ℂ → ℂ̂`. -/
 @[simp]
 theorem sphereChartFinite_symm_apply (w : ℂ) :
     sphereChartFinite.symm w = (w : ℂ̂) := rfl
@@ -133,6 +141,8 @@ theorem sphereChartFinite_eqOn :
   rw [sphereChartFinite_coe]
   rfl
 
+/-- The source of the bundled infinity chart is the unbundled infinity-chart source
+`ℂ̂ ∖ {0}`. -/
 theorem sphereChartInfty_source : sphereChartInfty.source = chartInftySource := by
   ext z
   simp only [sphereChartInfty, OpenPartialHomeomorph.trans_source,
@@ -142,6 +152,7 @@ theorem sphereChartInfty_source : sphereChartInfty.source = chartInftySource := 
     chartInftySource, Set.mem_setOf_eq]
   exact not_congr (inversionGL_smul_eq_infty_iff z)
 
+/-- The infinity chart is the inversion followed by the finite chart. -/
 @[simp]
 theorem sphereChartInfty_apply (z : ℂ̂) :
     sphereChartInfty z = sphereChartFinite (inversionGL • z) := rfl
@@ -162,6 +173,8 @@ theorem sphereChartInfty_eqOn :
     rw [sphereChartInfty_apply, inversionGL_smul_coe, if_neg hw,
       sphereChartFinite_coe, hval]
 
+/-- The inverse of the infinity chart sends `w` to the inversion of the finite point `w`,
+so that `0` is carried to `∞`. -/
 theorem sphereChartInfty_symm_apply (w : ℂ) :
     sphereChartInfty.symm w = inversionGL • ((w : ℂ̂)) := rfl
 
