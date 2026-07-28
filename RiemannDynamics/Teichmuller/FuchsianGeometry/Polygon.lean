@@ -557,11 +557,15 @@ theorem dist_basepoint_eq_infDist {z : UpperHalfPlane}
   obtain ⟨δ, rfl⟩ := MulAction.mem_orbit_iff.mp hy
   exact hz δ
 
+/-- The identity is a contact element of every point of the Dirichlet domain: by definition
+of the domain, `τ₀` itself already realizes the distance to its own orbit. -/
 theorem one_mem_contactSet {z : UpperHalfPlane} (hz : z ∈ dirichletDomain Γ τ₀) :
     (1 : ↥Γ) ∈ contactSet Γ τ₀ z := by
   simp only [contactSet, Set.mem_setOf_eq, one_smul]
   exact dist_basepoint_eq_infDist hz
 
+/-- A point on the side of `γ` has `γ` as a contact element: on that side the distances to
+`τ₀` and to `γ • τ₀` agree, and the first is already minimal over the orbit. -/
 theorem mem_contactSet_of_mem_sideSet {γ : ↥Γ} {z : UpperHalfPlane}
     (hz : z ∈ dirichletSideSet Γ τ₀ γ) : γ ∈ contactSet Γ τ₀ z := by
   obtain ⟨hzD, hzeq⟩ := hz
@@ -1279,6 +1283,9 @@ theorem mem_polygonVertices_of_isSegEndpoint (hΓ : IsFuchsianGroup Γ)
 
 /-! ## Normalizer characterizations of the bisector and its strict sides -/
 
+/-- In a normalizing coordinate with orientation sign `ε' = ±1`, where the two half-spaces of
+a distance comparison read as the sign conditions `ε' · Re (g • z) ≤ 0` and
+`0 ≤ ε' · Re (g • z)`, a point equidistant from `p` and `q` is carried to the imaginary axis. -/
 theorem normalizer_re_eq_zero {p q : UpperHalfPlane}
     {g : Matrix.SpecialLinearGroup (Fin 2) ℝ} {ε' : ℝ} (hε' : ε' = 1 ∨ ε' = -1)
     (hle : ∀ z : UpperHalfPlane, dist z p ≤ dist z q ↔ ε' * (g • z).re ≤ 0)
@@ -1287,6 +1294,8 @@ theorem normalizer_re_eq_zero {p q : UpperHalfPlane}
   have h := le_antisymm ((hle z).mp hz.le) ((hge z).mp hz.ge)
   rcases hε' with h1 | h1 <;> rw [h1] at h <;> linarith
 
+/-- In such a normalizing coordinate the equidistance set of `p` and `q` is exactly the
+preimage of the imaginary axis. -/
 theorem normalizer_eq_iff {p q : UpperHalfPlane}
     {g : Matrix.SpecialLinearGroup (Fin 2) ℝ} {ε' : ℝ} (hε' : ε' = 1 ∨ ε' = -1)
     (hle : ∀ z : UpperHalfPlane, dist z p ≤ dist z q ↔ ε' * (g • z).re ≤ 0)
@@ -1298,6 +1307,8 @@ theorem normalizer_eq_iff {p q : UpperHalfPlane}
     have h1 : ε' * (g • z).re = 0 := by rw [h0, mul_zero]
     exact le_antisymm ((hle z).mpr h1.le) ((hge z).mpr h1.ge)
 
+/-- In such a normalizing coordinate strict proximity to `p` over `q` is exactly the strict
+sign condition `ε' · Re (g • z) < 0`. Only the second half-space hypothesis is used. -/
 theorem normalizer_lt_iff {p q : UpperHalfPlane}
     {g : Matrix.SpecialLinearGroup (Fin 2) ℝ} {ε' : ℝ}
     (_hle : ∀ z : UpperHalfPlane, dist z p ≤ dist z q ↔ ε' * (g • z).re ≤ 0)
@@ -1896,6 +1907,8 @@ theorem exists_two_sides_at_vertex (hΓ : IsFuchsianGroup Γ)
 
 variable {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)} {τ₀ : UpperHalfPlane}
 
+/-- Contact sets are equivariant: `δ` touches `z` exactly when `g δ` touches `g • z`, since
+the group acts by isometries and permutes the orbit of the basepoint. -/
 theorem contact_shift (g δ : ↥Γ) (z : UpperHalfPlane) :
     δ ∈ contactSet Γ τ₀ z ↔ (g * δ) ∈ contactSet Γ τ₀ (g • z) := by
   rw [mem_contactSet_iff_mem_smul_dirichletDomain,
@@ -1913,6 +1926,9 @@ theorem contact_shift (g δ : ↥Γ) (z : UpperHalfPlane) :
       exact huz
     exact smul_left_cancel g h1
 
+/-- When every element with a fixed point acts trivially, two elements agreeing on the
+basepoint have the same inverse action everywhere: they differ by a stabilizer element,
+which is then the identity map. -/
 theorem inv_smul_eq_of_basepoint_eq
     (hfree : ∀ γ : Γ, (∃ τ : UpperHalfPlane, γ • τ = τ) →
       ∀ τ' : UpperHalfPlane, γ • τ' = τ')
@@ -1922,6 +1938,9 @@ theorem inv_smul_eq_of_basepoint_eq
   conv_lhs => rw [← h1]
   rw [inv_smul_smul]
 
+/-- Under the same hypothesis the transition element `γ⁻¹ δ` moves the basepoint in a way
+depending only on where `γ` and `δ` send it — so transitions are well defined on tiles
+rather than on group elements. -/
 theorem transition_basepoint_eq
     (hfree : ∀ γ : Γ, (∃ τ : UpperHalfPlane, γ • τ = τ) →
       ∀ τ' : UpperHalfPlane, γ • τ' = τ')
@@ -1930,11 +1949,16 @@ theorem transition_basepoint_eq
   rw [mul_smul, mul_smul, hδ]
   exact inv_smul_eq_of_basepoint_eq hfree hγ (δ' • τ₀)
 
+/-- Being a side element depends only on where the element sends the basepoint, so it is a
+property of the tile rather than of the group element. -/
 theorem isSideElement_congr {β β' : ↥Γ} (h : β • τ₀ = β' • τ₀) :
     IsSideElement Γ τ₀ β ↔ IsSideElement Γ τ₀ β' := by
   unfold IsSideElement
   rw [h, sideSet_eq_of_basepoint_eq h]
 
+/-- A contact element of a vertex never carries the basepoint onto that vertex: if it did, the
+vertex would sit on the orbit of the basepoint at distance `0`, so every contact element would
+send the basepoint there as well, leaving one tile center where a vertex has at least three. -/
 theorem smul_basepoint_ne {v : UpperHalfPlane} (hv : v ∈ polygonVertices Γ τ₀)
     {γ : ↥Γ} (hγ : γ ∈ contactSet Γ τ₀ v) : γ • τ₀ ≠ v := by
   intro h
@@ -1951,6 +1975,8 @@ theorem smul_basepoint_ne {v : UpperHalfPlane} (hv : v ∈ polygonVertices Γ τ
   have h5 : 3 ≤ (tileCenters Γ τ₀ v).ncard := hv.2
   omega
 
+/-- The tile centers transport along the group action: those at `γ⁻¹ • v` are the
+`γ⁻¹`-images of those at `v`. -/
 theorem tileCenters_smul {v : UpperHalfPlane} (γ : ↥Γ) :
     tileCenters Γ τ₀ (γ⁻¹ • v) = (γ⁻¹ • ·) '' tileCenters Γ τ₀ v := by
   ext c
@@ -1966,6 +1992,10 @@ theorem tileCenters_smul {v : UpperHalfPlane} (γ : ↥Γ) :
     change (γ⁻¹ * δ) • τ₀ = γ⁻¹ • δ • τ₀
     rw [mul_smul]
 
+/-- Pulling a vertex back by one of its own contact elements lands on a vertex again: being a
+contact element places the vertex in the `γ`-tile, so the pullback lies in the Dirichlet
+domain, and the action permutes tile centers bijectively, so the bound of at least three
+tiles survives. -/
 theorem smul_mem_polygonVertices {v : UpperHalfPlane}
     (hv : v ∈ polygonVertices Γ τ₀) {γ : ↥Γ} (hγ : γ ∈ contactSet Γ τ₀ v) :
     γ⁻¹ • v ∈ polygonVertices Γ τ₀ := by
@@ -1978,6 +2008,9 @@ theorem smul_mem_polygonVertices {v : UpperHalfPlane}
       Set.ncard_image_of_injective _ (fun a b h => smul_left_cancel γ⁻¹ h)]
     exact hv.2
 
+/-- **The tiles at a vertex are 2-regular.** Every tile meeting a vertex is adjacent —
+across a genuine side — to exactly two others there. This is the local step that makes the
+fan of tiles around a vertex a cycle rather than a tree or a longer configuration. -/
 theorem two_neighbors (hΓ : IsFuchsianGroup Γ)
     (hfree : ∀ γ : Γ, (∃ τ : UpperHalfPlane, γ • τ = τ) →
       ∀ τ' : UpperHalfPlane, γ • τ' = τ')
@@ -2052,6 +2085,9 @@ theorem two_neighbors (hΓ : IsFuchsianGroup Γ)
       · exact hback β₁ hβ₁elem hβ₁v
       · exact hback β₂ hβ₂elem hβ₂v
 
+/-- **The tiles at a vertex are connected under adjacency.** A nonempty set of tiles at a
+vertex closed under crossing sides is all of them — proved by separating the set from its
+complement by two closed unions of tiles, which a small ball around the vertex forbids. -/
 theorem adj_closed_eq (hΓ : IsFuchsianGroup Γ)
     (hfree : ∀ γ : Γ, (∃ τ : UpperHalfPlane, γ • τ = τ) →
       ∀ τ' : UpperHalfPlane, γ • τ' = τ')
@@ -2141,6 +2177,11 @@ theorem adj_closed_eq (hΓ : IsFuchsianGroup Γ)
       Metric.mem_ball.mpr hwd, fun hc => hwv (Set.mem_singleton_iff.mp hc)⟩
   exact punctured_ball_two_closed hr hAcl hBcl hcov hdisj hAne hBne
 
+/-- **A finite connected 2-regular graph is a single cycle.** Purely combinatorial: from a
+symmetric irreflexive relation in which every point has exactly two neighbours, and which
+admits no proper closed nonempty subset, one extracts a periodic enumeration `e` of period
+`n ≥ 3` traversing each point exactly once per period along edges. Applied to the tiles at a
+vertex, this turns `two_neighbors` and `adj_closed_eq` into the cyclic fan. -/
 theorem cycle_of_two_regular {α : Type*} {P : Set α} {A : α → α → Prop}
     (hfin : P.Finite) (hne : P.Nonempty)
     (hmem : ∀ p q, A p q → p ∈ P ∧ q ∈ P)
@@ -3015,16 +3056,20 @@ def dartOrbit {α β : Type*} (oside : β → α → α) (oend : α → β → �
     (d₀ : α × β) (k : ℕ) : α × β :=
   (stepDart oside oend)^[k] d₀
 
+/-- The dart orbit starts at the initial dart. -/
 theorem dartOrbit_zero {α β : Type*} (oside : β → α → α) (oend : α → β → β)
     (d₀ : α × β) : dartOrbit oside oend d₀ 0 = d₀ :=
   rfl
 
+/-- Each step of the dart orbit applies one boundary-walk step. -/
 theorem dartOrbit_succ {α β : Type*} (oside : β → α → α) (oend : α → β → β)
     (d₀ : α × β) (k : ℕ) :
     dartOrbit oside oend d₀ (k + 1)
       = stepDart oside oend (dartOrbit oside oend d₀ k) :=
   Function.iterate_succ_apply' _ k d₀
 
+/-- The dart orbit is additive in the step count: walking `m + k` steps is walking `k` and
+then iterating the step `m` more times. -/
 theorem dartOrbit_add {α β : Type*} (oside : β → α → α) (oend : α → β → β)
     (d₀ : α × β) (m k : ℕ) :
     dartOrbit oside oend d₀ (m + k)
