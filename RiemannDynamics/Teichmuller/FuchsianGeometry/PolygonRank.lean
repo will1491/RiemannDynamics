@@ -48,6 +48,7 @@ def homSubmodule (G : Type*) [Group G] : Submodule ℝ (G → ℝ) where
     simp only [Pi.smul_apply, hf a b, smul_eq_mul]
     ring
 
+/-- An additive character vanishes at the identity, since `f 1 = f (1 * 1) = f 1 + f 1`. -/
 theorem homSubmodule_apply_one {G : Type*} [Group G] (f : homSubmodule G) :
     (f : G → ℝ) 1 = 0 := by
   have h1 := f.2 1 1
@@ -91,6 +92,9 @@ def oddSideFunctions (Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ))
       ring
     · simp only [Pi.smul_apply, h3 γ δ h]
 
+/-- Membership in the odd side functions, unfolded into its three defining conditions:
+vanishing off the side elements, oddness under inversion, and constancy on the fibers of
+`γ ↦ γ • τ₀`. -/
 theorem mem_oddSideFunctions {α : (↥Γ) → ℝ} :
     α ∈ oddSideFunctions Γ τ₀ ↔ (∀ γ : ↥Γ, ¬IsSideElement Γ τ₀ γ → α γ = 0) ∧
       (∀ γ : ↥Γ, α γ⁻¹ = -α γ) ∧ ∀ γ δ : ↥Γ, γ • τ₀ = δ • τ₀ → α γ = α δ :=
@@ -111,6 +115,7 @@ transition elements of consecutive tiles. -/
 def crossingSum (α : (↥Γ) → ℝ) (p : List ↥Γ) : ℝ :=
   ((p.zip p.tail).map fun q => α (q.1⁻¹ * q.2)).sum
 
+/-- The crossing sum of the zero side function vanishes along every path. -/
 theorem crossingSum_zero (p : List ↥Γ) : crossingSum (0 : (↥Γ) → ℝ) p = 0 := by
   unfold crossingSum
   induction p.zip p.tail with
@@ -120,6 +125,7 @@ theorem crossingSum_zero (p : List ↥Γ) : crossingSum (0 : (↥Γ) → ℝ) p 
     rw [ih]
     simp
 
+/-- The crossing sum is additive in the side function, for a fixed path. -/
 theorem crossingSum_add (α β : (↥Γ) → ℝ) (p : List ↥Γ) :
     crossingSum (α + β) p = crossingSum α p + crossingSum β p := by
   unfold crossingSum
@@ -131,6 +137,9 @@ theorem crossingSum_add (α β : (↥Γ) → ℝ) (p : List ↥Γ) :
     simp only [Pi.add_apply]
     ring
 
+/-- The crossing sum is homogeneous in the side function, for a fixed path. Together with
+`crossingSum_add` this makes `α ↦ crossingSum α p` linear, which is what lets the vertex
+constraints cut out a subspace. -/
 theorem crossingSum_smul (c : ℝ) (α : (↥Γ) → ℝ) (p : List ↥Γ) :
     crossingSum (c • α) p = c * crossingSum α p := by
   unfold crossingSum
@@ -174,6 +183,8 @@ def cycleConstrained (Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ))
     refine ⟨(oddSideFunctions Γ τ₀).smul_mem c hα1, fun v hv p hp => ?_⟩
     rw [crossingSum_smul, hα2 v hv p hp, mul_zero]
 
+/-- Membership in the cycle-constrained side functions, unfolded: an odd side function
+whose crossing sum vanishes along every vertex loop of the polygon. -/
 theorem mem_cycleConstrained {α : (↥Γ) → ℝ} :
     α ∈ cycleConstrained Γ τ₀ ↔ α ∈ oddSideFunctions Γ τ₀ ∧
       ∀ v ∈ polygonVertices Γ τ₀, ∀ p : List ↥Γ,
@@ -2697,18 +2708,24 @@ def loopList (e : ℕ → ↥Γ) : ℕ → ℕ → List ↥Γ
   | x, 0 => [e x]
   | x, m + 1 => e x :: loopList e (x + 1) m
 
+/-- The tile list of length zero is the single tile at the starting position. -/
 theorem loopList_zero (e : ℕ → ↥Γ) (x : ℕ) : loopList e x 0 = [e x] := rfl
 
+/-- The tile list unfolds from the left: one more step prepends the tile at the current
+position to the list starting one position later. -/
 theorem loopList_succ (e : ℕ → ↥Γ) (x m : ℕ) :
     loopList e x (m + 1) = e x :: loopList e (x + 1) m := rfl
 
+/-- A tile list is never empty; it always contains at least its starting tile. -/
 theorem loopList_ne_nil (e : ℕ → ↥Γ) (x m : ℕ) : loopList e x m ≠ [] := by
   cases m <;> simp [loopList_zero, loopList_succ]
 
+/-- The tile list begins at the starting position. -/
 theorem loopList_head? (e : ℕ → ↥Γ) (x m : ℕ) :
     (loopList e x m).head? = some (e x) := by
   cases m <;> rfl
 
+/-- The tile list of length `m` from position `x` ends at position `x + m`. -/
 theorem loopList_getLast? (e : ℕ → ↥Γ) : ∀ m x,
     (loopList e x m).getLast? = some (e (x + m)) := by
   intro m
@@ -2723,6 +2740,7 @@ theorem loopList_getLast? (e : ℕ → ↥Γ) : ∀ m x,
       rw [List.getLast?_cons_cons, ← hm, ih (x + 1),
         show x + 1 + m = x + (m + 1) from by omega]
 
+/-- Every tile of the list occurs at one of the enumerated positions `x, …, x + m`. -/
 theorem loopList_mem (e : ℕ → ↥Γ) : ∀ m x γ, γ ∈ loopList e x m →
     ∃ i, i ≤ m ∧ γ = e (x + i) := by
   intro m
@@ -2740,6 +2758,8 @@ theorem loopList_mem (e : ℕ → ↥Γ) : ∀ m x γ, γ ∈ loopList e x m →
       exact ⟨i + 1, by omega, by rw [show x + (i + 1) = x + 1 + i by omega]⟩
 
 
+/-- The crossing sum along a tile list is the sum of the side function over the transition
+elements between consecutive positions of the enumeration. -/
 theorem crossingSum_loopList (α : (↥Γ) → ℝ) (e : ℕ → ↥Γ) : ∀ m x,
     crossingSum α (loopList e x m)
       = ∑ i ∈ Finset.range m, α ((e (x + i))⁻¹ * e (x + i + 1)) := by
@@ -2762,6 +2782,8 @@ theorem crossingSum_loopList (α : (↥Γ) → ℝ) (e : ℕ → ↥Γ) : ∀ m 
     refine Finset.sum_congr rfl fun i _ => ?_
     rw [hre i, show x + (i + 1) + 1 = x + (i + 1) + 1 from rfl]
 
+/-- A tile list is a tile path whenever consecutive positions of the enumeration are
+separated by a genuine side element. -/
 theorem isTilePath_loopList (e : ℕ → ↥Γ)
     (hadj : ∀ k, IsSideElement Γ τ₀ ((e k)⁻¹ * e (k + 1))) : ∀ m x,
     IsTilePath Γ τ₀ (loopList e x m) := by
@@ -2777,6 +2799,7 @@ theorem isTilePath_loopList (e : ℕ → ↥Γ)
     rw [loopList_succ, hshape, List.isChain_cons_cons]
     exact ⟨hadj x, by rw [← hshape]; exact ih (x + 1)⟩
 
+/-- An `n`-periodic enumeration is invariant under shifting by any multiple of `n`. -/
 theorem periodic_add_mul {e : ℕ → ↥Γ} {n : ℕ} (hper : ∀ k, e (k + n) = e k) :
     ∀ j k, e (k + j * n) = e k := by
   intro j
@@ -2786,6 +2809,7 @@ theorem periodic_add_mul {e : ℕ → ↥Γ} {n : ℕ} (hper : ∀ k, e (k + n) 
     intro k
     rw [show k + (j + 1) * n = k + j * n + n from by ring, hper, ih]
 
+/-- An `n`-periodic enumeration is determined by the residue of the position mod `n`. -/
 theorem periodic_mod {e : ℕ → ↥Γ} {n : ℕ} (hper : ∀ k, e (k + n) = e k)
     (k : ℕ) : e (k % n) = e k := by
   conv_rhs => rw [show k = k % n + (k / n) * n from by
@@ -2811,6 +2835,9 @@ theorem W_add (α : (↥Γ) → ℝ) {e : ℕ → ↥Γ} {n : ℕ} (hper : ∀ k
     rw [h1, h2]
     ring
 
+/-- The partial crossing sums of a periodic enumeration depend only on the position mod
+`n`, once the sum over one full period vanishes: the surplus positions contribute whole
+periods, each of which sums to zero. -/
 theorem W_congr_mod (α : (↥Γ) → ℝ) {e : ℕ → ↥Γ} {n : ℕ} (hper : ∀ k, e (k + n) = e k)
     (hzero : ∑ i ∈ Finset.range n, α ((e i)⁻¹ * e (i + 1)) = 0) {x y : ℕ}
     (hxy : x % n = y % n) :
@@ -4222,6 +4249,10 @@ theorem exists_ann_functional {W : Type*} [AddCommGroup W] [Module ℝ W]
     rw [LinearMap.comp_apply, show U.mkQ u = 0 from (Submodule.Quotient.mk_eq_zero U).mpr hu,
       map_zero]
 
+/-- **The cycle-constrained side functions form a finite-dimensional space.** For a
+Fuchsian group in which every element with a fixed point acts trivially, with a
+translation-length gap and an `R`-dense orbit, the polygon has finitely many side pairs;
+the odd side functions are then finite-dimensional and these form a subspace of them. -/
 theorem finiteDimensional_cycleConstrained (hΓ : IsFuchsianGroup Γ)
     (hfree : ∀ γ : Γ, (∃ τ : UpperHalfPlane, γ • τ = τ) →
       ∀ τ' : UpperHalfPlane, γ • τ' = τ')

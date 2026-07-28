@@ -273,6 +273,8 @@ theorem idealTriangle_eq_norm_form :
     calc √(1 - z.re ^ 2) ≤ √(z.im ^ 2) := Real.sqrt_le_sqrt (by nlinarith)
       _ = z.im := Real.sqrt_sq him.le
 
+/-- **The triply ideal triangle has area `π`**, in the norm form of the region: the points
+of the upper half plane with real part in `[-1, 1]` lying outside the unit circle. -/
 theorem volume_idealTriangle_norm :
     volume {z : ℍ | z.re ∈ Icc (-1 : ℝ) 1 ∧ 1 ≤ ‖(z : ℂ)‖} = ENNReal.ofReal π := by
   rw [← idealTriangle_eq_norm_form]
@@ -854,16 +856,26 @@ noncomputable def topPt (c r : ℝ) (hr : 0 < r) : UpperHalfPlane :=
 noncomputable def botPt (c r : ℝ) (hr : 0 < r) : UpperHalfPlane :=
   UpperHalfPlane.mk ⟨c, r / 2⟩ (by change (0 : ℝ) < r / 2; linarith)
 
+/-- The top comparison point lies on the vertical through the center `c`. -/
 theorem topPt_re (c r : ℝ) (hr : 0 < r) : (topPt c r hr).re = c := rfl
+
+/-- The top comparison point sits at height `2r`, above the circle of radius `r`. -/
 theorem topPt_im (c r : ℝ) (hr : 0 < r) : (topPt c r hr).im = 2 * r := rfl
+
+/-- The bottom comparison point lies on the vertical through the center `c`. -/
 theorem botPt_re (c r : ℝ) (hr : 0 < r) : (botPt c r hr).re = c := rfl
+
+/-- The bottom comparison point sits at height `r / 2`, inside the circle of radius `r`. -/
 theorem botPt_im (c r : ℝ) (hr : 0 < r) : (botPt c r hr).im = r / 2 := rfl
 
 /-- The point at height `1` over the abscissa `x`. -/
 noncomputable def ptAt (x : ℝ) : UpperHalfPlane :=
   UpperHalfPlane.mk ⟨x, 1⟩ (by change (0 : ℝ) < 1; norm_num)
 
+/-- The point `ptAt x` lies on the vertical through the abscissa `x`. -/
 theorem ptAt_re (x : ℝ) : (ptAt x).re = x := rfl
+
+/-- The point `ptAt x` sits at height `1`. -/
 theorem ptAt_im (x : ℝ) : (ptAt x).im = 1 := rfl
 
 /-- The exterior of the circle `|z - c| = r` is the half-space of points closer to the top

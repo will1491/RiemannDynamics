@@ -39,22 +39,28 @@ which the triangle inequality is an equality. -/
 def geodSeg (a b : UpperHalfPlane) : Set UpperHalfPlane :=
   {z | dist a z + dist z b = dist a b}
 
+/-- Membership in the geodesic segment, unfolded: `z` lies between `a` and `b` exactly when
+the triangle inequality through `z` is an equality. -/
 theorem mem_geodSeg {a b z : UpperHalfPlane} :
     z ∈ geodSeg a b ↔ dist a z + dist z b = dist a b :=
   Iff.rfl
 
+/-- The left endpoint lies on its own geodesic segment. -/
 theorem left_mem_geodSeg (a b : UpperHalfPlane) : a ∈ geodSeg a b := by
   simp [geodSeg]
 
+/-- The right endpoint lies on its own geodesic segment. -/
 theorem right_mem_geodSeg (a b : UpperHalfPlane) : b ∈ geodSeg a b := by
   simp [geodSeg]
 
+/-- The geodesic segment is symmetric in its endpoints. -/
 theorem geodSeg_comm (a b : UpperHalfPlane) : geodSeg a b = geodSeg b a := by
   ext z
   simp only [geodSeg, Set.mem_setOf_eq]
   rw [dist_comm a z, dist_comm z b, dist_comm a b]
   constructor <;> intro h <;> linarith
 
+/-- A degenerate segment is a single point. -/
 theorem geodSeg_self (a : UpperHalfPlane) : geodSeg a a = {a} := by
   ext z
   simp only [geodSeg, Set.mem_setOf_eq, dist_self, Set.mem_singleton_iff]
@@ -111,6 +117,9 @@ noncomputable def geodCenter (a b : UpperHalfPlane) : ℝ :=
 noncomputable def geodRadius (a b : UpperHalfPlane) : ℝ :=
   ‖(a : ℂ) - (geodCenter a b : ℂ)‖
 
+/-- The radius is always positive: `a` lies off the real axis, so it never coincides with
+the real number `geodCenter a b`. No relation between `a.re` and `b.re` is needed — in the
+degenerate case `a.re = b.re` the center is the junk value `0` and the radius is `‖a‖`. -/
 theorem geodRadius_pos (a b : UpperHalfPlane) : 0 < geodRadius a b := by
   rw [geodRadius, norm_pos_iff, sub_ne_zero]
   intro h
@@ -129,6 +138,8 @@ noncomputable def circCoord (c : ℝ) (z : UpperHalfPlane) : ℝ :=
 noncomputable def circAngle (u : ℝ) : ℝ :=
   2 * Real.arctan (Real.exp u)
 
+/-- The semicircle angle lies strictly between `0` and `π`, so its sine is positive — which
+is what places `circPoint` in the upper half plane. -/
 theorem sin_circAngle_pos (u : ℝ) : 0 < Real.sin (circAngle u) := by
   apply Real.sin_pos_of_pos_of_lt_pi
   · have h := Real.arctan_pos.mpr (Real.exp_pos u)
@@ -169,6 +180,8 @@ opposite side. -/
 def hyperbolicTriangle (v₁ v₂ v₃ : UpperHalfPlane) : Set UpperHalfPlane :=
   geodCone v₁ (geodSeg v₂ v₃)
 
+/-- Membership in a geodesic cone, unfolded: `w` lies in the cone from `z` over `s` exactly
+when it lies on some geodesic segment from `z` to a point of `s`. -/
 theorem mem_geodCone {z : UpperHalfPlane} {s : Set UpperHalfPlane} {w : UpperHalfPlane} :
     w ∈ geodCone z s ↔ ∃ x ∈ s, w ∈ geodSeg z x := by
   simp [geodCone]
@@ -182,6 +195,7 @@ noncomputable def discChart (z w : UpperHalfPlane) : ℂ :=
   (((w : ℂ) - (z.re : ℂ)) / (z.im : ℂ) - Complex.I) /
     (((w : ℂ) - (z.re : ℂ)) / (z.im : ℂ) + Complex.I)
 
+/-- The disc-model frame at `z` sends `z` itself to the origin. -/
 theorem discChart_self (z : UpperHalfPlane) : discChart z z = 0 := by
   have him : ((z.im : ℝ) : ℂ) ≠ 0 := by
     exact_mod_cast z.im_pos.ne'
@@ -198,12 +212,15 @@ in `[0, π]`. Convention: `sectorAngle z w₁ w₂ = |arg (discChart z w₂ / di
 noncomputable def sectorAngle (z w₁ w₂ : UpperHalfPlane) : ℝ :=
   |Complex.arg (discChart z w₂ / discChart z w₁)|
 
+/-- The angle between two geodesic rays is nonnegative. -/
 theorem sectorAngle_nonneg (z w₁ w₂ : UpperHalfPlane) : 0 ≤ sectorAngle z w₁ w₂ :=
   abs_nonneg _
 
+/-- The angle between two geodesic rays is at most `π`, being an unsigned argument. -/
 theorem sectorAngle_le_pi (z w₁ w₂ : UpperHalfPlane) : sectorAngle z w₁ w₂ ≤ Real.pi :=
   Complex.abs_arg_le_pi _
 
+/-- The angle between two geodesic rays does not depend on the order of the rays. -/
 theorem sectorAngle_comm (z w₁ w₂ : UpperHalfPlane) :
     sectorAngle z w₁ w₂ = sectorAngle z w₂ w₁ := by
   unfold sectorAngle
@@ -266,6 +283,7 @@ theorem discChart_eq_zero_iff {z w : UpperHalfPlane} : discChart z w = 0 ↔ w =
   · rintro rfl
     exact Or.inl (sub_self _)
 
+/-- Only the basepoint is sent to the origin by its own disc-model frame. -/
 theorem discChart_ne_zero {z w : UpperHalfPlane} (h : w ≠ z) : discChart z w ≠ 0 :=
   fun h0 => h (discChart_eq_zero_iff.mp h0)
 
@@ -292,9 +310,12 @@ noncomputable def affPt (z w : UpperHalfPlane) : UpperHalfPlane :=
     simp only [Complex.sub_im, Complex.ofReal_im, UpperHalfPlane.coe_im, sub_zero]
     exact div_pos w.im_pos z.im_pos)
 
+/-- The affine normalization at `z` reads as `w ↦ (w - Re z) / Im z`. -/
 theorem affPt_coe (z w : UpperHalfPlane) :
     ((affPt z w : UpperHalfPlane) : ℂ) = ((w : ℂ) - (z.re : ℂ)) / (z.im : ℂ) := rfl
 
+/-- The affine normalization at `z` rescales heights by `1 / Im z`, so it carries `z`
+itself to height `1`. -/
 theorem affPt_im (z w : UpperHalfPlane) : (affPt z w).im = w.im / z.im := by
   change ((((w : ℂ) - (z.re : ℂ)) / (z.im : ℂ))).im = w.im / z.im
   rw [div_ofReal_im]
@@ -589,6 +610,9 @@ noncomputable def vf (p q t : ℝ) : ℂ :=
   (Complex.I * (t : ℂ) - ((p : ℂ) + (q : ℂ) * Complex.I)) /
     (Complex.I * (t : ℂ) - ((p : ℂ) - (q : ℂ) * Complex.I))
 
+/-- The denominator of the frame value never vanishes on the imaginary axis: the point
+`i·t` with `t > 0` cannot equal the reflected center `p - qi`, which lies in the lower half
+plane when `q > 0`. -/
 theorem vf_den_ne_zero {q : ℝ} (hq : 0 < q) {t : ℝ} (ht : 0 < t) (p : ℝ) :
     Complex.I * (t : ℂ) - ((p : ℂ) - (q : ℂ) * Complex.I) ≠ 0 := by
   intro h
@@ -598,6 +622,8 @@ theorem vf_den_ne_zero {q : ℝ} (hq : 0 < q) {t : ℝ} (ht : 0 < t) (p : ℝ) :
     mul_one, zero_sub, sub_neg_eq_add] at him
   linarith
 
+/-- The frame value vanishes only at the basepoint: away from `p + qi` the numerator is
+nonzero, and the denominator never is. -/
 theorem vf_ne_zero {p q t : ℝ} (hq : 0 < q) (ht : 0 < t)
     (hn : Complex.I * (t : ℂ) ≠ (p : ℂ) + (q : ℂ) * Complex.I) : vf p q t ≠ 0 :=
   div_ne_zero (sub_ne_zero.mpr hn) (vf_den_ne_zero hq ht p)
@@ -925,6 +951,7 @@ theorem norm_sub_geodCenter {a b : UpperHalfPlane} (h : a.re ≠ b.re) :
 noncomputable def transSL (r : ℝ) : SL(2, ℝ) :=
   ⟨!![1, -r; 0, 1], by rw [Matrix.det_fin_two_of]; ring⟩
 
+/-- The horizontal translation shifts the real part by `-r`. -/
 theorem transSL_re (r : ℝ) (w : UpperHalfPlane) :
     ((transSL r) • w).re = w.re - r := by
   have hcoe := coe_smul (transSL r) w
@@ -953,6 +980,8 @@ noncomputable def circSL (c R : ℝ) (hR : 0 < R) : SL(2, ℝ) :=
     field_simp
     linarith [hss]⟩
 
+/-- The semicircle-to-axis element carries the circle of center `c` and radius `R` onto the
+imaginary axis: a point at distance exactly `R` from `c` is sent to real part `0`. -/
 theorem circSL_re {c R : ℝ} (hR : 0 < R) (w : UpperHalfPlane)
     (hw : ‖(w : ℂ) - (c : ℂ)‖ = R) : ((circSL c R hR) • w).re = 0 := by
   have hs : Real.sqrt (2 * R) ≠ 0 := (Real.sqrt_pos.mpr (by linarith)).ne'
@@ -1246,9 +1275,11 @@ theorem circAngle_mono {u v : ℝ} (h : u ≤ v) : circAngle u ≤ circAngle v :
 
 /-! ## The semicircle point -/
 
+/-- The real part of the semicircle point at arc-length coordinate `u`. -/
 theorem circPoint_re (c r u : ℝ) (hr : 0 < r) :
     (circPoint c r u hr).re = c + r * Real.cos (circAngle u) := rfl
 
+/-- The height of the semicircle point at arc-length coordinate `u`. -/
 theorem circPoint_im (c r u : ℝ) (hr : 0 < r) :
     (circPoint c r u hr).im = r * Real.sin (circAngle u) := rfl
 
@@ -1382,6 +1413,8 @@ theorem circPoint_circCoord {c r : ℝ} (hr : 0 < r) {z : UpperHalfPlane}
 
 /-! ## The two branches of the interpolation -/
 
+/-- On a vertical geodesic — equal real parts — the interpolation is log-linear in the
+height, which is what makes it constant speed for the hyperbolic metric `dy / y`. -/
 theorem geodInterp_vertical {a b : UpperHalfPlane} (hre : a.re = b.re) (t : ℝ) :
     geodInterp a b t
       = UpperHalfPlane.mk ⟨a.re, Real.exp ((1 - t) * Real.log a.im + t * Real.log b.im)⟩
@@ -1389,6 +1422,8 @@ theorem geodInterp_vertical {a b : UpperHalfPlane} (hre : a.re = b.re) (t : ℝ)
   unfold geodInterp
   rw [if_pos hre]
 
+/-- On a semicircular geodesic — distinct real parts — the interpolation is the semicircle
+point whose arc-length coordinate interpolates linearly between those of the endpoints. -/
 theorem geodInterp_circle {a b : UpperHalfPlane} (hre : ¬ a.re = b.re) (t : ℝ) :
     geodInterp a b t
       = circPoint (geodCenter a b) (geodRadius a b)
@@ -1397,6 +1432,7 @@ theorem geodInterp_circle {a b : UpperHalfPlane} (hre : ¬ a.re = b.re) (t : ℝ
   unfold geodInterp
   rw [if_neg hre]
 
+/-- Interpolation between a point and itself is constant. -/
 theorem geodInterp_self (a : UpperHalfPlane) (t : ℝ) : geodInterp a a t = a := by
   rw [geodInterp_vertical rfl]
   apply UpperHalfPlane.ext
@@ -1478,16 +1514,19 @@ theorem dist_geodInterp_right_abs (a b : UpperHalfPlane) (t : ℝ) :
 
 /-! ## Targets: endpoint values, membership, constant speed -/
 
+/-- The interpolation starts at the left endpoint. -/
 theorem geodInterp_zero (a b : UpperHalfPlane) : geodInterp a b 0 = a := by
   have h := dist_geodInterp_left_abs a b 0
   rw [abs_zero, zero_mul, dist_eq_zero] at h
   exact h.symm
 
+/-- The interpolation ends at the right endpoint. -/
 theorem geodInterp_one (a b : UpperHalfPlane) : geodInterp a b 1 = b := by
   have h := dist_geodInterp_right_abs a b 1
   rw [sub_self, abs_zero, zero_mul, dist_eq_zero] at h
   exact h
 
+/-- For a parameter in `[0, 1]` the interpolated point lies on the geodesic segment. -/
 theorem geodInterp_mem_geodSeg (a b : UpperHalfPlane) {t : ℝ} (ht : t ∈ Set.Icc (0 : ℝ) 1) :
     geodInterp a b t ∈ geodSeg a b := by
   obtain ⟨h0, h1⟩ := ht
@@ -1534,6 +1573,8 @@ theorem dist_geodInterp_pair (a b : UpperHalfPlane) (s t : ℝ) :
 
 /-! ## Uniqueness on a segment -/
 
+/-- Extensionality for points of the upper half plane: equal real parts and equal heights
+force equality. -/
 theorem ext_re_im {z w : UpperHalfPlane} (hre : z.re = w.re) (him : z.im = w.im) :
     z = w := by
   apply UpperHalfPlane.ext
@@ -1543,6 +1584,8 @@ theorem ext_re_im {z w : UpperHalfPlane} (hre : z.re = w.re) (him : z.im = w.im)
   · rw [UpperHalfPlane.coe_im, UpperHalfPlane.coe_im]
     exact him
 
+/-- The logarithm preserves being between two positive numbers: a value in `[min x y,
+max x y]` has logarithm in `[min (log x) (log y), max (log x) (log y)]`. -/
 theorem log_bounds {x y v : ℝ} (hx : 0 < x) (hy : 0 < y) (hv : 0 < v)
     (hlo : min x y ≤ v) (hhi : v ≤ max x y) :
     min (Real.log x) (Real.log y) ≤ Real.log v
@@ -1695,6 +1738,7 @@ noncomputable def scaleSL (l : ℝ) (hl : 0 < l) : SL(2, ℝ) :=
     rw [Matrix.det_fin_two_of, mul_inv_cancel₀ hs]
     ring⟩
 
+/-- The dilation element acts on the upper half plane by multiplication by the ratio. -/
 theorem scaleSL_coe (l : ℝ) (hl : 0 < l) (w : UpperHalfPlane) :
     ((scaleSL l hl • w : UpperHalfPlane) : ℂ) = (l : ℂ) * (w : ℂ) := by
   have hs : Real.sqrt l ≠ 0 := (Real.sqrt_pos.mpr hl).ne'
@@ -1725,6 +1769,7 @@ noncomputable def cayleySL : SL(2, ℝ) :=
     field_simp
     linarith⟩
 
+/-- The Cayley element acts by the Möbius map `w ↦ (w - 1) / (w + 1)`. -/
 theorem cayleySL_coe (w : UpperHalfPlane) :
     ((cayleySL • w : UpperHalfPlane) : ℂ) = ((w : ℂ) - 1) / ((w : ℂ) + 1) := by
   have h2 : Real.sqrt 2 ≠ 0 := (Real.sqrt_pos.mpr (by norm_num)).ne'
