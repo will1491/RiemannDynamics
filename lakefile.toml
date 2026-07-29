@@ -2,6 +2,9 @@ name = "RiemannDynamics"
 version = "0.1.0"
 keywords = ["math"]
 defaultTargets = ["RiemannDynamics"]
+# 128 MB language-server thread stacks: the default is too small for the info-tree
+# walks (semantic tokens, document highlight) over the largest proof files.
+moreGlobalServerArgs = ["--tstack=131072"]
 
 [leanOptions]
 pp.unicode.fun = true # pretty-prints `fun a ↦ b`
