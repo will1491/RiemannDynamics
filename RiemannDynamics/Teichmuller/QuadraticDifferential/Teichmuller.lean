@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Will (Ziang) Li
 -/
 import RiemannDynamics.Teichmuller.QuadraticDifferential.Extremal
-import RiemannDynamics.Teichmuller.QuadraticDifferential.HorizontalFlow
+import RiemannDynamics.Teichmuller.QuadraticDifferential.HorizontalFlow.Coarea.Main
 
 /-!
 # Teichmüller's theorem over the Fuchsian base
@@ -1085,8 +1085,6 @@ theorem w_eq_on_real_of_candidate_one {x y : TeichRep Γ₀} {G : ℂ → ℂ}
   rw [hgeq, ha1, hc] at hgy
   simpa using hgy.symm
 
-
-
 /-- The normalized solution at the base point is the identity. -/
 theorem zero_w_eq : (TeichRep.zero Γ₀).w = id :=
   ((TeichRep.zero Γ₀).w_unique isQCAnalytic_id rfl rfl).symm
@@ -1243,7 +1241,6 @@ theorem teichmullerCoeff_isTeichmullerCandidate (q : QuadraticDifferential Γ₀
     change symmExtension (teichmullerCoeffFun (⇑q) k) z = teichmullerCoeffFun (⇑q) k z
     unfold symmExtension
     rw [if_pos hmem]
-
 
 /-- **The Jacobian in Wirtinger form**: the determinant of a real-linear map of the plane
 is the difference of the squared moduli of its complex-linear and conjugate-linear parts. -/
