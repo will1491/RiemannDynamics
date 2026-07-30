@@ -747,7 +747,6 @@ theorem lintegral_cov_le {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
         exact mul_le_mul_left (ENNReal.ofReal_le_ofReal (le_abs_self _)) _
     _ = ∫⁻ z in h '' s, ‖q z‖ₑ := hAF.symm
 
-
 /-- The branch-free horizontal density form of `−W²` is `|Re W|`: the developed-frame
 identity behind the vertical flow. -/
 theorem sqrt_norm_neg_sq (W : ℂ) :
@@ -775,7 +774,6 @@ theorem horizontalDensity_eq_re_developed {q : ℂ → ℂ} {Φ : ℂ → ℂ} {
   unfold horizontalDensity
   rw [hQ, hchain, sqrt_norm_neg_sq]
 
-
 /-- **Order factorization at a point**: a holomorphic function that does not vanish
 identically near `z₀` factors as `(z − z₀)^m g z` with `g` analytic and nonvanishing at
 `z₀`; the exponent is positive when `z₀` is a zero. -/
@@ -799,7 +797,6 @@ theorem exists_order_factorization {q : ℂ → ℂ} {U : Set ℂ} (hU : IsOpen 
     have hself := hev.self_of_nhds
     rw [hm0, pow_zero, one_smul, hq0] at hself
     exact hg0 hself.symm
-
 
 /-- **Even zeros are transparent**: if `q = (z − z₀)^{2k} g` near `z₀` with `g` analytic
 and nonvanishing at `z₀`, then on some disc around `z₀` inside `U` there is a holomorphic
@@ -1025,7 +1022,6 @@ theorem odd_zero_slit_chart {q g : ℂ → ℂ} {U : Set ℂ} (hU : IsOpen U)
         ring
     _ = (z - z₀) ^ (2 * k) * (z - z₀) * -g z := by rw [hexp, hs2 z hzball]
     _ = -q z := by rw [hq]; ring
-
 
 /-- A plane Möbius map of `SL(2, ℝ)` is real-differentiable off the real axis. -/
 theorem moebius_diffAt (γ : Matrix.SpecialLinearGroup (Fin 2) ℝ) {z : ℂ}
@@ -1812,7 +1808,6 @@ theorem reflect_telescoping :
           rw [← h2] at *
           linarith
 
-
 /-- **Single-chart variation lower bound**: if along `[a, b]` the horizontal density of
 `q` along `σ` is the modulus of the real part of the developed velocity, and the
 developed real part is absolutely continuous with matching derivative, then the deposited
@@ -1839,7 +1834,6 @@ theorem single_chart_variation_lb {q Φ : ℂ → ℂ} {σ : ℝ → ℂ} {a b :
     refine setLIntegral_congr_fun measurableSet_Icc fun t ht => ?_
     rw [hden t ht, ← enorm_eq_nnnorm, hd t ht, Real.enorm_eq_ofReal_abs]
   exact h1.trans (h2.trans_eq h3)
-
 
 /-- **A development chain** for `q` along `σ` with `n` pieces: partition points, chart
 developments per piece, and affine `±`-matching data at the junctions, carrying the
@@ -2046,7 +2040,6 @@ theorem junction_data {Φ₁ Φ₂ : ℂ → ℂ} {Ω : Set ℂ} (hΩ : IsOpen �
     rw [h z hz]
     simp [Complex.add_re, Complex.sub_re]
     ring
-
 
 /-- Postcomposition with a map Lipschitz on a set containing the track preserves
 absolute continuity on a general interval, for any metric target. -/
@@ -2393,7 +2386,6 @@ theorem mv_lower_bound {q : ℂ → ℂ} {σ : ℝ → ℂ} {Φs Φe : ℂ → �
   have h := devChain_variation_lb n D
   rw [ht0, htn, hΦ0, hΦn] at h
   exact h
-
 
 /-- **The symmetrized vertical-flow interface**: an almost-everywhere defined unit-speed
 motion along the vertical foliation of `q`, consumed through both leaf orientations at
@@ -3144,7 +3136,6 @@ theorem chart_leaf_null {q Φ : ℂ → ℂ} {S A : Set ℂ} {c : ℝ} (hS : IsO
   rintro w ⟨z, hz, rfl⟩
   exact hline z hz
 
-
 /-- A **vertical trajectory** of `q` on a set of times: a continuous curve carried by
 `−q`-natural charts avoiding the zeros, in which the development is the unit-speed
 horizontal translation. -/
@@ -3586,7 +3577,6 @@ theorem traj_extend {q : ℂ → ℂ}
       congr 1
       push_cast
       ring
-
 
 /-- **Interior derivative of a vertical trajectory**: at an interior time the trajectory
 is differentiable, with speed of squared norm `1/|q|` — unit flat speed. -/
@@ -4263,7 +4253,6 @@ theorem traj_dichotomy {q : ℂ → ℂ}
   rw [hE' ⟨hu.1, lt_of_le_of_lt hu.2 hδc_lt⟩]
   exact hEi hu
 
-
 /-- A rational complex point within any prescribed distance of a given point. -/
 theorem exists_rat_near_complex (z : ℂ) {δ : ℝ} (hδ : 0 < δ) :
     ∃ a : ℚ × ℚ, ‖z - (((a.1 : ℝ) : ℂ) + ((a.2 : ℝ) : ℂ) * Complex.I)‖ < δ := by
@@ -4805,7 +4794,6 @@ theorem Atlas.measurable_flow {q : ℂ → ℂ} (A : Atlas q) :
   exact measurable_of_tendsto_metrizable' Filter.atTop hgmeas
     (tendsto_pi_nhds.mpr hglim)
 
-
 /-- Points on a vertical trajectory are regular. -/
 theorem traj_regular {q : ℂ → ℂ} {σ : ℝ → ℂ} {s : Set ℝ}
     (hσ : IsTrajOn q σ s) {u : ℝ} (hu : u ∈ s) : 0 < (σ u).im ∧ q (σ u) ≠ 0 := by
@@ -5274,7 +5262,6 @@ theorem flow_eq_traj {q : ℂ → ℂ} (hq : DifferentiableOn ℂ q {z : ℂ | 0
   rw [Atlas.flow, dif_pos hex]
   exact tendsto_nhds_unique hex.choose_spec hconv
 
-
 /-- The stepper move conjugated by simultaneous time-and-sign reversal. -/
 theorem step2_neg {q : ℂ → ℂ} (A : Atlas q) (p : ℝ × ℂ × ℝ) :
     A.step2 (-p.1, p.2.1, -p.2.2)
@@ -5593,7 +5580,6 @@ theorem flow_traj_eval_neg {q : ℂ → ℂ}
     rw [neg_neg] at this
     rw [← hz0]
     exact this
-
 
 /-- The imaginary part transforms by the reciprocal square denominator norm. -/
 theorem moebiusMap_im (γ : Matrix.SpecialLinearGroup (Fin 2) ℝ) {z : ℂ}
@@ -6225,7 +6211,6 @@ theorem traj_track_compact {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ
       linarith [hu.2]
     exact ⟨⟨σ u, hreg u hu⟩, Metric.mem_closedBall.mpr (key N u hu hle), rfl⟩
 
-
 /-- The zeros of a not identically vanishing differential are finite in every compact
 subset of the upper half plane. -/
 theorem zeros_finite {q : ℂ → ℂ}
@@ -6440,7 +6425,6 @@ theorem ball_mass {q : ℂ → ℂ} {z₀ : ℂ} {M : ℕ} {r₀ C₁ C₂ : ℝ
     _ = ENNReal.ofReal (C₂ * ρ ^ M) * volume (Metric.ball z₀ ρ) := by
         rw [setLIntegral_const]
 
-
 /-- **Compact track on the maximal window**: the track of a trajectory on `[0, c)` over a
 cocompact group stays in one compact subset of the upper half plane. -/
 theorem traj_track_compact_Ico {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
@@ -6579,7 +6563,6 @@ theorem dying_near_zero {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
   obtain ⟨σ', hE', hσ'c, hT'⟩ := traj_close q.holo hc hσ (hL'H hwL')
     (hL'ne w hwL') hlim
   exact hmax ⟨σ', hE', hT'⟩
-
 
 /-- **Bounded multiplicity summation**: countably many measurable sets covering each
 point at most twice have summed integrals dominated by twice the union integral. -/
@@ -6747,7 +6730,6 @@ theorem step_cov {q Φ : ℂ → ℂ} {S : Set ℂ} (hS : IsOpen S)
     exact htrans.image_of_continuousOn_injOn (hinvcont.mono hsub) (hinvinj.mono hsub)
   exact ⟨hBmeas, chart_flow_lintegral hS hΦd hΦinj hsq hP hPS hmove hBmeas⟩
 
-
 /-- The stepper position after `k` moves of size `h` from unit sign. -/
 noncomputable def pos {q : ℂ → ℂ} (A : Atlas q) (h : ℝ) (k : ℕ) (z : ℂ) : ℂ :=
   ((A.step2)^[k] (h, z, 1)).2.1
@@ -6853,7 +6835,6 @@ theorem chain_cov {q : ℂ → ℂ} (A : Atlas q) {h : ℝ} {N : ℕ}
       (A.hinj _ hact) (A.hne _ hact) (A.hsq _ hact) ihm hPS hmove
     rw [himg]
     exact ⟨hm, he.trans ihe⟩
-
 
 /-- A pointwise indicator sum over a family hitting each point through at most two
 indices is bounded by two. -/
@@ -7055,7 +7036,6 @@ theorem flow_push {q : ℂ → ℂ} (hqm : Measurable q) (A : Atlas q) {h : ℝ}
         refine mul_le_mul_right (lintegral_mono_set ?_) 2
         exact Set.iUnion_subset fun c => Set.image_mono (hPsub c)
 
-
 /-- **The segment trajectory of a legal move**: if the developed segment of one signed
 step stays in the developed chart image, the local translation flow is a vertical
 trajectory with that chart slope. -/
@@ -7117,7 +7097,6 @@ theorem seg_traj {q Φ : ℂ → ℂ} {S : Set ℂ} (hS : IsOpen S)
     rw [hσdev u hu, hσ0]
     push_cast
     ring
-
 
 /-- The rational parameter grid of a closed segment. -/
 def ratGrid (h : ℝ) : Set ℚ := {u : ℚ | 0 ≤ (u : ℝ) ∧ (u : ℝ) ≤ h}
@@ -7245,7 +7224,6 @@ theorem seg_cond_measurable {O : Set ℂ} (hO : IsOpen O) {g : ℂ → ℂ} {s :
     hg.add (Complex.measurable_ofReal.comp (hs.mul_const _))
   exact (Metric.continuous_infEDist).measurable.comp hpt
 
-
 /-- The **strong-legal set**: every step up to `N` selects an active chart holding the
 position in its unit ball, carries a unit sign, and its whole developed segment stays
 in the developed chart image. -/
@@ -7341,7 +7319,6 @@ theorem sgn_succ {q : ℂ → ℂ} (A : Atlas q) (h : ℝ) (k : ℕ) (z : ℂ) :
   rw [hpos]
   rfl
 
-
 /-- **The step unit**: the k-th strong-legal clause produces a segment trajectory from
 the k-th position to the (k+1)-st, arriving with the updated sign as chart slope. -/
 theorem slegal_step {q : ℂ → ℂ} (A : Atlas q) {h : ℝ} (hh : 0 < h)
@@ -7423,7 +7400,6 @@ theorem slegal_step {q : ℂ → ℂ} (A : Atlas q) {h : ℝ} (hh : 0 < h)
   refine ⟨τ, hτ0, hτtraj, hτslope, hτh, hpm', ?_⟩
   rw [hsucc, mul_comm s ε']
   exact hslope₂
-
 
 /-- **Junction glue of trajectory units**: two trajectories meeting at a point with the
 same signed slope in one chart concatenate to a trajectory. -/
@@ -7548,7 +7524,6 @@ theorem traj_glue_units {q Φ : ℂ → ℂ} {S : Set ℂ} (hS : IsOpen S)
       push_cast
       ring
 
-
 /-- Slope transfer through the right piece of a glued curve. -/
 theorem slope_glue_shift {Φ : ℂ → ℂ} {σ' τ : ℝ → ℂ} {b δ s : ℝ}
     (hb : 0 ≤ b) (hδ : 0 < δ)
@@ -7634,7 +7609,6 @@ theorem slegal_traj {q : ℂ → ℂ} (A : Atlas q) {h : ℝ} (hh : 0 < h) :
     · exact slope_glue_shift hb hh hEqR hτarr
     · rw [hEqR (b + h) (Set.right_mem_Icc.mpr (by linarith)),
         show b + h - b = h by ring, hτh]
-
 
 /-- Two chart slopes of the same curve at the same accumulating time agree. -/
 theorem slope_eq {Φ : ℂ → ℂ} {σ : ℝ → ℂ} {I : Set ℝ} {u s₁ s₂ : ℝ}
@@ -7883,7 +7857,6 @@ theorem ball_mass_pow {q : ℂ → ℂ} {z₀ : ℂ} {M : ℕ} {r₀ C₁ C₂ :
     ← ENNReal.ofReal_mul (mul_nonneg hC₂ (by positivity : (0 : ℝ) ≤ δ ^ M))]
   congr 1
   ring
-
 
 /-- Strong legality implies legality: the moving-segment clause at the full step recovers
 the single-step clause. -/
@@ -8784,7 +8757,6 @@ theorem pos_eq_traj {q : ℂ → ℂ} (A : Atlas q) {h : ℝ} (hh : 0 < h) {N : 
   rw [← hσ'end]
   exact hEq (Set.right_mem_Icc.mpr hT.le)
 
-
 /-- **Point-uniform reach ball**: below the per-zero threshold there is one radius
 capturing every point satisfying the reach inequality, with ball mass controlled by
 `ε ^ 2`. -/
@@ -9124,7 +9096,6 @@ theorem grid_union_push {q : ℂ → ℂ} (hqm : Measurable q) (A : Atlas q)
         refine Set.iUnion_subset fun i => ?_
         rintro y ⟨z, hzP, rfl⟩
         exact hB i.1 z (hPsub i hzP)
-
 
 /-- **Window mass bound**: the seeds of a compact set surviving to `a` but not to
 `a + ε` carry `|q|`-mass at most twice the pool-ball mass. -/
@@ -9604,7 +9575,6 @@ theorem forward_good_ae {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
       (traj_mono hσtraj (Set.Icc_subset_Icc le_rfl (by linarith))) h1
   exact Set.mem_iUnion.mpr ⟨max m₁ m₂,
     Set.mem_iUnion.mpr ⟨j, hzK, hq0z, hno'⟩⟩
-
 
 open Classical in
 /-- **The mirror atlas**: the same margin atlas with reversed development orientation on
@@ -17289,243 +17259,6 @@ theorem exp_quarter {ε : ℝ} (hε : ε = 1 ∨ ε = -1) :
     push_cast
     ring
 
-/-- **The bigon count**: a horizontal arc and a vertical arc joined at two
-perpendicular corners assemble into a corner-paused value loop and a corner-closed
-derivative loop whose winding numbers about the origin satisfy the exact index
-identity, with corner defect in `{-1, 0, 1}`. -/
-theorem bigon_count {q : ℂ → ℂ} (γ₁ γ₂ d₁ d₂ : C(I, ℂ)) {εA εB : ℝ}
-    (hεA : εA = 1 ∨ εA = -1) (hεB : εB = 1 ∨ εB = -1)
-    (hq₁ : ∀ u : I, q (γ₁ u) * d₁ u ^ 2 = -1)
-    (hq₂ : ∀ u : I, q (γ₂ u) * d₂ u ^ 2 = 1)
-    (hA : γ₂ 0 = γ₁ 1) (hB : γ₁ 0 = γ₂ 1)
-    (hdA : d₂ 0 = (εA : ℂ) * Complex.I * d₁ 1)
-    (hdB : d₁ 0 = (εB : ℂ) * Complex.I * d₂ 1)
-    (hqγ₁ : Continuous fun u : I => q (γ₁ u))
-    (hqγ₂ : Continuous fun u : I => q (γ₂ u)) :
-    ∃ (zh d : C(I, ℂ)) (m : ℤ) (hqz : Continuous fun t : I => q (zh t)),
-      zh 0 = γ₁ 0 ∧ zh 0 = zh 1 ∧ d 0 = d 1 ∧ (∀ t : I, d t ≠ 0) ∧
-      (∀ t : I, zh t ∈ Set.range γ₁ ∪ Set.range γ₂) ∧
-      (m = -1 ∨ m = 0 ∨ m = 1) ∧
-      windingNumber ⟨fun t => q (zh t), hqz⟩ 0 + 2 * windingNumber d 0 = m := by
-  classical
-  set cA : ℂ := Complex.I * (εA : ℂ) * ((Real.pi : ℂ) / 2) with hcAdef
-  set cB : ℂ := Complex.I * (εB : ℂ) * ((Real.pi : ℂ) / 2) with hcBdef
-  set piI : ℂ := (Real.pi : ℂ) * Complex.I with hpiIdef
-  have hexpA : Complex.exp cA = (εA : ℂ) * Complex.I := exp_quarter hεA
-  have hexpB : Complex.exp cB = (εB : ℂ) * Complex.I := exp_quarter hεB
-  have hpi : Complex.exp piI = -1 := Complex.exp_pi_mul_I
-  have hsq : ∀ ε : ℝ, ε = 1 ∨ ε = -1 → ((ε : ℂ) * Complex.I) ^ 2 = -1 := by
-    intro ε hε
-    rcases hε with h | h <;> subst h <;>
-      · rw [mul_pow, Complex.I_sq]
-        norm_num
-  have hexp2A : Complex.exp (2 * cA) = -1 := by
-    rw [show (2 : ℂ) * cA = cA + cA by ring, Complex.exp_add, hexpA,
-      show ((εA : ℂ) * Complex.I) * ((εA : ℂ) * Complex.I)
-        = ((εA : ℂ) * Complex.I) ^ 2 by ring, hsq εA hεA]
-  have hexp2B : Complex.exp (2 * cB) = -1 := by
-    rw [show (2 : ℂ) * cB = cB + cB by ring, Complex.exp_add, hexpB,
-      show ((εB : ℂ) * Complex.I) * ((εB : ℂ) * Complex.I)
-        = ((εB : ℂ) * Complex.I) ^ 2 by ring, hsq εB hεB]
-  have hd₁ne : ∀ u : I, d₁ u ≠ 0 := by
-    intro u h0
-    have h1 := hq₁ u
-    rw [h0] at h1
-    simp at h1
-  have hd₂ne : ∀ u : I, d₂ u ≠ 0 := by
-    intro u h0
-    have h1 := hq₂ u
-    rw [h0] at h1
-    simp at h1
-  have hcoe : Continuous fun u : I => (((u : ℝ)) : ℂ) :=
-    Complex.continuous_ofReal.comp continuous_subtype_val
-  set z₁ : C(I, ℂ) := ContinuousMap.const I (γ₁ 1) with hz₁def
-  set z₃ : C(I, ℂ) := ContinuousMap.const I (γ₂ 1) with hz₃def
-  set a₀ : C(I, ℂ) := ⟨fun u => q (γ₁ u), hqγ₁⟩ with ha₀def
-  set a₁ : C(I, ℂ) := ContinuousMap.const I (q (γ₁ 1)) with ha₁def
-  set a₂ : C(I, ℂ) := ⟨fun u => q (γ₂ u), hqγ₂⟩ with ha₂def
-  set a₃ : C(I, ℂ) := ContinuousMap.const I (q (γ₂ 1)) with ha₃def
-  set e₁ : C(I, ℂ) := ⟨fun u => Complex.exp (cA * ((u : ℝ) : ℂ)) * d₁ 1,
-    (Complex.continuous_exp.comp (continuous_const.mul hcoe)).mul
-      continuous_const⟩ with he₁def
-  set e₃ : C(I, ℂ) := ⟨fun u => Complex.exp (cB * ((u : ℝ) : ℂ)) * d₂ 1,
-    (Complex.continuous_exp.comp (continuous_const.mul hcoe)).mul
-      continuous_const⟩ with he₃def
-  set l₀ : C(I, ℂ) := ContinuousMap.const I piI with hl₀def
-  set l₁ : C(I, ℂ) := ⟨fun u => piI + 2 * cA * ((u : ℝ) : ℂ),
-    continuous_const.add (continuous_const.mul hcoe)⟩ with hl₁def
-  set l₂ : C(I, ℂ) := ContinuousMap.const I (piI + 2 * cA) with hl₂def
-  set l₃ : C(I, ℂ) := ⟨fun u => piI + 2 * cA + 2 * cB * ((u : ℝ) : ℂ),
-    continuous_const.add (continuous_const.mul hcoe)⟩ with hl₃def
-  have hz01 : γ₁ 1 = z₁ 0 := rfl
-  have hz12 : z₁ 1 = γ₂ 0 := hA.symm
-  have hz23 : γ₂ 1 = z₃ 0 := rfl
-  have ha01 : a₀ 1 = a₁ 0 := rfl
-  have ha12 : a₁ 1 = a₂ 0 := congrArg q hA.symm
-  have ha23 : a₂ 1 = a₃ 0 := rfl
-  have he01 : d₁ 1 = e₁ 0 := by
-    change d₁ 1 = Complex.exp (cA * (((0 : I) : ℝ) : ℂ)) * d₁ 1
-    norm_num
-  have he12 : e₁ 1 = d₂ 0 := by
-    change Complex.exp (cA * (((1 : I) : ℝ) : ℂ)) * d₁ 1 = d₂ 0
-    rw [hdA]
-    norm_num [hexpA]
-  have he23 : d₂ 1 = e₃ 0 := by
-    change d₂ 1 = Complex.exp (cB * (((0 : I) : ℝ) : ℂ)) * d₂ 1
-    norm_num
-  have hl01 : l₀ 1 = l₁ 0 := by
-    change piI = piI + 2 * cA * (((0 : I) : ℝ) : ℂ)
-    norm_num
-  have hl12 : l₁ 1 = l₂ 0 := by
-    change piI + 2 * cA * (((1 : I) : ℝ) : ℂ) = piI + 2 * cA
-    norm_num
-  have hl23 : l₂ 1 = l₃ 0 := by
-    change piI + 2 * cA = piI + 2 * cA + 2 * cB * (((0 : I) : ℝ) : ℂ)
-    norm_num
-  set zbig : C(I, ℂ) := ⟨fun t => quarterConcat γ₁ z₁ γ₂ z₃ t,
-    (quarterConcat_continuous _ _ _ _ hz01 hz12 hz23).comp
-      continuous_subtype_val⟩ with hzbigdef
-  set Abig : C(I, ℂ) := ⟨fun t => quarterConcat a₀ a₁ a₂ a₃ t,
-    (quarterConcat_continuous _ _ _ _ ha01 ha12 ha23).comp
-      continuous_subtype_val⟩ with hAbigdef
-  set dbig : C(I, ℂ) := ⟨fun t => quarterConcat d₁ e₁ d₂ e₃ t,
-    (quarterConcat_continuous _ _ _ _ he01 he12 he23).comp
-      continuous_subtype_val⟩ with hdbigdef
-  set Lbig : C(I, ℂ) := ⟨fun t => quarterConcat l₀ l₁ l₂ l₃ t,
-    (quarterConcat_continuous _ _ _ _ hl01 hl12 hl23).comp
-      continuous_subtype_val⟩ with hLbigdef
-  have hAz : ∀ t : I, Abig t = q (zbig t) := by
-    intro t
-    change quarterConcat a₀ a₁ a₂ a₃ (t : ℝ) = q (quarterConcat γ₁ z₁ γ₂ z₃ (t : ℝ))
-    exact quarterConcat_rel (P := fun a z _ => a = q z)
-      (c₀ := γ₁) (c₁ := z₁) (c₂ := γ₂) (c₃ := z₃)
-      (fun u => rfl) (fun u => rfl) (fun u => rfl) (fun u => rfl) (t : ℝ)
-  have hExp : ∀ t : I, Abig t * dbig t ^ 2 = Complex.exp (Lbig t) := by
-    intro t
-    change quarterConcat a₀ a₁ a₂ a₃ (t : ℝ) * quarterConcat d₁ e₁ d₂ e₃ (t : ℝ) ^ 2
-      = Complex.exp (quarterConcat l₀ l₁ l₂ l₃ (t : ℝ))
-    refine quarterConcat_rel (P := fun a d l => a * d ^ 2 = Complex.exp l)
-      ?_ ?_ ?_ ?_ (t : ℝ)
-    · intro u
-      change q (γ₁ u) * d₁ u ^ 2 = Complex.exp piI
-      rw [hq₁ u, hpi]
-    · intro u
-      change q (γ₁ 1) * (Complex.exp (cA * ((u : ℝ) : ℂ)) * d₁ 1) ^ 2
-        = Complex.exp (piI + 2 * cA * ((u : ℝ) : ℂ))
-      have h1 : Complex.exp (cA * ((u : ℝ) : ℂ)) ^ 2
-          = Complex.exp (2 * cA * ((u : ℝ) : ℂ)) := by
-        rw [sq, ← Complex.exp_add]
-        congr 1
-        ring
-      calc q (γ₁ 1) * (Complex.exp (cA * ((u : ℝ) : ℂ)) * d₁ 1) ^ 2
-          = Complex.exp (cA * ((u : ℝ) : ℂ)) ^ 2 * (q (γ₁ 1) * d₁ 1 ^ 2) := by
-            ring
-        _ = Complex.exp (2 * cA * ((u : ℝ) : ℂ)) * (-1) := by rw [h1, hq₁ 1]
-        _ = Complex.exp (piI + 2 * cA * ((u : ℝ) : ℂ)) := by
-            rw [Complex.exp_add, hpi]
-            ring
-    · intro u
-      change q (γ₂ u) * d₂ u ^ 2 = Complex.exp (piI + 2 * cA)
-      rw [hq₂ u, Complex.exp_add, hpi, hexp2A]
-      norm_num
-    · intro u
-      change q (γ₂ 1) * (Complex.exp (cB * ((u : ℝ) : ℂ)) * d₂ 1) ^ 2
-        = Complex.exp (piI + 2 * cA + 2 * cB * ((u : ℝ) : ℂ))
-      have h1 : Complex.exp (cB * ((u : ℝ) : ℂ)) ^ 2
-          = Complex.exp (2 * cB * ((u : ℝ) : ℂ)) := by
-        rw [sq, ← Complex.exp_add]
-        congr 1
-        ring
-      calc q (γ₂ 1) * (Complex.exp (cB * ((u : ℝ) : ℂ)) * d₂ 1) ^ 2
-          = Complex.exp (cB * ((u : ℝ) : ℂ)) ^ 2 * (q (γ₂ 1) * d₂ 1 ^ 2) := by
-            ring
-        _ = Complex.exp (2 * cB * ((u : ℝ) : ℂ)) * 1 := by rw [h1, hq₂ 1]
-        _ = Complex.exp (piI + 2 * cA + 2 * cB * ((u : ℝ) : ℂ)) := by
-            rw [show piI + 2 * cA + 2 * cB * ((u : ℝ) : ℂ)
-              = (piI + 2 * cA) + 2 * cB * ((u : ℝ) : ℂ) by ring,
-              Complex.exp_add, Complex.exp_add, hpi, hexp2A]
-            ring
-  have hdne : ∀ t : I, dbig t ≠ 0 := by
-    intro t
-    change quarterConcat d₁ e₁ d₂ e₃ (t : ℝ) ≠ 0
-    refine quarterConcat_rel (P := fun _ d _ => d ≠ 0)
-      (a₀ := d₁) (a₁ := e₁) (a₂ := d₂) (a₃ := e₃)
-      (c₀ := d₁) (c₁ := e₁) (c₂ := d₂) (c₃ := e₃)
-      ?_ ?_ ?_ ?_ (t : ℝ)
-    · exact hd₁ne
-    · intro u
-      exact mul_ne_zero (Complex.exp_ne_zero _) (hd₁ne 1)
-    · exact hd₂ne
-    · intro u
-      exact mul_ne_zero (Complex.exp_ne_zero _) (hd₂ne 1)
-  have htrack : ∀ t : I, zbig t ∈ Set.range γ₁ ∪ Set.range γ₂ := by
-    intro t
-    change quarterConcat γ₁ z₁ γ₂ z₃ (t : ℝ) ∈ Set.range γ₁ ∪ Set.range γ₂
-    refine quarterConcat_rel (P := fun _ z _ => z ∈ Set.range γ₁ ∪ Set.range γ₂)
-      (a₀ := γ₁) (a₁ := z₁) (a₂ := γ₂) (a₃ := z₃)
-      (c₀ := γ₁) (c₁ := z₁) (c₂ := γ₂) (c₃ := z₃)
-      ?_ ?_ ?_ ?_ (t : ℝ)
-    · exact fun u => Or.inl ⟨u, rfl⟩
-    · exact fun u => Or.inl ⟨1, rfl⟩
-    · exact fun u => Or.inr ⟨u, rfl⟩
-    · exact fun u => Or.inr ⟨1, rfl⟩
-  have hz0 : zbig 0 = γ₁ 0 := by
-    change quarterConcat γ₁ z₁ γ₂ z₃ (((0 : I) : ℝ)) = γ₁ 0
-    rw [show (((0 : I) : ℝ)) = (0 : ℝ) from rfl, quarterConcat_zero]
-  have hzcl : zbig 0 = zbig 1 := by
-    rw [hz0]
-    change γ₁ 0 = quarterConcat γ₁ z₁ γ₂ z₃ (((1 : I) : ℝ))
-    rw [show (((1 : I) : ℝ)) = (1 : ℝ) from rfl, quarterConcat_one]
-    exact hB
-  have hdcl : dbig 0 = dbig 1 := by
-    change quarterConcat d₁ e₁ d₂ e₃ (((0 : I) : ℝ))
-      = quarterConcat d₁ e₁ d₂ e₃ (((1 : I) : ℝ))
-    rw [show (((0 : I) : ℝ)) = (0 : ℝ) from rfl,
-      show (((1 : I) : ℝ)) = (1 : ℝ) from rfl, quarterConcat_zero, quarterConcat_one]
-    change d₁ 0 = Complex.exp (cB * (((1 : I) : ℝ) : ℂ)) * d₂ 1
-    rw [hdB]
-    norm_num [hexpB]
-  have hAcl : Abig 0 = Abig 1 := by
-    rw [hAz 0, hAz 1, hzcl]
-  have hAne : ∀ t : I, Abig t ≠ 0 := by
-    intro t h0
-    have h1 := hExp t
-    rw [h0, zero_mul] at h1
-    exact Complex.exp_ne_zero _ h1.symm
-  obtain ⟨m, hm, hmval⟩ : ∃ m : ℤ, (m = -1 ∨ m = 0 ∨ m = 1) ∧
-      Lbig 1 - Lbig 0 = 2 * Real.pi * Complex.I * m := by
-    have hL0 : Lbig 0 = piI := by
-      change quarterConcat l₀ l₁ l₂ l₃ (((0 : I) : ℝ)) = piI
-      rw [show (((0 : I) : ℝ)) = (0 : ℝ) from rfl, quarterConcat_zero]
-      rfl
-    have hL1 : Lbig 1 = piI + 2 * cA + 2 * cB := by
-      change quarterConcat l₀ l₁ l₂ l₃ (((1 : I) : ℝ)) = piI + 2 * cA + 2 * cB
-      rw [show (((1 : I) : ℝ)) = (1 : ℝ) from rfl, quarterConcat_one]
-      change piI + 2 * cA + 2 * cB * (((1 : I) : ℝ) : ℂ) = piI + 2 * cA + 2 * cB
-      norm_num
-    rw [hL0, hL1]
-    rcases hεA with h1 | h1 <;> rcases hεB with h2 | h2 <;>
-      rw [hcAdef, hcBdef, h1, h2]
-    · refine ⟨1, Or.inr (Or.inr rfl), ?_⟩
-      push_cast
-      ring
-    · refine ⟨0, Or.inr (Or.inl rfl), ?_⟩
-      push_cast
-      ring
-    · refine ⟨0, Or.inr (Or.inl rfl), ?_⟩
-      push_cast
-      ring
-    · refine ⟨-1, Or.inl rfl, ?_⟩
-      push_cast
-      ring
-  have hcount := winding_product_exp hAcl hdcl hAne hdne hExp hmval
-  have hqz : Continuous fun t : I => q (zbig t) := Abig.continuous.congr hAz
-  refine ⟨zbig, dbig, m, hqz, hz0, hzcl, hdcl, hdne, htrack, hm, ?_⟩
-  have hcurve : (⟨fun t => q (zbig t), hqz⟩ : C(I, ℂ)) = Abig :=
-    (ContinuousMap.ext hAz).symm
-  rw [hcurve]
-  exact hcount
-
 /-- **Positive rescaling preserves winding**: multiplying a closed nonvanishing curve
 by a closed positive real factor does not change its winding number about the
 origin. -/
@@ -21439,7 +21172,6 @@ theorem cornerPiece_package {q Φ : ℂ → ℂ} {S : Set ℂ} (hS : IsOpen S)
     corner_pullback hS hΦ hinj hsq hqne hr hω htr u
   exact ⟨hmem, hdev, hderiv, hexp⟩
 
-
 /-- **The first-corner seam bundle**: the corner piece with signs `(1, -ε₁)` centered at
 `Φ₁ (γ T) - r + I·(-ε₁)·r` starts at the truncated horizontal point `γ (T - r)`, ends at
 the truncated transverse point `τ r`, its endpoint velocities are the quarter-sweep speed
@@ -23436,299 +23168,6 @@ theorem ball_chart_at {q Φ : ℂ → ℂ} {S : Set ℂ} (hS : IsOpen S)
   refine ⟨rb/2, max C 1, by linarith, lt_of_lt_of_le one_pos (le_max_right C 1),
     hsub, hΦd.mono hsub, fun w hw => hΦsq w (hsub hw), fun w hw => ?_⟩
   exact le_trans (hC w (Metric.ball_subset_closedBall hw)) (le_max_left C 1)
-
-set_option maxHeartbeats 400000 in
--- Heartbeats: the winding transport composes the full four-piece loop calculus.
-/-- **The point-winding sign-constancy principle**: a simple closed `C¹` loop with
-nonvanishing derivative and tangent winding one has nonnegative winding about every
-point off its track. -/
-def NonnegWindingPrinciple : Prop :=
-  ∀ (ρ g : ℝ → ℂ),
-    (∀ t ∈ Set.Icc (0:ℝ) 1, HasDerivAt ρ (g t) t) →
-    ContinuousOn g (Set.Icc 0 1) →
-    ρ 0 = ρ 1 → g 1 = g 0 →
-    Set.InjOn ρ (Set.Ico 0 1) →
-    (∀ u ∈ Set.Icc (0:ℝ) 1, g u ≠ 0) →
-    ∀ (hgw : Continuous fun t : I => g ((t : ℝ))),
-      windingNumber ⟨fun t : I => g ((t : ℝ)), hgw⟩ 0 = 1 →
-    ∀ (hc' : Continuous fun t : I => ρ ((t : ℝ))),
-    ∀ ζ : ℂ, (∀ t : I, ρ ((t : ℝ)) ≠ ζ) →
-      0 ≤ windingNumber ⟨fun t : I => ρ ((t : ℝ)), hc'⟩ ζ
-
-/-- **Pin transport**: the sign-constancy principle yields both orientation hypotheses
-of the bigon exclusion — the direct one and the one for the reversed loop. -/
-theorem nonnegWinding_transport (hW : NonnegWindingPrinciple) {ρ g : ℝ → ℂ}
-    (hd : ∀ t ∈ Set.Icc (0 : ℝ) 1, HasDerivAt ρ (g t) t)
-    (hgc : ContinuousOn g (Set.Icc 0 1))
-    (hcl : ρ 0 = ρ 1) (hgcl : g 1 = g 0)
-    (hinj : Set.InjOn ρ (Set.Ico 0 1))
-    (hgne : ∀ u ∈ Set.Icc (0 : ℝ) 1, g u ≠ 0) :
-    (∀ (hgw : Continuous fun t : I => g ((t : ℝ))),
-      windingNumber ⟨fun t : I => g ((t : ℝ)), hgw⟩ 0 = 1 →
-      ∀ (hc' : Continuous fun t : I => ρ ((t : ℝ))),
-      ∀ ζ : ℂ, (∀ t : I, ρ ((t : ℝ)) ≠ ζ) →
-        0 ≤ windingNumber ⟨fun t : I => ρ ((t : ℝ)), hc'⟩ ζ)
-    ∧ (∀ (hgw : Continuous fun t : I => -(g (1 - ((t : ℝ))))),
-      windingNumber ⟨fun t : I => -(g (1 - ((t : ℝ)))), hgw⟩ 0 = 1 →
-      ∀ (hc' : Continuous fun t : I => ρ (1 - ((t : ℝ)))),
-      ∀ ζ : ℂ, (∀ t : I, ρ (1 - ((t : ℝ))) ≠ ζ) →
-        0 ≤ windingNumber ⟨fun t : I => ρ (1 - ((t : ℝ))), hc'⟩ ζ) := by
-  constructor
-  · exact hW ρ g hd hgc hcl hgcl hinj hgne
-  · have hd' : ∀ t ∈ Set.Icc (0:ℝ) 1,
-        HasDerivAt (fun u => ρ (1 - u)) (-(g (1 - t))) t := by
-      intro t ht
-      have hin : HasDerivAt (fun u : ℝ => 1 - u) (-1) t := by
-        simpa using (hasDerivAt_id t).const_sub 1
-      have hmem : 1 - t ∈ Set.Icc (0:ℝ) 1 :=
-        ⟨by linarith [ht.2], by linarith [ht.1]⟩
-      have h := (hd (1 - t) hmem).scomp t hin
-      convert h using 1
-      rw [neg_smul, one_smul]
-    have hgc' : ContinuousOn (fun u : ℝ => -(g (1 - u))) (Set.Icc 0 1) := by
-      refine ContinuousOn.neg ?_
-      refine hgc.comp (Continuous.continuousOn (by fun_prop)) ?_
-      intro u hu
-      exact ⟨by linarith [hu.2], by linarith [hu.1]⟩
-    have hcl' : ρ (1 - (0:ℝ)) = ρ (1 - (1:ℝ)) := by
-      rw [show (1:ℝ) - 0 = 1 by norm_num, show (1:ℝ) - 1 = 0 by norm_num]
-      exact hcl.symm
-    have hgcl' : -(g (1 - (1:ℝ))) = -(g (1 - (0:ℝ))) := by
-      rw [show (1:ℝ) - 0 = 1 by norm_num, show (1:ℝ) - 1 = 0 by norm_num, hgcl]
-    have hinj' : Set.InjOn (fun u : ℝ => ρ (1 - u)) (Set.Ico 0 1) := by
-      intro x hx y hy heq0
-      have heq : ρ (1 - x) = ρ (1 - y) := heq0
-      by_cases hx0 : x = 0
-      · by_cases hy0 : y = 0
-        · rw [hx0, hy0]
-        · exfalso
-          have hy' : 0 < y := lt_of_le_of_ne hy.1 (Ne.symm hy0)
-          rw [hx0, show (1:ℝ) - 0 = 1 by norm_num] at heq
-          have h1 : ρ 0 = ρ (1 - y) := by rw [hcl]; exact heq
-          have h2 := hinj (Set.mem_Ico.mpr ⟨le_refl 0, by norm_num⟩)
-            (Set.mem_Ico.mpr ⟨by linarith [hy.2], by linarith⟩) h1
-          linarith [hy.2]
-      · by_cases hy0 : y = 0
-        · exfalso
-          have hx' : 0 < x := lt_of_le_of_ne hx.1 (Ne.symm hx0)
-          rw [hy0, show (1:ℝ) - 0 = 1 by norm_num] at heq
-          have h1 : ρ 0 = ρ (1 - x) := by rw [hcl]; exact heq.symm
-          have h2 := hinj (Set.mem_Ico.mpr ⟨le_refl 0, by norm_num⟩)
-            (Set.mem_Ico.mpr ⟨by linarith [hx.2], by linarith⟩) h1
-          linarith [hx.2]
-        · have hx' : 0 < x := lt_of_le_of_ne hx.1 (Ne.symm hx0)
-          have hy' : 0 < y := lt_of_le_of_ne hy.1 (Ne.symm hy0)
-          have h := hinj (Set.mem_Ico.mpr ⟨by linarith [hx.2], by linarith⟩)
-            (Set.mem_Ico.mpr ⟨by linarith [hy.2], by linarith⟩) heq
-          linarith
-    have hgne' : ∀ u ∈ Set.Icc (0:ℝ) 1, -(g (1 - u)) ≠ 0 := by
-      intro u hu
-      simp only [ne_eq, neg_eq_zero]
-      exact hgne (1 - u) ⟨by linarith [hu.2], by linarith [hu.1]⟩
-    exact hW (fun u => ρ (1 - u)) (fun u => -(g (1 - u))) hd' hgc' hcl' hgcl'
-      hinj' hgne'
-
-set_option maxHeartbeats 400000 in
--- Heartbeats: the exclusion instantiates the sign-constancy principle wholesale.
-/-- **Monogon exclusion**: under the nonnegative-winding principle no trajectory has a
-simple closed loop. -/
-theorem no_monogon {q : ℂ → ℂ}
-    (hq : DifferentiableOn ℂ q {z : ℂ | 0 < z.im})
-    (hq0 : ∃ z₀ : ℂ, 0 < z₀.im ∧ q z₀ ≠ 0)
-    (hW : NonnegWindingPrinciple)
-    {γ : ℝ → ℂ} {sdom : Set ℝ} (hγ : IsTrajOn q γ sdom) {c d : ℝ} (hcd : c < d)
-    (hnh : ∀ w ∈ Set.Icc c d, sdom ∈ nhds w)
-    (hcl : γ c = γ d) (hinj : Set.InjOn γ (Set.Ico c d)) : False := by
-  set ℓ : ℝ := (d - c)/4 with hℓdef
-  have hℓ : 0 < ℓ := by rw [hℓdef]; linarith
-  have hd4 : c + 4*ℓ = d := by rw [hℓdef]; ring
-  have h3 : ℓ < 3*ℓ := by linarith
-  have hcl4 : γ c = γ (c + 4*ℓ) := by rw [hd4]; exact hcl
-  have hnh4 : ∀ w ∈ Set.Icc c (c + 4*ℓ), sdom ∈ nhds w := by
-    rw [hd4]; exact hnh
-  have hinj4 : Set.InjOn γ (Set.Ico c (c + 4*ℓ)) := by
-    rw [hd4]; exact hinj
-  obtain ⟨hdA, hdC, hqγ⟩ := arc_prep hγ hnh4
-  have hclv : deriv γ c = deriv γ (c + 4*ℓ) :=
-    monogon_closed hγ (by linarith) hnh4 hcl4 hinj4
-  obtain ⟨hd1, hv01, hv12, hv23, hv30, hg01, hg12, hg23, hg30⟩ :=
-    monogon_bundle hℓ hdA hdC hqγ hcl4 hclv
-  have hmemdom : ∀ w ∈ Set.Icc c (c + 4*ℓ), w ∈ sdom := fun w hw =>
-    mem_of_mem_nhds (hnh4 w hw)
-  -- window maps for the four quarters
-  have hmaps₀ : ∀ u ∈ Set.Icc (0:ℝ) 1,
-      cubicRamp c ℓ ℓ u ∈ Set.Icc c (c + 4*ℓ) := by
-    intro u hu
-    have h := cubicRamp_mapsTo (a := c) hℓ h3 u hu
-    exact ⟨by linarith [h.1], by linarith [h.2]⟩
-  have hmaps₁ : ∀ u ∈ Set.Icc (0:ℝ) 1,
-      cubicRamp (c + ℓ) ℓ ℓ u ∈ Set.Icc c (c + 4*ℓ) := by
-    intro u hu
-    have h := cubicRamp_mapsTo (a := c + ℓ) hℓ h3 u hu
-    exact ⟨by linarith [h.1], by linarith [h.2]⟩
-  have hmaps₂ : ∀ u ∈ Set.Icc (0:ℝ) 1,
-      cubicRamp (c + 2*ℓ) ℓ ℓ u ∈ Set.Icc c (c + 4*ℓ) := by
-    intro u hu
-    have h := cubicRamp_mapsTo (a := c + 2*ℓ) hℓ h3 u hu
-    exact ⟨by linarith [h.1], by linarith [h.2]⟩
-  have hmaps₃ : ∀ u ∈ Set.Icc (0:ℝ) 1,
-      cubicRamp (c + 3*ℓ) ℓ ℓ u ∈ Set.Icc c (c + 4*ℓ) := by
-    intro u hu
-    have h := cubicRamp_mapsTo (a := c + 3*ℓ) hℓ h3 u hu
-    exact ⟨by linarith [h.1], by linarith [h.2]⟩
-  -- speed continuities from the arc packages
-  have hE : Complex.exp ((Real.pi : ℂ) * Complex.I) = -1 := Complex.exp_pi_mul_I
-  have hq₀ : ∀ w ∈ Set.Icc c (c + ℓ),
-      q (γ w) * (deriv γ w) ^ 2 = Complex.exp ((Real.pi : ℂ) * Complex.I) := by
-    rw [hE]
-    exact fun w hw => hqγ w ⟨by linarith [hw.1], by linarith [hw.2]⟩
-  have hq₁ : ∀ w ∈ Set.Icc (c + ℓ) ((c + ℓ) + ℓ),
-      q (γ w) * (deriv γ w) ^ 2 = Complex.exp ((Real.pi : ℂ) * Complex.I) := by
-    rw [hE]
-    exact fun w hw => hqγ w ⟨by linarith [hw.1], by linarith [hw.2]⟩
-  have hq₂ : ∀ w ∈ Set.Icc (c + 2*ℓ) ((c + 2*ℓ) + ℓ),
-      q (γ w) * (deriv γ w) ^ 2 = Complex.exp ((Real.pi : ℂ) * Complex.I) := by
-    rw [hE]
-    exact fun w hw => hqγ w ⟨by linarith [hw.1], by linarith [hw.2]⟩
-  have hq₃ : ∀ w ∈ Set.Icc (c + 3*ℓ) ((c + 3*ℓ) + ℓ),
-      q (γ w) * (deriv γ w) ^ 2 = Complex.exp ((Real.pi : ℂ) * Complex.I) := by
-    rw [hE]
-    exact fun w hw => hqγ w ⟨by linarith [hw.1], by linarith [hw.2]⟩
-  have hd₀ : ∀ w ∈ Set.Icc c (c + ℓ), HasDerivAt γ (deriv γ w) w := fun w hw =>
-    hdA w ⟨by linarith [hw.1], by linarith [hw.2]⟩
-  have hd₁ : ∀ w ∈ Set.Icc (c + ℓ) ((c + ℓ) + ℓ), HasDerivAt γ (deriv γ w) w :=
-    fun w hw => hdA w ⟨by linarith [hw.1], by linarith [hw.2]⟩
-  have hd₂ : ∀ w ∈ Set.Icc (c + 2*ℓ) ((c + 2*ℓ) + ℓ), HasDerivAt γ (deriv γ w) w :=
-    fun w hw => hdA w ⟨by linarith [hw.1], by linarith [hw.2]⟩
-  have hd₃ : ∀ w ∈ Set.Icc (c + 3*ℓ) ((c + 3*ℓ) + ℓ), HasDerivAt γ (deriv γ w) w :=
-    fun w hw => hdA w ⟨by linarith [hw.1], by linarith [hw.2]⟩
-  have hc₀ : ContinuousOn (deriv γ) (Set.Icc c (c + ℓ)) :=
-    hdC.mono fun w hw => ⟨by linarith [hw.1], by linarith [hw.2]⟩
-  have hc₁ : ContinuousOn (deriv γ) (Set.Icc (c + ℓ) ((c + ℓ) + ℓ)) :=
-    hdC.mono fun w hw => ⟨by linarith [hw.1], by linarith [hw.2]⟩
-  have hc₂ : ContinuousOn (deriv γ) (Set.Icc (c + 2*ℓ) ((c + 2*ℓ) + ℓ)) :=
-    hdC.mono fun w hw => ⟨by linarith [hw.1], by linarith [hw.2]⟩
-  have hc₃ : ContinuousOn (deriv γ) (Set.Icc (c + 3*ℓ) ((c + 3*ℓ) + ℓ)) :=
-    hdC.mono fun w hw => ⟨by linarith [hw.1], by linarith [hw.2]⟩
-  obtain ⟨hA1, -, -, -, -, -, hA7, -⟩ :=
-    arc_piece (f := γ) (df := deriv γ) hℓ h3 hd₀ hc₀ hq₀
-  obtain ⟨hB1, -, -, -, -, -, hB7, -⟩ :=
-    arc_piece (f := γ) (df := deriv γ) hℓ h3 hd₁ hc₁ hq₁
-  obtain ⟨hC1, -, -, -, -, -, hC7, -⟩ :=
-    arc_piece (f := γ) (df := deriv γ) hℓ h3 hd₂ hc₂ hq₂
-  obtain ⟨hD1, -, -, -, -, -, hD7, -⟩ :=
-    arc_piece (f := γ) (df := deriv γ) hℓ h3 hd₃ hc₃ hq₃
-  -- nonvanishing velocities
-  have hdne : ∀ w ∈ Set.Icc c (c + 4*ℓ), deriv γ w ≠ 0 := by
-    intro w hw h0
-    have h1 := hqγ w hw
-    rw [h0] at h1
-    simp at h1
-  have hgne : ∀ u ∈ Set.Icc (0:ℝ) 1, (4:ℂ) * quarterPW (rampArcSpeed γ c ℓ ℓ)
-      (rampArcSpeed γ (c + ℓ) ℓ ℓ) (rampArcSpeed γ (c + 2*ℓ) ℓ ℓ)
-      (rampArcSpeed γ (c + 3*ℓ) ℓ ℓ) u ≠ 0 :=
-    quarterPW_ne
-      (rampSpeed_ne hℓ h3 fun w hw =>
-        hdne w ⟨by linarith [hw.1], by linarith [hw.2]⟩)
-      (rampSpeed_ne hℓ h3 fun w hw =>
-        hdne w ⟨by linarith [hw.1], by linarith [hw.2]⟩)
-      (rampSpeed_ne hℓ h3 fun w hw =>
-        hdne w ⟨by linarith [hw.1], by linarith [hw.2]⟩)
-      (rampSpeed_ne hℓ h3 fun w hw =>
-        hdne w ⟨by linarith [hw.1], by linarith [hw.2]⟩)
-  -- the track factorization through the arc
-  have hfact : ∀ u ∈ Set.Icc (0:ℝ) 1, ∃ w ∈ Set.Icc c (c + 4*ℓ),
-      quarterPW (rampArc γ c ℓ ℓ) (rampArc γ (c + ℓ) ℓ ℓ)
-        (rampArc γ (c + 2*ℓ) ℓ ℓ) (rampArc γ (c + 3*ℓ) ℓ ℓ) u = γ w := by
-    intro u hu
-    by_cases h1 : u ≤ 1/4
-    · exact ⟨cubicRamp c ℓ ℓ (4*u), hmaps₀ _ ⟨by linarith [hu.1], by linarith⟩,
-        by rw [quarterPW_eval₀ h1, rampArc_apply]⟩
-    · by_cases h2 : u ≤ 1/2
-      · exact ⟨cubicRamp (c + ℓ) ℓ ℓ (4*u - 1),
-          hmaps₁ _ ⟨by linarith [not_le.mp h1], by linarith⟩,
-          by rw [quarterPW_eval₁ h1 h2, rampArc_apply]⟩
-      · by_cases h3' : u ≤ 3/4
-        · exact ⟨cubicRamp (c + 2*ℓ) ℓ ℓ (4*u - 2),
-            hmaps₂ _ ⟨by linarith [not_le.mp h2], by linarith⟩,
-            by rw [quarterPW_eval₂ h1 h2 h3', rampArc_apply]⟩
-        · exact ⟨cubicRamp (c + 3*ℓ) ℓ ℓ (4*u - 3),
-            hmaps₃ _ ⟨by linarith [not_le.mp h3'], by linarith [hu.2]⟩,
-            by rw [quarterPW_eval₃ h1 h2 h3', rampArc_apply]⟩
-  have hρH : ∀ u ∈ Set.Icc (0:ℝ) 1,
-      0 < (quarterPW (rampArc γ c ℓ ℓ) (rampArc γ (c + ℓ) ℓ ℓ)
-        (rampArc γ (c + 2*ℓ) ℓ ℓ) (rampArc γ (c + 3*ℓ) ℓ ℓ) u).im := by
-    intro u hu
-    obtain ⟨w, hw, heq⟩ := hfact u hu
-    rw [heq]
-    exact (traj_regular hγ (hmemdom w hw)).1
-  have hqneρ : ∀ u ∈ Set.Icc (0:ℝ) 1,
-      q (quarterPW (rampArc γ c ℓ ℓ) (rampArc γ (c + ℓ) ℓ ℓ)
-        (rampArc γ (c + 2*ℓ) ℓ ℓ) (rampArc γ (c + 3*ℓ) ℓ ℓ) u) ≠ 0 := by
-    intro u hu
-    obtain ⟨w, hw, heq⟩ := hfact u hu
-    rw [heq]
-    exact (traj_regular hγ (hmemdom w hw)).2
-  have hρc : ContinuousOn (quarterPW (rampArc γ c ℓ ℓ) (rampArc γ (c + ℓ) ℓ ℓ)
-      (rampArc γ (c + 2*ℓ) ℓ ℓ) (rampArc γ (c + 3*ℓ) ℓ ℓ)) (Set.Icc 0 1) :=
-    fun v hv => (hd1 v hv).continuousAt.continuousWithinAt
-  obtain ⟨U, hUo, hUconv, hUH, hfin, htrU⟩ := loop_hull hq hq0 hρc hρH
-  -- piece continuity and upper-half membership for the composed continuity
-  have hPc₀ : ContinuousOn (rampArc γ c ℓ ℓ) (Set.Icc 0 1) :=
-    fun v hv => (hA1 v hv).continuousAt.continuousWithinAt
-  have hPc₁ : ContinuousOn (rampArc γ (c + ℓ) ℓ ℓ) (Set.Icc 0 1) :=
-    fun v hv => (hB1 v hv).continuousAt.continuousWithinAt
-  have hPc₂ : ContinuousOn (rampArc γ (c + 2*ℓ) ℓ ℓ) (Set.Icc 0 1) :=
-    fun v hv => (hC1 v hv).continuousAt.continuousWithinAt
-  have hPc₃ : ContinuousOn (rampArc γ (c + 3*ℓ) ℓ ℓ) (Set.Icc 0 1) :=
-    fun v hv => (hD1 v hv).continuousAt.continuousWithinAt
-  have hW₀ : ∀ u ∈ Set.Icc (0:ℝ) 1, rampArc γ c ℓ ℓ u ∈ {z : ℂ | 0 < z.im} := by
-    intro u hu
-    rw [rampArc_apply]
-    exact (traj_regular hγ (hmemdom _ (hmaps₀ u hu))).1
-  have hW₁ : ∀ u ∈ Set.Icc (0:ℝ) 1,
-      rampArc γ (c + ℓ) ℓ ℓ u ∈ {z : ℂ | 0 < z.im} := by
-    intro u hu
-    rw [rampArc_apply]
-    exact (traj_regular hγ (hmemdom _ (hmaps₁ u hu))).1
-  have hW₂ : ∀ u ∈ Set.Icc (0:ℝ) 1,
-      rampArc γ (c + 2*ℓ) ℓ ℓ u ∈ {z : ℂ | 0 < z.im} := by
-    intro u hu
-    rw [rampArc_apply]
-    exact (traj_regular hγ (hmemdom _ (hmaps₂ u hu))).1
-  have hW₃ : ∀ u ∈ Set.Icc (0:ℝ) 1,
-      rampArc γ (c + 3*ℓ) ℓ ℓ u ∈ {z : ℂ | 0 < z.im} := by
-    intro u hu
-    rw [rampArc_apply]
-    exact (traj_regular hγ (hmemdom _ (hmaps₃ u hu))).1
-  have hqρc := loop_q_continuous hq.continuousOn hPc₀ hPc₁ hPc₂ hPc₃
-    hv01 hv12 hv23 hW₀ hW₁ hW₂ hW₃
-  -- closure and velocity closure of the assembled loop
-  have hclρ : quarterPW (rampArc γ c ℓ ℓ) (rampArc γ (c + ℓ) ℓ ℓ)
-      (rampArc γ (c + 2*ℓ) ℓ ℓ) (rampArc γ (c + 3*ℓ) ℓ ℓ) 0
-      = quarterPW (rampArc γ c ℓ ℓ) (rampArc γ (c + ℓ) ℓ ℓ)
-        (rampArc γ (c + 2*ℓ) ℓ ℓ) (rampArc γ (c + 3*ℓ) ℓ ℓ) 1 := by
-    rw [quarterPW_eval₀ (by norm_num),
-      quarterPW_eval₃ (by norm_num) (by norm_num) (by norm_num),
-      show (4:ℝ)*0 = 0 by norm_num, show (4:ℝ)*1 - 3 = 1 by norm_num, hv30]
-  have hgclρ : (4:ℂ) * quarterPW (rampArcSpeed γ c ℓ ℓ) (rampArcSpeed γ (c + ℓ) ℓ ℓ)
-      (rampArcSpeed γ (c + 2*ℓ) ℓ ℓ) (rampArcSpeed γ (c + 3*ℓ) ℓ ℓ) 1
-      = 4 * quarterPW (rampArcSpeed γ c ℓ ℓ) (rampArcSpeed γ (c + ℓ) ℓ ℓ)
-        (rampArcSpeed γ (c + 2*ℓ) ℓ ℓ) (rampArcSpeed γ (c + 3*ℓ) ℓ ℓ) 0 := by
-    rw [quarterPW_eval₃ (by norm_num) (by norm_num) (by norm_num),
-      quarterPW_eval₀ (by norm_num),
-      show (4:ℝ)*1 - 3 = 1 by norm_num, show (4:ℝ)*0 = 0 by norm_num, hg30]
-  have hgcρ : ContinuousOn (fun t : ℝ => (4:ℂ) * quarterPW (rampArcSpeed γ c ℓ ℓ)
-      (rampArcSpeed γ (c + ℓ) ℓ ℓ) (rampArcSpeed γ (c + 2*ℓ) ℓ ℓ)
-      (rampArcSpeed γ (c + 3*ℓ) ℓ ℓ) t) (Set.Icc 0 1) :=
-    continuousOn_const.mul
-      (quarterPW_continuousOn_Icc hA7 hB7 hC7 hD7 hg01 hg12 hg23)
-  have hinjρ := monogon_injOn hℓ hinj4
-  have hcount := monogon_count hℓ hdA hdC hqγ hcl4 hclv hqρc
-    (hgcρ.comp_continuous continuous_subtype_val fun t => t.2)
-  obtain ⟨hnnP, hnnR⟩ := nonnegWinding_transport hW hd1 hgcρ hclρ hgclρ hinjρ hgne
-  exact no_bigon_loop hUconv hUH hq hq0 hfin hd1 hgcρ hclρ hgclρ hinjρ hgne
-    htrU hqneρ hqρc hcount (Or.inr (Or.inl rfl)) (hnnP _) hnnR
 
 end WindingBricks
 
@@ -25976,194 +25415,6 @@ theorem isTrajOn_congr {q₁ q₂ : ℂ → ℂ} (h : ∀ w, q₁ w = q₂ w)
     exact ⟨U, hUo, hpU, hUH, fun w hw => h w ▸ hUne w hw, Φ, hΦd, hΦinj,
       fun w hw => h w ▸ hΦsq w hw, hev⟩
 
-/-- **The separation inequality from the pins**: the no-bigon principle in both
-chiralities, the universal winding jump, and the plaque certificate produce the
-horizontal no-shortcut inequality for almost every anchored trajectory. -/
-theorem hsep_final {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
-    (hΓ : IsFuchsianGroup Γ)
-    (hcc : CompactSpace (Quotient (MulAction.orbitRel Γ UpperHalfPlane)))
-    (q : QuadraticDifferential Γ) (hq0 : ∃ z₀ : ℂ, 0 < z₀.im ∧ q z₀ ≠ 0)
-    (hbigon : ∀ (σv τh : ℝ → ℂ) (T s μ : ℝ), 0 < T → 0 ≤ s → 0 < μ →
-      IsTrajOn (q : ℂ → ℂ) σv (Set.Icc (-μ) (T + μ)) →
-      IsTrajOn (fun z => -(q : ℂ → ℂ) z) τh (Set.Icc (-μ) (s + μ)) →
-      τh 0 = σv T → τh s = σv 0 → False)
-    (hbigonH : ∀ (σv τh : ℝ → ℂ) (T s μ : ℝ), 0 < T → 0 ≤ s → 0 < μ →
-      IsTrajOn (fun z => -(q : ℂ → ℂ) z) σv (Set.Icc (-μ) (T + μ)) →
-      IsTrajOn (q : ℂ → ℂ) τh (Set.Icc (-μ) (s + μ)) →
-      τh 0 = σv T → τh s = σv 0 → False)
-    (hjump : ∀ (ϑ : ℝ → ℂ) (a : ℝ) (hϑ : IsTrajOn (q : ℂ → ℂ) ϑ (Set.Ici a))
-      (ha : a < 0) (T : ℝ) (hT : 0 < T) (τ : ℝ → ℂ),
-      IsTrajOn (fun z => -(q : ℂ → ℂ) z) τ Set.univ →
-      ∀ tstar : ℝ, tstar ∈ Set.Ioo 0 T → τ 0 = ϑ tstar →
-      ∀ (p : C(unitInterval, ℂ)), p 0 = ϑ 0 → ∀ hp1 : p 1 = ϑ T,
-      (∀ s : unitInterval, 0 < (p s).im) →
-      (∀ (s : unitInterval) (u : ℝ), p s ≠ τ u) →
-      ∃ η : ℝ, 0 < η ∧
-        (windingNumber (leafLoopC p ϑ T
-            (hϑ.cont.mono fun _ hx => le_trans ha.le hx.1) hT.le hp1) (τ η) ≠ 0 ∨
-         windingNumber (leafLoopC p ϑ T
-            (hϑ.cont.mono fun _ hx => le_trans ha.le hx.1) hT.le hp1)
-              (τ (-η)) ≠ 0))
-    (hplaque : ∀ ϑ : ℝ → ℂ, IsTrajOn (q : ℂ → ℂ) ϑ Set.univ → ∀ T : ℝ, 0 < T →
-      Set.InjOn ϑ (Set.Icc 0 T) →
-      ∀ D : Set ℝ, D ⊆ Set.Ioo 0 T →
-      ∀ τfam : ℝ → ℝ → ℂ,
-      (∀ t ∈ D, IsTrajOn (fun z => -(q : ℂ → ℂ) z) (τfam t) Set.univ ∧
-        τfam t 0 = ϑ t) →
-      ∀ p : ℝ → ℂ, IsFlatPath p (ϑ 0) (ϑ T) →
-      (∀ t ∈ D, ∃ s ∈ Set.Icc (0 : ℝ) 1, ∃ u : ℝ, p s = τfam t u) →
-      ∃ Ψ : ℂ → ℂ, ∃ V : Set ℂ, IsOpen V ∧ DifferentiableOn ℂ Ψ V ∧
-        (∀ x ∈ V, deriv Ψ x ^ 2 = -(-(q : ℂ → ℂ) x)) ∧
-        ∃ c ε δ : ℝ, (ε = 1 ∨ ε = -1) ∧ 0 < δ ∧
-        ∀ t ∈ D, ∃ s ∈ Set.Icc (0 : ℝ) 1,
-          Metric.ball (p s) δ ⊆ V ∧ (Ψ (p s)).im = c - ε * t) :
-    ∀ A : Atlas (q : ℂ → ℂ),
-      ∀ᵐ z ∂(volume.restrict {z : ℂ | 0 < z.im}), z ∈ good (q : ℂ → ℂ) A →
-      ∀ T : ℝ, 0 < T → ∀ σ : ℝ → ℂ, σ 0 = z →
-      IsTrajOn (q : ℂ → ℂ) σ (Set.Icc 0 T) →
-      ENNReal.ofReal T ≤ horizontalDist (q : ℂ → ℂ) (σ 0) (σ T) := by
-  intro A
-  obtain ⟨B⟩ := exists_atlas (qdNeg q).holo
-  have hqq : ((qdNeg q : ℂ → ℂ)) = fun z => -((q : ℂ → ℂ) z) :=
-    funext fun z => qdNeg_apply q z
-  filter_upwards [flow_good_neg_ae hΓ hcc q hq0 A B] with z hzimp
-  intro hzg T hT σ hσ0 hσtr
-  have hzim : 0 < z.im := hzg.1
-  have hz0 : (q : ℂ → ℂ) z ≠ 0 := hzg.2.1
-  have hflowae := hzimp hzg
-  have hϑuniv : IsTrajOn (q : ℂ → ℂ) (fun u => A.flow u z) Set.univ :=
-    flow_alltime q.holo A hzg
-  have key : ∀ ϑ : ℝ → ℂ, IsTrajOn (q : ℂ → ℂ) ϑ Set.univ →
-      (∀ u ∈ Set.Icc 0 T, ϑ u = σ u) →
-      (∀ᵐ t ∂(volume : Measure ℝ), ϑ t ∈ good (qdNeg q : ℂ → ℂ) B) →
-      ENNReal.ofReal T ≤ horizontalDist (q : ℂ → ℂ) (σ 0) (σ T) := by
-    intro ϑ hϑ hagree hae
-    have h00 : ϑ 0 = σ 0 := hagree 0 ⟨le_rfl, hT.le⟩
-    have hTT : ϑ T = σ T := hagree T ⟨hT.le, le_rfl⟩
-    rw [← h00, ← hTT]
-    have hinj : Set.InjOn ϑ (Set.Icc 0 T) := by
-      refine traj_injOn q.holo hbigon (m := 1) one_pos ?_
-      exact traj_mono hϑ (Set.subset_univ _)
-    set D : Set ℝ := Set.Ioo 0 T ∩ {t | ϑ t ∈ good (qdNeg q : ℂ → ℂ) B}
-      with hDdef
-    have hDsub : D ⊆ Set.Ioo 0 T := Set.inter_subset_left
-    have hDfull : volume (Set.Icc 0 T \ D) = 0 := by
-      have h1 : Set.Icc 0 T \ D ⊆ ({0, T} : Set ℝ)
-          ∪ {t | ¬ ϑ t ∈ good (qdNeg q : ℂ → ℂ) B} := by
-        rintro t ⟨htI, htD⟩
-        by_cases hg : ϑ t ∈ good (qdNeg q : ℂ → ℂ) B
-        · left
-          rcases eq_or_lt_of_le htI.1 with h | h
-          · exact Or.inl h.symm
-          · rcases eq_or_lt_of_le htI.2 with h' | h'
-            · exact Or.inr h'
-            · exact absurd ⟨⟨h, h'⟩, hg⟩ htD
-        · exact Or.inr hg
-      refine measure_mono_null h1 ?_
-      have h2 : volume ({0, T} : Set ℝ) = 0 :=
-        ((Set.finite_singleton T).insert 0).measure_zero volume
-      have h3 : volume {t | ¬ ϑ t ∈ good (qdNeg q : ℂ → ℂ) B} = 0 :=
-        ae_iff.mp hae
-      exact measure_union_null h2 h3
-    set τfam : ℝ → ℝ → ℂ := fun t u => B.flow u (ϑ t) with hτfamdef
-    have hτfam : ∀ t ∈ D, IsTrajOn (fun w => -(q : ℂ → ℂ) w) (τfam t) Set.univ ∧
-        τfam t 0 = ϑ t := by
-      intro t ht
-      have hgood : ϑ t ∈ good (qdNeg q : ℂ → ℂ) B := ht.2
-      constructor
-      · exact isTrajOn_congr (fun w => qdNeg_apply q w)
-          (flow_alltime (qdNeg q).holo B hgood)
-      · exact flow_zero B hgood.1 hgood.2.1
-    refine hsep_of_certificates (D := D) hDfull ?_
-    intro p hp
-    have hcrossall : ∀ t ∈ D, ∃ s ∈ Set.Icc (0 : ℝ) 1, ∃ u : ℝ,
-        p s = τfam t u := by
-      intro t ht
-      set pC : C(unitInterval, ℂ) := ⟨fun s => p s,
-        hp.cont.comp_continuous continuous_subtype_val (fun s => s.2)⟩ with hpCdef
-      have hϑIci : IsTrajOn (q : ℂ → ℂ) ϑ (Set.Ici (-1 : ℝ)) :=
-        traj_mono hϑ (Set.subset_univ _)
-      have hp0' : pC 0 = ϑ 0 := hp.init
-      have hp1' : pC 1 = ϑ T := hp.final
-      have hpim' : ∀ s : unitInterval, 0 < (pC s).im := fun s =>
-        hp.upper s s.2
-      obtain ⟨s, u, hsu⟩ := competitor_crosses_leaf q.holo hbigon hbigonH hϑIci
-        (by norm_num) hT (hτfam t ht).1 (hDsub ht) (hτfam t ht).2 pC hp0' hp1'
-        hpim' (hjump ϑ (-1) hϑIci (by norm_num) T hT (τfam t) (hτfam t ht).1 t
-          (hDsub ht) (hτfam t ht).2 pC hp0' hp1' hpim')
-      exact ⟨(s : ℝ), s.2, u, hsu⟩
-    obtain ⟨Ψ, V, hV, hΨd, hΨsq, c, ε, δ, hε, hδ, hcert⟩ :=
-      hplaque ϑ hϑ T hT hinj D hDsub τfam hτfam p hp hcrossall
-    exact ⟨Ψ, V, hV, hΨd, hΨsq, c, ε, δ, hε, hδ, hcert⟩
-  rcases traj_flow_eval q.holo A hzim hz0 hT hσ0 hσtr with hor | hor
-  · exact key (fun u => A.flow u z) hϑuniv (fun u hu => hor u hu) hflowae
-  · have hrev := traj_reverse hϑuniv
-    rw [Set.preimage_univ] at hrev
-    exact key (fun u => A.flow (-u) z) hrev (fun u hu => hor u hu)
-      (ae_neg_volume hflowae)
-
-/-- **The Reich–Strebel main inequality from the pins**: composing the separation
-inequality with the flow-data machinery, with the vanishing differential handled by
-the zero norm. -/
-theorem reich_strebel_of_pins {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
-    (hΓ : IsFuchsianGroup Γ)
-    (hfree : ∀ γ : Γ, (∃ τ : UpperHalfPlane, γ • τ = τ) →
-      ∀ τ' : UpperHalfPlane, γ • τ' = τ')
-    (hcc : CompactSpace (Quotient (MulAction.orbitRel Γ UpperHalfPlane)))
-    (q : QuadraticDifferential Γ) {h hinv : ℂ → ℂ} {κ : ℝ} (hκ : κ < 1)
-    (hqc : IsQCUpper h hinv κ)
-    (hbd : ∀ t : ℝ, Filter.Tendsto h (nhdsWithin (t : ℂ) {z : ℂ | 0 < z.im})
-      (nhds (t : ℂ)))
-    (hcomm : ∀ γ ∈ Γ, ∀ z : ℂ, 0 < z.im →
-      h (moebiusMap γ z) = moebiusMap γ (h z))
-    (hbigon : ∀ (σv τh : ℝ → ℂ) (T s μ : ℝ), 0 < T → 0 ≤ s → 0 < μ →
-      IsTrajOn (q : ℂ → ℂ) σv (Set.Icc (-μ) (T + μ)) →
-      IsTrajOn (fun z => -(q : ℂ → ℂ) z) τh (Set.Icc (-μ) (s + μ)) →
-      τh 0 = σv T → τh s = σv 0 → False)
-    (hbigonH : ∀ (σv τh : ℝ → ℂ) (T s μ : ℝ), 0 < T → 0 ≤ s → 0 < μ →
-      IsTrajOn (fun z => -(q : ℂ → ℂ) z) σv (Set.Icc (-μ) (T + μ)) →
-      IsTrajOn (q : ℂ → ℂ) τh (Set.Icc (-μ) (s + μ)) →
-      τh 0 = σv T → τh s = σv 0 → False)
-    (hjump : ∀ (ϑ : ℝ → ℂ) (a : ℝ) (hϑ : IsTrajOn (q : ℂ → ℂ) ϑ (Set.Ici a))
-      (ha : a < 0) (T : ℝ) (hT : 0 < T) (τ : ℝ → ℂ),
-      IsTrajOn (fun z => -(q : ℂ → ℂ) z) τ Set.univ →
-      ∀ tstar : ℝ, tstar ∈ Set.Ioo 0 T → τ 0 = ϑ tstar →
-      ∀ (p : C(unitInterval, ℂ)), p 0 = ϑ 0 → ∀ hp1 : p 1 = ϑ T,
-      (∀ s : unitInterval, 0 < (p s).im) →
-      (∀ (s : unitInterval) (u : ℝ), p s ≠ τ u) →
-      ∃ η : ℝ, 0 < η ∧
-        (windingNumber (leafLoopC p ϑ T
-            (hϑ.cont.mono fun _ hx => le_trans ha.le hx.1) hT.le hp1) (τ η) ≠ 0 ∨
-         windingNumber (leafLoopC p ϑ T
-            (hϑ.cont.mono fun _ hx => le_trans ha.le hx.1) hT.le hp1)
-              (τ (-η)) ≠ 0))
-    (hplaque : ∀ ϑ : ℝ → ℂ, IsTrajOn (q : ℂ → ℂ) ϑ Set.univ → ∀ T : ℝ, 0 < T →
-      Set.InjOn ϑ (Set.Icc 0 T) →
-      ∀ D : Set ℝ, D ⊆ Set.Ioo 0 T →
-      ∀ τfam : ℝ → ℝ → ℂ,
-      (∀ t ∈ D, IsTrajOn (fun z => -(q : ℂ → ℂ) z) (τfam t) Set.univ ∧
-        τfam t 0 = ϑ t) →
-      ∀ p : ℝ → ℂ, IsFlatPath p (ϑ 0) (ϑ T) →
-      (∀ t ∈ D, ∃ s ∈ Set.Icc (0 : ℝ) 1, ∃ u : ℝ, p s = τfam t u) →
-      ∃ Ψ : ℂ → ℂ, ∃ V : Set ℂ, IsOpen V ∧ DifferentiableOn ℂ Ψ V ∧
-        (∀ x ∈ V, deriv Ψ x ^ 2 = -(-(q : ℂ → ℂ) x)) ∧
-        ∃ c ε δ : ℝ, (ε = 1 ∨ ε = -1) ∧ 0 < δ ∧
-        ∀ t ∈ D, ∃ s ∈ Set.Icc (0 : ℝ) 1,
-          Metric.ball (p s) δ ⊆ V ∧ (Ψ (p s)).im = c - ε * t) :
-    q.l1Norm ≤ ∫⁻ z in UpperHalfPlane.coe '' dirichletDomain Γ UpperHalfPlane.I,
-      ‖q z‖ₑ * ENNReal.ofReal
-        (‖1 - wirtingerQuotient h z * (q z / (‖q z‖ : ℂ))‖ ^ 2
-          / (1 - ‖wirtingerQuotient h z‖ ^ 2)) := by
-  by_cases hq0 : ∃ z₀ : ℂ, 0 < z₀.im ∧ (q : ℂ → ℂ) z₀ ≠ 0
-  · exact reich_strebel_of_hsep hΓ hfree hcc q hκ hqc hbd hcomm
-      (hsep_final hΓ hcc q hq0 hbigon hbigonH hjump hplaque)
-  · push Not at hq0
-    have hmeas : MeasurableSet
-        (UpperHalfPlane.coe '' dirichletDomain Γ UpperHalfPlane.I) :=
-      (isCompact_domain hΓ hfree hcc).measurableSet
-    rw [l1Norm_eq_zero q hmeas hq0]
-    exact zero_le _
-
 /-- **Vertical tails are proper**: under the no-bigon principle an all-time vertical
 trajectory leaves every compact subset of the upper half plane at arbitrarily late
 times. -/
@@ -26204,221 +25455,6 @@ theorem leaf_tail_proper {q : ℂ → ℂ}
     exact hbigonH σv τh T s μ hT hs hμ hσv
       (isTrajOn_congr (fun w => neg_neg (q w)) hτh) hc1 hc2
   exact confined_tail_false hq.neg hbigon' hτ hK hKH (fun t ht => hcon t ht)
-
-/-- **The separation inequality from the multi-window pins**. -/
-theorem hsep_final₂ {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
-    (hΓ : IsFuchsianGroup Γ)
-    (hcc : CompactSpace (Quotient (MulAction.orbitRel Γ UpperHalfPlane)))
-    (q : QuadraticDifferential Γ) (hq0 : ∃ z₀ : ℂ, 0 < z₀.im ∧ q z₀ ≠ 0)
-    (hbigon : ∀ (σv τh : ℝ → ℂ) (T s μ : ℝ), 0 < T → 0 ≤ s → 0 < μ →
-      IsTrajOn (q : ℂ → ℂ) σv (Set.Icc (-μ) (T + μ)) →
-      IsTrajOn (fun z => -(q : ℂ → ℂ) z) τh (Set.Icc (-μ) (s + μ)) →
-      τh 0 = σv T → τh s = σv 0 → False)
-    (hbigonH : ∀ (σv τh : ℝ → ℂ) (T s μ : ℝ), 0 < T → 0 ≤ s → 0 < μ →
-      IsTrajOn (fun z => -(q : ℂ → ℂ) z) σv (Set.Icc (-μ) (T + μ)) →
-      IsTrajOn (q : ℂ → ℂ) τh (Set.Icc (-μ) (s + μ)) →
-      τh 0 = σv T → τh s = σv 0 → False)
-    (hjump : ∀ (ϑ : ℝ → ℂ) (a : ℝ) (hϑ : IsTrajOn (q : ℂ → ℂ) ϑ (Set.Ici a))
-      (ha : a < 0) (T : ℝ) (hT : 0 < T) (τ : ℝ → ℂ),
-      IsTrajOn (fun z => -(q : ℂ → ℂ) z) τ Set.univ →
-      ∀ tstar : ℝ, tstar ∈ Set.Ioo 0 T → τ 0 = ϑ tstar →
-      ∀ (p : C(unitInterval, ℂ)), p 0 = ϑ 0 → ∀ hp1 : p 1 = ϑ T,
-      (∀ s : unitInterval, 0 < (p s).im) →
-      (∀ (s : unitInterval) (u : ℝ), p s ≠ τ u) →
-      ∃ η : ℝ, 0 < η ∧
-        (windingNumber (leafLoopC p ϑ T
-            (hϑ.cont.mono fun _ hx => le_trans ha.le hx.1) hT.le hp1) (τ η) ≠ 0 ∨
-         windingNumber (leafLoopC p ϑ T
-            (hϑ.cont.mono fun _ hx => le_trans ha.le hx.1) hT.le hp1)
-              (τ (-η)) ≠ 0))
-    (hcert₂ : ∀ ϑ : ℝ → ℂ, IsTrajOn (q : ℂ → ℂ) ϑ Set.univ → ∀ T : ℝ, 0 < T →
-      Set.InjOn ϑ (Set.Icc 0 T) →
-      ∀ D : Set ℝ, D ⊆ Set.Ioo 0 T → volume (Set.Icc 0 T \ D) = 0 →
-      ∀ τfam : ℝ → ℝ → ℂ,
-      (∀ t ∈ D, IsTrajOn (fun z => -(q : ℂ → ℂ) z) (τfam t) Set.univ ∧
-        τfam t 0 = ϑ t) →
-      ∀ p : ℝ → ℂ, IsFlatPath p (ϑ 0) (ϑ T) →
-      (∀ t ∈ D, ∃ s ∈ Set.Icc (0 : ℝ) 1, ∃ u : ℝ, p s = τfam t u) →
-      ∃ D' : Set ℝ, D' ⊆ D ∧ volume (Set.Icc 0 T \ D') = 0 ∧
-      ∃ (Ψ : ℕ → ℂ → ℂ) (V : ℕ → Set ℂ) (c ε δ : ℕ → ℝ) (J : ℕ → Set ℝ),
-        (∀ i, IsOpen (V i)) ∧ (∀ i, DifferentiableOn ℂ (Ψ i) (V i)) ∧
-        (∀ i, ∀ x ∈ V i, deriv (Ψ i) x ^ 2 = -(-(q : ℂ → ℂ) x)) ∧
-        (∀ i, ε i = 1 ∨ ε i = -1) ∧ (∀ i, 0 < δ i) ∧
-        (∀ i, MeasurableSet (J i)) ∧ (∀ i, J i ⊆ Set.Icc 0 1) ∧
-        (∀ i j, i ≠ j → Disjoint (J i) (J j)) ∧
-        ∀ t ∈ D', ∃ i, ∃ s ∈ J i,
-          Metric.ball (p s) (δ i) ⊆ V i ∧ (Ψ i (p s)).im = c i - ε i * t)
-    (hcoarea₂ : ∀ (z w : ℂ) (T : ℝ) (D' : Set ℝ),
-      volume (Set.Icc 0 T \ D') = 0 →
-      ∀ p : ℝ → ℂ, IsFlatPath p z w →
-      (∃ (Ψ : ℕ → ℂ → ℂ) (V : ℕ → Set ℂ) (c ε δ : ℕ → ℝ) (J : ℕ → Set ℝ),
-        (∀ i, IsOpen (V i)) ∧ (∀ i, DifferentiableOn ℂ (Ψ i) (V i)) ∧
-        (∀ i, ∀ x ∈ V i, deriv (Ψ i) x ^ 2 = -(-(q : ℂ → ℂ) x)) ∧
-        (∀ i, ε i = 1 ∨ ε i = -1) ∧ (∀ i, 0 < δ i) ∧
-        (∀ i, MeasurableSet (J i)) ∧ (∀ i, J i ⊆ Set.Icc 0 1) ∧
-        (∀ i j, i ≠ j → Disjoint (J i) (J j)) ∧
-        ∀ t ∈ D', ∃ i, ∃ s ∈ J i,
-          Metric.ball (p s) (δ i) ⊆ V i ∧ (Ψ i (p s)).im = c i - ε i * t) →
-      ENNReal.ofReal T ≤ horizontalDist (q : ℂ → ℂ) z w) :
-    ∀ A : Atlas (q : ℂ → ℂ),
-      ∀ᵐ z ∂(volume.restrict {z : ℂ | 0 < z.im}), z ∈ good (q : ℂ → ℂ) A →
-      ∀ T : ℝ, 0 < T → ∀ σ : ℝ → ℂ, σ 0 = z →
-      IsTrajOn (q : ℂ → ℂ) σ (Set.Icc 0 T) →
-      ENNReal.ofReal T ≤ horizontalDist (q : ℂ → ℂ) (σ 0) (σ T) := by
-  intro A
-  obtain ⟨B⟩ := exists_atlas (qdNeg q).holo
-  filter_upwards [flow_good_neg_ae hΓ hcc q hq0 A B] with z hzimp
-  intro hzg T hT σ hσ0 hσtr
-  have hzim : 0 < z.im := hzg.1
-  have hz0 : (q : ℂ → ℂ) z ≠ 0 := hzg.2.1
-  have hflowae := hzimp hzg
-  have hϑuniv : IsTrajOn (q : ℂ → ℂ) (fun u => A.flow u z) Set.univ :=
-    flow_alltime q.holo A hzg
-  have key : ∀ ϑ : ℝ → ℂ, IsTrajOn (q : ℂ → ℂ) ϑ Set.univ →
-      (∀ u ∈ Set.Icc 0 T, ϑ u = σ u) →
-      (∀ᵐ t ∂(volume : Measure ℝ), ϑ t ∈ good (qdNeg q : ℂ → ℂ) B) →
-      ENNReal.ofReal T ≤ horizontalDist (q : ℂ → ℂ) (σ 0) (σ T) := by
-    intro ϑ hϑ hagree hae
-    have h00 : ϑ 0 = σ 0 := hagree 0 ⟨le_rfl, hT.le⟩
-    have hTT : ϑ T = σ T := hagree T ⟨hT.le, le_rfl⟩
-    rw [← h00, ← hTT]
-    have hinj : Set.InjOn ϑ (Set.Icc 0 T) := by
-      refine traj_injOn q.holo hbigon (m := 1) one_pos ?_
-      exact traj_mono hϑ (Set.subset_univ _)
-    set D : Set ℝ := Set.Ioo 0 T ∩ {t | ϑ t ∈ good (qdNeg q : ℂ → ℂ) B}
-      with hDdef
-    have hDsub : D ⊆ Set.Ioo 0 T := Set.inter_subset_left
-    have hDfull : volume (Set.Icc 0 T \ D) = 0 := by
-      have h1 : Set.Icc 0 T \ D ⊆ ({0, T} : Set ℝ)
-          ∪ {t | ¬ ϑ t ∈ good (qdNeg q : ℂ → ℂ) B} := by
-        rintro t ⟨htI, htD⟩
-        by_cases hg : ϑ t ∈ good (qdNeg q : ℂ → ℂ) B
-        · left
-          rcases eq_or_lt_of_le htI.1 with h | h
-          · exact Or.inl h.symm
-          · rcases eq_or_lt_of_le htI.2 with h' | h'
-            · exact Or.inr h'
-            · exact absurd ⟨⟨h, h'⟩, hg⟩ htD
-        · exact Or.inr hg
-      refine measure_mono_null h1 ?_
-      have h2 : volume ({0, T} : Set ℝ) = 0 :=
-        ((Set.finite_singleton T).insert 0).measure_zero volume
-      have h3 : volume {t | ¬ ϑ t ∈ good (qdNeg q : ℂ → ℂ) B} = 0 :=
-        ae_iff.mp hae
-      exact measure_union_null h2 h3
-    set τfam : ℝ → ℝ → ℂ := fun t u => B.flow u (ϑ t) with hτfamdef
-    have hτfam : ∀ t ∈ D, IsTrajOn (fun w => -(q : ℂ → ℂ) w) (τfam t) Set.univ ∧
-        τfam t 0 = ϑ t := by
-      intro t ht
-      have hgood : ϑ t ∈ good (qdNeg q : ℂ → ℂ) B := ht.2
-      constructor
-      · exact isTrajOn_congr (fun w => qdNeg_apply q w)
-          (flow_alltime (qdNeg q).holo B hgood)
-      · exact flow_zero B hgood.1 hgood.2.1
-    have hcrossall : ∀ p : ℝ → ℂ, IsFlatPath p (ϑ 0) (ϑ T) →
-        ∀ t ∈ D, ∃ s ∈ Set.Icc (0 : ℝ) 1, ∃ u : ℝ, p s = τfam t u := by
-      intro p hp t ht
-      set pC : C(unitInterval, ℂ) := ⟨fun s => p s,
-        hp.cont.comp_continuous continuous_subtype_val (fun s => s.2)⟩ with hpCdef
-      have hϑIci : IsTrajOn (q : ℂ → ℂ) ϑ (Set.Ici (-1 : ℝ)) :=
-        traj_mono hϑ (Set.subset_univ _)
-      have hp0' : pC 0 = ϑ 0 := hp.init
-      have hp1' : pC 1 = ϑ T := hp.final
-      have hpim' : ∀ s : unitInterval, 0 < (pC s).im := fun s =>
-        hp.upper s s.2
-      obtain ⟨s, u, hsu⟩ := competitor_crosses_leaf q.holo hbigon hbigonH hϑIci
-        (by norm_num) hT (hτfam t ht).1 (hDsub ht) (hτfam t ht).2 pC hp0' hp1'
-        hpim' (hjump ϑ (-1) hϑIci (by norm_num) T hT (τfam t) (hτfam t ht).1 t
-          (hDsub ht) (hτfam t ht).2 pC hp0' hp1' hpim')
-      exact ⟨(s : ℝ), s.2, u, hsu⟩
-    -- multi-window certificates per competitor, then the coarea pin
-    refine le_iInf₂ fun p hp => ?_
-    obtain ⟨D', hD'sub, hD'full, fam⟩ := hcert₂ ϑ hϑ T hT hinj D hDsub hDfull
-      τfam hτfam p hp (hcrossall p hp)
-    have := hcoarea₂ (ϑ 0) (ϑ T) T D' hD'full p hp fam
-    exact le_trans this (le_iInf₂_iff.mp le_rfl p hp)
-  rcases traj_flow_eval q.holo A hzim hz0 hT hσ0 hσtr with hor | hor
-  · exact key (fun u => A.flow u z) hϑuniv (fun u hu => hor u hu) hflowae
-  · have hrev := traj_reverse hϑuniv
-    rw [Set.preimage_univ] at hrev
-    exact key (fun u => A.flow (-u) z) hrev (fun u hu => hor u hu)
-      (ae_neg_volume hflowae)
-
-/-- **The Reich–Strebel main inequality from the multi-window pins**. -/
-theorem reich_strebel_of_pins₂ {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
-    (hΓ : IsFuchsianGroup Γ)
-    (hfree : ∀ γ : Γ, (∃ τ : UpperHalfPlane, γ • τ = τ) →
-      ∀ τ' : UpperHalfPlane, γ • τ' = τ')
-    (hcc : CompactSpace (Quotient (MulAction.orbitRel Γ UpperHalfPlane)))
-    (q : QuadraticDifferential Γ) {h hinv : ℂ → ℂ} {κ : ℝ} (hκ : κ < 1)
-    (hqc : IsQCUpper h hinv κ)
-    (hbd : ∀ t : ℝ, Filter.Tendsto h (nhdsWithin (t : ℂ) {z : ℂ | 0 < z.im})
-      (nhds (t : ℂ)))
-    (hcomm : ∀ γ ∈ Γ, ∀ z : ℂ, 0 < z.im →
-      h (moebiusMap γ z) = moebiusMap γ (h z))
-    (hbigon : ∀ (σv τh : ℝ → ℂ) (T s μ : ℝ), 0 < T → 0 ≤ s → 0 < μ →
-      IsTrajOn (q : ℂ → ℂ) σv (Set.Icc (-μ) (T + μ)) →
-      IsTrajOn (fun z => -(q : ℂ → ℂ) z) τh (Set.Icc (-μ) (s + μ)) →
-      τh 0 = σv T → τh s = σv 0 → False)
-    (hbigonH : ∀ (σv τh : ℝ → ℂ) (T s μ : ℝ), 0 < T → 0 ≤ s → 0 < μ →
-      IsTrajOn (fun z => -(q : ℂ → ℂ) z) σv (Set.Icc (-μ) (T + μ)) →
-      IsTrajOn (q : ℂ → ℂ) τh (Set.Icc (-μ) (s + μ)) →
-      τh 0 = σv T → τh s = σv 0 → False)
-    (hjump : ∀ (ϑ : ℝ → ℂ) (a : ℝ) (hϑ : IsTrajOn (q : ℂ → ℂ) ϑ (Set.Ici a))
-      (ha : a < 0) (T : ℝ) (hT : 0 < T) (τ : ℝ → ℂ),
-      IsTrajOn (fun z => -(q : ℂ → ℂ) z) τ Set.univ →
-      ∀ tstar : ℝ, tstar ∈ Set.Ioo 0 T → τ 0 = ϑ tstar →
-      ∀ (p : C(unitInterval, ℂ)), p 0 = ϑ 0 → ∀ hp1 : p 1 = ϑ T,
-      (∀ s : unitInterval, 0 < (p s).im) →
-      (∀ (s : unitInterval) (u : ℝ), p s ≠ τ u) →
-      ∃ η : ℝ, 0 < η ∧
-        (windingNumber (leafLoopC p ϑ T
-            (hϑ.cont.mono fun _ hx => le_trans ha.le hx.1) hT.le hp1) (τ η) ≠ 0 ∨
-         windingNumber (leafLoopC p ϑ T
-            (hϑ.cont.mono fun _ hx => le_trans ha.le hx.1) hT.le hp1)
-              (τ (-η)) ≠ 0))
-    (hcert₂ : ∀ ϑ : ℝ → ℂ, IsTrajOn (q : ℂ → ℂ) ϑ Set.univ → ∀ T : ℝ, 0 < T →
-      Set.InjOn ϑ (Set.Icc 0 T) →
-      ∀ D : Set ℝ, D ⊆ Set.Ioo 0 T → volume (Set.Icc 0 T \ D) = 0 →
-      ∀ τfam : ℝ → ℝ → ℂ,
-      (∀ t ∈ D, IsTrajOn (fun z => -(q : ℂ → ℂ) z) (τfam t) Set.univ ∧
-        τfam t 0 = ϑ t) →
-      ∀ p : ℝ → ℂ, IsFlatPath p (ϑ 0) (ϑ T) →
-      (∀ t ∈ D, ∃ s ∈ Set.Icc (0 : ℝ) 1, ∃ u : ℝ, p s = τfam t u) →
-      ∃ D' : Set ℝ, D' ⊆ D ∧ volume (Set.Icc 0 T \ D') = 0 ∧
-      ∃ (Ψ : ℕ → ℂ → ℂ) (V : ℕ → Set ℂ) (c ε δ : ℕ → ℝ) (J : ℕ → Set ℝ),
-        (∀ i, IsOpen (V i)) ∧ (∀ i, DifferentiableOn ℂ (Ψ i) (V i)) ∧
-        (∀ i, ∀ x ∈ V i, deriv (Ψ i) x ^ 2 = -(-(q : ℂ → ℂ) x)) ∧
-        (∀ i, ε i = 1 ∨ ε i = -1) ∧ (∀ i, 0 < δ i) ∧
-        (∀ i, MeasurableSet (J i)) ∧ (∀ i, J i ⊆ Set.Icc 0 1) ∧
-        (∀ i j, i ≠ j → Disjoint (J i) (J j)) ∧
-        ∀ t ∈ D', ∃ i, ∃ s ∈ J i,
-          Metric.ball (p s) (δ i) ⊆ V i ∧ (Ψ i (p s)).im = c i - ε i * t)
-    (hcoarea₂ : ∀ (z w : ℂ) (T : ℝ) (D' : Set ℝ),
-      volume (Set.Icc 0 T \ D') = 0 →
-      ∀ p : ℝ → ℂ, IsFlatPath p z w →
-      (∃ (Ψ : ℕ → ℂ → ℂ) (V : ℕ → Set ℂ) (c ε δ : ℕ → ℝ) (J : ℕ → Set ℝ),
-        (∀ i, IsOpen (V i)) ∧ (∀ i, DifferentiableOn ℂ (Ψ i) (V i)) ∧
-        (∀ i, ∀ x ∈ V i, deriv (Ψ i) x ^ 2 = -(-(q : ℂ → ℂ) x)) ∧
-        (∀ i, ε i = 1 ∨ ε i = -1) ∧ (∀ i, 0 < δ i) ∧
-        (∀ i, MeasurableSet (J i)) ∧ (∀ i, J i ⊆ Set.Icc 0 1) ∧
-        (∀ i j, i ≠ j → Disjoint (J i) (J j)) ∧
-        ∀ t ∈ D', ∃ i, ∃ s ∈ J i,
-          Metric.ball (p s) (δ i) ⊆ V i ∧ (Ψ i (p s)).im = c i - ε i * t) →
-      ENNReal.ofReal T ≤ horizontalDist (q : ℂ → ℂ) z w) :
-    q.l1Norm ≤ ∫⁻ z in UpperHalfPlane.coe '' dirichletDomain Γ UpperHalfPlane.I,
-      ‖q z‖ₑ * ENNReal.ofReal
-        (‖1 - wirtingerQuotient h z * (q z / (‖q z‖ : ℂ))‖ ^ 2
-          / (1 - ‖wirtingerQuotient h z‖ ^ 2)) := by
-  by_cases hq0 : ∃ z₀ : ℂ, 0 < z₀.im ∧ (q : ℂ → ℂ) z₀ ≠ 0
-  · exact reich_strebel_of_hsep hΓ hfree hcc q hκ hqc hbd hcomm
-      (hsep_final₂ hΓ hcc q hq0 hbigon hbigonH hjump hcert₂ hcoarea₂)
-  · push Not at hq0
-    have hmeas : MeasurableSet
-        (UpperHalfPlane.coe '' dirichletDomain Γ UpperHalfPlane.I) :=
-      (isCompact_domain hΓ hfree hcc).measurableSet
-    rw [l1Norm_eq_zero q hmeas hq0]
-    exact zero_le _
 
 /-- **Countability of the zero set**: the zeros of a nonvanishing-somewhere holomorphic
 differential in the upper half plane form a countable set. -/
@@ -27047,7 +26083,6 @@ theorem traj_double_cover_on {q : ℂ → ℂ} {z₀ : ℂ} {σ w : ℝ → ℂ}
       change Φ (p (w u + Complex.I)) = Φ (p (w t + Complex.I)) + _
       rw [hpτ u huI, hpτ t ht]
       exact hu.2
-
 
 /-- **The dying-trajectory double-cover lift**: a trajectory on an open interval dying
 at a point at its left end lifts, on a terminal piece, through the branched double
@@ -28319,228 +27354,6 @@ theorem chart_level_offset {Ψ₁ Ψ₂ : ℂ → ℂ} {Ω : Set ℂ} (hΩ : IsO
     rw [h z hz, Complex.sub_im]
     ring
 
-/-- **The separation inequality from the displacement pin**. -/
-theorem hsep_final₃ {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
-    (hΓ : IsFuchsianGroup Γ)
-    (hcc : CompactSpace (Quotient (MulAction.orbitRel Γ UpperHalfPlane)))
-    (q : QuadraticDifferential Γ) (hq0 : ∃ z₀ : ℂ, 0 < z₀.im ∧ q z₀ ≠ 0)
-    (hbigon : ∀ (σv τh : ℝ → ℂ) (T s μ : ℝ), 0 < T → 0 ≤ s → 0 < μ →
-      IsTrajOn (q : ℂ → ℂ) σv (Set.Icc (-μ) (T + μ)) →
-      IsTrajOn (fun z => -(q : ℂ → ℂ) z) τh (Set.Icc (-μ) (s + μ)) →
-      τh 0 = σv T → τh s = σv 0 → False)
-    (hbigonH : ∀ (σv τh : ℝ → ℂ) (T s μ : ℝ), 0 < T → 0 ≤ s → 0 < μ →
-      IsTrajOn (fun z => -(q : ℂ → ℂ) z) σv (Set.Icc (-μ) (T + μ)) →
-      IsTrajOn (q : ℂ → ℂ) τh (Set.Icc (-μ) (s + μ)) →
-      τh 0 = σv T → τh s = σv 0 → False)
-    (hjump : ∀ (ϑ : ℝ → ℂ) (a : ℝ) (hϑ : IsTrajOn (q : ℂ → ℂ) ϑ (Set.Ici a))
-      (ha : a < 0) (T : ℝ) (hT : 0 < T) (τ : ℝ → ℂ),
-      IsTrajOn (fun z => -(q : ℂ → ℂ) z) τ Set.univ →
-      ∀ tstar : ℝ, tstar ∈ Set.Ioo 0 T → τ 0 = ϑ tstar →
-      ∀ (p : C(unitInterval, ℂ)), p 0 = ϑ 0 → ∀ hp1 : p 1 = ϑ T,
-      (∀ s : unitInterval, 0 < (p s).im) →
-      (∀ (s : unitInterval) (u : ℝ), p s ≠ τ u) →
-      ∃ η : ℝ, 0 < η ∧
-        (windingNumber (leafLoopC p ϑ T
-            (hϑ.cont.mono fun _ hx => le_trans ha.le hx.1) hT.le hp1) (τ η) ≠ 0 ∨
-         windingNumber (leafLoopC p ϑ T
-            (hϑ.cont.mono fun _ hx => le_trans ha.le hx.1) hT.le hp1)
-              (τ (-η)) ≠ 0))
-    (hcoarea₃ : ∀ ϑ : ℝ → ℂ, IsTrajOn (q : ℂ → ℂ) ϑ Set.univ → ∀ T : ℝ, 0 < T →
-      Set.InjOn ϑ (Set.Icc 0 T) →
-      ∀ p : ℝ → ℂ, IsFlatPath p (ϑ 0) (ϑ T) →
-      ∀ (t₀ t₁ s₀ s₁ : ℝ) (τ₀ τ₁ : ℝ → ℂ),
-      IsTrajOn (fun z => -(q : ℂ → ℂ) z) τ₀ Set.univ →
-      IsTrajOn (fun z => -(q : ℂ → ℂ) z) τ₁ Set.univ →
-      τ₀ 0 = ϑ t₀ → τ₁ 0 = ϑ t₁ →
-      t₀ ∈ Set.Ioo 0 T → t₁ ∈ Set.Ioo 0 T →
-      s₀ ∈ Set.Icc (0 : ℝ) 1 → s₁ ∈ Set.Icc (0 : ℝ) 1 →
-      (∃ u, p s₀ = τ₀ u) → (∃ u, p s₁ = τ₁ u) →
-      ENNReal.ofReal |t₁ - t₀| ≤ ∫⁻ s in Set.Icc (min s₀ s₁) (max s₀ s₁),
-        horizontalDensity (q : ℂ → ℂ) p s) :
-    ∀ A : Atlas (q : ℂ → ℂ),
-      ∀ᵐ z ∂(volume.restrict {z : ℂ | 0 < z.im}), z ∈ good (q : ℂ → ℂ) A →
-      ∀ T : ℝ, 0 < T → ∀ σ : ℝ → ℂ, σ 0 = z →
-      IsTrajOn (q : ℂ → ℂ) σ (Set.Icc 0 T) →
-      ENNReal.ofReal T ≤ horizontalDist (q : ℂ → ℂ) (σ 0) (σ T) := by
-  intro A
-  obtain ⟨B⟩ := exists_atlas (qdNeg q).holo
-  filter_upwards [flow_good_neg_ae hΓ hcc q hq0 A B] with z hzimp
-  intro hzg T hT σ hσ0 hσtr
-  have hzim : 0 < z.im := hzg.1
-  have hz0 : (q : ℂ → ℂ) z ≠ 0 := hzg.2.1
-  have hflowae := hzimp hzg
-  have hϑuniv : IsTrajOn (q : ℂ → ℂ) (fun u => A.flow u z) Set.univ :=
-    flow_alltime q.holo A hzg
-  have key : ∀ ϑ : ℝ → ℂ, IsTrajOn (q : ℂ → ℂ) ϑ Set.univ →
-      (∀ u ∈ Set.Icc 0 T, ϑ u = σ u) →
-      (∀ᵐ t ∂(volume : Measure ℝ), ϑ t ∈ good (qdNeg q : ℂ → ℂ) B) →
-      ENNReal.ofReal T ≤ horizontalDist (q : ℂ → ℂ) (σ 0) (σ T) := by
-    intro ϑ hϑ hagree hae
-    have h00 : ϑ 0 = σ 0 := hagree 0 ⟨le_rfl, hT.le⟩
-    have hTT : ϑ T = σ T := hagree T ⟨hT.le, le_rfl⟩
-    rw [← h00, ← hTT]
-    have hinj : Set.InjOn ϑ (Set.Icc 0 T) := by
-      refine traj_injOn q.holo hbigon (m := 1) one_pos ?_
-      exact traj_mono hϑ (Set.subset_univ _)
-    set D : Set ℝ := Set.Ioo 0 T ∩ {t | ϑ t ∈ good (qdNeg q : ℂ → ℂ) B}
-      with hDdef
-    have hDsub : D ⊆ Set.Ioo 0 T := Set.inter_subset_left
-    have hDae : volume ({t | ¬ ϑ t ∈ good (qdNeg q : ℂ → ℂ) B}) = 0 :=
-      ae_iff.mp hae
-    have hDmeet : ∀ α β : ℝ, 0 ≤ α → α < β → β ≤ T →
-        (D ∩ Set.Ioo α β).Nonempty := by
-      intro α β hα hαβ hβT
-      by_contra hemp
-      push Not at hemp
-      have hsub : Set.Ioo α β ⊆ {t | ¬ ϑ t ∈ good (qdNeg q : ℂ → ℂ) B} := by
-        intro t ht hg
-        have hmem : t ∈ D ∩ Set.Ioo α β :=
-          ⟨⟨⟨lt_of_le_of_lt hα ht.1, lt_of_lt_of_le ht.2 hβT⟩, hg⟩, ht⟩
-        rw [hemp] at hmem
-        exact hmem
-      have h1 : volume (Set.Ioo α β) = 0 :=
-        measure_mono_null hsub hDae
-      rw [Real.volume_Ioo] at h1
-      have h2 : (0 : ℝ) < β - α := by linarith
-      rw [ENNReal.ofReal_eq_zero] at h1
-      linarith
-    set τfam : ℝ → ℝ → ℂ := fun t u => B.flow u (ϑ t) with hτfamdef
-    have hτfam : ∀ t ∈ D, IsTrajOn (fun w => -(q : ℂ → ℂ) w) (τfam t) Set.univ ∧
-        τfam t 0 = ϑ t := by
-      intro t ht
-      have hgood : ϑ t ∈ good (qdNeg q : ℂ → ℂ) B := ht.2
-      exact ⟨isTrajOn_congr (fun w => qdNeg_apply q w)
-        (flow_alltime (qdNeg q).holo B hgood), flow_zero B hgood.1 hgood.2.1⟩
-    rw [horizontalDist]
-    refine le_iInf₂ fun p hp => ?_
-    have hcross : ∀ t ∈ D, ∃ s ∈ Set.Icc (0 : ℝ) 1, ∃ u : ℝ,
-        p s = τfam t u := by
-      intro t ht
-      set pC : C(unitInterval, ℂ) := ⟨fun s => p s,
-        hp.cont.comp_continuous continuous_subtype_val (fun s => s.2)⟩ with hpCdef
-      have hϑIci : IsTrajOn (q : ℂ → ℂ) ϑ (Set.Ici (-1 : ℝ)) :=
-        traj_mono hϑ (Set.subset_univ _)
-      have hp0' : pC 0 = ϑ 0 := hp.init
-      have hp1' : pC 1 = ϑ T := hp.final
-      have hpim' : ∀ s : unitInterval, 0 < (pC s).im := fun s =>
-        hp.upper s s.2
-      obtain ⟨s, u, hsu⟩ := competitor_crosses_leaf q.holo hbigon hbigonH hϑIci
-        (by norm_num) hT (hτfam t ht).1 (hDsub ht) (hτfam t ht).2 pC hp0' hp1'
-        hpim' (hjump ϑ (-1) hϑIci (by norm_num) T hT (τfam t) (hτfam t ht).1 t
-          (hDsub ht) (hτfam t ht).2 pC hp0' hp1' hpim')
-      exact ⟨(s : ℝ), s.2, u, hsu⟩
-    -- the squeeze over levels near the window ends
-    have hstep : ∀ n : ℕ, ENNReal.ofReal (T - 2 * (T / (2 * ((n : ℝ) + 2))))
-        ≤ ∫⁻ s in Set.Icc (0 : ℝ) 1, horizontalDensity (q : ℂ → ℂ) p s := by
-      intro n
-      set εn : ℝ := T / (2 * ((n : ℝ) + 2)) with hεndef
-      have hεn : 0 < εn := by positivity
-      have hεnT : εn < T / 2 := by
-        rw [hεndef]
-        rw [div_lt_div_iff₀ (by positivity) (by norm_num)]
-        nlinarith [Nat.cast_nonneg (α := ℝ) n]
-      obtain ⟨t₀, ht₀D, ht₀I⟩ := hDmeet 0 εn le_rfl hεn (by linarith)
-      obtain ⟨t₁, ht₁D, ht₁I⟩ := hDmeet (T - εn) T (by linarith) (by linarith)
-        le_rfl
-      obtain ⟨s₀, hs₀I, u₀, hu₀⟩ := hcross t₀ ht₀D
-      obtain ⟨s₁, hs₁I, u₁, hu₁⟩ := hcross t₁ ht₁D
-      have hbound := hcoarea₃ ϑ hϑ T hT hinj p hp t₀ t₁ s₀ s₁ (τfam t₀)
-        (τfam t₁) (hτfam t₀ ht₀D).1 (hτfam t₁ ht₁D).1 (hτfam t₀ ht₀D).2
-        (hτfam t₁ ht₁D).2 (hDsub ht₀D) (hDsub ht₁D) hs₀I hs₁I ⟨u₀, hu₀⟩
-        ⟨u₁, hu₁⟩
-      have hgap : T - 2 * εn ≤ |t₁ - t₀| := by
-        have h1 : t₀ < εn := ht₀I.2
-        have h2 : T - εn < t₁ := ht₁I.1
-        have h3 : T - 2 * εn ≤ t₁ - t₀ := by linarith
-        exact le_trans h3 (le_abs_self _)
-      refine le_trans (ENNReal.ofReal_le_ofReal hgap) (le_trans hbound ?_)
-      refine lintegral_mono_set ?_
-      intro x hx
-      constructor
-      · exact le_trans (le_min hs₀I.1 hs₁I.1) hx.1
-      · exact le_trans hx.2 (max_le hs₀I.2 hs₁I.2)
-    have htend : Filter.Tendsto
-        (fun n : ℕ => ENNReal.ofReal (T - 2 * (T / (2 * ((n : ℝ) + 2)))))
-        Filter.atTop (𝓝 (ENNReal.ofReal T)) := by
-      refine (ENNReal.continuous_ofReal.tendsto T).comp ?_
-      have h1 : Filter.Tendsto (fun n : ℕ => T / (2 * ((n : ℝ) + 2)))
-          Filter.atTop (𝓝 0) := by
-        refine Filter.Tendsto.div_atTop tendsto_const_nhds ?_
-        have h2 : Filter.Tendsto (fun n : ℕ => ((n : ℝ) + 2)) Filter.atTop
-            Filter.atTop :=
-          Filter.tendsto_atTop_add_const_right _ 2 tendsto_natCast_atTop_atTop
-        exact h2.const_mul_atTop (by norm_num)
-      have h3 := h1.const_mul (2 : ℝ)
-      have h4 := (tendsto_const_nhds (x := T)
-        (f := Filter.atTop (α := ℕ))).sub h3
-      simpa using h4
-    exact le_of_tendsto' htend hstep
-  rcases traj_flow_eval q.holo A hzim hz0 hT hσ0 hσtr with hor | hor
-  · exact key (fun u => A.flow u z) hϑuniv (fun u hu => hor u hu) hflowae
-  · have hrev := traj_reverse hϑuniv
-    rw [Set.preimage_univ] at hrev
-    exact key (fun u => A.flow (-u) z) hrev (fun u hu => hor u hu)
-      (ae_neg_volume hflowae)
-
-/-- **The Reich–Strebel main inequality from the displacement pins**. -/
-theorem reich_strebel_of_pins₃ {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
-    (hΓ : IsFuchsianGroup Γ)
-    (hfree : ∀ γ : Γ, (∃ τ : UpperHalfPlane, γ • τ = τ) →
-      ∀ τ' : UpperHalfPlane, γ • τ' = τ')
-    (hcc : CompactSpace (Quotient (MulAction.orbitRel Γ UpperHalfPlane)))
-    (q : QuadraticDifferential Γ) {h hinv : ℂ → ℂ} {κ : ℝ} (hκ : κ < 1)
-    (hqc : IsQCUpper h hinv κ)
-    (hbd : ∀ t : ℝ, Filter.Tendsto h (nhdsWithin (t : ℂ) {z : ℂ | 0 < z.im})
-      (nhds (t : ℂ)))
-    (hcomm : ∀ γ ∈ Γ, ∀ z : ℂ, 0 < z.im →
-      h (moebiusMap γ z) = moebiusMap γ (h z))
-    (hbigon : ∀ (σv τh : ℝ → ℂ) (T s μ : ℝ), 0 < T → 0 ≤ s → 0 < μ →
-      IsTrajOn (q : ℂ → ℂ) σv (Set.Icc (-μ) (T + μ)) →
-      IsTrajOn (fun z => -(q : ℂ → ℂ) z) τh (Set.Icc (-μ) (s + μ)) →
-      τh 0 = σv T → τh s = σv 0 → False)
-    (hbigonH : ∀ (σv τh : ℝ → ℂ) (T s μ : ℝ), 0 < T → 0 ≤ s → 0 < μ →
-      IsTrajOn (fun z => -(q : ℂ → ℂ) z) σv (Set.Icc (-μ) (T + μ)) →
-      IsTrajOn (q : ℂ → ℂ) τh (Set.Icc (-μ) (s + μ)) →
-      τh 0 = σv T → τh s = σv 0 → False)
-    (hjump : ∀ (ϑ : ℝ → ℂ) (a : ℝ) (hϑ : IsTrajOn (q : ℂ → ℂ) ϑ (Set.Ici a))
-      (ha : a < 0) (T : ℝ) (hT : 0 < T) (τ : ℝ → ℂ),
-      IsTrajOn (fun z => -(q : ℂ → ℂ) z) τ Set.univ →
-      ∀ tstar : ℝ, tstar ∈ Set.Ioo 0 T → τ 0 = ϑ tstar →
-      ∀ (p : C(unitInterval, ℂ)), p 0 = ϑ 0 → ∀ hp1 : p 1 = ϑ T,
-      (∀ s : unitInterval, 0 < (p s).im) →
-      (∀ (s : unitInterval) (u : ℝ), p s ≠ τ u) →
-      ∃ η : ℝ, 0 < η ∧
-        (windingNumber (leafLoopC p ϑ T
-            (hϑ.cont.mono fun _ hx => le_trans ha.le hx.1) hT.le hp1) (τ η) ≠ 0 ∨
-         windingNumber (leafLoopC p ϑ T
-            (hϑ.cont.mono fun _ hx => le_trans ha.le hx.1) hT.le hp1)
-              (τ (-η)) ≠ 0))
-    (hcoarea₃ : ∀ ϑ : ℝ → ℂ, IsTrajOn (q : ℂ → ℂ) ϑ Set.univ → ∀ T : ℝ, 0 < T →
-      Set.InjOn ϑ (Set.Icc 0 T) →
-      ∀ p : ℝ → ℂ, IsFlatPath p (ϑ 0) (ϑ T) →
-      ∀ (t₀ t₁ s₀ s₁ : ℝ) (τ₀ τ₁ : ℝ → ℂ),
-      IsTrajOn (fun z => -(q : ℂ → ℂ) z) τ₀ Set.univ →
-      IsTrajOn (fun z => -(q : ℂ → ℂ) z) τ₁ Set.univ →
-      τ₀ 0 = ϑ t₀ → τ₁ 0 = ϑ t₁ →
-      t₀ ∈ Set.Ioo 0 T → t₁ ∈ Set.Ioo 0 T →
-      s₀ ∈ Set.Icc (0 : ℝ) 1 → s₁ ∈ Set.Icc (0 : ℝ) 1 →
-      (∃ u, p s₀ = τ₀ u) → (∃ u, p s₁ = τ₁ u) →
-      ENNReal.ofReal |t₁ - t₀| ≤ ∫⁻ s in Set.Icc (min s₀ s₁) (max s₀ s₁),
-        horizontalDensity (q : ℂ → ℂ) p s) :
-    q.l1Norm ≤ ∫⁻ z in UpperHalfPlane.coe '' dirichletDomain Γ UpperHalfPlane.I,
-      ‖q z‖ₑ * ENNReal.ofReal
-        (‖1 - wirtingerQuotient h z * (q z / (‖q z‖ : ℂ))‖ ^ 2
-          / (1 - ‖wirtingerQuotient h z‖ ^ 2)) := by
-  by_cases hq0 : ∃ z₀ : ℂ, 0 < z₀.im ∧ (q : ℂ → ℂ) z₀ ≠ 0
-  · exact reich_strebel_of_hsep hΓ hfree hcc q hκ hqc hbd hcomm
-      (hsep_final₃ hΓ hcc q hq0 hbigon hbigonH hjump hcoarea₃)
-  · push Not at hq0
-    have hmeas : MeasurableSet
-        (UpperHalfPlane.coe '' dirichletDomain Γ UpperHalfPlane.I) :=
-      (isCompact_domain hΓ hfree hcc).measurableSet
-    rw [l1Norm_eq_zero q hmeas hq0]
-    exact zero_le _
-
 /-- **Winding difference is the ratio winding**: for a closed curve avoiding two base
 points, `w(γ, zp) − w(γ, zm)` is the winding of `(γ − zp)/(γ − zm)` about `0`. -/
 theorem winding_sub_eq_ratio {γ : C(unitInterval, ℂ)} (hcl : γ 0 = γ 1)
@@ -29797,47 +28610,6 @@ theorem leaf_level_compare {q Ψ : ℂ → ℂ} {V : Set ℂ} (hV : IsOpen V)
     abs_mul, show |ε| = 1 from by rcases hε with h | h <;> rw [h] <;> norm_num,
     one_mul, abs_sub_comm]
 
-/-- **The Reich–Strebel main inequality from the exclusion principles**: the bigon exclusions in
-both chiralities and the two-point leaf-displacement estimate imply the main
-inequality; the winding jump is supplied by the proven crossing theorem. -/
-theorem reich_strebel_of_pins₄ {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
-    (hΓ : IsFuchsianGroup Γ)
-    (hfree : ∀ γ : Γ, (∃ τ : UpperHalfPlane, γ • τ = τ) →
-      ∀ τ' : UpperHalfPlane, γ • τ' = τ')
-    (hcc : CompactSpace (Quotient (MulAction.orbitRel Γ UpperHalfPlane)))
-    (q : QuadraticDifferential Γ) {h hinv : ℂ → ℂ} {κ : ℝ} (hκ : κ < 1)
-    (hqc : IsQCUpper h hinv κ)
-    (hbd : ∀ t : ℝ, Filter.Tendsto h (nhdsWithin (t : ℂ) {z : ℂ | 0 < z.im})
-      (nhds (t : ℂ)))
-    (hcomm : ∀ γ ∈ Γ, ∀ z : ℂ, 0 < z.im →
-      h (moebiusMap γ z) = moebiusMap γ (h z))
-    (hbigon : ∀ (σv τh : ℝ → ℂ) (T s μ : ℝ), 0 < T → 0 ≤ s → 0 < μ →
-      IsTrajOn (q : ℂ → ℂ) σv (Set.Icc (-μ) (T + μ)) →
-      IsTrajOn (fun z => -(q : ℂ → ℂ) z) τh (Set.Icc (-μ) (s + μ)) →
-      τh 0 = σv T → τh s = σv 0 → False)
-    (hbigonH : ∀ (σv τh : ℝ → ℂ) (T s μ : ℝ), 0 < T → 0 ≤ s → 0 < μ →
-      IsTrajOn (fun z => -(q : ℂ → ℂ) z) σv (Set.Icc (-μ) (T + μ)) →
-      IsTrajOn (q : ℂ → ℂ) τh (Set.Icc (-μ) (s + μ)) →
-      τh 0 = σv T → τh s = σv 0 → False)
-    (hcoarea₃ : ∀ ϑ : ℝ → ℂ, IsTrajOn (q : ℂ → ℂ) ϑ Set.univ → ∀ T : ℝ, 0 < T →
-      Set.InjOn ϑ (Set.Icc 0 T) →
-      ∀ p : ℝ → ℂ, IsFlatPath p (ϑ 0) (ϑ T) →
-      ∀ (t₀ t₁ s₀ s₁ : ℝ) (τ₀ τ₁ : ℝ → ℂ),
-      IsTrajOn (fun z => -(q : ℂ → ℂ) z) τ₀ Set.univ →
-      IsTrajOn (fun z => -(q : ℂ → ℂ) z) τ₁ Set.univ →
-      τ₀ 0 = ϑ t₀ → τ₁ 0 = ϑ t₁ →
-      t₀ ∈ Set.Ioo 0 T → t₁ ∈ Set.Ioo 0 T →
-      s₀ ∈ Set.Icc (0 : ℝ) 1 → s₁ ∈ Set.Icc (0 : ℝ) 1 →
-      (∃ u, p s₀ = τ₀ u) → (∃ u, p s₁ = τ₁ u) →
-      ENNReal.ofReal |t₁ - t₀| ≤ ∫⁻ s in Set.Icc (min s₀ s₁) (max s₀ s₁),
-        horizontalDensity (q : ℂ → ℂ) p s) :
-    q.l1Norm ≤ ∫⁻ z in UpperHalfPlane.coe '' dirichletDomain Γ UpperHalfPlane.I,
-      ‖q z‖ₑ * ENNReal.ofReal
-        (‖1 - wirtingerQuotient h z * (q z / (‖q z‖ : ℂ))‖ ^ 2
-          / (1 - ‖wirtingerQuotient h z‖ ^ 2)) :=
-  reich_strebel_of_pins₃ hΓ hfree hcc q hκ hqc hbd hcomm hbigon hbigonH
-    (hjump_of_bigons q.holo hbigon hbigonH) hcoarea₃
-
 /-- **In-chart leaf level constancy on an interval**: along any tracked parameter
 interval of a transverse leaf the chart height is constant. -/
 theorem leaf_level_const_on {q Ψ : ℂ → ℂ} {V : Set ℂ} (hV : IsOpen V)
@@ -31007,395 +29779,7 @@ theorem discharge_pack₂ {q : ℂ → ℂ} {γ τ : ℝ → ℂ} {a T b μ s : 
     hball₁f, hball₂f, htr₁, htr₂, hdevγ₁f, hdevτ₁f, hdevγ₂f, hdevτ₂f, hκ₁b, hκ₂b,
     hfar₁γ, hfar₁τ, hfar₂γ, hfar₂τ, hηd, hη₁im, hη₂im⟩
 
-set_option maxHeartbeats 400000 in
--- Heartbeats: the bigon branch composes two four-piece loop calculi.
-/-- **Bigon-branch exclusion**: under the nonnegative-winding principle no simple
-sub-bigon survives — the rounded four-piece loop contradicts the winding count. -/
-theorem no_bigon3 {q : ℂ → ℂ}
-    (hq : DifferentiableOn ℂ q {z : ℂ | 0 < z.im})
-    (hq0 : ∃ z₀ : ℂ, 0 < z₀.im ∧ q z₀ ≠ 0)
-    (hW : NonnegWindingPrinciple)
-    {γ τ : ℝ → ℂ} {a T b μ s : ℝ}
-    (hμ : 0 < μ) (ha0 : 0 ≤ a) (haT : a < T) (hb0 : 0 < b) (hbs : b ≤ s)
-    (hγ : IsTrajOn q γ (Set.Icc (-μ) (T + μ)))
-    (hτ : IsTrajOn (fun z => -q z) τ (Set.Icc (-μ) (s + μ)))
-    (hc1 : τ 0 = γ T) (hc2 : τ b = γ a)
-    (hγinj : Set.InjOn γ (Set.Icc a T)) (hτinj : Set.InjOn τ (Set.Icc 0 b))
-    (hcross : ∀ x ∈ Set.Icc a T, ∀ u ∈ Set.Icc 0 b,
-      γ x = τ u → (x = T ∧ u = 0) ∨ (x = a ∧ u = b)) : False := by
-  obtain ⟨S₁, S₂, Φ₁, Φ₂, ε₁, ε₂, r, r₀, η₁, η₂, hr, hrr₀, hε₁, hε₂, h3γ, h3τ,
-    hS₁o, hΦ₁d, hΦ₁inj, hΦ₁sq, hq₁ne, hS₂o, hΦ₂d, hΦ₂inj, hΦ₂sq, hq₂ne,
-    hball₁, hball₂, htr₁, htr₂, hdevγ₁, hdevτ₁, hdevγ₂, hdevτ₂, hκ₁b, hκ₂b,
-    hfar₁γ, hfar₁τ, hfar₂γ, hfar₂τ, hηd, hη₁im, hη₂im⟩ :=
-    discharge_pack₂ hμ ha0 haT hb0 hbs hγ hτ hc1 hc2 hγinj hτinj
-  have hπ : (0:ℝ) < Real.pi := Real.pi_pos
-  have hv : (0:ℝ) < r * (Real.pi/2) := mul_pos hr (by linarith)
-  have haTr : a + r ≤ T - r := by nlinarith
-  have hrbr : r ≤ b - r := by nlinarith
-  -- arc data on the truncated windows
-  have hnhγ : ∀ w ∈ Set.Icc (a + r) (T - r), Set.Icc (-μ) (T + μ) ∈ nhds w := by
-    intro w hw
-    exact Icc_mem_nhds (by linarith [hw.1]) (by linarith [hw.2])
-  have hnhτ : ∀ w ∈ Set.Icc r (b - r), Set.Icc (-μ) (s + μ) ∈ nhds w := by
-    intro w hw
-    exact Icc_mem_nhds (by linarith [hw.1]) (by linarith [hw.2])
-  obtain ⟨hdγA, hdγC, hqγ⟩ := arc_prep hγ hnhγ
-  obtain ⟨hdτA, hdτC, hqτ0⟩ := arc_prep hτ hnhτ
-  have hqτ : ∀ w ∈ Set.Icc r (b - r), q (τ w) * (deriv τ w) ^ 2 = 1 := by
-    intro w hw
-    have h : -q (τ w) * (deriv τ w) ^ 2 = -1 := hqτ0 w hw
-    linear_combination -h
-  -- the count integer
-  obtain ⟨m, hm, hm3⟩ : ∃ m : ℤ, 2 * (m : ℝ) = ε₂ - ε₁
-      ∧ (m = -1 ∨ m = 0 ∨ m = 1) := by
-    rcases hε₁ with h1 | h1 <;> rcases hε₂ with h2 | h2
-    · exact ⟨0, by rw [h1, h2]; norm_num, Or.inr (Or.inl rfl)⟩
-    · exact ⟨-1, by rw [h1, h2]; norm_num, Or.inl rfl⟩
-    · exact ⟨1, by rw [h1, h2]; norm_num, Or.inr (Or.inr rfl)⟩
-    · exact ⟨0, by rw [h1, h2]; norm_num, Or.inr (Or.inl rfl)⟩
-  -- the four-piece bundle at the literal pins
-  obtain ⟨hd1, hv01, hv12, hv23, hv30, hg01, hg12, hg23, hg30⟩ :=
-    four_piece_bundle hr hrr₀ hε₁ hε₂ rfl rfl rfl rfl rfl rfl h3γ h3τ
-      hS₁o hΦ₁d hΦ₁inj hΦ₁sq hq₁ne hS₂o hΦ₂d hΦ₂inj hΦ₂sq hq₂ne hball₁ hball₂
-      hdevγ₁ hdevτ₁ hdevγ₂ hdevτ₂ hdγA hdγC hqγ hdτA hdτC hqτ
-  -- corner packages at the literal pins
-  have hω₁ne : (1 * (-ε₁) * (Real.pi / 2)) ≠ 0 := by
-    rcases hε₁ with h | h <;> rw [h] <;> norm_num [Real.pi_ne_zero]
-  have hω₂ne : (ε₂ * (Real.pi / 2)) ≠ 0 := by
-    rcases hε₂ with h | h <;> rw [h] <;> norm_num [Real.pi_ne_zero]
-  have hpk₁ := cornerPiece_package hS₁o hΦ₁d hΦ₁inj hΦ₁sq hq₁ne hr hω₁ne htr₁
-  have hpk₂ := cornerPiece_package hS₂o hΦ₂d hΦ₂inj hΦ₂sq hq₂ne hr hω₂ne htr₂
-  -- arc packages for speed continuity
-  have heγ : (a + r) + (T - a - 2*r) = T - r := by ring
-  have heτ : r + (b - 2*r) = b - r := by ring
-  have hdA' : ∀ w ∈ Set.Icc (a + r) ((a + r) + (T - a - 2*r)),
-      HasDerivAt γ (deriv γ w) w := by
-    rw [heγ]; exact hdγA
-  have hdC' : ContinuousOn (deriv γ) (Set.Icc (a + r) ((a + r) + (T - a - 2*r))) := by
-    rw [heγ]; exact hdγC
-  have hqγ' : ∀ w ∈ Set.Icc (a + r) ((a + r) + (T - a - 2*r)),
-      q (γ w) * (deriv γ w) ^ 2 = Complex.exp ((Real.pi : ℂ) * Complex.I) := by
-    rw [heγ, Complex.exp_pi_mul_I]
-    exact hqγ
-  have hdτA' : ∀ w ∈ Set.Icc r (r + (b - 2*r)), HasDerivAt τ (deriv τ w) w := by
-    rw [heτ]; exact hdτA
-  have hdτC' : ContinuousOn (deriv τ) (Set.Icc r (r + (b - 2*r))) := by
-    rw [heτ]; exact hdτC
-  have hqτ' : ∀ w ∈ Set.Icc r (r + (b - 2*r)),
-      q (τ w) * (deriv τ w) ^ 2 = Complex.exp 0 := by
-    rw [heτ, Complex.exp_zero]
-    exact hqτ
-  obtain ⟨hA1, -, -, -, -, -, hA7, -⟩ :=
-    arc_piece (f := γ) (df := deriv γ) hv h3γ hdA' hdC' hqγ'
-  obtain ⟨hB1, -, -, -, -, -, hB7, -⟩ :=
-    arc_piece (f := τ) (df := deriv τ) hv h3τ hdτA' hdτC' hqτ'
-  -- per-piece track facts
-  have hdomγ : ∀ w ∈ Set.Icc (a + r) (T - r), w ∈ Set.Icc (-μ) (T + μ) :=
-    fun w hw => mem_of_mem_nhds (hnhγ w hw)
-  have hdomτ : ∀ w ∈ Set.Icc r (b - r), w ∈ Set.Icc (-μ) (s + μ) :=
-    fun w hw => mem_of_mem_nhds (hnhτ w hw)
-  have hmapsγ : ∀ u ∈ Set.Icc (0:ℝ) 1,
-      cubicRamp (a + r) (r * (Real.pi/2)) (T - a - 2*r) u
-        ∈ Set.Icc (a + r) (T - r) := by
-    intro u hu
-    have h := cubicRamp_mapsTo (a := a + r) hv h3γ u hu
-    rwa [heγ] at h
-  have hmapsτ : ∀ u ∈ Set.Icc (0:ℝ) 1,
-      cubicRamp r (r * (Real.pi/2)) (b - 2*r) u ∈ Set.Icc r (b - r) := by
-    intro u hu
-    have h := cubicRamp_mapsTo (a := r) hv h3τ u hu
-    rwa [heτ] at h
-  have hballim : ∀ (p : ℂ) (η : ℝ), η ≤ p.im →
-      ∀ z ∈ Metric.ball p η, 0 < z.im := by
-    intro p η hη z hz
-    rw [Metric.mem_ball, dist_eq_norm] at hz
-    have h1 : |(z - p).im| ≤ ‖z - p‖ := Complex.abs_im_le_norm _
-    rw [Complex.sub_im] at h1
-    have h2 := abs_le.mp h1
-    linarith [h2.1]
-  have hW₀ : ∀ u ∈ Set.Icc (0:ℝ) 1,
-      rampArc γ (a + r) (r * (Real.pi/2)) (T - a - 2*r) u
-        ∈ {z : ℂ | 0 < z.im} := by
-    intro u hu
-    rw [rampArc_apply]
-    exact (traj_regular hγ (hdomγ _ (hmapsγ u hu))).1
-  have hW₁ : ∀ u ∈ Set.Icc (0:ℝ) 1, cornerPiece Φ₁ S₁
-      (Φ₁ (γ T) - ((1:ℝ) : ℂ)*r + Complex.I*((-ε₁ : ℝ) : ℂ)*r) r
-      (-(-ε₁) * (Real.pi / 2)) (1 * (-ε₁) * (Real.pi / 2)) u
-      ∈ {z : ℂ | 0 < z.im} :=
-    fun u _ => hballim _ _ hη₁im _ (hκ₁b u)
-  have hW₂ : ∀ u ∈ Set.Icc (0:ℝ) 1,
-      rampArc τ r (r * (Real.pi/2)) (b - 2*r) u ∈ {z : ℂ | 0 < z.im} := by
-    intro u hu
-    rw [rampArc_apply]
-    exact (traj_regular hτ (hdomτ _ (hmapsτ u hu))).1
-  have hW₃ : ∀ u ∈ Set.Icc (0:ℝ) 1, cornerPiece Φ₂ S₂
-      (Φ₂ (γ a) - ((-1:ℝ) : ℂ)*r + Complex.I*(ε₂ : ℂ)*r) r
-      (-ε₂ * Real.pi) (ε₂ * (Real.pi / 2)) u
-      ∈ {z : ℂ | 0 < z.im} :=
-    fun u _ => hballim _ _ hη₂im _ (hκ₂b u)
-  have hqne₀ : ∀ u ∈ Set.Icc (0:ℝ) 1,
-      q (rampArc γ (a + r) (r * (Real.pi/2)) (T - a - 2*r) u) ≠ 0 := by
-    intro u hu
-    rw [rampArc_apply]
-    exact (traj_regular hγ (hdomγ _ (hmapsγ u hu))).2
-  have hqne₁ : ∀ u ∈ Set.Icc (0:ℝ) 1, q (cornerPiece Φ₁ S₁
-      (Φ₁ (γ T) - ((1:ℝ) : ℂ)*r + Complex.I*((-ε₁ : ℝ) : ℂ)*r) r
-      (-(-ε₁) * (Real.pi / 2)) (1 * (-ε₁) * (Real.pi / 2)) u) ≠ 0 :=
-    fun u _ => hq₁ne _ (hpk₁ u).1
-  have hqne₂ : ∀ u ∈ Set.Icc (0:ℝ) 1,
-      q (rampArc τ r (r * (Real.pi/2)) (b - 2*r) u) ≠ 0 := by
-    intro u hu
-    rw [rampArc_apply]
-    intro h0
-    have h : -q (τ (cubicRamp r (r * (Real.pi/2)) (b - 2*r) u)) ≠ 0 :=
-      (traj_regular hτ (hdomτ _ (hmapsτ u hu))).2
-    exact h (by rw [h0, neg_zero])
-  have hqne₃ : ∀ u ∈ Set.Icc (0:ℝ) 1, q (cornerPiece Φ₂ S₂
-      (Φ₂ (γ a) - ((-1:ℝ) : ℂ)*r + Complex.I*(ε₂ : ℂ)*r) r
-      (-ε₂ * Real.pi) (ε₂ * (Real.pi / 2)) u) ≠ 0 :=
-    fun u _ => hq₂ne _ (hpk₂ u).1
-  -- the quarter transfer
-  have hquarter : ∀ Pr : ℂ → Prop,
-      (∀ u ∈ Set.Icc (0:ℝ) 1,
-        Pr (rampArc γ (a + r) (r * (Real.pi/2)) (T - a - 2*r) u)) →
-      (∀ u ∈ Set.Icc (0:ℝ) 1, Pr (cornerPiece Φ₁ S₁
-        (Φ₁ (γ T) - ((1:ℝ) : ℂ)*r + Complex.I*((-ε₁ : ℝ) : ℂ)*r) r
-        (-(-ε₁) * (Real.pi / 2)) (1 * (-ε₁) * (Real.pi / 2)) u)) →
-      (∀ u ∈ Set.Icc (0:ℝ) 1, Pr (rampArc τ r (r * (Real.pi/2)) (b - 2*r) u)) →
-      (∀ u ∈ Set.Icc (0:ℝ) 1, Pr (cornerPiece Φ₂ S₂
-        (Φ₂ (γ a) - ((-1:ℝ) : ℂ)*r + Complex.I*(ε₂ : ℂ)*r) r
-        (-ε₂ * Real.pi) (ε₂ * (Real.pi / 2)) u)) →
-      ∀ u ∈ Set.Icc (0:ℝ) 1, Pr (quarterPW
-        (rampArc γ (a + r) (r * (Real.pi/2)) (T - a - 2*r))
-        (cornerPiece Φ₁ S₁
-          (Φ₁ (γ T) - ((1:ℝ) : ℂ)*r + Complex.I*((-ε₁ : ℝ) : ℂ)*r) r
-          (-(-ε₁) * (Real.pi / 2)) (1 * (-ε₁) * (Real.pi / 2)))
-        (rampArc τ r (r * (Real.pi/2)) (b - 2*r))
-        (cornerPiece Φ₂ S₂
-          (Φ₂ (γ a) - ((-1:ℝ) : ℂ)*r + Complex.I*(ε₂ : ℂ)*r) r
-          (-ε₂ * Real.pi) (ε₂ * (Real.pi / 2))) u) := by
-    intro Pr h₀ h₁ h₂ h₃ u hu
-    by_cases hu1 : u ≤ 1/4
-    · rw [quarterPW_eval₀ hu1]
-      exact h₀ _ ⟨by linarith [hu.1], by linarith⟩
-    · by_cases hu2 : u ≤ 1/2
-      · rw [quarterPW_eval₁ hu1 hu2]
-        exact h₁ _ ⟨by linarith [not_le.mp hu1], by linarith⟩
-      · by_cases hu3 : u ≤ 3/4
-        · rw [quarterPW_eval₂ hu1 hu2 hu3]
-          exact h₂ _ ⟨by linarith [not_le.mp hu2], by linarith⟩
-        · rw [quarterPW_eval₃ hu1 hu2 hu3]
-          exact h₃ _ ⟨by linarith [not_le.mp hu3], by linarith [hu.2]⟩
-  have hρH := hquarter (fun z => 0 < z.im) hW₀ hW₁ hW₂ hW₃
-  have hqneρ := hquarter (fun z => q z ≠ 0) hqne₀ hqne₁ hqne₂ hqne₃
-  have hρc : ContinuousOn (quarterPW
-      (rampArc γ (a + r) (r * (Real.pi/2)) (T - a - 2*r))
-      (cornerPiece Φ₁ S₁
-        (Φ₁ (γ T) - ((1:ℝ) : ℂ)*r + Complex.I*((-ε₁ : ℝ) : ℂ)*r) r
-        (-(-ε₁) * (Real.pi / 2)) (1 * (-ε₁) * (Real.pi / 2)))
-      (rampArc τ r (r * (Real.pi/2)) (b - 2*r))
-      (cornerPiece Φ₂ S₂
-        (Φ₂ (γ a) - ((-1:ℝ) : ℂ)*r + Complex.I*(ε₂ : ℂ)*r) r
-        (-ε₂ * Real.pi) (ε₂ * (Real.pi / 2)))) (Set.Icc 0 1) :=
-    fun v hv' => (hd1 v hv').continuousAt.continuousWithinAt
-  obtain ⟨U, hUo, hUconv, hUH, hfin, htrU⟩ := loop_hull hq hq0 hρc hρH
-  -- piece and speed continuity
-  have hPc₀ : ContinuousOn (rampArc γ (a + r) (r * (Real.pi/2)) (T - a - 2*r))
-      (Set.Icc 0 1) := fun v hv' => (hA1 v hv').continuousAt.continuousWithinAt
-  have hPc₁ : ContinuousOn (cornerPiece Φ₁ S₁
-      (Φ₁ (γ T) - ((1:ℝ) : ℂ)*r + Complex.I*((-ε₁ : ℝ) : ℂ)*r) r
-      (-(-ε₁) * (Real.pi / 2)) (1 * (-ε₁) * (Real.pi / 2))) (Set.Icc 0 1) :=
-    fun v _ => ((hpk₁ v).2.2.1).continuousAt.continuousWithinAt
-  have hPc₂ : ContinuousOn (rampArc τ r (r * (Real.pi/2)) (b - 2*r))
-      (Set.Icc 0 1) := fun v hv' => (hB1 v hv').continuousAt.continuousWithinAt
-  have hPc₃ : ContinuousOn (cornerPiece Φ₂ S₂
-      (Φ₂ (γ a) - ((-1:ℝ) : ℂ)*r + Complex.I*(ε₂ : ℂ)*r) r
-      (-ε₂ * Real.pi) (ε₂ * (Real.pi / 2))) (Set.Icc 0 1) :=
-    fun v _ => ((hpk₂ v).2.2.1).continuousAt.continuousWithinAt
-  have hqρc := loop_q_continuous hq.continuousOn hPc₀ hPc₁ hPc₂ hPc₃
-    hv01 hv12 hv23 hW₀ hW₁ hW₂ hW₃
-  have hG₁ := (cornerSpeed_continuous hS₁o hΦ₁d hΦ₁inj hΦ₁sq hq₁ne hr hω₁ne
-    htr₁).continuousOn (s := Set.Icc 0 1)
-  have hG₃ := (cornerSpeed_continuous hS₂o hΦ₂d hΦ₂inj hΦ₂sq hq₂ne hr hω₂ne
-    htr₂).continuousOn (s := Set.Icc 0 1)
-  have hgcρ : ContinuousOn (fun t : ℝ => (4:ℂ) * quarterPW
-      (rampArcSpeed γ (a + r) (r * (Real.pi/2)) (T - a - 2*r))
-      (cornerSpeed Φ₁ S₁
-        (Φ₁ (γ T) - ((1:ℝ) : ℂ)*r + Complex.I*((-ε₁ : ℝ) : ℂ)*r) r
-        (-(-ε₁) * (Real.pi / 2)) (1 * (-ε₁) * (Real.pi / 2)))
-      (rampArcSpeed τ r (r * (Real.pi/2)) (b - 2*r))
-      (cornerSpeed Φ₂ S₂
-        (Φ₂ (γ a) - ((-1:ℝ) : ℂ)*r + Complex.I*(ε₂ : ℂ)*r) r
-        (-ε₂ * Real.pi) (ε₂ * (Real.pi / 2))) t) (Set.Icc 0 1) :=
-    continuousOn_const.mul
-      (quarterPW_continuousOn_Icc hA7 hG₁ hB7 hG₃ hg01 hg12 hg23)
-  -- nonvanishing velocities
-  have hdneγ : ∀ w ∈ Set.Icc (a + r) ((a + r) + (T - a - 2*r)),
-      deriv γ w ≠ 0 := by
-    rw [heγ]
-    intro w hw h0
-    have h1 := hqγ w hw
-    rw [h0] at h1
-    simp at h1
-  have hdneτ : ∀ w ∈ Set.Icc r (r + (b - 2*r)), deriv τ w ≠ 0 := by
-    rw [heτ]
-    intro w hw h0
-    have h1 := hqτ w hw
-    rw [h0] at h1
-    simp at h1
-  have hgne : ∀ u ∈ Set.Icc (0:ℝ) 1, (4:ℂ) * quarterPW
-      (rampArcSpeed γ (a + r) (r * (Real.pi/2)) (T - a - 2*r))
-      (cornerSpeed Φ₁ S₁
-        (Φ₁ (γ T) - ((1:ℝ) : ℂ)*r + Complex.I*((-ε₁ : ℝ) : ℂ)*r) r
-        (-(-ε₁) * (Real.pi / 2)) (1 * (-ε₁) * (Real.pi / 2)))
-      (rampArcSpeed τ r (r * (Real.pi/2)) (b - 2*r))
-      (cornerSpeed Φ₂ S₂
-        (Φ₂ (γ a) - ((-1:ℝ) : ℂ)*r + Complex.I*(ε₂ : ℂ)*r) r
-        (-ε₂ * Real.pi) (ε₂ * (Real.pi / 2))) u ≠ 0 :=
-    quarterPW_ne (rampSpeed_ne hv h3γ hdneγ)
-      (fun u _ => cornerSpeed_ne hS₁o hΦ₁d hΦ₁inj hΦ₁sq hq₁ne hr hω₁ne htr₁ u)
-      (rampSpeed_ne hv h3τ hdneτ)
-      (fun u _ => cornerSpeed_ne hS₂o hΦ₂d hΦ₂inj hΦ₂sq hq₂ne hr hω₂ne htr₂ u)
-  -- loop closure
-  have hclρ : quarterPW
-      (rampArc γ (a + r) (r * (Real.pi/2)) (T - a - 2*r))
-      (cornerPiece Φ₁ S₁
-        (Φ₁ (γ T) - ((1:ℝ) : ℂ)*r + Complex.I*((-ε₁ : ℝ) : ℂ)*r) r
-        (-(-ε₁) * (Real.pi / 2)) (1 * (-ε₁) * (Real.pi / 2)))
-      (rampArc τ r (r * (Real.pi/2)) (b - 2*r))
-      (cornerPiece Φ₂ S₂
-        (Φ₂ (γ a) - ((-1:ℝ) : ℂ)*r + Complex.I*(ε₂ : ℂ)*r) r
-        (-ε₂ * Real.pi) (ε₂ * (Real.pi / 2))) 0
-      = quarterPW
-      (rampArc γ (a + r) (r * (Real.pi/2)) (T - a - 2*r))
-      (cornerPiece Φ₁ S₁
-        (Φ₁ (γ T) - ((1:ℝ) : ℂ)*r + Complex.I*((-ε₁ : ℝ) : ℂ)*r) r
-        (-(-ε₁) * (Real.pi / 2)) (1 * (-ε₁) * (Real.pi / 2)))
-      (rampArc τ r (r * (Real.pi/2)) (b - 2*r))
-      (cornerPiece Φ₂ S₂
-        (Φ₂ (γ a) - ((-1:ℝ) : ℂ)*r + Complex.I*(ε₂ : ℂ)*r) r
-        (-ε₂ * Real.pi) (ε₂ * (Real.pi / 2))) 1 := by
-    rw [quarterPW_eval₀ (by norm_num),
-      quarterPW_eval₃ (by norm_num) (by norm_num) (by norm_num),
-      show (4:ℝ)*0 = 0 by norm_num, show (4:ℝ)*1 - 3 = 1 by norm_num, hv30]
-  have hgclρ : (4:ℂ) * quarterPW
-      (rampArcSpeed γ (a + r) (r * (Real.pi/2)) (T - a - 2*r))
-      (cornerSpeed Φ₁ S₁
-        (Φ₁ (γ T) - ((1:ℝ) : ℂ)*r + Complex.I*((-ε₁ : ℝ) : ℂ)*r) r
-        (-(-ε₁) * (Real.pi / 2)) (1 * (-ε₁) * (Real.pi / 2)))
-      (rampArcSpeed τ r (r * (Real.pi/2)) (b - 2*r))
-      (cornerSpeed Φ₂ S₂
-        (Φ₂ (γ a) - ((-1:ℝ) : ℂ)*r + Complex.I*(ε₂ : ℂ)*r) r
-        (-ε₂ * Real.pi) (ε₂ * (Real.pi / 2))) 1
-      = 4 * quarterPW
-      (rampArcSpeed γ (a + r) (r * (Real.pi/2)) (T - a - 2*r))
-      (cornerSpeed Φ₁ S₁
-        (Φ₁ (γ T) - ((1:ℝ) : ℂ)*r + Complex.I*((-ε₁ : ℝ) : ℂ)*r) r
-        (-(-ε₁) * (Real.pi / 2)) (1 * (-ε₁) * (Real.pi / 2)))
-      (rampArcSpeed τ r (r * (Real.pi/2)) (b - 2*r))
-      (cornerSpeed Φ₂ S₂
-        (Φ₂ (γ a) - ((-1:ℝ) : ℂ)*r + Complex.I*(ε₂ : ℂ)*r) r
-        (-ε₂ * Real.pi) (ε₂ * (Real.pi / 2))) 0 := by
-    rw [quarterPW_eval₃ (by norm_num) (by norm_num) (by norm_num),
-      quarterPW_eval₀ (by norm_num),
-      show (4:ℝ)*1 - 3 = 1 by norm_num, show (4:ℝ)*0 = 0 by norm_num, hg30]
-  have hinjρ := rounded_injOn₃ hr hrr₀ hε₁ hε₂ rfl rfl rfl rfl h3γ h3τ
-    hS₁o hΦ₁d hΦ₁inj hΦ₁sq hq₁ne hS₂o hΦ₂d hΦ₂inj hΦ₂sq hq₂ne htr₁ htr₂
-    hdevγ₁ hdevτ₁ hdevγ₂ hdevτ₂ hγinj hτinj hcross hκ₁b hκ₂b
-    hfar₁γ hfar₁τ hfar₂γ hfar₂τ hηd
-  have hcount := four_piece_count hr hrr₀ hε₁ hε₂ rfl rfl rfl rfl rfl rfl hm
-    h3γ h3τ hS₁o hΦ₁d hΦ₁inj hΦ₁sq hq₁ne hS₂o hΦ₂d hΦ₂inj hΦ₂sq hq₂ne
-    hball₁ hball₂ hdevγ₁ hdevτ₁ hdevγ₂ hdevτ₂ hdγA hdγC hqγ hdτA hdτC hqτ
-    hqρc (hgcρ.comp_continuous continuous_subtype_val fun t => t.2)
-  obtain ⟨hnnP, hnnR⟩ := nonnegWinding_transport hW hd1 hgcρ hclρ hgclρ hinjρ hgne
-  exact no_bigon_loop hUconv hUH hq hq0 hfin hd1 hgcρ hclρ hgclρ hinjρ hgne
-    htrU hqneρ hqρc hcount hm3 (hnnP _) hnnR
-
-/-- **The vertical bigon principle**: under the nonnegative-winding principle, no
-vertical trajectory and horizontal trajectory bound a bigon. -/
-theorem bigon_principle {q : ℂ → ℂ}
-    (hq : DifferentiableOn ℂ q {z : ℂ | 0 < z.im})
-    (hq0 : ∃ z₀ : ℂ, 0 < z₀.im ∧ q z₀ ≠ 0)
-    (hW : NonnegWindingPrinciple) :
-    ∀ (sv th : ℝ → ℂ) (T s μ : ℝ), 0 < T → 0 ≤ s → 0 < μ →
-      IsTrajOn q sv (Set.Icc (-μ) (T + μ)) →
-      IsTrajOn (fun z => -q z) th (Set.Icc (-μ) (s + μ)) →
-      th 0 = sv T → th s = sv 0 → False := by
-  intro sv th T s μ hT hs hμ hσ hτ hc1 hc2
-  rcases bigon_extract hT hs hμ hσ hτ hc1 hc2 with
-    ⟨a, b, ha0, hab, hbT, hcl, hinj⟩ | ⟨a, b, ha0, hab, hbs', hcl, hinj⟩ |
-    ⟨a, b, ha0, haT, hb0, hbs', hcl, hγinj, hτinj, hcross⟩
-  · exact no_monogon hq hq0 hW hσ hab
-      (fun w hw => Icc_mem_nhds (by linarith [hw.1]) (by linarith [hw.2]))
-      hcl hinj
-  · obtain ⟨z₀, hz₀, hz₀ne⟩ := hq0
-    exact no_monogon hq.neg ⟨z₀, hz₀, neg_ne_zero.mpr hz₀ne⟩ hW hτ hab
-      (fun w hw => Icc_mem_nhds (by linarith [hw.1]) (by linarith [hw.2]))
-      hcl hinj
-  · exact no_bigon3 hq hq0 hW hμ ha0 haT hb0 hbs' hσ hτ hc1 hcl
-      hγinj hτinj hcross
-
-/-- **The horizontal bigon principle**: the mirror statement at the negated
-differential. -/
-theorem bigon_principleH {q : ℂ → ℂ}
-    (hq : DifferentiableOn ℂ q {z : ℂ | 0 < z.im})
-    (hq0 : ∃ z₀ : ℂ, 0 < z₀.im ∧ q z₀ ≠ 0)
-    (hW : NonnegWindingPrinciple) :
-    ∀ (sv th : ℝ → ℂ) (T s μ : ℝ), 0 < T → 0 ≤ s → 0 < μ →
-      IsTrajOn (fun z => -q z) sv (Set.Icc (-μ) (T + μ)) →
-      IsTrajOn q th (Set.Icc (-μ) (s + μ)) →
-      th 0 = sv T → th s = sv 0 → False := by
-  intro sv th T s μ hT hs hμ hσ hτ hc1 hc2
-  obtain ⟨z₀, hz₀, hz₀ne⟩ := hq0
-  exact bigon_principle hq.neg ⟨z₀, hz₀, neg_ne_zero.mpr hz₀ne⟩ hW sv th T s μ
-    hT hs hμ hσ (isTrajOn_congr (fun w => (neg_neg (q w)).symm) hτ) hc1 hc2
-
 end FinalFeed
-
-/-- **Reich–Strebel from the winding principle**: the main inequality holds under the
-standard pack, the nonnegative-winding principle, and the coarea pin. -/
-theorem reich_strebel_of_pinW {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
-    (hΓ : IsFuchsianGroup Γ)
-    (hfree : ∀ γ : Γ, (∃ τ : UpperHalfPlane, γ • τ = τ) →
-      ∀ τ' : UpperHalfPlane, γ • τ' = τ')
-    (hcc : CompactSpace (Quotient (MulAction.orbitRel Γ UpperHalfPlane)))
-    (q : QuadraticDifferential Γ) {h hinv : ℂ → ℂ} {κ : ℝ} (hκ : κ < 1)
-    (hqc : IsQCUpper h hinv κ)
-    (hbd : ∀ t : ℝ, Filter.Tendsto h (nhdsWithin (t : ℂ) {z : ℂ | 0 < z.im})
-      (nhds (t : ℂ)))
-    (hcomm : ∀ γ ∈ Γ, ∀ z : ℂ, 0 < z.im →
-      h (moebiusMap γ z) = moebiusMap γ (h z))
-    (hW : NonnegWindingPrinciple)
-    (hcoarea₃ : ∀ ϑ : ℝ → ℂ, IsTrajOn (q : ℂ → ℂ) ϑ Set.univ → ∀ T : ℝ, 0 < T →
-      Set.InjOn ϑ (Set.Icc 0 T) →
-      ∀ p : ℝ → ℂ, IsFlatPath p (ϑ 0) (ϑ T) →
-      ∀ (t₀ t₁ s₀ s₁ : ℝ) (τ₀ τ₁ : ℝ → ℂ),
-      IsTrajOn (fun z => -(q : ℂ → ℂ) z) τ₀ Set.univ →
-      IsTrajOn (fun z => -(q : ℂ → ℂ) z) τ₁ Set.univ →
-      τ₀ 0 = ϑ t₀ → τ₁ 0 = ϑ t₁ →
-      t₀ ∈ Set.Ioo 0 T → t₁ ∈ Set.Ioo 0 T →
-      s₀ ∈ Set.Icc (0 : ℝ) 1 → s₁ ∈ Set.Icc (0 : ℝ) 1 →
-      (∃ u, p s₀ = τ₀ u) → (∃ u, p s₁ = τ₁ u) →
-      ENNReal.ofReal |t₁ - t₀| ≤ ∫⁻ s in Set.Icc (min s₀ s₁) (max s₀ s₁),
-        horizontalDensity (q : ℂ → ℂ) p s) :
-    q.l1Norm ≤ ∫⁻ z in UpperHalfPlane.coe '' dirichletDomain Γ UpperHalfPlane.I,
-      ‖q z‖ₑ * ENNReal.ofReal
-        (‖1 - wirtingerQuotient h z * (q z / (‖q z‖ : ℂ))‖ ^ 2
-          / (1 - ‖wirtingerQuotient h z‖ ^ 2)) := by
-  refine reich_strebel_of_pins₄ hΓ hfree hcc q hκ hqc hbd hcomm ?_ ?_ hcoarea₃
-  · intro sv th T s μ hT hs hμ hσ hτ hc1 hc2
-    have hq0 : ∃ z₀ : ℂ, 0 < z₀.im ∧ (q : ℂ → ℂ) z₀ ≠ 0 := by
-      obtain ⟨U, -, hpU, hUH, hUne, -⟩ :=
-        hσ.chart 0 ⟨by linarith, by linarith⟩
-      exact ⟨sv 0, hUH hpU, hUne _ hpU⟩
-    exact bigon_principle q.holo hq0 hW sv th T s μ hT hs hμ hσ hτ hc1 hc2
-  · intro sv th T s μ hT hs hμ hσ hτ hc1 hc2
-    have hq0 : ∃ z₀ : ℂ, 0 < z₀.im ∧ (q : ℂ → ℂ) z₀ ≠ 0 := by
-      obtain ⟨U, -, hpU, hUH, hUne, -⟩ :=
-        hτ.chart 0 ⟨by linarith, by linarith⟩
-      exact ⟨th 0, hUH hpU, hUne _ hpU⟩
-    exact bigon_principleH q.holo hq0 hW sv th T s μ hT hs hμ hσ hτ hc1 hc2
 
 /-- **Vertical development at the anchor**: near a chart point of an all-time vertical
 trajectory, the trajectory stays in the chart and its chart value moves purely
@@ -32048,107 +30432,6 @@ theorem cubicRamp_analytic (a v L : ℝ) (u : ℝ) :
       (analyticAt_const.mul h1)
   exact h2
 
-/-- **Margined affinity chart at a leaf point**: at any parameter of an anchored
-all-time transverse leaf there is a margined natural chart whose inner-ball visits by
-nearby-level leaves have heights affine in the level. -/
-theorem cert_at_crossing {q : ℂ → ℂ}
-    (hbigon : ∀ (σv τh : ℝ → ℂ) (T s μ : ℝ), 0 < T → 0 ≤ s → 0 < μ →
-      IsTrajOn q σv (Set.Icc (-μ) (T + μ)) →
-      IsTrajOn (fun z => -q z) τh (Set.Icc (-μ) (s + μ)) →
-      τh 0 = σv T → τh s = σv 0 → False)
-    {ϑ : ℝ → ℂ} (hϑ : IsTrajOn q ϑ Set.univ)
-    {τ : ℝ → ℂ} (hτ : IsTrajOn (fun z => -q z) τ Set.univ)
-    {tb : ℝ} (hanch : τ 0 = ϑ tb) (ub : ℝ) :
-    ∃ W : Set ℂ, ∃ Ψw : ℂ → ℂ, ∃ c₀ : ℂ, ∃ R : ℝ, 0 < R ∧ IsOpen W ∧
-      DifferentiableOn ℂ Ψw W ∧ Set.InjOn Ψw W ∧ W ⊆ {z : ℂ | 0 < z.im} ∧
-      (∀ w ∈ W, q w ≠ 0) ∧ (∀ x ∈ W, deriv Ψw x ^ 2 = -(-q x)) ∧
-      Metric.ball c₀ (5 * R) ⊆ Ψw '' W ∧ τ ub ∈ W ∧
-      Ψw (τ ub) ∈ Metric.ball c₀ (R / 2) ∧
-      ∃ ρ : ℝ, 0 < ρ ∧ ∃ ε : ℝ, (ε = 1 ∨ ε = -1) ∧ ∃ c : ℝ,
-      ∀ t : ℝ, |t - tb| < ρ →
-      ∀ σ : ℝ → ℂ, IsTrajOn (fun z => -q z) σ Set.univ → σ 0 = ϑ t →
-      ∀ u : ℝ, σ u ∈ W → Ψw (σ u) ∈ Metric.ball c₀ R →
-      (Ψw (σ u)).im = c - ε * t := by
-  obtain ⟨W, hWo, hxW, hWH, hWne', Ψw, hWd, hWinj, hWsq, -⟩ :=
-    hτ.chart ub (Set.mem_univ ub)
-  have hWne : ∀ w ∈ W, q w ≠ 0 := by
-    intro w hw h0
-    exact hWne' w hw (by rw [h0]; exact neg_zero)
-  have hdne : ∀ x ∈ W, deriv Ψw x ≠ 0 := by
-    intro x hx h0
-    have h1 := hWsq x hx
-    rw [h0] at h1
-    exact hWne x hx (by simpa using h1.symm)
-  have hio : IsOpen (Ψw '' W) := image_open_of_deriv_ne hWo hWd (hdne)
-  obtain ⟨r₀, hr₀, hball⟩ := Metric.mem_nhds_iff.mp
-    (hio.mem_nhds (Set.mem_image_of_mem _ hxW))
-  set c₀ : ℂ := Ψw (τ ub) with hc₀def
-  set R : ℝ := r₀ / 6 with hRdef
-  have hR : 0 < R := by positivity
-  have hmarg : Metric.ball c₀ (5 * R) ⊆ Ψw '' W :=
-    subset_trans (Metric.ball_subset_ball (by rw [hRdef]; linarith)) hball
-  have hcen : Ψw (τ ub) ∈ Metric.ball c₀ (R / 2) :=
-    Metric.mem_ball_self (by linarith)
-  refine ⟨W, Ψw, c₀, R, hR, hWo, hWd, hWinj, hWH, hWne, hWsq, hmarg, hxW,
-    hcen, ?_⟩
-  rcases lt_trichotomy ub 0 with hub | hub | hub
-  · -- reversed leaf carries the crossing at parameter −ub > 0
-    have hτr : IsTrajOn (fun z => -q z) (fun w => τ (-w)) Set.univ := by
-      have h1 := traj_reverse hτ
-      rwa [show (fun u : ℝ => -u) ⁻¹' Set.univ = Set.univ from
-        Set.preimage_univ] at h1
-    have hanchr : (fun w => τ (-w)) 0 = ϑ tb := by
-      simp only [neg_zero]
-      exact hanch
-    have htWr : (fun w => τ (-w)) (-ub) ∈ W := by
-      simp only [neg_neg]
-      exact hxW
-    have hcenr : Ψw ((fun w => τ (-w)) (-ub)) ∈ Metric.ball c₀ (R / 2) := by
-      simp only [neg_neg]
-      exact hcen
-    obtain ⟨ρ, hρ, ε, hε, c, hcert⟩ := cert_affine hbigon hϑ hτr hanchr
-      (by linarith : (0 : ℝ) < -ub) hWo hWd hWinj hWH hWne hWsq hR hmarg
-      htWr hcenr
-    exact ⟨ρ, hρ, ε, hε, c, hcert⟩
-  · -- the crossing is the anchor itself
-    have hanchW : ϑ tb ∈ W := by
-      rw [← hanch, ← hub]
-      exact hxW
-    obtain ⟨ρ₁, hρ₁, ε₀, hε₀, hdev⟩ := anchor_dev hWo hWd hWsq hϑ hanchW
-    refine ⟨min ρ₁ (R / 2), lt_min hρ₁ (by linarith), ε₀, hε₀,
-      c₀.im + ε₀ * tb, ?_⟩
-    intro t ht σ hσ hσ0 u huW huball
-    have ht1 : |t - tb| < ρ₁ := lt_of_lt_of_le ht (min_le_left _ _)
-    have ht2 : |t - tb| < R / 2 := lt_of_lt_of_le ht (min_le_right _ _)
-    obtain ⟨hϑtW, hϑtval⟩ := hdev t ht1
-    have hσ0W : σ 0 ∈ W := by
-      rw [hσ0]
-      exact hϑtW
-    have hc₀eq : c₀ = Ψw (ϑ tb) := by
-      rw [hc₀def, hub, hanch]
-    have hσ0ball : Ψw (σ 0) ∈ Metric.ball c₀ R := by
-      rw [hσ0, hϑtval, ← hc₀eq, Metric.mem_ball, dist_eq_norm,
-        show c₀ + Complex.I * ((-ε₀ * (t - tb) : ℝ) : ℂ) - c₀
-            = Complex.I * ((-ε₀ * (t - tb) : ℝ) : ℂ) from by ring,
-        norm_mul, Complex.norm_I, one_mul, Complex.norm_real,
-        Real.norm_eq_abs, abs_mul, abs_neg]
-      have hε₀abs : |ε₀| = 1 := by rcases hε₀ with h | h <;> rw [h] <;> norm_num
-      rw [hε₀abs, one_mul]
-      linarith
-    have hvis := leaf_visit_height hWo hWd hWinj hWH hWne hWsq hbigon hR
-      hmarg hσ huW hσ0W huball hσ0ball
-    rw [hvis, hσ0, hϑtval, ← hc₀eq, Complex.add_im]
-    have h9 : (Complex.I * ((-ε₀ * (t - tb) : ℝ) : ℂ)).im = -ε₀ * (t - tb) := by
-      rw [Complex.mul_im, Complex.I_re, Complex.I_im, Complex.ofReal_re,
-        Complex.ofReal_im]
-      ring
-    rw [h9]
-    ring
-  · -- the direct orientation
-    obtain ⟨ρ, hρ, ε, hε, c, hcert⟩ := cert_affine hbigon hϑ hτ hanch hub
-      hWo hWd hWinj hWH hWne hWsq hR hmarg hxW hcen
-    exact ⟨ρ, hρ, ε, hε, c, hcert⟩
-
 /-- **Ramped-arc analyticity**: the ramped trajectory arc is real-analytic where the
 ramp lands in the trajectory's interior. -/
 theorem rampArc_analytic {q : ℂ → ℂ} {γ : ℝ → ℂ} {sdom : Set ℝ}
@@ -32454,7 +30737,6 @@ theorem no_monogon₂ {q : ℂ → ℂ}
     hpa
   exact no_bigon_loop hUconv hUH hq hq0 hfin hd1 hgcρ hclρ hgclρ hinjρ hgne
     htrU hqneρ hqρc hcount (Or.inr (Or.inl rfl)) (hnnP _) hnnR
-
 
 theorem no_bigon3₂ {q : ℂ → ℂ}
     (hq : DifferentiableOn ℂ q {z : ℂ | 0 < z.im})
@@ -32807,49 +31089,6 @@ theorem bigon_principleH₂ {q : ℂ → ℂ}
   obtain ⟨z₀, hz₀, hz₀ne⟩ := hq0
   exact bigon_principle₂ hq.neg ⟨z₀, hz₀, neg_ne_zero.mpr hz₀ne⟩ hW sv th T s μ
     hT hs hμ hσ (isTrajOn_congr (fun w => (neg_neg (q w)).symm) hτ) hc1 hc2
-
-
-theorem reich_strebel_of_pinW₂ {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
-    (hΓ : IsFuchsianGroup Γ)
-    (hfree : ∀ γ : Γ, (∃ τ : UpperHalfPlane, γ • τ = τ) →
-      ∀ τ' : UpperHalfPlane, γ • τ' = τ')
-    (hcc : CompactSpace (Quotient (MulAction.orbitRel Γ UpperHalfPlane)))
-    (q : QuadraticDifferential Γ) {h hinv : ℂ → ℂ} {κ : ℝ} (hκ : κ < 1)
-    (hqc : IsQCUpper h hinv κ)
-    (hbd : ∀ t : ℝ, Filter.Tendsto h (nhdsWithin (t : ℂ) {z : ℂ | 0 < z.im})
-      (nhds (t : ℂ)))
-    (hcomm : ∀ γ ∈ Γ, ∀ z : ℂ, 0 < z.im →
-      h (moebiusMap γ z) = moebiusMap γ (h z))
-    (hW : NonnegWindingPrinciple₂)
-    (hcoarea₃ : ∀ ϑ : ℝ → ℂ, IsTrajOn (q : ℂ → ℂ) ϑ Set.univ → ∀ T : ℝ, 0 < T →
-      Set.InjOn ϑ (Set.Icc 0 T) →
-      ∀ p : ℝ → ℂ, IsFlatPath p (ϑ 0) (ϑ T) →
-      ∀ (t₀ t₁ s₀ s₁ : ℝ) (τ₀ τ₁ : ℝ → ℂ),
-      IsTrajOn (fun z => -(q : ℂ → ℂ) z) τ₀ Set.univ →
-      IsTrajOn (fun z => -(q : ℂ → ℂ) z) τ₁ Set.univ →
-      τ₀ 0 = ϑ t₀ → τ₁ 0 = ϑ t₁ →
-      t₀ ∈ Set.Ioo 0 T → t₁ ∈ Set.Ioo 0 T →
-      s₀ ∈ Set.Icc (0 : ℝ) 1 → s₁ ∈ Set.Icc (0 : ℝ) 1 →
-      (∃ u, p s₀ = τ₀ u) → (∃ u, p s₁ = τ₁ u) →
-      ENNReal.ofReal |t₁ - t₀| ≤ ∫⁻ s in Set.Icc (min s₀ s₁) (max s₀ s₁),
-        horizontalDensity (q : ℂ → ℂ) p s) :
-    q.l1Norm ≤ ∫⁻ z in UpperHalfPlane.coe '' dirichletDomain Γ UpperHalfPlane.I,
-      ‖q z‖ₑ * ENNReal.ofReal
-        (‖1 - wirtingerQuotient h z * (q z / (‖q z‖ : ℂ))‖ ^ 2
-          / (1 - ‖wirtingerQuotient h z‖ ^ 2)) := by
-  refine reich_strebel_of_pins₄ hΓ hfree hcc q hκ hqc hbd hcomm ?_ ?_ hcoarea₃
-  · intro sv th T s μ hT hs hμ hσ hτ hc1 hc2
-    have hq0 : ∃ z₀ : ℂ, 0 < z₀.im ∧ (q : ℂ → ℂ) z₀ ≠ 0 := by
-      obtain ⟨U, -, hpU, hUH, hUne, -⟩ :=
-        hσ.chart 0 ⟨by linarith, by linarith⟩
-      exact ⟨sv 0, hUH hpU, hUne _ hpU⟩
-    exact bigon_principle₂ q.holo hq0 hW sv th T s μ hT hs hμ hσ hτ hc1 hc2
-  · intro sv th T s μ hT hs hμ hσ hτ hc1 hc2
-    have hq0 : ∃ z₀ : ℂ, 0 < z₀.im ∧ (q : ℂ → ℂ) z₀ ≠ 0 := by
-      obtain ⟨U, -, hpU, hUH, hUne, -⟩ :=
-        hτ.chart 0 ⟨by linarith, by linarith⟩
-      exact ⟨th 0, hUH hpU, hUne _ hpU⟩
-    exact bigon_principleH₂ q.holo hq0 hW sv th T s μ hT hs hμ hσ hτ hc1 hc2
 
 end FinalFeedTwo
 
@@ -37092,7 +35331,7 @@ theorem hcoarea_of_bigons {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)
         lintegral_mono_set (Set.iUnion_subset hG01)
 
 /-- **The separation inequality from the atlas-threaded displacement estimate**. -/
-theorem hsep_final₄ {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
+theorem hsep_of_displacement {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
     (hΓ : IsFuchsianGroup Γ)
     (hcc : CompactSpace (Quotient (MulAction.orbitRel Γ UpperHalfPlane)))
     (q : QuadraticDifferential Γ) (hq0 : ∃ z₀ : ℂ, 0 < z₀.im ∧ q z₀ ≠ 0)
@@ -37254,7 +35493,7 @@ theorem hsep_final₄ {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
 /-- **The Reich–Strebel main inequality from the exclusion principles**: the bigon exclusions in
 both chiralities and the atlas-threaded two-point leaf-displacement estimate imply the
 main inequality; the winding jump is supplied by the proven crossing theorem. -/
-theorem reich_strebel_of_pins₅ {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
+theorem reich_strebel_of_principles {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
     (hΓ : IsFuchsianGroup Γ)
     (hfree : ∀ γ : Γ, (∃ τ : UpperHalfPlane, γ • τ = τ) →
       ∀ τ' : UpperHalfPlane, γ • τ' = τ')
@@ -37293,7 +35532,7 @@ theorem reich_strebel_of_pins₅ {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 
           / (1 - ‖wirtingerQuotient h z‖ ^ 2)) := by
   by_cases hq0 : ∃ z₀ : ℂ, 0 < z₀.im ∧ (q : ℂ → ℂ) z₀ ≠ 0
   · exact reich_strebel_of_hsep hΓ hfree hcc q hκ hqc hbd hcomm
-      (hsep_final₄ hΓ hcc q hq0 hbigon hbigonH
+      (hsep_of_displacement hΓ hcc q hq0 hbigon hbigonH
         (hjump_of_bigons q.holo hbigon hbigonH) hcoarea₄)
   · push Not at hq0
     have hmeas : MeasurableSet
@@ -37344,7 +35583,7 @@ theorem rs_main_of_principle
         hτ.chart 0 ⟨by linarith, by linarith⟩
       exact ⟨th 0, hUH hpU, hUne _ hpU⟩
     exact bigon_principleH₂ q.holo hq0 hW sv th T s μ hT hs hμ hσ hτ hc1 hc2
-  exact reich_strebel_of_pins₅ hΓ hfree hcc q hκ hqc hbd hcomm hbigon hbigonH
+  exact reich_strebel_of_principles hΓ hfree hcc q hκ hqc hbd hcomm hbigon hbigonH
     (hcoarea_of_bigons q hbigon hbigonH)
 
 section PinDischarge
@@ -37975,7 +36214,7 @@ theorem two_values {P G : ℝ → ℂ} {ς εA M ε' : ℝ}
 
 /-- **The nonnegative-winding principle**: a positively-oriented simple smooth loop has
 nonnegative winding about every off-track point. -/
-theorem pin_discharge : NonnegWindingPrinciple₂ := by
+theorem nonnegWindingPrinciple₂_holds : NonnegWindingPrinciple₂ := by
   intro ρ g hd hgc hcl hgcl hinj hgne _hpa hgw hdeg hc' ζ hζ
   have hρc : ContinuousOn ρ (Set.Icc 0 1) := fun t ht =>
     (hd t ht).continuousAt.continuousWithinAt
@@ -38117,7 +36356,7 @@ theorem reich_strebel_main_inequality
       ‖q z‖ₑ * ENNReal.ofReal
         (‖1 - wirtingerQuotient h z * (q z / (‖q z‖ : ℂ))‖ ^ 2
           / (1 - ‖wirtingerQuotient h z‖ ^ 2)) :=
-  rs_main_of_principle hΓ hfree hcc q hκ hqc hbd hcomm pin_discharge
+  rs_main_of_principle hΓ hfree hcc q hκ hqc hbd hcomm nonnegWindingPrinciple₂_holds
 
 /-- **Lusin (N) for quasiconformal maps**: the image of a Lebesgue-null set under an
 analytically quasiconformal plane map is Lebesgue-null. -/
