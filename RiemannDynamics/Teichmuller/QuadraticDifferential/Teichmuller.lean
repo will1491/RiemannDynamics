@@ -1438,8 +1438,6 @@ theorem teichDistG_teichmullerCoeff (hΓ₀ : IsFuchsianGroup Γ₀)
   exact (isTeichmullerCandidate_extremal hΓ₀ hfree hcc hq0' hk0 hk1
     (teichmullerCoeff_isTeichmullerCandidate q hk0 hk1)).2
 
-
-
 /-- **Pullback of null events**: a property holding almost everywhere holds almost
 everywhere along a quasiconformal map, by the Lusin property of the inverse. -/
 theorem qc_pullback_ae {f : ℂ → ℂ} {K : ℝ} (hf : IsQCGeometric f K)
