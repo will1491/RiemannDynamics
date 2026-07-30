@@ -106,28 +106,6 @@ theorem exists_natural_chart {q : ℂ → ℂ} {U : Set ℂ} (hU : IsOpen U)
     rw [(hΦ₀ z hzb).deriv]
     exact hg2 z hzb
 
-/-- **The Reich–Strebel main inequality.** Let `Γ` be a cocompact free Fuchsian group,
-`q` an automorphic quadratic differential, and `h` an upper-half-plane quasiconformal map
-commuting with `Γ` elementwise whose boundary limits are the identity on `ℝ`. Then the
-`L¹` mass of `q` is dominated by the integral, over the Dirichlet domain, of
-`|q| · ‖1 − μ_h q/|q|‖²/(1 − ‖μ_h‖²)` formed from the Wirtinger quotient of `h`. -/
-theorem reich_strebel_main_inequality
-    {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)} (hΓ : IsFuchsianGroup Γ)
-    (hfree : ∀ γ : Γ, (∃ τ : UpperHalfPlane, γ • τ = τ) →
-      ∀ τ' : UpperHalfPlane, γ • τ' = τ')
-    (hcc : CompactSpace (Quotient (MulAction.orbitRel Γ UpperHalfPlane)))
-    (q : QuadraticDifferential Γ) {h hinv : ℂ → ℂ} {κ : ℝ} (hκ : κ < 1)
-    (hqc : IsQCUpper h hinv κ)
-    (hbd : ∀ t : ℝ, Filter.Tendsto h (nhdsWithin (t : ℂ) {z : ℂ | 0 < z.im})
-      (nhds (t : ℂ)))
-    (hcomm : ∀ γ ∈ Γ, ∀ z : ℂ, 0 < z.im →
-      h (moebiusMap γ z) = moebiusMap γ (h z)) :
-    q.l1Norm ≤ ∫⁻ z in UpperHalfPlane.coe '' dirichletDomain Γ UpperHalfPlane.I,
-      ‖q z‖ₑ * ENNReal.ofReal
-        (‖1 - wirtingerQuotient h z * (q z / (‖q z‖ : ℂ))‖ ^ 2
-          / (1 - ‖wirtingerQuotient h z‖ ^ 2)) := by
-  sorry
-
 /-- The **Reich–Strebel weight** of `h` against `q` at `z`: the pointwise factor
 `‖1 − μ q/|q|‖² / (1 − ‖μ‖²)` formed from the Wirtinger quotient `μ` of `h`. -/
 noncomputable def rsWeight (q : ℂ → ℂ) (h : ℂ → ℂ) (z : ℂ) : ℝ≥0∞ :=
@@ -34108,5 +34086,4036 @@ theorem winding_jump {Ψ : ℂ → ℂ}
     rw [norm_mul, Complex.norm_real, Real.norm_eq_abs, h4, one_mul, h5]
   rw [h3] at hηd
   linarith [Real.pi_gt_three]
+
+/-- **Band-step accumulation**: consecutive `{-π, 0, π}` steps accumulate to `m·π` with
+`|m|` at most the number of steps. -/
+theorem band_steps {θ : ℕ → ℝ} :
+    ∀ n : ℕ, (∀ i < n, θ (i + 1) = θ i ∨ θ (i + 1) = θ i + Real.pi
+      ∨ θ (i + 1) = θ i - Real.pi) →
+    ∃ m : ℤ, θ n - θ 0 = m * Real.pi ∧ |m| ≤ n := by
+  intro n
+  induction n with
+  | zero =>
+    intro _
+    exact ⟨0, by push_cast; ring, by norm_num⟩
+  | succ k ih =>
+    intro hstep
+    obtain ⟨m, hm, hmb⟩ := ih fun i hi => hstep i (by omega)
+    rcases hstep k (by omega) with h | h | h
+    · refine ⟨m, ?_, ?_⟩
+      · rw [h]
+        exact hm
+      · calc |m| ≤ (k : ℤ) := hmb
+          _ ≤ (k + 1 : ℕ) := by push_cast; linarith
+    · refine ⟨m + 1, ?_, ?_⟩
+      · rw [h]
+        push_cast
+        linarith [hm]
+      · obtain ⟨hml, hmr⟩ := abs_le.mp hmb
+        refine abs_le.mpr ⟨?_, ?_⟩ <;> omega
+    · refine ⟨m - 1, ?_, ?_⟩
+      · rw [h]
+        push_cast
+        linarith [hm]
+      · obtain ⟨hml, hmr⟩ := abs_le.mp hmb
+        refine abs_le.mpr ⟨?_, ?_⟩ <;> omega
+
+/-- **The crossing schedule**: a finite subset of an open interval sorts into a strict
+schedule with endpoint knots, interior knots enumerating the set, and empty open
+gaps. -/
+theorem crossing_schedule {S : Finset ℝ} {a b : ℝ} (hab : a < b)
+    (hS : ∀ s ∈ S, s ∈ Set.Ioo a b) :
+    ∃ sched : ℕ → ℝ, sched 0 = a ∧ sched (S.card + 1) = b ∧
+      (∀ i < S.card + 1, sched i < sched (i + 1)) ∧
+      (∀ i, 1 ≤ i → i ≤ S.card → sched i ∈ S) ∧
+      (∀ s ∈ S, ∃ i, 1 ≤ i ∧ i ≤ S.card ∧ sched i = s) ∧
+      (∀ i < S.card + 1, ∀ t, sched i < t → t < sched (i + 1) → t ∉ S) := by
+  classical
+  set N := S.card with hN
+  set f : Fin N ↪o ℝ := S.orderEmbOfFin rfl with hf
+  have hfmem : ∀ j : Fin N, f j ∈ S := fun j => Finset.orderEmbOfFin_mem S rfl j
+  have hfsurj : ∀ s ∈ S, ∃ j : Fin N, f j = s := by
+    intro s hs
+    have hrange := Finset.range_orderEmbOfFin S (rfl : S.card = N)
+    have : s ∈ Set.range (S.orderEmbOfFin rfl) := by
+      rw [hrange]
+      exact hs
+    exact this
+  set sched : ℕ → ℝ := fun i =>
+    if i = 0 then a else if h : i - 1 < N then f ⟨i - 1, h⟩ else b with hsched
+  have hs0 : sched 0 = a := by simp [hsched]
+  have hsmid : ∀ i, 1 ≤ i → i ≤ N → ∀ (h : i - 1 < N), sched i = f ⟨i - 1, h⟩ := by
+    intro i hi1 hiN h
+    simp only [hsched]
+    rw [if_neg (by omega), dif_pos h]
+  have hsend : ∀ i, N + 1 ≤ i → sched i = b := by
+    intro i hi
+    simp only [hsched]
+    rw [if_neg (by omega), dif_neg (by omega)]
+  refine ⟨sched, hs0, hsend _ (le_refl _), ?_, ?_, ?_, ?_⟩
+  · -- strict monotone steps
+    intro i hi
+    rcases Nat.eq_zero_or_pos i with h0 | h0
+    · subst h0
+      rcases Nat.eq_zero_or_pos N with hN0 | hN0
+      · rw [hs0, hsend 1 (by omega)]
+        exact hab
+      · rw [hs0, hsmid 1 (by omega) (by omega) (by omega)]
+        exact (hS _ (hfmem _)).1
+    · rcases Nat.lt_or_ge i N with hiN | hiN
+      · rw [hsmid i (by omega) (by omega) (by omega),
+          hsmid (i + 1) (by omega) (by omega) (by omega)]
+        exact f.strictMono (by simp only [Fin.mk_lt_mk]; omega)
+      · have hieq : i = N := by omega
+        subst hieq
+        rw [hsmid N (by omega) (by omega) (by omega), hsend (N + 1) (by omega)]
+        exact (hS _ (hfmem _)).2
+  · -- interior knots in the set
+    intro i hi1 hiN
+    rw [hsmid i hi1 hiN (by omega)]
+    exact hfmem _
+  · -- enumeration
+    intro s hs
+    obtain ⟨j, hj⟩ := hfsurj s hs
+    refine ⟨j.1 + 1, by omega, by omega, ?_⟩
+    rw [hsmid (j.1 + 1) (by omega) (by omega) (by omega)]
+    rw [← hj]
+    congr 1
+  · -- empty gaps
+    intro i hi t ht1 ht2 htS
+    obtain ⟨j, hj⟩ := hfsurj t htS
+    rcases Nat.eq_zero_or_pos i with h0 | h0
+    · subst h0
+      rcases Nat.eq_zero_or_pos N with hN0 | hN0
+      · exact absurd j.2 (by omega)
+      · rw [hsmid 1 (by omega) (by omega) (by omega)] at ht2
+        have hjlt : f j < f ⟨0, by omega⟩ := by rw [hj]; exact ht2
+        have := f.strictMono.lt_iff_lt.mp hjlt
+        simp [Fin.lt_def] at this
+    · rcases Nat.lt_or_ge i N with hiN | hiN
+      · rw [hsmid i (by omega) (by omega) (by omega)] at ht1
+        rw [hsmid (i + 1) (by omega) (by omega) (by omega)] at ht2
+        have hlt : f ⟨i - 1, by omega⟩ < f j := by rw [hj]; exact ht1
+        have hlt2 : f j < f ⟨i, by omega⟩ := by rw [hj]; exact ht2
+        have h1 := f.strictMono.lt_iff_lt.mp hlt
+        have h2 := f.strictMono.lt_iff_lt.mp hlt2
+        simp [Fin.lt_def] at h1 h2
+        omega
+      · have hieq : i = N := by omega
+        subst hieq
+        rw [hsmid N (by omega) (by omega) (by omega)] at ht1
+        have hlt : f ⟨N - 1, by omega⟩ < f j := by rw [hj]; exact ht1
+        have h1 := f.strictMono.lt_iff_lt.mp hlt
+        simp [Fin.lt_def] at h1
+        omega
+
+/-- **Local-flow matching on a margined domain**: a trajectory whose domain contains a
+symmetric parameter window about a chart point follows the local flow of the chart
+throughout the window. -/
+theorem leaf_follow_on {q Φ : ℂ → ℂ} {S : Set ℂ} (hS : IsOpen S)
+    (hΦd : DifferentiableOn ℂ Φ S) (hΦinj : Set.InjOn Φ S)
+    (hSH : S ⊆ {z : ℂ | 0 < z.im}) (hSne : ∀ w ∈ S, q w ≠ 0)
+    (hΦsq : ∀ w ∈ S, deriv Φ w ^ 2 = -q w)
+    {σ : ℝ → ℂ} {D : Set ℝ} (hσ : IsTrajOn q σ D)
+    {t h : ℝ} (hh : 0 < h) (hD : Set.Icc (t - h) (t + h) ⊆ D) (htS : σ t ∈ S)
+    (hdev : ∀ x : ℝ, |x| ≤ h → Φ (σ t) + (x : ℂ) ∈ Φ '' S) :
+    ∃ ε : ℝ, (ε = 1 ∨ ε = -1) ∧
+      ∀ u : ℝ, |u| ≤ h → σ (t + u) = localFlow Φ S (ε * u) (σ t) := by
+  obtain ⟨ε, hε, hev⟩ := traj_ambient_local hS hΦd hΦsq hσ hD
+    (⟨by linarith, by linarith⟩ : t ∈ Set.Icc (t - h) (t + h)) htS
+  have hevn : ∀ᶠ u in 𝓝 t, Φ (σ u) = Φ (σ t) + ε * ((u - t : ℝ) : ℂ) := by
+    rwa [nhdsWithin_eq_nhds.mpr (Icc_mem_nhds (by linarith) (by linarith))] at hev
+  have hεsq : ε * ε = 1 := by rcases hε with h1 | h1 <;> rw [h1] <;> norm_num
+  have hside : ∀ sgn : ℝ, sgn = 1 ∨ sgn = -1 →
+      (∀ᶠ u in nhdsWithin 0 (Set.Icc 0 h),
+        Φ (σ (t + sgn * u)) = Φ (σ t) + (ε * sgn) * (u : ℂ)) →
+      IsTrajOn q (fun u => σ (t + sgn * u)) (Set.Icc 0 h) →
+      ∀ u ∈ Set.Icc (0 : ℝ) h, σ (t + sgn * u)
+        = localFlow Φ S ((ε * sgn) * u) (σ t) := by
+    intro sgn hsgn hdevε hτ
+    have hεs : ε * sgn = 1 ∨ ε * sgn = -1 := by
+      rcases hε with h1 | h1 <;> rcases hsgn with h2 | h2 <;>
+        rw [h1, h2] <;> norm_num
+    have hsegm : ∀ u ∈ Set.Icc (0 : ℝ) h,
+        Φ (σ t) + (((ε * sgn) * u : ℝ) : ℂ) ∈ Φ '' S := by
+      intro u hu
+      refine hdev _ ?_
+      have h3 : |(ε * sgn) * u| = |u| := by
+        rw [abs_mul, abs_mul]
+        rcases hε with h1 | h1 <;> rcases hsgn with h2 | h2 <;>
+          rw [h1, h2] <;> simp
+      rw [h3, abs_of_nonneg hu.1]
+      exact hu.2
+    obtain ⟨hflow0, hflowτ, -⟩ := seg_traj hS hΦd hΦinj hSH hSne hΦsq htS
+      hεs hh hsegm
+    have hgerm : ∀ᶠ u in nhdsWithin 0 (Set.Icc 0 h),
+        σ (t + sgn * u) = localFlow Φ S ((ε * sgn) * u) (σ t) := by
+      have hcS : ∀ᶠ u in nhdsWithin 0 (Set.Icc 0 h), σ (t + sgn * u) ∈ S := by
+        have h0m : (0 : ℝ) ∈ Set.Icc (0 : ℝ) h := Set.left_mem_Icc.mpr hh.le
+        have hc := hτ.cont 0 h0m
+        have h4 := hc (hS.mem_nhds (by simpa using htS))
+        simpa using h4
+      filter_upwards [hdevε, hcS, eventually_mem_nhdsWithin] with u hd hcSu hum
+      refine hΦinj hcSu (localFlow_mem (hsegm u hum)) ?_
+      rw [hd, localFlow_dev (hsegm u hum)]
+      push_cast
+      ring
+    have h5 := traj_unique hh.le hτ hflowτ hgerm
+    intro u hu
+    exact h5 hu
+  have hτfwd : IsTrajOn q (fun u => σ (t + 1 * u)) (Set.Icc 0 h) := by
+    have h1 := traj_shift t hσ
+    have h2 : Set.Icc (0 : ℝ) h ⊆ (fun u : ℝ => u + t) ⁻¹' D := by
+      intro u hu
+      simp only [Set.mem_preimage]
+      exact hD ⟨by linarith [hu.1], by linarith [hu.2]⟩
+    have h3 := traj_mono h1 h2
+    have hfun : (fun u => σ (u + t)) = fun u => σ (t + 1 * u) := by
+      funext u
+      ring_nf
+    rwa [hfun] at h3
+  have hdevfwd : ∀ᶠ u in nhdsWithin 0 (Set.Icc 0 h),
+      Φ (σ (t + 1 * u)) = Φ (σ t) + (ε * 1) * (u : ℂ) := by
+    have hmap : Filter.Tendsto (fun u : ℝ => t + 1 * u)
+        (nhdsWithin 0 (Set.Icc 0 h)) (𝓝 t) := by
+      refine Filter.Tendsto.mono_left ?_ nhdsWithin_le_nhds
+      have h6 : Continuous fun u : ℝ => t + 1 * u := by continuity
+      simpa using h6.tendsto 0
+    filter_upwards [hmap.eventually hevn] with u hu
+    rw [hu]
+    push_cast
+    ring
+  have hfwd := hside 1 (Or.inl rfl) hdevfwd hτfwd
+  have hτbwd : IsTrajOn q (fun u => σ (t + (-1) * u)) (Set.Icc 0 h) := by
+    have hshift := traj_shift (t - h) hσ
+    have hsub : Set.Icc (0 : ℝ) h ⊆ (fun u : ℝ => u + (t - h)) ⁻¹' D := by
+      intro u hu
+      simp only [Set.mem_preimage]
+      exact hD ⟨by linarith [hu.1], by linarith [hu.2]⟩
+    have hbase := traj_mono hshift hsub
+    have hrev := traj_reverse hbase
+    have hset : (fun u : ℝ => -u) ⁻¹' Set.Icc (0 : ℝ) h = Set.Icc (-h) 0 := by
+      ext u
+      simp only [Set.mem_preimage, Set.mem_Icc]
+      constructor <;> rintro ⟨h1, h2⟩ <;> constructor <;> linarith
+    rw [hset] at hrev
+    have hshift2 := traj_shift (-h) hrev
+    have hset2 : (fun u : ℝ => u + -h) ⁻¹' Set.Icc (-h) (0 : ℝ) = Set.Icc 0 h := by
+      ext u
+      simp only [Set.mem_preimage, Set.mem_Icc]
+      constructor <;> rintro ⟨h1, h2⟩ <;> constructor <;> linarith
+    rw [hset2] at hshift2
+    have hfun : (fun u : ℝ => (fun v : ℝ =>
+        (fun y : ℝ => σ (y + (t - h))) (-v)) (u + -h))
+        = fun u => σ (t + (-1) * u) := by
+      funext u
+      change σ (-(u + -h) + (t - h)) = σ (t + (-1) * u)
+      ring_nf
+    rwa [hfun] at hshift2
+  have hdevbwd : ∀ᶠ u in nhdsWithin 0 (Set.Icc 0 h),
+      Φ (σ (t + (-1) * u)) = Φ (σ t) + (ε : ℂ) * ((-1 : ℝ) : ℂ) * (u : ℂ) := by
+    have hmap : Filter.Tendsto (fun u : ℝ => t + (-1) * u)
+        (nhdsWithin 0 (Set.Icc 0 h)) (𝓝 t) := by
+      refine Filter.Tendsto.mono_left ?_ nhdsWithin_le_nhds
+      have h6 : Continuous fun u : ℝ => t + (-1) * u := by continuity
+      simpa using h6.tendsto 0
+    filter_upwards [hmap.eventually hevn] with u hu
+    rw [hu]
+    push_cast
+    ring
+  have hbwd := hside (-1) (Or.inr rfl) hdevbwd hτbwd
+  refine ⟨ε, hε, ?_⟩
+  intro u hu
+  rcases le_or_gt 0 u with h0 | h0
+  · have h7 := hfwd u ⟨h0, by rwa [abs_of_nonneg h0] at hu⟩
+    simpa using h7
+  · have hmem : -u ∈ Set.Icc (0 : ℝ) h :=
+      ⟨by linarith, by rwa [abs_of_neg h0] at hu⟩
+    have h7 := hbwd (-u) hmem
+    have hl : t + (-1) * (-u) = t + u := by ring
+    have hr : (ε * (-1)) * (-u) = ε * u := by ring
+    rwa [hl, hr] at h7
+
+/-- **Vertical development with tracking of a chart-transverse arc**: a vertical
+trajectory arc through a point of a transverse natural chart stays in the chart on a
+margined symmetric window and its chart value moves purely vertically with a single
+sign. -/
+theorem arc_vert_dev {q Ψ : ℂ → ℂ} {W : Set ℂ} (hW : IsOpen W)
+    (hΨd : DifferentiableOn ℂ Ψ W) (hΨinj : Set.InjOn Ψ W)
+    (hWH : W ⊆ {z : ℂ | 0 < z.im}) (hWne : ∀ w ∈ W, q w ≠ 0)
+    (hΨsq : ∀ x ∈ W, deriv Ψ x ^ 2 = -(-q x))
+    {A : ℝ → ℂ} {D : Set ℝ} (hA : IsTrajOn q A D)
+    {t h : ℝ} (hh : 0 < h) (hD : Set.Icc (t - h) (t + h) ⊆ D) (htW : A t ∈ W)
+    (hdev : ∀ x : ℝ, |x| ≤ h → Ψ (A t) - Complex.I * (x : ℂ) ∈ Ψ '' W) :
+    ∃ ε : ℝ, (ε = 1 ∨ ε = -1) ∧ ∀ u : ℝ, |u| ≤ h →
+      A (t + u) ∈ W ∧ Ψ (A (t + u)) = Ψ (A t) - Complex.I * (ε : ℂ) * (u : ℂ) := by
+  set Φ : ℂ → ℂ := fun z => Complex.I * Ψ z with hΦdef
+  have hΦd : DifferentiableOn ℂ Φ W := hΨd.const_mul _
+  have hΦinj : Set.InjOn Φ W := by
+    intro a ha b hb hab
+    refine hΨinj ha hb ?_
+    have h2 : Complex.I * Ψ a = Complex.I * Ψ b := hab
+    exact mul_left_cancel₀ Complex.I_ne_zero h2
+  have hΦsq : ∀ w ∈ W, deriv Φ w ^ 2 = -q w := by
+    intro w hw
+    have hat : DifferentiableAt ℂ Ψ w := hΨd.differentiableAt (hW.mem_nhds hw)
+    rw [hΦdef]
+    rw [deriv_const_mul _ hat, mul_pow, Complex.I_sq, hΨsq w hw]
+    ring
+  have hdev' : ∀ x : ℝ, |x| ≤ h → Φ (A t) + (x : ℂ) ∈ Φ '' W := by
+    intro x hx
+    obtain ⟨w, hwW, hwval⟩ := hdev x hx
+    refine ⟨w, hwW, ?_⟩
+    rw [hΦdef]
+    simp only
+    rw [hwval]
+    linear_combination (-(x : ℂ)) * Complex.I_sq
+  obtain ⟨ε, hε, hfollow⟩ := leaf_follow_on hW hΦd hΦinj hWH hWne hΦsq
+    hA hh hD htW hdev'
+  refine ⟨ε, hε, ?_⟩
+  intro u hu
+  have hεu : |ε * u| = |u| := by
+    rw [abs_mul]
+    rcases hε with h1 | h1 <;> rw [h1] <;> simp
+  have hmem : Φ (A t) + ((ε * u : ℝ) : ℂ) ∈ Φ '' W := by
+    refine hdev' _ ?_
+    rw [hεu]
+    exact hu
+  rw [hfollow u hu]
+  refine ⟨localFlow_mem hmem, ?_⟩
+  have hval := localFlow_dev hmem
+  rw [hΦdef] at hval
+  simp only at hval
+  push_cast at hval
+  linear_combination (-Complex.I) * hval
+    + (Ψ (localFlow (fun z => Complex.I * Ψ z) W (ε * u) (A t)) - Ψ (A t))
+      * Complex.I_sq
+
+/-- **The vertical arc through the middle level**: two central-line chart points at
+close heights are joined by a margined vertical trajectory arc, tracked in the chart,
+whose chart value descends at unit speed and which passes through the central-line
+point of every strictly intermediate height. -/
+theorem arc_through {q Ψ : ℂ → ℂ} {W : Set ℂ} (hWo : IsOpen W)
+    (hWd : DifferentiableOn ℂ Ψ W) (hWinj : Set.InjOn Ψ W)
+    (hWH : W ⊆ {z : ℂ | 0 < z.im}) (hWne : ∀ w ∈ W, q w ≠ 0)
+    (hWsq : ∀ x ∈ W, deriv Ψ x ^ 2 = -(-q x))
+    {c₀ : ℂ} {R : ℝ} (hR : 0 < R) (hmarg : Metric.ball c₀ (5 * R) ⊆ Ψ '' W)
+    {z z' x'' : ℂ} (hzW : z ∈ W) (hz'W : z' ∈ W) (hxW : x'' ∈ W)
+    {hh hh' hh'' : ℝ}
+    (hΨz : Ψ z = (c₀.re : ℂ) + (hh : ℂ) * Complex.I)
+    (hΨz' : Ψ z' = (c₀.re : ℂ) + (hh' : ℂ) * Complex.I)
+    (hΨx : Ψ x'' = (c₀.re : ℂ) + (hh'' : ℂ) * Complex.I)
+    (hbz : |hh - c₀.im| < R / 4) (hbz' : |hh' - c₀.im| < R / 4)
+    (hlt1 : hh < hh'') (hlt2 : hh'' < hh') :
+    ∃ A : ℝ → ℂ,
+      IsTrajOn q A (Set.Icc (-(5 * R / 4)) ((hh' - hh) + 5 * R / 4)) ∧
+      A 0 = z' ∧ A (hh' - hh) = z ∧ A (hh' - hh'') = x'' ∧
+      (∀ u ∈ Set.Icc (0 : ℝ) (hh' - hh), A u ∈ W) ∧
+      ∀ u ∈ Set.Icc (0 : ℝ) (hh' - hh),
+        Ψ (A u) = (c₀.re : ℂ) + ((hh' - u : ℝ) : ℂ) * Complex.I := by
+  set L : ℝ := hh' - hh with hLdef
+  have hL : 0 < L := by rw [hLdef]; linarith
+  have habsb : |hh - c₀.im| < 5 * R / 4 := by linarith [abs_nonneg (hh - c₀.im)]
+  have habsb' : |hh' - c₀.im| < 5 * R / 4 := by linarith [abs_nonneg (hh' - c₀.im)]
+  obtain ⟨A, harc, harc0, harcL⟩ := vertical_connect (q := fun w => -q w) hWo hWd
+    hWinj hWH (fun w hw => neg_ne_zero.mpr (hWne w hw)) hWsq
+    (by positivity : (0 : ℝ) < 5 * R) hmarg hzW hz'W hΨz hΨz' habsb habsb'
+    (by linarith : hh ≠ hh')
+  have habsL : |hh - hh'| = L := by
+    rw [hLdef, abs_sub_comm, abs_of_pos (by linarith : (0 : ℝ) < hh' - hh)]
+  rw [habsL] at harc harcL
+  have harcq : IsTrajOn q A (Set.Icc (-(5 * R / 4)) (L + 5 * R / 4)) := by
+    have h2 := isTrajOn_congr (fun w => neg_neg (q w)) harc
+    have h3 : (5 : ℝ) * R / 4 = 5 * R / 4 := rfl
+    exact h2
+  -- the single anchored development window
+  set hwin : ℝ := L + R / 2 with hwindef
+  have hwinL : L ≤ hwin := by rw [hwindef]; linarith
+  have hwin54 : hwin ≤ 5 * R / 4 := by
+    have hL2 : L < R / 2 := by
+      rw [hLdef]
+      have h4 := abs_lt.mp hbz
+      have h5 := abs_lt.mp hbz'
+      linarith [h4.1, h5.2]
+    rw [hwindef]
+    linarith
+  have hD : Set.Icc (0 - hwin) (0 + hwin)
+      ⊆ Set.Icc (-(5 * R / 4)) (L + 5 * R / 4) := by
+    intro u hu
+    constructor
+    · have := hu.1
+      linarith [hwin54]
+    · have := hu.2
+      linarith [hwin54, hL.le]
+  have hz'mem : A 0 ∈ W := by rw [harc0]; exact hz'W
+  have hdevm : ∀ x : ℝ, |x| ≤ hwin → Ψ (A 0) - Complex.I * (x : ℂ) ∈ Ψ '' W := by
+    intro x hx
+    refine hmarg (Metric.mem_ball.mpr ?_)
+    rw [harc0, hΨz', dist_eq_norm]
+    have h7 : (c₀.re : ℂ) + (hh' : ℂ) * Complex.I - Complex.I * (x : ℂ) - c₀
+        = ((hh' - x - c₀.im : ℝ) : ℂ) * Complex.I := by
+      rw [Complex.ext_iff]
+      constructor
+      · simp [Complex.add_re, Complex.sub_re, Complex.mul_re]
+      · simp [Complex.add_im, Complex.sub_im, Complex.mul_im]
+    rw [h7, norm_mul, Complex.norm_I, mul_one, Complex.norm_real,
+      Real.norm_eq_abs]
+    have h8 := abs_lt.mp hbz'
+    have h9 := abs_le.mp hx
+    rw [abs_lt]
+    constructor <;> [linarith [h8.1, h9.2, hwin54]; linarith [h8.2, h9.1, hwin54]]
+  obtain ⟨ε, hε, hdevall⟩ := arc_vert_dev hWo hWd hWinj hWH hWne hWsq harcq
+    (by positivity : (0 : ℝ) < hwin) hD hz'mem hdevm
+  -- the development sign is forced by the endpoints
+  have hε1 : ε = 1 := by
+    rcases hε with h1 | h1
+    · exact h1
+    · exfalso
+      have h2 := (hdevall L (by rw [abs_of_pos hL]; exact hwinL)).2
+      rw [show (0 : ℝ) + L = L from by rw [zero_add], harcL, harc0, hΨz, hΨz',
+        h1] at h2
+      have h3 := congrArg Complex.im h2
+      simp only [Complex.add_im, Complex.ofReal_im, Complex.mul_im,
+        Complex.ofReal_re, Complex.I_im, Complex.I_re, Complex.sub_im,
+        mul_zero, mul_one, zero_add, add_zero] at h3
+      rw [hLdef] at h3
+      nlinarith [h3]
+  have htrack : ∀ u ∈ Set.Icc (0 : ℝ) L, A u ∈ W := by
+    intro u hu
+    have h2 := (hdevall u (by
+      rw [abs_of_nonneg hu.1]
+      exact le_trans hu.2 hwinL)).1
+    rwa [zero_add] at h2
+  have hheight : ∀ u ∈ Set.Icc (0 : ℝ) L,
+      Ψ (A u) = (c₀.re : ℂ) + ((hh' - u : ℝ) : ℂ) * Complex.I := by
+    intro u hu
+    have h2 := (hdevall u (by
+      rw [abs_of_nonneg hu.1]
+      exact le_trans hu.2 hwinL)).2
+    rw [zero_add] at h2
+    rw [h2, harc0, hΨz', hε1]
+    push_cast
+    ring
+  have ha'' : A (hh' - hh'') = x'' := by
+    have hmem : hh' - hh'' ∈ Set.Icc (0 : ℝ) L :=
+      ⟨by linarith, by rw [hLdef]; linarith⟩
+    refine hWinj (htrack _ hmem) hxW ?_
+    rw [hheight _ hmem, hΨx]
+    push_cast
+    ring
+  exact ⟨A, harcq, harc0, harcL, ha'', htrack, hheight⟩
+
+/-- **The monotonicity quadrilateral**: the loop formed by an outer-leaf leg, the
+vertical trajectory segment, the other outer-leaf leg, and the connecting arc is
+closed, meets the middle leaf only at the arc crossing, evaluates to the arc on the
+upper parameter half, and stays on the three legs on the lower half. -/
+theorem mono_loop {q : ℂ → ℂ}
+    (hbigon : ∀ (σv τh : ℝ → ℂ) (T s μ : ℝ), 0 < T → 0 ≤ s → 0 < μ →
+      IsTrajOn q σv (Set.Icc (-μ) (T + μ)) →
+      IsTrajOn (fun z => -q z) τh (Set.Icc (-μ) (s + μ)) →
+      τh 0 = σv T → τh s = σv 0 → False)
+    (hbigonH : ∀ (σv τh : ℝ → ℂ) (T s μ : ℝ), 0 < T → 0 ≤ s → 0 < μ →
+      IsTrajOn (fun z => -q z) σv (Set.Icc (-μ) (T + μ)) →
+      IsTrajOn q τh (Set.Icc (-μ) (s + μ)) →
+      τh 0 = σv T → τh s = σv 0 → False)
+    {ϑ : ℝ → ℂ} (hϑc : Continuous ϑ)
+    {σ σ' σ'' : ℝ → ℂ} (hσc : Continuous σ) (hσ'c : Continuous σ')
+    (hσ'' : IsTrajOn (fun z => -q z) σ'' Set.univ)
+    {t t' : ℝ} (ha : σ 0 = ϑ t) (ha' : σ' 0 = ϑ t')
+    {A : ℝ → ℂ} {L μA : ℝ} (hμA : 0 < μA) (hL : 0 < L)
+    (hA : IsTrajOn q A (Set.Icc (-μA) (L + μA)))
+    {a'' vc : ℝ} (haI : a'' ∈ Set.Ioo 0 L)
+    {uz uz' : ℝ} (hAz' : A 0 = σ' uz') (hAz : A L = σ uz)
+    (hAx : A a'' = σ'' vc)
+    (hd1 : ∀ v w : ℝ, σ v ≠ σ'' w) (hd2 : ∀ v w : ℝ, σ' v ≠ σ'' w)
+    (hϑmiss : ∀ r ∈ Set.uIcc t t', ∀ w : ℝ, ϑ r ≠ σ'' w) :
+    ∃ γloop : C(unitInterval, ℂ), γloop 0 = γloop 1 ∧
+      (∀ (s : unitInterval) (u : ℝ), u ≠ 0 → γloop s ≠ σ'' (vc + u)) ∧
+      (∀ (s : unitInterval), 1 / 2 < (s : ℝ) →
+        γloop s = A (L * (2 - 2 * (s : ℝ)))) ∧
+      ∀ s : unitInterval, (s : ℝ) ≤ 1 / 2 →
+        γloop s ∈ σ' '' Set.uIcc 0 uz' ∪ ϑ '' Set.uIcc t t' ∪ σ '' Set.uIcc 0 uz := by
+  -- generic leg: a path from the base point to a parameter value along a curve
+  have hleg : ∀ (τ : ℝ → ℂ), Continuous τ → ∀ w : ℝ,
+      ∃ p : Path (τ 0) (τ w), Set.range p ⊆ τ '' Set.uIcc 0 w := by
+    intro τ hτc w
+    rcases le_total 0 w with hw | hw
+    · obtain ⟨p, hp⟩ := traj_path hw hτc.continuousOn
+      refine ⟨p, ?_⟩
+      rw [Set.uIcc_of_le hw]
+      exact hp.le
+    · obtain ⟨p, hp⟩ := traj_path hw hτc.continuousOn
+      refine ⟨p.symm, ?_⟩
+      rw [Set.uIcc_of_ge hw]
+      intro ζ hζ
+      obtain ⟨s, hs⟩ := hζ
+      refine hp.le ⟨unitInterval.symm s, ?_⟩
+      rw [← hs]
+      rfl
+  -- the arc as the fourth side, reversed to run from the σ-leg end to the σ'-leg end
+  obtain ⟨pA, hpA⟩ := traj_path hL.le (hA.cont.mono (by
+    intro u hu
+    exact ⟨by linarith [hu.1], by linarith [hu.2]⟩))
+  -- the three legs
+  obtain ⟨pσ', hpσ'⟩ := hleg σ' hσ'c uz'
+  obtain ⟨pϑ, hpϑ⟩ := hleg (fun r => ϑ (t' + r)) (by fun_prop) (t - t')
+  obtain ⟨pσ, hpσ⟩ := hleg σ hσc uz
+  -- the arc side with an explicit reversed parameterization
+  have hAsub : Set.Icc (0 : ℝ) L ⊆ Set.Icc (-μA) (L + μA) := by
+    intro u hu
+    exact ⟨by linarith [hu.1], by linarith [hu.2]⟩
+  have hAmaps : ∀ r : unitInterval, L * (1 - (r : ℝ)) ∈ Set.Icc (0 : ℝ) L := by
+    intro r
+    have h1 := r.2.1
+    have h2 := r.2.2
+    constructor
+    · nlinarith
+    · nlinarith
+  set pA : Path (A L) (A 0) := ⟨⟨fun r => A (L * (1 - (r : ℝ))), by
+      refine (hA.cont.mono hAsub).comp_continuous ?_ hAmaps
+      fun_prop⟩, by
+      change A (L * (1 - ((0 : unitInterval) : ℝ))) = A L
+      norm_num, by
+      change A (L * (1 - ((1 : unitInterval) : ℝ))) = A 0
+      norm_num⟩ with hpAdef
+  -- corner casts
+  have hc₁ : σ' 0 = ϑ (t' + 0) := by rw [add_zero]; exact ha'
+  have hc₂ : σ 0 = ϑ (t' + (t - t')) := by
+    rw [show t' + (t - t') = t from by ring]
+    exact ha
+  set P₂ : Path (σ' 0) (σ 0) := pϑ.cast hc₁ hc₂ with hP₂def
+  set P₃ : Path (σ 0) (A L) := pσ.cast rfl hAz with hP₃def
+  set P₄ : Path (A L) (σ' uz') := pA.cast rfl hAz'.symm with hP₄def
+  obtain ⟨γloop, hcl, hrange, hlow, hup⟩ := quad_eval pσ'.symm P₂ P₃ P₄
+  have hupeval : ∀ (s : unitInterval), 1 / 2 < (s : ℝ) →
+      γloop s = A (L * (2 - 2 * (s : ℝ))) := by
+    intro s hs
+    rw [hup s hs]
+    change A (L * (1 - (2 * (s : ℝ) - 1))) = A (L * (2 - 2 * (s : ℝ)))
+    congr 1
+    ring
+  have hlow' : ∀ s : unitInterval, (s : ℝ) ≤ 1 / 2 →
+      γloop s ∈ σ' '' Set.uIcc 0 uz' ∪ ϑ '' Set.uIcc t t'
+        ∪ σ '' Set.uIcc 0 uz := by
+    intro s hs
+    have h2 := hlow s hs
+    rcases h2 with (h3 | h3) | h3
+    · left; left
+      obtain ⟨r, hr⟩ := h3
+      have h4 : pσ'.symm r ∈ Set.range (pσ' : C(unitInterval, ℂ)) :=
+        ⟨unitInterval.symm r, rfl⟩
+      rw [hr] at h4
+      exact hpσ' h4
+    · left; right
+      obtain ⟨r, hr⟩ := h3
+      rw [← hr]
+      obtain ⟨w, hw, hval⟩ := hpϑ (⟨r, rfl⟩ : ∃ i, pϑ i = P₂ r)
+      refine ⟨t' + w, ?_, hval⟩
+      rw [Set.uIcc_comm]
+      rcases Set.mem_uIcc.mp hw with ⟨hw1, hw2⟩ | ⟨hw1, hw2⟩
+      · exact Set.mem_uIcc.mpr (Or.inl ⟨by linarith, by linarith⟩)
+      · exact Set.mem_uIcc.mpr (Or.inr ⟨by linarith, by linarith⟩)
+    · right
+      obtain ⟨r, hr⟩ := h3
+      rw [← hr]
+      exact hpσ (⟨r, rfl⟩ : ∃ i, pσ i = P₃ r)
+  refine ⟨γloop, hcl, ?_, hupeval, hlow'⟩
+  intro s u hu hEq
+  rcases le_or_gt (s : ℝ) (1 / 2) with hhalf | hhalf
+  · have h2 := hlow' s hhalf
+    rcases h2 with (h3 | h3) | h3
+    · obtain ⟨w, -, hval⟩ := h3
+      exact hd2 w (vc + u) (hval.symm ▸ hEq)
+    · obtain ⟨w, hwmem, hval⟩ := h3
+      exact hϑmiss w hwmem (vc + u) (hval.symm ▸ hEq)
+    · obtain ⟨w, -, hval⟩ := h3
+      exact hd1 w (vc + u) (hval.symm ▸ hEq)
+  · have h2 := hupeval s hhalf
+    rw [h2] at hEq
+    have hmem : L * (2 - 2 * (s : ℝ)) ∈ Set.Icc (0 : ℝ) L := by
+      have h1 := s.2.2
+      constructor
+      · nlinarith
+      · nlinarith [hhalf]
+    have h4 := arc_cross_once hbigon hbigonH hμA hA hσ'' hmem
+      ⟨haI.1.le, haI.2.le⟩ hEq.symm hAx.symm
+    exact hu (by linarith [h4.2])
+
+/-- **Uniform first-order modulus**: for every `η` there is a mesh below which the
+curve deviates from its tangent model by at most `η` times the parameter gap. -/
+theorem c1_modulus {γ g : ℝ → ℂ}
+    (hd : ∀ t ∈ Set.Icc (0 : ℝ) 1, HasDerivAt γ (g t) t)
+    (hgc : ContinuousOn g (Set.Icc 0 1)) {η : ℝ} (hη : 0 < η) :
+    ∃ δ > 0, ∀ s ∈ Set.Icc (0:ℝ) 1, ∀ t ∈ Set.Icc (0:ℝ) 1, |t - s| ≤ δ →
+      ‖γ t - γ s - ((t - s : ℝ) : ℂ) * g s‖ ≤ η * |t - s| := by
+  have huc := isCompact_Icc.uniformContinuousOn_of_continuous hgc
+  rw [Metric.uniformContinuousOn_iff] at huc
+  obtain ⟨δ', hδ', hmod⟩ := huc η hη
+  refine ⟨δ'/2, by linarith, ?_⟩
+  intro s hs t ht hst
+  have hbound : ∀ u ∈ Set.Icc (min s t) (max s t), ‖g u - g s‖ ≤ η := by
+    intro u hu
+    have humem : u ∈ Set.Icc (0:ℝ) 1 := by
+      constructor
+      · exact le_trans (le_min hs.1 ht.1) hu.1
+      · exact le_trans hu.2 (max_le hs.2 ht.2)
+    have hdist : dist u s < δ' := by
+      rw [Real.dist_eq, abs_lt]
+      have h1 := hu.1
+      have h2 := hu.2
+      rw [abs_le] at hst
+      rcases le_total s t with h | h
+      · rw [min_eq_left h] at h1
+        rw [max_eq_right h] at h2
+        constructor <;> linarith only [h1, h2, hst.1, hst.2, hδ']
+      · rw [min_eq_right h] at h1
+        rw [max_eq_left h] at h2
+        constructor <;> linarith only [h1, h2, hst.1, hst.2, hδ']
+    exact le_of_lt (by
+      have := hmod u humem s hs hdist
+      rwa [dist_eq_norm] at this)
+  have hφd : ∀ u ∈ Set.Icc (min s t) (max s t),
+      HasDerivWithinAt (fun u : ℝ => γ u - (u : ℂ) * g s) (g u - g s)
+        (Set.Icc (min s t) (max s t)) u := by
+    intro u hu
+    have humem : u ∈ Set.Icc (0:ℝ) 1 := by
+      constructor
+      · exact le_trans (le_min hs.1 ht.1) hu.1
+      · exact le_trans hu.2 (max_le hs.2 ht.2)
+    have h1 : HasDerivAt (fun u : ℝ => (u : ℂ) * g s) (g s) u := by
+      simpa using (Complex.ofRealCLM.hasDerivAt (x := u)).mul_const (g s)
+    exact ((hd u humem).sub h1).hasDerivWithinAt
+  rcases le_total s t with h | h
+  · have hkey := norm_image_sub_le_of_norm_deriv_le_segment' hφd
+      (fun u hu => hbound u ⟨hu.1, le_of_lt hu.2⟩) t
+      (by rw [min_eq_left h, max_eq_right h]; exact ⟨h, le_refl t⟩)
+    have hval : (fun u : ℝ => γ u - (u : ℂ) * g s) t
+        - (fun u : ℝ => γ u - (u : ℂ) * g s) (min s t)
+        = γ t - γ s - ((t - s : ℝ) : ℂ) * g s := by
+      rw [min_eq_left h]
+      push_cast
+      ring
+    rw [hval] at hkey
+    calc ‖γ t - γ s - ((t - s : ℝ) : ℂ) * g s‖ ≤ η * (t - min s t) := hkey
+      _ = η * |t - s| := by rw [min_eq_left h, abs_of_nonneg (by linarith)]
+  · have hkey := norm_image_sub_le_of_norm_deriv_le_segment' hφd
+      (fun u hu => hbound u ⟨hu.1, le_of_lt hu.2⟩) s
+      (by rw [min_eq_right h, max_eq_left h]; exact ⟨h, le_refl s⟩)
+    have hval : (fun u : ℝ => γ u - (u : ℂ) * g s) s
+        - (fun u : ℝ => γ u - (u : ℂ) * g s) (min s t)
+        = -(γ t - γ s - ((t - s : ℝ) : ℂ) * g s) := by
+      rw [min_eq_right h]
+      push_cast
+      ring
+    rw [hval, norm_neg] at hkey
+    calc ‖γ t - γ s - ((t - s : ℝ) : ℂ) * g s‖ ≤ η * (s - min s t) := hkey
+      _ = η * |t - s| := by
+        rw [min_eq_right h, abs_of_nonpos (by linarith), neg_sub]
+
+/-- **Tail vanishing of the winding along a leaf**: for a closed loop with range in
+the upper half plane and an all-time transverse leaf meeting it at exactly one
+parameter, the winding number about every other leaf point vanishes. -/
+theorem tails_zero {q : ℂ → ℂ}
+    (hq : DifferentiableOn ℂ q {z : ℂ | 0 < z.im})
+    (hbigonH : ∀ (σv τh : ℝ → ℂ) (T s μ : ℝ), 0 < T → 0 ≤ s → 0 < μ →
+      IsTrajOn (fun z => -q z) σv (Set.Icc (-μ) (T + μ)) →
+      IsTrajOn q τh (Set.Icc (-μ) (s + μ)) →
+      τh 0 = σv T → τh s = σv 0 → False)
+    {σ : ℝ → ℂ} (hσ : IsTrajOn (fun z => -q z) σ Set.univ)
+    {γ : C(unitInterval, ℂ)} (hcl : γ 0 = γ 1)
+    (hγim : ∀ s : unitInterval, 0 < (γ s).im)
+    {vs : ℝ} (hmiss : ∀ (s : unitInterval) (u : ℝ), u ≠ vs → γ s ≠ σ u) :
+    ∀ u : ℝ, u ≠ vs → windingNumber γ (σ u) = 0 := by
+  -- the loop's imaginary floor
+  obtain ⟨s₀, -, hs₀min⟩ := isCompact_univ.exists_isMinOn ⟨0, Set.mem_univ _⟩
+    ((Complex.continuous_im.comp (map_continuous γ)).continuousOn)
+  set δγ : ℝ := (γ s₀).im with hδγdef
+  have hδγ : 0 < δγ := hγim s₀
+  have hfloor : ∀ s : unitInterval, δγ ≤ (γ s).im := by
+    intro s
+    exact isMinOn_iff.mp hs₀min s (Set.mem_univ s)
+  -- the compact region carrying all nonzero windings of leaf points
+  obtain ⟨R₀, hR₀⟩ := (isBounded_windingRegion hcl).subset_closedBall 0
+  set K : Set ℂ := Metric.closedBall 0 R₀ ∩ {z : ℂ | δγ / 2 ≤ z.im} with hKdef
+  have hKc : IsCompact K :=
+    (isCompact_closedBall 0 R₀).inter_right
+      (isClosed_le continuous_const Complex.continuous_im)
+  have hKH : K ⊆ {z : ℂ | 0 < z.im} := by
+    intro z hz
+    have h2 := hz.2
+    simp only [Set.mem_setOf_eq] at h2 ⊢
+    linarith
+  -- a leaf point outside the region has zero winding
+  have hzero : ∀ u : ℝ, u ≠ vs → σ u ∉ K → windingNumber γ (σ u) = 0 := by
+    intro u hu hK
+    rcases lt_or_ge (σ u).im (δγ / 2) with him | him
+    · refine winding_offline_zero hcl ?_
+      intro s hEq
+      have h2 := hfloor s
+      rw [hEq] at h2
+      linarith
+    · by_contra hw
+      have hmem : σ u ∈ {ζ : ℂ | ζ ∉ Set.range γ ∧ windingNumber γ ζ ≠ 0} := by
+        refine ⟨?_, hw⟩
+        rintro ⟨s, hs⟩
+        exact hmiss s u hu hs
+      exact hK ⟨hR₀ hmem, him⟩
+  -- both tails escape the region
+  have hfwd : ∃ uf : ℝ, vs < uf ∧ σ uf ∉ K := by
+    obtain ⟨t₁, ht₁, htK⟩ := leaf_tail_proper hq hbigonH
+      (traj_mono hσ (Set.subset_univ (Set.Ici 0))) hKc hKH (vs + 1)
+    exact ⟨t₁, by linarith, htK⟩
+  have hbwd : ∃ ub : ℝ, ub < vs ∧ σ ub ∉ K := by
+    have hσr : IsTrajOn (fun z => -q z) (fun u => σ (-u)) (Set.Ici 0) := by
+      have h2 := traj_reverse hσ
+      rw [Set.preimage_univ] at h2
+      exact traj_mono h2 (Set.subset_univ _)
+    obtain ⟨t₁, ht₁, htK⟩ := leaf_tail_proper hq hbigonH hσr hKc hKH (-vs + 1)
+    exact ⟨-t₁, by linarith, htK⟩
+  -- constancy along each branch
+  intro u hu
+  rcases lt_or_gt_of_ne hu with hult | hugt
+  · obtain ⟨ub, hub, hubK⟩ := hbwd
+    have hC : IsPreconnected (σ '' Set.Iio vs) :=
+      (isPreconnected_Iio).image σ (hσ.cont.mono (Set.subset_univ _))
+    have hdisj : ∀ s : unitInterval, γ s ∉ σ '' Set.Iio vs := by
+      rintro s ⟨w, hw, hval⟩
+      exact hmiss s w (ne_of_lt hw) hval.symm
+    have hconst := windingNumber_eq_of_preconnected hcl hC hdisj
+      (Set.mem_image_of_mem σ (show u ∈ Set.Iio vs from hult))
+      (Set.mem_image_of_mem σ (show ub ∈ Set.Iio vs from hub))
+    rw [hconst]
+    exact hzero ub (ne_of_lt hub) hubK
+  · obtain ⟨uf, huf, hufK⟩ := hfwd
+    have hC : IsPreconnected (σ '' Set.Ioi vs) :=
+      (isPreconnected_Ioi).image σ (hσ.cont.mono (Set.subset_univ _))
+    have hdisj : ∀ s : unitInterval, γ s ∉ σ '' Set.Ioi vs := by
+      rintro s ⟨w, hw, hval⟩
+      exact hmiss s w (ne_of_gt hw) hval.symm
+    have hconst := windingNumber_eq_of_preconnected hcl hC hdisj
+      (Set.mem_image_of_mem σ (show u ∈ Set.Ioi vs from hugt))
+      (Set.mem_image_of_mem σ (show uf ∈ Set.Ioi vs from huf))
+    rw [hconst]
+    exact hzero uf (ne_of_gt huf) hufK
+
+/-- **The offset core**: if `D = τ·G + E` with `‖E‖ ≤ (m/2)|τ|` and `m ≤ ‖G‖`, then
+`D + ε'·i·G = 0` forces `ε' = 0`. -/
+theorem offset_core {D E G : ℂ} {τ ε' m : ℝ}
+    (hm : 0 < m) (hG : m ≤ ‖G‖)
+    (hdec : D = (τ : ℂ) * G + E) (hE : ‖E‖ ≤ m / 2 * |τ|)
+    (heq : D + (ε' : ℂ) * (Complex.I * G) = 0) (hε' : ε' ≠ 0) : False := by
+  have hG0 : G ≠ 0 := by
+    intro h
+    rw [h, norm_zero] at hG
+    linarith
+  have hmc : G * (starRingEnd ℂ) G = ((‖G‖^2 : ℝ) : ℂ) := by
+    rw [Complex.mul_conj]
+    norm_cast
+    exact Complex.normSq_eq_norm_sq G
+  rw [hdec] at heq
+  have h1 : ((τ : ℂ) * G + E + (ε' : ℂ) * (Complex.I * G)) * (starRingEnd ℂ) G
+      = 0 := by
+    rw [heq, zero_mul]
+  have hmc' : G * (starRingEnd ℂ) G = ((‖G‖ : ℝ) : ℂ)^2 := by
+    rw [hmc]
+    push_cast
+    ring
+  set P : ℂ := E * (starRingEnd ℂ) G with hPdef
+  have hkey : ((τ * ‖G‖^2 : ℝ) : ℂ) + P
+      + ((ε' * ‖G‖^2 : ℝ) : ℂ) * Complex.I = 0 := by
+    rw [hPdef]
+    push_cast
+    linear_combination h1 - ((τ : ℂ) + (ε' : ℂ) * Complex.I) * hmc'
+  have hre := congrArg Complex.re hkey
+  have him := congrArg Complex.im hkey
+  simp only [Complex.add_re, Complex.add_im, Complex.ofReal_re, Complex.ofReal_im,
+    Complex.mul_re, Complex.mul_im, Complex.I_re, Complex.I_im, Complex.zero_re,
+    Complex.zero_im, mul_zero, mul_one, sub_zero, zero_add, add_zero] at hre him
+  -- hre : τ*‖G‖^2 + P.re = 0 ; him : P.im + ε'*‖G‖^2 = 0
+  have hPn : ‖P‖ = ‖E‖ * ‖G‖ := by
+    rw [hPdef, norm_mul, RCLike.norm_conj]
+  have hPre : |P.re| ≤ m/2 * |τ| * ‖G‖ := by
+    calc |P.re| ≤ ‖P‖ := Complex.abs_re_le_norm _
+      _ = ‖E‖ * ‖G‖ := hPn
+      _ ≤ m/2 * |τ| * ‖G‖ := by
+          nlinarith only [hE, norm_nonneg G, norm_nonneg E]
+  have hPim : |P.im| ≤ m/2 * |τ| * ‖G‖ := by
+    calc |P.im| ≤ ‖P‖ := Complex.abs_im_le_norm _
+      _ = ‖E‖ * ‖G‖ := hPn
+      _ ≤ m/2 * |τ| * ‖G‖ := by
+          nlinarith only [hE, norm_nonneg G, norm_nonneg E]
+  have hτ0 : τ = 0 := by
+    have h2 : |τ| * ‖G‖^2 ≤ m/2 * |τ| * ‖G‖ := by
+      have h3 : |τ * ‖G‖^2| = |P.re| := by
+        rw [abs_eq_abs]
+        right
+        linarith only [hre]
+      have h4 : |τ * ‖G‖^2| = |τ| * ‖G‖^2 := by
+        rw [abs_mul, abs_of_nonneg (by positivity : (0:ℝ) ≤ ‖G‖^2)]
+      linarith only [hPre, h3, h4]
+    have h5 : |τ| * (‖G‖ * (m/2)) ≤ 0 := by
+      nlinarith only [h2, hG, hm, abs_nonneg τ, norm_nonneg G]
+    have h6 : 0 ≤ |τ| * (‖G‖ * (m/2)) := by positivity
+    have h7 : |τ| * (‖G‖ * (m/2)) = 0 := le_antisymm h5 h6
+    rcases mul_eq_zero.mp h7 with h | h
+    · exact abs_eq_zero.mp h
+    · exfalso
+      rcases mul_eq_zero.mp h with h' | h'
+      · rw [h'] at hG; linarith
+      · linarith
+  have hE0 : E = 0 := by
+    rw [hτ0, abs_zero, mul_zero] at hE
+    exact norm_eq_zero.mp (le_antisymm hE (norm_nonneg E))
+  have hP0 : P = 0 := by
+    rw [hPdef, hE0, zero_mul]
+  have hεG : ε' * ‖G‖^2 = 0 := by
+    rw [hP0] at him
+    simp only [Complex.zero_im, zero_add] at him
+    linarith only [him]
+  rcases mul_eq_zero.mp hεG with h | h
+  · exact hε' h
+  · have : ‖G‖ = 0 := by
+      have := sq_eq_zero_iff.mp h
+      exact this
+    rw [this] at hG
+    linarith
+
+/-- **The forward wrap offset**: a pair wrapping through the closure with `t` past the
+seam reduces to the offset core with gap `t + 1 - s`. -/
+theorem offset_wrap {γ g : ℝ → ℂ} {s t ε' m : ℝ}
+    (hm : 0 < m) (hgs : m ≤ ‖g s‖)
+    (hcl : γ 0 = γ 1) (hgcl : g 1 = g 0)
+    (ht0 : 0 ≤ t) (hs1 : s ≤ 1)
+    (hE₁ : ‖γ t - γ 0 - ((t - 0 : ℝ) : ℂ) * g 0‖ ≤ m / 4 * |t - 0|)
+    (hE₂ : ‖γ 1 - γ s - ((1 - s : ℝ) : ℂ) * g s‖ ≤ m / 4 * |1 - s|)
+    (hg1s : ‖g 1 - g s‖ ≤ m / 4)
+    (heq : γ t - γ s + (ε' : ℂ) * (Complex.I * g s) = 0) (hε' : ε' ≠ 0) : False := by
+  refine offset_core (D := γ t - γ s)
+    (E := γ t - γ s - ((t + 1 - s : ℝ) : ℂ) * g s)
+    (G := g s) (τ := t + 1 - s) hm hgs (by push_cast; ring) ?_ heq hε'
+  have hτ : |t + 1 - s| = t + 1 - s := abs_of_nonneg (by linarith only [ht0, hs1])
+  have ht' : |t - 0| = t := by rw [sub_zero, abs_of_nonneg ht0]
+  have hs' : |1 - s| = 1 - s := abs_of_nonneg (by linarith only [hs1])
+  rw [hτ]
+  have hdec : γ t - γ s - ((t + 1 - s : ℝ) : ℂ) * g s
+      = (γ t - γ 0 - ((t - 0 : ℝ) : ℂ) * g 0)
+        + (γ 1 - γ s - ((1 - s : ℝ) : ℂ) * g s)
+        + ((t : ℝ) : ℂ) * (g 1 - g s) := by
+    rw [hcl, hgcl]
+    push_cast
+    ring
+  rw [hdec]
+  calc ‖(γ t - γ 0 - ((t - 0 : ℝ) : ℂ) * g 0)
+        + (γ 1 - γ s - ((1 - s : ℝ) : ℂ) * g s)
+        + ((t : ℝ) : ℂ) * (g 1 - g s)‖
+      ≤ ‖γ t - γ 0 - ((t - 0 : ℝ) : ℂ) * g 0‖
+        + ‖γ 1 - γ s - ((1 - s : ℝ) : ℂ) * g s‖
+        + ‖((t : ℝ) : ℂ) * (g 1 - g s)‖ := norm_add₃_le
+    _ ≤ m/4 * t + m/4 * (1 - s) + t * (m/4) := by
+        have h3 : ‖((t : ℝ) : ℂ) * (g 1 - g s)‖ ≤ t * (m/4) := by
+          rw [norm_mul, Complex.norm_real, Real.norm_eq_abs, abs_of_nonneg ht0]
+          exact mul_le_mul_of_nonneg_left hg1s ht0
+        rw [ht'] at hE₁
+        rw [hs'] at hE₂
+        linarith only [hE₁, hE₂, h3]
+    _ ≤ m/2 * (t + 1 - s) := by nlinarith only [hs1, ht0, hm]
+
+/-- **The backward wrap offset**: the mirror pair with `s` past the seam reduces to the
+offset core with gap `t - 1 - s`. -/
+theorem offset_wrap' {γ g : ℝ → ℂ} {s t ε' m : ℝ}
+    (hm : 0 < m) (hgs : m ≤ ‖g s‖)
+    (hcl : γ 0 = γ 1) (hgcl : g 1 = g 0)
+    (ht1 : t ≤ 1) (hs0 : 0 ≤ s)
+    (hE₁ : ‖γ t - γ 1 - ((t - 1 : ℝ) : ℂ) * g 1‖ ≤ m / 4 * |t - 1|)
+    (hE₂ : ‖γ 0 - γ s - ((0 - s : ℝ) : ℂ) * g s‖ ≤ m / 4 * |0 - s|)
+    (hg1s : ‖g 1 - g s‖ ≤ m / 4)
+    (heq : γ t - γ s + (ε' : ℂ) * (Complex.I * g s) = 0) (hε' : ε' ≠ 0) : False := by
+  refine offset_core (D := γ t - γ s)
+    (E := γ t - γ s - ((t - 1 - s : ℝ) : ℂ) * g s)
+    (G := g s) (τ := t - 1 - s) hm hgs (by push_cast; ring) ?_ heq hε'
+  have hτ : |t - 1 - s| = 1 - t + s := by
+    rw [abs_of_nonpos (by linarith only [ht1, hs0])]
+    ring
+  have ht' : |t - 1| = 1 - t := by
+    rw [abs_of_nonpos (by linarith only [ht1])]
+    ring
+  have hs' : |0 - s| = s := by
+    rw [abs_of_nonpos (by linarith only [hs0])]
+    ring
+  rw [hτ]
+  have hdec : γ t - γ s - ((t - 1 - s : ℝ) : ℂ) * g s
+      = (γ t - γ 1 - ((t - 1 : ℝ) : ℂ) * g 1)
+        + (γ 0 - γ s - ((0 - s : ℝ) : ℂ) * g s)
+        + ((t - 1 : ℝ) : ℂ) * (g 1 - g s) := by
+    rw [hcl, hgcl]
+    push_cast
+    ring
+  rw [hdec]
+  calc ‖(γ t - γ 1 - ((t - 1 : ℝ) : ℂ) * g 1)
+        + (γ 0 - γ s - ((0 - s : ℝ) : ℂ) * g s)
+        + ((t - 1 : ℝ) : ℂ) * (g 1 - g s)‖
+      ≤ ‖γ t - γ 1 - ((t - 1 : ℝ) : ℂ) * g 1‖
+        + ‖γ 0 - γ s - ((0 - s : ℝ) : ℂ) * g s‖
+        + ‖((t - 1 : ℝ) : ℂ) * (g 1 - g s)‖ := norm_add₃_le
+    _ ≤ m/4 * (1 - t) + m/4 * s + (1 - t) * (m/4) := by
+        have h3 : ‖((t - 1 : ℝ) : ℂ) * (g 1 - g s)‖ ≤ (1 - t) * (m/4) := by
+          rw [norm_mul, Complex.norm_real, Real.norm_eq_abs, ht']
+          exact mul_le_mul_of_nonneg_left hg1s (by linarith only [ht1])
+        rw [ht'] at hE₁
+        rw [hs'] at hE₂
+        linarith only [hE₁, hE₂, h3]
+    _ ≤ m/2 * (1 - t + s) := by nlinarith only [ht1, hs0, hm]
+
+/-- **Far-diagonal separation**: on the compact annulus of parameter pairs away from
+the diagonal and the wrap, a simple closed curve is spatially separated. -/
+theorem far_sep {γ : ℝ → ℂ} {δ : ℝ} (hδ : 0 < δ)
+    (hγc : ContinuousOn γ (Set.Icc 0 1))
+    (hcl : γ 0 = γ 1) (hinj : Set.InjOn γ (Set.Ico 0 1)) :
+    ∃ sep > 0, ∀ s ∈ Set.Icc (0:ℝ) 1, ∀ t ∈ Set.Icc (0:ℝ) 1,
+      δ ≤ |t - s| → |t - s| ≤ 1 - δ → sep ≤ ‖γ t - γ s‖ := by
+  set P : Set (ℝ × ℝ) := {p | p.1 ∈ Set.Icc 0 1 ∧ p.2 ∈ Set.Icc 0 1 ∧
+    δ ≤ |p.2 - p.1| ∧ |p.2 - p.1| ≤ 1 - δ} with hPdef
+  by_cases hPne : P.Nonempty
+  case neg =>
+    refine ⟨1, one_pos, fun s hs t ht hd1 hd2 => ?_⟩
+    exact absurd ⟨(s, t), hs, ht, hd1, hd2⟩ hPne
+  case pos =>
+  have hPclosed : IsClosed P := by
+    have h1 : IsClosed {p : ℝ × ℝ | p.1 ∈ Set.Icc 0 1} :=
+      isClosed_Icc.preimage continuous_fst
+    have h2 : IsClosed {p : ℝ × ℝ | p.2 ∈ Set.Icc 0 1} :=
+      isClosed_Icc.preimage continuous_snd
+    have h3 : IsClosed {p : ℝ × ℝ | δ ≤ |p.2 - p.1|} :=
+      isClosed_le continuous_const ((continuous_snd.sub continuous_fst).abs)
+    have h4 : IsClosed {p : ℝ × ℝ | |p.2 - p.1| ≤ 1 - δ} :=
+      isClosed_le ((continuous_snd.sub continuous_fst).abs) continuous_const
+    exact h1.inter (h2.inter (h3.inter h4))
+  have hPc : IsCompact P :=
+    (isCompact_Icc.prod isCompact_Icc).of_isClosed_subset hPclosed
+      fun p hp => ⟨hp.1, hp.2.1⟩
+  have hfc : ContinuousOn (fun p : ℝ × ℝ => ‖γ p.2 - γ p.1‖) P := by
+    refine ContinuousOn.norm (ContinuousOn.sub ?_ ?_)
+    · exact hγc.comp continuous_snd.continuousOn fun p hp => hp.2.1
+    · exact hγc.comp continuous_fst.continuousOn fun p hp => hp.1
+  obtain ⟨p₀, hp₀, hmin⟩ := hPc.exists_isMinOn hPne hfc
+  refine ⟨‖γ p₀.2 - γ p₀.1‖, ?_, ?_⟩
+  · rw [gt_iff_lt, norm_pos_iff, sub_ne_zero]
+    intro heq
+    obtain ⟨hp1, hp2, hpd1, hpd2⟩ := hp₀
+    rcases lt_or_ge p₀.1 1 with hlt1 | hge1
+    · rcases lt_or_ge p₀.2 1 with hlt2 | hge2
+      · have h5 := hinj ⟨hp2.1, hlt2⟩ ⟨hp1.1, hlt1⟩ heq
+        rw [h5] at hpd1
+        simp only [sub_self, abs_zero] at hpd1
+        linarith only [hpd1, hδ]
+      · have hp2e : p₀.2 = 1 := le_antisymm hp2.2 hge2
+        have hlt1' : p₀.1 < 1 := hlt1
+        have heq2 : γ p₀.1 = γ 0 := by
+          rw [← heq, hp2e, ← hcl]
+        have h5 := hinj ⟨hp1.1, hlt1'⟩
+          (Set.mem_Ico.mpr ⟨le_refl 0, one_pos⟩) heq2
+        rw [h5, hp2e] at hpd2
+        simp only [sub_zero, abs_one] at hpd2
+        linarith only [hpd2, hδ]
+    · have hp1e : p₀.1 = 1 := le_antisymm hp1.2 hge1
+      have hlt2' : p₀.2 < 1 := by
+        rcases eq_or_lt_of_le hp2.2 with he | hl
+        · exfalso
+          rw [hp1e, he, sub_self, abs_zero] at hpd1
+          linarith only [hpd1, hδ]
+        · exact hl
+      have heq2 : γ p₀.2 = γ 0 := by
+        rw [heq, hp1e, ← hcl]
+      have h5 := hinj ⟨hp2.1, hlt2'⟩
+        (Set.mem_Ico.mpr ⟨le_refl 0, one_pos⟩) heq2
+      rw [h5, hp1e] at hpd2
+      simp only [zero_sub, abs_neg, abs_one] at hpd2
+      linarith only [hpd2, hδ]
+  · intro s hs t ht hd1 hd2
+    exact hmin (⟨hs, ht, hd1, hd2⟩ : (s, t) ∈ P)
+
+/-- **Offset disjointness**: below a positive threshold, normal offsets of the loop
+miss the track. -/
+theorem offset_disjoint {γ g : ℝ → ℂ}
+    (hd : ∀ t ∈ Set.Icc (0 : ℝ) 1, HasDerivAt γ (g t) t)
+    (hgc : ContinuousOn g (Set.Icc 0 1))
+    (hcl : γ 0 = γ 1) (hgcl : g 1 = g 0)
+    (hinj : Set.InjOn γ (Set.Ico 0 1))
+    (hgne : ∀ u ∈ Set.Icc (0 : ℝ) 1, g u ≠ 0) :
+    ∃ ε₀ > 0, ∀ ε' : ℝ, 0 < |ε'| → |ε'| ≤ ε₀ →
+      ∀ s ∈ Set.Icc (0:ℝ) 1, ∀ t ∈ Set.Icc (0:ℝ) 1,
+      γ t ≠ γ s - (ε' : ℂ) * (Complex.I * g s) := by
+  obtain ⟨u₀, hu₀, hminOn⟩ := isCompact_Icc.exists_isMinOn
+    (Set.nonempty_Icc.mpr zero_le_one) hgc.norm
+  obtain ⟨u₁, hu₁, hmaxOn⟩ := isCompact_Icc.exists_isMaxOn
+    (Set.nonempty_Icc.mpr zero_le_one) hgc.norm
+  set m := ‖g u₀‖ with hmdef
+  set M := ‖g u₁‖ with hMdef
+  have hm : 0 < m := norm_pos_iff.mpr (hgne u₀ hu₀)
+  have hmg : ∀ u ∈ Set.Icc (0:ℝ) 1, m ≤ ‖g u‖ := fun u hu =>
+    isMinOn_iff.mp hminOn u hu
+  have hMg : ∀ u ∈ Set.Icc (0:ℝ) 1, ‖g u‖ ≤ M := fun u hu =>
+    isMaxOn_iff.mp hmaxOn u hu
+  have hM : 0 < M := lt_of_lt_of_le hm (hMg u₀ hu₀)
+  obtain ⟨δ₁, hδ₁, hmod⟩ := c1_modulus hd hgc
+    (show (0:ℝ) < m/4 by linarith only [hm])
+  have huc := isCompact_Icc.uniformContinuousOn_of_continuous hgc
+  rw [Metric.uniformContinuousOn_iff] at huc
+  obtain ⟨δ₂, hδ₂, hgmod⟩ := huc (m/4) (by linarith only [hm])
+  set δ : ℝ := min (min δ₁ (δ₂/2)) (1/4) with hδdef
+  have hδ : 0 < δ := lt_min (lt_min hδ₁ (by linarith only [hδ₂])) (by norm_num)
+  have hδa : δ ≤ δ₁ := le_trans (min_le_left _ _) (min_le_left _ _)
+  have hδb : δ ≤ δ₂/2 := le_trans (min_le_left _ _) (min_le_right _ _)
+  have hδc : δ ≤ 1/4 := min_le_right _ _
+  obtain ⟨sep, hsep, hfarb⟩ := far_sep hδ
+    (fun v hv => (hd v hv).continuousAt.continuousWithinAt) hcl hinj
+  refine ⟨sep/(2*M), by positivity, ?_⟩
+  intro ε' hε'p hε'b s hs t ht heq0
+  have hε' : ε' ≠ 0 := abs_pos.mp hε'p
+  have heq : γ t - γ s + (ε' : ℂ) * (Complex.I * g s) = 0 := by
+    rw [heq0]
+    ring
+  rcases le_or_gt |t - s| δ with hnear | hfar1
+  · have hE := hmod s hs t ht (le_trans hnear hδa)
+    exact offset_core (D := γ t - γ s)
+      (E := γ t - γ s - ((t - s : ℝ) : ℂ) * g s) (G := g s) (τ := t - s)
+      hm (hmg s hs) (by ring)
+      (le_trans hE (by nlinarith only [abs_nonneg (t - s), hm])) heq hε'
+  · rcases le_or_gt (1 - δ) |t - s| with hwrap | hmid
+    · rcases le_total t s with hts | hst
+      · have habs : 1 - δ ≤ s - t := by
+          rw [abs_of_nonpos (by linarith only [hts])] at hwrap
+          linarith only [hwrap]
+        have ht' : t ≤ δ := by linarith only [habs, hs.2]
+        have hs' : 1 - δ ≤ s := by linarith only [habs, ht.1]
+        have hE₁ := hmod 0 ⟨le_refl 0, zero_le_one⟩ t ht
+          (by rw [sub_zero, abs_of_nonneg ht.1]; linarith only [ht', hδa])
+        have hE₂ := hmod s hs 1 ⟨zero_le_one, le_refl 1⟩
+          (by rw [abs_of_nonneg (by linarith only [hs.2] : (0:ℝ) ≤ 1 - s)]
+              linarith only [hs', hδa])
+        have hg1s : ‖g 1 - g s‖ ≤ m/4 := by
+          have h := hgmod 1 ⟨zero_le_one, le_refl 1⟩ s hs
+            (by rw [Real.dist_eq, abs_of_nonneg (by linarith only [hs.2] : (0:ℝ) ≤ 1 - s)]
+                linarith only [hs', hδb, hδ₂])
+          rw [dist_eq_norm] at h
+          exact le_of_lt h
+        exact offset_wrap hm (hmg s hs) hcl hgcl ht.1 hs.2 hE₁ hE₂ hg1s heq hε'
+      · have habs : 1 - δ ≤ t - s := by
+          rw [abs_of_nonneg (by linarith only [hst])] at hwrap
+          linarith only [hwrap]
+        have hs' : s ≤ δ := by linarith only [habs, ht.2]
+        have ht' : 1 - δ ≤ t := by linarith only [habs, hs.1]
+        have hE₁ := hmod 1 ⟨zero_le_one, le_refl 1⟩ t ht
+          (by rw [abs_of_nonpos (by linarith only [ht.2] : t - 1 ≤ 0)]
+              linarith only [ht', hδa])
+        have hE₂ := hmod s hs 0 ⟨le_refl 0, zero_le_one⟩
+          (by rw [zero_sub, abs_neg, abs_of_nonneg hs.1]
+              linarith only [hs', hδa])
+        have hg1s : ‖g 1 - g s‖ ≤ m/4 := by
+          rw [hgcl]
+          have h := hgmod 0 ⟨le_refl 0, zero_le_one⟩ s hs
+            (by rw [Real.dist_eq, zero_sub, abs_neg, abs_of_nonneg hs.1]
+                linarith only [hs', hδb, hδ₂])
+          rw [dist_eq_norm] at h
+          exact le_of_lt h
+        exact offset_wrap' hm (hmg s hs) hcl hgcl ht.2 hs.1 hE₁ hE₂ hg1s heq hε'
+    · have hsepb := hfarb s hs t ht (le_of_lt hfar1) (le_of_lt hmid)
+      have hnorm : ‖γ t - γ s‖ = |ε'| * ‖g s‖ := by
+        rw [show γ t - γ s = -((ε' : ℂ) * (Complex.I * g s)) by
+          linear_combination heq]
+        rw [norm_neg, norm_mul, norm_mul, Complex.norm_real, Real.norm_eq_abs,
+          Complex.norm_I, one_mul]
+      have h1 : |ε'| * ‖g s‖ ≤ sep/(2*M) * M := by
+        have h2 := hMg s hs
+        nlinarith only [hε'b, h2, abs_nonneg ε', hM, norm_nonneg (g s)]
+      have h3 : sep/(2*M) * M = sep/2 := by
+        field_simp
+      rw [hnorm] at hsepb
+      linarith only [hsepb, h1, h3, hsep]
+
+set_option maxHeartbeats 400000 in
+-- Heartbeats: the deep local-definition tower needs an enlarged elaboration budget.
+/-- **Monotonicity of levels against chart heights**: three anchored all-time
+transverse leaves visiting the inner ball of a margined chart with the third height
+strictly between the first two have the third anchor level strictly between the first
+two levels. -/
+theorem level_monotone {q : ℂ → ℂ}
+    (hq : DifferentiableOn ℂ q {z : ℂ | 0 < z.im})
+    (hbigon : ∀ (σv τh : ℝ → ℂ) (T s μ : ℝ), 0 < T → 0 ≤ s → 0 < μ →
+      IsTrajOn q σv (Set.Icc (-μ) (T + μ)) →
+      IsTrajOn (fun z => -q z) τh (Set.Icc (-μ) (s + μ)) →
+      τh 0 = σv T → τh s = σv 0 → False)
+    (hbigonH : ∀ (σv τh : ℝ → ℂ) (T s μ : ℝ), 0 < T → 0 ≤ s → 0 < μ →
+      IsTrajOn (fun z => -q z) σv (Set.Icc (-μ) (T + μ)) →
+      IsTrajOn q τh (Set.Icc (-μ) (s + μ)) →
+      τh 0 = σv T → τh s = σv 0 → False)
+    {ϑ : ℝ → ℂ} (hϑ : IsTrajOn q ϑ Set.univ)
+    {W : Set ℂ} {Ψ : ℂ → ℂ} (hWo : IsOpen W) (hWd : DifferentiableOn ℂ Ψ W)
+    (hWinj : Set.InjOn Ψ W) (hWH : W ⊆ {z : ℂ | 0 < z.im})
+    (hWne : ∀ w ∈ W, q w ≠ 0) (hWsq : ∀ x ∈ W, deriv Ψ x ^ 2 = -(-q x))
+    {c₀ : ℂ} {R : ℝ} (hR : 0 < R) (hmarg : Metric.ball c₀ (5 * R) ⊆ Ψ '' W)
+    {σ σ' σ'' : ℝ → ℂ}
+    (hσ : IsTrajOn (fun z => -q z) σ Set.univ)
+    (hσ' : IsTrajOn (fun z => -q z) σ' Set.univ)
+    (hσ'' : IsTrajOn (fun z => -q z) σ'' Set.univ)
+    {t t' t'' : ℝ} (ha : σ 0 = ϑ t) (ha' : σ' 0 = ϑ t') (ha'' : σ'' 0 = ϑ t'')
+    {v v' v'' : ℝ} (hvW : σ v ∈ W) (hv'W : σ' v' ∈ W) (hv''W : σ'' v'' ∈ W)
+    (hvb : Ψ (σ v) ∈ Metric.ball c₀ (R / 4))
+    (hv'b : Ψ (σ' v') ∈ Metric.ball c₀ (R / 4))
+    (hv''b : Ψ (σ'' v'') ∈ Metric.ball c₀ (R / 4))
+    (hlt1 : (Ψ (σ v)).im < (Ψ (σ'' v'')).im)
+    (hlt2 : (Ψ (σ'' v'')).im < (Ψ (σ' v')).im) :
+    t'' ∈ Set.Ioo (min t t') (max t t') := by
+  have hquarter : (0 : ℝ) < R / 4 := by linarith
+  have hsub4 : Metric.ball c₀ (R / 4) ⊆ Metric.ball c₀ R :=
+    Metric.ball_subset_ball (by linarith)
+  -- aligned points
+  obtain ⟨uz, huzW, huzval⟩ := leaf_align hWo hWd hWinj hWH hWne hWsq hR hmarg
+    hσ hvW (hsub4 hvb)
+  obtain ⟨uz', huz'W, huz'val⟩ := leaf_align hWo hWd hWinj hWH hWne hWsq hR hmarg
+    hσ' hv'W (hsub4 hv'b)
+  obtain ⟨uz'', huz''W, huz''val⟩ := leaf_align hWo hWd hWinj hWH hWne hWsq hR
+    hmarg hσ'' hv''W (hsub4 hv''b)
+  -- height bounds
+  have hb : |(Ψ (σ v)).im - c₀.im| < R / 4 := by
+    calc |(Ψ (σ v)).im - c₀.im| = |(Ψ (σ v) - c₀).im| := by rw [Complex.sub_im]
+      _ ≤ ‖Ψ (σ v) - c₀‖ := Complex.abs_im_le_norm _
+      _ < R / 4 := by rw [← dist_eq_norm]; exact Metric.mem_ball.mp hvb
+  have hb' : |(Ψ (σ' v')).im - c₀.im| < R / 4 := by
+    calc |(Ψ (σ' v')).im - c₀.im| = |(Ψ (σ' v') - c₀).im| := by
+          rw [Complex.sub_im]
+      _ ≤ ‖Ψ (σ' v') - c₀‖ := Complex.abs_im_le_norm _
+      _ < R / 4 := by rw [← dist_eq_norm]; exact Metric.mem_ball.mp hv'b
+  -- the arc through the middle level
+  obtain ⟨A, harcq, hA0, hAL, hAx, htrack, hheight⟩ := arc_through hWo hWd hWinj
+    hWH hWne hWsq hR hmarg huzW huz'W huz''W huzval huz'val huz''val hb hb'
+    hlt1 hlt2
+  set hh : ℝ := (Ψ (σ v)).im with hhdef
+  set hh'' : ℝ := (Ψ (σ'' v'')).im with hh''def
+  set hh' : ℝ := (Ψ (σ' v')).im with hh'def
+  set L : ℝ := hh' - hh with hLdef
+  have hL : 0 < L := by rw [hLdef]; linarith
+  have haI : hh' - hh'' ∈ Set.Ioo 0 L := ⟨by linarith, by rw [hLdef]; linarith⟩
+  -- level distinctness and the contradiction hypothesis
+  have hd1 : ∀ w u : ℝ, σ w ≠ σ'' u := by
+    intro w u
+    exact leaf_disjoint_of_heights hWo hWd hWinj hWH hWne hWsq hbigon hR hmarg
+      hσ hσ'' hvW hv''W (hsub4 hvb) (hsub4 hv''b) (by linarith) w u
+  have hd2 : ∀ w u : ℝ, σ' w ≠ σ'' u := by
+    intro w u
+    exact leaf_disjoint_of_heights hWo hWd hWinj hWH hWne hWsq hbigon hR hmarg
+      hσ' hσ'' hv'W hv''W (hsub4 hv'b) (hsub4 hv''b) (by linarith) w u
+  have htne : t'' ≠ t := by
+    intro hE
+    refine hd1 0 0 ?_
+    rw [ha, ha'', hE]
+  have htne' : t'' ≠ t' := by
+    intro hE
+    refine hd2 0 0 ?_
+    rw [ha', ha'', hE]
+  by_contra hcon
+  rw [Set.mem_Ioo] at hcon
+  push Not at hcon
+  have hout : t'' < min t t' ∨ max t t' < t'' := by
+    rcases lt_or_ge t'' (min t t') with h1 | h1
+    · exact Or.inl h1
+    · right
+      have h2 : min t t' < t'' := by
+        rcases eq_or_lt_of_le h1 with h3 | h3
+        · exfalso
+          rcases min_cases t t' with ⟨h4, -⟩ | ⟨h4, -⟩
+          · exact htne (by rw [← h3, h4])
+          · exact htne' (by rw [← h3, h4])
+        · exact h3
+      have h5 := hcon h2
+      rcases eq_or_lt_of_le h5 with h6 | h6
+      · exfalso
+        rcases max_cases t t' with ⟨h4, -⟩ | ⟨h4, -⟩
+        · exact htne (by rw [← h6, h4])
+        · exact htne' (by rw [← h6, h4])
+      · exact h6
+  have hϑmiss : ∀ r ∈ Set.uIcc t t', ∀ w : ℝ, ϑ r ≠ σ'' w := by
+    intro r hr w hEq
+    have hrIcc : r ∈ Set.Icc (min t t') (max t t') := by
+      rwa [Set.uIcc, Set.Icc] at hr
+    set a₀ : ℝ := min (min t t') t'' - 1 with ha₀def
+    have hϑI : IsTrajOn q ϑ (Set.Ici a₀) := traj_mono hϑ (Set.subset_univ _)
+    have hcr := leaf_cross_once hq hbigon hbigonH hϑI hσ''
+      (show a₀ < r from by
+        have h7 := min_le_left (min t t') t''
+        have h8 := hrIcc.1
+        rw [ha₀def]
+        linarith)
+      (show a₀ < t'' from by
+        have h7 := min_le_right (min t t') t''
+        rw [ha₀def]
+        linarith)
+      hEq ha''.symm
+    rcases hout with h9 | h9
+    · have h10 := hrIcc.1
+      rw [hcr.1] at h10
+      linarith
+    · have h10 := hrIcc.2
+      rw [hcr.1] at h10
+      linarith
+  -- the quadrilateral
+  have hϑc : Continuous ϑ := continuousOn_univ.mp hϑ.cont
+  have hσc : Continuous σ := continuousOn_univ.mp hσ.cont
+  have hσ'c : Continuous σ' := continuousOn_univ.mp hσ'.cont
+  have hσ''c : Continuous σ'' := continuousOn_univ.mp hσ''.cont
+  obtain ⟨γloop, hcl, hloopmiss, hupeval, hlow⟩ := mono_loop hbigon hbigonH hϑc
+    hσc hσ'c hσ'' ha ha' (by positivity : (0 : ℝ) < 5 * R / 4) hL harcq haI
+    hA0 hAL hAx hd1 hd2 hϑmiss
+  -- the loop lies in the upper half plane
+  have htraj_upper : ∀ (τ : ℝ → ℂ), IsTrajOn (fun z => -q z) τ Set.univ →
+      ∀ w : ℝ, 0 < (τ w).im := by
+    intro τ hτ w
+    obtain ⟨U, -, hpU, hUH, -, -⟩ := hτ.chart w (Set.mem_univ w)
+    exact hUH hpU
+  have hϑupper : ∀ w : ℝ, 0 < (ϑ w).im := by
+    intro w
+    obtain ⟨U, -, hpU, hUH, -, -⟩ := hϑ.chart w (Set.mem_univ w)
+    exact hUH hpU
+  have hparam : ∀ s : unitInterval, 1 / 2 < (s : ℝ) →
+      L * (2 - 2 * (s : ℝ)) ∈ Set.Icc (0 : ℝ) L := by
+    intro s hs
+    have h1 : (0 : ℝ) ≤ 2 - 2 * (s : ℝ) := by linarith only [s.2.2]
+    have h2 : (0 : ℝ) ≤ 2 * (s : ℝ) - 1 := by linarith only [hs]
+    constructor
+    · exact mul_nonneg hL.le h1
+    · nlinarith only [mul_nonneg hL.le h2]
+  have hγim : ∀ s : unitInterval, 0 < (γloop s).im := by
+    intro s
+    rcases le_or_gt (s : ℝ) (1 / 2) with hs | hs
+    · rcases hlow s hs with (h3 | h3) | h3
+      · obtain ⟨w, -, hval⟩ := h3
+        rw [← hval]
+        exact htraj_upper σ' hσ' w
+      · obtain ⟨w, -, hval⟩ := h3
+        rw [← hval]
+        exact hϑupper w
+      · obtain ⟨w, -, hval⟩ := h3
+        rw [← hval]
+        exact htraj_upper σ hσ w
+    · rw [hupeval s hs]
+      exact hWH (htrack _ (hparam s hs))
+  -- divided-difference and chart-inverse data at the crossing point
+  have hdne : deriv Ψ (σ'' uz'') ≠ 0 := by
+    intro h0
+    have h1 := hWsq _ huz''W
+    rw [h0] at h1
+    exact hWne _ huz''W (by simpa using h1.symm)
+  have hdnorm : 0 < ‖deriv Ψ (σ'' uz'')‖ := norm_pos_iff.mpr hdne
+  obtain ⟨δb, hδb, hdd⟩ := divided_diff_ball hWo hWd huz''W
+    (‖deriv Ψ (σ'' uz'')‖ / 4) (by linarith)
+  obtain ⟨δc, hδc, hnear⟩ := chart_preimage_near_open hWo hWd hWinj huz''W
+    hdne hδb
+  -- the middle aligned point's chart distance to the center
+  have hb'' : |(Ψ (σ'' v'')).im - c₀.im| < R / 4 := by
+    calc |(Ψ (σ'' v'')).im - c₀.im| = |(Ψ (σ'' v'') - c₀).im| := by
+          rw [Complex.sub_im]
+      _ ≤ ‖Ψ (σ'' v'') - c₀‖ := Complex.abs_im_le_norm _
+      _ < R / 4 := by rw [← dist_eq_norm]; exact Metric.mem_ball.mp hv''b
+  have hx''dist : ‖Ψ (σ'' uz'') - c₀‖ < R / 4 := by
+    rw [huz''val, show (c₀.re : ℂ) + ((Ψ (σ'' v'')).im : ℝ) * Complex.I - c₀
+        = (((Ψ (σ'' v'')).im - c₀.im : ℝ) : ℂ) * Complex.I from by
+      rw [Complex.ext_iff]
+      constructor
+      · simp [Complex.add_re, Complex.sub_re, Complex.mul_re]
+      · simp [Complex.add_im, Complex.sub_im, Complex.mul_im],
+      norm_mul, Complex.norm_I, mul_one, Complex.norm_real, Real.norm_eq_abs]
+    exact hb''
+  -- horizontal probe development along the middle leaf
+  have hpm : ∀ x : ℝ, |x| ≤ R → Ψ (σ'' uz'') + (x : ℂ) ∈ Ψ '' W := by
+    intro x hx
+    refine hmarg (Metric.mem_ball.mpr ?_)
+    rw [dist_eq_norm, show Ψ (σ'' uz'') + (x : ℂ) - c₀
+        = (Ψ (σ'' uz'') - c₀) + (x : ℂ) from by ring]
+    calc ‖(Ψ (σ'' uz'') - c₀) + (x : ℂ)‖
+        ≤ ‖Ψ (σ'' uz'') - c₀‖ + ‖(x : ℂ)‖ := norm_add_le _ _
+      _ < R / 4 + R := by
+          rw [Complex.norm_real, Real.norm_eq_abs]
+          exact add_lt_add_of_lt_of_le hx''dist hx
+      _ < 5 * R := by linarith
+  obtain ⟨ε₂, hε₂, hprobes⟩ := leaf_cross_chart hWo hWd hWinj hWH hWne hWsq
+    hσ'' hR huz''W hpm
+  set hp : ℝ := min R (δc / 2) with hpdef
+  have hppos : 0 < hp := lt_min hR (by linarith)
+  have hσdev : ∀ u : ℝ, |u| ≤ hp → σ'' (uz'' + u) ∈ Metric.ball (σ'' uz'') δb ∧
+      Ψ (σ'' (uz'' + u)) = Ψ (σ'' uz'') + (ε₂ : ℂ) * (u : ℂ) := by
+    intro u hu
+    have hu1 : |u| ≤ R := le_trans hu (min_le_left _ _)
+    obtain ⟨hmem, hval⟩ := hprobes u hu1
+    refine ⟨Metric.mem_ball.mpr (hnear _ hmem ?_), hval⟩
+    rw [hval, dist_eq_norm, add_sub_cancel_left, norm_mul, Complex.norm_real,
+      Real.norm_eq_abs, Complex.norm_real, Real.norm_eq_abs]
+    have h2 : |ε₂| = 1 := by rcases hε₂ with h' | h' <;> rw [h'] <;> norm_num
+    rw [h2, one_mul]
+    have h3 : |u| ≤ δc / 2 := le_trans hu (min_le_right _ _)
+    linarith
+  -- the parameter window around the crossing
+  have hLne : L ≠ 0 := hL.ne'
+  set aa : ℝ := hh' - hh'' with haadef
+  set sstar : ℝ := 1 - aa / (2 * L) with hsstardef
+  set ρw : ℝ := min ((L - aa) / (4 * L)) (min (aa / (4 * L)) (δc / (8 * L)))
+    with hρwdef
+  have haa1 : 0 < aa := haI.1
+  have haa2 : aa < L := haI.2
+  have hρw : 0 < ρw := by
+    refine lt_min (div_pos (by linarith only [haa2]) (by positivity))
+      (lt_min (div_pos haa1 (by positivity)) (div_pos hδc (by positivity)))
+  have hρw1 : ρw ≤ (L - aa) / (4 * L) := min_le_left _ _
+  have hρw2 : ρw ≤ aa / (4 * L) := le_trans (min_le_right _ _) (min_le_left _ _)
+  have hρw3 : ρw ≤ δc / (8 * L) := le_trans (min_le_right _ _) (min_le_right _ _)
+  set b₁ : ℝ := sstar - ρw with hb₁def
+  set b₂ : ℝ := sstar + ρw with hb₂def
+  have hb₁half : 1 / 2 < b₁ := by
+    rw [hb₁def, hsstardef]
+    have h2 : aa / (2 * L) + (L - aa) / (4 * L) < 1 / 2 := by
+      rw [div_add_div _ _ (by positivity : (2 : ℝ) * L ≠ 0)
+        (by positivity : (4 : ℝ) * L ≠ 0), div_lt_iff₀ (by positivity)]
+      ring_nf
+      nlinarith only [haa2, hL]
+    nlinarith only [h2, hρw1]
+  have hb₂1 : b₂ ≤ 1 := by
+    rw [hb₂def, hsstardef]
+    have h2 : ρw ≤ aa / (2 * L) := by
+      refine le_trans hρw2 ?_
+      rw [div_le_div_iff₀ (by positivity) (by positivity)]
+      nlinarith only [haa1, hL]
+    linarith
+  have hb₁₂ : b₁ < b₂ := by
+    rw [hb₁def, hb₂def]
+    linarith
+  set c₁ : ℝ := hh' - 2 * L - hh'' with hc₁def
+  set c₂ : ℝ := 2 * L with hc₂def
+  have hstarzero : c₁ + c₂ * sstar = 0 := by
+    rw [hc₁def, hsstardef, haadef, hc₂def]
+    field_simp
+    ring
+  have hlin : ∀ s : ℝ, c₁ + c₂ * s = 2 * L * (s - sstar) := by
+    intro s
+    have h2 : c₁ + c₂ * s = (c₁ + c₂ * sstar) + c₂ * (s - sstar) := by ring
+    rw [h2, hstarzero, hc₂def]
+    ring
+  have hwinfinal : ∀ s : unitInterval, b₁ ≤ (s : ℝ) → (s : ℝ) ≤ b₂ →
+      γloop s ∈ Metric.ball (σ'' uz'') δb ∧
+      Ψ (γloop s) = Ψ (σ'' uz'') + Complex.I * ((c₁ + c₂ * (s : ℝ) : ℝ) : ℂ) := by
+    intro s hs1 hs2
+    have hshalf : 1 / 2 < (s : ℝ) := lt_of_lt_of_le hb₁half hs1
+    have hval : Ψ (γloop s) = (c₀.re : ℂ)
+        + ((hh' - L * (2 - 2 * (s : ℝ)) : ℝ) : ℂ) * Complex.I := by
+      rw [hupeval s hshalf]
+      exact hheight _ (hparam s hshalf)
+    have hΨdiff : Ψ (γloop s) = Ψ (σ'' uz'')
+        + Complex.I * ((c₁ + c₂ * (s : ℝ) : ℝ) : ℂ) := by
+      rw [hval, huz''val, hc₁def, hc₂def, hLdef]
+      push_cast
+      ring
+    refine ⟨Metric.mem_ball.mpr (hnear _ ?_ ?_), hΨdiff⟩
+    · rw [hupeval s hshalf]
+      exact htrack _ (hparam s hshalf)
+    · rw [hΨdiff, dist_eq_norm, add_sub_cancel_left, norm_mul, Complex.norm_I,
+        one_mul, Complex.norm_real, Real.norm_eq_abs, hlin]
+      have h3 : |(s : ℝ) - sstar| ≤ ρw := by
+        rw [hb₁def] at hs1
+        rw [hb₂def] at hs2
+        rw [abs_le]
+        constructor
+        · linarith only [hs1]
+        · linarith only [hs2]
+      rw [abs_mul, abs_mul]
+      have h4 : |(2 : ℝ)| = 2 := by norm_num
+      have h5 : |L| = L := abs_of_pos hL
+      rw [h4, h5]
+      have h6 : 2 * L * ρw ≤ δc / 4 := by
+        have h7 : 2 * L * ρw ≤ 2 * L * (δc / (8 * L)) :=
+          mul_le_mul_of_nonneg_left hρw3 (by positivity)
+        have h8 : 2 * L * (δc / (8 * L)) = δc / 4 := by
+          field_simp
+          ring
+        linarith only [h7, h8]
+      have h9 : 2 * L * |(s : ℝ) - sstar| ≤ 2 * L * ρw :=
+        mul_le_mul_of_nonneg_left h3 (by positivity)
+      linarith only [h6, h9, hδc]
+  have hyy : (c₁ + c₂ * b₁) * (c₁ + c₂ * b₂) < 0 := by
+    rw [hlin b₁, hlin b₂, hb₁def, hb₂def]
+    have h2 : sstar - ρw - sstar = -ρw := by ring
+    have h3 : sstar + ρw - sstar = ρw := by ring
+    rw [h2, h3]
+    have hpos : 0 < 2 * L * ρw := by positivity
+    nlinarith only [hpos, mul_pos hpos hpos]
+  -- clearance of the crossing point off the window
+  have hoffK : ∀ s : unitInterval, ((s : ℝ) ≤ b₁ ∨ b₂ ≤ (s : ℝ)) →
+      γloop s ≠ σ'' uz'' := by
+    intro s hcase hEq
+    rcases le_or_gt (s : ℝ) (1 / 2) with hs | hs
+    · rcases hlow s hs with (h3 | h3) | h3
+      · obtain ⟨w, -, hval⟩ := h3
+        exact hd2 w uz'' (hval.trans hEq)
+      · obtain ⟨w, hwmem, hval⟩ := h3
+        exact hϑmiss w hwmem uz'' (hval.trans hEq)
+      · obtain ⟨w, -, hval⟩ := h3
+        exact hd1 w uz'' (hval.trans hEq)
+    · rw [hupeval s hs] at hEq
+      have h4 : Ψ (A (L * (2 - 2 * (s : ℝ)))) = Ψ (σ'' uz'') := by rw [hEq]
+      rw [hheight _ (hparam s hs), huz''val] at h4
+      have h5 := congrArg Complex.im h4
+      simp only [Complex.add_im, Complex.ofReal_im, Complex.mul_im,
+        Complex.ofReal_re, Complex.I_im, Complex.I_re, mul_zero, mul_one,
+        zero_add, add_zero] at h5
+      have h6 : (s : ℝ) = sstar := by
+        have hne2 : hh' - hh ≠ 0 := by
+          rw [← hLdef]
+          exact hL.ne'
+        rw [hsstardef, haadef, hc₂def, hLdef]
+        rw [hLdef] at h5
+        field_simp [hne2]
+        linear_combination h5
+      rcases hcase with h7 | h7
+      · rw [hb₁def] at h7
+        rw [h6] at h7
+        linarith only [h7, hρw]
+      · rw [hb₂def] at h7
+        rw [h6] at h7
+        linarith only [h7, hρw]
+  have hCoffc : IsClosed {s : unitInterval | (s : ℝ) ≤ b₁ ∨ b₂ ≤ (s : ℝ)} :=
+    (isClosed_le continuous_subtype_val continuous_const).union
+      (isClosed_le continuous_const continuous_subtype_val)
+  have hKcomp : IsCompact (γloop '' {s : unitInterval |
+      (s : ℝ) ≤ b₁ ∨ b₂ ≤ (s : ℝ)}) :=
+    (hCoffc.isCompact).image (map_continuous γloop)
+  have hxnotin : σ'' uz'' ∉ γloop '' {s : unitInterval |
+      (s : ℝ) ≤ b₁ ∨ b₂ ≤ (s : ℝ)} := by
+    rintro ⟨s, hsC, hsE⟩
+    exact hoffK s hsC hsE
+  obtain ⟨d₀, hd₀, hball⟩ := Metric.mem_nhds_iff.mp
+    (hKcomp.isClosed.isOpen_compl.mem_nhds hxnotin)
+  have hofffinal : ∀ s : unitInterval, ((s : ℝ) ≤ b₁ ∨ b₂ ≤ (s : ℝ)) →
+      γloop s ∉ Metric.ball (σ'' uz'') d₀ := by
+    intro s hsC hmem
+    exact hball hmem (Set.mem_image_of_mem γloop hsC)
+  -- the winding jump against the vanishing tails
+  obtain ⟨η, hη, hwne⟩ := winding_jump hσ''c hdne hδb hdd hcl
+    (by linarith only [hb₁half] : (0 : ℝ) ≤ b₁) hb₁₂ hb₂1 hwinfinal hyy hppos
+    hε₂ hσdev hloopmiss hd₀ hofffinal
+  have hmissabs : ∀ (s : unitInterval) (u : ℝ), u ≠ uz'' → γloop s ≠ σ'' u := by
+    intro s u hu
+    have h2 := hloopmiss s (u - uz'') (sub_ne_zero.mpr hu)
+    rwa [show uz'' + (u - uz'') = u from by ring] at h2
+  have hzp := tails_zero hq hbigonH hσ'' hcl hγim hmissabs (uz'' + η)
+    (by intro h2; exact hη.ne' (by linarith only [h2.symm.le, h2.le]))
+  have hzm := tails_zero hq hbigonH hσ'' hcl hγim hmissabs (uz'' - η)
+    (by intro h2; exact hη.ne' (by linarith only [h2.symm.le, h2.le]))
+  exact hwne (hzp.trans hzm.symm)
+
+section OffsetTransport
+
+open unitInterval
+
+/-- **Offset transport**: the winding of a closed curve is constant along a connected
+disjoint track. -/
+theorem offset_transport {γ ρ : ℝ → ℂ}
+    (hρc : ContinuousOn ρ (Set.Icc 0 1))
+    (hcl : γ 0 = γ 1)
+    (hdisj : ∀ s ∈ Set.Icc (0 : ℝ) 1, ∀ t ∈ Set.Icc (0 : ℝ) 1, γ t ≠ ρ s)
+    (hc' : Continuous fun t : I => γ ((t : ℝ))) {s₀ s₁ : ℝ}
+    (hs₀ : s₀ ∈ Set.Icc (0 : ℝ) 1) (hs₁ : s₁ ∈ Set.Icc (0 : ℝ) 1) :
+    windingNumber ⟨fun t : I => γ ((t : ℝ)), hc'⟩ (ρ s₀)
+      = windingNumber ⟨fun t : I => γ ((t : ℝ)), hc'⟩ (ρ s₁) := by
+  refine windingNumber_eq_of_preconnected ?_ (C := ρ '' Set.Icc 0 1)
+    (isPreconnected_Icc.image ρ hρc) ?_ ⟨s₀, hs₀, rfl⟩ ⟨s₁, hs₁, rfl⟩
+  · change γ (((0 : I) : ℝ)) = γ (((1 : I) : ℝ))
+    rw [show (((0 : I) : ℝ)) = 0 from rfl, show (((1 : I) : ℝ)) = 1 from rfl]
+    exact hcl
+  · rintro t ⟨s, hsm, hval⟩
+    exact hdisj s hsm ((t : ℝ)) t.2 hval.symm
+
+/-- **The tangent identity**: a nonzero constant multiple of the velocity loop winds as
+the velocity loop. -/
+theorem winding_const_mul {g : ℝ → ℂ} {c : ℂ} (hc : c ≠ 0)
+    (hgw : Continuous fun t : I => g ((t : ℝ))) (hgcl : g 1 = g 0)
+    (hgne : ∀ u ∈ Set.Icc (0 : ℝ) 1, g u ≠ 0)
+    (hw : Continuous fun t : I => c * g ((t : ℝ))) :
+    windingNumber ⟨fun t : I => c * g ((t : ℝ)), hw⟩ 0
+      = windingNumber ⟨fun t : I => g ((t : ℝ)), hgw⟩ 0 := by
+  have hclg : (⟨fun t : I => g ((t : ℝ)), hgw⟩ : C(I, ℂ)) 0
+      = (⟨fun t : I => g ((t : ℝ)), hgw⟩ : C(I, ℂ)) 1 := by
+    change g (((0 : I) : ℝ)) = g (((1 : I) : ℝ))
+    rw [show (((0 : I) : ℝ)) = 0 from rfl, show (((1 : I) : ℝ)) = 1 from rfl]
+    exact hgcl.symm
+  have hgne' : ∀ t : I, (⟨fun t : I => g ((t : ℝ)), hgw⟩ : C(I, ℂ)) t ≠ 0 :=
+    fun t => hgne _ t.2
+  have hmul := windingNumber_mul (ContinuousMap.const I c)
+    (⟨fun t : I => g ((t : ℝ)), hgw⟩ : C(I, ℂ)) rfl hclg
+    (fun _ => hc) hgne'
+  have hext : (⟨fun t : I => c * g ((t : ℝ)), hw⟩ : C(I, ℂ))
+      = ContinuousMap.const I c * ⟨fun t : I => g ((t : ℝ)), hgw⟩ :=
+    ContinuousMap.ext fun t => rfl
+  rw [hext, hmul, windingNumber_const c 0 hc, zero_add]
+
+end OffsetTransport
+
+/-- **Order-separated summation**: countably many pairwise order-separated subsets of
+a set of reals have summed outer measures dominated by the ambient measure. -/
+theorem ordered_sum {Λ : Set ℝ} {H : ℕ → Set ℝ}
+    (hsub : ∀ n, H n ⊆ Λ)
+    (hsep : ∀ m n, m ≠ n → (∀ x ∈ H m, ∀ y ∈ H n, x < y) ∨
+      (∀ x ∈ H m, ∀ y ∈ H n, y < x)) :
+    ∑' n, volume (H n) ≤ volume Λ := by
+  have key : ∀ F : Finset ℕ, ∀ Λ' : Set ℝ, (∀ n ∈ F, H n ⊆ Λ') →
+      ∑ n ∈ F, volume (H n) ≤ volume Λ' := by
+    intro F
+    induction F using Finset.strongInduction with
+    | _ F ih =>
+      intro Λ' hsub'
+      classical
+      rcases Finset.eq_empty_or_nonempty F with rfl | hFne
+      · simp
+      by_cases hex : ∃ n ∈ F, H n = ∅
+      · obtain ⟨n₀, hn₀F, hn₀e⟩ := hex
+        rw [← Finset.sum_erase_add F _ hn₀F, hn₀e]
+        simp only [measure_empty, add_zero]
+        exact ih (F.erase n₀) (Finset.erase_ssubset hn₀F) Λ'
+          fun n hn => hsub' n (Finset.mem_of_mem_erase hn)
+      push Not at hex
+      have hne : ∀ n ∈ F, (H n).Nonempty := hex
+      set f : ℕ → ℝ := fun n => if h : (H n).Nonempty then h.choose else 0
+        with hfdef
+      have hfmem : ∀ n ∈ F, f n ∈ H n := by
+        intro n hn
+        rw [hfdef]
+        simp only
+        rw [dif_pos (hne n hn)]
+        exact (hne n hn).choose_spec
+      obtain ⟨ns, hnsF, hnsmax⟩ := F.exists_max_image f hFne
+      have hmaxside : ∀ m ∈ F.erase ns, ∀ x ∈ H m, ∀ y ∈ H ns, x < y := by
+        intro m hm
+        have hmne : m ≠ ns := Finset.ne_of_mem_erase hm
+        have hmF : m ∈ F := Finset.mem_of_mem_erase hm
+        rcases hsep m ns hmne with h2 | h2
+        · exact h2
+        · exfalso
+          have h3 := h2 (f m) (hfmem m hmF) (f ns) (hfmem ns hnsF)
+          have h4 := hnsmax m hmF
+          linarith only [h3, h4]
+      rcases Finset.eq_empty_or_nonempty (F.erase ns) with herase | herase
+      · have hFsingle : F = {ns} := by
+          refine Finset.eq_singleton_iff_unique_mem.mpr ⟨hnsF, fun m hm => ?_⟩
+          by_contra hmne
+          have h9 : m ∈ F.erase ns := Finset.mem_erase.mpr ⟨hmne, hm⟩
+          rw [herase] at h9
+          exact absurd h9 (by simp)
+        rw [hFsingle, Finset.sum_singleton]
+        exact measure_mono (hsub' ns hnsF)
+      -- the cut point at the infimum of the maximal member
+      obtain ⟨m₀, hm₀⟩ := herase
+      have hm₀F : m₀ ∈ F := Finset.mem_of_mem_erase hm₀
+      have hbdd : BddBelow (H ns) :=
+        ⟨f m₀, fun y hy => (hmaxside m₀ hm₀ _ (hfmem m₀ hm₀F) y hy).le⟩
+      set qc : ℝ := sInf (H ns) with hqcdef
+      have hrestle : ∀ m ∈ F.erase ns, ∀ x ∈ H m, x ≤ qc := by
+        intro m hm x hx
+        exact le_csInf (hne ns hnsF) fun y hy => (hmaxside m hm x hx y hy).le
+      by_cases hq : ∀ y ∈ H ns, qc < y
+      · -- the maximal member avoids the cut point
+        have hsplit := measure_inter_add_diff (μ := volume) Λ'
+          (measurableSet_Iic (a := qc))
+        have hrest : ∑ n ∈ F.erase ns, volume (H n)
+            ≤ volume (Λ' ∩ Set.Iic qc) := by
+          refine ih (F.erase ns) (Finset.erase_ssubset hnsF) _ ?_
+          intro n hn x hx
+          exact ⟨hsub' n (Finset.mem_of_mem_erase hn) hx, hrestle n hn x hx⟩
+        have hmax : volume (H ns) ≤ volume (Λ' \ Set.Iic qc) := by
+          refine measure_mono ?_
+          intro y hy
+          exact ⟨hsub' ns hnsF hy, by
+            simp only [Set.mem_Iic, not_le]
+            exact hq y hy⟩
+        calc ∑ n ∈ F, volume (H n)
+            = ∑ n ∈ F.erase ns, volume (H n) + volume (H ns) := by
+              rw [Finset.sum_erase_add]
+              exact hnsF
+          _ ≤ volume (Λ' ∩ Set.Iic qc) + volume (Λ' \ Set.Iic qc) :=
+              add_le_add hrest hmax
+          _ = volume Λ' := hsplit
+      · -- the cut point is attained in the maximal member
+        push Not at hq
+        obtain ⟨y₀, hy₀, hy₀le⟩ := hq
+        have hy₀eq : y₀ = qc := le_antisymm hy₀le (csInf_le hbdd hy₀)
+        have hrestlt : ∀ m ∈ F.erase ns, ∀ x ∈ H m, x < qc := by
+          intro m hm x hx
+          have h2 := hmaxside m hm x hx y₀ hy₀
+          rwa [hy₀eq] at h2
+        have hsplit := measure_inter_add_diff (μ := volume) Λ'
+          (measurableSet_Iio (a := qc))
+        have hrest : ∑ n ∈ F.erase ns, volume (H n)
+            ≤ volume (Λ' ∩ Set.Iio qc) := by
+          refine ih (F.erase ns) (Finset.erase_ssubset hnsF) _ ?_
+          intro n hn x hx
+          exact ⟨hsub' n (Finset.mem_of_mem_erase hn) hx, hrestlt n hn x hx⟩
+        have hmax : volume (H ns) ≤ volume (Λ' \ Set.Iio qc) := by
+          refine measure_mono ?_
+          intro y hy
+          exact ⟨hsub' ns hnsF hy, by
+            simp only [Set.mem_Iio, not_lt]
+            exact csInf_le hbdd hy⟩
+        calc ∑ n ∈ F, volume (H n)
+            = ∑ n ∈ F.erase ns, volume (H n) + volume (H ns) := by
+              rw [Finset.sum_erase_add]
+              exact hnsF
+          _ ≤ volume (Λ' ∩ Set.Iio qc) + volume (Λ' \ Set.Iio qc) :=
+              add_le_add hrest hmax
+          _ = volume Λ' := hsplit
+  rw [ENNReal.tsum_eq_iSup_sum]
+  exact iSup_le fun F => key F Λ fun n _ => hsub n
+
+section WindingRayZero
+
+open unitInterval
+
+/-- **Ray omission**: a closed curve avoiding the upward vertical ray from `ζ` has
+winding number zero about `ζ`. -/
+theorem winding_ray_zero {γ : C(I, ℂ)} {ζ : ℂ}
+    (hcl : γ 0 = γ 1) (hne : ∀ t : I, γ t ≠ ζ)
+    (hray : ∀ t : I, ¬((γ t - ζ).re = 0 ∧ 0 < (γ t - ζ).im)) :
+    windingNumber γ ζ = 0 := by
+  have hπ : (0 : ℝ) < Real.pi := Real.pi_pos
+  have hsne : ∀ t : I, shiftedCurve γ ζ t ≠ 0 := by
+    intro t
+    have h1 : shiftedCurve γ ζ t = γ t - ζ := by simp [shiftedCurve]
+    rw [h1]
+    exact sub_ne_zero.mpr (hne t)
+  obtain ⟨L, hL⟩ := exists_isLogLiftOf (shiftedCurve γ ζ) hsne
+  have hspec := windingNumber_spec hcl hne hL
+  have hval : ∀ t : I, shiftedCurve γ ζ t = γ t - ζ := by
+    intro t
+    simp [shiftedCurve]
+  have hpin : ∀ (t : I) (k : ℤ), (L t).im ≠ Real.pi/2 + k * (2 * Real.pi) := by
+    intro t k hk
+    have hre : (γ t - ζ).re = Real.exp ((L t).re)
+        * Real.cos ((L t).im) := by
+      rw [← hval t, ← hL t, Complex.exp_re]
+    have him : (γ t - ζ).im = Real.exp ((L t).re)
+        * Real.sin ((L t).im) := by
+      rw [← hval t, ← hL t, Complex.exp_im]
+    rw [hk] at hre him
+    have hcos : Real.cos (Real.pi/2 + (k : ℝ) * (2 * Real.pi)) = 0 := by
+      rw [Real.cos_add_int_mul_two_pi, Real.cos_pi_div_two]
+    have hsin : Real.sin (Real.pi/2 + (k : ℝ) * (2 * Real.pi)) = 1 := by
+      rw [Real.sin_add_int_mul_two_pi, Real.sin_pi_div_two]
+    refine hray t ⟨?_, ?_⟩
+    · rw [hre, hcos, mul_zero]
+    · rw [him, hsin, mul_one]
+      exact Real.exp_pos _
+  by_contra hw
+  have him : (L 1).im - (L 0).im = 2 * Real.pi * ((windingNumber γ ζ : ℤ) : ℝ) := by
+    have h := congrArg Complex.im hspec
+    simpa using h
+  have hθc : Continuous fun t : I => (L t).im := by fun_prop
+  set n : ℤ := windingNumber γ ζ with hndef
+  have hn : n ≠ 0 := hw
+  have hkey : ∃ t : I, ∃ k : ℤ,
+      (L t).im = Real.pi/2 + k * (2 * Real.pi) := by
+    rcases lt_or_gt_of_ne hn with hneg | hpos
+    · have hbound : (L 1).im ≤ (L 0).im - 2 * Real.pi := by
+        have h1 : ((n : ℝ)) ≤ -1 := by exact_mod_cast Int.le_sub_one_of_lt hneg
+        nlinarith only [him, hπ, h1]
+      set k : ℤ := ⌈((L 1).im - Real.pi/2) / (2 * Real.pi)⌉ with hkdef
+      have hk1 : (L 1).im ≤ Real.pi/2 + (k : ℝ) * (2 * Real.pi) := by
+        have h := Int.le_ceil (((L 1).im - Real.pi/2) / (2 * Real.pi))
+        rw [← hkdef, div_le_iff₀ (by linarith only [hπ])] at h
+        linarith only [h]
+      have hk2 : Real.pi/2 + (k : ℝ) * (2 * Real.pi) ≤ (L 0).im := by
+        have h := Int.ceil_lt_add_one (((L 1).im - Real.pi/2) / (2 * Real.pi))
+        rw [← hkdef] at h
+        have h3 : (k : ℝ) * (2 * Real.pi) < (L 1).im - Real.pi/2 + 2 * Real.pi := by
+          have h2 : (k : ℝ) < ((L 1).im - Real.pi/2) / (2 * Real.pi) + 1 := h
+          rw [div_add' _ _ _ (by linarith only [hπ] : (2 * Real.pi) ≠ 0)] at h2
+          rw [lt_div_iff₀ (by linarith only [hπ])] at h2
+          linarith only [h2]
+        linarith only [h3, hbound]
+      have hmem : Real.pi/2 + (k : ℝ) * (2 * Real.pi)
+          ∈ Set.Icc ((L 1).im) ((L 0).im) := ⟨hk1, hk2⟩
+      obtain ⟨t, ht⟩ := intermediate_value_univ (1 : I) (0 : I) hθc hmem
+      exact ⟨t, k, by exact ht⟩
+    · have hbound : (L 0).im + 2 * Real.pi ≤ (L 1).im := by
+        have h1 : (1 : ℝ) ≤ ((n : ℝ)) := by exact_mod_cast hpos
+        nlinarith only [him, hπ, h1]
+      set k : ℤ := ⌈((L 0).im - Real.pi/2) / (2 * Real.pi)⌉ with hkdef
+      have hk1 : (L 0).im ≤ Real.pi/2 + (k : ℝ) * (2 * Real.pi) := by
+        have h := Int.le_ceil (((L 0).im - Real.pi/2) / (2 * Real.pi))
+        rw [← hkdef, div_le_iff₀ (by linarith only [hπ])] at h
+        linarith only [h]
+      have hk2 : Real.pi/2 + (k : ℝ) * (2 * Real.pi) ≤ (L 1).im := by
+        have h := Int.ceil_lt_add_one (((L 0).im - Real.pi/2) / (2 * Real.pi))
+        rw [← hkdef] at h
+        have h3 : (k : ℝ) * (2 * Real.pi) < (L 0).im - Real.pi/2 + 2 * Real.pi := by
+          have h2 : (k : ℝ) < ((L 0).im - Real.pi/2) / (2 * Real.pi) + 1 := h
+          rw [div_add' _ _ _ (by linarith only [hπ] : (2 * Real.pi) ≠ 0)] at h2
+          rw [lt_div_iff₀ (by linarith only [hπ])] at h2
+          linarith only [h2]
+        linarith only [h3, hbound]
+      have hmem : Real.pi/2 + (k : ℝ) * (2 * Real.pi)
+          ∈ Set.Icc ((L 0).im) ((L 1).im) := ⟨hk1, hk2⟩
+      obtain ⟨t, ht⟩ := intermediate_value_univ (0 : I) (1 : I) hθc hmem
+      exact ⟨t, k, by exact ht⟩
+  obtain ⟨t, k, htk⟩ := hkey
+  exact hpin t k htk
+
+end WindingRayZero
+
+/-- **The basepoint sign window**: if the rotated velocity has negative vertical
+component at the basepoint, it keeps it at every parameter whose image is close enough
+to the basepoint. -/
+theorem assertion_ii {γ g : ℝ → ℂ}
+    (hγc : ContinuousOn γ (Set.Icc 0 1))
+    (hgc : ContinuousOn g (Set.Icc 0 1))
+    (hgcl : g 1 = g 0)
+    (hinj : Set.InjOn γ (Set.Ico 0 1))
+    (hneg : (Complex.I * g 0).im < 0) :
+    ∃ ε > 0, ∀ t ∈ Set.Icc (0 : ℝ) 1, γ t ∈ Metric.closedBall (γ 0) ε →
+      (Complex.I * g t).im < 0 := by
+  have himc : ContinuousOn (fun t => (Complex.I * g t).im) (Set.Icc 0 1) :=
+    Complex.continuous_im.comp_continuousOn (continuousOn_const.mul hgc)
+  -- endpoint windows
+  have hev0 : ∀ᶠ t in nhdsWithin 0 (Set.Icc 0 1), (Complex.I * g t).im < 0 :=
+    (himc 0 ⟨le_refl 0, zero_le_one⟩).eventually_lt_const hneg
+  have hneg1 : (Complex.I * g 1).im < 0 := by
+    rw [hgcl]
+    exact hneg
+  have hev1 : ∀ᶠ t in nhdsWithin 1 (Set.Icc 0 1), (Complex.I * g t).im < 0 :=
+    (himc 1 ⟨zero_le_one, le_refl 1⟩).eventually_lt_const hneg1
+  rw [Filter.eventually_iff, Metric.mem_nhdsWithin_iff] at hev0 hev1
+  obtain ⟨δ₀, hδ₀, hwin0⟩ := hev0
+  obtain ⟨δ₁, hδ₁, hwin1⟩ := hev1
+  set δ : ℝ := min (min δ₀ δ₁) (1/2) with hδdef
+  have hδ : 0 < δ := lt_min (lt_min hδ₀ hδ₁) (by norm_num)
+  have hδ0 : δ ≤ δ₀ := le_trans (min_le_left _ _) (min_le_left _ _)
+  have hδ1 : δ ≤ δ₁ := le_trans (min_le_left _ _) (min_le_right _ _)
+  have hδh : δ ≤ 1/2 := min_le_right _ _
+  -- the middle arc stays away from the basepoint
+  by_cases hKne : (Set.Icc (δ/2) (1 - δ/2)).Nonempty
+  · obtain ⟨u₂, hu₂, hminOn⟩ := (isCompact_Icc (a := δ/2) (b := 1 - δ/2)).exists_isMinOn
+      hKne ((hγc.mono (fun u hu => ⟨by linarith only [hu.1, hδ],
+        by linarith only [hu.2, hδ]⟩)).sub continuousOn_const).norm
+    set d₀ := ‖γ u₂ - γ 0‖ with hd₀def
+    have hd₀ : 0 < d₀ := by
+      rw [hd₀def, norm_pos_iff, sub_ne_zero]
+      intro h
+      have hu₂m : u₂ ∈ Set.Ico (0 : ℝ) 1 := ⟨by linarith only [hu₂.1, hδ],
+        by linarith only [hu₂.2, hδ]⟩
+      have h5 := hinj hu₂m (Set.mem_Ico.mpr ⟨le_refl 0, one_pos⟩) h
+      linarith only [h5, hu₂.1, hδ]
+    refine ⟨d₀/2, by positivity, ?_⟩
+    intro t htm hball
+    rw [Metric.mem_closedBall, dist_eq_norm] at hball
+    have htK : t ∉ Set.Icc (δ/2) (1 - δ/2) := by
+      intro htK
+      have h6 := isMinOn_iff.mp hminOn t htK
+      simp only at h6
+      linarith only [h6, hball, hd₀]
+    rw [Set.mem_Icc, not_and_or] at htK
+    rcases htK with h | h
+    · rw [not_le] at h
+      refine hwin0 ⟨?_, htm⟩
+      rw [Metric.mem_ball, Real.dist_eq,
+        abs_of_nonneg (by linarith only [htm.1] : (0 : ℝ) ≤ t - 0)]
+      linarith only [h, hδ0, hδ]
+    · rw [not_le] at h
+      refine hwin1 ⟨?_, htm⟩
+      rw [Metric.mem_ball, Real.dist_eq,
+        abs_of_nonpos (by linarith only [htm.2] : t - 1 ≤ 0)]
+      linarith only [h, hδ1, hδ]
+  · -- the middle interval is empty: the endpoint windows cover everything
+    refine ⟨1, one_pos, ?_⟩
+    intro t htm _
+    exfalso
+    rw [Set.nonempty_Icc, not_le] at hKne
+    linarith only [hKne, hδh]
+
+/-- **Affine unit maps preserve outer measure**: the image of an arbitrary set of
+reals under `t ↦ c − εt` with `ε = ±1` has the same volume. -/
+theorem affine_vol (c : ℝ) {ε : ℝ} (hε : ε = 1 ∨ ε = -1) (S : Set ℝ) :
+    volume ((fun t => c - ε * t) '' S) = volume S := by
+  rcases hε with h | h
+  · have hinv : (fun t : ℝ => c - ε * t) '' S = (fun t : ℝ => c - t) ⁻¹' S := by
+      rw [h]
+      ext x
+      constructor
+      · rintro ⟨y, hy, rfl⟩
+        simpa using hy
+      · intro hx
+        exact ⟨c - x, hx, by ring⟩
+    rw [hinv]
+    exact (Measure.measurePreserving_sub_left volume c).measure_preimage_emb
+      (Homeomorph.measurableEmbedding (Homeomorph.subLeft c)) S
+  · have hinv : (fun t : ℝ => c - ε * t) '' S = (fun t : ℝ => t + -c) ⁻¹' S := by
+      rw [h]
+      ext x
+      constructor
+      · rintro ⟨y, hy, rfl⟩
+        simpa using hy
+      · intro hx
+        exact ⟨x + -c, hx, by ring⟩
+    rw [hinv]
+    exact (measurePreserving_add_right volume (-c)).measure_preimage_emb
+      (Homeomorph.measurableEmbedding (Homeomorph.addRight (-c))) S
+
+/-- **The corridor interval cover**: a set of reals with positive corridor radii is
+covered up to a null set by countably many pairwise disjoint closed intervals, each
+centered at a member with radius below the corridor radius there. -/
+theorem corridor_icov {E : Set ℝ} {ρ : ℝ → ℝ} (hρ : ∀ t ∈ E, 0 < ρ t) :
+    ∃ A : ℕ → Set ℝ, ∃ c : ℕ → ℝ, ∃ r : ℕ → ℝ,
+      (∀ n, A n = ∅ ∨ (c n ∈ E ∧ A n = Set.Icc (c n - r n) (c n + r n) ∧
+        0 < r n ∧ r n < ρ (c n))) ∧
+      volume (E \ ⋃ n, A n) = 0 ∧
+      ∀ m n, m ≠ n → Disjoint (A m) (A n) := by
+  classical
+  obtain ⟨t, r₀, htc, hts, hr₀, hae, hdisj⟩ :=
+    Besicovitch.exists_disjoint_closedBall_covering_ae volume
+      (fun x => Set.Ioo 0 (ρ x)) E
+      (fun x hx δ hδ => ⟨min (ρ x / 2) (δ / 2),
+        ⟨lt_min (by linarith [hρ x hx]) (by linarith),
+          lt_of_le_of_lt (min_le_left _ _) (by linarith [hρ x hx])⟩,
+        ⟨lt_min (by linarith [hρ x hx]) (by linarith),
+          lt_of_le_of_lt (min_le_right _ _) (by linarith)⟩⟩)
+      ρ hρ
+  obtain ⟨f, hf⟩ := Set.countable_iff_exists_injective.mp htc
+  set A : ℕ → Set ℝ := fun n =>
+    if h : ∃ x : t, f x = n then
+      Metric.closedBall (h.choose : ℝ) (r₀ (h.choose : ℝ)) else ∅ with hAdef
+  set cf : ℕ → ℝ := fun n =>
+    if h : ∃ x : t, f x = n then (h.choose : ℝ) else 0 with hcfdef
+  refine ⟨A, cf, fun n => r₀ (cf n), ?_, ?_, ?_⟩
+  · intro n
+    rw [hAdef, hcfdef]
+    simp only
+    by_cases h : ∃ x : t, f x = n
+    · rw [dif_pos h, dif_pos h]
+      right
+      have hmem : (h.choose : ℝ) ∈ t := h.choose.2
+      have hr := hr₀ _ hmem
+      exact ⟨hts hmem, Real.closedBall_eq_Icc, hr.1.1, hr.1.2⟩
+    · rw [dif_neg h]
+      exact Or.inl rfl
+  · have hsub : (⋃ x ∈ t, Metric.closedBall x (r₀ x)) ⊆ ⋃ n, A n := by
+      intro y hy
+      obtain ⟨x, hx, hyx⟩ := Set.mem_iUnion₂.mp hy
+      refine Set.mem_iUnion.mpr ⟨f ⟨x, hx⟩, ?_⟩
+      rw [hAdef]
+      simp only
+      have hex : ∃ z : t, f z = f ⟨x, hx⟩ := ⟨⟨x, hx⟩, rfl⟩
+      rw [dif_pos hex]
+      have hchoose : hex.choose = ⟨x, hx⟩ := hf hex.choose_spec
+      rw [hchoose]
+      exact hyx
+    refine measure_mono_null ?_ hae
+    intro y hy
+    exact ⟨hy.1, fun h2 => hy.2 (hsub h2)⟩
+  · intro m n hmn
+    rw [hAdef]
+    simp only
+    by_cases hm : ∃ x : t, f x = m
+    · by_cases hn : ∃ x : t, f x = n
+      · rw [dif_pos hm, dif_pos hn]
+        refine hdisj hm.choose.2 hn.choose.2 ?_
+        intro hEq
+        refine hmn ?_
+        rw [← hm.choose_spec, ← hn.choose_spec]
+        congr 1
+        exact Subtype.ext hEq
+      · rw [dif_pos hm, dif_neg hn]
+        exact Set.disjoint_empty _
+    · rw [dif_neg hm]
+      exact Set.empty_disjoint _
+
+section SquareChain
+
+open unitInterval
+
+/-- **The square chain**: the left loop and the top loop wind together as the diagonal
+loop. -/
+theorem square_chain {γ gε : ℝ → ℂ}
+    (hγc : ContinuousOn γ (Set.Icc 0 1)) (hεc : ContinuousOn gε (Set.Icc 0 1))
+    (hclγ : γ 0 = γ 1) (hclε : gε 0 = gε 1)
+    (hdisj : ∀ s ∈ Set.Icc (0 : ℝ) 1, ∀ t ∈ Set.Icc (0 : ℝ) 1, γ t ≠ gε s) :
+    ∃ pA pT pD : Path (γ 0 - gε 0) (γ 0 - gε 0),
+      (∀ u : I, pA u = γ ((u : ℝ)) - gε 0)
+      ∧ (∀ u : I, pT u = γ 0 - gε ((u : ℝ)))
+      ∧ (∀ u : I, pD u = γ ((u : ℝ)) - gε ((u : ℝ)))
+      ∧ windingNumber pA.toContinuousMap 0 + windingNumber pT.toContinuousMap 0
+        = windingNumber pD.toContinuousMap 0 := by
+  have hAc : Continuous fun u : I => γ ((u : ℝ)) - gε 0 :=
+    (hγc.comp_continuous continuous_subtype_val fun u => u.2).sub continuous_const
+  have hTc : Continuous fun u : I => γ 0 - gε ((u : ℝ)) :=
+    continuous_const.sub (hεc.comp_continuous continuous_subtype_val fun u => u.2)
+  have hDc : Continuous fun u : I => γ ((u : ℝ)) - gε ((u : ℝ)) :=
+    (hγc.comp_continuous continuous_subtype_val fun u => u.2).sub
+      (hεc.comp_continuous continuous_subtype_val fun u => u.2)
+  set pA : Path (γ 0 - gε 0) (γ 0 - gε 0) :=
+    ⟨⟨fun u : I => γ ((u : ℝ)) - gε 0, hAc⟩,
+      by norm_num, by norm_num [← hclγ]⟩ with hpAdef
+  set pT : Path (γ 0 - gε 0) (γ 0 - gε 0) :=
+    ⟨⟨fun u : I => γ 0 - gε ((u : ℝ)), hTc⟩,
+      by norm_num, by norm_num [← hclε]⟩ with hpTdef
+  set pD : Path (γ 0 - gε 0) (γ 0 - gε 0) :=
+    ⟨⟨fun u : I => γ ((u : ℝ)) - gε ((u : ℝ)), hDc⟩,
+      by norm_num, by norm_num [← hclγ, ← hclε]⟩ with hpDdef
+  refine ⟨pA, pT, pD, fun u => rfl, fun u => rfl, fun u => rfl, ?_⟩
+  -- the square coordinates of the blended homotopy
+  set Sv : I × I → ℝ :=
+    fun p => (1 - (p.1 : ℝ)) * max 0 (2 * (p.2 : ℝ) - 1) + (p.1 : ℝ) * (p.2 : ℝ)
+    with hSvdef
+  set Tv : I × I → ℝ :=
+    fun p => (1 - (p.1 : ℝ)) * min (2 * (p.2 : ℝ)) 1 + (p.1 : ℝ) * (p.2 : ℝ)
+    with hTvdef
+  have hSvc : Continuous Sv := by
+    rw [hSvdef]
+    fun_prop
+  have hTvc : Continuous Tv := by
+    rw [hTvdef]
+    fun_prop
+  have hSvmem : ∀ p : I × I, Sv p ∈ Set.Icc (0 : ℝ) 1 := by
+    intro ⟨a, u⟩
+    have ha := a.2
+    have hu := u.2
+    constructor
+    · have h1 : (0 : ℝ) ≤ max 0 (2 * (u : ℝ) - 1) := le_max_left _ _
+      nlinarith only [ha.1, ha.2, hu.1, hu.2, h1]
+    · have h1 : max 0 (2 * (u : ℝ) - 1) ≤ 1 := by
+        rw [max_le_iff]
+        constructor <;> nlinarith only [hu.1, hu.2]
+      nlinarith only [ha.1, ha.2, hu.1, hu.2, h1]
+  have hTvmem : ∀ p : I × I, Tv p ∈ Set.Icc (0 : ℝ) 1 := by
+    intro ⟨a, u⟩
+    have ha := a.2
+    have hu := u.2
+    constructor
+    · have h1 : (0 : ℝ) ≤ min (2 * (u : ℝ)) 1 := by
+        rw [le_min_iff]
+        constructor <;> nlinarith only [hu.1, hu.2]
+      nlinarith only [ha.1, ha.2, hu.1, hu.2, h1]
+    · have h1 : min (2 * (u : ℝ)) 1 ≤ 1 := min_le_right _ _
+      nlinarith only [ha.1, ha.2, hu.1, hu.2, h1]
+  have hHc : Continuous fun p : I × I => γ (Tv p) - gε (Sv p) :=
+    (hγc.comp_continuous hTvc hTvmem).sub (hεc.comp_continuous hSvc hSvmem)
+  have hHne : ∀ p : I × I, γ (Tv p) - gε (Sv p) ≠ 0 := fun p =>
+    sub_ne_zero.mpr (hdisj (Sv p) (hSvmem p) (Tv p) (hTvmem p))
+  have hface0 : ∀ u : I, γ (Tv (0, u)) - gε (Sv (0, u)) = (pA.trans pT) u := by
+    intro u
+    rw [Path.trans_apply]
+    split_ifs with h
+    · have hS : Sv (0, u) = 0 := by
+        rw [hSvdef]
+        simp only [Set.Icc.coe_zero]
+        rw [max_eq_left (by nlinarith only [h] : 2 * (u : ℝ) - 1 ≤ 0)]
+        ring
+      have hT : Tv (0, u) = 2 * (u : ℝ) := by
+        rw [hTvdef]
+        simp only [Set.Icc.coe_zero]
+        rw [min_eq_left (by nlinarith only [h] : 2 * (u : ℝ) ≤ 1)]
+        ring
+      rw [hS, hT]
+      rfl
+    · rw [not_le] at h
+      have hS : Sv (0, u) = 2 * (u : ℝ) - 1 := by
+        rw [hSvdef]
+        simp only [Set.Icc.coe_zero]
+        rw [max_eq_right (by nlinarith only [h] : (0 : ℝ) ≤ 2 * (u : ℝ) - 1)]
+        ring
+      have hT : Tv (0, u) = 1 := by
+        rw [hTvdef]
+        simp only [Set.Icc.coe_zero]
+        rw [min_eq_right (by nlinarith only [h] : (1 : ℝ) ≤ 2 * (u : ℝ))]
+        ring
+      rw [hS, hT, ← hclγ]
+      rfl
+  have hface1 : ∀ u : I, γ (Tv (1, u)) - gε (Sv (1, u)) = pD u := by
+    intro u
+    have hS : Sv (1, u) = (u : ℝ) := by
+      rw [hSvdef]
+      simp only [Set.Icc.coe_one]
+      ring
+    have hT : Tv (1, u) = (u : ℝ) := by
+      rw [hTvdef]
+      simp only [Set.Icc.coe_one]
+      ring
+    rw [hS, hT]
+    rfl
+  have hend : ∀ (a : I) (u : I), u = 0 ∨ u = 1 →
+      γ (Tv (a, u)) - gε (Sv (a, u)) = (pA.trans pT) u := by
+    intro a u hu
+    rcases hu with hu | hu
+    · subst hu
+      have hS : Sv (a, (0 : I)) = 0 := by
+        rw [hSvdef]
+        simp only [Set.Icc.coe_zero]
+        rw [max_eq_left (by norm_num : (2 : ℝ) * 0 - 1 ≤ 0)]
+        ring
+      have hT : Tv (a, (0 : I)) = 0 := by
+        rw [hTvdef]
+        simp only [Set.Icc.coe_zero]
+        rw [min_eq_left (by norm_num : (2 : ℝ) * 0 ≤ 1)]
+        ring
+      rw [hS, hT]
+      have h2 : (pA.trans pT) 0 = γ 0 - gε 0 := (pA.trans pT).source
+      rw [h2]
+    · subst hu
+      have hS : Sv (a, (1 : I)) = 1 := by
+        rw [hSvdef]
+        simp only [Set.Icc.coe_one]
+        rw [max_eq_right (by norm_num : (0 : ℝ) ≤ 2 * 1 - 1)]
+        ring
+      have hT : Tv (a, (1 : I)) = 1 := by
+        rw [hTvdef]
+        simp only [Set.Icc.coe_one]
+        rw [min_eq_right (by norm_num : (1 : ℝ) ≤ 2 * 1)]
+        ring
+      rw [hS, hT]
+      have h2 : (pA.trans pT) 1 = γ 0 - gε 0 := (pA.trans pT).target
+      rw [h2, ← hclγ, ← hclε]
+  set HH : ContinuousMap.HomotopyRel (pA.trans pT).toContinuousMap
+      pD.toContinuousMap {0, 1} :=
+    ⟨⟨⟨fun p : I × I => γ (Tv p) - gε (Sv p), hHc⟩, hface0, hface1⟩,
+      fun a u hu => hend a u (by
+        rcases hu with hu | hu
+        · exact Or.inl hu
+        · exact Or.inr hu)⟩ with hHHdef
+  have hclAT : (pA.trans pT).toContinuousMap 0 = (pA.trans pT).toContinuousMap 1 := by
+    have h1 : (pA.trans pT).toContinuousMap 0 = γ 0 - gε 0 := (pA.trans pT).source
+    have h2 : (pA.trans pT).toContinuousMap 1 = γ 0 - gε 0 := (pA.trans pT).target
+    rw [h1, h2]
+  have hchain := windingNumber_eq_of_homotopicRel (q := 0) hclAT HH
+    (fun t s => hHne (t, s))
+  have hAne : ∀ t : I, pA t ≠ (0 : ℂ) := by
+    intro t
+    exact sub_ne_zero.mpr (hdisj 0 ⟨le_refl 0, zero_le_one⟩ ((t : ℝ)) t.2)
+  have hTne : ∀ t : I, pT t ≠ (0 : ℂ) := by
+    intro t
+    exact sub_ne_zero.mpr (hdisj ((t : ℝ)) t.2 0 ⟨le_refl 0, zero_le_one⟩)
+  have htrans := windingNumber_trans pA pT hAne hTne
+  rw [← hchain, htrans]
+
+end SquareChain
+
+/-- **The per-piece level count**: a set of levels with corridor radii and a height
+map that is affine of unit slope on each corridor, injective, betweenness-preserving,
+and valued in an attained set has outer measure at most that of the attained set. -/
+theorem piece_count {E : Set ℝ} {F : ℝ → ℝ} {Λ : Set ℝ} {ρ : ℝ → ℝ}
+    (hρ : ∀ t ∈ E, 0 < ρ t)
+    (haff : ∀ c ∈ E, ∃ ε : ℝ, (ε = 1 ∨ ε = -1) ∧ ∃ k : ℝ,
+      ∀ t ∈ E, |t - c| < ρ c → F t = k - ε * t)
+    (hatt : ∀ t ∈ E, F t ∈ Λ)
+    (hinj : ∀ t ∈ E, ∀ t' ∈ E, F t = F t' → t = t')
+    (hmono : ∀ t ∈ E, ∀ t' ∈ E, ∀ t'' ∈ E,
+      min (F t) (F t') < F t'' → F t'' < max (F t) (F t') →
+      min t t' < t'' ∧ t'' < max t t') :
+    volume E ≤ volume Λ := by
+  obtain ⟨A, cA, rA, hAcases, hAnull, hAdisj⟩ := corridor_icov hρ
+  -- split the level set along the carriers
+  have hsplit : volume E ≤ ∑' n, volume (E ∩ A n) := by
+    have h1 : E = (E \ ⋃ n, A n) ∪ (E ∩ ⋃ n, A n) := by
+      rw [Set.diff_union_inter]
+    calc volume E = volume ((E \ ⋃ n, A n) ∪ (E ∩ ⋃ n, A n)) := by rw [← h1]
+      _ ≤ volume (E \ ⋃ n, A n) + volume (E ∩ ⋃ n, A n) := measure_union_le _ _
+      _ = volume (E ∩ ⋃ n, A n) := by rw [hAnull, zero_add]
+      _ = volume (⋃ n, E ∩ A n) := by rw [Set.inter_iUnion]
+      _ ≤ ∑' n, volume (E ∩ A n) := measure_iUnion_le _
+  -- the height images of the carrier pieces
+  set H : ℕ → Set ℝ := fun n => F '' (E ∩ A n) with hHdef
+  have hvol : ∀ n, volume (E ∩ A n) = volume (H n) := by
+    intro n
+    rcases hAcases n with hempty | ⟨hcE, hAe, hrpos, hrρ⟩
+    · rw [hHdef]
+      simp only
+      rw [hempty]
+      simp
+    · obtain ⟨ε, hε, k, hk⟩ := haff (cA n) hcE
+      have himg : H n = (fun t => k - ε * t) '' (E ∩ A n) := by
+        rw [hHdef]
+        simp only
+        refine Set.image_congr ?_
+        intro t ht
+        refine hk t ht.1 ?_
+        have h2 := ht.2
+        rw [hAe] at h2
+        rw [abs_lt]
+        exact ⟨by linarith [h2.1, hrρ], by linarith [h2.2, hrρ]⟩
+      rw [himg, affine_vol k hε]
+  -- the images sit in the attained set
+  have hsub : ∀ n, H n ⊆ Λ := by
+    rintro n y ⟨t, ht, rfl⟩
+    exact hatt t ht.1
+  -- carrier order separation in the levels
+  have htsep : ∀ m n, m ≠ n → ∀ x ∈ E ∩ A m, ∀ y ∈ E ∩ A n, x ≠ y := by
+    intro m n hmn x hx y hy hEq
+    have h2 := hAdisj m n hmn
+    exact (Set.disjoint_left.mp h2 hx.2) (hEq ▸ hy.2)
+  have hosep : ∀ m n, m ≠ n →
+      (∀ x ∈ E ∩ A m, ∀ y ∈ E ∩ A n, x < y) ∨
+      (∀ x ∈ E ∩ A m, ∀ y ∈ E ∩ A n, y < x) := by
+    intro m n hmn
+    rcases hAcases m with hm | ⟨-, hAm, hrm, -⟩
+    · left
+      intro x hx
+      rw [hm] at hx
+      exact absurd hx.2 (Set.notMem_empty x)
+    rcases hAcases n with hn | ⟨-, hAn, hrn, -⟩
+    · left
+      intro x hx y hy
+      rw [hn] at hy
+      exact absurd hy.2 (Set.notMem_empty y)
+    have hkey : cA m + rA m < cA n - rA n ∨ cA n + rA n < cA m - rA m := by
+      by_contra hcon
+      push Not at hcon
+      obtain ⟨h3, h4⟩ := hcon
+      have hw1 : max (cA m - rA m) (cA n - rA n) ∈ A m := by
+        rw [hAm]
+        refine ⟨le_max_left _ _, ?_⟩
+        rcases max_cases (cA m - rA m) (cA n - rA n) with ⟨h5, -⟩ | ⟨h5, -⟩ <;>
+          rw [h5]
+        · linarith only [hrm]
+        · linarith only [h3]
+      have hw2 : max (cA m - rA m) (cA n - rA n) ∈ A n := by
+        rw [hAn]
+        refine ⟨le_max_right _ _, ?_⟩
+        rcases max_cases (cA m - rA m) (cA n - rA n) with ⟨h5, -⟩ | ⟨h5, -⟩ <;>
+          rw [h5]
+        · linarith only [h4]
+        · linarith only [hrn]
+      exact Set.disjoint_left.mp (hAdisj m n hmn) hw1 hw2
+    rcases hkey with h5 | h5
+    · left
+      intro x hx y hy
+      have hx2 := hx.2
+      have hy2 := hy.2
+      rw [hAm] at hx2
+      rw [hAn] at hy2
+      linarith only [hx2.2, hy2.1, h5]
+    · right
+      intro x hx y hy
+      have hx2 := hx.2
+      have hy2 := hy.2
+      rw [hAm] at hx2
+      rw [hAn] at hy2
+      linarith only [hx2.1, hy2.2, h5]
+  -- transport of the order separation through the height map
+  have hcore : ∀ P Q : Set ℝ, P ⊆ E → Q ⊆ E →
+      (∀ x ∈ P, ∀ y ∈ Q, x < y) →
+      ∀ a ∈ P, ∀ b ∈ Q, F a < F b → ∀ u ∈ P, ∀ v ∈ Q, F u < F v := by
+    intro P Q hPE hQE hPQ a ha b hb hab u hu v hv
+    rcases lt_trichotomy (F u) (F v) with h6 | h6 | h6
+    · exact h6
+    · exact absurd (hinj u (hPE hu) v (hQE hv) h6)
+        (ne_of_lt (hPQ u hu v hv))
+    · exfalso
+      rcases lt_trichotomy (F v) (F a) with h7 | h7 | h7
+      · have h8 := hmono v (hQE hv) b (hQE hb) a (hPE ha)
+          (by rw [min_def]; split_ifs with hif <;> linarith only [h7, hab, hif])
+          (by rw [max_def]; split_ifs with hif <;> linarith only [h7, hab, hif])
+        have h9 := hPQ a ha v hv
+        have h10 := hPQ a ha b hb
+        rcases min_cases v b with ⟨h11, -⟩ | ⟨h11, -⟩ <;>
+          rw [h11] at h8 <;> linarith only [h8.1, h9, h10]
+      · exact absurd (hinj v (hQE hv) a (hPE ha) h7)
+          (ne_of_gt (hPQ a ha v hv))
+      · have h8 := hmono a (hPE ha) u (hPE hu) v (hQE hv)
+          (by rw [min_def]; split_ifs with hif <;> linarith only [h7, h6, hif])
+          (by rw [max_def]; split_ifs with hif <;> linarith only [h7, h6, hif])
+        have h9 := hPQ a ha v hv
+        have h10 := hPQ u hu v hv
+        rcases max_cases a u with ⟨h11, -⟩ | ⟨h11, -⟩ <;>
+          rw [h11] at h8 <;> linarith only [h8.2, h9, h10]
+  have hFsep : ∀ m n, m ≠ n →
+      (∀ x ∈ H m, ∀ y ∈ H n, x < y) ∨ (∀ x ∈ H m, ∀ y ∈ H n, y < x) := by
+    intro m n hmn
+    rcases Set.eq_empty_or_nonempty (E ∩ A m) with hEm | ⟨a, ha⟩
+    · left
+      rintro x ⟨t, ht, rfl⟩
+      rw [hEm] at ht
+      exact absurd ht (Set.notMem_empty t)
+    rcases Set.eq_empty_or_nonempty (E ∩ A n) with hEn | ⟨b, hb⟩
+    · left
+      rintro x hx y ⟨t, ht, rfl⟩
+      rw [hEn] at ht
+      exact absurd ht (Set.notMem_empty t)
+    have hPE : E ∩ A m ⊆ E := Set.inter_subset_left
+    have hQE : E ∩ A n ⊆ E := Set.inter_subset_left
+    have hcore2 : ∀ P Q : Set ℝ, P ⊆ E → Q ⊆ E →
+        (∀ x ∈ P, ∀ y ∈ Q, x < y) →
+        ∀ a ∈ P, ∀ b ∈ Q, F b < F a → ∀ u ∈ P, ∀ v ∈ Q, F v < F u := by
+      intro P Q hPE hQE hPQ a ha b hb hab u hu v hv
+      rcases lt_trichotomy (F v) (F u) with h6 | h6 | h6
+      · exact h6
+      · exact absurd (hinj v (hQE hv) u (hPE hu) h6)
+          (ne_of_gt (hPQ u hu v hv))
+      · exfalso
+        rcases lt_trichotomy (F a) (F v) with h7 | h7 | h7
+        · have h8 := hmono v (hQE hv) b (hQE hb) a (hPE ha)
+            (by rw [min_def]; split_ifs with hif <;> linarith only [h7, hab, hif])
+            (by rw [max_def]; split_ifs with hif <;> linarith only [h7, hab, hif])
+          have h9 := hPQ a ha v hv
+          have h10 := hPQ a ha b hb
+          rcases min_cases v b with ⟨h11, -⟩ | ⟨h11, -⟩ <;>
+            rw [h11] at h8 <;> linarith only [h8.1, h9, h10]
+        · exact absurd (hinj a (hPE ha) v (hQE hv) h7)
+            (ne_of_lt (hPQ a ha v hv))
+        · have h8 := hmono a (hPE ha) u (hPE hu) v (hQE hv)
+            (by rw [min_def]; split_ifs with hif <;> linarith only [h7, h6, hif])
+            (by rw [max_def]; split_ifs with hif <;> linarith only [h7, h6, hif])
+          have h9 := hPQ a ha v hv
+          have h10 := hPQ u hu v hv
+          rcases max_cases a u with ⟨h11, -⟩ | ⟨h11, -⟩ <;>
+            rw [h11] at h8 <;> linarith only [h8.2, h9, h10]
+    rcases hosep m n hmn with hlr | hlr
+    · rcases lt_trichotomy (F a) (F b) with hc | hc | hc
+      · left
+        rintro x ⟨u, hu, rfl⟩ y ⟨v, hv, rfl⟩
+        exact hcore _ _ hPE hQE hlr a ha b hb hc u hu v hv
+      · exact absurd (hinj a (hPE ha) b (hQE hb) hc) (ne_of_lt (hlr a ha b hb))
+      · right
+        rintro x ⟨u, hu, rfl⟩ y ⟨v, hv, rfl⟩
+        exact hcore2 _ _ hPE hQE hlr a ha b hb hc u hu v hv
+    · have hlr' : ∀ y ∈ E ∩ A n, ∀ x ∈ E ∩ A m, y < x :=
+        fun y hy x hx => hlr x hx y hy
+      rcases lt_trichotomy (F a) (F b) with hc | hc | hc
+      · left
+        rintro x ⟨u, hu, rfl⟩ y ⟨v, hv, rfl⟩
+        exact hcore2 _ _ hQE hPE hlr' b hb a ha hc v hv u hu
+      · exact absurd (hinj a (hPE ha) b (hQE hb) hc) (ne_of_gt (hlr a ha b hb))
+      · right
+        rintro x ⟨u, hu, rfl⟩ y ⟨v, hv, rfl⟩
+        exact hcore _ _ hQE hPE hlr' b hb a ha hc v hv u hu
+  calc volume E ≤ ∑' n, volume (E ∩ A n) := hsplit
+    _ = ∑' n, volume (H n) := tsum_congr hvol
+    _ ≤ volume Λ := ordered_sum hsub hFsep
+
+/-- The half-open dyadic interval at scale `k` and position `i`. -/
+noncomputable def dyadic (k : ℕ) (i : ℤ) : Set ℝ :=
+  Set.Ico ((i : ℝ) / 2 ^ k) (((i : ℝ) + 1) / 2 ^ k)
+
+/-- **Dyadic nesting**: two intersecting dyadic intervals with ordered scales are
+nested. -/
+theorem dyadic_nested {k k' : ℕ} {i i' : ℤ} (hk : k ≤ k')
+    (hmeet : (dyadic k i ∩ dyadic k' i').Nonempty) :
+    dyadic k' i' ⊆ dyadic k i := by
+  obtain ⟨x, hx1, hx2⟩ := hmeet
+  rw [dyadic, Set.mem_Ico] at hx1 hx2
+  have h2k : (0 : ℝ) < 2 ^ k := by positivity
+  have h2k' : (0 : ℝ) < 2 ^ k' := by positivity
+  set d : ℕ := k' - k with hddef
+  have hpow : (2 : ℝ) ^ k' = 2 ^ k * 2 ^ d := by
+    rw [← pow_add]
+    congr 1
+    omega
+  have h2d : (0 : ℝ) < 2 ^ d := by positivity
+  have hy1 : (i : ℝ) ≤ x * 2 ^ k := (div_le_iff₀ h2k).mp hx1.1
+  have hy2 : x * 2 ^ k < (i : ℝ) + 1 := by
+    have h3 := hx1.2
+    rw [lt_div_iff₀ h2k] at h3
+    linarith only [h3]
+  have hy3 : (i' : ℝ) ≤ x * 2 ^ k' := (div_le_iff₀ h2k').mp hx2.1
+  have hy4 : x * 2 ^ k' < (i' : ℝ) + 1 := by
+    have h3 := hx2.2
+    rw [lt_div_iff₀ h2k'] at h3
+    linarith only [h3]
+  have hz1 : (i : ℝ) * 2 ^ d < (i' : ℝ) + 1 := by
+    calc (i : ℝ) * 2 ^ d ≤ x * 2 ^ k * 2 ^ d :=
+          mul_le_mul_of_nonneg_right hy1 h2d.le
+      _ = x * 2 ^ k' := by rw [hpow]; ring
+      _ < (i' : ℝ) + 1 := hy4
+  have hz2 : (i' : ℝ) < ((i : ℝ) + 1) * 2 ^ d := by
+    calc (i' : ℝ) ≤ x * 2 ^ k' := hy3
+      _ = x * 2 ^ k * 2 ^ d := by rw [hpow]; ring
+      _ < ((i : ℝ) + 1) * 2 ^ d := mul_lt_mul_of_pos_right hy2 h2d
+  have hzz1 : (i * 2 ^ d : ℤ) < i' + 1 := by
+    have h3 : ((i * 2 ^ d : ℤ) : ℝ) < ((i' + 1 : ℤ) : ℝ) := by
+      push_cast
+      linarith only [hz1]
+    exact_mod_cast h3
+  have hzz2 : (i' : ℤ) < (i + 1) * 2 ^ d := by
+    have h3 : ((i' : ℤ) : ℝ) < (((i + 1) * 2 ^ d : ℤ) : ℝ) := by
+      push_cast
+      linarith only [hz2]
+    exact_mod_cast h3
+  have hw1 : ((i * 2 ^ d : ℤ) : ℝ) ≤ (i' : ℝ) := by
+    have h4 : (i * 2 ^ d : ℤ) ≤ i' := by omega
+    exact_mod_cast h4
+  have hw2 : ((i' + 1 : ℤ) : ℝ) ≤ (((i + 1) * 2 ^ d : ℤ) : ℝ) := by
+    have h4 : (i' : ℤ) + 1 ≤ (i + 1) * 2 ^ d := by omega
+    exact_mod_cast h4
+  intro z hz
+  rw [dyadic, Set.mem_Ico] at hz ⊢
+  constructor
+  · calc (i : ℝ) / 2 ^ k = (i : ℝ) * 2 ^ d / 2 ^ k' := by
+          rw [hpow]
+          field_simp
+      _ ≤ (i' : ℝ) / 2 ^ k' := by
+          have h5 : (i : ℝ) * 2 ^ d ≤ (i' : ℝ) := by
+            have h6 := hw1
+            push_cast at h6
+            linarith only [h6]
+          gcongr
+      _ ≤ z := hz.1
+  · calc z < ((i' : ℝ) + 1) / 2 ^ k' := hz.2
+      _ ≤ ((i : ℝ) + 1) * 2 ^ d / 2 ^ k' := by
+          have h5 : (i' : ℝ) + 1 ≤ ((i : ℝ) + 1) * 2 ^ d := by
+            have h6 := hw2
+            push_cast at h6
+            linarith only [h6]
+          gcongr
+      _ = ((i : ℝ) + 1) / 2 ^ k := by
+          rw [hpow]
+          field_simp
+
+section InnerDegree
+
+open unitInterval
+
+/-- **The ray-hit exclusion**: at a minimum-height basepoint with the negative normal
+window, no point of the cross loop lies on the upward vertical ray. -/
+theorem top_kill {γ g : ℝ → ℂ} {ε ς M εA : ℝ}
+    (hε : 0 < ε) (hς : ς = 1 ∨ ς = -1)
+    (hM : ∀ u ∈ Set.Icc (0 : ℝ) 1, ‖g u‖ ≤ M)
+    (hmin : ∀ t ∈ Set.Icc (0 : ℝ) 1, (γ 0).im ≤ (γ t).im)
+    (hwin : ∀ t ∈ Set.Icc (0 : ℝ) 1, γ t ∈ Metric.closedBall (γ 0) εA →
+      (Complex.I * (((ς : ℝ) : ℂ) * g t)).im < 0)
+    (hεA : ε * M ≤ εA)
+    {t : ℝ} (ht : t ∈ Set.Icc (0 : ℝ) 1) :
+    ¬((γ 0 - (γ t - ((ς * ε : ℝ) : ℂ) * (Complex.I * g t))).re = 0
+      ∧ 0 < (γ 0 - (γ t - ((ς * ε : ℝ) : ℂ) * (Complex.I * g t))).im) := by
+  rintro ⟨hre, him⟩
+  set W : ℂ := ((ς * ε : ℝ) : ℂ) * (Complex.I * g t) with hWdef
+  set V : ℂ := γ 0 - (γ t - W) with hVdef
+  set d : ℝ := V.im with hddef
+  have hns : ∀ z : ℂ, ‖z‖^2 = z.re^2 + z.im^2 := fun z => by
+    rw [← Complex.normSq_eq_norm_sq, Complex.normSq_apply]
+    ring
+  have h1 : d = (γ 0).im - (γ t).im + W.im := by
+    rw [hddef, hVdef]
+    simp only [Complex.sub_im]
+    ring
+  have hWim : d ≤ W.im := by
+    have h2 := hmin t ht
+    linarith only [h1, h2]
+  have hdist : ‖γ 0 - γ t‖^2 = ‖W‖^2 + d^2 - 2*d*W.im := by
+    have hval : γ 0 - γ t = V - W := by
+      rw [hVdef]
+      ring
+    rw [hval, hns (V - W), hns W]
+    simp only [Complex.sub_re, Complex.sub_im]
+    rw [hre]
+    ring
+  have hWn : ‖W‖ ≤ ε * M := by
+    rw [hWdef, norm_mul, norm_mul, Complex.norm_I, one_mul, Complex.norm_real,
+      Real.norm_eq_abs]
+    have habs : |ς * ε| = ε := by
+      rcases hς with h | h <;> rw [h]
+      · rw [one_mul, abs_of_pos hε]
+      · rw [neg_one_mul, abs_neg, abs_of_pos hε]
+    rw [habs]
+    exact mul_le_mul_of_nonneg_left (hM t ht) hε.le
+  have hMnn : (0 : ℝ) ≤ ε * M :=
+    le_trans (norm_nonneg W) hWn
+  have hball : γ t ∈ Metric.closedBall (γ 0) εA := by
+    rw [Metric.mem_closedBall, dist_comm, dist_eq_norm]
+    have h2 : ‖γ 0 - γ t‖^2 ≤ (ε*M)^2 := by
+      nlinarith only [hdist, hWim, him, hWn, norm_nonneg W]
+    have h3 : ‖γ 0 - γ t‖ ≤ ε * M := by
+      by_contra hc
+      rw [not_le] at hc
+      nlinarith only [h2, hc, hMnn]
+    linarith only [h3, hεA]
+  have hwin' := hwin t ht hball
+  have hWeq : W = (ε : ℂ) * (Complex.I * (((ς : ℝ) : ℂ) * g t)) := by
+    rw [hWdef]
+    push_cast
+    ring
+  have hWim2 : W.im = ε * (Complex.I * (((ς : ℝ) : ℂ) * g t)).im := by
+    rw [hWeq, Complex.mul_im, Complex.ofReal_re, Complex.ofReal_im]
+    ring
+  nlinarith only [hwin', hWim, him, hWim2, hε]
+
+/-- **The inner degree**: the winding of the loop about the inward offset basepoint
+equals the winding of its velocity loop about the origin. -/
+theorem inner_degree {γ g : ℝ → ℂ} {ε ς M εA : ℝ}
+    (hγc : ContinuousOn γ (Set.Icc 0 1)) (hclγ : γ 0 = γ 1) (hgcl : g 1 = g 0)
+    (hε : 0 < ε) (hς : ς = 1 ∨ ς = -1)
+    (hgc : ContinuousOn g (Set.Icc 0 1))
+    (hgne : ∀ u ∈ Set.Icc (0 : ℝ) 1, g u ≠ 0)
+    (hM : ∀ u ∈ Set.Icc (0 : ℝ) 1, ‖g u‖ ≤ M)
+    (hmin : ∀ t ∈ Set.Icc (0 : ℝ) 1, (γ 0).im ≤ (γ t).im)
+    (hwin : ∀ t ∈ Set.Icc (0 : ℝ) 1, γ t ∈ Metric.closedBall (γ 0) εA →
+      (Complex.I * (((ς : ℝ) : ℂ) * g t)).im < 0)
+    (hεA : ε * M ≤ εA)
+    (hdisj : ∀ s ∈ Set.Icc (0 : ℝ) 1, ∀ t ∈ Set.Icc (0 : ℝ) 1,
+      γ t ≠ γ s - ((ς * ε : ℝ) : ℂ) * (Complex.I * g s))
+    (A : C(I, ℂ))
+    (hA : ∀ u : I, A u = γ ((u : ℝ)) - (γ 0 - ((ς * ε : ℝ) : ℂ) * (Complex.I * g 0)))
+    (hgw : Continuous fun t : I => g ((t : ℝ))) :
+    windingNumber A 0 = windingNumber ⟨fun t : I => g ((t : ℝ)), hgw⟩ 0 := by
+  set gε : ℝ → ℂ := fun s => γ s - ((ς * ε : ℝ) : ℂ) * (Complex.I * g s) with hgεdef
+  have hgεapp : ∀ s, gε s = γ s - ((ς * ε : ℝ) : ℂ) * (Complex.I * g s) := fun s => rfl
+  have hεc : ContinuousOn gε (Set.Icc 0 1) :=
+    hγc.sub (continuousOn_const.mul (continuousOn_const.mul hgc))
+  have hclε : gε 0 = gε 1 := by
+    rw [hgεapp, hgεapp, hclγ, ← hgcl]
+  have hdisj' : ∀ s ∈ Set.Icc (0 : ℝ) 1, ∀ t ∈ Set.Icc (0 : ℝ) 1, γ t ≠ gε s := hdisj
+  obtain ⟨pA, pT, pD, hpA, hpT, hpD, hsum⟩ := square_chain hγc hεc hclγ hclε hdisj'
+  -- the top loop avoids the upward vertical ray, so its winding vanishes
+  have hTcl : pT.toContinuousMap 0 = pT.toContinuousMap 1 := by
+    have h1 : pT.toContinuousMap 0 = γ 0 - gε 0 := pT.source
+    have h2 : pT.toContinuousMap 1 = γ 0 - gε 0 := pT.target
+    rw [h1, h2]
+  have hTne : ∀ u : I, pT.toContinuousMap u ≠ (0 : ℂ) := by
+    intro u
+    have h1 : pT.toContinuousMap u = pT u := rfl
+    rw [h1, hpT u]
+    exact sub_ne_zero.mpr (hdisj' ((u : ℝ)) u.2 0 ⟨le_refl 0, zero_le_one⟩)
+  have hTray : ∀ u : I,
+      ¬((pT.toContinuousMap u - 0).re = 0 ∧ 0 < (pT.toContinuousMap u - 0).im) := by
+    intro u
+    have h1 : pT.toContinuousMap u = pT u := rfl
+    rw [sub_zero, h1, hpT u, hgεapp]
+    exact top_kill hε hς hM hmin hwin hεA u.2
+  have hT0 : windingNumber pT.toContinuousMap 0 = 0 :=
+    winding_ray_zero hTcl hTne hTray
+  -- the diagonal loop is the constant multiple of the velocity loop
+  set c : ℂ := ((ς * ε : ℝ) : ℂ) * Complex.I with hcdef
+  have hc : c ≠ 0 := by
+    rw [hcdef]
+    apply mul_ne_zero
+    · rw [Ne, Complex.ofReal_eq_zero]
+      rcases hς with h | h <;> rw [h]
+      · rw [one_mul]
+        exact ne_of_gt hε
+      · rw [neg_one_mul, neg_eq_zero]
+        exact ne_of_gt hε
+    · exact Complex.I_ne_zero
+  have hDval : ∀ u : I, pD u = c * g ((u : ℝ)) := by
+    intro u
+    rw [hpD u, hgεapp, hcdef]
+    ring
+  have hw : Continuous fun t : I => c * g ((t : ℝ)) := continuous_const.mul hgw
+  have hcm := winding_const_mul hc hgw hgcl hgne hw
+  have hDeq : pD.toContinuousMap = (⟨fun t : I => c * g ((t : ℝ)), hw⟩ : C(I, ℂ)) := by
+    apply ContinuousMap.ext
+    intro u
+    exact hDval u
+  have hAeq : A = pA.toContinuousMap := by
+    apply ContinuousMap.ext
+    intro u
+    have h1 : pA.toContinuousMap u = pA u := rfl
+    rw [hA u, h1, hpA u, hgεapp]
+  rw [hAeq]
+  rw [hT0, add_zero] at hsum
+  rw [hsum, hDeq]
+  exact hcm
+
+end InnerDegree
+
+/-- **Dyadic membership pins the position**: a point lies in the scale-`k` dyadic at
+position `i` exactly when `i` is the floor of `x·2^k`. -/
+theorem dyadic_mem_iff {k : ℕ} {i : ℤ} {x : ℝ} :
+    x ∈ dyadic k i ↔ i = ⌊x * 2 ^ k⌋ := by
+  have h2k : (0 : ℝ) < 2 ^ k := by positivity
+  rw [dyadic, Set.mem_Ico]
+  constructor
+  · rintro ⟨h1, h2⟩
+    rw [div_le_iff₀ h2k] at h1
+    rw [lt_div_iff₀ h2k] at h2
+    symm
+    rw [Int.floor_eq_iff]
+    constructor
+    · exact_mod_cast h1
+    · linarith only [h2]
+  · rintro rfl
+    constructor
+    · rw [div_le_iff₀ h2k]
+      exact Int.floor_le _
+    · rw [lt_div_iff₀ h2k]
+      linarith only [Int.lt_floor_add_one (x * 2 ^ k)]
+/-- **The dyadic locator**: every point sits in a dyadic interval of some scale that
+fits inside any prescribed neighborhood. -/
+theorem dyadic_locate (x : ℝ) {δ : ℝ} (hδ : 0 < δ) :
+    ∃ k : ℕ, dyadic k ⌊x * 2 ^ k⌋ ⊆ Set.Ioo (x - δ) (x + δ) := by
+  obtain ⟨k, hk⟩ := exists_pow_lt_of_lt_one (half_pos hδ)
+    (by norm_num : (1 : ℝ) / 2 < 1)
+  refine ⟨k, ?_⟩
+  have h2k : (0 : ℝ) < 2 ^ k := by positivity
+  have hk' : 1 / 2 ^ k < δ / 2 := by
+    calc (1 : ℝ) / 2 ^ k = (1 / 2) ^ k := by rw [div_pow, one_pow]
+      _ < δ / 2 := hk
+  have hfl : (⌊x * 2 ^ k⌋ : ℝ) ≤ x * 2 ^ k := Int.floor_le _
+  have hfl2 : x * 2 ^ k < (⌊x * 2 ^ k⌋ : ℝ) + 1 := Int.lt_floor_add_one _
+  intro z hz
+  rw [dyadic, Set.mem_Ico] at hz
+  have hz1 := hz.1
+  have hz2 := hz.2
+  rw [div_le_iff₀ h2k] at hz1
+  rw [lt_div_iff₀ h2k] at hz2
+  constructor
+  · have h3 : x * 2 ^ k - 1 < z * 2 ^ k := by linarith only [hfl2, hz1]
+    have h4 : (x * 2 ^ k - 1) / 2 ^ k < z := by
+      rw [div_lt_iff₀ h2k]
+      linarith only [h3]
+    have h5 : (x * 2 ^ k - 1) / 2 ^ k = x - 1 / 2 ^ k := by
+      field_simp
+    rw [h5] at h4
+    linarith only [h4, hk', hδ]
+  · have h3 : z * 2 ^ k < x * 2 ^ k + 1 := by linarith only [hfl, hz2]
+    have h4 : z < (x * 2 ^ k + 1) / 2 ^ k := by
+      rw [lt_div_iff₀ h2k]
+      linarith only [h3]
+    have h5 : (x * 2 ^ k + 1) / 2 ^ k = x + 1 / 2 ^ k := by
+      field_simp
+    rw [h5] at h4
+    linarith only [h4, hk', hδ]
+
+/-- **The exact dyadic corridor cover**: an open-free set with positive corridor
+radii is exactly covered by countably many pairwise disjoint dyadic intervals, each
+fitted inside the corridor of one of its points. -/
+theorem dyadic_cover {U : Set ℝ} {δf : ℝ → ℝ} (hδf : ∀ x ∈ U, 0 < δf x) :
+    ∃ I : ℕ → Set ℝ,
+      (∀ n, I n = ∅ ∨ ∃ k : ℕ, ∃ i : ℤ, I n = dyadic k i ∧
+        ∃ x ∈ U, dyadic k i ⊆ Set.Ioo (x - δf x) (x + δf x)) ∧
+      (∀ m n, m ≠ n → Disjoint (I m) (I n)) ∧
+      U ⊆ ⋃ n, I n := by
+  classical
+  set P : ℕ → ℤ → Prop := fun k i => ∃ x ∈ U,
+    dyadic k i ⊆ Set.Ioo (x - δf x) (x + δf x) with hPdef
+  set M : ℕ → ℤ → Prop := fun k i => P k i ∧
+    ∀ k' i', k' < k → dyadic k i ⊆ dyadic k' i' → ¬ P k' i' with hMdef
+  have hxmem : ∀ (x : ℝ) (k : ℕ), x ∈ dyadic k ⌊x * 2 ^ k⌋ := fun x k =>
+    dyadic_mem_iff.mpr rfl
+  have hcover : ∀ x ∈ U, ∃ k i, M k i ∧ x ∈ dyadic k i := by
+    intro x hx
+    obtain ⟨k₀, hk₀⟩ := dyadic_locate x (hδf x hx)
+    have hex : ∃ k, P k ⌊x * 2 ^ k⌋ := ⟨k₀, x, hx, hk₀⟩
+    have hPks : P (Nat.find hex) ⌊x * 2 ^ Nat.find hex⌋ := Nat.find_spec hex
+    refine ⟨Nat.find hex, ⌊x * 2 ^ Nat.find hex⌋, ⟨hPks, ?_⟩,
+      hxmem x (Nat.find hex)⟩
+    intro k' i' hk' hsub hP'
+    have hx' : x ∈ dyadic k' i' := hsub (hxmem x (Nat.find hex))
+    have hi' : i' = ⌊x * 2 ^ k'⌋ := dyadic_mem_iff.mp hx'
+    rw [hi'] at hP'
+    exact absurd hP' (Nat.find_min hex hk')
+  have hdisj : ∀ k i k' i', M k i → M k' i' → ¬(k = k' ∧ i = i') →
+      Disjoint (dyadic k i) (dyadic k' i') := by
+    intro k i k' i' hM hM' hne
+    rw [Set.disjoint_iff_inter_eq_empty]
+    by_contra hcon
+    have hmeet : (dyadic k i ∩ dyadic k' i').Nonempty :=
+      Set.nonempty_iff_ne_empty.mpr hcon
+    rcases lt_trichotomy k k' with hlt | rfl | hlt
+    · exact (hM'.2 k i hlt (dyadic_nested hlt.le hmeet)) hM.1
+    · obtain ⟨y, hy⟩ := hmeet
+      have h3 := dyadic_mem_iff.mp hy.1
+      have h4 := dyadic_mem_iff.mp hy.2
+      exact hne ⟨rfl, h3.trans h4.symm⟩
+    · have hmeet' : (dyadic k' i' ∩ dyadic k i).Nonempty := by
+        obtain ⟨y, hy⟩ := hmeet
+        exact ⟨y, hy.2, hy.1⟩
+      exact (hM.2 k' i' hlt (dyadic_nested hlt.le hmeet')) hM'.1
+  set I : ℕ → Set ℝ := fun n =>
+    if h : ∃ p : ℕ × ℤ, Encodable.encode p = n ∧ M p.1 p.2 then
+      dyadic h.choose.1 h.choose.2 else ∅ with hIdef
+  refine ⟨I, ?_, ?_, ?_⟩
+  · intro n
+    rw [hIdef]
+    simp only
+    by_cases h : ∃ p : ℕ × ℤ, Encodable.encode p = n ∧ M p.1 p.2
+    · rw [dif_pos h]
+      exact Or.inr ⟨h.choose.1, h.choose.2, rfl, h.choose_spec.2.1⟩
+    · rw [dif_neg h]
+      exact Or.inl rfl
+  · intro m n hmn
+    rw [hIdef]
+    simp only
+    by_cases hm : ∃ p : ℕ × ℤ, Encodable.encode p = m ∧ M p.1 p.2
+    · by_cases hn : ∃ p : ℕ × ℤ, Encodable.encode p = n ∧ M p.1 p.2
+      · rw [dif_pos hm, dif_pos hn]
+        refine hdisj _ _ _ _ hm.choose_spec.2 hn.choose_spec.2 ?_
+        rintro ⟨h1, h2⟩
+        refine hmn ?_
+        rw [← hm.choose_spec.1, ← hn.choose_spec.1]
+        congr 1
+        exact Prod.ext h1 h2
+      · rw [dif_pos hm, dif_neg hn]
+        exact Set.disjoint_empty _
+    · rw [dif_neg hm]
+      exact Set.empty_disjoint _
+  · intro x hx
+    obtain ⟨k, i, hM, hmem⟩ := hcover x hx
+    refine Set.mem_iUnion.mpr ⟨Encodable.encode ((k, i) : ℕ × ℤ), ?_⟩
+    rw [hIdef]
+    simp only
+    have hex : ∃ p : ℕ × ℤ, Encodable.encode p = Encodable.encode ((k, i) : ℕ × ℤ)
+        ∧ M p.1 p.2 := ⟨(k, i), rfl, hM⟩
+    rw [dif_pos hex]
+    have hch : hex.choose = ((k, i) : ℕ × ℤ) :=
+      Encodable.encode_injective hex.choose_spec.1
+    rw [hch]
+    exact hmem
+
+/-- **Margined affinity in a given chart**: at any parameter of an anchored all-time
+leaf whose point lies in the inner half ball of a prescribed margined chart, the
+inner-ball visits of nearby-level leaves have heights affine in the level. -/
+theorem cert_at_crossing_in {q Ψw : ℂ → ℂ} {W : Set ℂ}
+    (hWo : IsOpen W) (hWd : DifferentiableOn ℂ Ψw W) (hWinj : Set.InjOn Ψw W)
+    (hWH : W ⊆ {z : ℂ | 0 < z.im}) (hWne : ∀ w ∈ W, q w ≠ 0)
+    (hWsq : ∀ x ∈ W, deriv Ψw x ^ 2 = -(-q x))
+    (hbigon : ∀ (σv τh : ℝ → ℂ) (T s μ : ℝ), 0 < T → 0 ≤ s → 0 < μ →
+      IsTrajOn q σv (Set.Icc (-μ) (T + μ)) →
+      IsTrajOn (fun z => -q z) τh (Set.Icc (-μ) (s + μ)) →
+      τh 0 = σv T → τh s = σv 0 → False)
+    {ϑ : ℝ → ℂ} (hϑ : IsTrajOn q ϑ Set.univ)
+    {τ : ℝ → ℂ} (hτ : IsTrajOn (fun z => -q z) τ Set.univ)
+    {tb : ℝ} (hanch : τ 0 = ϑ tb) (ub : ℝ)
+    {c₀ : ℂ} {R : ℝ} (hR : 0 < R) (hmarg : Metric.ball c₀ (5 * R) ⊆ Ψw '' W)
+    (hxW : τ ub ∈ W) (hcen : Ψw (τ ub) ∈ Metric.ball c₀ (R / 2)) :
+    ∃ ρ : ℝ, 0 < ρ ∧ ∃ ε : ℝ, (ε = 1 ∨ ε = -1) ∧ ∃ c : ℝ,
+      ∀ t : ℝ, |t - tb| < ρ →
+      ∀ σ : ℝ → ℂ, IsTrajOn (fun z => -q z) σ Set.univ → σ 0 = ϑ t →
+      ∀ u : ℝ, σ u ∈ W → Ψw (σ u) ∈ Metric.ball c₀ R →
+      (Ψw (σ u)).im = c - ε * t := by
+  rcases lt_trichotomy ub 0 with hub | hub | hub
+  · have hτr : IsTrajOn (fun z => -q z) (fun w => τ (-w)) Set.univ := by
+      have h1 := traj_reverse hτ
+      rwa [show (fun u : ℝ => -u) ⁻¹' Set.univ = Set.univ from
+        Set.preimage_univ] at h1
+    have hanchr : (fun w => τ (-w)) 0 = ϑ tb := by
+      simp only [neg_zero]
+      exact hanch
+    have htWr : (fun w => τ (-w)) (-ub) ∈ W := by
+      simp only [neg_neg]
+      exact hxW
+    have hcenr : Ψw ((fun w => τ (-w)) (-ub)) ∈ Metric.ball c₀ (R / 2) := by
+      simp only [neg_neg]
+      exact hcen
+    obtain ⟨ρ, hρ, ε, hε, c, hcert⟩ := cert_affine hbigon hϑ hτr hanchr
+      (by linarith : (0 : ℝ) < -ub) hWo hWd hWinj hWH hWne hWsq hR hmarg
+      htWr hcenr
+    exact ⟨ρ, hρ, ε, hε, c, hcert⟩
+  · have hanchW : ϑ tb ∈ W := by
+      rw [← hanch, ← hub]
+      exact hxW
+    obtain ⟨ρ₁, hρ₁, ε₀, hε₀, hdev⟩ := anchor_dev hWo hWd hWsq hϑ hanchW
+    have hcenb : Ψw (ϑ tb) ∈ Metric.ball c₀ (R / 2) := by
+      rw [← hanch, ← hub]
+      exact hcen
+    refine ⟨min ρ₁ (R / 2), lt_min hρ₁ (by linarith), ε₀, hε₀,
+      (Ψw (ϑ tb)).im + ε₀ * tb, ?_⟩
+    intro t ht σ hσ hσ0 u huW huball
+    have ht1 : |t - tb| < ρ₁ := lt_of_lt_of_le ht (min_le_left _ _)
+    have ht2 : |t - tb| < R / 2 := lt_of_lt_of_le ht (min_le_right _ _)
+    obtain ⟨hϑtW, hϑtval⟩ := hdev t ht1
+    have hσ0W : σ 0 ∈ W := by
+      rw [hσ0]
+      exact hϑtW
+    have hσ0ball : Ψw (σ 0) ∈ Metric.ball c₀ R := by
+      rw [hσ0, hϑtval, Metric.mem_ball]
+      have h6 : dist (Ψw (ϑ tb) + Complex.I * ((-ε₀ * (t - tb) : ℝ) : ℂ)) c₀
+          ≤ dist (Ψw (ϑ tb)) c₀ + |(-ε₀ * (t - tb) : ℝ)| := by
+        rw [dist_eq_norm, dist_eq_norm,
+          show Ψw (ϑ tb) + Complex.I * ((-ε₀ * (t - tb) : ℝ) : ℂ) - c₀
+              = (Ψw (ϑ tb) - c₀) + Complex.I * ((-ε₀ * (t - tb) : ℝ) : ℂ) from by
+            ring]
+        refine le_trans (norm_add_le _ _) ?_
+        rw [norm_mul, Complex.norm_I, one_mul, Complex.norm_real,
+          Real.norm_eq_abs]
+      have h7 : |(-ε₀ * (t - tb) : ℝ)| = |t - tb| := by
+        rw [abs_mul, abs_neg]
+        rcases hε₀ with h' | h' <;> rw [h'] <;> norm_num
+      have h8 : dist (Ψw (ϑ tb)) c₀ < R / 2 := Metric.mem_ball.mp hcenb
+      rw [h7] at h6
+      linarith [h6, h8, ht2]
+    have hvis := leaf_visit_height hWo hWd hWinj hWH hWne hWsq hbigon hR
+      hmarg hσ huW hσ0W huball hσ0ball
+    rw [hvis, hσ0, hϑtval, Complex.add_im]
+    have h9 : (Complex.I * ((-ε₀ * (t - tb) : ℝ) : ℂ)).im = -ε₀ * (t - tb) := by
+      rw [Complex.mul_im, Complex.I_re, Complex.I_im, Complex.ofReal_re,
+        Complex.ofReal_im]
+      ring
+    rw [h9]
+    ring
+  · obtain ⟨ρ, hρ, ε, hε, c, hcert⟩ := cert_affine hbigon hϑ hτ hanch hub
+      hWo hWd hWinj hWH hWne hWsq hR hmarg hxW hcen
+    exact ⟨ρ, hρ, ε, hε, c, hcert⟩
+
+/-- **A margined transverse chart at a regular point**: every regular point of the
+upper half plane carries an injective transverse natural chart whose development
+contains a five-fold margined ball about the point's value. -/
+theorem margined_chart {q : ℂ → ℂ}
+    (hq : DifferentiableOn ℂ q {z : ℂ | 0 < z.im})
+    {w : ℂ} (hw : 0 < w.im) (hq0 : q w ≠ 0) :
+    ∃ W : Set ℂ, ∃ Ψ : ℂ → ℂ, ∃ R : ℝ, 0 < R ∧ IsOpen W ∧
+      DifferentiableOn ℂ Ψ W ∧ Set.InjOn Ψ W ∧ W ⊆ {z : ℂ | 0 < z.im} ∧
+      (∀ z ∈ W, q z ≠ 0) ∧ (∀ x ∈ W, deriv Ψ x ^ 2 = -(-q x)) ∧
+      Metric.ball (Ψ w) (5 * R) ⊆ Ψ '' W ∧ w ∈ W := by
+  obtain ⟨W, Ψ, ρ₀, hρ₀, hWo, hwW, hWH, hWne', hΨd, hΨinj, hΨsq, himg⟩ :=
+    box_data (q := fun z => -q z) hq.neg hw (neg_ne_zero.mpr hq0)
+  refine ⟨W, Ψ, ρ₀ / 5, by linarith, hWo, hΨd, hΨinj, hWH, ?_, hΨsq, ?_, hwW⟩
+  · intro z hz h0
+    exact hWne' z hz (by rw [h0]; exact neg_zero)
+  · rw [show 5 * (ρ₀ / 5) = ρ₀ from by ring]
+    exact himg
+
+set_option maxHeartbeats 400000 in
+-- Heartbeats: the deep local-definition tower needs an enlarged elaboration budget.
+/-- **The two-point leaf-displacement estimate**: the level gap between two leaf
+crossings of a connecting flat path is at most the path's horizontal variation. -/
+theorem hcoarea_of_bigons {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
+    (q : QuadraticDifferential Γ)
+    (hbigon : ∀ (σv τh : ℝ → ℂ) (T s μ : ℝ), 0 < T → 0 ≤ s → 0 < μ →
+      IsTrajOn (q : ℂ → ℂ) σv (Set.Icc (-μ) (T + μ)) →
+      IsTrajOn (fun z => -(q : ℂ → ℂ) z) τh (Set.Icc (-μ) (s + μ)) →
+      τh 0 = σv T → τh s = σv 0 → False)
+    (hbigonH : ∀ (σv τh : ℝ → ℂ) (T s μ : ℝ), 0 < T → 0 ≤ s → 0 < μ →
+      IsTrajOn (fun z => -(q : ℂ → ℂ) z) σv (Set.Icc (-μ) (T + μ)) →
+      IsTrajOn (q : ℂ → ℂ) τh (Set.Icc (-μ) (s + μ)) →
+      τh 0 = σv T → τh s = σv 0 → False) :
+    ∀ ϑ : ℝ → ℂ, IsTrajOn (q : ℂ → ℂ) ϑ Set.univ →
+    ∀ B : Atlas (qdNeg q : ℂ → ℂ),
+    (∀ᵐ t ∂(volume : Measure ℝ), ϑ t ∈ good (qdNeg q : ℂ → ℂ) B) →
+    ∀ T : ℝ, 0 < T → Set.InjOn ϑ (Set.Icc 0 T) →
+    ∀ p : ℝ → ℂ, IsFlatPath p (ϑ 0) (ϑ T) →
+    ∀ (t₀ t₁ s₀ s₁ : ℝ) (τ₀ τ₁ : ℝ → ℂ),
+    IsTrajOn (fun z => -(q : ℂ → ℂ) z) τ₀ Set.univ →
+    IsTrajOn (fun z => -(q : ℂ → ℂ) z) τ₁ Set.univ →
+    τ₀ 0 = ϑ t₀ → τ₁ 0 = ϑ t₁ →
+    t₀ ∈ Set.Ioo 0 T → t₁ ∈ Set.Ioo 0 T →
+    s₀ ∈ Set.Icc (0 : ℝ) 1 → s₁ ∈ Set.Icc (0 : ℝ) 1 →
+    (∃ u, p s₀ = τ₀ u) → (∃ u, p s₁ = τ₁ u) →
+    ENNReal.ofReal |t₁ - t₀| ≤ ∫⁻ s in Set.Icc (0 : ℝ) 1,
+      horizontalDensity (q : ℂ → ℂ) p s := by
+  intro ϑ hϑ B hae T hT hinjT p hp t₀ t₁ s₀ s₁ τ₀ τ₁ hτ₀ hτ₁ ha₀ ha₁ ht₀ ht₁
+    hs₀ hs₁ hx₀ hx₁
+  rcases eq_or_ne t₀ t₁ with rfl | htne
+  · simp
+  -- the level window and its good part
+  set J : Set ℝ := Set.Ioo (min t₀ t₁) (max t₀ t₁) with hJdef
+  have hJvol : ENNReal.ofReal |t₁ - t₀| = volume J := by
+    rw [hJdef, Real.volume_Ioo]
+    congr 1
+    rcases le_total t₀ t₁ with h | h
+    · rw [max_eq_right h, min_eq_left h, abs_of_nonneg (by linarith)]
+    · rw [max_eq_left h, min_eq_right h, abs_of_nonpos (by linarith)]
+      ring
+  set D : Set ℝ := J ∩ {t | ϑ t ∈ good (qdNeg q : ℂ → ℂ) B} with hDdef
+  have hDJ : D ⊆ J := Set.inter_subset_left
+  have hDIoo : D ⊆ Set.Ioo 0 T := by
+    intro t ht
+    have h2 := hDJ ht
+    rw [hJdef] at h2
+    constructor
+    · rcases min_cases t₀ t₁ with ⟨h3, -⟩ | ⟨h3, -⟩ <;> rw [h3] at h2
+      · linarith [h2.1, ht₀.1]
+      · linarith [h2.1, ht₁.1]
+    · rcases max_cases t₀ t₁ with ⟨h3, -⟩ | ⟨h3, -⟩ <;> rw [h3] at h2
+      · linarith [h2.2, ht₀.2]
+      · linarith [h2.2, ht₁.2]
+  have hvolJD : volume J ≤ volume D := by
+    have h2 : J ⊆ D ∪ {t | ¬ ϑ t ∈ good (qdNeg q : ℂ → ℂ) B} := by
+      intro t ht
+      by_cases h3 : ϑ t ∈ good (qdNeg q : ℂ → ℂ) B
+      · exact Or.inl ⟨ht, h3⟩
+      · exact Or.inr h3
+    calc volume J ≤ volume (D ∪ {t | ¬ ϑ t ∈ good (qdNeg q : ℂ → ℂ) B}) :=
+          measure_mono h2
+      _ ≤ volume D + volume {t | ¬ ϑ t ∈ good (qdNeg q : ℂ → ℂ) B} :=
+          measure_union_le _ _
+      _ = volume D := by rw [ae_iff.mp hae, add_zero]
+  -- the leaf family and its crossings
+  set τfam : ℝ → ℝ → ℂ := fun t u => B.flow u (ϑ t) with hτfamdef
+  have hτfam : ∀ t ∈ D, IsTrajOn (fun w => -(q : ℂ → ℂ) w) (τfam t) Set.univ ∧
+      τfam t 0 = ϑ t := by
+    intro t ht
+    have hgood : ϑ t ∈ good (qdNeg q : ℂ → ℂ) B := ht.2
+    exact ⟨isTrajOn_congr (fun w => qdNeg_apply q w)
+      (flow_alltime (qdNeg q).holo B hgood), flow_zero B hgood.1 hgood.2.1⟩
+  set pC : C(unitInterval, ℂ) := ⟨fun s => p s,
+    hp.cont.comp_continuous continuous_subtype_val (fun s => s.2)⟩ with hpCdef
+  have hϑIci : IsTrajOn (q : ℂ → ℂ) ϑ (Set.Ici (-1 : ℝ)) :=
+    traj_mono hϑ (Set.subset_univ _)
+  have hcrossx : ∀ t : ℝ, ∃ (s : unitInterval) (u : ℝ), t ∈ D →
+      p s = τfam t u := by
+    intro t
+    by_cases ht : t ∈ D
+    · obtain ⟨s, u, hsu⟩ := level_crossing q.holo hbigon hbigonH hϑIci hT
+        (hτfam t ht).1 (hDIoo ht) (hτfam t ht).2 pC hp.init hp.final
+        (fun s => hp.upper s s.2)
+      exact ⟨s, u, fun _ => hsu⟩
+    · exact ⟨0, 0, fun h => absurd h ht⟩
+  choose sc uc hscuc using hcrossx
+  -- the regular parameter set with its chart corridors
+  set U : Set ℝ := {s : ℝ | s ∈ Set.Icc (0 : ℝ) 1 ∧ 0 < (p s).im ∧
+    (q : ℂ → ℂ) (p s) ≠ 0} with hUdef
+  have hUdata : ∀ x : ℝ, ∃ (W : Set ℂ) (Ψ : ℂ → ℂ) (R δ : ℝ), x ∈ U →
+      0 < R ∧ 0 < δ ∧ IsOpen W ∧ DifferentiableOn ℂ Ψ W ∧ Set.InjOn Ψ W ∧
+      W ⊆ {z : ℂ | 0 < z.im} ∧ (∀ z ∈ W, (q : ℂ → ℂ) z ≠ 0) ∧
+      (∀ y ∈ W, deriv Ψ y ^ 2 = -(-(q : ℂ → ℂ) y)) ∧
+      Metric.ball (Ψ (p x)) (5 * R) ⊆ Ψ '' W ∧
+      ∀ s' ∈ Set.Icc (0 : ℝ) 1, |s' - x| ≤ δ →
+        p s' ∈ W ∧ Ψ (p s') ∈ Metric.ball (Ψ (p x)) (R / 8) := by
+    intro x
+    by_cases hx : x ∈ U
+    · obtain ⟨W, Ψ, R, hR, hWo, hWd, hWinj, hWH, hWne, hWsq, hmarg, hmem⟩ :=
+        margined_chart q.holo hx.2.1 hx.2.2
+      have hcont : ContinuousWithinAt p (Set.Icc (0 : ℝ) 1) x :=
+        hp.cont x hx.1
+      have hev : ∀ᶠ s' in nhdsWithin x (Set.Icc (0 : ℝ) 1),
+          p s' ∈ W ∧ Ψ (p s') ∈ Metric.ball (Ψ (p x)) (R / 8) := by
+        have h2 : {z : ℂ | z ∈ W ∧ Ψ z ∈ Metric.ball (Ψ (p x)) (R / 8)}
+            ∈ 𝓝 (p x) := by
+          refine Filter.inter_mem (hWo.mem_nhds hmem) ?_
+          have h3 : ContinuousAt Ψ (p x) :=
+            (hWd.continuousOn.continuousAt (hWo.mem_nhds hmem))
+          exact h3 (Metric.ball_mem_nhds _ (by linarith))
+        exact hcont.eventually_mem h2
+      rw [Filter.eventually_iff, Metric.mem_nhdsWithin_iff] at hev
+      obtain ⟨δ₂, hδ₂, hball⟩ := hev
+      refine ⟨W, Ψ, R, δ₂ / 2, fun _ => ⟨hR, by linarith, hWo, hWd, hWinj,
+        hWH, hWne, hWsq, hmarg, ?_⟩⟩
+      intro s' hs' hd
+      exact hball ⟨by rw [Metric.mem_ball, Real.dist_eq]; linarith [hd], hs'⟩
+    · exact ⟨∅, id, 1, 1, fun h => absurd h hx⟩
+  choose Wf Ψf Rf δf hUpack using hUdata
+  obtain ⟨Ipc, hIcases, hIdisj, hIcov⟩ := dyadic_cover
+    (U := U) (δf := δf) (fun x hx => ((hUpack x hx).2.1))
+  -- the level classes per piece
+  set E : ℕ → Set ℝ := fun n => {t ∈ D | ((sc t : ℝ)) ∈ Ipc n} with hEdef
+  have hscU : ∀ t ∈ D, ((sc t : ℝ)) ∈ U := by
+    intro t ht
+    refine ⟨(sc t).2, hp.upper _ (sc t).2, ?_⟩
+    have h2 := hscuc t ht
+    obtain ⟨V₂, -, hpV₂, -, hV₂ne, -⟩ :=
+      ((hτfam t ht).1).chart (uc t) (Set.mem_univ (uc t))
+    intro h0
+    refine hV₂ne _ hpV₂ ?_
+    rw [← h2] at hpV₂ ⊢
+    rw [h0]
+    exact neg_zero
+  have hDE : D ⊆ ⋃ n, E n := by
+    intro t ht
+    obtain ⟨n, hn⟩ := Set.mem_iUnion.mp (hIcov (hscU t ht))
+    exact Set.mem_iUnion.mpr ⟨n, ht, hn⟩
+  have hvolDE : volume D ≤ ∑' n, volume (E n) :=
+    le_trans (measure_mono hDE) (measure_iUnion_le _)
+  -- the per-piece bound
+  have hpieces : ∀ n : ℕ, ∃ G : Set ℝ, MeasurableSet G ∧ G ⊆ Ipc n ∧
+      G ⊆ Set.Icc (0 : ℝ) 1 ∧
+      volume (E n) ≤ ∫⁻ s in G, horizontalDensity (q : ℂ → ℂ) p s := by
+    intro n
+    rcases Set.eq_empty_or_nonempty (E n) with hEe | ⟨tw, htw⟩
+    · exact ⟨∅, MeasurableSet.empty, Set.empty_subset _, Set.empty_subset _,
+        by rw [hEe]; simp⟩
+    rcases hIcases n with hIe | ⟨k, i, hIeq, xn, hxnU, hfit⟩
+    · exfalso
+      have h2 := htw.2
+      rw [hIe] at h2
+      exact Set.notMem_empty _ h2
+    obtain ⟨hRpos, hδpos, hWo, hWd, hWinj, hWH, hWne, hWsq, hmarg, hcorr⟩ :=
+      hUpack xn hxnU
+    -- the corridor bound on the closed hull of the piece
+    set av : ℝ := (i : ℝ) / 2 ^ k with havdef
+    set bv : ℝ := ((i : ℝ) + 1) / 2 ^ k with hbvdef
+    have hIab : Ipc n = Set.Ico av bv := hIeq
+    have havbv : av < bv := by
+      rw [havdef, hbvdef]
+      have h2k : (0 : ℝ) < 2 ^ k := by positivity
+      rw [div_lt_div_iff_of_pos_right h2k]
+      linarith
+    have hcorrIcc : ∀ s' ∈ Set.Icc av bv, |s' - xn| ≤ δf xn := by
+      intro s' hs'
+      have hbfit : bv ≤ xn + δf xn := by
+        by_contra hcon
+        push Not at hcon
+        have h3 : max av (xn + δf xn) ∈ Ipc n := by
+          rw [hIab]
+          exact ⟨le_max_left _ _, by
+            rcases max_cases av (xn + δf xn) with ⟨h4, -⟩ | ⟨h4, -⟩ <;>
+              rw [h4]
+            · exact havbv
+            · exact hcon⟩
+        have h5 := hfit (hIeq ▸ h3)
+        rw [Set.mem_Ioo] at h5
+        rcases max_cases av (xn + δf xn) with ⟨h4, h6⟩ | ⟨h4, -⟩ <;>
+          rw [h4] at h5
+        · linarith [h5.2, h6]
+        · linarith [h5.2]
+      have hafit : xn - δf xn < av := by
+        have h3 : av ∈ Ipc n := by rw [hIab]; exact ⟨le_rfl, havbv⟩
+        have h5 := hfit (hIeq ▸ h3)
+        rw [Set.mem_Ioo] at h5
+        exact h5.1
+      rw [abs_le]
+      exact ⟨by linarith [hs'.1], by linarith [hs'.2]⟩
+    -- the trimmed interval inside the unit domain
+    set a' : ℝ := max av 0 with ha'def
+    set b' : ℝ := min bv 1 with hb'def
+    have hsc01 : (sc tw : ℝ) ∈ Set.Icc (0 : ℝ) 1 := (sc tw).2
+    have hscIn : ((sc tw : ℝ)) ∈ Set.Ico av bv := hIab ▸ htw.2
+    have hsca' : a' ≤ ((sc tw : ℝ)) := max_le hscIn.1 hsc01.1
+    have hscb' : ((sc tw : ℝ)) ≤ b' := le_min hscIn.2.le hsc01.2
+    have ha'b' : a' ≤ b' := le_trans hsca' hscb'
+    have hIccsub : Set.Icc a' b' ⊆ Set.Icc av bv :=
+      Set.Icc_subset_Icc (le_max_left _ _) (min_le_left _ _)
+    have hIcc01 : Set.Icc a' b' ⊆ Set.Icc (0 : ℝ) 1 :=
+      Set.Icc_subset_Icc (le_max_right _ _) (min_le_right _ _)
+    have htrkW : ∀ s' ∈ Set.Icc a' b', p s' ∈ Wf xn ∧
+        Ψf xn (p s') ∈ Metric.ball (Ψf xn (p xn)) (Rf xn / 8) :=
+      fun s' hs' => hcorr s' (hIcc01 hs') (hcorrIcc s' (hIccsub hs'))
+    -- the corridor membership of the crossings of piece levels
+    have hscmem : ∀ t ∈ E n, ((sc t : ℝ)) ∈ Set.Icc a' b' := by
+      intro t ht
+      have h2 : ((sc t : ℝ)) ∈ Set.Ico av bv := hIab ▸ ht.2
+      exact ⟨max_le h2.1 (sc t).2.1, le_min h2.2.le (sc t).2.2⟩
+    have hvisit : ∀ t ∈ E n, τfam t (uc t) ∈ Wf xn ∧
+        Ψf xn (τfam t (uc t)) ∈ Metric.ball (Ψf xn (p xn)) (Rf xn / 8) := by
+      intro t ht
+      have h2 := htrkW _ (hscmem t ht)
+      rw [hscuc t ht.1] at h2
+      exact h2
+    have hball8R : Metric.ball (Ψf xn (p xn)) (Rf xn / 8)
+        ⊆ Metric.ball (Ψf xn (p xn)) (Rf xn) :=
+      Metric.ball_subset_ball (by linarith)
+    have hball82 : Metric.ball (Ψf xn (p xn)) (Rf xn / 8)
+        ⊆ Metric.ball (Ψf xn (p xn)) (Rf xn / 2) :=
+      Metric.ball_subset_ball (by linarith)
+    have hball84 : Metric.ball (Ψf xn (p xn)) (Rf xn / 8)
+        ⊆ Metric.ball (Ψf xn (p xn)) (Rf xn / 4) :=
+      Metric.ball_subset_ball (by linarith)
+    have hcertdata : ∀ c : ℝ, ∃ ρv εv kv : ℝ, c ∈ E n → 0 < ρv ∧
+        (εv = 1 ∨ εv = -1) ∧ ∀ t ∈ E n, |t - c| < ρv →
+        (Ψf xn (p ((sc t : ℝ)))).im = kv - εv * t := by
+      intro c
+      by_cases hc : c ∈ E n
+      · obtain ⟨ρv, hρv, εv, hεv, kv, hlaw⟩ := cert_at_crossing_in hWo hWd
+          hWinj hWH hWne hWsq hbigon hϑ (hτfam c hc.1).1 (hτfam c hc.1).2
+          (uc c) hRpos hmarg (hvisit c hc).1 (hball82 (hvisit c hc).2)
+        refine ⟨ρv, εv, kv, fun _ => ⟨hρv, hεv, ?_⟩⟩
+        intro t ht hnear
+        have h5 := hlaw t hnear (τfam t) (hτfam t ht.1).1 (hτfam t ht.1).2
+          (uc t) (hvisit t ht).1 (hball8R (hvisit t ht).2)
+        rw [← hscuc t ht.1] at h5
+        exact h5
+      · exact ⟨1, 1, 0, fun h => absurd h hc⟩
+    choose ρf εff kff hcert using hcertdata
+    have hheq : ∀ t ∈ E n, (Ψf xn (p ((sc t : ℝ)))).im
+        = (Ψf xn (τfam t (uc t))).im := by
+      intro t ht
+      rw [hscuc t ht.1]
+    have hinjE : ∀ t ∈ E n, ∀ t' ∈ E n,
+        (Ψf xn (p ((sc t : ℝ)))).im = (Ψf xn (p ((sc t' : ℝ)))).im → t = t' := by
+      intro t ht t' ht' hFeq
+      rw [hheq t ht, hheq t' ht'] at hFeq
+      obtain ⟨u, u', hshare⟩ := equal_height_meet hWo hWd hWinj hWH hWne hWsq
+        hRpos hmarg (hτfam t ht.1).1 (hτfam t' ht'.1).1
+        (hvisit t ht).1 (hvisit t' ht').1 (hball8R (hvisit t ht).2)
+        (hball8R (hvisit t' ht').2) hFeq
+      exact leaves_meet_level q.holo hbigon hbigonH hϑIci
+        (hτfam t ht.1).1 (hτfam t' ht'.1).1
+        (by linarith [(hDIoo ht.1).1] : (-1 : ℝ) < t)
+        (by linarith [(hDIoo ht'.1).1] : (-1 : ℝ) < t')
+        (hτfam t ht.1).2 (hτfam t' ht'.1).2 hshare
+    have hmonoE : ∀ t ∈ E n, ∀ t' ∈ E n, ∀ t'' ∈ E n,
+        min ((Ψf xn (p ((sc t : ℝ)))).im) ((Ψf xn (p ((sc t' : ℝ)))).im)
+          < (Ψf xn (p ((sc t'' : ℝ)))).im →
+        (Ψf xn (p ((sc t'' : ℝ)))).im
+          < max ((Ψf xn (p ((sc t : ℝ)))).im) ((Ψf xn (p ((sc t' : ℝ)))).im) →
+        min t t' < t'' ∧ t'' < max t t' := by
+      intro t ht t' ht' t'' ht'' hlo hhi
+      rw [hheq t ht, hheq t' ht', hheq t'' ht''] at hlo hhi
+      rcases le_total ((Ψf xn (τfam t (uc t))).im)
+          ((Ψf xn (τfam t' (uc t'))).im) with hor | hor
+      · rw [min_eq_left hor] at hlo
+        rw [max_eq_right hor] at hhi
+        have h6 := level_monotone q.holo hbigon hbigonH hϑ hWo hWd hWinj hWH
+          hWne hWsq hRpos hmarg (hτfam t ht.1).1 (hτfam t' ht'.1).1
+          (hτfam t'' ht''.1).1 (hτfam t ht.1).2 (hτfam t' ht'.1).2
+          (hτfam t'' ht''.1).2 (hvisit t ht).1 (hvisit t' ht').1
+          (hvisit t'' ht'').1 (hball84 (hvisit t ht).2)
+          (hball84 (hvisit t' ht').2) (hball84 (hvisit t'' ht'').2) hlo hhi
+        rw [Set.mem_Ioo] at h6
+        exact h6
+      · rw [min_eq_right hor] at hlo
+        rw [max_eq_left hor] at hhi
+        have h6 := level_monotone q.holo hbigon hbigonH hϑ hWo hWd hWinj hWH
+          hWne hWsq hRpos hmarg (hτfam t' ht'.1).1 (hτfam t ht.1).1
+          (hτfam t'' ht''.1).1 (hτfam t' ht'.1).2 (hτfam t ht.1).2
+          (hτfam t'' ht''.1).2 (hvisit t' ht').1 (hvisit t ht).1
+          (hvisit t'' ht'').1 (hball84 (hvisit t' ht').2)
+          (hball84 (hvisit t ht).2) (hball84 (hvisit t'' ht'').2) hlo hhi
+        rw [Set.mem_Ioo, min_comm, max_comm] at h6
+        exact h6
+    have hcount := piece_count (E := E n)
+      (F := fun t => (Ψf xn (p ((sc t : ℝ)))).im)
+      (Λ := {h : ℝ | ∃ s' ∈ Set.Icc a' b', (Ψf xn (p s')).im = h})
+      (ρ := ρf) (fun t ht => (hcert t ht).1)
+      (fun c hc => ⟨εff c, (hcert c hc).2.1, kff c,
+        fun t ht hn => (hcert c hc).2.2 t ht hn⟩)
+      (fun t ht => ⟨(sc t : ℝ), hscmem t ht, rfl⟩) hinjE hmonoE
+    have hΛbound := piece_lambda_bound hWo hWd hWsq ha'b'
+      (hp.cont.mono hIcc01)
+      (hp.ac.mono (by
+        rw [Set.uIcc_of_le ha'b', Set.uIcc_of_le zero_le_one]
+        exact hIcc01))
+      (fun s' hs' => (htrkW s' hs').1)
+      (fun l hl => hl)
+    refine ⟨Set.Ioo a' b', measurableSet_Ioo, ?_, ?_, ?_⟩
+    · intro z hz
+      rw [hIab]
+      exact ⟨le_trans (le_max_left _ _) hz.1.le,
+        lt_of_lt_of_le hz.2 (min_le_left _ _)⟩
+    · exact fun z hz => ⟨le_trans (le_max_right _ _) hz.1.le,
+        le_trans hz.2.le (min_le_right _ _)⟩
+    · calc volume (E n) ≤ volume {h : ℝ | ∃ s' ∈ Set.Icc a' b',
+            (Ψf xn (p s')).im = h} := hcount
+        _ ≤ ∫⁻ s in Set.Icc a' b', horizontalDensity (q : ℂ → ℂ) p s :=
+            hΛbound
+        _ = ∫⁻ s in Set.Ioo a' b', horizontalDensity (q : ℂ → ℂ) p s :=
+            (setLIntegral_congr Ioo_ae_eq_Icc).symm
+  choose Gf hGmeas hGIpc hG01 hGbound using hpieces
+  have hGdisj : Pairwise (Function.onFun Disjoint Gf) := fun m n hmn =>
+    Set.disjoint_of_subset (hGIpc m) (hGIpc n) (hIdisj m n hmn)
+  calc ENNReal.ofReal |t₁ - t₀| = volume J := hJvol
+    _ ≤ volume D := hvolJD
+    _ ≤ ∑' n, volume (E n) := hvolDE
+    _ ≤ ∑' n, ∫⁻ s in Gf n, horizontalDensity (q : ℂ → ℂ) p s :=
+        ENNReal.tsum_le_tsum hGbound
+    _ = ∫⁻ s in ⋃ n, Gf n, horizontalDensity (q : ℂ → ℂ) p s :=
+        (lintegral_iUnion hGmeas hGdisj _).symm
+    _ ≤ ∫⁻ s in Set.Icc (0 : ℝ) 1, horizontalDensity (q : ℂ → ℂ) p s :=
+        lintegral_mono_set (Set.iUnion_subset hG01)
+
+/-- **The separation inequality from the atlas-threaded displacement pin**. -/
+theorem hsep_final₄ {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
+    (hΓ : IsFuchsianGroup Γ)
+    (hcc : CompactSpace (Quotient (MulAction.orbitRel Γ UpperHalfPlane)))
+    (q : QuadraticDifferential Γ) (hq0 : ∃ z₀ : ℂ, 0 < z₀.im ∧ q z₀ ≠ 0)
+    (hbigon : ∀ (σv τh : ℝ → ℂ) (T s μ : ℝ), 0 < T → 0 ≤ s → 0 < μ →
+      IsTrajOn (q : ℂ → ℂ) σv (Set.Icc (-μ) (T + μ)) →
+      IsTrajOn (fun z => -(q : ℂ → ℂ) z) τh (Set.Icc (-μ) (s + μ)) →
+      τh 0 = σv T → τh s = σv 0 → False)
+    (hbigonH : ∀ (σv τh : ℝ → ℂ) (T s μ : ℝ), 0 < T → 0 ≤ s → 0 < μ →
+      IsTrajOn (fun z => -(q : ℂ → ℂ) z) σv (Set.Icc (-μ) (T + μ)) →
+      IsTrajOn (q : ℂ → ℂ) τh (Set.Icc (-μ) (s + μ)) →
+      τh 0 = σv T → τh s = σv 0 → False)
+    (hjump : ∀ (ϑ : ℝ → ℂ) (a : ℝ) (hϑ : IsTrajOn (q : ℂ → ℂ) ϑ (Set.Ici a))
+      (ha : a < 0) (T : ℝ) (hT : 0 < T) (τ : ℝ → ℂ),
+      IsTrajOn (fun z => -(q : ℂ → ℂ) z) τ Set.univ →
+      ∀ tstar : ℝ, tstar ∈ Set.Ioo 0 T → τ 0 = ϑ tstar →
+      ∀ (p : C(unitInterval, ℂ)), p 0 = ϑ 0 → ∀ hp1 : p 1 = ϑ T,
+      (∀ s : unitInterval, 0 < (p s).im) →
+      (∀ (s : unitInterval) (u : ℝ), p s ≠ τ u) →
+      ∃ η : ℝ, 0 < η ∧
+        (windingNumber (leafLoopC p ϑ T
+            (hϑ.cont.mono fun _ hx => le_trans ha.le hx.1) hT.le hp1) (τ η) ≠ 0 ∨
+         windingNumber (leafLoopC p ϑ T
+            (hϑ.cont.mono fun _ hx => le_trans ha.le hx.1) hT.le hp1)
+              (τ (-η)) ≠ 0))
+    (hcoarea₄ : ∀ ϑ : ℝ → ℂ, IsTrajOn (q : ℂ → ℂ) ϑ Set.univ →
+      ∀ B : Atlas (qdNeg q : ℂ → ℂ),
+      (∀ᵐ t ∂(volume : Measure ℝ), ϑ t ∈ good (qdNeg q : ℂ → ℂ) B) →
+      ∀ T : ℝ, 0 < T → Set.InjOn ϑ (Set.Icc 0 T) →
+      ∀ p : ℝ → ℂ, IsFlatPath p (ϑ 0) (ϑ T) →
+      ∀ (t₀ t₁ s₀ s₁ : ℝ) (τ₀ τ₁ : ℝ → ℂ),
+      IsTrajOn (fun z => -(q : ℂ → ℂ) z) τ₀ Set.univ →
+      IsTrajOn (fun z => -(q : ℂ → ℂ) z) τ₁ Set.univ →
+      τ₀ 0 = ϑ t₀ → τ₁ 0 = ϑ t₁ →
+      t₀ ∈ Set.Ioo 0 T → t₁ ∈ Set.Ioo 0 T →
+      s₀ ∈ Set.Icc (0 : ℝ) 1 → s₁ ∈ Set.Icc (0 : ℝ) 1 →
+      (∃ u, p s₀ = τ₀ u) → (∃ u, p s₁ = τ₁ u) →
+      ENNReal.ofReal |t₁ - t₀| ≤ ∫⁻ s in Set.Icc (0 : ℝ) 1,
+        horizontalDensity (q : ℂ → ℂ) p s) :
+    ∀ A : Atlas (q : ℂ → ℂ),
+      ∀ᵐ z ∂(volume.restrict {z : ℂ | 0 < z.im}), z ∈ good (q : ℂ → ℂ) A →
+      ∀ T : ℝ, 0 < T → ∀ σ : ℝ → ℂ, σ 0 = z →
+      IsTrajOn (q : ℂ → ℂ) σ (Set.Icc 0 T) →
+      ENNReal.ofReal T ≤ horizontalDist (q : ℂ → ℂ) (σ 0) (σ T) := by
+  intro A
+  obtain ⟨B⟩ := exists_atlas (qdNeg q).holo
+  filter_upwards [flow_good_neg_ae hΓ hcc q hq0 A B] with z hzimp
+  intro hzg T hT σ hσ0 hσtr
+  have hzim : 0 < z.im := hzg.1
+  have hz0 : (q : ℂ → ℂ) z ≠ 0 := hzg.2.1
+  have hflowae := hzimp hzg
+  have hϑuniv : IsTrajOn (q : ℂ → ℂ) (fun u => A.flow u z) Set.univ :=
+    flow_alltime q.holo A hzg
+  have key : ∀ ϑ : ℝ → ℂ, IsTrajOn (q : ℂ → ℂ) ϑ Set.univ →
+      (∀ u ∈ Set.Icc 0 T, ϑ u = σ u) →
+      (∀ᵐ t ∂(volume : Measure ℝ), ϑ t ∈ good (qdNeg q : ℂ → ℂ) B) →
+      ENNReal.ofReal T ≤ horizontalDist (q : ℂ → ℂ) (σ 0) (σ T) := by
+    intro ϑ hϑ hagree hae
+    have h00 : ϑ 0 = σ 0 := hagree 0 ⟨le_rfl, hT.le⟩
+    have hTT : ϑ T = σ T := hagree T ⟨hT.le, le_rfl⟩
+    rw [← h00, ← hTT]
+    have hinj : Set.InjOn ϑ (Set.Icc 0 T) := by
+      refine traj_injOn q.holo hbigon (m := 1) one_pos ?_
+      exact traj_mono hϑ (Set.subset_univ _)
+    set D : Set ℝ := Set.Ioo 0 T ∩ {t | ϑ t ∈ good (qdNeg q : ℂ → ℂ) B}
+      with hDdef
+    have hDsub : D ⊆ Set.Ioo 0 T := Set.inter_subset_left
+    have hDae : volume ({t | ¬ ϑ t ∈ good (qdNeg q : ℂ → ℂ) B}) = 0 :=
+      ae_iff.mp hae
+    have hDmeet : ∀ α β : ℝ, 0 ≤ α → α < β → β ≤ T →
+        (D ∩ Set.Ioo α β).Nonempty := by
+      intro α β hα hαβ hβT
+      by_contra hemp
+      push Not at hemp
+      have hsub : Set.Ioo α β ⊆ {t | ¬ ϑ t ∈ good (qdNeg q : ℂ → ℂ) B} := by
+        intro t ht hg
+        have hmem : t ∈ D ∩ Set.Ioo α β :=
+          ⟨⟨⟨lt_of_le_of_lt hα ht.1, lt_of_lt_of_le ht.2 hβT⟩, hg⟩, ht⟩
+        rw [hemp] at hmem
+        exact hmem
+      have h1 : volume (Set.Ioo α β) = 0 :=
+        measure_mono_null hsub hDae
+      rw [Real.volume_Ioo] at h1
+      have h2 : (0 : ℝ) < β - α := by linarith
+      rw [ENNReal.ofReal_eq_zero] at h1
+      linarith
+    set τfam : ℝ → ℝ → ℂ := fun t u => B.flow u (ϑ t) with hτfamdef
+    have hτfam : ∀ t ∈ D, IsTrajOn (fun w => -(q : ℂ → ℂ) w) (τfam t) Set.univ ∧
+        τfam t 0 = ϑ t := by
+      intro t ht
+      have hgood : ϑ t ∈ good (qdNeg q : ℂ → ℂ) B := ht.2
+      exact ⟨isTrajOn_congr (fun w => qdNeg_apply q w)
+        (flow_alltime (qdNeg q).holo B hgood), flow_zero B hgood.1 hgood.2.1⟩
+    rw [horizontalDist]
+    refine le_iInf₂ fun p hp => ?_
+    have hcross : ∀ t ∈ D, ∃ s ∈ Set.Icc (0 : ℝ) 1, ∃ u : ℝ,
+        p s = τfam t u := by
+      intro t ht
+      set pC : C(unitInterval, ℂ) := ⟨fun s => p s,
+        hp.cont.comp_continuous continuous_subtype_val (fun s => s.2)⟩ with hpCdef
+      have hϑIci : IsTrajOn (q : ℂ → ℂ) ϑ (Set.Ici (-1 : ℝ)) :=
+        traj_mono hϑ (Set.subset_univ _)
+      have hp0' : pC 0 = ϑ 0 := hp.init
+      have hp1' : pC 1 = ϑ T := hp.final
+      have hpim' : ∀ s : unitInterval, 0 < (pC s).im := fun s =>
+        hp.upper s s.2
+      obtain ⟨s, u, hsu⟩ := competitor_crosses_leaf q.holo hbigon hbigonH hϑIci
+        (by norm_num) hT (hτfam t ht).1 (hDsub ht) (hτfam t ht).2 pC hp0' hp1'
+        hpim' (hjump ϑ (-1) hϑIci (by norm_num) T hT (τfam t) (hτfam t ht).1 t
+          (hDsub ht) (hτfam t ht).2 pC hp0' hp1' hpim')
+      exact ⟨(s : ℝ), s.2, u, hsu⟩
+    -- the squeeze over levels near the window ends
+    have hstep : ∀ n : ℕ, ENNReal.ofReal (T - 2 * (T / (2 * ((n : ℝ) + 2))))
+        ≤ ∫⁻ s in Set.Icc (0 : ℝ) 1, horizontalDensity (q : ℂ → ℂ) p s := by
+      intro n
+      set εn : ℝ := T / (2 * ((n : ℝ) + 2)) with hεndef
+      have hεn : 0 < εn := by positivity
+      have hεnT : εn < T / 2 := by
+        rw [hεndef]
+        rw [div_lt_div_iff₀ (by positivity) (by norm_num)]
+        nlinarith [Nat.cast_nonneg (α := ℝ) n]
+      obtain ⟨t₀, ht₀D, ht₀I⟩ := hDmeet 0 εn le_rfl hεn (by linarith)
+      obtain ⟨t₁, ht₁D, ht₁I⟩ := hDmeet (T - εn) T (by linarith) (by linarith)
+        le_rfl
+      obtain ⟨s₀, hs₀I, u₀, hu₀⟩ := hcross t₀ ht₀D
+      obtain ⟨s₁, hs₁I, u₁, hu₁⟩ := hcross t₁ ht₁D
+      have hbound := hcoarea₄ ϑ hϑ B hae T hT hinj p hp t₀ t₁ s₀ s₁ (τfam t₀)
+        (τfam t₁) (hτfam t₀ ht₀D).1 (hτfam t₁ ht₁D).1 (hτfam t₀ ht₀D).2
+        (hτfam t₁ ht₁D).2 (hDsub ht₀D) (hDsub ht₁D) hs₀I hs₁I ⟨u₀, hu₀⟩
+        ⟨u₁, hu₁⟩
+      have hgap : T - 2 * εn ≤ |t₁ - t₀| := by
+        have h1 : t₀ < εn := ht₀I.2
+        have h2 : T - εn < t₁ := ht₁I.1
+        have h3 : T - 2 * εn ≤ t₁ - t₀ := by linarith
+        exact le_trans h3 (le_abs_self _)
+      exact le_trans (ENNReal.ofReal_le_ofReal hgap) hbound
+    have htend : Filter.Tendsto
+        (fun n : ℕ => ENNReal.ofReal (T - 2 * (T / (2 * ((n : ℝ) + 2)))))
+        Filter.atTop (𝓝 (ENNReal.ofReal T)) := by
+      refine (ENNReal.continuous_ofReal.tendsto T).comp ?_
+      have h1 : Filter.Tendsto (fun n : ℕ => T / (2 * ((n : ℝ) + 2)))
+          Filter.atTop (𝓝 0) := by
+        refine Filter.Tendsto.div_atTop tendsto_const_nhds ?_
+        have h2 : Filter.Tendsto (fun n : ℕ => ((n : ℝ) + 2)) Filter.atTop
+            Filter.atTop :=
+          Filter.tendsto_atTop_add_const_right _ 2 tendsto_natCast_atTop_atTop
+        exact h2.const_mul_atTop (by norm_num)
+      have h3 := h1.const_mul (2 : ℝ)
+      have h4 := (tendsto_const_nhds (x := T)
+        (f := Filter.atTop (α := ℕ))).sub h3
+      simpa using h4
+    exact le_of_tendsto' htend hstep
+  rcases traj_flow_eval q.holo A hzim hz0 hT hσ0 hσtr with hor | hor
+  · exact key (fun u => A.flow u z) hϑuniv (fun u hu => hor u hu) hflowae
+  · have hrev := traj_reverse hϑuniv
+    rw [Set.preimage_univ] at hrev
+    exact key (fun u => A.flow (-u) z) hrev (fun u hu => hor u hu)
+      (ae_neg_volume hflowae)
+
+/-- **The Reich–Strebel main inequality from the three pins**: the bigon exclusions in
+both chiralities and the atlas-threaded two-point leaf-displacement estimate imply the
+main inequality; the winding jump is supplied by the proven crossing theorem. -/
+theorem reich_strebel_of_pins₅ {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
+    (hΓ : IsFuchsianGroup Γ)
+    (hfree : ∀ γ : Γ, (∃ τ : UpperHalfPlane, γ • τ = τ) →
+      ∀ τ' : UpperHalfPlane, γ • τ' = τ')
+    (hcc : CompactSpace (Quotient (MulAction.orbitRel Γ UpperHalfPlane)))
+    (q : QuadraticDifferential Γ) {h hinv : ℂ → ℂ} {κ : ℝ} (hκ : κ < 1)
+    (hqc : IsQCUpper h hinv κ)
+    (hbd : ∀ t : ℝ, Filter.Tendsto h (nhdsWithin (t : ℂ) {z : ℂ | 0 < z.im})
+      (nhds (t : ℂ)))
+    (hcomm : ∀ γ ∈ Γ, ∀ z : ℂ, 0 < z.im →
+      h (moebiusMap γ z) = moebiusMap γ (h z))
+    (hbigon : ∀ (σv τh : ℝ → ℂ) (T s μ : ℝ), 0 < T → 0 ≤ s → 0 < μ →
+      IsTrajOn (q : ℂ → ℂ) σv (Set.Icc (-μ) (T + μ)) →
+      IsTrajOn (fun z => -(q : ℂ → ℂ) z) τh (Set.Icc (-μ) (s + μ)) →
+      τh 0 = σv T → τh s = σv 0 → False)
+    (hbigonH : ∀ (σv τh : ℝ → ℂ) (T s μ : ℝ), 0 < T → 0 ≤ s → 0 < μ →
+      IsTrajOn (fun z => -(q : ℂ → ℂ) z) σv (Set.Icc (-μ) (T + μ)) →
+      IsTrajOn (q : ℂ → ℂ) τh (Set.Icc (-μ) (s + μ)) →
+      τh 0 = σv T → τh s = σv 0 → False)
+    (hcoarea₄ : ∀ ϑ : ℝ → ℂ, IsTrajOn (q : ℂ → ℂ) ϑ Set.univ →
+      ∀ B : Atlas (qdNeg q : ℂ → ℂ),
+      (∀ᵐ t ∂(volume : Measure ℝ), ϑ t ∈ good (qdNeg q : ℂ → ℂ) B) →
+      ∀ T : ℝ, 0 < T → Set.InjOn ϑ (Set.Icc 0 T) →
+      ∀ p : ℝ → ℂ, IsFlatPath p (ϑ 0) (ϑ T) →
+      ∀ (t₀ t₁ s₀ s₁ : ℝ) (τ₀ τ₁ : ℝ → ℂ),
+      IsTrajOn (fun z => -(q : ℂ → ℂ) z) τ₀ Set.univ →
+      IsTrajOn (fun z => -(q : ℂ → ℂ) z) τ₁ Set.univ →
+      τ₀ 0 = ϑ t₀ → τ₁ 0 = ϑ t₁ →
+      t₀ ∈ Set.Ioo 0 T → t₁ ∈ Set.Ioo 0 T →
+      s₀ ∈ Set.Icc (0 : ℝ) 1 → s₁ ∈ Set.Icc (0 : ℝ) 1 →
+      (∃ u, p s₀ = τ₀ u) → (∃ u, p s₁ = τ₁ u) →
+      ENNReal.ofReal |t₁ - t₀| ≤ ∫⁻ s in Set.Icc (0 : ℝ) 1,
+        horizontalDensity (q : ℂ → ℂ) p s) :
+    q.l1Norm ≤ ∫⁻ z in UpperHalfPlane.coe '' dirichletDomain Γ UpperHalfPlane.I,
+      ‖q z‖ₑ * ENNReal.ofReal
+        (‖1 - wirtingerQuotient h z * (q z / (‖q z‖ : ℂ))‖ ^ 2
+          / (1 - ‖wirtingerQuotient h z‖ ^ 2)) := by
+  by_cases hq0 : ∃ z₀ : ℂ, 0 < z₀.im ∧ (q : ℂ → ℂ) z₀ ≠ 0
+  · exact reich_strebel_of_hsep hΓ hfree hcc q hκ hqc hbd hcomm
+      (hsep_final₄ hΓ hcc q hq0 hbigon hbigonH
+        (hjump_of_bigons q.holo hbigon hbigonH) hcoarea₄)
+  · push Not at hq0
+    have hmeas : MeasurableSet
+        (UpperHalfPlane.coe '' dirichletDomain Γ UpperHalfPlane.I) :=
+      (isCompact_domain hΓ hfree hcc).measurableSet
+    rw [l1Norm_eq_zero q hmeas hq0]
+    exact zero_le _
+
+/-- **The Reich–Strebel main inequality from the nonnegative-winding principle.** Let
+`Γ` be a cocompact free Fuchsian group, `q` an automorphic quadratic differential, and
+`h` an upper-half-plane quasiconformal map commuting with `Γ` elementwise whose
+boundary limits are the identity on `ℝ`. Then the `L¹` mass of `q` is dominated by the
+integral, over the Dirichlet domain, of `|q| · ‖1 − μ_h q/|q|‖²/(1 − ‖μ_h‖²)` formed
+from the Wirtinger quotient of `h`. -/
+theorem rs_main_of_principle
+    {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)} (hΓ : IsFuchsianGroup Γ)
+    (hfree : ∀ γ : Γ, (∃ τ : UpperHalfPlane, γ • τ = τ) →
+      ∀ τ' : UpperHalfPlane, γ • τ' = τ')
+    (hcc : CompactSpace (Quotient (MulAction.orbitRel Γ UpperHalfPlane)))
+    (q : QuadraticDifferential Γ) {h hinv : ℂ → ℂ} {κ : ℝ} (hκ : κ < 1)
+    (hqc : IsQCUpper h hinv κ)
+    (hbd : ∀ t : ℝ, Filter.Tendsto h (nhdsWithin (t : ℂ) {z : ℂ | 0 < z.im})
+      (nhds (t : ℂ)))
+    (hcomm : ∀ γ ∈ Γ, ∀ z : ℂ, 0 < z.im →
+      h (moebiusMap γ z) = moebiusMap γ (h z))
+    (hW : NonnegWindingPrinciple₂) :
+    q.l1Norm ≤ ∫⁻ z in UpperHalfPlane.coe '' dirichletDomain Γ UpperHalfPlane.I,
+      ‖q z‖ₑ * ENNReal.ofReal
+        (‖1 - wirtingerQuotient h z * (q z / (‖q z‖ : ℂ))‖ ^ 2
+          / (1 - ‖wirtingerQuotient h z‖ ^ 2)) := by
+  have hbigon : ∀ (sv th : ℝ → ℂ) (T s μ : ℝ), 0 < T → 0 ≤ s → 0 < μ →
+      IsTrajOn (q : ℂ → ℂ) sv (Set.Icc (-μ) (T + μ)) →
+      IsTrajOn (fun z => -(q : ℂ → ℂ) z) th (Set.Icc (-μ) (s + μ)) →
+      th 0 = sv T → th s = sv 0 → False := by
+    intro sv th T s μ hT hs hμ hσ hτ hc1 hc2
+    have hq0 : ∃ z₀ : ℂ, 0 < z₀.im ∧ (q : ℂ → ℂ) z₀ ≠ 0 := by
+      obtain ⟨U, -, hpU, hUH, hUne, -⟩ :=
+        hσ.chart 0 ⟨by linarith, by linarith⟩
+      exact ⟨sv 0, hUH hpU, hUne _ hpU⟩
+    exact bigon_principle₂ q.holo hq0 hW sv th T s μ hT hs hμ hσ hτ hc1 hc2
+  have hbigonH : ∀ (sv th : ℝ → ℂ) (T s μ : ℝ), 0 < T → 0 ≤ s → 0 < μ →
+      IsTrajOn (fun z => -(q : ℂ → ℂ) z) sv (Set.Icc (-μ) (T + μ)) →
+      IsTrajOn (q : ℂ → ℂ) th (Set.Icc (-μ) (s + μ)) →
+      th 0 = sv T → th s = sv 0 → False := by
+    intro sv th T s μ hT hs hμ hσ hτ hc1 hc2
+    have hq0 : ∃ z₀ : ℂ, 0 < z₀.im ∧ (q : ℂ → ℂ) z₀ ≠ 0 := by
+      obtain ⟨U, -, hpU, hUH, hUne, -⟩ :=
+        hτ.chart 0 ⟨by linarith, by linarith⟩
+      exact ⟨th 0, hUH hpU, hUne _ hpU⟩
+    exact bigon_principleH₂ q.holo hq0 hW sv th T s μ hT hs hμ hσ hτ hc1 hc2
+  exact reich_strebel_of_pins₅ hΓ hfree hcc q hκ hqc hbd hcomm hbigon hbigonH
+    (hcoarea_of_bigons q hbigon hbigonH)
+
+section PinDischarge
+
+open unitInterval
+
+/-- **First variation at a periodic minimum**: a function with wrap-matched values and
+derivatives on the period has vanishing derivative at any minimum over the period. -/
+theorem loop_min_deriv_zero {φ ψ : ℝ → ℝ}
+    (hd : ∀ t ∈ Set.Icc (0 : ℝ) 1, HasDerivAt φ (ψ t) t)
+    (hφcl : φ 0 = φ 1) (hψcl : ψ 1 = ψ 0) {t₀ : ℝ}
+    (ht₀ : t₀ ∈ Set.Icc (0 : ℝ) 1)
+    (hmin : ∀ t ∈ Set.Icc (0 : ℝ) 1, φ t₀ ≤ φ t) :
+    ψ t₀ = 0 := by
+  rcases lt_or_eq_of_le ht₀.1 with h0 | h0
+  · rcases lt_or_eq_of_le ht₀.2 with h1 | h1
+    · -- interior minimum
+      have hloc : IsLocalMin φ t₀ := by
+        have hmem : Set.Icc (0 : ℝ) 1 ∈ nhds t₀ := Icc_mem_nhds h0 h1
+        exact Filter.eventually_iff_exists_mem.mpr ⟨_, hmem, fun t ht => hmin t ht⟩
+      exact hloc.hasDerivAt_eq_zero (hd t₀ ht₀)
+    · -- minimum at the right endpoint: both endpoints are minima
+      have hm0 : φ 0 = φ t₀ := by rw [hφcl, h1]
+      have hge : 0 ≤ ψ 0 := by
+        have h1' : HasDerivWithinAt φ (ψ 0) (Set.Ioc 0 1) 0 :=
+          (hd 0 (by norm_num)).hasDerivWithinAt
+        rw [hasDerivWithinAt_iff_tendsto_slope] at h1'
+        have h2 : Set.Ioc (0 : ℝ) 1 \ {0} = Set.Ioc 0 1 := by
+          ext x
+          simp only [Set.mem_diff, Set.mem_Ioc, Set.mem_singleton_iff]
+          exact ⟨fun h => h.1, fun h => ⟨h, by linarith [h.1]⟩⟩
+        rw [h2] at h1'
+        haveI := left_nhdsWithin_Ioc_neBot (by norm_num : (0 : ℝ) < 1)
+        refine ge_of_tendsto h1' ?_
+        filter_upwards [self_mem_nhdsWithin] with t ht
+        rw [slope_def_field]
+        have h3 : φ 0 ≤ φ t := by rw [hm0]; exact hmin t ⟨ht.1.le, ht.2⟩
+        have h4 : 0 < t - 0 := by linarith [ht.1]
+        exact div_nonneg (by linarith) (by linarith)
+      have hle : ψ 1 ≤ 0 := by
+        have h1' : HasDerivWithinAt φ (ψ 1) (Set.Ico 0 1) 1 :=
+          (hd 1 (by norm_num)).hasDerivWithinAt
+        rw [hasDerivWithinAt_iff_tendsto_slope] at h1'
+        have h2 : Set.Ico (0 : ℝ) 1 \ {1} = Set.Ico 0 1 := by
+          ext x
+          simp only [Set.mem_diff, Set.mem_Ico, Set.mem_singleton_iff]
+          exact ⟨fun h => h.1, fun h => ⟨h, by linarith [h.2]⟩⟩
+        rw [h2] at h1'
+        haveI := right_nhdsWithin_Ico_neBot (by norm_num : (0 : ℝ) < 1)
+        refine le_of_tendsto h1' ?_
+        filter_upwards [self_mem_nhdsWithin] with t ht
+        rw [slope_def_field]
+        have h3 : φ 1 ≤ φ t := by rw [← h1]; exact hmin t ⟨ht.1, ht.2.le⟩
+        have h4 : t - 1 < 0 := by linarith [ht.2]
+        exact div_nonpos_of_nonneg_of_nonpos (by linarith) (by linarith)
+      rw [hψcl] at hle
+      have : ψ 0 = 0 := le_antisymm hle hge
+      rw [h1, hψcl]
+      exact this
+  · -- minimum at the left endpoint: symmetric squeeze
+    have hm1 : φ 1 = φ t₀ := by rw [← hφcl, h0]
+    have hge : 0 ≤ ψ 0 := by
+      have h1' : HasDerivWithinAt φ (ψ 0) (Set.Ioc 0 1) 0 :=
+        (hd 0 (by norm_num)).hasDerivWithinAt
+      rw [hasDerivWithinAt_iff_tendsto_slope] at h1'
+      have h2 : Set.Ioc (0 : ℝ) 1 \ {0} = Set.Ioc 0 1 := by
+        ext x
+        simp only [Set.mem_diff, Set.mem_Ioc, Set.mem_singleton_iff]
+        exact ⟨fun h => h.1, fun h => ⟨h, by linarith [h.1]⟩⟩
+      rw [h2] at h1'
+      haveI := left_nhdsWithin_Ioc_neBot (by norm_num : (0 : ℝ) < 1)
+      refine ge_of_tendsto h1' ?_
+      filter_upwards [self_mem_nhdsWithin] with t ht
+      rw [slope_def_field]
+      have h3 : φ 0 ≤ φ t := by rw [h0]; exact hmin t ⟨ht.1.le, ht.2⟩
+      have h4 : 0 < t - 0 := by linarith [ht.1]
+      exact div_nonneg (by linarith) (by linarith)
+    have hle : ψ 1 ≤ 0 := by
+      have h1' : HasDerivWithinAt φ (ψ 1) (Set.Ico 0 1) 1 :=
+        (hd 1 (by norm_num)).hasDerivWithinAt
+      rw [hasDerivWithinAt_iff_tendsto_slope] at h1'
+      have h2 : Set.Ico (0 : ℝ) 1 \ {1} = Set.Ico 0 1 := by
+        ext x
+        simp only [Set.mem_diff, Set.mem_Ico, Set.mem_singleton_iff]
+        exact ⟨fun h => h.1, fun h => ⟨h, by linarith [h.2]⟩⟩
+      rw [h2] at h1'
+      haveI := right_nhdsWithin_Ico_neBot (by norm_num : (0 : ℝ) < 1)
+      refine le_of_tendsto h1' ?_
+      filter_upwards [self_mem_nhdsWithin] with t ht
+      rw [slope_def_field]
+      have h3 : φ 1 ≤ φ t := by rw [hm1]; exact hmin t ⟨ht.1, ht.2.le⟩
+      have h4 : t - 1 < 0 := by linarith [ht.2]
+      exact div_nonpos_of_nonneg_of_nonpos (by linarith) (by linarith)
+    rw [hψcl] at hle
+    rw [← h0, le_antisymm hle hge]
+
+/-- **Winding under recentering**: the winding of a closed curve about a point equals the
+winding of the recentered curve about the origin. -/
+theorem winding_shift {γ : C(I, ℂ)} {p : ℂ} (hcl : γ 0 = γ 1)
+    (hne : ∀ t : I, γ t ≠ p) (A : C(I, ℂ)) (hA : ∀ t : I, A t = γ t - p) :
+    windingNumber A 0 = windingNumber γ p := by
+  have hclA : A 0 = A 1 := by rw [hA 0, hA 1, hcl]
+  have hneA : ∀ t : I, A t ≠ 0 := fun t => by
+    rw [hA t]
+    exact sub_ne_zero.mpr (hne t)
+  have hs : shiftedCurve γ p = shiftedCurve A 0 := by
+    apply ContinuousMap.ext
+    intro t
+    have h1 : shiftedCurve A 0 t = A t - 0 := by simp [shiftedCurve]
+    have h2 : shiftedCurve γ p t = γ t - p := by simp [shiftedCurve]
+    rw [h1, h2, hA t, sub_zero]
+  have hsne : ∀ t : I, shiftedCurve γ p t ≠ 0 := by
+    intro t
+    have h2 : shiftedCurve γ p t = γ t - p := by simp [shiftedCurve]
+    rw [h2]
+    exact sub_ne_zero.mpr (hne t)
+  obtain ⟨L, hL⟩ := exists_isLogLiftOf (shiftedCurve γ p) hsne
+  have hspec1 := windingNumber_spec hcl hne hL
+  have hL' : IsLogLiftOf L (shiftedCurve A 0) := by
+    rw [← hs]
+    exact hL
+  have hspec2 := windingNumber_spec hclA hneA hL'
+  rw [hspec1] at hspec2
+  have h2πi : (2 * (Real.pi : ℂ) * Complex.I : ℂ) ≠ 0 :=
+    mul_ne_zero (mul_ne_zero two_ne_zero
+      (Complex.ofReal_ne_zero.mpr Real.pi_ne_zero)) Complex.I_ne_zero
+  have hcan := mul_left_cancel₀ h2πi hspec2
+  exact_mod_cast hcan.symm
+
+/-- **Normal decomposition**: a vector orthogonal to a nonzero vector is a real multiple
+of its quarter-turn rotation. -/
+theorem normal_decomp {w v : ℂ} (hv : v ≠ 0)
+    (h : w.re * v.re + w.im * v.im = 0) :
+    ∃ s : ℝ, w = (s : ℂ) * (Complex.I * v) := by
+  have hns : (0 : ℝ) < Complex.normSq v := Complex.normSq_pos.mpr hv
+  have hns' : Complex.normSq v ≠ 0 := ne_of_gt hns
+  set s := (w.im * v.re - w.re * v.im) / Complex.normSq v with hsdef
+  refine ⟨s, ?_⟩
+  have hIv : (Complex.I * v).re = -v.im := by simp [Complex.mul_re]
+  have hIv' : (Complex.I * v).im = v.re := by simp [Complex.mul_im]
+  apply Complex.ext
+  · rw [Complex.mul_re, Complex.ofReal_re, Complex.ofReal_im, hIv, hIv', zero_mul,
+      sub_zero, hsdef, div_mul_eq_mul_div, eq_div_iff hns', Complex.normSq_apply]
+    linear_combination (v.re : ℝ) * h
+  · rw [Complex.mul_im, Complex.ofReal_re, Complex.ofReal_im, hIv, hIv', zero_mul,
+      add_zero, hsdef, div_mul_eq_mul_div, eq_div_iff hns', Complex.normSq_apply]
+    linear_combination (v.im : ℝ) * h
+
+/-- **Derivative gluing at a seam**: two functions with equal value and equal derivative
+at a point glue along it to a differentiable piecewise function. -/
+theorem glue_deriv {F₁ F₂ : ℝ → ℂ} {d : ℂ} {a : ℝ}
+    (h1 : HasDerivAt F₁ d a) (h2 : HasDerivAt F₂ d a) (heq : F₁ a = F₂ a) :
+    HasDerivAt (fun t => if t ≤ a then F₁ t else F₂ t) d a := by
+  have hIic : HasDerivWithinAt (fun t => if t ≤ a then F₁ t else F₂ t) d (Set.Iic a) a := by
+    refine (h1.hasDerivWithinAt).congr ?_ ?_
+    · intro y hy
+      rw [if_pos (Set.mem_Iic.mp hy)]
+    · rw [if_pos le_rfl]
+  have hIci : HasDerivWithinAt (fun t => if t ≤ a then F₁ t else F₂ t) d (Set.Ici a) a := by
+    refine (h2.hasDerivWithinAt).congr ?_ ?_
+    · intro y hy
+      rcases eq_or_lt_of_le (Set.mem_Ici.mp hy) with h | h
+      · rw [if_pos h.symm.le, ← h, heq]
+      · rw [if_neg (not_le.mpr h)]
+    · rw [if_pos le_rfl, heq]
+  have hu := hIic.union hIci
+  rw [Set.Iic_union_Ici] at hu
+  exact hasDerivWithinAt_univ.mp hu
+
+/-- **Rebased derivative**: the wrap-shift of a closed curve with wrap-matched derivative
+differentiates to the wrap-shift of the derivative throughout the period. -/
+theorem rebase_deriv {ρ g : ℝ → ℂ} {c : ℝ}
+    (hd : ∀ t ∈ Set.Icc (0 : ℝ) 1, HasDerivAt ρ (g t) t)
+    (hcl : ρ 0 = ρ 1) (hgcl : g 1 = g 0) (hc : c ∈ Set.Icc (0 : ℝ) 1) :
+    ∀ t ∈ Set.Icc (0 : ℝ) 1,
+      HasDerivAt (fun u => if u + c ≤ 1 then ρ (u + c) else ρ (u + c - 1))
+        (if t + c ≤ 1 then g (t + c) else g (t + c - 1)) t := by
+  intro t ht
+  have hfun2 : (fun x : ℝ => ρ (x + (c - 1))) = fun x => ρ (x + c - 1) := by
+    funext x
+    congr 1
+    ring
+  rcases lt_trichotomy (t + c) 1 with hlt | heq | hgt
+  · have hd1 : HasDerivAt (fun u => ρ (u + c)) (g (t + c)) t :=
+      HasDerivAt.comp_add_const t c
+        (hd (t + c) ⟨by linarith [ht.1, hc.1], le_of_lt hlt⟩)
+    rw [if_pos (le_of_lt hlt)]
+    refine hd1.congr_of_eventuallyEq ?_
+    have hmem : Set.Iio (1 - c) ∈ nhds t := Iio_mem_nhds (by linarith)
+    filter_upwards [hmem] with u hu
+    rw [if_pos (by linarith [Set.mem_Iio.mp hu])]
+  · have hF1 : HasDerivAt (fun u => ρ (u + c)) (g 1) t := by
+      have h0' : HasDerivAt ρ (g 1) (t + c) := by
+        rw [heq]
+        exact hd 1 ⟨zero_le_one, le_refl 1⟩
+      exact HasDerivAt.comp_add_const t c h0'
+    have hF2 : HasDerivAt (fun u => ρ (u + c - 1)) (g 1) t := by
+      have h0' : HasDerivAt ρ (g 0) (t + (c - 1)) := by
+        rw [show t + (c - 1) = 0 by linarith]
+        exact hd 0 ⟨le_refl 0, zero_le_one⟩
+      have h1' := HasDerivAt.comp_add_const t (c - 1) h0'
+      rw [hfun2] at h1'
+      rw [hgcl]
+      exact h1'
+    have heqv : (fun u => ρ (u + c)) t = (fun u => ρ (u + c - 1)) t := by
+      have h1 : t + c = 1 := heq
+      have h2 : t + c - 1 = 0 := by linarith
+      change ρ (t + c) = ρ (t + c - 1)
+      rw [h2, h1]
+      exact hcl.symm
+    have hglue := glue_deriv hF1 hF2 heqv
+    have hfun : (fun u : ℝ => if u + c ≤ 1 then ρ (u + c) else ρ (u + c - 1))
+        = fun u => if u ≤ t then ρ (u + c) else ρ (u + c - 1) := by
+      funext u
+      by_cases hu : u + c ≤ 1
+      · rw [if_pos hu, if_pos (by linarith)]
+      · rw [if_neg hu, if_neg (by intro hle; exact hu (by linarith))]
+    rw [hfun, if_pos (le_of_eq heq), heq]
+    exact hglue
+  · have hd2 : HasDerivAt (fun u => ρ (u + c - 1)) (g (t + c - 1)) t := by
+      have h0' : HasDerivAt ρ (g (t + c - 1)) (t + (c - 1)) := by
+        rw [show t + (c - 1) = t + c - 1 by ring]
+        exact hd (t + c - 1) ⟨by linarith, by linarith [ht.2, hc.2]⟩
+      have h1' := HasDerivAt.comp_add_const t (c - 1) h0'
+      rw [hfun2] at h1'
+      exact h1'
+    rw [if_neg (not_le.mpr hgt)]
+    refine hd2.congr_of_eventuallyEq ?_
+    have hmem : Set.Ioi (1 - c) ∈ nhds t := Ioi_mem_nhds (by linarith)
+    filter_upwards [hmem] with u hu
+    rw [if_neg (by intro hle; linarith [Set.mem_Ioi.mp hu])]
+
+/-- The wrapped shift keeps the period. -/
+theorem wrap_mem {t c : ℝ} (ht : t ∈ Set.Icc (0 : ℝ) 1) (hc : c ∈ Set.Icc (0 : ℝ) 1) :
+    (if t + c ≤ 1 then t + c else t + c - 1) ∈ Set.Icc (0 : ℝ) 1 := by
+  by_cases h : t + c ≤ 1
+  · rw [if_pos h]
+    exact ⟨by linarith [ht.1, hc.1], h⟩
+  · rw [if_neg h]
+    rw [not_le] at h
+    exact ⟨by linarith, by linarith [ht.2, hc.2]⟩
+
+/-- The wrap-shift of a function is the function at the wrapped time. -/
+theorem rebase_val (ρ : ℝ → ℂ) {t c : ℝ} :
+    (if t + c ≤ 1 then ρ (t + c) else ρ (t + c - 1))
+      = ρ (if t + c ≤ 1 then t + c else t + c - 1) := by
+  by_cases h : t + c ≤ 1
+  · rw [if_pos h, if_pos h]
+  · rw [if_neg h, if_neg h]
+
+/-- The wrap-shift of a closed loop is closed. -/
+theorem rebase_closure {ρ : ℝ → ℂ} {c : ℝ} (hcl : ρ 0 = ρ 1)
+    (hc : c ∈ Set.Icc (0 : ℝ) 1) :
+    (if (0 : ℝ) + c ≤ 1 then ρ (0 + c) else ρ (0 + c - 1))
+      = (if (1 : ℝ) + c ≤ 1 then ρ (1 + c) else ρ (1 + c - 1)) := by
+  rw [if_pos (by linarith [hc.2] : (0 : ℝ) + c ≤ 1)]
+  by_cases h : (1 : ℝ) + c ≤ 1
+  · have hc0 : c = 0 := le_antisymm (by linarith) hc.1
+    rw [if_pos h, hc0]
+    norm_num
+    exact hcl
+  · rw [if_neg h, show (1 : ℝ) + c - 1 = 0 + c by ring]
+
+/-- The wrap-shift matches at the endpoints in the reversed order as well. -/
+theorem rebase_gclosure {g : ℝ → ℂ} {c : ℝ} (hgcl : g 1 = g 0)
+    (hc : c ∈ Set.Icc (0 : ℝ) 1) :
+    (if (1 : ℝ) + c ≤ 1 then g (1 + c) else g (1 + c - 1))
+      = (if (0 : ℝ) + c ≤ 1 then g (0 + c) else g (0 + c - 1)) := by
+  rw [if_pos (by linarith [hc.2] : (0 : ℝ) + c ≤ 1)]
+  by_cases h : (1 : ℝ) + c ≤ 1
+  · have hc0 : c = 0 := le_antisymm (by linarith) hc.1
+    rw [if_pos h, hc0]
+    norm_num
+    exact hgcl
+  · rw [if_neg h, show (1 : ℝ) + c - 1 = 0 + c by ring]
+
+/-- **Rebased continuity**: the wrap-shift of a continuous loop with matched endpoint
+values is continuous on the period. -/
+theorem rebase_gcont {g : ℝ → ℂ} {c : ℝ} (hgc : ContinuousOn g (Set.Icc 0 1))
+    (hgcl : g 1 = g 0) (hc : c ∈ Set.Icc (0 : ℝ) 1) :
+    ContinuousOn (fun u => if u + c ≤ 1 then g (u + c) else g (u + c - 1))
+      (Set.Icc 0 1) := by
+  set G : ℝ → ℂ := fun x => g (min 1 (max 0 x)) with hGdef
+  have hGid : ∀ x ∈ Set.Icc (0 : ℝ) 1, G x = g x := by
+    intro x hx
+    change g (min 1 (max 0 x)) = g x
+    rw [max_eq_right hx.1, min_eq_right hx.2]
+  have hGc : Continuous G := by
+    refine hgc.comp_continuous (continuous_const.min (continuous_const.max continuous_id))
+      fun x => ?_
+    exact ⟨le_min zero_le_one (le_max_left 0 x), min_le_left 1 _⟩
+  have hcont : Continuous fun u => if u + c ≤ 1 then G (u + c) else G (u + c - 1) := by
+    refine Continuous.if_le (hGc.comp (continuous_id.add continuous_const))
+      (hGc.comp ((continuous_id.add continuous_const).sub continuous_const))
+      (continuous_id.add continuous_const) continuous_const fun x hx => ?_
+    rw [hx, show (1 : ℝ) - 1 = 0 by norm_num]
+    have h1 : G 1 = g 1 := hGid 1 ⟨zero_le_one, le_refl 1⟩
+    have h0 : G 0 = g 0 := hGid 0 ⟨le_refl 0, zero_le_one⟩
+    rw [h1, h0, hgcl]
+  refine hcont.continuousOn.congr fun u hu => ?_
+  by_cases h : u + c ≤ 1
+  · rw [if_pos h, if_pos h, hGid (u + c) ⟨by linarith [hu.1, hc.1], h⟩]
+  · rw [if_neg h, if_neg h]
+    rw [not_le] at h
+    rw [hGid (u + c - 1) ⟨by linarith, by linarith [hu.2, hc.2]⟩]
+
+/-- **Rebased injectivity**: the wrap-shift of a loop injective on the fundamental
+half-open period is injective there as well. -/
+theorem rebase_inj {ρ : ℝ → ℂ} {c : ℝ} (hcl : ρ 0 = ρ 1)
+    (hinj : Set.InjOn ρ (Set.Ico 0 1)) (hc : c ∈ Set.Ico (0 : ℝ) 1) :
+    Set.InjOn (fun u => if u + c ≤ 1 then ρ (u + c) else ρ (u + c - 1))
+      (Set.Ico 0 1) := by
+  have hval : ∀ z ∈ Set.Ico (0 : ℝ) 1,
+      (if z + c ≤ 1 then ρ (z + c) else ρ (z + c - 1))
+        = ρ (if z + c < 1 then z + c else z + c - 1) := by
+    intro z hz
+    by_cases h1 : z + c < 1
+    · rw [if_pos (le_of_lt h1), if_pos h1]
+    · rw [if_neg h1]
+      rw [not_lt] at h1
+      by_cases h2 : z + c ≤ 1
+      · have he : z + c = 1 := le_antisymm h2 h1
+        rw [if_pos h2, he, show (1 : ℝ) - 1 = 0 by norm_num]
+        exact hcl.symm
+      · rw [if_neg h2]
+  have hmem : ∀ z ∈ Set.Ico (0 : ℝ) 1,
+      (if z + c < 1 then z + c else z + c - 1) ∈ Set.Ico (0 : ℝ) 1 := by
+    intro z hz
+    by_cases h : z + c < 1
+    · rw [if_pos h]
+      exact ⟨by linarith [hz.1, hc.1], h⟩
+    · rw [if_neg h]
+      rw [not_lt] at h
+      exact ⟨by linarith, by linarith [hz.2, hc.2]⟩
+  intro x hx y hy hxy
+  have hxy' : ρ (if x + c < 1 then x + c else x + c - 1)
+      = ρ (if y + c < 1 then y + c else y + c - 1) := by
+    rw [← hval x hx, ← hval y hy]
+    exact hxy
+  have hww := hinj (hmem x hx) (hmem y hy) hxy'
+  by_cases h1 : x + c < 1 <;> by_cases h2 : y + c < 1
+  · rw [if_pos h1, if_pos h2] at hww
+    linarith
+  · rw [if_pos h1, if_neg h2] at hww
+    rw [not_lt] at h2
+    linarith [hx.1, hy.2]
+  · rw [if_neg h1, if_pos h2] at hww
+    rw [not_lt] at h1
+    linarith [hy.1, hx.2]
+  · rw [if_neg h1, if_neg h2] at hww
+    linarith
+
+/-- **Rebased winding**: the wrap-shift of a closed loop winds about any off-track point
+exactly as the loop does. -/
+theorem rebase_winding {ρ : ℝ → ℂ} {c : ℝ} {ζ : ℂ}
+    (hc' : Continuous fun t : I => ρ ((t : ℝ)))
+    (hcl : ρ 0 = ρ 1) (hc : c ∈ Set.Icc (0 : ℝ) 1)
+    (hne : ∀ t : I, ρ ((t : ℝ)) ≠ ζ)
+    (hw : Continuous fun t : I =>
+      if ((t : ℝ)) + c ≤ 1 then ρ (((t : ℝ)) + c) else ρ (((t : ℝ)) + c - 1)) :
+    windingNumber (⟨fun t : I =>
+        if ((t : ℝ)) + c ≤ 1 then ρ (((t : ℝ)) + c) else ρ (((t : ℝ)) + c - 1), hw⟩ : C(I, ℂ)) ζ
+      = windingNumber (⟨fun t : I => ρ ((t : ℝ)), hc'⟩ : C(I, ℂ)) ζ := by
+  set γρ : C(I, ℂ) := ⟨fun t : I => ρ ((t : ℝ)), hc'⟩ with hγdef
+  have hclγ : γρ 0 = γρ 1 := by
+    change ρ (((0:I) : ℝ)) = ρ (((1:I) : ℝ))
+    rw [show (((0:I) : ℝ)) = 0 from rfl, show (((1:I) : ℝ)) = 1 from rfl]
+    exact hcl
+  have hkey : (⟨fun t : I =>
+      if ((t : ℝ)) + c ≤ 1 then ρ (((t : ℝ)) + c) else ρ (((t : ℝ)) + c - 1), hw⟩ : C(I, ℂ))
+      = ⟨fun t : I => rotateLoop γρ c ((t : ℝ)),
+          (rotateLoop_continuous γρ hclγ).comp continuous_subtype_val⟩ := by
+    apply ContinuousMap.ext
+    intro t
+    change (if ((t : ℝ)) + c ≤ 1 then ρ (((t : ℝ)) + c) else ρ (((t : ℝ)) + c - 1))
+      = rotateLoop γρ c ((t : ℝ))
+    by_cases h : ((t : ℝ)) + c ≤ 1
+    · rw [if_pos h, rotateLoop_apply_le γρ h]
+      have hmem : ((t : ℝ)) + c ∈ Set.Icc (0 : ℝ) 1 := ⟨by linarith [t.2.1, hc.1], h⟩
+      change _ = ρ ((Set.projIcc 0 1 zero_le_one (((t : ℝ)) + c) : I) : ℝ)
+      rw [Set.projIcc_of_mem zero_le_one hmem]
+    · rw [if_neg h, rotateLoop_apply_gt γρ h]
+      rw [not_le] at h
+      have hmem : ((t : ℝ)) + c - 1 ∈ Set.Icc (0 : ℝ) 1 :=
+        ⟨by linarith, by linarith [t.2.2, hc.2]⟩
+      change _ = ρ ((Set.projIcc 0 1 zero_le_one (((t : ℝ)) + c - 1) : I) : ℝ)
+      rw [Set.projIcc_of_mem zero_le_one hmem]
+  rw [hkey]
+  exact winding_rotate hclγ hne hc
+
+/-- **Nearest-point orthogonality**: at a parameter of minimal squared distance from a
+point to a closed curve with wrap-matched derivative, the joining vector is orthogonal
+to the velocity. -/
+theorem nearest_orth {ρ g : ℝ → ℂ} {ζ : ℂ} {t₀ : ℝ}
+    (hd : ∀ t ∈ Set.Icc (0 : ℝ) 1, HasDerivAt ρ (g t) t)
+    (hcl : ρ 0 = ρ 1) (hgcl : g 1 = g 0)
+    (ht₀ : t₀ ∈ Set.Icc (0 : ℝ) 1)
+    (hmin : ∀ t ∈ Set.Icc (0 : ℝ) 1,
+      Complex.normSq (ρ t₀ - ζ) ≤ Complex.normSq (ρ t - ζ)) :
+    (ρ t₀ - ζ).re * (g t₀).re + (ρ t₀ - ζ).im * (g t₀).im = 0 := by
+  set φ : ℝ → ℝ := fun t => Complex.normSq (ρ t - ζ) with hφdef
+  set ψ : ℝ → ℝ := fun t =>
+    2 * ((ρ t - ζ).re * (g t).re + (ρ t - ζ).im * (g t).im) with hψdef
+  have hdφ : ∀ t ∈ Set.Icc (0 : ℝ) 1, HasDerivAt φ (ψ t) t := by
+    intro t ht
+    have hsub : HasDerivAt (fun u => ρ u - ζ) (g t) t := (hd t ht).sub_const ζ
+    have hre : HasDerivAt (fun u => (ρ u - ζ).re) ((g t).re) t :=
+      Complex.reCLM.hasFDerivAt.comp_hasDerivAt t hsub
+    have him : HasDerivAt (fun u => (ρ u - ζ).im) ((g t).im) t :=
+      Complex.imCLM.hasFDerivAt.comp_hasDerivAt t hsub
+    have hpoly : HasDerivAt (fun u => (ρ u - ζ).re ^ 2 + (ρ u - ζ).im ^ 2)
+        (2 * (ρ t - ζ).re ^ 1 * (g t).re + 2 * (ρ t - ζ).im ^ 1 * (g t).im) t :=
+      (hre.pow 2).add (him.pow 2)
+    have hfun : φ = fun u => (ρ u - ζ).re ^ 2 + (ρ u - ζ).im ^ 2 := by
+      funext u
+      change Complex.normSq (ρ u - ζ) = _
+      rw [Complex.normSq_apply]
+      ring
+    have hval : ψ t = 2 * (ρ t - ζ).re ^ 1 * (g t).re
+        + 2 * (ρ t - ζ).im ^ 1 * (g t).im := by
+      change 2 * ((ρ t - ζ).re * (g t).re + (ρ t - ζ).im * (g t).im) = _
+      ring
+    rw [hfun, hval]
+    exact hpoly
+  have hφcl : φ 0 = φ 1 := by
+    change Complex.normSq (ρ 0 - ζ) = Complex.normSq (ρ 1 - ζ)
+    rw [hcl]
+  have hψcl : ψ 1 = ψ 0 := by
+    change 2 * ((ρ 1 - ζ).re * (g 1).re + (ρ 1 - ζ).im * (g 1).im)
+      = 2 * ((ρ 0 - ζ).re * (g 0).re + (ρ 0 - ζ).im * (g 0).im)
+    rw [← hcl, hgcl]
+  have hz := loop_min_deriv_zero hdφ hφcl hψcl ht₀ hmin
+  have hz' : 2 * ((ρ t₀ - ζ).re * (g t₀).re + (ρ t₀ - ζ).im * (g t₀).im) = 0 := hz
+  linarith
+
+/-- **Segment reach**: the winding of a loop about an off-track point transports along
+the nearest-point normal segment and then along the offset track to the winding about
+some admissibly small basepoint offset. -/
+theorem reach {ρ g : ℝ → ℂ} {ζ : ℂ} {ε₁ : ℝ}
+    (hd : ∀ t ∈ Set.Icc (0 : ℝ) 1, HasDerivAt ρ (g t) t)
+    (hgc : ContinuousOn g (Set.Icc 0 1))
+    (hcl : ρ 0 = ρ 1) (hgcl : g 1 = g 0)
+    (hgne : ∀ u ∈ Set.Icc (0 : ℝ) 1, g u ≠ 0)
+    (hc' : Continuous fun t : I => ρ ((t : ℝ)))
+    (hζ : ∀ t : I, ρ ((t : ℝ)) ≠ ζ) (hε₁ : 0 < ε₁)
+    (hdisj : ∀ ε' : ℝ, 0 < |ε'| → |ε'| ≤ ε₁ →
+      ∀ s ∈ Set.Icc (0 : ℝ) 1, ∀ t ∈ Set.Icc (0 : ℝ) 1,
+        ρ t ≠ ρ s - (ε' : ℂ) * (Complex.I * g s)) :
+    ∃ ε' : ℝ, 0 < |ε'| ∧ |ε'| ≤ ε₁ ∧
+      windingNumber (⟨fun t : I => ρ ((t : ℝ)), hc'⟩ : C(I, ℂ)) ζ
+        = windingNumber (⟨fun t : I => ρ ((t : ℝ)), hc'⟩ : C(I, ℂ))
+            (ρ 0 - (ε' : ℂ) * (Complex.I * g 0)) := by
+  have hρc : ContinuousOn ρ (Set.Icc 0 1) := fun t ht =>
+    (hd t ht).continuousAt.continuousWithinAt
+  have hφc : ContinuousOn (fun t => Complex.normSq (ρ t - ζ)) (Set.Icc 0 1) :=
+    Complex.continuous_normSq.comp_continuousOn (hρc.sub continuousOn_const)
+  obtain ⟨t₀, ht₀, hminOn⟩ := isCompact_Icc.exists_isMinOn
+    (Set.nonempty_Icc.mpr zero_le_one) hφc
+  have hmin : ∀ t ∈ Set.Icc (0 : ℝ) 1,
+      Complex.normSq (ρ t₀ - ζ) ≤ Complex.normSq (ρ t - ζ) := fun t ht => hminOn ht
+  have horth := nearest_orth hd hcl hgcl ht₀ hmin
+  have horth' : (ζ - ρ t₀).re * (g t₀).re + (ζ - ρ t₀).im * (g t₀).im = 0 := by
+    simp only [Complex.sub_re, Complex.sub_im] at horth ⊢
+    linarith
+  obtain ⟨s, hs⟩ := normal_decomp (hgne t₀ ht₀) horth'
+  have hζne : ζ - ρ t₀ ≠ 0 := sub_ne_zero.mpr (Ne.symm (hζ ⟨t₀, ht₀⟩))
+  have hsne : s ≠ 0 := by
+    intro h0
+    rw [h0, Complex.ofReal_zero, zero_mul] at hs
+    exact hζne hs
+  set W : ℂ := ζ - ρ t₀ with hWdef
+  set ε : ℝ := min ε₁ |s| with hεdef
+  have habs : 0 < |s| := abs_pos.mpr hsne
+  have hε : 0 < ε := lt_min hε₁ habs
+  set θ : ℝ := ε / |s| with hθdef
+  have hθ0 : 0 < θ := div_pos hε habs
+  have hθ1 : θ ≤ 1 := (div_le_one habs).mpr (min_le_right _ _)
+  set ε' : ℝ := -(θ * s) with hε'def
+  have hε'abs : |ε'| = ε := by
+    rw [hε'def, abs_neg, abs_mul, abs_of_pos hθ0, hθdef]
+    field_simp
+  have hε'pos : 0 < |ε'| := by rw [hε'abs]; exact hε
+  have hε'le : |ε'| ≤ ε₁ := by rw [hε'abs]; exact min_le_left _ _
+  refine ⟨ε', hε'pos, hε'le, ?_⟩
+  set sg : ℝ → ℂ := fun u => ρ t₀ + ((θ + u * (1 - θ) : ℝ) : ℂ) * W with hsgdef
+  have hsgc : ContinuousOn sg (Set.Icc 0 1) := by
+    apply ContinuousOn.add continuousOn_const
+    apply ContinuousOn.mul ?_ continuousOn_const
+    exact (Complex.continuous_ofReal.comp
+      (continuous_const.add (continuous_id.mul continuous_const))).continuousOn
+  have hsgavoid : ∀ u ∈ Set.Icc (0 : ℝ) 1, ∀ t ∈ Set.Icc (0 : ℝ) 1, ρ t ≠ sg u := by
+    intro u hu t ht heq'
+    set lam : ℝ := θ + u * (1 - θ) with hlam
+    have hlam0 : 0 < lam := by nlinarith only [hu.1, hu.2, hθ0, hθ1]
+    have hlam1 : lam ≤ 1 := by nlinarith only [hu.1, hu.2, hθ0, hθ1]
+    have h2 : sg u - ζ = ((lam - 1 : ℝ) : ℂ) * W := by
+      change ρ t₀ + ((lam : ℝ) : ℂ) * W - ζ = _
+      rw [hWdef]
+      push_cast
+      ring
+    have h2' : ρ t - ζ = ((lam - 1 : ℝ) : ℂ) * W := by rw [heq']; exact h2
+    have hWpos : 0 < Complex.normSq W := Complex.normSq_pos.mpr hζne
+    have h3 : Complex.normSq (ρ t - ζ) = (lam - 1) * (lam - 1) * Complex.normSq W := by
+      rw [h2', Complex.normSq_mul, Complex.normSq_ofReal]
+    have h4 : ρ t₀ - ζ = -W := by
+      rw [hWdef]
+      ring
+    have h5 : Complex.normSq (ρ t₀ - ζ) = Complex.normSq W := by
+      rw [h4, Complex.normSq_neg]
+    have h6 := hmin t ht
+    rw [h3, h5] at h6
+    nlinarith only [h6, hlam0, hlam1, hWpos,
+      mul_pos (mul_pos hlam0 (show (0 : ℝ) < 2 - lam by linarith)) hWpos]
+  have hsg1 : sg 1 = ζ := by
+    change ρ t₀ + ((θ + 1 * (1 - θ) : ℝ) : ℂ) * W = ζ
+    rw [show θ + 1 * (1 - θ) = 1 by ring, hWdef]
+    push_cast
+    ring
+  have hsg0 : sg 0 = ρ t₀ - (ε' : ℂ) * (Complex.I * g t₀) := by
+    change ρ t₀ + ((θ + 0 * (1 - θ) : ℝ) : ℂ) * W = _
+    rw [show θ + 0 * (1 - θ) = θ by ring, hs, hε'def]
+    push_cast
+    ring
+  have htr1 := offset_transport hsgc hcl hsgavoid hc'
+    (s₀ := 1) (s₁ := 0) ⟨zero_le_one, le_refl 1⟩ ⟨le_refl 0, zero_le_one⟩
+  set τ : ℝ → ℂ := fun u => ρ u - (ε' : ℂ) * (Complex.I * g u) with hτdef
+  have hτc : ContinuousOn τ (Set.Icc 0 1) :=
+    hρc.sub (continuousOn_const.mul (continuousOn_const.mul hgc))
+  have hτavoid : ∀ u ∈ Set.Icc (0 : ℝ) 1, ∀ t ∈ Set.Icc (0 : ℝ) 1, ρ t ≠ τ u := by
+    intro u hu t ht
+    exact hdisj ε' hε'pos hε'le u hu t ht
+  have htr2 := offset_transport hτc hcl hτavoid hc'
+    (s₀ := t₀) (s₁ := 0) ht₀ ⟨le_refl 0, zero_le_one⟩
+  have hτt₀ : τ t₀ = sg 0 := by
+    rw [hsg0]
+  have hτ0 : τ 0 = ρ 0 - (ε' : ℂ) * (Complex.I * g 0) := rfl
+  rw [← hsg1, htr1, ← hτ0, ← htr2, hτt₀]
+
+/-- **Two values at the offset basepoint**: for a loop based at its imaginary minimum
+with sign-adapted window data, the winding about the offset basepoint is the tangent
+degree on the inward side and zero on the outward side, hence nonnegative. -/
+theorem two_values {P G : ℝ → ℂ} {ς εA M ε' : ℝ}
+    (hPc : ContinuousOn P (Set.Icc 0 1)) (hclP : P 0 = P 1) (hGcl : G 1 = G 0)
+    (hGc : ContinuousOn G (Set.Icc 0 1))
+    (hGne : ∀ u ∈ Set.Icc (0 : ℝ) 1, G u ≠ 0)
+    (hM : ∀ u ∈ Set.Icc (0 : ℝ) 1, ‖G u‖ ≤ M)
+    (hminP : ∀ t ∈ Set.Icc (0 : ℝ) 1, (P 0).im ≤ (P t).im)
+    (hwin : ∀ t ∈ Set.Icc (0 : ℝ) 1, P t ∈ Metric.closedBall (P 0) εA →
+      (Complex.I * (((ς : ℝ) : ℂ) * G t)).im < 0)
+    (hς : ς = 1 ∨ ς = -1)
+    (hneg : (Complex.I * (((ς : ℝ) : ℂ) * G 0)).im < 0)
+    (hε'pos : 0 < |ε'|) (hεAM : |ε'| * M ≤ εA)
+    (hdisjε' : ∀ s ∈ Set.Icc (0 : ℝ) 1, ∀ t ∈ Set.Icc (0 : ℝ) 1,
+      P t ≠ P s - (ε' : ℂ) * (Complex.I * G s))
+    (hcP' : Continuous fun t : I => P ((t : ℝ)))
+    (hGw : Continuous fun t : I => G ((t : ℝ)))
+    (hdeg1 : windingNumber (⟨fun t : I => G ((t : ℝ)), hGw⟩ : C(I, ℂ)) 0 = 1) :
+    0 ≤ windingNumber (⟨fun t : I => P ((t : ℝ)), hcP'⟩ : C(I, ℂ))
+        (P 0 - (ε' : ℂ) * (Complex.I * G 0)) := by
+  have hclP' : (⟨fun t : I => P ((t : ℝ)), hcP'⟩ : C(I, ℂ)) 0
+      = (⟨fun t : I => P ((t : ℝ)), hcP'⟩ : C(I, ℂ)) 1 := by
+    change P (((0:I) : ℝ)) = P (((1:I) : ℝ))
+    rw [show (((0:I) : ℝ)) = 0 from rfl, show (((1:I) : ℝ)) = 1 from rfl]
+    exact hclP
+  have hnegG : ς * (G 0).re < 0 := by
+    have h1 : (Complex.I * (((ς:ℝ):ℂ) * G 0)).im = ς * (G 0).re := by
+      rw [Complex.mul_im, Complex.I_re, Complex.I_im, Complex.mul_re,
+        Complex.ofReal_re, Complex.ofReal_im]
+      ring
+    rw [h1] at hneg
+    exact hneg
+  by_cases hsign : ε' = ς * |ε'|
+  · -- inward side: the winding is the tangent degree
+    have hdisj2 : ∀ s ∈ Set.Icc (0 : ℝ) 1, ∀ t ∈ Set.Icc (0 : ℝ) 1,
+        P t ≠ P s - ((ς * |ε'| : ℝ) : ℂ) * (Complex.I * G s) := by
+      rw [← hsign]
+      exact hdisjε'
+    have hAc : Continuous fun u : I =>
+        P ((u : ℝ)) - (P 0 - ((ς * |ε'| : ℝ) : ℂ) * (Complex.I * G 0)) :=
+      hcP'.sub continuous_const
+    have happ := inner_degree hPc hclP hGcl hε'pos hς hGc hGne hM hminP hwin hεAM hdisj2
+      (⟨fun u : I => P ((u : ℝ)) - (P 0 - ((ς * |ε'| : ℝ) : ℂ) * (Complex.I * G 0)),
+        hAc⟩ : C(I, ℂ)) (fun u => rfl) hGw
+    have hne : ∀ t : I, (⟨fun t : I => P ((t : ℝ)), hcP'⟩ : C(I, ℂ)) t
+        ≠ P 0 - ((ς * |ε'| : ℝ) : ℂ) * (Complex.I * G 0) :=
+      fun t => hdisj2 0 ⟨le_refl 0, zero_le_one⟩ ((t : ℝ)) t.2
+    have hshift := winding_shift hclP' hne
+      (⟨fun u : I => P ((u : ℝ)) - (P 0 - ((ς * |ε'| : ℝ) : ℂ) * (Complex.I * G 0)),
+        hAc⟩ : C(I, ℂ)) (fun u => rfl)
+    rw [show ((ε' : ℝ) : ℂ) = ((ς * |ε'| : ℝ) : ℂ) by rw [← hsign]]
+    rw [← hshift, happ, hdeg1]
+    norm_num
+  · -- outward side: the offset point lies strictly below the loop
+    have heq2 : ε' = -(ς * |ε'|) := by
+      rcases hς with hh | hh <;> rcases abs_cases ε' with ⟨ha, hb⟩ | ⟨ha, hb⟩
+      · exfalso
+        rw [hh, ha, one_mul] at hsign
+        exact hsign rfl
+      · rw [hh, ha]
+        ring
+      · rw [hh, ha]
+        ring
+      · exfalso
+        rw [hh, ha] at hsign
+        apply hsign
+        ring
+    have hkey : 0 < ε' * (Complex.I * G 0).im := by
+      have hIm : (Complex.I * G 0).im = (G 0).re := by
+        rw [Complex.mul_im, Complex.I_re, Complex.I_im]
+        ring
+      rw [heq2, hIm]
+      rcases hς with hh | hh <;> rw [hh] at hnegG ⊢
+      · nlinarith only [mul_pos hε'pos (show (0 : ℝ) < -(G 0).re by linarith [hnegG])]
+      · nlinarith only [mul_pos hε'pos (show (0 : ℝ) < (G 0).re by linarith [hnegG])]
+    have hpim : (P 0 - (ε' : ℂ) * (Complex.I * G 0)).im
+        = (P 0).im - ε' * (Complex.I * G 0).im := by
+      rw [Complex.sub_im, Complex.mul_im, Complex.ofReal_re, Complex.ofReal_im]
+      ring
+    have hoff : ∀ t : I, ((⟨fun t : I => P ((t : ℝ)), hcP'⟩ : C(I, ℂ)) t).im
+        ≠ (P 0 - (ε' : ℂ) * (Complex.I * G 0)).im := by
+      intro t
+      have hlt : (P 0 - (ε' : ℂ) * (Complex.I * G 0)).im < (P ((t : ℝ))).im := by
+        rw [hpim]
+        have := hminP ((t : ℝ)) t.2
+        linarith [hkey]
+      exact ne_of_gt hlt
+    rw [winding_offline_zero hclP' hoff]
+
+/-- **The nonnegative-winding principle**: a positively-oriented simple smooth loop has
+nonnegative winding about every off-track point. -/
+theorem pin_discharge : NonnegWindingPrinciple₂ := by
+  intro ρ g hd hgc hcl hgcl hinj hgne _hpa hgw hdeg hc' ζ hζ
+  have hρc : ContinuousOn ρ (Set.Icc 0 1) := fun t ht =>
+    (hd t ht).continuousAt.continuousWithinAt
+  obtain ⟨c₀, hc₀, hminOn⟩ := isCompact_Icc.exists_isMinOn
+    (Set.nonempty_Icc.mpr zero_le_one) (Complex.continuous_im.comp_continuousOn hρc)
+  have hminIm : ∀ t ∈ Set.Icc (0 : ℝ) 1, (ρ c₀).im ≤ (ρ t).im := fun t ht => hminOn ht
+  set c : ℝ := if c₀ = 1 then 0 else c₀ with hcdef
+  have hcIco : c ∈ Set.Ico (0 : ℝ) 1 := by
+    by_cases h : c₀ = 1
+    · rw [hcdef, if_pos h]
+      exact ⟨le_refl 0, zero_lt_one⟩
+    · rw [hcdef, if_neg h]
+      exact ⟨hc₀.1, lt_of_le_of_ne hc₀.2 h⟩
+  have hcIcc : c ∈ Set.Icc (0 : ℝ) 1 := ⟨hcIco.1, hcIco.2.le⟩
+  have hcmin : ∀ t ∈ Set.Icc (0 : ℝ) 1, (ρ c).im ≤ (ρ t).im := by
+    intro t ht
+    by_cases h : c₀ = 1
+    · rw [hcdef, if_pos h, hcl]
+      have h1 := hminIm t ht
+      rw [h] at h1
+      exact h1
+    · rw [hcdef, if_neg h]
+      exact hminIm t ht
+  set P : ℝ → ℂ := fun u => if u + c ≤ 1 then ρ (u + c) else ρ (u + c - 1) with hPdef
+  set G : ℝ → ℂ := fun u => if u + c ≤ 1 then g (u + c) else g (u + c - 1) with hGdef
+  have hdP : ∀ t ∈ Set.Icc (0 : ℝ) 1, HasDerivAt P (G t) t := fun t ht =>
+    rebase_deriv hd hcl hgcl hcIcc t ht
+  have hGc : ContinuousOn G (Set.Icc 0 1) := rebase_gcont hgc hgcl hcIcc
+  have hclP : P 0 = P 1 := rebase_closure hcl hcIcc
+  have hGcl : G 1 = G 0 := rebase_gclosure hgcl hcIcc
+  have hinjP : Set.InjOn P (Set.Ico 0 1) := rebase_inj hcl hinj hcIco
+  have hGne : ∀ u ∈ Set.Icc (0 : ℝ) 1, G u ≠ 0 := by
+    intro u hu
+    have hv : G u = g (if u + c ≤ 1 then u + c else u + c - 1) := rebase_val g
+    rw [hv]
+    exact hgne _ (wrap_mem hu hcIcc)
+  have hPc : ContinuousOn P (Set.Icc 0 1) := fun t ht =>
+    (hdP t ht).continuousAt.continuousWithinAt
+  have hP0 : P 0 = ρ c := by
+    change (if (0 : ℝ) + c ≤ 1 then ρ (0 + c) else ρ (0 + c - 1)) = ρ c
+    rw [if_pos (by linarith [hcIco.2.le] : (0 : ℝ) + c ≤ 1), zero_add]
+  have hminP : ∀ t ∈ Set.Icc (0 : ℝ) 1, (P 0).im ≤ (P t).im := by
+    intro t ht
+    rw [hP0]
+    have hv : P t = ρ (if t + c ≤ 1 then t + c else t + c - 1) := rebase_val ρ
+    rw [hv]
+    exact hcmin _ (wrap_mem ht hcIcc)
+  have hcP' : Continuous fun t : I => P ((t : ℝ)) :=
+    hPc.comp_continuous continuous_subtype_val fun u => u.2
+  have hGw : Continuous fun t : I => G ((t : ℝ)) :=
+    hGc.comp_continuous continuous_subtype_val fun u => u.2
+  have hζP : ∀ t : I, P ((t : ℝ)) ≠ ζ := by
+    intro t
+    have hv : P ((t : ℝ)) = ρ (if (t:ℝ) + c ≤ 1 then (t:ℝ) + c else (t:ℝ) + c - 1) :=
+      rebase_val ρ
+    rw [hv]
+    exact hζ ⟨_, wrap_mem t.2 hcIcc⟩
+  have hGim : (G 0).im = 0 := min_im_deriv_zero hdP hclP hGcl hminP
+  have hG0ne : G 0 ≠ 0 := hGne 0 ⟨le_refl 0, zero_le_one⟩
+  have hGre : (G 0).re ≠ 0 := by
+    intro h0
+    apply hG0ne
+    apply Complex.ext
+    · rw [h0, Complex.zero_re]
+    · rw [hGim, Complex.zero_im]
+  set ς : ℝ := if 0 < (G 0).re then -1 else 1 with hςdef
+  have hς : ς = 1 ∨ ς = -1 := by
+    by_cases h : 0 < (G 0).re
+    · right
+      rw [hςdef, if_pos h]
+    · left
+      rw [hςdef, if_neg h]
+  have hneg : (Complex.I * (((ς : ℝ) : ℂ) * G 0)).im < 0 := by
+    have h1 : (Complex.I * (((ς:ℝ):ℂ) * G 0)).im = ς * (G 0).re := by
+      rw [Complex.mul_im, Complex.I_re, Complex.I_im, Complex.mul_re,
+        Complex.ofReal_re, Complex.ofReal_im]
+      ring
+    rw [h1]
+    by_cases h : 0 < (G 0).re
+    · rw [hςdef, if_pos h]
+      nlinarith only [h]
+    · rw [hςdef, if_neg h]
+      rw [not_lt] at h
+      nlinarith only [lt_of_le_of_ne h hGre]
+  obtain ⟨εA, hεA0, hwin⟩ := assertion_ii (g := fun t => ((ς : ℝ) : ℂ) * G t) hPc
+    (continuousOn_const.mul hGc)
+    (by change ((ς:ℝ):ℂ) * G 1 = ((ς:ℝ):ℂ) * G 0; rw [hGcl]) hinjP hneg
+  obtain ⟨u₁, hu₁, hmaxOn⟩ := isCompact_Icc.exists_isMaxOn
+    (Set.nonempty_Icc.mpr zero_le_one) hGc.norm
+  set M : ℝ := ‖G u₁‖ with hMdef
+  have hM : ∀ u ∈ Set.Icc (0 : ℝ) 1, ‖G u‖ ≤ M := fun u hu => hmaxOn hu
+  have hMpos : 0 < M := lt_of_lt_of_le (norm_pos_iff.mpr hG0ne)
+    (hM 0 ⟨le_refl 0, zero_le_one⟩)
+  obtain ⟨ε₀, hε₀, hoffd⟩ := offset_disjoint hdP hGc hclP hGcl hinjP hGne
+  set ε₁ : ℝ := min ε₀ (εA / M) with hε₁def
+  have hε₁ : 0 < ε₁ := lt_min hε₀ (div_pos hεA0 hMpos)
+  have hdisj₁ : ∀ ε' : ℝ, 0 < |ε'| → |ε'| ≤ ε₁ →
+      ∀ s ∈ Set.Icc (0 : ℝ) 1, ∀ t ∈ Set.Icc (0 : ℝ) 1,
+        P t ≠ P s - (ε' : ℂ) * (Complex.I * G s) :=
+    fun ε' h1 h2 => hoffd ε' h1 (le_trans h2 (min_le_left _ _))
+  obtain ⟨ε', hε'pos, hε'le, hreach⟩ :=
+    reach hdP hGc hclP hGcl hGne hcP' hζP hε₁ hdisj₁
+  have hεAM : |ε'| * M ≤ εA := by
+    have h1 : |ε'| ≤ εA / M := le_trans hε'le (min_le_right _ _)
+    calc |ε'| * M ≤ (εA / M) * M := by nlinarith only [h1, hMpos]
+      _ = εA := by field_simp
+  have hdegG : windingNumber (⟨fun t : I => G ((t : ℝ)), hGw⟩ : C(I, ℂ)) 0 = 1 := by
+    have htr := rebase_winding (ρ := g) (c := c) (ζ := 0) hgw hgcl.symm hcIcc
+      (fun t => hgne _ t.2) hGw
+    rw [← hdeg]
+    exact htr
+  have hwζ : windingNumber (⟨fun t : I => P ((t:ℝ)), hcP'⟩ : C(I,ℂ)) ζ
+      = windingNumber (⟨fun t : I => ρ ((t:ℝ)), hc'⟩ : C(I,ℂ)) ζ :=
+    rebase_winding hc' hcl hcIcc hζ hcP'
+  have h2v := two_values hPc hclP hGcl hGc hGne hM hminP hwin hς hneg hε'pos hεAM
+    (fun s hs t ht => hdisj₁ ε' hε'pos hε'le s hs t ht) hcP' hGw hdegG
+  rw [← hwζ, hreach]
+  exact h2v
+
+end PinDischarge
+
+/-- **The Reich–Strebel main inequality.** Let `Γ` be a cocompact free Fuchsian group,
+`q` an automorphic quadratic differential, and `h` an upper-half-plane quasiconformal map
+commuting with `Γ` elementwise whose boundary limits are the identity on `ℝ`. Then the
+`L¹` mass of `q` is dominated by the integral, over the Dirichlet domain, of
+`|q| · ‖1 − μ_h q/|q|‖²/(1 − ‖μ_h‖²)` formed from the Wirtinger quotient of `h`. -/
+theorem reich_strebel_main_inequality
+    {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)} (hΓ : IsFuchsianGroup Γ)
+    (hfree : ∀ γ : Γ, (∃ τ : UpperHalfPlane, γ • τ = τ) →
+      ∀ τ' : UpperHalfPlane, γ • τ' = τ')
+    (hcc : CompactSpace (Quotient (MulAction.orbitRel Γ UpperHalfPlane)))
+    (q : QuadraticDifferential Γ) {h hinv : ℂ → ℂ} {κ : ℝ} (hκ : κ < 1)
+    (hqc : IsQCUpper h hinv κ)
+    (hbd : ∀ t : ℝ, Filter.Tendsto h (nhdsWithin (t : ℂ) {z : ℂ | 0 < z.im})
+      (nhds (t : ℂ)))
+    (hcomm : ∀ γ ∈ Γ, ∀ z : ℂ, 0 < z.im →
+      h (moebiusMap γ z) = moebiusMap γ (h z)) :
+    q.l1Norm ≤ ∫⁻ z in UpperHalfPlane.coe '' dirichletDomain Γ UpperHalfPlane.I,
+      ‖q z‖ₑ * ENNReal.ofReal
+        (‖1 - wirtingerQuotient h z * (q z / (‖q z‖ : ℂ))‖ ^ 2
+          / (1 - ‖wirtingerQuotient h z‖ ^ 2)) :=
+  rs_main_of_principle hΓ hfree hcc q hκ hqc hbd hcomm pin_discharge
 
 end RiemannDynamics
