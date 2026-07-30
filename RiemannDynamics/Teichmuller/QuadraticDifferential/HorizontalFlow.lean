@@ -510,7 +510,7 @@ theorem le_sqrt_mul_sqrt {x y z : ℝ≥0∞} (h : x ^ 2 ≤ y * z) :
   rw [hx, ← ENNReal.mul_rpow_of_nonneg _ _ (by norm_num : (0 : ℝ) ≤ 1 / 2)]
   exact ENNReal.rpow_le_rpow h (by norm_num)
 
--- The assembly tier below never unfolds the integrand definitions; sealing them keeps
+-- The assembly theorems below never unfold the integrand definitions; sealing them keeps
 -- unification from descending into the Wirtinger terms.
 attribute [irreducible] rsQ rsDensity rsWeight rsWeightM rsU
 
@@ -2924,7 +2924,7 @@ theorem rsU_moebius {q h : ℂ → ℂ} (γ : Matrix.SpecialLinearGroup (Fin 2) 
 /-- **Packaging of the symmetrized flow data**: given the flow, its regular set, the two
 leafwise minimal-variation bounds, and the two symmetrized invariance identities, the
 composed measurability fields are discharged from joint measurability of the flow, and
-the interface theorem `reich_strebel_of_flowDataSym` becomes consumable. -/
+the interface theorem `reich_strebel_of_flowDataSym` applies. -/
 noncomputable def verticalFlowDataSym_of_leafLb
     {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
     (q : QuadraticDifferential Γ) (h : ℂ → ℂ) (κ : ℝ) (hh : Measurable h)
@@ -12521,7 +12521,7 @@ theorem sym_invar_engine {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
 
 /-- **Symmetrized flow invariance of the first Cauchy–Schwarz factor** against the
 `|q|` area: the `invar_U` field of `VerticalFlowDataSym` for the atlas flow, from the
-Reich–Strebel pack, the dyadic two-step law of the flow on the regular set, and the
+Reich–Strebel hypotheses, the dyadic two-step law of the flow on the regular set, and the
 almost-everywhere deck compatibility of the symmetrized factor. -/
 theorem sym_invar_U {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
     (hΓ : IsFuchsianGroup Γ)
@@ -12559,7 +12559,8 @@ theorem sym_invar_U {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
 
 /-- **Symmetrized flow invariance of the floored weight** against the `|q|` area: the
 `invar_W` field of `VerticalFlowDataSym` for the atlas flow, from the Reich–Strebel
-pack, the dyadic two-step law of the flow on the regular set, and the almost-everywhere
+standing hypotheses, the dyadic two-step law of the flow on the regular set, and the
+almost-everywhere
 deck compatibility of the symmetrized weight. -/
 theorem sym_invar_W {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
     (hΓ : IsFuchsianGroup Γ)
@@ -13500,7 +13501,7 @@ theorem sym_hdeckW {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
   hdeck_engine hΓ hcc q hq0 A (rsWeightM_ae_inv q hqc hcomm)
 
 /-- **Unconditional symmetrized flow invariance of the first factor**: the `invar_U`
-field of `VerticalFlowDataSym` for the atlas flow, from the Reich–Strebel pack alone. -/
+field of `VerticalFlowDataSym` for the atlas flow, from the Reich–Strebel hypotheses. -/
 theorem sym_invar_U_full {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
     (hΓ : IsFuchsianGroup Γ)
     (hfree : ∀ γ : Γ, (∃ τ : UpperHalfPlane, γ • τ = τ) →
@@ -13521,7 +13522,7 @@ theorem sym_invar_U_full {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
     (sym_hdeckU hΓ hcc q hq0 hqc hcomm A)
 
 /-- **Unconditional symmetrized flow invariance of the floored weight**: the `invar_W`
-field of `VerticalFlowDataSym` for the atlas flow, from the Reich–Strebel pack alone. -/
+field of `VerticalFlowDataSym` for the atlas flow, from the Reich–Strebel hypotheses. -/
 theorem sym_invar_W_full {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
     (hΓ : IsFuchsianGroup Γ)
     (hfree : ∀ γ : Γ, (∃ τ : UpperHalfPlane, γ • τ = τ) →
@@ -14076,7 +14077,7 @@ theorem traj_hasDerivAt_interior {q : ℂ → ℂ} {σ : ℝ → ℂ} {a b : ℝ
   refine ⟨(deriv Φ (σ v))⁻¹, hmodel.congr_of_eventuallyEq hgerm, ?_⟩
   rw [inv_pow, hΦsq (σ v) hmem, ← inv_neg]
 
-/-- **The image-density design identity**: along a unit-speed vertical leaf the
+/-- **The image-density identity**: along a unit-speed vertical leaf the
 horizontal transverse density of the image curve is the flat-time multiple of the
 sealed image density, wherever the chain-rule derivative and the Beltrami bound hold. -/
 theorem image_density_eq {q h : ℂ → ℂ} {κ : ℝ} {w d : ℂ} {T : ℝ}
@@ -16188,7 +16189,7 @@ theorem sym_chart_slicing {q h hinv : ℂ → ℂ} {κ : ℝ} (A : Atlas q)
     (fun _ hj _ hK hKW => w11loc_localization A hqc hj hK hKW)
 
 /-- **Leafwise absolute continuity of the quasiconformal image**: the pinned
-hypothesis of `sym_hpath_of_acl`, discharged in full from the Reich–Strebel pack. -/
+hypothesis of `sym_hpath_of_acl`, obtained in full from the Reich–Strebel hypotheses. -/
 theorem sym_hacl {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
     (q : QuadraticDifferential Γ) (hq0 : ∃ z₀ : ℂ, 0 < z₀.im ∧ q z₀ ≠ 0)
     {h hinv : ℂ → ℂ} {κ : ℝ} (hqc : IsQCUpper h hinv κ)
@@ -29796,7 +29797,7 @@ theorem leaf_level_compare {q Ψ : ℂ → ℂ} {V : Set ℂ} (hV : IsOpen V)
     abs_mul, show |ε| = 1 from by rcases hε with h | h <;> rw [h] <;> norm_num,
     one_mul, abs_sub_comm]
 
-/-- **The Reich–Strebel main inequality from the three pins**: the bigon exclusions in
+/-- **The Reich–Strebel main inequality from the exclusion principles**: the bigon exclusions in
 both chiralities and the two-point leaf-displacement estimate imply the main
 inequality; the winding jump is supplied by the proven crossing theorem. -/
 theorem reich_strebel_of_pins₄ {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
@@ -30680,7 +30681,7 @@ section FinalFeed
 open unitInterval
 
 set_option maxHeartbeats 400000 in
--- Heartbeats: the pack discharges dozens of conjuncts in one elaboration.
+-- Heartbeats: the conclusion bundles dozens of conjuncts in one elaboration.
 theorem discharge_pack₂ {q : ℂ → ℂ} {γ τ : ℝ → ℂ} {a T b μ s : ℝ}
     (hμ : 0 < μ) (ha0 : 0 ≤ a) (haT : a < T) (hb0 : 0 < b) (hbs : b ≤ s)
     (hγ : IsTrajOn q γ (Set.Icc (-μ) (T + μ)))
@@ -31741,7 +31742,7 @@ theorem hpa_reverse {ρ : ℝ → ℂ}
       intro t ht
       exact ⟨by linarith [ht.2], by linarith [ht.1]⟩
 
-/-- **Pin transport, analytic tier**: the piecewise-analytic sign principle yields both
+/-- **Orientation transport**: the piecewise-analytic sign principle yields both
 orientation hypotheses of the bigon exclusion for piecewise-analytic loops. -/
 theorem nonnegWinding_transport₂ (hW : NonnegWindingPrinciple₂) {ρ g : ℝ → ℂ}
     (hd : ∀ t ∈ Set.Icc (0 : ℝ) 1, HasDerivAt ρ (g t) t)
@@ -37090,7 +37091,7 @@ theorem hcoarea_of_bigons {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)
     _ ≤ ∫⁻ s in Set.Icc (0 : ℝ) 1, horizontalDensity (q : ℂ → ℂ) p s :=
         lintegral_mono_set (Set.iUnion_subset hG01)
 
-/-- **The separation inequality from the atlas-threaded displacement pin**. -/
+/-- **The separation inequality from the atlas-threaded displacement estimate**. -/
 theorem hsep_final₄ {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
     (hΓ : IsFuchsianGroup Γ)
     (hcc : CompactSpace (Quotient (MulAction.orbitRel Γ UpperHalfPlane)))
@@ -37250,7 +37251,7 @@ theorem hsep_final₄ {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
     exact key (fun u => A.flow (-u) z) hrev (fun u hu => hor u hu)
       (ae_neg_volume hflowae)
 
-/-- **The Reich–Strebel main inequality from the three pins**: the bigon exclusions in
+/-- **The Reich–Strebel main inequality from the exclusion principles**: the bigon exclusions in
 both chiralities and the atlas-threaded two-point leaf-displacement estimate imply the
 main inequality; the winding jump is supplied by the proven crossing theorem. -/
 theorem reich_strebel_of_pins₅ {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
@@ -38117,5 +38118,450 @@ theorem reich_strebel_main_inequality
         (‖1 - wirtingerQuotient h z * (q z / (‖q z‖ : ℂ))‖ ^ 2
           / (1 - ‖wirtingerQuotient h z‖ ^ 2)) :=
   rs_main_of_principle hΓ hfree hcc q hκ hqc hbd hcomm pin_discharge
+
+/-- **Lusin (N) for quasiconformal maps**: the image of a Lebesgue-null set under an
+analytically quasiconformal plane map is Lebesgue-null. -/
+theorem qc_image_null {f : ℂ → ℂ} {b : BeltramiCoeff} (hf : IsQCAnalytic f b)
+    {N : Set ℂ} (hN : volume N = 0) : volume (f '' N) = 0 := by
+  obtain ⟨p, gx, gy, hp2, hgrad, hgxp, hgyp⟩ :=
+    hf.exists_weakGradient_memLpLocOn_gt_two
+  exact lusinN_image_null_of_weakGradient hp2 hf.1.1.continuous hgrad hgxp hgyp hN
+
+/-- **Quasiconformal pullback of a co-null set**: a geometrically quasiconformal plane
+map sends almost every point outside any given null set. -/
+theorem preimage_conull {H : ℂ → ℂ} {K : ℝ} (hH : IsQCGeometric H K)
+    {N : Set ℂ} (hN : volume N = 0) : ∀ᵐ z : ℂ, H z ∉ N := by
+  have hHinvqc := isQCGeometric_inv_of_isQCGeometric hH
+  obtain ⟨b, -, hQCA⟩ := isQCAnalytic_of_isQCGeometric hHinvqc.1 hHinvqc
+  have himg : volume (⇑(hH.2.1.isHomeomorph.homeomorph H).symm '' N) = 0 :=
+    qc_image_null hQCA hN
+  rw [ae_iff]
+  have happ : ∀ z : ℂ, (hH.2.1.isHomeomorph.homeomorph H) z = H z := fun z =>
+    IsHomeomorph.homeomorph_apply H hH.2.1.isHomeomorph z
+  have hset : {z : ℂ | ¬ H z ∉ N}
+      = ⇑(hH.2.1.isHomeomorph.homeomorph H).symm '' N := by
+    ext z
+    simp only [Set.mem_setOf_eq, not_not]
+    constructor
+    · intro hz
+      exact ⟨H z, hz, by rw [← happ z, Homeomorph.symm_apply_apply]⟩
+    · rintro ⟨w, hw, rfl⟩
+      have h2 : H ((hH.2.1.isHomeomorph.homeomorph H).symm w) = w := by
+        rw [← happ, Homeomorph.apply_symm_apply]
+      rwa [h2]
+  rw [hset]
+  exact himg
+
+/-- **The conjugate-pair real part**: for a unimodular direction `θ` the product
+`(u − θv) conj (u + θv)` has real part `|u|² − |v|²`. -/
+theorem conj_pair_re (u v θ : ℂ) (hθ : θ * starRingEnd ℂ θ = 1) :
+    ((u - θ * v) * starRingEnd ℂ (u + θ * v)).re
+      = Complex.normSq u - Complex.normSq v := by
+  have h1 : (u - θ * v) * starRingEnd ℂ (u + θ * v)
+      = ((Complex.normSq u - Complex.normSq v : ℝ) : ℂ)
+        + (u * starRingEnd ℂ θ * starRingEnd ℂ v
+            - starRingEnd ℂ u * θ * v) := by
+    simp only [map_add, map_mul, Complex.ofReal_sub]
+    linear_combination Complex.mul_conj u - Complex.mul_conj v
+      - (v * starRingEnd ℂ v) * hθ
+  rw [h1]
+  have h2 : (u * starRingEnd ℂ θ * starRingEnd ℂ v - starRingEnd ℂ u * θ * v).re
+      = 0 := by
+    have h3 : starRingEnd ℂ u * θ * v
+        = starRingEnd ℂ (u * starRingEnd ℂ θ * starRingEnd ℂ v) := by
+      simp only [map_mul, Complex.conj_conj]
+    rw [h3, Complex.sub_re, Complex.conj_re, sub_self]
+  rw [Complex.add_re, h2, add_zero, Complex.ofReal_re]
+
+/-- **The pointwise Reich–Strebel weight bound in the Teichmüller frame**: if the chain
+identity `p (β − k θ̄ α) = −b conj (α − k θ β)` holds with unimodular `θ`, positive
+Jacobian `|β| < |α|`, and coefficient bound `|b| ≤ c₀ |p|` with `p ≠ 0`, then the weight
+`|α − θβ|²/(|α|² − |β|²)` is at most `(1 − k)/(1 + k) · (1 + c₀)/(1 − c₀)`. -/
+theorem rs_weight_pointwise {θ α β p b : ℂ} {k c₀ : ℝ}
+    (hk0 : 0 ≤ k) (hk1 : k < 1) (hc₀0 : 0 ≤ c₀) (hc₀1 : c₀ < 1)
+    (hθ : θ * starRingEnd ℂ θ = 1)
+    (hjac : ‖β‖ < ‖α‖) (hp : p ≠ 0) (hb : ‖b‖ ≤ c₀ * ‖p‖)
+    (hchain : p * (β - (k : ℂ) * starRingEnd ℂ θ * α)
+      = -(b * starRingEnd ℂ (α - (k : ℂ) * θ * β))) :
+    ‖α - θ * β‖ ^ 2 / (‖α‖ ^ 2 - ‖β‖ ^ 2)
+      ≤ (1 - k) / (1 + k) * ((1 + c₀) / (1 - c₀)) := by
+  set X : ℂ := α - (k : ℂ) * θ * β with hXdef
+  set Y : ℂ := β - (k : ℂ) * starRingEnd ℂ θ * α with hYdef
+  -- the two linear identities of the frame
+  have hX1 : X - θ * Y = (1 + (k : ℂ)) * (α - θ * β) := by
+    rw [hXdef, hYdef]
+    linear_combination ((k : ℂ) * α) * hθ
+  have hX2 : X + θ * Y = (1 - (k : ℂ)) * (α + θ * β) := by
+    rw [hXdef, hYdef]
+    linear_combination (-(k : ℂ) * α) * hθ
+  -- the norm transfer along the chain identity
+  have hpn : 0 < ‖p‖ := norm_pos_iff.mpr hp
+  have hYX : ‖Y‖ ≤ c₀ * ‖X‖ := by
+    have h1 : ‖p‖ * ‖Y‖ = ‖b‖ * ‖X‖ := by
+      have h2 := congrArg norm hchain
+      rwa [norm_mul, norm_neg, norm_mul, RCLike.norm_conj] at h2
+    have h2 : ‖b‖ * ‖X‖ ≤ c₀ * ‖p‖ * ‖X‖ :=
+      mul_le_mul_of_nonneg_right hb (norm_nonneg _)
+    nlinarith [h1, h2, hpn]
+  -- the Jacobian transfer
+  have hnθY : ∀ w : ℂ, ‖θ * w‖ = ‖w‖ := by
+    intro w
+    have hθ1 : ‖θ‖ = 1 := by
+      have h1 := congrArg norm hθ
+      rw [norm_mul, RCLike.norm_conj, norm_one] at h1
+      nlinarith [norm_nonneg θ]
+    rw [norm_mul, hθ1, one_mul]
+  have hXY2 : Complex.normSq X - Complex.normSq Y
+      = (1 - k ^ 2) * (Complex.normSq α - Complex.normSq β) := by
+    have h1 := conj_pair_re X Y θ hθ
+    rw [hX1, hX2] at h1
+    have h2 : ((1 + (k : ℂ)) * (α - θ * β)
+        * starRingEnd ℂ ((1 - (k : ℂ)) * (α + θ * β)))
+        = ((1 - k ^ 2 : ℝ) : ℂ) * ((α - θ * β) * starRingEnd ℂ (α + θ * β)) := by
+      simp only [map_mul, map_sub, map_one, Complex.conj_ofReal]
+      push_cast
+      ring
+    rw [h2] at h1
+    rw [← h1, Complex.re_ofReal_mul, conj_pair_re α β θ hθ]
+  -- positivity of the frame
+  have hJ : 0 < ‖α‖ ^ 2 - ‖β‖ ^ 2 := by
+    nlinarith [norm_nonneg β]
+  have hX0 : 0 < ‖X‖ := by
+    rcases eq_or_ne X 0 with hXz | hXz
+    · exfalso
+      have hYz : Y = 0 := by
+        have h5 : ‖Y‖ ≤ 0 := by
+          have h6 := hYX
+          rw [hXz, norm_zero, mul_zero] at h6
+          exact h6
+        exact norm_eq_zero.mp (le_antisymm h5 (norm_nonneg _))
+      have hαe : α - (k : ℂ) * θ * β = 0 := by rw [← hXdef]; exact hXz
+      have hβe : β - (k : ℂ) * starRingEnd ℂ θ * α = 0 := by rw [← hYdef]; exact hYz
+      have h6 : (1 - (k : ℂ) ^ 2) * α = 0 := by
+        linear_combination hαe + (k : ℂ) * θ * hβe + ((k : ℂ) ^ 2 * α) * hθ
+      have h7 : (1 - (k : ℂ) ^ 2) ≠ 0 := by
+        intro h8
+        have h9 : ((k ^ 2 : ℝ) : ℂ) = ((1 : ℝ) : ℂ) := by push_cast; linear_combination -h8
+        have h10 : (k : ℝ) ^ 2 = 1 := by exact_mod_cast h9
+        nlinarith
+      have hαz : α = 0 := (mul_eq_zero.mp h6).resolve_left h7
+      rw [hαz, norm_zero] at hjac
+      exact absurd hjac (not_lt.mpr (norm_nonneg β))
+    · exact norm_pos_iff.mpr hXz
+  -- the endgame chain
+  have hnum : ‖α - θ * β‖ * (1 + k) = ‖X - θ * Y‖ := by
+    rw [hX1, norm_mul]
+    have h1 : ‖(1 + (k : ℂ))‖ = 1 + k := by
+      rw [show (1 + (k : ℂ)) = ((1 + k : ℝ) : ℂ) by push_cast; ring,
+        Complex.norm_real, Real.norm_eq_abs, abs_of_pos (by linarith)]
+    rw [h1]
+    ring
+  have hA : (‖α - θ * β‖ * (1 + k)) ^ 2 = ‖X - θ * Y‖ ^ 2 := by rw [hnum]
+  have hB0 : ‖X - θ * Y‖ ≤ (1 + c₀) * ‖X‖ := by
+    calc ‖X - θ * Y‖ ≤ ‖X‖ + ‖θ * Y‖ := norm_sub_le _ _
+      _ = ‖X‖ + ‖Y‖ := by rw [hnθY]
+      _ ≤ ‖X‖ + c₀ * ‖X‖ := by linarith [hYX]
+      _ = (1 + c₀) * ‖X‖ := by ring
+  have hB : ‖X - θ * Y‖ ^ 2 ≤ ((1 + c₀) * ‖X‖) ^ 2 := by
+    nlinarith [hB0, norm_nonneg (X - θ * Y)]
+  have hden_ge : (1 - c₀ ^ 2) * ‖X‖ ^ 2 ≤ (1 - k ^ 2) * (‖α‖ ^ 2 - ‖β‖ ^ 2) := by
+    have h1 : ‖X‖ ^ 2 - c₀ ^ 2 * ‖X‖ ^ 2 ≤ Complex.normSq X - Complex.normSq Y := by
+      rw [Complex.normSq_eq_norm_sq, Complex.normSq_eq_norm_sq]
+      nlinarith [hYX, norm_nonneg Y, norm_nonneg X]
+    rw [hXY2, Complex.normSq_eq_norm_sq, Complex.normSq_eq_norm_sq] at h1
+    nlinarith [h1]
+  have hgoal2 : ‖α - θ * β‖ ^ 2 * ((1 + k) * (1 - c₀)) * (1 + k)
+      ≤ (1 - k) * (1 + c₀) * (‖α‖ ^ 2 - ‖β‖ ^ 2) * (1 + k) := by
+    nlinarith [hA, hB, hden_ge, hX0, hJ, sq_nonneg ‖X‖, sq_nonneg (‖α - θ * β‖)]
+  have hgoal3 : ‖α - θ * β‖ ^ 2 * ((1 + k) * (1 - c₀))
+      ≤ (1 - k) * (1 + c₀) * (‖α‖ ^ 2 - ‖β‖ ^ 2) :=
+    le_of_mul_le_mul_right hgoal2 (by linarith)
+  rw [div_le_iff₀ hJ, div_mul_div_comm, div_mul_eq_mul_div,
+    le_div_iff₀ (by nlinarith : (0 : ℝ) < (1 + k) * (1 - c₀))]
+  nlinarith [hgoal3]
+
+/-- **Positivity of the `L¹` mass**: a somewhere-nonzero automorphic quadratic
+differential over a cocompact free Fuchsian base has positive `L¹` mass. -/
+theorem l1Norm_pos {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
+    (hΓ : IsFuchsianGroup Γ)
+    (hfree : ∀ γ : Γ, (∃ τ : UpperHalfPlane, γ • τ = τ) →
+      ∀ τ' : UpperHalfPlane, γ • τ' = τ')
+    (hcc : CompactSpace (Quotient (MulAction.orbitRel Γ UpperHalfPlane)))
+    (q : QuadraticDifferential Γ) (hq0 : ∃ z : ℂ, 0 < z.im ∧ q z ≠ 0) :
+    0 < q.l1Norm := by
+  set K : Set ℂ := UpperHalfPlane.coe '' dirichletDomain Γ UpperHalfPlane.I with hKdef
+  have hsub : K ⊆ {z : ℂ | 0 < z.im} := by
+    rintro w ⟨τ, -, rfl⟩
+    simpa using τ.im_pos
+  -- the domain image has positive volume
+  obtain ⟨ε, hε, hgap⟩ := exists_translation_gap hΓ hfree hcc
+  have hball : Metric.ball UpperHalfPlane.I (ε / 2) ⊆ dirichletDomain Γ UpperHalfPlane.I :=
+    ball_subset_dirichletDomain hε hgap
+  have hopen : IsOpen (UpperHalfPlane.coe '' Metric.ball UpperHalfPlane.I (ε / 2)) :=
+    UpperHalfPlane.isOpenEmbedding_coe.isOpenMap _ Metric.isOpen_ball
+  have hne : (UpperHalfPlane.coe '' Metric.ball UpperHalfPlane.I (ε / 2)).Nonempty :=
+    ⟨UpperHalfPlane.coe UpperHalfPlane.I,
+      ⟨UpperHalfPlane.I, Metric.mem_ball_self (by linarith), rfl⟩⟩
+  have hvol : 0 < volume K := by
+    refine lt_of_lt_of_le (hopen.measure_pos volume hne) (measure_mono ?_)
+    exact Set.image_mono hball
+  -- if the mass vanished, the differential would vanish almost everywhere on the image
+  rw [pos_iff_ne_zero]
+  intro h0
+  have hmeas : Measurable fun z : ℂ => ‖q z‖ₑ := q.measurable.enorm
+  have h1 : ∀ᵐ z ∂(volume.restrict K), ‖q z‖ₑ = 0 := by
+    have h2 : ∫⁻ z in K, ‖q z‖ₑ = 0 := h0
+    rw [lintegral_eq_zero_iff hmeas] at h2
+    exact h2
+  have h3 : ∀ᵐ z ∂(volume.restrict K), q z ≠ 0 :=
+    ae_restrict_of_ae_restrict_of_subset hsub (q.ae_ne_zero hq0)
+  have h4 : ∀ᵐ z ∂(volume.restrict K), False := by
+    filter_upwards [h1, h3] with z hz1 hz3
+    exact hz3 (by rwa [enorm_eq_zero] at hz1)
+  have h5 : (volume.restrict K) Set.univ = 0 := by
+    have h6 := ae_iff.mp h4
+    simpa using h6
+  rw [Measure.restrict_apply_univ] at h5
+  rw [h5] at hvol
+  exact lt_irrefl 0 hvol
+
+set_option maxHeartbeats 400000 in
+-- Heartbeats: the deep local-definition tower needs an enlarged elaboration budget.
+-- The equality analysis chains a dozen nonlinear norm identities; the elaboration
+-- needs an enlarged budget.
+/-- **The equality case of the pointwise weight bound**: with exactly aligned coefficient
+of modulus `k`, competitor coefficient bound `k` at the image, and weight exactly one,
+the antiholomorphic derivative vanishes. -/
+theorem rs_weight_equality {θ α β p b : ℂ} {k : ℝ}
+    (hk0 : 0 ≤ k) (hk1 : k < 1)
+    (hθ : θ * starRingEnd ℂ θ = 1)
+    (hjac : ‖β‖ < ‖α‖) (hp : p ≠ 0) (hb : ‖b‖ ≤ k * ‖p‖)
+    (hchain : p * (β - (k : ℂ) * starRingEnd ℂ θ * α)
+      = -(b * starRingEnd ℂ (α - (k : ℂ) * θ * β)))
+    (hEq : ‖α - θ * β‖ ^ 2 / (‖α‖ ^ 2 - ‖β‖ ^ 2) = 1) :
+    β = 0 := by
+  set X : ℂ := α - (k : ℂ) * θ * β with hXdef
+  set Y : ℂ := β - (k : ℂ) * starRingEnd ℂ θ * α with hYdef
+  have hX1 : X - θ * Y = (1 + (k : ℂ)) * (α - θ * β) := by
+    rw [hXdef, hYdef]
+    linear_combination ((k : ℂ) * α) * hθ
+  have hpn : 0 < ‖p‖ := norm_pos_iff.mpr hp
+  have hYX : ‖Y‖ ≤ k * ‖X‖ := by
+    have h1 : ‖p‖ * ‖Y‖ = ‖b‖ * ‖X‖ := by
+      have h2 := congrArg norm hchain
+      rwa [norm_mul, norm_neg, norm_mul, RCLike.norm_conj] at h2
+    have h2 : ‖b‖ * ‖X‖ ≤ k * ‖p‖ * ‖X‖ :=
+      mul_le_mul_of_nonneg_right hb (norm_nonneg _)
+    nlinarith [h1, h2, hpn]
+  have hnθ : ∀ w : ℂ, ‖θ * w‖ = ‖w‖ := by
+    intro w
+    have hθ1 : ‖θ‖ = 1 := by
+      have h1 := congrArg norm hθ
+      rw [norm_mul, RCLike.norm_conj, norm_one] at h1
+      nlinarith [norm_nonneg θ]
+    rw [norm_mul, hθ1, one_mul]
+  have hJ : 0 < ‖α‖ ^ 2 - ‖β‖ ^ 2 := by nlinarith [norm_nonneg β]
+  have hk2 : (1 - (k : ℂ) ^ 2) ≠ 0 := by
+    intro h8
+    have h9 : ((k ^ 2 : ℝ) : ℂ) = ((1 : ℝ) : ℂ) := by push_cast; linear_combination -h8
+    have h10 : (k : ℝ) ^ 2 = 1 := by exact_mod_cast h9
+    nlinarith
+  have hX0 : 0 < ‖X‖ := by
+    rcases eq_or_ne X 0 with hXz | hXz
+    · exfalso
+      have hYz : Y = 0 := by
+        have h5 : ‖Y‖ ≤ 0 := by
+          have h6 := hYX
+          rw [hXz, norm_zero, mul_zero] at h6
+          exact h6
+        exact norm_eq_zero.mp (le_antisymm h5 (norm_nonneg _))
+      have hαe : α - (k : ℂ) * θ * β = 0 := by rw [← hXdef]; exact hXz
+      have hβe : β - (k : ℂ) * starRingEnd ℂ θ * α = 0 := by rw [← hYdef]; exact hYz
+      have h6 : (1 - (k : ℂ) ^ 2) * α = 0 := by
+        linear_combination hαe + (k : ℂ) * θ * hβe + ((k : ℂ) ^ 2 * α) * hθ
+      have hαz : α = 0 := (mul_eq_zero.mp h6).resolve_left hk2
+      rw [hαz, norm_zero] at hjac
+      exact absurd hjac (not_lt.mpr (norm_nonneg β))
+    · exact norm_pos_iff.mpr hXz
+  -- the norm-square transfer of the frame
+  have hXY2 : Complex.normSq X - Complex.normSq Y
+      = (1 - k ^ 2) * (Complex.normSq α - Complex.normSq β) := by
+    have hX2 : X + θ * Y = (1 - (k : ℂ)) * (α + θ * β) := by
+      rw [hXdef, hYdef]
+      linear_combination (-(k : ℂ) * α) * hθ
+    have h1 := conj_pair_re X Y θ hθ
+    rw [hX1, hX2] at h1
+    have h2 : ((1 + (k : ℂ)) * (α - θ * β)
+        * starRingEnd ℂ ((1 - (k : ℂ)) * (α + θ * β)))
+        = ((1 - k ^ 2 : ℝ) : ℂ) * ((α - θ * β) * starRingEnd ℂ (α + θ * β)) := by
+      simp only [map_mul, map_sub, map_one, Complex.conj_ofReal]
+      push_cast
+      ring
+    rw [h2] at h1
+    rw [← h1, Complex.re_ofReal_mul, conj_pair_re α β θ hθ]
+  -- the equality extraction
+  have hEq2 : ‖α - θ * β‖ ^ 2 = ‖α‖ ^ 2 - ‖β‖ ^ 2 := by
+    rw [div_eq_one_iff_eq hJ.ne'] at hEq
+    exact hEq
+  have hnum : ‖α - θ * β‖ * (1 + k) = ‖X - θ * Y‖ := by
+    rw [hX1, norm_mul]
+    have h1 : ‖(1 + (k : ℂ))‖ = 1 + k := by
+      rw [show (1 + (k : ℂ)) = ((1 + k : ℝ) : ℂ) by push_cast; ring,
+        Complex.norm_real, Real.norm_eq_abs, abs_of_pos (by linarith)]
+    rw [h1]
+    ring
+  have hkey1 : (1 - k) * ‖X - θ * Y‖ ^ 2 = (1 + k) * (‖X‖ ^ 2 - ‖Y‖ ^ 2) := by
+    have h1 : ‖X - θ * Y‖ ^ 2 = (1 + k) ^ 2 * ‖α - θ * β‖ ^ 2 := by
+      rw [← hnum, mul_pow]
+      ring
+    have h2 : ‖X‖ ^ 2 - ‖Y‖ ^ 2 = (1 - k ^ 2) * (‖α‖ ^ 2 - ‖β‖ ^ 2) := by
+      have h3 := hXY2
+      rw [Complex.normSq_eq_norm_sq, Complex.normSq_eq_norm_sq,
+        Complex.normSq_eq_norm_sq, Complex.normSq_eq_norm_sq] at h3
+      exact h3
+    rw [h1, hEq2, h2]
+    ring
+  have hTri : ‖X - θ * Y‖ ≤ ‖X‖ + ‖Y‖ := by
+    calc ‖X - θ * Y‖ ≤ ‖X‖ + ‖θ * Y‖ := norm_sub_le _ _
+      _ = ‖X‖ + ‖Y‖ := by rw [hnθ]
+  have hTri2 : ‖X - θ * Y‖ ^ 2 ≤ (‖X‖ + ‖Y‖) ^ 2 := by
+    nlinarith [hTri, norm_nonneg (X - θ * Y)]
+  have hYge : k * ‖X‖ ≤ ‖Y‖ := by
+    nlinarith [hkey1, hTri2, hX0, norm_nonneg Y, hYX]
+  have hYeq : ‖Y‖ = k * ‖X‖ := le_antisymm hYX hYge
+  -- the positive alignment
+  have hAl2 : ‖X - θ * Y‖ ^ 2 = (‖X‖ + ‖Y‖) ^ 2 := by
+    have h4 : (1 - k) * ‖X - θ * Y‖ ^ 2 = (1 - k) * (‖X‖ + ‖Y‖) ^ 2 := by
+      rw [hkey1, hYeq]
+      ring
+    exact mul_left_cancel₀ (by linarith : (1 : ℝ) - k ≠ 0) h4
+  have hRe : (X * starRingEnd ℂ (θ * Y)).re = -(‖X‖ * ‖Y‖) := by
+    have h6 : Complex.normSq (X - θ * Y) = Complex.normSq X + Complex.normSq (θ * Y)
+        - 2 * (X * starRingEnd ℂ (θ * Y)).re := Complex.normSq_sub _ _
+    rw [Complex.normSq_eq_norm_sq, Complex.normSq_eq_norm_sq,
+      Complex.normSq_eq_norm_sq, hnθ] at h6
+    have h7 : (‖X‖ + ‖Y‖) ^ 2 = ‖X‖ ^ 2 + 2 * (‖X‖ * ‖Y‖) + ‖Y‖ ^ 2 := by ring
+    linarith [h6, hAl2, h7]
+  set w : ℂ := X * starRingEnd ℂ (θ * Y) with hwdef
+  have hwnorm : ‖w‖ = ‖X‖ * ‖Y‖ := by
+    rw [hwdef, norm_mul, RCLike.norm_conj, hnθ]
+  have hwre : w.re = -(‖w‖) := by
+    rw [hwnorm]
+    exact hRe
+  have hwim : w.im = 0 := by
+    have h8 : w.re ^ 2 + w.im ^ 2 = ‖w‖ ^ 2 := by
+      rw [← Complex.normSq_eq_norm_sq, Complex.normSq_apply]
+      ring
+    have h9 : w.re ^ 2 = ‖w‖ ^ 2 := by
+      rw [hwre]
+      ring
+    have h10 : w.im ^ 2 = 0 := by linarith
+    exact pow_eq_zero_iff (by norm_num) |>.mp h10
+  have hwval : w = -((‖X‖ * ‖Y‖ : ℝ) : ℂ) := by
+    apply Complex.ext
+    · rw [Complex.neg_re, Complex.ofReal_re, hwre, hwnorm]
+    · rw [hwim, Complex.neg_im, Complex.ofReal_im, neg_zero]
+  -- cancellation to the exact ray
+  have hconjw : starRingEnd ℂ X * (θ * Y) = -((‖X‖ * ‖Y‖ : ℝ) : ℂ) := by
+    have h11 := congrArg (starRingEnd ℂ) hwval
+    rw [hwdef, map_mul, Complex.conj_conj, map_neg, Complex.conj_ofReal] at h11
+    rw [← h11]
+  have hXc0 : starRingEnd ℂ X ≠ 0 := by
+    rw [map_ne_zero]
+    exact norm_pos_iff.mp hX0
+  have hgoal : starRingEnd ℂ X * (θ * Y) = starRingEnd ℂ X * (-(k : ℂ) * X) := by
+    rw [hconjw, show starRingEnd ℂ X * (-(k : ℂ) * X)
+        = -((k : ℂ) * (X * starRingEnd ℂ X)) by ring,
+      Complex.mul_conj, Complex.normSq_eq_norm_sq, hYeq]
+    push_cast
+    ring
+  have hθY : θ * Y = -(k : ℂ) * X := mul_left_cancel₀ hXc0 hgoal
+  -- the vanishing conclusion
+  have hfin : (1 - (k : ℂ) ^ 2) * (θ * β) = 0 := by
+    rw [hYdef, hXdef] at hθY
+    linear_combination hθY + ((k : ℂ) * α) * hθ
+  have hθβ : θ * β = 0 := (mul_eq_zero.mp hfin).resolve_left hk2
+  have hθ0 : θ ≠ 0 := by
+    intro h13
+    rw [h13, zero_mul] at hθ
+    exact zero_ne_one hθ
+  exact (mul_eq_zero.mp hθβ).resolve_left hθ0
+
+/-- **Fundamental-domain unfolding of `∂̄ = 0`**: for an equivariant upper-half-plane
+quasiconformal map over a cocompact free Fuchsian base, vanishing of the antiholomorphic
+derivative almost everywhere on the Dirichlet domain propagates to the whole upper half
+plane along the countable family of group translates. -/
+theorem dzbar_zero_unfold {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
+    (hΓ : IsFuchsianGroup Γ)
+    (hfree : ∀ γ : Γ, (∃ τ : UpperHalfPlane, γ • τ = τ) →
+      ∀ τ' : UpperHalfPlane, γ • τ' = τ')
+    (hcc : CompactSpace (Quotient (MulAction.orbitRel Γ UpperHalfPlane)))
+    {H Hinv : ℂ → ℂ} {κ : ℝ} (hqc : IsQCUpper H Hinv κ)
+    (hcomm : ∀ γ ∈ Γ, ∀ z : ℂ, 0 < z.im →
+      H (moebiusMap γ z) = moebiusMap γ (H z))
+    (hD0 : ∀ᵐ z ∂(volume.restrict
+      (UpperHalfPlane.coe '' dirichletDomain Γ UpperHalfPlane.I)), dzbar H z = 0) :
+    ∀ᵐ z ∂(volume.restrict {z : ℂ | 0 < z.im}), dzbar H z = 0 := by
+  haveI hcnt : Countable ↥Γ := IsFuchsianGroup.countable hΓ
+  set D : Set ℂ := UpperHalfPlane.coe '' dirichletDomain Γ UpperHalfPlane.I with hDdef
+  have hDsub : D ⊆ {z : ℂ | 0 < z.im} := by
+    rintro w ⟨τ, -, rfl⟩
+    simpa using τ.im_pos
+  have hDmeas : MeasurableSet D := (isCompact_domain hΓ hfree hcc).measurableSet
+  have hUm : MeasurableSet {z : ℂ | 0 < z.im} :=
+    measurableSet_lt measurable_const Complex.continuous_im.measurable
+  -- per-translate nullity on the domain
+  have hTγ : ∀ γ : Γ, volume
+      ({w : ℂ | ¬ dzbar H (moebiusMap ((γ⁻¹ : Γ) : Matrix.SpecialLinearGroup (Fin 2) ℝ) w)
+        = 0} ∩ D) = 0 := by
+    intro γ
+    have hγinv : ((γ⁻¹ : Γ) : Matrix.SpecialLinearGroup (Fin 2) ℝ) ∈ Γ := (γ⁻¹ : Γ).2
+    have hae : ∀ᵐ w ∂(volume.restrict D),
+        dzbar H (moebiusMap ((γ⁻¹ : Γ) : Matrix.SpecialLinearGroup (Fin 2) ℝ) w) = 0 := by
+      filter_upwards [hD0,
+        ae_restrict_of_ae_restrict_of_subset hDsub (ae_differentiableAt hqc),
+        ae_restrict_of_ae_restrict_of_subset hDsub (ae_diffAt_moebius hqc
+          ((γ⁻¹ : Γ) : Matrix.SpecialLinearGroup (Fin 2) ℝ)),
+        ae_restrict_mem hDmeas] with w h0 hdiff hdiffγ hwD
+      have hwU : 0 < w.im := hDsub hwD
+      have h1 := (wirtinger_moebius ((γ⁻¹ : Γ) : Matrix.SpecialLinearGroup (Fin 2) ℝ) hwU
+        (hqc.mapsTo w hwU) (fun ζ hζ => hcomm _ hγinv ζ hζ) hdiff hdiffγ).2
+      rw [h1, h0, mul_zero]
+    have h2 := ae_iff.mp hae
+    rwa [Measure.restrict_apply' hDmeas] at h2
+  -- the exceptional set is covered by the translates of the domain bad sets
+  set E : Set ℂ := {z : ℂ | 0 < z.im ∧ dzbar H z ≠ 0} with hEdef
+  have hEcover : E ⊆ ⋃ γ : Γ,
+      moebiusMap ((γ⁻¹ : Γ) : Matrix.SpecialLinearGroup (Fin 2) ℝ) ''
+      ({w : ℂ | ¬ dzbar H (moebiusMap ((γ⁻¹ : Γ) : Matrix.SpecialLinearGroup (Fin 2) ℝ) w)
+        = 0} ∩ D) := by
+    rintro z ⟨hzU, hzne⟩
+    set τ : UpperHalfPlane := ⟨z, hzU⟩ with hτdef
+    obtain ⟨γ, hγD⟩ := exists_smul_mem_dirichletDomain hΓ UpperHalfPlane.I τ
+    have hback : moebiusMap ((γ⁻¹ : Γ) : Matrix.SpecialLinearGroup (Fin 2) ℝ)
+        (UpperHalfPlane.coe (γ • τ)) = z := by
+      rw [← coe_smul_eq_moebiusMap]
+      have h3 : ((γ⁻¹ : Γ) : Matrix.SpecialLinearGroup (Fin 2) ℝ) • (γ • τ) = τ := by
+        have h4 : γ • τ = ((γ : Matrix.SpecialLinearGroup (Fin 2) ℝ)) • τ := rfl
+        rw [h4, smul_smul]
+        simp
+      rw [h3]
+    refine Set.mem_iUnion.mpr ⟨γ, ⟨UpperHalfPlane.coe (γ • τ), ⟨?_, ⟨γ • τ, hγD, rfl⟩⟩, hback⟩⟩
+    simp only [Set.mem_setOf_eq]
+    rw [hback]
+    exact hzne
+  -- countable union of null translated images
+  have hEnull : volume E = 0 := by
+    refine measure_mono_null hEcover (measure_iUnion_null fun γ => ?_)
+    refine addHaar_image_eq_zero_of_differentiableOn_of_addHaar_eq_zero (μ := volume)
+      ?_ (hTγ γ)
+    intro w hw
+    have hwU : 0 < w.im := hDsub hw.2
+    exact (moebius_diffAt _ hwU).differentiableWithinAt
+  -- conclusion
+  rw [ae_iff, Measure.restrict_apply' hUm]
+  refine measure_mono_null ?_ hEnull
+  intro z hz
+  exact ⟨hz.2, hz.1⟩
 
 end RiemannDynamics
