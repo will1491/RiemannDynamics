@@ -5,6 +5,8 @@ Authors: Will (Ziang) Li
 -/
 import RiemannDynamics.Teichmuller.QuadraticDifferential.Extremal
 import RiemannDynamics.Teichmuller.QuadraticDifferential.HorizontalFlow.Coarea.Main
+import RiemannDynamics.Teichmuller.QuadraticDifferential.Necessity.Necessity
+import RiemannDynamics.Teichmuller.QuadraticDifferential.Necessity.Endgame
 
 /-!
 # Teichmüller's theorem over the Fuchsian base
@@ -1643,6 +1645,42 @@ theorem exists_teichmuller_form (hΓ₀ : IsFuchsianGroup Γ₀)
     (x y : TeichRep Γ₀) :
     ∃ (q : QuadraticDifferential y.group) (k : ℝ) (F : ℂ → ℂ),
       0 ≤ k ∧ k < 1 ∧ IsTeichmullerCandidate x y q k F := by
-  sorry
+  obtain ⟨F, b, hmc, hqa, hsym, hFsym, hext⟩ :=
+    exists_symmetric_extremal hΓ₀ hfree hcc x y
+  rcases eq_or_lt_of_le b.normInf_nonneg with hk0eq | hkpos
+  · -- the coefficient vanishes: the zero differential at modulus `0` serves
+    have hmu0 : b.μ =ᵐ[volume] 0 := by
+      refine eLpNormEssSup_eq_zero_iff.mp ?_
+      have h0 : (eLpNormEssSup b.μ volume).toReal = 0 := hk0eq.symm
+      rcases (ENNReal.toReal_eq_zero_iff _).mp h0 with h | h
+      · exact h
+      · exact absurd h (ne_top_of_lt b.bound)
+    refine ⟨0, 0, F, le_refl 0, zero_lt_one, hmc, ?_, ?_⟩
+    · have hgeo : IsQCGeometric F ((1 + b.normInf) / (1 - b.normInf)) :=
+        hqa.isQCGeometric_K
+      rwa [← hk0eq] at hgeo
+    · filter_upwards [ae_restrict_of_ae hqa.2.2, ae_restrict_of_ae hmu0] with z h1 h2
+      simp only [Pi.zero_apply] at h2
+      rw [h1, h2]
+      simp [teichmullerCoeffFun]
+  · -- positive modulus: the Hamilton maximizer supplies the differential
+    obtain ⟨q₀, hq1, hqmax⟩ :=
+      hamilton_krushkal_necessity hΓ₀ hfree hcc hmc hqa hsym hFsym hext
+    have hΓy := TeichRep.isFuchsian_group hΓ₀ hfree y
+    have hfy := y.group_free hfree
+    have hccy := y.group_cocompact hcc
+    have hbd_ae : ∀ᵐ w : ℂ, ‖b.μ w‖ ≤ b.normInf := by
+      filter_upwards [enorm_ae_le_eLpNormEssSup b.μ volume] with w hw
+      have h2 := ENNReal.toReal_mono (ne_top_of_lt b.bound) hw
+      simpa [BeltramiCoeff.normInf, enorm_eq_nnnorm] using h2
+    have heqD := eq_teichmullerCoeffFun_ae_of_maximal hΓy hfy hccy b.measurable hkpos
+      (ae_restrict_of_ae hbd_ae) hq1 hqmax
+    have hequp := ae_eq_upper_of_ae_eq_dirichlet hΓy hfy hccy
+      (beltrami_invariant_of_isMarkedCandidate hmc hqa)
+      (teichmullerCoeffFun_invariant_ae q₀ b.normInf) heqD
+    refine ⟨q₀, b.normInf, F, b.normInf_nonneg, b.normInf_lt_one, hmc, ?_, ?_⟩
+    · exact hqa.isQCGeometric_K
+    · filter_upwards [ae_restrict_of_ae hqa.2.2, hequp] with z h1 h2
+      rw [h1, h2]
 
 end RiemannDynamics
