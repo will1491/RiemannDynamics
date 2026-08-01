@@ -276,3 +276,6 @@ import RiemannDynamics.Teichmuller.QuadraticDifferential.Necessity.Necessity
 import RiemannDynamics.Teichmuller.QuadraticDifferential.Necessity.Endgame
 import RiemannDynamics.Teichmuller.QuadraticDifferential.Necessity.Variational.Schwarzian
 import RiemannDynamics.Teichmuller.QuadraticDifferential.Necessity.Variational.Nehari
+import RiemannDynamics.Teichmuller.QuadraticDifferential.Necessity.Variational.Gronwall
+import RiemannDynamics.Teichmuller.QuadraticDifferential.Necessity.Variational.Theta
+import RiemannDynamics.Teichmuller.QuadraticDifferential.Necessity.Variational.Reproducing
