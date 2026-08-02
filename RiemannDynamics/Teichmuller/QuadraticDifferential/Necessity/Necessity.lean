@@ -7,7 +7,8 @@ import RiemannDynamics.Teichmuller.QuadraticDifferential.Bergman
 import RiemannDynamics.Teichmuller.QuadraticDifferential.Necessity.Symmetrize
 import RiemannDynamics.Teichmuller.QuadraticDifferential.Necessity.Invariant
 import RiemannDynamics.Teichmuller.QuadraticDifferential.Necessity.Endgame
-import RiemannDynamics.Teichmuller.QuadraticDifferential.Necessity.Variational.Trivial
+import RiemannDynamics.Teichmuller.QuadraticDifferential.Necessity.Variational.Spread
+import RiemannDynamics.Teichmuller.QuadraticDifferential.Necessity.Variational.Deformation
 import RiemannDynamics.Analysis.SingularIntegral.L1Duality
 
 /-!
