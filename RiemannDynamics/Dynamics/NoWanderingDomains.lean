@@ -3,7 +3,7 @@ Copyright (c) 2026 Will (Ziang) Li. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Will (Ziang) Li
 -/
-import RiemannDynamics.Dynamics.Sullivan.EventualInjectivity
+import RiemannDynamics.Dynamics.Sullivan.EventualInjectivity.Package
 import RiemannDynamics.Dynamics.Sullivan.Spreading
 import RiemannDynamics.Dynamics.Sullivan.SeedTriviality
 

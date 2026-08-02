@@ -93,7 +93,11 @@ import RiemannDynamics.Dynamics.JuliaFatou.PeriodicDensity
 import RiemannDynamics.Dynamics.JuliaFatou.RepellingCycles
 import RiemannDynamics.Dynamics.JuliaFatou.RepellingDensity
 import RiemannDynamics.Dynamics.NoWanderingDomains
-import RiemannDynamics.Dynamics.Sullivan.EventualInjectivity
+import RiemannDynamics.Dynamics.Sullivan.EventualInjectivity.FiberCount
+import RiemannDynamics.Dynamics.Sullivan.EventualInjectivity.Loops
+import RiemannDynamics.Dynamics.Sullivan.EventualInjectivity.WindingLimit
+import RiemannDynamics.Dynamics.Sullivan.EventualInjectivity.WindingGrowth
+import RiemannDynamics.Dynamics.Sullivan.EventualInjectivity.Package
 import RiemannDynamics.Dynamics.Sullivan.SeedTriviality
 import RiemannDynamics.Dynamics.Sullivan.Spreading
 
