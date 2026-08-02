@@ -220,7 +220,8 @@ import RiemannDynamics.Uniformization.Perron.HarmonicTransfer
 import RiemannDynamics.Uniformization.Perron.Myrberg
 import RiemannDynamics.Uniformization.Perron.PathCover
 import RiemannDynamics.Uniformization.Perron.SurfaceHarmonic
-import RiemannDynamics.Uniformization.Perron.GreenSymmetry
+import RiemannDynamics.Uniformization.Perron.GreenSymmetry.Transport
+import RiemannDynamics.Uniformization.Perron.GreenSymmetry.Symmetry
 import RiemannDynamics.Uniformization.Perron.GreensFunction.Basic
 import RiemannDynamics.Uniformization.Perron.GreensFunction.Envelope
 import RiemannDynamics.Uniformization.Perron.GreensFunction.GreenMap

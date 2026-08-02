@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Will (Ziang) Li
 -/
 import RiemannDynamics.Uniformization.Perron.PathCover
-import RiemannDynamics.Uniformization.Perron.GreenSymmetry
+import RiemannDynamics.Uniformization.Perron.GreenSymmetry.Symmetry
 
 /-!
 # The deck-sum formula and symmetry of the Green's function
