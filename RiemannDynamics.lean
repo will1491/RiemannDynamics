@@ -225,7 +225,15 @@ import RiemannDynamics.Uniformization.Perron.GreensFunction.Basic
 import RiemannDynamics.Uniformization.Perron.GreensFunction.Envelope
 import RiemannDynamics.Uniformization.Perron.GreensFunction.GreenMap
 import RiemannDynamics.Uniformization.Perron.GreensFunction.Injective
-import RiemannDynamics.Uniformization.Perron.BipolarGreen
+import RiemannDynamics.Uniformization.Perron.BipolarGreen.Pieces
+import RiemannDynamics.Uniformization.Perron.BipolarGreen.Harnack
+import RiemannDynamics.Uniformization.Perron.BipolarGreen.DriftBound
+import RiemannDynamics.Uniformization.Perron.BipolarGreen.ExteriorBound
+import RiemannDynamics.Uniformization.Perron.BipolarGreen.Barrier
+import RiemannDynamics.Uniformization.Perron.BipolarGreen.Limit
+import RiemannDynamics.Uniformization.Perron.BipolarGreen.DipoleMap
+import RiemannDynamics.Uniformization.Perron.BipolarGreen.Injective
+import RiemannDynamics.Uniformization.Perron.BipolarGreen.Assembly
 
 import RiemannDynamics.Surface.Curves
 import RiemannDynamics.Surface.GenusSurface
