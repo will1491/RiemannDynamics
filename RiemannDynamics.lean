@@ -217,7 +217,8 @@ import RiemannDynamics.Uniformization.HyperbolicSurface
 import RiemannDynamics.Uniformization.CoverCountable
 import RiemannDynamics.Uniformization.GenusHyperbolic
 import RiemannDynamics.Uniformization.Perron.HarmonicTransfer
-import RiemannDynamics.Uniformization.Perron.Myrberg
+import RiemannDynamics.Uniformization.Perron.Myrberg.DeckSum
+import RiemannDynamics.Uniformization.Perron.Myrberg.Transfer
 import RiemannDynamics.Uniformization.Perron.PathCover
 import RiemannDynamics.Uniformization.Perron.SurfaceHarmonic
 import RiemannDynamics.Uniformization.Perron.GreenSymmetry.Transport

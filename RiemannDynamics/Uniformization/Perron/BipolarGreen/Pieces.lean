@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Will (Ziang) Li
 -/
 import RiemannDynamics.Uniformization.Perron.GreensFunction.Injective
-import RiemannDynamics.Uniformization.Perron.Myrberg
+import RiemannDynamics.Uniformization.Perron.Myrberg.Transfer
 
 /-!
 # Bipolar Green: coordinate disks and hyperbolic pieces
