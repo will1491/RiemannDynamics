@@ -279,3 +279,5 @@ import RiemannDynamics.Teichmuller.QuadraticDifferential.Necessity.Variational.N
 import RiemannDynamics.Teichmuller.QuadraticDifferential.Necessity.Variational.Gronwall
 import RiemannDynamics.Teichmuller.QuadraticDifferential.Necessity.Variational.Theta
 import RiemannDynamics.Teichmuller.QuadraticDifferential.Necessity.Variational.Reproducing
+import RiemannDynamics.Teichmuller.QuadraticDifferential.Necessity.Variational.ZeroExtension
+import RiemannDynamics.Teichmuller.QuadraticDifferential.Necessity.Variational.Trivial

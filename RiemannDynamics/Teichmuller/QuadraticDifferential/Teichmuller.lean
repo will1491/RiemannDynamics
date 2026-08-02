@@ -18,8 +18,10 @@ on the upper half plane. The lower bound comes from the Reich–Strebel main ine
 applied to the conjugator `h = G⁻¹ ∘ F` of a competitor with the candidate, followed by
 the pointwise Wirtinger algebra in the `q`-frame; the equality case forces the competitor
 to solve the same Beltrami equation and the Möbius factor is trivial on three boundary
-points. The existence half — every marked class contains a Teichmüller-form candidate — is
-recorded as the open input of the campaign.
+points. The existence half — every marked class contains a Teichmüller-form candidate —
+is proved by the Hamilton–Krushkal route: the symmetric extremal marked candidate, the
+attained Hamilton maximizer over the Bergman unit ball, and the Hölder equality case
+spread along the invariance law.
 
 * `exists_upper_conjugator_of_candidates` — the reduction to a boundary-trivial
   equivariant self-map of the upper half plane.
@@ -29,7 +31,7 @@ recorded as the open input of the campaign.
 * `exists_extremal_unique_upper` — the conditional existence-and-uniqueness statement.
 * `teichDistG_teichmullerCoeff`, `teichDistG_teichmullerCoeff_add` — the Teichmüller ray
   through the base point and its geodesic additivity.
-* `exists_teichmuller_form` — the recorded existence input.
+* `exists_teichmuller_form` — the existence half of Teichmüller's theorem.
 -/
 
 open MeasureTheory Filter Topology
@@ -1628,16 +1630,16 @@ theorem teichDistG_teichmullerCoeff_add (hΓ₀ : IsFuchsianGroup Γ₀)
   rw [hd10, hd20]
   linarith only [hrel, hlogadd]
 
-/-! ## The recorded existence input -/
+/-! ## The existence half -/
 
-/-- **The existence half of Teichmüller's theorem — the open input of the equivariant
-tier.** Every marked pair over a cocompact free Fuchsian base admits a Teichmüller-form
-candidate in its class. The proof requires the Hamilton–Krushkal necessity of extremal
-coefficients, the finite-dimensionality of the space of automorphic quadratic
-differentials (the Riemann–Roch tier), and the variational dependence of the normalized
-Beltrami solution on its coefficient; none of these tiers is available in this
-development, and every consumer of form-existence must take this statement as a
-hypothesis until they are. -/
+/-- **The existence half of Teichmüller's theorem.** Every marked pair over a cocompact
+free Fuchsian base admits a Teichmüller-form candidate in its class. The proof runs the
+Hamilton–Krushkal route: the symmetric extremal marked candidate attains the equivariant
+dilatation infimum, its coefficient attains the Hamilton pairing supremum over the unit
+ball of integrable quadratic differentials of the domain group — the variational step
+defeats any pairing gap through the fundamental variational lemma — and the Hölder
+equality case identifies the coefficient with the Teichmüller form `k q̄/|q|` on the
+Dirichlet domain, spread to the upper half plane along the invariance law. -/
 theorem exists_teichmuller_form (hΓ₀ : IsFuchsianGroup Γ₀)
     (hfree : ∀ γ : Γ₀, (∃ τ : UpperHalfPlane, γ • τ = τ) →
       ∀ τ' : UpperHalfPlane, γ • τ' = τ')
