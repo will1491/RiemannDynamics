@@ -79,7 +79,8 @@ import RiemannDynamics.Basic
 import RiemannDynamics.Dynamics.Deformation.DeltaOperator.Basic
 import RiemannDynamics.Dynamics.Deformation.DeltaOperator.ChainRule
 import RiemannDynamics.Dynamics.Deformation.DeltaOperator.Representation
-import RiemannDynamics.Dynamics.Deformation.SphereVectorField
+import RiemannDynamics.Dynamics.Deformation.SphereVectorField.Basic
+import RiemannDynamics.Dynamics.Deformation.SphereVectorField.Transport
 import RiemannDynamics.Dynamics.FatouComponents.Def
 import RiemannDynamics.Dynamics.FatouComponents.GrandOrbit
 import RiemannDynamics.Dynamics.FatouComponents.Periodic
