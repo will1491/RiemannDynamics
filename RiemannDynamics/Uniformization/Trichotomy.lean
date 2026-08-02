@@ -5,7 +5,7 @@ Authors: Will (Ziang) Li
 -/
 import RiemannDynamics.Uniformization.HolomorphicEquiv
 import RiemannDynamics.Uniformization.Perron.BipolarGreen
-import RiemannDynamics.Analysis.Winding.GridPrimitives
+import RiemannDynamics.Analysis.Winding.GridPrimitives.Primitives
 import RMT4.Main
 
 /-!

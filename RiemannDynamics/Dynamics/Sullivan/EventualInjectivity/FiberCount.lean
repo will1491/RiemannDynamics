@@ -5,7 +5,7 @@ Authors: Will (Ziang) Li
 -/
 import RiemannDynamics.Dynamics.FatouComponents.Periodic
 import RiemannDynamics.Dynamics.JuliaFatou.RepellingDensity
-import RiemannDynamics.Analysis.Winding.GridPrimitives
+import RiemannDynamics.Analysis.Winding.GridPrimitives.Primitives
 import RMT4.Main
 import Mathlib.Topology.Homotopy.Lifting
 import Mathlib.AlgebraicTopology.FundamentalGroupoid.SimplyConnected

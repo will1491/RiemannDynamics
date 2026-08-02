@@ -72,7 +72,10 @@ import RiemannDynamics.Analysis.WeakLimits.JacobianWeakContinuity.WeakContinuity
 import RiemannDynamics.Analysis.WeakLimits.WeakCompactness
 import RiemannDynamics.Analysis.WeakLimits.WeakL2Limit
 import RiemannDynamics.Analysis.Winding.Basic
-import RiemannDynamics.Analysis.Winding.GridPrimitives
+import RiemannDynamics.Analysis.Winding.GridPrimitives.Basic
+import RiemannDynamics.Analysis.Winding.GridPrimitives.Join
+import RiemannDynamics.Analysis.Winding.GridPrimitives.Loop
+import RiemannDynamics.Analysis.Winding.GridPrimitives.Primitives
 
 import RiemannDynamics.Basic
 
