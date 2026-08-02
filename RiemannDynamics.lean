@@ -76,7 +76,9 @@ import RiemannDynamics.Analysis.Winding.GridPrimitives
 
 import RiemannDynamics.Basic
 
-import RiemannDynamics.Dynamics.Deformation.DeltaOperator
+import RiemannDynamics.Dynamics.Deformation.DeltaOperator.Basic
+import RiemannDynamics.Dynamics.Deformation.DeltaOperator.ChainRule
+import RiemannDynamics.Dynamics.Deformation.DeltaOperator.Representation
 import RiemannDynamics.Dynamics.Deformation.SphereVectorField
 import RiemannDynamics.Dynamics.FatouComponents.Def
 import RiemannDynamics.Dynamics.FatouComponents.GrandOrbit
