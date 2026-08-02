@@ -28,7 +28,7 @@ spread along the invariance law.
 * `isTeichmullerCandidate_le_dilatation`, `isTeichmullerCandidate_extremal` —
   extremality and the distance formula.
 * `isTeichmullerCandidate_unique` — unique extremality on the upper half plane.
-* `exists_extremal_unique_upper` — the conditional existence-and-uniqueness statement.
+* `exists_extremal_unique_upper` — the existence-and-uniqueness statement.
 * `teichDistG_teichmullerCoeff`, `teichDistG_teichmullerCoeff_add` — the Teichmüller ray
   through the base point and its geodesic additivity.
 * `exists_teichmuller_form` — the existence half of Teichmüller's theorem.
@@ -1017,13 +1017,67 @@ theorem isTeichmullerCandidate_unique (hΓ₀ : IsFuchsianGroup Γ₀)
   rw [hHid z hz] at h3
   exact h3.symm
 
-/-! ## The conditional existence-and-uniqueness statement -/
+/-! ## The existence-and-uniqueness statement -/
 
-/-- **Teichmüller's theorem on the upper half plane, conditional form**: if the marked
-class of the pair contains a Teichmüller-form candidate, then it contains an extremal
-marked candidate of dilatation `sInf (gDilatationSet x y)`, unique up to its values on
-the upper half plane. -/
-theorem exists_extremal_unique_upper (hΓ₀ : IsFuchsianGroup Γ₀)
+/-- **Nondegenerate form existence above the base dilatation**: a pair whose equivariant
+dilatation infimum lies strictly above `1` admits a Teichmüller-form candidate of
+positive modulus whose differential is somewhere nonzero on the upper half plane. -/
+theorem exists_teichmuller_form_nondegenerate (hΓ₀ : IsFuchsianGroup Γ₀)
+    (hfree : ∀ γ : Γ₀, (∃ τ : UpperHalfPlane, γ • τ = τ) →
+      ∀ τ' : UpperHalfPlane, γ • τ' = τ')
+    (hcc : CompactSpace (Quotient (MulAction.orbitRel Γ₀ UpperHalfPlane)))
+    {x y : TeichRep Γ₀} (hlt : 1 < sInf (gDilatationSet x y)) :
+    ∃ (q : QuadraticDifferential y.group) (k : ℝ) (F : ℂ → ℂ),
+      0 < k ∧ k < 1 ∧ (∃ z : ℂ, 0 < z.im ∧ q z ≠ 0) ∧
+      IsTeichmullerCandidate x y q k F := by
+  obtain ⟨F, b, hmc, hqa, hsym, hFsym, hext⟩ :=
+    exists_symmetric_extremal hΓ₀ hfree hcc x y
+  -- the strict dilatation bound forces a positive modulus
+  have hkpos : 0 < b.normInf := by
+    have hk1 := b.normInf_lt_one
+    have h1k : (0:ℝ) < 1 - b.normInf := by linarith
+    have hltK : 1 < b.K := by rw [hext]; exact hlt
+    rw [show b.K = (1 + b.normInf) / (1 - b.normInf) from rfl] at hltK
+    have h2 := (one_lt_div h1k).mp hltK
+    linarith
+  -- the Hamilton maximizer supplies the differential
+  obtain ⟨q₀, hq1, hqmax⟩ :=
+    hamilton_krushkal_necessity hΓ₀ hfree hcc hmc hqa hsym hFsym hext
+  -- the differential is somewhere nonzero: else the pairing would vanish
+  have hq0 : ∃ z : ℂ, 0 < z.im ∧ q₀ z ≠ 0 := by
+    by_contra hnone
+    push Not at hnone
+    have hzero : qdPairing b.μ q₀ = 0 := by
+      unfold qdPairing
+      refine setIntegral_eq_zero_of_forall_eq_zero ?_
+      rintro w ⟨τ, -, rfl⟩
+      rw [hnone _ (by simpa using τ.im_pos), mul_zero]
+    rw [hzero] at hqmax
+    simp only [Complex.zero_re] at hqmax
+    linarith
+  -- assembly along the positive branch of `exists_teichmuller_form`
+  have hΓy := TeichRep.isFuchsian_group hΓ₀ hfree y
+  have hfy := y.group_free hfree
+  have hccy := y.group_cocompact hcc
+  have hbd_ae : ∀ᵐ w : ℂ, ‖b.μ w‖ ≤ b.normInf := by
+    filter_upwards [enorm_ae_le_eLpNormEssSup b.μ volume] with w hw
+    have h2 := ENNReal.toReal_mono (ne_top_of_lt b.bound) hw
+    simpa [BeltramiCoeff.normInf, enorm_eq_nnnorm] using h2
+  have heqD := eq_teichmullerCoeffFun_ae_of_maximal hΓy hfy hccy b.measurable hkpos
+    (ae_restrict_of_ae hbd_ae) hq1 hqmax
+  have hequp := ae_eq_upper_of_ae_eq_dirichlet hΓy hfy hccy
+    (beltrami_invariant_of_isMarkedCandidate hmc hqa)
+    (teichmullerCoeffFun_invariant_ae q₀ b.normInf) heqD
+  refine ⟨q₀, b.normInf, F, hkpos, b.normInf_lt_one, hq0, hmc, ?_, ?_⟩
+  · exact hqa.isQCGeometric_K
+  · filter_upwards [ae_restrict_of_ae hqa.2.2, hequp] with z h1 h2
+    rw [h1, h2]
+
+/-- **Teichmüller's theorem on the upper half plane, from a given candidate**: if the
+marked class of the pair contains a Teichmüller-form candidate with somewhere-nonzero
+differential, then it contains an extremal marked candidate of dilatation
+`sInf (gDilatationSet x y)`, unique up to its values on the upper half plane. -/
+theorem exists_extremal_unique_upper_of_candidate (hΓ₀ : IsFuchsianGroup Γ₀)
     (hfree : ∀ γ : Γ₀, (∃ τ : UpperHalfPlane, γ • τ = τ) →
       ∀ τ' : UpperHalfPlane, γ • τ' = τ')
     (hcc : CompactSpace (Quotient (MulAction.orbitRel Γ₀ UpperHalfPlane)))
@@ -1047,6 +1101,70 @@ theorem exists_extremal_unique_upper (hΓ₀ : IsFuchsianGroup Γ₀)
   · intro G hGqc hGc z hz
     rw [hsinf] at hGqc
     exact isTeichmullerCandidate_unique hΓ₀ hfree hcc hq0 hk0 hk1 hF hGqc hGc z hz
+
+/-- **Teichmüller's theorem on the upper half plane**: every marked pair contains an
+extremal marked candidate of dilatation `sInf (gDilatationSet x y)`, unique up to its
+values on the upper half plane. -/
+theorem exists_extremal_unique_upper (hΓ₀ : IsFuchsianGroup Γ₀)
+    (hfree : ∀ γ : Γ₀, (∃ τ : UpperHalfPlane, γ • τ = τ) →
+      ∀ τ' : UpperHalfPlane, γ • τ' = τ')
+    (hcc : CompactSpace (Quotient (MulAction.orbitRel Γ₀ UpperHalfPlane)))
+    (x y : TeichRep Γ₀) :
+    ∃ F : ℂ → ℂ, IsQCGeometric F (sInf (gDilatationSet x y)) ∧
+      IsMarkedCandidate x y F ∧
+      ∀ G : ℂ → ℂ, IsQCGeometric G (sInf (gDilatationSet x y)) →
+        IsMarkedCandidate x y G → ∀ z : ℂ, 0 < z.im → G z = F z := by
+  have h1le : 1 ≤ sInf (gDilatationSet x y) :=
+    le_csInf (gDilatationSet_nonempty x y) fun K hK => one_le_of_mem_gDilatationSet hK
+  rcases lt_or_eq_of_le h1le with hlt | heq
+  · -- nondegenerate case: the Teichmüller-form candidate route
+    obtain ⟨q, k, F, hk0, hk1, hq0, hF⟩ :=
+      exists_teichmuller_form_nondegenerate hΓ₀ hfree hcc hlt
+    exact exists_extremal_unique_upper_of_candidate hΓ₀ hfree hcc
+      ⟨q, k, F, hk0.le, hk1, hq0, hF⟩
+  · -- conformal case: every candidate of dilatation `1` is the identity
+    obtain ⟨F₀, hgeo₀, hmc₀⟩ := exists_extremal_marked hΓ₀ hfree hcc x y
+    have hid : ∀ H : ℂ → ℂ, IsQCGeometric H 1 → IsMarkedCandidate x y H →
+        ∀ w : ℂ, H w = w := by
+      intro H hH hHc
+      obtain ⟨b₁, hbn, hbQC⟩ := isQCAnalytic_of_isQCGeometric le_rfl hH
+      have hbn0 : b₁.normInf = 0 := by
+        have h0 : b₁.normInf ≤ 0 := by
+          have hb' := hbn
+          norm_num at hb'
+          exact hb'
+        exact le_antisymm h0 b₁.normInf_nonneg
+      have hbe : eLpNormEssSup b₁.μ volume = 0 := by
+        rcases (ENNReal.toReal_eq_zero_iff _).mp hbn0 with h0 | htop
+        · exact h0
+        · exact absurd htop (ne_top_of_lt b₁.bound)
+      have hmu : b₁.μ =ᵐ[volume] BeltramiCoeff.zero.μ := eLpNormEssSup_eq_zero_iff.mp hbe
+      have hgz : IsQCAnalytic H BeltramiCoeff.zero := hbQC.congr_coeff hmu
+      have hgdiff : Differentiable ℂ H := weyl_lemma hgz rfl
+      obtain ⟨a, c, -, hgeq⟩ :=
+        eq_affine_of_differentiable_of_injective hgdiff hgz.injective
+      have hg0 : H 0 = 0 := by
+        have h0 := hHc.1 0
+        rwa [Complex.ofReal_zero, y.w_zero, x.w_zero] at h0
+      have hg1 : H 1 = 1 := by
+        have h1 := hHc.1 1
+        rwa [Complex.ofReal_one, y.w_one, x.w_one] at h1
+      have hc : c = 0 := by
+        have h0 := hg0
+        rw [hgeq] at h0
+        simpa using h0
+      have ha1 : a = 1 := by
+        have h1 := hg1
+        rw [hgeq, hc] at h1
+        simpa using h1
+      intro w
+      rw [hgeq, ha1, hc]
+      simp
+    refine ⟨F₀, hgeo₀, hmc₀, ?_⟩
+    intro G hGqc hGc z hz
+    rw [← heq] at hGqc
+    have hgeo₁ : IsQCGeometric F₀ 1 := by rwa [← heq] at hgeo₀
+    rw [hid G hGqc hGc z, hid F₀ hgeo₁ hmc₀ z]
 
 /-- **The conformal degenerate case**: a candidate of dilatation `1` for a pair is
 conformal, hence affine, and fixing `0` and `1` it is the identity; the pair has equal

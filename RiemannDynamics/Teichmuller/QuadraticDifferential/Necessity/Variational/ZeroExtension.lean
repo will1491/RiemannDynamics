@@ -11,6 +11,7 @@ import RiemannDynamics.Teichmuller.QuadraticDifferential.Necessity.Symmetrize
 
 A Beltrami coefficient supported in the closed upper half plane has its normalized
 solution conformal on the open lower half plane, where the Schwarzian derivative reads
+the deformation. Along an affine family of such coefficients the solution values at
 lower-half-plane points depend analytically on the parameter, as does the Schwarzian,
 and at the origin of a linear ray the parameter derivative of the Schwarzian is the
 pairing of the direction with the quartic kernel. A solution whose Schwarzian vanishes
