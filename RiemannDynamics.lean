@@ -221,7 +221,10 @@ import RiemannDynamics.Uniformization.Perron.Myrberg
 import RiemannDynamics.Uniformization.Perron.PathCover
 import RiemannDynamics.Uniformization.Perron.SurfaceHarmonic
 import RiemannDynamics.Uniformization.Perron.GreenSymmetry
-import RiemannDynamics.Uniformization.Perron.GreensFunction
+import RiemannDynamics.Uniformization.Perron.GreensFunction.Basic
+import RiemannDynamics.Uniformization.Perron.GreensFunction.Envelope
+import RiemannDynamics.Uniformization.Perron.GreensFunction.GreenMap
+import RiemannDynamics.Uniformization.Perron.GreensFunction.Injective
 import RiemannDynamics.Uniformization.Perron.BipolarGreen
 
 import RiemannDynamics.Surface.Curves
