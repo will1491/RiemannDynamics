@@ -53,7 +53,8 @@ import RiemannDynamics.Analysis.Sobolev.AbsolutelyContinuousLines
 import RiemannDynamics.Analysis.Sobolev.Coarea.Assembly
 import RiemannDynamics.Analysis.Sobolev.Coarea.Foundations
 import RiemannDynamics.Analysis.Sobolev.Coarea.PerPiece
-import RiemannDynamics.Analysis.Sobolev.ConformalCoV
+import RiemannDynamics.Analysis.Sobolev.ConformalCoV.Comp
+import RiemannDynamics.Analysis.Sobolev.ConformalCoV.Removable
 import RiemannDynamics.Analysis.Sobolev.DifferenceQuotient
 import RiemannDynamics.Analysis.Sobolev.GehringLehto.CourantLebesgue
 import RiemannDynamics.Analysis.Sobolev.GehringLehto.Differentiability

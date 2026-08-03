@@ -8,7 +8,7 @@ import RiemannDynamics.Uniformization.Fuchsian
 import RiemannDynamics.QC.Calculus.Removability
 import RiemannDynamics.QC.Calculus.Weyl
 import RiemannDynamics.QC.GeometricToAnalytic.NondegeneracyAssembly
-import RiemannDynamics.Analysis.Sobolev.ConformalCoV
+import RiemannDynamics.Analysis.Sobolev.ConformalCoV.Removable
 import RiemannDynamics.QC.InverseQC.LusinN
 
 /-!

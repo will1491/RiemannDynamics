@@ -7,7 +7,7 @@ import RiemannDynamics.Teichmuller.QuadraticDifferential.FlatMetric
 import RiemannDynamics.QC.LengthArea.CurveConcat
 import RiemannDynamics.QC.GeometricToAnalytic.GeometricDifferentiable.PlaneSeparation
 import RiemannDynamics.Analysis.Winding.Basic
-import RiemannDynamics.Analysis.Sobolev.ConformalCoV
+import RiemannDynamics.Analysis.Sobolev.ConformalCoV.Removable
 import RiemannDynamics.Analysis.Sobolev.SobolevToACL
 
 /-!
