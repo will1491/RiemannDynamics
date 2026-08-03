@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Will (Ziang) Li
 -/
 import RiemannDynamics.Teichmuller.Foundations.Equivariance
-import RiemannDynamics.Surface.Orientation
+import RiemannDynamics.Surface.Orientation.Surface
 
 /-!
 # Teichmüller representatives over an abstract Fuchsian base

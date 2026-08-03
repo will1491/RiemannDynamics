@@ -244,7 +244,8 @@ import RiemannDynamics.Surface.GenusSurface.VertexChart
 import RiemannDynamics.Surface.GenusSurface.Atlas
 import RiemannDynamics.Surface.GenusSurface.Manifold
 import RiemannDynamics.Surface.MappingClassGroup
-import RiemannDynamics.Surface.Orientation
+import RiemannDynamics.Surface.Orientation.Degree
+import RiemannDynamics.Surface.Orientation.Surface
 import RiemannDynamics.Surface.Pi1
 import RiemannDynamics.Surface.WindingFunctionals
 
