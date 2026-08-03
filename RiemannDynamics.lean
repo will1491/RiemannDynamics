@@ -238,7 +238,11 @@ import RiemannDynamics.Uniformization.Perron.BipolarGreen.Injective
 import RiemannDynamics.Uniformization.Perron.BipolarGreen.Assembly
 
 import RiemannDynamics.Surface.Curves
-import RiemannDynamics.Surface.GenusSurface
+import RiemannDynamics.Surface.GenusSurface.Basic
+import RiemannDynamics.Surface.GenusSurface.EdgeCharts
+import RiemannDynamics.Surface.GenusSurface.VertexChart
+import RiemannDynamics.Surface.GenusSurface.Atlas
+import RiemannDynamics.Surface.GenusSurface.Manifold
 import RiemannDynamics.Surface.MappingClassGroup
 import RiemannDynamics.Surface.Orientation
 import RiemannDynamics.Surface.Pi1

@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Will (Ziang) Li
 -/
 import Mathlib.GroupTheory.PresentedGroup
-import RiemannDynamics.Surface.GenusSurface
+import RiemannDynamics.Surface.GenusSurface.Manifold
 
 /-!
 # The surface group of genus `g`

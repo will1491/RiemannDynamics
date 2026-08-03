@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Will (Ziang) Li
 -/
 import RiemannDynamics.Teichmuller.Foundations.Def
-import RiemannDynamics.Surface.GenusSurface
+import RiemannDynamics.Surface.GenusSurface.Manifold
 import RiemannDynamics.Uniformization.Fuchsian
 import RiemannDynamics.Uniformization.GenusHyperbolic
 

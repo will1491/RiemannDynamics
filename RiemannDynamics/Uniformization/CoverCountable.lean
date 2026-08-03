@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Will (Ziang) Li
 -/
 import RiemannDynamics.Uniformization.Perron.PathCover
-import RiemannDynamics.Surface.GenusSurface
+import RiemannDynamics.Surface.GenusSurface.Manifold
 
 /-!
 # Second countability of the path cover
