@@ -263,7 +263,11 @@ import RiemannDynamics.Teichmuller.Compactness.Limit
 import RiemannDynamics.Teichmuller.Compactness.Mumford
 
 import RiemannDynamics.Teichmuller.FuchsianGeometry.Dirichlet
-import RiemannDynamics.Teichmuller.FuchsianGeometry.Polygon
+import RiemannDynamics.Teichmuller.FuchsianGeometry.Polygon.Basic
+import RiemannDynamics.Teichmuller.FuchsianGeometry.Polygon.FrameSign
+import RiemannDynamics.Teichmuller.FuchsianGeometry.Polygon.Fan
+import RiemannDynamics.Teichmuller.FuchsianGeometry.Polygon.SidePairing
+import RiemannDynamics.Teichmuller.FuchsianGeometry.Polygon.AngleSum
 import RiemannDynamics.Teichmuller.FuchsianGeometry.PolygonRank.Basic
 import RiemannDynamics.Teichmuller.FuchsianGeometry.PolygonRank.Homotopy
 import RiemannDynamics.Teichmuller.FuchsianGeometry.PolygonRank.Rank
