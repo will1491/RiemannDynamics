@@ -128,7 +128,8 @@ import RiemannDynamics.Hyperbolic.ModularLambda.ModularFormsBridge
 import RiemannDynamics.Hyperbolic.ModularLambda.TriplyPunctured
 import RiemannDynamics.Hyperbolic.PathWinding.LogLiftHomotopy
 import RiemannDynamics.Hyperbolic.PathWinding.WindingInvariance
-import RiemannDynamics.Hyperbolic.PlaneGeometry.Geodesics
+import RiemannDynamics.Hyperbolic.PlaneGeometry.Geodesics.Frame
+import RiemannDynamics.Hyperbolic.PlaneGeometry.Geodesics.Interpolation
 import RiemannDynamics.Hyperbolic.PlaneGeometry.StarShapedPrimitive
 import RiemannDynamics.Hyperbolic.PlaneGeometry.TriangleArea
 import RiemannDynamics.Hyperbolic.WindingNumber.CircleRectangleWinding
