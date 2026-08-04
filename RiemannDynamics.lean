@@ -268,7 +268,10 @@ import RiemannDynamics.Teichmuller.FuchsianGeometry.GaussBonnet
 
 import RiemannDynamics.Teichmuller.ModuliAction.Interpolate
 import RiemannDynamics.Teichmuller.ModuliAction.UpperQC
-import RiemannDynamics.Teichmuller.ModuliAction.ModAction
+import RiemannDynamics.Teichmuller.ModuliAction.ModAction.Group
+import RiemannDynamics.Teichmuller.ModuliAction.ModAction.Remark
+import RiemannDynamics.Teichmuller.ModuliAction.ModAction.UpperRemark
+import RiemannDynamics.Teichmuller.ModuliAction.ModAction.SmulUpper
 
 import RiemannDynamics.Teichmuller.QuadraticDifferential.Def
 import RiemannDynamics.Teichmuller.QuadraticDifferential.Foliations

@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Will (Ziang) Li
 -/
 import RiemannDynamics.Teichmuller.FuchsianGeometry.GaussBonnet
-import RiemannDynamics.Teichmuller.ModuliAction.ModAction
+import RiemannDynamics.Teichmuller.ModuliAction.ModAction.SmulUpper
 import Mathlib.NumberTheory.ModularForms.SlashInvariantForms
 import Mathlib.Analysis.Complex.UpperHalfPlane.Manifold
 
