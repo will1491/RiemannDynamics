@@ -27,8 +27,8 @@ No new `axiom`, no `sorry`.
 ## Collaborators
 
 - **Will (Ziang) Li** — primary maintainer; design and formalization.
-- **Yusheng Luo** (Cornell, Department of Mathematics) — mathematical advisor; domain expert in complex dynamics, Teichmüller theory, and hyperbolic geometry.
-- **Ziyang Qin** — Lean 4 expert; technical guidance on tactic infrastructure, Mathlib idioms, and large-scale proof engineering. (See also Ziyang's [differential geometry library](https://github.com/qinz1yang/differential-geometry).)
+- [**Yusheng Luo**](https://sites.google.com/view/yushengmath/home) (Cornell, Department of Mathematics) — mathematical advisor; domain expert in complex dynamics, Teichmüller theory, and hyperbolic geometry.
+- [**Ziyang Qin**](https://qinziyang.com) — Lean 4 expert; technical guidance on tactic infrastructure, Mathlib idioms, and large-scale proof engineering. (See also Ziyang's [differential geometry library](https://github.com/qinz1yang/differential-geometry).)
 
 ## Installation
 
