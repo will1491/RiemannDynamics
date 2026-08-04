@@ -79,8 +79,6 @@ import RiemannDynamics.Analysis.Winding.GridPrimitives.Join
 import RiemannDynamics.Analysis.Winding.GridPrimitives.Loop
 import RiemannDynamics.Analysis.Winding.GridPrimitives.Primitives
 
-import RiemannDynamics.Basic
-
 import RiemannDynamics.Dynamics.Deformation.DeltaOperator.Basic
 import RiemannDynamics.Dynamics.Deformation.DeltaOperator.ChainRule
 import RiemannDynamics.Dynamics.Deformation.DeltaOperator.Representation
