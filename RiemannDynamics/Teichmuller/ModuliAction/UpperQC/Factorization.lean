@@ -24,7 +24,7 @@ namespace RiemannDynamics
 set_option maxHeartbeats 400000 in
 -- The radial contour parameterization carries explicit trigonometric estimates;
 -- the single-declaration elaboration exceeds the default heartbeat budget.
-/-- Stage F1 ([HALF] contour): the radial parameterization of the boundary of the upper
+/-- The radial parameterization of the boundary of the upper
 half-disc `{‖z‖ ≤ R} ∩ {im ≥ 0}` from an interior point `z₀`, via the Minkowski gauge:
 a positive continuous radial function landing on the frontier, uniquely determined by
 frontier membership along each ray. -/
@@ -280,7 +280,7 @@ theorem halfdisc_radial (z₀ : ℂ) (hz₀ : 0 < z₀.im) (R : ℝ) (hR : ‖z�
     change (gauge B₀ (Complex.exp (ϑ * Complex.I)))⁻¹ = t
     rw [h2, inv_inv]
 
-/-- Stage F2: a continuous function on an interval with values in `2πiℤ` takes equal
+/-- A continuous function on an interval with values in `2πiℤ` takes equal
 values at the endpoints. -/
 theorem disc_const {f : ℝ → ℂ} {a b : ℝ} (hab : a ≤ b)
     (hf : ContinuousOn f (Set.Icc a b))
@@ -380,7 +380,7 @@ theorem disc_const {f : ℝ → ℂ} {a b : ℝ} (hab : a ≤ b)
 set_option maxHeartbeats 400000 in
 -- The window-selection argument iterates the contour estimate through a bisection;
 -- the single-declaration elaboration exceeds the default heartbeat budget.
-/-- Stage F3 ([HALF] window): the half-disc radial contour passes through a prescribed
+/-- The half-disc radial contour passes through a prescribed
 real frontier point at a unique angle in `(π, 2π)`, and near that angle the contour is
 real with strictly increasing real part. -/
 theorem halfdisc_window (z₀ : ℂ) (hz₀ : 0 < z₀.im) (R : ℝ)
@@ -667,7 +667,7 @@ theorem halfdisc_window (z₀ : ℂ) (hz₀ : 0 < z₀.im) (R : ℝ)
     rw [h4, h5, hηre ϑ hsin, hηre ϑ' hsin']
     exact hXmono ⟨h1, by linarith⟩ ⟨by linarith, h3⟩ h2
 
-/-- Stage F4: the principal branch shift across the negative imaginary side: for `w` in
+/-- The principal branch shift across the negative imaginary side: for `w` in
 the open upper half plane, `log w = log (-w) + πi`. -/
 theorem log_branch_plus {w : ℂ} (hw : w ≠ 0) (him : 0 < w.im) :
     Complex.log w = Complex.log (-w) + Real.pi * Complex.I := by
@@ -726,7 +726,7 @@ theorem log_branch_plus {w : ℂ} (hw : w ≠ 0) (him : 0 < w.im) :
   simp at hn
   linear_combination hn
 
-/-- Stage F4′: the mirrored branch shift: for `w` in the open lower half plane,
+/-- The mirrored branch shift: for `w` in the open lower half plane,
 `log w = log (-w) - πi`. -/
 theorem log_branch_minus {w : ℂ} (hw : w ≠ 0) (him : w.im < 0) :
     Complex.log w = Complex.log (-w) - Real.pi * Complex.I := by
@@ -738,9 +738,9 @@ theorem log_branch_minus {w : ℂ} (hw : w ≠ 0) (him : w.im < 0) :
 -- The winding computation around the half-disc contour is one long elaboration; the
 -- raised budget is required.
 set_option maxHeartbeats 400000 in
--- The half-plane preservation proof assembles the contour, window, and winding stages;
+-- The half-plane preservation proof assembles the contour, window, and winding lemmas;
 -- the single-declaration elaboration exceeds the default heartbeat budget.
-/-- Stage F ([HALF]): the normalized solution of a Teichmüller representative preserves
+/-- The normalized solution of a Teichmüller representative preserves
 the upper half plane. The lower branch of the half-plane dichotomy is excluded by a
 winding-number computation: the image of a small circle winds `+1` (sense preservation),
 while the image of the half-disc contour, whose interior pieces land in the closed lower

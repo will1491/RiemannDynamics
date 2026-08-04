@@ -21,9 +21,9 @@ namespace RiemannDynamics
 -- Instantiating the two abstract limit lemmas over the mollified frames is a heavy
 -- elaboration; the raised budget is required.
 set_option maxHeartbeats 400000 in
--- The weak chain rule assembles the three mollification stages in one declaration;
+-- The weak chain rule assembles the three mollification steps in one declaration;
 -- the single-declaration elaboration exceeds the default heartbeat budget.
-/-- Stage B2 (X6–X8): weak chain rule for the composition of a compactly supported
+/-- Weak chain rule for the composition of a compactly supported
 continuous `W^{1,2}` function with a plane quasiconformal map, in the directions `1, I`. -/
 theorem hasWeakDirDeriv_comp_qc
     {q : ℂ → ℂ} {bq : BeltramiCoeff} (hq : IsQCAnalytic q bq)
@@ -252,7 +252,7 @@ theorem hasWeakDirDeriv_comp_qc
 set_option maxHeartbeats 400000 in
 -- The classical-derivative bridge runs a Lebesgue-point argument over the open set;
 -- the single-declaration elaboration exceeds the default heartbeat budget.
-/-- Stage C ([BRIDGE]): on an open set, the classical directional derivative of an
+/-- On an open set, the classical directional derivative of an
 almost-everywhere differentiable function agrees almost everywhere with any locally
 integrable weak directional derivative, by cutoff transfer to the plane statement. -/
 theorem fderiv_ae_eq_weakDirDeriv_on
@@ -590,7 +590,7 @@ theorem fderiv_ae_eq_weakDirDeriv_on
 set_option maxHeartbeats 400000 in
 -- The cutoff package discharges support, smoothness, and derivative bounds together;
 -- the single-declaration elaboration exceeds the default heartbeat budget.
-/-- Stage D1: the cutoff package. For a smooth compactly supported cutoff `χ` with
+/-- The cutoff package. For a smooth compactly supported cutoff `χ` with
 support in the open set `Ω`, the localization `χ • v` of a function with weak
 directional derivative `g` on `Ω` has the Leibniz combination as a weak directional
 derivative on the whole plane, and the two localized pieces are continuous. -/
@@ -796,7 +796,7 @@ theorem cutoff_hasWeakDirDeriv
   rw [h1, hid, hgoal2]
   ring
 
-/-- Stage D2: a smooth compact-set cutoff by mollification of an indicator: it is `1` on
+/-- A smooth compact-set cutoff by mollification of an indicator: it is `1` on
 an open neighbourhood of the compact set `K`, supported inside the open set `U`. -/
 theorem smooth_cutoff {K U : Set ℂ} (hK : IsCompact K) (hU : IsOpen U)
     (hKU : K ⊆ U) :
@@ -942,7 +942,7 @@ theorem smooth_cutoff {K U : Set ℂ} (hK : IsCompact K) (hU : IsOpen U)
         exact hptwise t
     _ = 1 := Φδ.integral_normed
 
-/-- Stage D3: pointwise Wirtinger cancellation. If `w` and `v` solve the same Beltrami
+/-- Pointwise Wirtinger cancellation. If `w` and `v` solve the same Beltrami
 ratio at `z`, with invertible sense-preserving differential of `w`, then the pairing of
 the differential of `v` against the inverse differential of `w` has vanishing
 `∂̄`-combination. -/
@@ -1014,7 +1014,7 @@ theorem wirtinger_cancel
 set_option maxHeartbeats 400000 in
 -- The transition-map analysis composes the chain rule with the Weyl lemma input;
 -- the single-declaration elaboration exceeds the default heartbeat budget.
-/-- Stage D ([CHAIN]+[WEYL]): the transition map `v ∘ u.w⁻¹` of two solutions of the same
+/-- The transition map `v ∘ u.w⁻¹` of two solutions of the same
 Beltrami equation on the upper half plane is holomorphic there, provided the normalized
 plane solution preserves the upper half plane. -/
 theorem composite_holomorphic
@@ -1607,7 +1607,7 @@ theorem composite_holomorphic
 set_option maxHeartbeats 400000 in
 -- The Moebius classification splits into affine and inversion branches with long algebra;
 -- the single-declaration elaboration exceeds the default heartbeat budget.
-/-- Stage E ([MÖBIUS]): a holomorphic homeomorphism of the upper half plane is a real
+/-- A holomorphic homeomorphism of the upper half plane is a real
 Möbius map, through the Cayley transform and the classification of disc automorphisms. -/
 theorem holo_upper_selfmap_moebius
     {ψ θ : ℂ → ℂ}

@@ -137,7 +137,7 @@ theorem exists_equivariant_upper_conjugacy_K_to_one
 
 /-! ## The factorization lemma -/
 
-/-- Stage A (X3+X4+X5): change-of-variables/Hölder bound for a plane quasiconformal map.
+/-- Change-of-variables/Hölder bound for a plane quasiconformal map.
 For `q` analytically quasiconformal with coefficient `bq`, a measurable set `S`, a unit
 direction `e`, and a measurable `g`, the weighted composition integral is controlled by
 the global `L²` mass of `g`, the distortion constant, and the measure of `S`. -/
@@ -344,7 +344,7 @@ theorem qc_cov_bound {q : ℂ → ℂ} {bq : BeltramiCoeff} (hq : IsQCAnalytic q
     ENNReal.rpow_le_rpow hfact2 (by norm_num)
   exact mul_le_mul' h1 h2
 
-/-- Stage B1 (X6a): localized `L²` convergence of mollifications. On a compact set the
+/-- Localized `L²` convergence of mollifications. On a compact set the
 mollifications of a locally square-integrable function converge to it in `L²`. -/
 theorem mollify_L2_loc {h : ℂ → ℂ} (hm : Measurable h) (h2 : MemLpLocOn h 2 Set.univ)
     {K : Set ℂ} (hK : IsCompact K) (hKm : MeasurableSet K)
@@ -464,7 +464,7 @@ theorem mollify_L2_loc {h : ℂ → ℂ} (hm : Measurable h) (h2 : MemLpLocOn h 
 set_option maxHeartbeats 400000 in
 -- The abstract pairing-limit argument chains dominated convergence through the pairing;
 -- the single-declaration elaboration exceeds the default heartbeat budget.
-/-- Stage B2a′ (abstract pairing limit): if `QE m → qe` in `L¹` of the compact support of
+/-- Abstract pairing limit: if `QE m → qe` in `L¹` of the compact support of
 the real test weight `φ`, the frames `U m, V m` are uniformly bounded and converge
 pointwise to `u, v`, then the paired integrals converge. -/
 theorem pairing_tendsto
@@ -745,7 +745,7 @@ theorem pairing_tendsto
 set_option maxHeartbeats 400000 in
 -- The smooth-composite weak chain rule elaborates a long mollification chain;
 -- the single-declaration elaboration exceeds the default heartbeat budget.
-/-- Stage B2a (X6): weak chain rule for the composition of a smooth compactly supported
+/-- Weak chain rule for the composition of a smooth compactly supported
 map with a plane quasiconformal map. The weak directional derivative of `G ∘ q` is the
 chain-rule pairing of the classical differential of `G` along `q` with the weak
 directional derivative of `q`. -/
@@ -998,7 +998,7 @@ theorem comp_smooth_qc
     exact hRHS.neg
   exact tendsto_nhds_unique hLHS h2
 
-/-- Stage B2b (X7-core): `lintegral` bound for a paired integrand against the composed
+/-- `lintegral` bound for a paired integrand against the composed
 frames, through the change-of-variables estimate. -/
 theorem cov_pairing_bound
     {q : ℂ → ℂ} {bq : BeltramiCoeff} (hq : IsQCAnalytic q bq)
@@ -1120,7 +1120,7 @@ theorem cov_pairing_bound
 set_option maxHeartbeats 400000 in
 -- The frame-convergence limit interchanges two L2 limits against test pairings;
 -- the single-declaration elaboration exceeds the default heartbeat budget.
-/-- Stage B2c (X7): if the frames `GX n, GY n` converge in `L²(ℂ)` to `gX, gY` and are
+/-- If the frames `GX n, GY n` converge in `L²(ℂ)` to `gX, gY` and are
 bounded, the paired integrals against the composed frames converge, by the
 change-of-variables estimate. -/
 theorem pairing_tendsto_L2
