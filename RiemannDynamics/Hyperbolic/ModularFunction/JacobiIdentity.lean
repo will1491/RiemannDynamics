@@ -3,7 +3,7 @@ Copyright (c) 2026 Will (Ziang) Li. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Will (Ziang) Li
 -/
-import RiemannDynamics.Hyperbolic.ModularFunction.FourTermBounds
+import RiemannDynamics.Hyperbolic.ModularFunction.FourTermBounds.Lambda
 
 /-! # Jacobi’s identity, theta non-vanishing, and the cusp function
 

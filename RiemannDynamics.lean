@@ -118,7 +118,8 @@ import RiemannDynamics.Hyperbolic.ModularCoveringMap.CoveringAssembly
 import RiemannDynamics.Hyperbolic.ModularCoveringMap.DegreeArgument
 import RiemannDynamics.Hyperbolic.ModularCoveringMap.FundamentalDomainGeometry
 import RiemannDynamics.Hyperbolic.ModularCoveringMap.WindingInjectivity
-import RiemannDynamics.Hyperbolic.ModularFunction.FourTermBounds
+import RiemannDynamics.Hyperbolic.ModularFunction.FourTermBounds.Theta
+import RiemannDynamics.Hyperbolic.ModularFunction.FourTermBounds.Lambda
 import RiemannDynamics.Hyperbolic.ModularFunction.GammaTwoInvariance
 import RiemannDynamics.Hyperbolic.ModularFunction.JacobiIdentity
 import RiemannDynamics.Hyperbolic.ModularFunction.QExpansionBounds
