@@ -14,20 +14,18 @@ Four-term q-expansion bounds for `jacobiTheta₂ (τ/2) τ`, `θ₂`, and `θ₃
 `theta3_sub_four_term_norm_le_of_im_ge_one`), and the bracket-bound helpers
 (`modularLambda_four_term_bracket_bound` and its widened variant) expanding `(θ₂/θ₃)⁴`
 one order beyond the three-term version.
+
+These bounds extend the three-term q-expansion infrastructure by one order: the
+underlying `jacobiTheta₂` series gains one more term and the algebraic `(θ₂/θ₃)⁴`
+expansion one more order. Via the `λ` bound in `FourTermBounds/Lambda.lean` they power
+the Cauchy estimate that closes
+`modularLambdaH_deriv_norm_sub_three_term_le_of_im_ge_one` in
+`Gamma2FundamentalDomain/CuspAsymptotics.lean`.
 -/
 
 namespace RiemannDynamics
 open Complex Metric Set UpperHalfPlane CongruenceSubgroup
 open scoped ModularForm Manifold MatrixGroups
-
-/-! ### Four-term q-expansion bounds
-
-These bounds extend the three-term q-expansion infrastructure by one
-order: the underlying `jacobiTheta₂` series gains one more term and the
-algebraic `(θ₂/θ₃)⁴` expansion one more order. Via the `λ` bounds in
-`FourTermBounds/Lambda.lean` they power the Cauchy estimate that closes
-`modularLambdaH_deriv_norm_sub_three_term_le_of_im_ge_one` in
-`Gamma2FundamentalDomain/CuspAsymptotics.lean`. -/
 
 /-- **Four-term q-expansion of `jacobiTheta₂(τ/2, τ)`.** For `τ.im ≥ 1`,
 `‖jacobiTheta₂(τ/2, τ) - 2 - 2·exp(2πi τ) - 2·exp(6πi τ) - 2·exp(12πi τ)‖ ≤ 8·exp(-20π·τ.im)`.
