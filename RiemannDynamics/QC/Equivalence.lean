@@ -935,7 +935,7 @@ geometric (modulus) sense is absolutely continuous on lines, hence lies in
 `W^{1,2}_loc`, and satisfies the Beltrami equation with a coefficient of norm at
 most `(K − 1)/(K + 1)`. The proof assembles the Gehring–Lehto stages of
 `QC/GeometricToAnalytic/Assembly.lean` (`exists_acl_weakGradient`, `ae_differentiableAt`,
-`exists_beltrami`); these remain the open research-scale residual. -/
+`exists_beltrami`). -/
 theorem isQCAnalytic_of_isQCGeometric {f : ℂ → ℂ} {K : ℝ} (hK : 1 ≤ K)
     (hf : IsQCGeometric f K) :
     ∃ b : BeltramiCoeff, b.normInf ≤ (K - 1) / (K + 1) ∧ IsQCAnalytic f b := by
