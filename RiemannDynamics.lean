@@ -264,7 +264,9 @@ import RiemannDynamics.Teichmuller.Compactness.Mumford
 
 import RiemannDynamics.Teichmuller.FuchsianGeometry.Dirichlet
 import RiemannDynamics.Teichmuller.FuchsianGeometry.Polygon
-import RiemannDynamics.Teichmuller.FuchsianGeometry.PolygonRank
+import RiemannDynamics.Teichmuller.FuchsianGeometry.PolygonRank.Basic
+import RiemannDynamics.Teichmuller.FuchsianGeometry.PolygonRank.Homotopy
+import RiemannDynamics.Teichmuller.FuchsianGeometry.PolygonRank.Rank
 import RiemannDynamics.Teichmuller.FuchsianGeometry.GaussBonnet
 
 import RiemannDynamics.Teichmuller.ModuliAction.Interpolate.Basic
