@@ -78,7 +78,9 @@ import RiemannDynamics.Analysis.Winding.GridPrimitives.Basic
 import RiemannDynamics.Analysis.Winding.GridPrimitives.Join
 import RiemannDynamics.Analysis.Winding.GridPrimitives.Loop
 import RiemannDynamics.Analysis.Winding.GridPrimitives.Primitives
+
 import RiemannDynamics.Basic
+
 import RiemannDynamics.Dynamics.Deformation.DeltaOperator.Basic
 import RiemannDynamics.Dynamics.Deformation.DeltaOperator.ChainRule
 import RiemannDynamics.Dynamics.Deformation.DeltaOperator.Representation
@@ -103,6 +105,7 @@ import RiemannDynamics.Dynamics.Sullivan.EventualInjectivity.WindingGrowth
 import RiemannDynamics.Dynamics.Sullivan.EventualInjectivity.WindingLimit
 import RiemannDynamics.Dynamics.Sullivan.SeedTriviality
 import RiemannDynamics.Dynamics.Sullivan.Spreading
+
 import RiemannDynamics.Hyperbolic.DiskModel.DiskMetric
 import RiemannDynamics.Hyperbolic.DiskModel.MobiusDisk
 import RiemannDynamics.Hyperbolic.DiskModel.SchwarzPick
@@ -134,6 +137,7 @@ import RiemannDynamics.Hyperbolic.PlaneGeometry.TriangleArea
 import RiemannDynamics.Hyperbolic.WindingNumber.CircleRectangleWinding
 import RiemannDynamics.Hyperbolic.WindingNumber.LuneHalfAnnulus
 import RiemannDynamics.Hyperbolic.WindingNumber.TruncatedArgumentPrinciple
+
 import RiemannDynamics.NormalFamilies.Basic
 import RiemannDynamics.NormalFamilies.Montel
 import RiemannDynamics.NormalFamilies.Spherical
@@ -141,6 +145,7 @@ import RiemannDynamics.NormalFamilies.StrongMontel.ModularLift
 import RiemannDynamics.NormalFamilies.StrongMontel.MontelCaratheodory
 import RiemannDynamics.NormalFamilies.StrongMontel.SphereMontel
 import RiemannDynamics.NormalFamilies.Zalcman
+
 import RiemannDynamics.QC.Calculus.AnalyticClosedness
 import RiemannDynamics.QC.Calculus.Compactness
 import RiemannDynamics.QC.Calculus.Composition
@@ -197,6 +202,7 @@ import RiemannDynamics.QC.Regularity.Quasisymmetry
 import RiemannDynamics.QC.Regularity.RingModulus
 import RiemannDynamics.QC.Regularity.RingModulusTransport
 import RiemannDynamics.QC.Regularity.SeparatingModulus
+
 import RiemannDynamics.Sphere.Basic
 import RiemannDynamics.Sphere.DegreeFinite
 import RiemannDynamics.Sphere.Iterate
@@ -206,6 +212,7 @@ import RiemannDynamics.Sphere.OpenMapping
 import RiemannDynamics.Sphere.RationalMap
 import RiemannDynamics.Sphere.SphereHolomorphic
 import RiemannDynamics.Sphere.SphericalMetric
+
 import RiemannDynamics.Surface.Curves
 import RiemannDynamics.Surface.GenusSurface.Atlas
 import RiemannDynamics.Surface.GenusSurface.Basic
@@ -217,6 +224,7 @@ import RiemannDynamics.Surface.Orientation.Degree
 import RiemannDynamics.Surface.Orientation.Surface
 import RiemannDynamics.Surface.Pi1
 import RiemannDynamics.Surface.WindingFunctionals
+
 import RiemannDynamics.Teichmuller.Compactness.Covolume
 import RiemannDynamics.Teichmuller.Compactness.Length
 import RiemannDynamics.Teichmuller.Compactness.Limit
@@ -289,6 +297,7 @@ import RiemannDynamics.Teichmuller.QuadraticDifferential.Necessity.Variational.S
 import RiemannDynamics.Teichmuller.QuadraticDifferential.Necessity.Variational.Theta
 import RiemannDynamics.Teichmuller.QuadraticDifferential.Necessity.Variational.WeylRigidity
 import RiemannDynamics.Teichmuller.QuadraticDifferential.Teichmuller
+
 import RiemannDynamics.Uniformization.CoverCountable
 import RiemannDynamics.Uniformization.Fuchsian
 import RiemannDynamics.Uniformization.GenusHyperbolic
