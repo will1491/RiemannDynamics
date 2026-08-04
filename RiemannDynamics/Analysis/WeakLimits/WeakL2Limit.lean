@@ -12,7 +12,7 @@ import Mathlib.MeasureTheory.Covering.DensityTheorem
 
 Connective tissue between the abstract Hilbert-space weak compactness of
 `Analysis/WeakLimits/WeakCompactness.lean` and the concrete `L²_loc` pairing form
-(`TendstoWeaklyL2Loc`, `Analysis/WeakLimits/JacobianWeakContinuity.lean`) that the
+(`TendstoWeaklyL2Loc`, `Analysis/WeakLimits/JacobianWeakContinuity/NullLagrangian.lean`) that the
 null-Lagrangian cluster consumes.
 
 * `exists_subseq_tendstoWeaklyL2Loc` — **local weak `L²` sequential compactness**: a

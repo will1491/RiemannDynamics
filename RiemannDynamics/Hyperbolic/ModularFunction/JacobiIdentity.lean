@@ -872,7 +872,7 @@ analytic on the open unit disk, providing the foundation for the
 q-expansion power series of `λ`. The Cauchy estimate on this disk
 closes the three-term derivative bound
 `modularLambdaH_deriv_norm_sub_three_term_le_of_im_ge_one`
-(in `Gamma2FundamentalDomain.lean`). -/
+(in `Gamma2FundamentalDomain/CuspAsymptotics.lean`). -/
 
 /-- **`λ` is differentiable at every `τ` with `0 < τ.im`.**
 Generalization of `modularLambdaH_differentiableAt_of_im_ge_one`. -/

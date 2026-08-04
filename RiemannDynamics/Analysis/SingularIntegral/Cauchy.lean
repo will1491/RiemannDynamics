@@ -25,7 +25,7 @@ project's Wirtinger convention `∂̄ = ½(∂ₓ + i∂ᵧ)` and the fundamenta
 `∂̄(1/(πz)) = δ₀`, this is the sign that makes the Cauchy transform solve the
 inhomogeneous `∂̄`-equation, `∂̄(Pω) = ω` (`dzbar_cauchyTransform`). The companion
 holomorphic derivative `∂(Pω)` is the Beurling transform `T = ∂ ∘ P`
-(`Analysis/SingularIntegral/Beurling.lean`); together they invert the Beltrami
+(`Analysis/SingularIntegral/Beurling/Kernel.lean`); together they invert the Beltrami
 equation in the analytic quasiconformal theory.
 
 The solvability `∂̄(Pω) = ω` factors through two facts about a `C¹` compactly

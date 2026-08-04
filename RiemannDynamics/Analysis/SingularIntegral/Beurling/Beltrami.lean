@@ -24,7 +24,7 @@ derivative `∂f` locally in `Lᵖ` for some `p > 2`. The assembled target `L6`
 `beltrami_higher_integrability` exactly, so the latter reduces to a call into this
 file. `L6` in turn reduces to the Gehring reverse-Hölder / Caccioppoli
 self-improvement residual living in
-`Analysis/SingularIntegral/GehringHigherIntegrability.lean` (see the residual note
+`Analysis/SingularIntegral/GehringHigherIntegrability/` (see the residual note
 above `beltrami_fixedPoint_memLpLocOn_of_memLp_two`).
 
 ## The chain
@@ -1157,7 +1157,7 @@ an `L²` Beltrami fixed point with `‖μ‖∞ < 1` is automatically `Lᵖ_loc`
 without an `Lᵖ` hypothesis on `h`.
 
 The Gehring reverse-Hölder / Caccioppoli self-improvement lives in
-`Analysis/SingularIntegral/GehringHigherIntegrability.lean`, at the
+`Analysis/SingularIntegral/GehringHigherIntegrability/`, at the
 **`f`-level**: the reverse-Hölder node `reverseHolder_of_weakGradient` (S1) consumes the
 primitive bundle `(F, Gx, Gy)` of which `G = ½(Gx − I·Gy)` is the weak holomorphic
 gradient, and reduces to the genuinely analytic nodes `sobolevPoincare_ball` (N1),

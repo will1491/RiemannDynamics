@@ -20,20 +20,18 @@ namespace RiemannDynamics
 open Complex Metric Set UpperHalfPlane CongruenceSubgroup
 open scoped ModularForm Manifold MatrixGroups
 
-/-! ### Four-term q-expansion bounds (architectural)
+/-! ### Four-term q-expansion bounds
 
-These four bounds extend the three-term q-expansion infrastructure by one
-order. They are positioned to close
+These bounds extend the three-term q-expansion infrastructure by one
+order: the underlying `jacobiTheta₂` series gains one more term and the
+algebraic `(θ₂/θ₃)⁴` expansion one more order. Via the `λ` bounds in
+`FourTermBounds/Lambda.lean` they power the Cauchy estimate that closes
 `modularLambdaH_deriv_norm_sub_three_term_le_of_im_ge_one` in
-`Gamma2FundamentalDomain.lean` via a Cauchy estimate on the four-term
-function bound. Each is mathematically true with the stated constant;
-proofs follow the same pattern as their three-term predecessors but
-require extending the underlying `jacobiTheta₂` series by one more term
-and the algebraic `(θ₂/θ₃)⁴` expansion by one more order. -/
+`Gamma2FundamentalDomain/CuspAsymptotics.lean`. -/
 
 /-- **Four-term q-expansion of `jacobiTheta₂(τ/2, τ)`.** For `τ.im ≥ 1`,
-`‖jacobiTheta₂(τ/2, τ) - 2 - 2·exp(2πi τ) - 2·exp(6πi τ) - 2·exp(12πi τ)‖
-   ≤ 8·exp(-20π·τ.im)`. Tail of `2 ∑_{k≥0} exp(πi k(k+1) τ)` starting at
+`‖jacobiTheta₂(τ/2, τ) - 2 - 2·exp(2πi τ) - 2·exp(6πi τ) - 2·exp(12πi τ)‖ ≤ 8·exp(-20π·τ.im)`.
+Tail of `2 ∑_{k≥0} exp(πi k(k+1) τ)` starting at
 `k = 4` (i.e., `2·exp(20πi τ)`). Extends
 `jacobiTheta₂_half_sub_three_term_norm_le_of_im_ge_one` by one term. -/
 theorem jacobiTheta₂_half_sub_four_term_norm_le_of_im_ge_one
@@ -258,8 +256,8 @@ theorem jacobiTheta₂_half_sub_four_term_norm_le_of_im_ge_one
     _ = 8 * Real.exp (-20 * Real.pi * τ.im) := by rw [hr10_eq]
 
 /-- **Four-term leading bound for `θ₂`.** For `τ.im ≥ 1`,
-`‖θ₂(τ) − 2·exp(πi τ/4)·(1 + exp(2πi τ) + exp(6πi τ) + exp(12πi τ))‖
-   ≤ 8·exp(−81π·τ.im/4)`. Extends the three-term
+`‖θ₂(τ) − 2·exp(πi τ/4)·(1 + exp(2πi τ) + exp(6πi τ) + exp(12πi τ))‖ ≤ 8·exp(−81π·τ.im/4)`.
+Extends the three-term
 `theta2_norm_sub_three_term_le_of_im_ge_one` using the four-term
 `jacobiTheta₂` bound. -/
 theorem theta2_norm_sub_four_term_le_of_im_ge_one {τ : ℂ} (hτ : 1 ≤ τ.im) :
@@ -312,11 +310,11 @@ theorem theta2_norm_sub_four_term_le_of_im_ge_one {τ : ℂ} (hτ : 1 ≤ τ.im)
     _ = 8 * Real.exp (-(81 * Real.pi * τ.im / 4)) := h_combine
 
 /-- **Four-term q-expansion of `θ₃`.** For `τ.im ≥ 1`,
-`‖θ₃(τ) − 1 − 2·exp(πi τ) − 2·exp(4πi τ) − 2·exp(9πi τ)‖
-   ≤ 4·exp(−16π·τ.im)`. Extends
+`‖θ₃(τ) − 1 − 2·exp(πi τ) − 2·exp(4πi τ) − 2·exp(9πi τ)‖ ≤ 4·exp(−16π·τ.im)`.
+Extends
 `theta3_sub_one_minus_2q_minus_2q4_norm_le_of_im_ge_one` by one term.
-The first four non-zero terms of `θ₃ = 1 + 2q + 2q⁴ + 2q⁹ + 2q^{16} + …`
-are subtracted; the tail starts at `2 q^{16}`. -/
+With `q = exp(πi τ)`, the first four non-zero terms of
+`θ₃ = 1 + 2q + 2q⁴ + 2q⁹ + 2q^{16} + …` are subtracted; the tail starts at `2 q^{16}`. -/
 theorem theta3_sub_four_term_norm_le_of_im_ge_one {τ : ℂ} (hτ : 1 ≤ τ.im) :
     ‖theta3 τ - 1 - 2 * Complex.exp (Real.pi * Complex.I * τ) -
         2 * Complex.exp (4 * Real.pi * Complex.I * τ) -
@@ -451,9 +449,9 @@ theorem theta3_sub_four_term_norm_le_of_im_ge_one {τ : ℂ} (hτ : 1 ≤ τ.im)
     _ = 4 * r^16 := by ring
     _ = 4 * Real.exp (-16 * Real.pi * τ.im) := by rw [hr16_eq]
 
-/-- **Four-term bracket bound.** Combines `v_bound` and `t_bound` with the
-algebraic identity expansion to bound the bracket
-`4(1+u)³t + 6(1+u)²t² + 4(1+u)t³ + t⁴ + q-remainder` by `4003·rq⁴`. -/
+/-- **Four-term bracket bound.** With `u = -2q + 5q² - 10q³` and
+`t = v + 2q - 5q² + 10q³`: if `‖q‖ = rq < 1/16` and `‖t‖ ≤ 100·rq⁴` (`ht_bound`), the
+bracket `4(1+u)³t + 6(1+u)²t² + 4(1+u)t³ + t⁴ + q-remainder` has norm at most `4406·rq⁴`. -/
 theorem modularLambda_four_term_bracket_bound (v q : ℂ) (rq : ℝ)
     (hq_norm : ‖q‖ = rq) (hrq_pos : 0 < rq) (hrq_lt : rq < 1 / 16)
     (ht_bound : ‖v + 2 * q - 5 * q ^ 2 + 10 * q ^ 3‖ ≤ 100 * rq ^ 4) :
@@ -686,7 +684,7 @@ theorem modularLambda_four_term_bracket_bound (v q : ℂ) (rq : ℝ)
               h_20000q11_norm.le, h_10000q12_norm.le,
               h_rq5_to_rq4, h_rq6_to_rq4, h_rq7_to_rq4, h_rq8_to_rq4,
               h_rq9_to_rq4, h_rq10_to_rq4, h_rq11_to_rq4, h_rq12_to_rq4, hrq4_nn]
-  -- Combine: 3200 + 1 + 1 + 1 + 800 = 4003 rq⁴.
+  -- Combine: 3200 + 4 + 1 + 1 + 1200 = 4406 rq⁴.
   have h_eq : (4 * (1 + (-2*q + 5*q^2 - 10*q^3))^3 * (v + 2*q - 5*q^2 + 10*q^3) +
       6 * (1 + (-2*q + 5*q^2 - 10*q^3))^2 * (v + 2*q - 5*q^2 + 10*q^3)^2 +
       4 * (1 + (-2*q + 5*q^2 - 10*q^3)) * (v + 2*q - 5*q^2 + 10*q^3)^3 +

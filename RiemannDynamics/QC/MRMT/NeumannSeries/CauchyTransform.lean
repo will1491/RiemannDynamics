@@ -19,8 +19,8 @@ and the vanishing condition. The companion file `QC/MRMT/NeumannSeries/Principal
 consumes these estimates: it computes the weak gradient of `P h` (coordinate components
 `S h + h` and `i·(S h - h)`, `S` the Beurling transform), solves `h = μ·S h + μ` by a Banach
 fixed point, and assembles the principal solution `f = id + P h` of `∂̄f = μ·∂f`. The estimates
-are also used directly in `QC/MRMT/SmoothCase.lean`, `QC/MRMT/AnalyticDependence.lean` and
-`Dynamics/Deformation/SphereVectorField.lean`.
+are also used directly in `QC/MRMT/SmoothCase/`, `QC/MRMT/AnalyticDependence.lean` and
+`Dynamics/Deformation/SphereVectorField/`.
 
 ## Main results
 

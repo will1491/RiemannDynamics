@@ -964,7 +964,7 @@ theorem modularLambdaH_top_edge_far_of_im_pos {w : ℂ} (hw : 0 < w.im) :
 
 The F_Y argument principle
 `cIntegralLogDeriv_eq_divisor_sum_of_nonzero_on_rectMinusUpperHalfDisk`
-from `WindingNumber.lean` drives both the winding-index theorem
+from `WindingNumber/TruncatedArgumentPrinciple.lean` drives both the winding-index theorem
 `modularLambdaH_F_Y_image_curve_winding_index_eq_one` and the
 degree-argument bootstrap `modularLambdaH_F_interior_preimage_unique`
 (uniqueness of the `λ`-preimage in `F^o`). The scaffold below

@@ -808,7 +808,7 @@ theorem exists_essential_loop_of_multiple_step {f : ℂ̂ → ℂ̂}
     intro T hT z₀ hz₀T hbdd
     -- ---------------------------------------------------------------
     -- Inner grid stage: black box exists_gridLoop_winding_ne_zero
-    -- (GridPrimitives.lean) — the grid boundary loop of the union of
+    -- (GridPrimitives/Loop.lean) — the grid boundary loop of the union of
     -- δ-squares meeting the separated compact piece A.
     -- ---------------------------------------------------------------
     have hgrid : ∀ (A : Set ℂ) (ε : ℝ), 0 < ε → IsCompact A → z₀ ∈ A → A ⊆ Tᶜ →

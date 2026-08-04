@@ -260,7 +260,7 @@ component `U` of `f = r.toSphereMap` with all iterates injective on `U`,
 whose forward orbit components avoid `∞`, with no critical point of any
 iterate on `U` (phrased through the nonvanishing of `iterDeriv`); a carrier
 `S` whose points lie in `U`; and a seed `σ` vanishing off `S`. The interface
-theorem of `EventualInjectivity.lean` produces exactly this package from an
+theorem of `EventualInjectivity/Package.lean` produces exactly this package from an
 arbitrary wandering component. -/
 
 /-- **The spread extends the seed.** On the finite part of `U`, the spread
@@ -1054,7 +1054,7 @@ invariant with witnesses shifting by one time step, the transported values
 agree by witness independence (wandering, injectivity, and the twist
 cocycle `iterDeriv_add`), the complement carries `0` on both sides, and the
 finitely many poles together with the orbit segments through critical points
-or `∞` form a null set. This is the hypothesis `DeltaOperator.lean` consumes
+or `∞` form a null set. This is the hypothesis `Dynamics/Deformation/DeltaOperator/` consumes
 to kill the weak `∂̄` of the deformation field. -/
 theorem isInvariantBeltrami_spreadCoeff {r : RationalData} (hd : 1 ≤ r.degree)
     {U : Set ℂ̂} {S : Set ℂ} {σ : ℂ → ℂ}

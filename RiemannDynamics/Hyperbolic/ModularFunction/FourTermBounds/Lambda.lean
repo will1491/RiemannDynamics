@@ -22,8 +22,8 @@ open Complex Metric Set UpperHalfPlane CongruenceSubgroup
 open scoped ModularForm Manifold MatrixGroups
 
 /-- **Four-term leading bound for `λ`.** For `τ.im ≥ 1`,
-`‖λ(τ) − 16·exp(πi τ) + 128·exp(2πi τ) − 704·exp(3πi τ) + 3072·exp(4πi τ)‖
-   ≤ 131072·exp(−5π·τ.im)`. Extends `modularLambdaH_norm_sub_three_term_le_of_im_ge_one`
+`‖λ(τ) − 16·exp(πi τ) + 128·exp(2πi τ) − 704·exp(3πi τ) + 3072·exp(4πi τ)‖ ≤ 131072·exp(−5π·τ.im)`.
+Extends `modularLambdaH_norm_sub_three_term_le_of_im_ge_one`
 by one order. Derives from the four-term `θ₂` and `θ₃` bounds via the
 algebraic identity `(θ₂/θ₃)⁴ = λ` expanded one more order than the
 three-term version. -/
@@ -225,7 +225,7 @@ theorem modularLambdaH_norm_sub_four_term_le_of_im_ge_one {τ : ℂ} (hτ : 1 �
     unfold modularLambdaH
     rw [h_th2_eq, h_th3_eq, mul_pow, div_pow]; ring
   rw [h_lambda_eq]
-  -- Substitute 16q = A⁴, 128 Q2 = 8q A⁴, 704 Q3 = 44q² A⁴, 3072 Q4·... wait, 3072·Q4 = 3072·q⁴.
+  -- Substitute 16q = A⁴, 128 Q2 = 8q A⁴, 704 Q3 = 44q² A⁴, 3072 Q4 = 192q³ A⁴.
   -- Note: 16q·8q = 128q², 16q·44q² = 704q³, 16q·192q³ = 3072q⁴.
   rw [show (16 * Complex.exp (Real.pi * Complex.I * τ) : ℂ) = A^4 from hA_pow.symm]
   rw [show (128 * Complex.exp (2 * Real.pi * Complex.I * τ) : ℂ) = 8 * q * A^4 from by
@@ -263,9 +263,9 @@ theorem modularLambdaH_norm_sub_four_term_le_of_im_ge_one {τ : ℂ} (hτ : 1 �
   have ht_bound : ‖v + 2*q - 5*q^2 + 10*q^3‖ ≤ 100 * rq^4 :=
     modularLambda_four_term_t_bound q r₂' r₃' rq hq_norm hrq_pos hrq_lt
       hr2_loose hr3_loose hD_norm_q
-  -- Use the bracket bound helper to get ‖bracket‖ ≤ 4003·rq⁴.
+  -- Use the bracket bound helper to get ‖bracket‖ ≤ 4406·rq⁴.
   have h_bracket_le := modularLambda_four_term_bracket_bound v q rq hq_norm hrq_pos hrq_lt ht_bound
-  -- 16 rq · 4003 rq⁴ = 64048 rq⁵ ≤ 131072 rq⁵.
+  -- 16 rq · 4406 rq⁴ = 70496 rq⁵ ≤ 131072 rq⁵.
   have h_step : (16 * rq) * ‖(4 * (1 + (-2*q + 5*q^2 - 10*q^3))^3 * (v + 2*q - 5*q^2 + 10*q^3) +
       6 * (1 + (-2*q + 5*q^2 - 10*q^3))^2 * (v + 2*q - 5*q^2 + 10*q^3)^2 +
       4 * (1 + (-2*q + 5*q^2 - 10*q^3)) * (v + 2*q - 5*q^2 + 10*q^3)^3 +
@@ -292,7 +292,7 @@ theorem modularLambdaH_norm_sub_four_term_le_of_im_ge_one {τ : ℂ} (hτ : 1 �
 /-! ### Widened four-term bounds on `τ.im ≥ 9/10`
 
 The Cauchy estimate behind `modularLambdaH_deriv_norm_sub_three_term_le_of_im_ge_one`
-(in `Gamma2FundamentalDomain.lean`) needs the four-term bounds on a disk of radius
+(in `Gamma2FundamentalDomain/CuspAsymptotics.lean`) needs the four-term bounds on a disk of radius
 `R = exp(−9π/10)`, strictly larger than `‖q‖ ≤ exp(−π)` — that is, down to
 `τ.im ≥ 9/10`. The threshold still satisfies `exp(−9π/10) < 1/16`, so each widened
 bound replicates its `τ.im ≥ 1` counterpart with the geometric-series constants
@@ -300,8 +300,8 @@ recomputed at `r = exp(−π·9/10)`.
 -/
 
 /-- **Widened jacobi-theta four-term bound.**
-`‖jacobiTheta₂(τ/2, τ) − 2 − 2·exp(2πi τ) − 2·exp(6πi τ) − 2·exp(12πi τ)‖
-   ≤ 8·exp(−20π·τ.im)` for `τ.im ≥ 9/10`. Same shape as
+`‖jacobiTheta₂(τ/2, τ) − 2 − 2·exp(2πi τ) − 2·exp(6πi τ) − 2·exp(12πi τ)‖ ≤ 8·exp(−20π·τ.im)`
+for `τ.im ≥ 9/10`. Same shape as
 `jacobiTheta₂_half_sub_four_term_norm_le_of_im_ge_one`, with the
 weaker hypothesis `9/10 ≤ τ.im` that admits `q = exp(πi τ)` up to
 norm `exp(−9π/10) > exp(−π)`. Required for the widened four-term `λ`
@@ -572,7 +572,7 @@ theorem theta2_norm_sub_four_term_le_of_im_ge_nine_tenths
 /-- **Widened `θ₃` four-term bound.** Same shape as
 `theta3_sub_four_term_norm_le_of_im_ge_one` but with hypothesis
 `9/10 ≤ τ.im`. The first four nonzero terms of `θ₃` are subtracted;
-the tail starts at `2 q^{16}`. -/
+the tail starts at `2 q^{16}`, where `q = exp(πi τ)`. -/
 theorem theta3_sub_four_term_norm_le_of_im_ge_nine_tenths
     {τ : ℂ} (hτ : (9 : ℝ) / 10 ≤ τ.im) :
     ‖theta3 τ - 1 - 2 * Complex.exp (Real.pi * Complex.I * τ) -
@@ -705,8 +705,7 @@ theorem theta3_sub_four_term_norm_le_of_im_ge_nine_tenths
 
 /-- **Widened `θ₃` lower bound.** `‖θ₃(τ)‖ ≥ 1/2` for `τ.im ≥ 9/10`.
 Same statement as `theta3_norm_ge_half_of_im_ge_one` with the weaker
-hypothesis. Used as the denominator-positivity input to the widened
-`λ` bound. -/
+hypothesis. -/
 theorem theta3_norm_ge_half_of_im_ge_nine_tenths
     {τ : ℂ} (hτ : (9 : ℝ) / 10 ≤ τ.im) :
     (1 : ℝ) / 2 ≤ ‖theta3 τ‖ := by
@@ -716,7 +715,7 @@ theorem theta3_norm_ge_half_of_im_ge_nine_tenths
   have h_mathlib : ‖jacobiTheta τ - 1‖ ≤
       2 / (1 - Real.exp (-Real.pi * τ.im)) * Real.exp (-Real.pi * τ.im) :=
     norm_jacobiTheta_sub_one_le hτim_pos
-  -- exp(2) > 7.34 from exp(1) > 2.71.
+  -- exp(2) > 5 from exp(1) > 2.71.
   have h_e_gt : (2.7182818283 : ℝ) < Real.exp 1 := Real.exp_one_gt_d9
   have h_exp2_gt : (5 : ℝ) < Real.exp 2 := by
     have h_eq : Real.exp 2 = Real.exp 1 * Real.exp 1 := by
@@ -765,16 +764,17 @@ theorem theta3_norm_ge_half_of_im_ge_nine_tenths
 
 /-- **Widened four-term `λ` bound.**
 `‖λ(τ) − 16 q + 128 q² − 704 q³ + 3072 q⁴‖ ≤ 35000·exp(−5π·τ.im)`
-for `τ.im ≥ 9/10`. Same shape as
+for `τ.im ≥ 9/10`, where `q = exp(πi τ)`. Same shape as
 `modularLambdaH_norm_sub_four_term_le_of_im_ge_one` but with weaker
 hypothesis and tighter constant (`35000` vs. `131072`). The tighter
 constant is required for the Cauchy closure of
 `modularLambdaH_deriv_norm_sub_three_term_le_of_im_ge_one`: combined
 with the algebraic `12288·‖q‖³` correction, `C ≤ ~35 000` keeps
-`π·(C·12.21·exp(−π) + 12288) ≤ 100000`. The proof inlines sharper
-triangle bounds (`‖1 + (−2q + 5q² − 10q³)‖ ≤ 5/4` instead of the
-loose `≤ 2` used in the `τ.im ≥ 1` helper) and splits across the
-four bracket terms. -/
+`π·(C·12.21·exp(−π) + 12288) ≤ 100000`. The proof invokes the widened
+bracket helper `modularLambda_four_term_bracket_bound_widened`
+(constant `2100` vs. `4406`), which sharpens the triangle bound to
+`‖1 + (−2q + 5q² − 10q³)‖ ≤ 5/4` (instead of the loose `≤ 2` in the
+`τ.im ≥ 1` helper) and splits across the four bracket terms. -/
 theorem modularLambdaH_norm_sub_four_term_le_of_im_ge_nine_tenths
     {τ : ℂ} (hτ : (9 : ℝ) / 10 ≤ τ.im) :
     ‖modularLambdaH τ - 16 * Complex.exp (Real.pi * Complex.I * τ) +

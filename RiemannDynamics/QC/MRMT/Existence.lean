@@ -16,7 +16,7 @@ The measurable Riemann mapping theorem, existence half: every Beltrami coefficie
 `mrmt_exists : ∃ f, IsQCAnalytic f b`.
 
 The compactly-vanishing case runs through the principal solution of
-`QC/MRMT/NeumannSeries.lean` and three upgrades:
+`QC/MRMT/NeumannSeries/` and three upgrades:
 
 * **Injectivity** (`IsPrincipalSolution.injective`) — the exponential-quotient
   representation: for each `w` an auxiliary fixed-point solve produces `u_w` with

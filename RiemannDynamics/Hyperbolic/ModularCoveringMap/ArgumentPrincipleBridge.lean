@@ -1756,7 +1756,7 @@ equal.
 This is the load-bearing topological sub-claim. The proof factors
 through three pieces:
 
-1. `continuous_log_lift_param_of_continuous_ne_zero` (PathWinding.lean):
+1. `continuous_log_lift_param_of_continuous_ne_zero` (PathWinding/LogLiftHomotopy.lean):
    a jointly continuous log lift `L` of `H − w` over the homotopy
    rectangle `[0, 1] × [0, 6]`.
 
@@ -1766,7 +1766,7 @@ through three pieces:
    `2πi · ℤ`; by the intermediate value theorem applied to
    `s ↦ (τ s).im / (2π)`, the endpoint values agree: `τ 0 = τ 1`.
 
-3. The FTC bridges (PathWinding.lean): at `s = 0`, the piecewise-C¹
+3. The FTC bridges (PathWinding/LogLiftHomotopy.lean): at `s = 0`, the piecewise-C¹
    bridge `pathContourIntegral_inv_eq_log_lift_diff_F_Y_image_curve`
    identifies the image-curve contour integral with `τ 0`; at `s = 1`,
    the C¹ bridge `pathContourIntegral_inv_eq_log_lift_diff_of_contDiff`

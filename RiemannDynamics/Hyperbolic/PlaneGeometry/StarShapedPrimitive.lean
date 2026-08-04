@@ -27,10 +27,10 @@ star center `p ∈ U`, this defines a primitive of `f` on `U`.
   open star-shaped set `U` with star center `p`, `starPrimitive p f` has
   complex derivative `f z` at every `z ∈ U`.
 
-## Lune-specific support lemmas (consumed by `WindingNumber.lean`)
+## Lune-specific support lemmas (consumed by `WindingNumber/LuneHalfAnnulus.lean`)
 
 The following lemmas support the closed-form lune Cauchy-Goursat
-identities in `RiemannDynamics/Hyperbolic/WindingNumber.lean`:
+identities in `RiemannDynamics/Hyperbolic/WindingNumber/LuneHalfAnnulus.lean`:
 
 * `Complex.topLeftBoxMinusBall_starConvex_of_subradius`: the upper-left-of-`e`
   open box minus `closedBall e R₀'` (with `R₀' ≤ R₀`) is star-convex from
@@ -343,7 +343,7 @@ theorem hasDerivAt_starPrimitive
   rw [h_eq] at h_final
   exact h_final
 
-/-! ## Lune-specific support lemmas for `WindingNumber.lean` -/
+/-! ## Lune-specific support lemmas for `WindingNumber/LuneHalfAnnulus.lean` -/
 
 /-- **Star-convexity of the upper-left-of-`e` open box minus a closed
 ball of radius `R₀' ≤ R₀`.** For `e : ℂ`, `R₀ > 0`, `a < e.re - R₀`,

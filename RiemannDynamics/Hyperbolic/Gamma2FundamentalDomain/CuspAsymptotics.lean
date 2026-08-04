@@ -1190,7 +1190,7 @@ remains compatible with the closure constraint `K · r^3 < 3π` for
 `100000/10648 ≈ 9.391 < 3π ≈ 9.425`).
 
 The closure path goes through the widened four-term cusp-function
-infrastructure in `ModularFunction.lean`: at the boundary `τ.im = 1`,
+infrastructure in `ModularFunction/JacobiIdentity.lean`: at the boundary `τ.im = 1`,
 `|q| = exp(−π)`, and Cauchy on the standard disk `|z| ≤ exp(−π)`
 collapses to zero radius. The widened bound
 `modularLambdaH_cusp_norm_sub_four_term_le_widened` extends the

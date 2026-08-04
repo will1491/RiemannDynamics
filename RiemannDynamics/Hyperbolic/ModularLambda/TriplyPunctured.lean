@@ -12,7 +12,7 @@ import RiemannDynamics.Hyperbolic.ModularCoveringMap.CoveringAssembly
 
 The triply-punctured plane `ℂ ∖ {0, 1}` is a hyperbolic Riemann surface;
 its universal cover is the unit disk `𝔻` via the modular function
-`modularLambda` from `ModularFunction.lean`, a covering map by
+`modularLambda` from `ModularFunction/ThetaTransformations.lean`, a covering map by
 `modularLambda_isCoveringMapOn`. We define the hyperbolic distance on
 `ℂ ∖ {0, 1}` as the infimum of disk hyperbolic distances over pairs of
 preimages, and prove:
