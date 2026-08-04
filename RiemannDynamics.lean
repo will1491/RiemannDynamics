@@ -266,7 +266,10 @@ import RiemannDynamics.Teichmuller.FuchsianGeometry.Polygon
 import RiemannDynamics.Teichmuller.FuchsianGeometry.PolygonRank
 import RiemannDynamics.Teichmuller.FuchsianGeometry.GaussBonnet
 
-import RiemannDynamics.Teichmuller.ModuliAction.Interpolate
+import RiemannDynamics.Teichmuller.ModuliAction.Interpolate.Basic
+import RiemannDynamics.Teichmuller.ModuliAction.Interpolate.Chains
+import RiemannDynamics.Teichmuller.ModuliAction.Interpolate.Estimates
+import RiemannDynamics.Teichmuller.ModuliAction.Interpolate.Assembly
 import RiemannDynamics.Teichmuller.ModuliAction.UpperQC.Basic
 import RiemannDynamics.Teichmuller.ModuliAction.UpperQC.Composite
 import RiemannDynamics.Teichmuller.ModuliAction.UpperQC.Factorization
