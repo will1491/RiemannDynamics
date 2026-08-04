@@ -291,26 +291,12 @@ theorem modularLambdaH_norm_sub_four_term_le_of_im_ge_one {τ : ℂ} (hτ : 1 �
 
 /-! ### Widened four-term bounds on `τ.im ≥ 9/10`
 
-`modularLambdaH_deriv_norm_sub_three_term_le_of_im_ge_one`
-in `Gamma2FundamentalDomain.lean` reduces (via the chain rule
-`deriv λ τ = πi · q · deriv cusp(q)` with `q = exp(πi τ)`) to a Cauchy
-estimate on `H₄(z) := cusp(z) − 16z + 128z² − 704z³ + 3072z⁴` around
-`q` with `‖q‖ ≤ exp(−π)`. The Cauchy disk `|z − q| ≤ ρ` requires the
-function bound on a sphere with `‖q‖ + ρ ≤ R` for some `R > exp(−π)`.
-For `R = exp(−9π/10)`, the scaled Cauchy radius `ρ = β·‖q‖` with
-`β = 1/4` keeps the sphere inside `‖z‖ ≤ R` and minimises the Cauchy
-slack to `(5/4)⁵·4 ≈ 12.21`. This requires extending the four-term
-bound chain from `τ.im ≥ 1` to `τ.im ≥ 9/10`. The threshold `9/10` is
-chosen so that:
-* `exp(−9π/10) > exp(−π)` (allows non-zero Cauchy radius at the
-  boundary `τ.im = 1`);
-* `exp(−π·9/10) < 1/16` (the same geometric-series structure used in
-  the existing four-term proof carries over).
-
-The widened bounds replicate the structure of their `τ.im ≥ 1`
-counterparts; the proofs differ only in numerical-constant
-computations (geometric-series ratios at `r = exp(−2π·9/10)`,
-`r = exp(−π·9/10)`).
+The Cauchy estimate behind `modularLambdaH_deriv_norm_sub_three_term_le_of_im_ge_one`
+(in `Gamma2FundamentalDomain.lean`) needs the four-term bounds on a disk of radius
+`R = exp(−9π/10)`, strictly larger than `‖q‖ ≤ exp(−π)` — that is, down to
+`τ.im ≥ 9/10`. The threshold still satisfies `exp(−9π/10) < 1/16`, so each widened
+bound replicates its `τ.im ≥ 1` counterpart with the geometric-series constants
+recomputed at `r = exp(−π·9/10)`.
 -/
 
 /-- **Widened jacobi-theta four-term bound.**
