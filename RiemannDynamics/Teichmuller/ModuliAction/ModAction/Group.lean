@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Will (Ziang) Li
 -/
 import RiemannDynamics.Teichmuller.Foundations.Metric
-import RiemannDynamics.Teichmuller.ModuliAction.UpperQC
+import RiemannDynamics.Teichmuller.ModuliAction.UpperQC.Factorization
 import RiemannDynamics.Surface.MappingClassGroup
 import Mathlib.Topology.MetricSpace.IsometricSMul
 

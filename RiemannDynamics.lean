@@ -267,7 +267,9 @@ import RiemannDynamics.Teichmuller.FuchsianGeometry.PolygonRank
 import RiemannDynamics.Teichmuller.FuchsianGeometry.GaussBonnet
 
 import RiemannDynamics.Teichmuller.ModuliAction.Interpolate
-import RiemannDynamics.Teichmuller.ModuliAction.UpperQC
+import RiemannDynamics.Teichmuller.ModuliAction.UpperQC.Basic
+import RiemannDynamics.Teichmuller.ModuliAction.UpperQC.Composite
+import RiemannDynamics.Teichmuller.ModuliAction.UpperQC.Factorization
 import RiemannDynamics.Teichmuller.ModuliAction.ModAction.Group
 import RiemannDynamics.Teichmuller.ModuliAction.ModAction.Remark
 import RiemannDynamics.Teichmuller.ModuliAction.ModAction.UpperRemark

@@ -5,7 +5,7 @@ Authors: Will (Ziang) Li
 -/
 import RiemannDynamics.Teichmuller.Compactness.Covolume
 import RiemannDynamics.Teichmuller.ModuliAction.ModAction.SmulUpper
-import RiemannDynamics.Teichmuller.ModuliAction.UpperQC
+import RiemannDynamics.Teichmuller.ModuliAction.UpperQC.Factorization
 
 /-!
 # Convergence of Mumford limits in the Teichmüller metric
