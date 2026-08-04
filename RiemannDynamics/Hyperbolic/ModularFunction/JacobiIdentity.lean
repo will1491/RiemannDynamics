@@ -3,7 +3,7 @@ Copyright (c) 2026 Will (Ziang) Li. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Will (Ziang) Li
 -/
-import RiemannDynamics.Hyperbolic.ModularFunction.FourTermBounds
+import RiemannDynamics.Hyperbolic.ModularFunction.FourTermBounds.Lambda
 
 /-! # Jacobi’s identity, theta non-vanishing, and the cusp function
 
@@ -872,7 +872,7 @@ analytic on the open unit disk, providing the foundation for the
 q-expansion power series of `λ`. The Cauchy estimate on this disk
 closes the three-term derivative bound
 `modularLambdaH_deriv_norm_sub_three_term_le_of_im_ge_one`
-(in `Gamma2FundamentalDomain.lean`). -/
+(in `Gamma2FundamentalDomain/CuspAsymptotics.lean`). -/
 
 /-- **`λ` is differentiable at every `τ` with `0 < τ.im`.**
 Generalization of `modularLambdaH_differentiableAt_of_im_ge_one`. -/

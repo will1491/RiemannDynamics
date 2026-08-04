@@ -3,11 +3,11 @@ Copyright (c) 2026 Will (Ziang) Li. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Will (Ziang) Li
 -/
-import RiemannDynamics.Sphere.Basic
-import Mathlib.Topology.Connected.LocallyConnected
 import Mathlib.Analysis.Normed.Module.Connected
-import Mathlib.Topology.Compactification.OnePoint.Basic
 import Mathlib.LinearAlgebra.Complex.FiniteDimensional
+import Mathlib.Topology.Compactification.OnePoint.Basic
+import Mathlib.Topology.Connected.LocallyConnected
+import RiemannDynamics.Sphere.Basic
 
 /-!
 # The Riemann sphere is locally connected
@@ -25,6 +25,17 @@ unbounded exterior — preserves preconnectedness.
 This is the structural fact that makes connected components of open subsets
 of `ℂ̂` open; in particular the connected components of the Fatou set (the
 *Fatou components*) are open domains.
+
+## Main results
+
+* `isConnected_setOf_lt_norm` — the exterior `{z : ℂ | r < ‖z‖}` of a ball is
+  connected.
+* `isOpen_exteriorChart`, `isPreconnected_exteriorChart` — the exterior charts
+  at `∞` are open and preconnected.
+* `nhds_basis_openPreconnected_infty`, `nhds_basis_openPreconnected_coe` — open
+  preconnected neighbourhoods form a basis at `∞` and at each finite point.
+* `locallyConnectedSpace_onePoint_complex` — the Riemann sphere is locally
+  connected.
 -/
 
 open Topology Function Metric OnePoint
@@ -134,7 +145,7 @@ theorem isPreconnected_exteriorChart (r : ℝ) :
 
 /-- The exterior charts form a neighbourhood basis of `∞` consisting of open
 preconnected sets. -/
-theorem nhdsBasis_openPreconnected_infty :
+theorem nhds_basis_openPreconnected_infty :
     (𝓝 (∞ : ℂ̂)).HasBasis
       (fun s : Set ℂ̂ => IsOpen s ∧ IsPreconnected s ∧ (∞ : ℂ̂) ∈ s) id := by
   rw [Filter.hasBasis_iff]
@@ -160,9 +171,9 @@ theorem nhdsBasis_openPreconnected_infty :
 /-- Open preconnected neighbourhoods form a basis at every finite point,
 inherited from the local connectedness of `ℂ` through the open embedding
 `OnePoint.some`. -/
-theorem nhdsBasis_openPreconnected_coe (x : ℂ) :
-    (𝓝 ((x : ℂ̂))).HasBasis
-      (fun s : Set ℂ̂ => IsOpen s ∧ IsPreconnected s ∧ ((x : ℂ̂)) ∈ s) id := by
+theorem nhds_basis_openPreconnected_coe (x : ℂ) :
+    (𝓝 (x : ℂ̂)).HasBasis
+      (fun s : Set ℂ̂ => IsOpen s ∧ IsPreconnected s ∧ (x : ℂ̂) ∈ s) id := by
   -- The open-connected basis of `ℂ` at `x`, pushed through the open embedding `some`.
   have hbasis : (𝓝 x).HasBasis
       (fun s : Set ℂ => IsOpen s ∧ x ∈ s ∧ IsConnected s) id :=
@@ -196,8 +207,8 @@ theorem locallyConnectedSpace_onePoint_complex :
     (fun (x : ℂ̂) s => IsOpen s ∧ IsPreconnected s ∧ x ∈ s) ?_ ?_
   · intro x
     induction x using OnePoint.rec with
-    | infty => exact nhdsBasis_openPreconnected_infty
-    | coe x => exact nhdsBasis_openPreconnected_coe x
+    | infty => exact nhds_basis_openPreconnected_infty
+    | coe x => exact nhds_basis_openPreconnected_coe x
   · exact fun _ _ h => h.2.1
 
 instance : LocallyConnectedSpace ℂ̂ :=

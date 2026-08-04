@@ -25,7 +25,7 @@ and weak-(2,2) is bounded on `Lᵖ` for every `1 < p < 2`. It is the abstract,
 kernel-free node through which the Beurling transform's `Lᵖ` bound factors — the
 Beurling-specific input (the kernel satisfies the Calderón–Zygmund hypotheses,
 giving weak-(1,1) via the Carleson project's `czOperator_weak_1_1`, together with
-the `L²` isometry) feeds this bridge in `Analysis/SingularIntegral/Beurling.lean`.
+the `L²` isometry) feeds this bridge in `Analysis/SingularIntegral/Beurling/Kernel.lean`.
 The proof routes through the Carleson real-interpolation theorem
 `MeasureTheory.exists_hasStrongType_real_interpolation`.
 

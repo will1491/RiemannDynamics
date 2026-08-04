@@ -21,14 +21,19 @@ with poles read honestly as the value `∞`.
 The local neighborhoods are required to be open subsets of `U`, so the
 predicate forces `U` to be open (`SphereHolomorphicOn.isOpen`).
 
-Main results:
+## Main definitions
+
+* `SphereHolomorphicOn` — the predicate that a map `f : ℂ → ℂ̂` is
+  sphere-holomorphic on a set `U ⊆ ℂ`.
+
+## Main results
 
 * `DifferentiableOn.sphereHolomorphicOn` : coercions of holomorphic functions
   are sphere-holomorphic;
 * `SphereHolomorphicOn.continuousOn` : sphere-holomorphic maps are continuous;
 * `SphereHolomorphicOn.differentiableOn_chartFiniteMap` : a sphere-holomorphic
   map omitting `∞` is an honest holomorphic function;
-* `SphereHolomorphicOn.glSMul` : sphere-holomorphy is preserved by
+* `SphereHolomorphicOn.gl_smul` : sphere-holomorphy is preserved by
   post-composition with Möbius transformations.
 -/
 
@@ -95,7 +100,7 @@ theorem SphereHolomorphicOn.continuousOn {f : ℂ → ℂ̂} {U : Set ℂ}
       | coe x => rfl
     exact (hco.congr heq).continuousAt (hVo.mem_nhds hzV)
   · have hco : ContinuousOn (fun w => inversionGL • ((chartInftyMap (f w) : ℂ) : ℂ̂)) V :=
-      ((continuous_glSMul inversionGL).comp OnePoint.continuous_coe).comp_continuousOn
+      ((continuous_gl_smul inversionGL).comp OnePoint.continuous_coe).comp_continuousOn
         hdiff.continuousOn
     have heq : ∀ w ∈ V, f w = inversionGL • ((chartInftyMap (f w) : ℂ) : ℂ̂) := fun w hw =>
       (inversionGL_smul_coe_chartInftyMap (hne w hw)).symm
@@ -132,11 +137,11 @@ theorem SphereHolomorphicOn.differentiableOn_chartFiniteMap {f : ℂ → ℂ̂}
 
 /-- Applying a Möbius transformation to the coercion of a holomorphic function
 yields a sphere-holomorphic map. This is the chart-level computation behind
-`SphereHolomorphicOn.glSMul`: where `N • (h ·)` is finite it reads in the
+`SphereHolomorphicOn.gl_smul`: where `N • (h ·)` is finite it reads in the
 finite chart as the quotient `(N₀₀ h + N₀₁) / (N₁₀ h + N₁₁)` with
 non-vanishing denominator, and near a pole the infinity chart reads it as the
 reciprocal quotient with non-vanishing numerator. -/
-theorem sphereHolomorphicOn_glSMul_coe {h : ℂ → ℂ} {V : Set ℂ}
+theorem sphereHolomorphicOn_gl_smul_coe {h : ℂ → ℂ} {V : Set ℂ}
     (hd : DifferentiableOn ℂ h V) (hV : IsOpen V) (N : GL (Fin 2) ℂ) :
     SphereHolomorphicOn (fun w => N • ((h w : ℂ̂))) V := by
   have cf : ∀ x : ℂ, chartFiniteMap (x : ℂ̂) = x := fun _ => rfl
@@ -213,19 +218,19 @@ theorem sphereHolomorphicOn_glSMul_coe {h : ℂ → ℂ} {V : Set ℂ}
 
 /-- Sphere-holomorphy is preserved by post-composition with Möbius
 transformations. -/
-theorem SphereHolomorphicOn.glSMul {f : ℂ → ℂ̂} {U : Set ℂ}
+theorem SphereHolomorphicOn.gl_smul {f : ℂ → ℂ̂} {U : Set ℂ}
     (hf : SphereHolomorphicOn f U) (g : GL (Fin 2) ℂ) :
     SphereHolomorphicOn (fun z => g • f z) U := by
   intro z hz
   obtain ⟨V, hVo, hzV, hVU, hcase⟩ := hf z hz
   have hVmain : SphereHolomorphicOn (fun w => g • f w) V := by
     rcases hcase with ⟨hne, hdiff⟩ | ⟨hne, hdiff⟩
-    · refine (sphereHolomorphicOn_glSMul_coe hdiff hVo g).congr fun w hw => ?_
+    · refine (sphereHolomorphicOn_gl_smul_coe hdiff hVo g).congr fun w hw => ?_
       change g • ((chartFiniteMap (f w) : ℂ) : ℂ̂) = g • f w
       cases hfw : f w with
       | infty => exact absurd hfw (hne w hw)
       | coe x => rfl
-    · refine (sphereHolomorphicOn_glSMul_coe hdiff hVo
+    · refine (sphereHolomorphicOn_gl_smul_coe hdiff hVo
         (g * inversionGL)).congr fun w hw => ?_
       change (g * inversionGL) • ((chartInftyMap (f w) : ℂ) : ℂ̂) = g • f w
       rw [SemigroupAction.mul_smul, inversionGL_smul_coe_chartInftyMap (hne w hw)]

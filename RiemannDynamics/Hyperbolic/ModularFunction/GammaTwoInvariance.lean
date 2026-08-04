@@ -664,7 +664,7 @@ theorem modularLambdaH_differentiableOn :
 The two pillars of the covering-map proof that depend only on the
 `SL₂(ℤ)`-action live here. The remaining pillars (`λ' ≠ 0` and
 orbit identification) require Step D and live in
-`ModularCoveringMap.lean`. -/
+`ModularCoveringMap/`. -/
 
 /-- **Pillar 1: `Γ(2)` is torsion-free modulo `±I` on `ℍ`.** Any
 `γ ∈ Γ(2)` with a fixed point in `ℍ` is `±I`. Proof by trace

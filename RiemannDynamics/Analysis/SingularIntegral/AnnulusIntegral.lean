@@ -1,3 +1,8 @@
+/-
+Copyright (c) 2026 Will (Ziang) Li. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Will (Ziang) Li
+-/
 import Mathlib.MeasureTheory.Measure.Lebesgue.Complex
 import Mathlib.Analysis.SpecialFunctions.PolarCoord
 import Mathlib.Analysis.SpecialFunctions.Integrals.Basic
@@ -20,7 +25,7 @@ In polar coordinates the area element is `ρ dρ dθ`, so the integrand
 `L¹` mass over `{‖u‖ ≥ r}` diverges, but every higher power `‖u‖^{-2q}` with
 `q > 1` is integrable.
 
-`Analysis/SingularIntegral/Beurling.lean` consumes `annulus_lintegral` (and its
+`Analysis/SingularIntegral/Beurling/` consumes `annulus_lintegral` (and its
 `Lᵖ` variants built from the same polar reduction) to show the truncated Beurling
 kernel section `1_{‖·‖ ≥ r}(·) · ‖·‖⁻²` lies in `Lᵖ'`, so the singular integral is
 well-defined against `Lᵖ` data, and in the Cotlar–Stein / Schur kernel bounds.

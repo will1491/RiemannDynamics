@@ -12,7 +12,7 @@ import Mathlib.Analysis.Meromorphic.FactorizedRational
 import Mathlib.Analysis.Meromorphic.Divisor
 import Mathlib.Analysis.Normed.Module.Connected
 import Mathlib.LinearAlgebra.Complex.FiniteDimensional
-import RiemannDynamics.Hyperbolic.StarShapedPrimitive
+import RiemannDynamics.Hyperbolic.PlaneGeometry.StarShapedPrimitive
 
 /-! # Winding numbers for circles and rectangles
 
@@ -89,7 +89,7 @@ theorem circleWindingNumber_self (c : ℂ) {R : ℝ} (hR : 0 < R) :
 The following definitions and theorems extend the toolkit to general
 parameterized paths and rectangle / argument-principle versions used
 by `modularLambdaH_image_fundamentalDomainInterior` (in
-`Gamma2FundamentalDomain.lean`) to count preimages of `w` under the
+`Gamma2FundamentalDomain/Surjectivity.lean`) to count preimages of `w` under the
 modular function `λ` inside a fundamental domain. -/
 
 /-- Contour integral of `f : ℂ → ℂ` along a parameterized path

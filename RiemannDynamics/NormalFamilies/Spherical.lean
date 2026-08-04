@@ -12,7 +12,7 @@ import RiemannDynamics.Sphere.SphericalMetric
 This file installs `MetricSpace` (and hence `UniformSpace`) instances on the
 Riemann sphere `ℂ̂ = OnePoint ℂ` derived from the spherical (chordal) metric
 defined in `Sphere/SphericalMetric.lean`. The induced topology coincides with
-the one already on `OnePoint ℂ` by `sphericalDist_inducesTopology`.
+the one already on `OnePoint ℂ` by `sphericalDist_induces_topology`.
 
 With these instances in place, `IsNormal 𝓕 U` from `NormalFamilies/Basic.lean`
 specializes to the meromorphic case (`Y = ℂ̂`) — sequences in a family of
@@ -26,7 +26,7 @@ open OnePoint
 
 /-- The spherical metric makes `ℂ̂` a metric space. The induced topology agrees
 with the existing one-point-compactification topology, via
-`sphericalDist_inducesTopology`. -/
+`sphericalDist_induces_topology`. -/
 noncomputable instance : MetricSpace (OnePoint ℂ) :=
   let m : MetricSpace (OnePoint ℂ) :=
     { dist := sphericalDist
@@ -37,7 +37,7 @@ noncomputable instance : MetricSpace (OnePoint ℂ) :=
   m.replaceTopology <| by
     apply TopologicalSpace.ext
     ext s
-    rw [sphericalDist_inducesTopology, @Metric.isOpen_iff _ m.toPseudoMetricSpace]
+    rw [sphericalDist_induces_topology, @Metric.isOpen_iff _ m.toPseudoMetricSpace]
     refine forall_congr' fun z => forall_congr' fun _ => ?_
     refine exists_congr fun ε => and_congr Iff.rfl ?_
     constructor

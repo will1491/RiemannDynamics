@@ -825,7 +825,7 @@ theorem sphereHolomorphicOn_of_tendstoLocallyUniformlyOn {Fn : ℕ → ℂ → �
   by_cases hzi : g z₀ = ∞
   · -- pass to the inversion: a spherical isometry exchanging `∞` and `0`
     have hol' : ∀ n, SphereHolomorphicOn (fun w => inversionGL • Fn n w) U := fun n =>
-      (hol n).glSMul inversionGL
+      (hol n).gl_smul inversionGL
     have hg' : TendstoLocallyUniformlyOn (fun n w => inversionGL • Fn n w)
         (fun w => inversionGL • g w) atTop U := by
       rw [Metric.tendstoLocallyUniformlyOn_iff] at hg ⊢
@@ -989,7 +989,7 @@ theorem tendsto_sphericalDeriv_of_tendstoLocallyUniformlyOn
   by_cases hzi : g z = ∞
   · -- pass to the inversion; the spherical derivative is inversion-invariant
     have hol' : ∀ n, SphereHolomorphicOn (fun w => inversionGL • Fn n w) U := fun n =>
-      (hol n).glSMul inversionGL
+      (hol n).gl_smul inversionGL
     have hg' : TendstoLocallyUniformlyOn (fun n w => inversionGL • Fn n w)
         (fun w => inversionGL • g w) atTop U := by
       rw [Metric.tendstoLocallyUniformlyOn_iff] at hg ⊢

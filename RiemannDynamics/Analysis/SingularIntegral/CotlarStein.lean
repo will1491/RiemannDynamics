@@ -1,3 +1,8 @@
+/-
+Copyright (c) 2026 Will (Ziang) Li. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Will (Ziang) Li
+-/
 import Mathlib.Analysis.InnerProductSpace.Adjoint
 import Mathlib.Analysis.CStarAlgebra.ContinuousLinearMap
 import Mathlib.Analysis.CStarAlgebra.Basic
@@ -9,9 +14,6 @@ Finite Cotlar-Stein lemma for a finite family of bounded operators on a Hilbert
 space: if `T : Fin N -> (H ->L[C] H)` satisfies the two Schur bounds
 `forall i, sum j sqrt ‖(T i)* (T j)‖ <= A` and
 `forall i, sum j sqrt ‖(T i) (T j)*‖ <= A`, then `‖sum i, T i‖ <= A`.
-
-Self-contained standalone development; does not depend on or modify any other
-project file.
 
 ## Proof outline
 

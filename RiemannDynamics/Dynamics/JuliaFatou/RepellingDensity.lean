@@ -119,7 +119,7 @@ theorem countable_setOf_sphericalDeriv_eq_zero {g : ℂ → ℂ̂}
         exact OnePoint.coe_ne_infty 0
       · exact ⟨1, fun p => by rw [one_smul, one_smul], by rwa [one_smul],
           fun ζ => by simp only [one_smul]⟩
-    have hGn : SphereHolomorphicOn (fun w => N • g w) Set.univ := hg.glSMul N
+    have hGn : SphereHolomorphicOn (fun w => N • g w) Set.univ := hg.gl_smul N
     have hGnc : Continuous (fun w => N • g w) :=
       continuousOn_univ.mp hGn.continuousOn
     set U₀ : Set ℂ := {x : ℂ | N • g x ≠ ∞} with hU₀_def
@@ -360,7 +360,7 @@ theorem isOpen_image_setOf_sphericalDeriv_ne_zero {g : ℂ → ℂ̂}
     have hinvol : ∀ p : ℂ̂, inversionGL • inversionGL • p = p := fun p => by
       rw [← SemigroupAction.mul_smul, hJJ, one_smul]
     have hh : SphereHolomorphicOn (fun w => inversionGL • g w) Set.univ :=
-      hg.glSMul inversionGL
+      hg.gl_smul inversionGL
     have hhreg : sphericalDeriv (fun w => inversionGL • g w) ζ₀ ≠ 0 := by
       rw [sphericalDeriv_inversionGL_smul]
       exact hζ₀
@@ -370,7 +370,7 @@ theorem isOpen_image_setOf_sphericalDeriv_ne_zero {g : ℂ → ℂ̂}
       exact OnePoint.coe_ne_infty 0
     obtain ⟨W', hW'o, hW'mem, hW'sub⟩ := key _ hh ζ₀ hhreg hhfin
     refine ⟨(fun p : ℂ̂ => inversionGL • p) ⁻¹' W', ?_,
-      hW'o.preimage (continuous_glSMul inversionGL), hW'mem⟩
+      hW'o.preimage (continuous_gl_smul inversionGL), hW'mem⟩
     intro q hq
     obtain ⟨ζ, hζreg, hζeq⟩ := hW'sub hq
     have hζeq' : inversionGL • g ζ = inversionGL • q := hζeq
@@ -391,7 +391,7 @@ invariant, hence contained in the Fatou set. -/
 theorem juliaSet_subset_closure_backwardOrbit {f : ℂ̂ → ℂ̂}
     (hf : IsRational f) (hd : 2 ≤ degreeOfRational f) {z₀ : ℂ̂}
     (hz₀ : z₀ ∈ JuliaSet f) :
-    JuliaSet f ⊆ closure (BackwardOrbit f z₀) := by
+    JuliaSet f ⊆ closure (backwardOrbit f z₀) := by
   have hd1 : 1 ≤ degreeOfRational f := le_trans one_le_two hd
   intro w hw
   rw [_root_.mem_closure_iff]
@@ -745,7 +745,7 @@ theorem juliaSet_subset_closure_repelling {f : ℂ̂ → ℂ̂}
     refine ne_const_comp_coe_of_isRational (hf.iterate hd1 k) ?_
     rw [degreeOfRational_iterate hf hd1 k]
     exact Nat.one_le_pow _ _ (by omega)
-  obtain ⟨B, hB_def⟩ : ∃ B : Set ℂ̂, B = {∞} ∪ ForwardOrbit f ∞ ∪
+  obtain ⟨B, hB_def⟩ : ∃ B : Set ℂ̂, B = {∞} ∪ forwardOrbit f ∞ ∪
       ⋃ k : ℕ, (fun ζ : ℂ => f^[k] ((ζ : ℂ̂))) ''
         {ζ : ℂ | sphericalDeriv (fun w : ℂ => f^[k] ((w : ℂ̂))) ζ = 0} := ⟨_, rfl⟩
   have hB : B.Countable := by

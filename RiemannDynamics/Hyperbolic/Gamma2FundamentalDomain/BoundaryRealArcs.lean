@@ -4,8 +4,8 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Will (Ziang) Li
 -/
 import RiemannDynamics.Hyperbolic.ModularFunction.GammaTwoInvariance
-import RiemannDynamics.Hyperbolic.SchwarzReflection
-import RiemannDynamics.Hyperbolic.ArgumentPrinciple
+import RiemannDynamics.Hyperbolic.DiskModel.SchwarzReflection
+import RiemannDynamics.Hyperbolic.ModularLambda.ArgumentPrinciple
 import Mathlib.Analysis.Complex.OpenMapping
 
 /-! # The half-fundamental domain and real boundary arcs

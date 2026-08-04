@@ -3,10 +3,10 @@ Copyright (c) 2026 Will (Ziang) Li. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Will (Ziang) Li
 -/
-import Mathlib.Topology.Compactification.OnePoint.Basic
 import Mathlib.Analysis.Calculus.FDeriv.Basic
 import Mathlib.Analysis.Calculus.FDeriv.Mul
 import Mathlib.Analysis.Complex.Basic
+import Mathlib.Topology.Compactification.OnePoint.Basic
 import Mathlib.Topology.OpenPartialHomeomorph.Defs
 
 /-!
@@ -21,6 +21,20 @@ with two explicit coordinate charts:
 
 We do not introduce an abstract Riemann-surface structure at this point — see
 `Uniformization/` for the lift to general Riemann surfaces.
+
+## Main definitions
+
+* `ℂ̂` — notation for the Riemann sphere `OnePoint ℂ`.
+* `chartFiniteMap`, `chartInftyMap` — the two chart maps `ℂ̂ → ℂ`.
+* `chartFiniteSource`, `chartInftySource` — the corresponding open source sets.
+
+## Main results
+
+* `chartSource_union_eq_univ`, `chartSource_inter_eq` — the two chart sources
+  cover `ℂ̂`, and their overlap is `ℂ̂ \ {0, ∞}`.
+* `chart_transition_holomorphic` — the transition map `z ↦ z⁻¹` is holomorphic.
+* `isOpen_chartFiniteSource`, `isOpen_chartInftySource` — the chart sources are
+  open.
 -/
 
 open OnePoint Topology

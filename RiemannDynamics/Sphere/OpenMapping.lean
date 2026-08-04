@@ -4,10 +4,10 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Will (Ziang) Li
 -/
 import Mathlib.Analysis.Analytic.IsolatedZeros
-import Mathlib.Analysis.Complex.OpenMapping
 import Mathlib.Analysis.Calculus.InverseFunctionTheorem.Deriv
-import RiemannDynamics.Sphere.RationalMap
+import Mathlib.Analysis.Complex.OpenMapping
 import RiemannDynamics.Sphere.MobiusAction
+import RiemannDynamics.Sphere.RationalMap
 import RiemannDynamics.Sphere.SphereHolomorphic
 
 /-!
@@ -32,6 +32,17 @@ sends neighborhoods to neighborhoods at that point.
 Surjectivity follows from openness alone: the image of a continuous open
 self-map of `ℂ̂` is open, compact (hence closed), and nonempty, so it is
 all of the connected sphere.
+
+## Main results
+
+* `IsRational.isOpenMap` — a nonconstant rational map is an open map.
+* `IsRational.surjective` — a nonconstant rational map is surjective.
+* `IsRational.ne_const` — a nonconstant rational map is not a constant map.
+* `IsRational.sphereHolomorphicOn_comp_coe`,
+  `IsRational.sphereHolomorphicOn_comp_inversionGL` — the chart readings of a
+  rational map are sphere-holomorphic.
+* `exists_branch_of_deriv_ne_zero` — a local holomorphic branch exists where the
+  derivative reading is nonzero.
 -/
 
 open OnePoint Polynomial Filter Topology Matrix
@@ -42,7 +53,7 @@ namespace RiemannDynamics
 theorem IsRational.continuous {f : ℂ̂ → ℂ̂} (hf : IsRational f) :
     Continuous f := by
   obtain ⟨r, rfl⟩ := hf
-  exact r.toSphereMap_continuous
+  exact r.continuous_toSphereMap
 
 /-- Sending a quotient to the sphere with poles at the zeros of the
 denominator is, after inversion, the reciprocal quotient: the value-level
@@ -102,14 +113,7 @@ theorem RationalData.reflect_eval_ne_zero_or (r : RationalData) (w : ℂ) :
       rw [hd_eq, Polynomial.coeff_natDegree]
       exact Polynomial.leadingCoeff_ne_zero.mpr hnum_ne
     · right
-      have hdenR_ne_zero : r.denReduced ≠ 0 := by
-        unfold RationalData.denReduced
-        intro hz
-        have h1 : r.den = gcd r.num r.den * (r.den / gcd r.num r.den) :=
-          (EuclideanDomain.mul_div_cancel' (gcd_ne_zero_of_right r.den_ne_zero)
-            (gcd_dvd_right _ _)).symm
-        rw [hz, mul_zero] at h1
-        exact r.den_ne_zero h1
+      have hdenR_ne_zero : r.denReduced ≠ 0 := r.denReduced_ne_zero
       have hd_eq : r.degree = r.denReduced.natDegree := by
         rw [hdeg]; exact max_eq_right hle
       rw [hd_eq, Polynomial.coeff_natDegree]
@@ -164,14 +168,7 @@ theorem RationalData.toSphereMap_inversionGL_smul_coe (r : RationalData)
           else if r.numReduced.natDegree = r.denReduced.natDegree then
             ((r.numReduced.leadingCoeff / r.denReduced.leadingCoeff : ℂ) : ℂ̂)
           else ∞ := rfl
-    have hdenR_ne_zero : r.denReduced ≠ 0 := by
-      unfold RationalData.denReduced
-      intro hz
-      have h1 : r.den = gcd r.num r.den * (r.den / gcd r.num r.den) :=
-        (EuclideanDomain.mul_div_cancel' (gcd_ne_zero_of_right r.den_ne_zero)
-          (gcd_dvd_right _ _)).symm
-      rw [hz, mul_zero] at h1
-      exact r.den_ne_zero h1
+    have hdenR_ne_zero : r.denReduced ≠ 0 := r.denReduced_ne_zero
     rcases lt_trichotomy r.numReduced.natDegree r.denReduced.natDegree with hlt | heq | hgt
     · -- `deg num < deg den`: the value at `∞` is `0`, and the reflected
       -- numerator coefficient vanishes while the denominator one does not.
@@ -231,14 +228,7 @@ coprimality then forces the denominator to be a nonvanishing constant. -/
 theorem RationalData.toSphereMap_eq_const_of_eventuallyEq {r : RationalData}
     {z₀ : ℂ̂} {c : ℂ̂} (h : ∀ᶠ z in nhds z₀, r.toSphereMap z = c) :
     r.toSphereMap = Function.const ℂ̂ c := by
-  have hdenR_ne_zero : r.denReduced ≠ 0 := by
-    unfold RationalData.denReduced
-    intro hz
-    have h1 : r.den = gcd r.num r.den * (r.den / gcd r.num r.den) :=
-      (EuclideanDomain.mul_div_cancel' (gcd_ne_zero_of_right r.den_ne_zero)
-        (gcd_dvd_right _ _)).symm
-    rw [hz, mul_zero] at h1
-    exact r.den_ne_zero h1
+  have hdenR_ne_zero : r.denReduced ≠ 0 := r.denReduced_ne_zero
   have hcop : IsCoprime r.numReduced r.denReduced :=
     isCoprime_div_gcd_div_gcd r.den_ne_zero
   -- Step 1: infinitely many finite points carry the value `c`.
@@ -338,7 +328,7 @@ theorem IsRational.isOpenMap {f : ℂ̂ → ℂ̂} (hf : IsRational f)
     intro x
     exact Homeomorph.map_nhds_eq
       ⟨⟨fun z => inversionGL • z, fun z => inversionGL • z, hinvol, hinvol⟩,
-        continuous_glSMul _, continuous_glSMul _⟩ x
+        continuous_gl_smul _, continuous_gl_smul _⟩ x
   -- Neighborhood transport along the two chart parameterizations.
   have hcoe : ∀ w : ℂ, map ((↑) : ℂ → ℂ̂) (𝓝 w) = 𝓝 (w : ℂ̂) :=
     fun w => OnePoint.isOpenEmbedding_coe.map_nhds_eq w
@@ -488,14 +478,7 @@ theorem IsRational.ne_const {f : ℂ̂ → ℂ̂} (hf : IsRational f)
     (hd : 1 ≤ degreeOfRational f) (c : ℂ̂) : f ≠ Function.const ℂ̂ c := by
   intro hc
   obtain ⟨r, hr⟩ := hf
-  have hdenR_ne_zero : r.denReduced ≠ 0 := by
-    unfold RationalData.denReduced
-    intro hz
-    have h1 : r.den = gcd r.num r.den * (r.den / gcd r.num r.den) :=
-      (EuclideanDomain.mul_div_cancel' (gcd_ne_zero_of_right r.den_ne_zero)
-        (gcd_dvd_right _ _)).symm
-    rw [hz, mul_zero] at h1
-    exact r.den_ne_zero h1
+  have hdenR_ne_zero : r.denReduced ≠ 0 := r.denReduced_ne_zero
   have hcop : IsCoprime r.numReduced r.denReduced :=
     isCoprime_div_gcd_div_gcd r.den_ne_zero
   have hval : ∀ w : ℂ, r.toSphereMap ↑w = c := by
@@ -543,7 +526,6 @@ theorem IsRational.ne_const {f : ℂ̂ → ℂ̂} (hf : IsRational f)
       rw [hn_deg, hd_deg]
       exact Nat.max_self 0
     omega
-
 
 /-- The finite-chart reading of a rational map is sphere-holomorphic: near a
 regular point it reads holomorphically in the finite chart, and near a pole
@@ -662,7 +644,6 @@ theorem IsRational.sphereHolomorphicOn_comp_inversionGL {f : ℂ̂ → ℂ̂}
       simp only [hread]
       rw [if_neg (ht_ne w hw.2), cf, div_eq_mul_inv]
 
-
 /-- The Wronskian `num′·den − num·den′` of the reduced representation. Its
 zeros among non-poles are exactly the critical points of the finite-chart
 reading. -/
@@ -678,14 +659,7 @@ theorem RationalData.wronskian_ne_zero (r : RationalData) (hdeg : 2 ≤ r.degree
   intro h0
   have hcop : IsCoprime r.numReduced r.denReduced :=
     isCoprime_div_gcd_div_gcd r.den_ne_zero
-  have hdenR_ne_zero : r.denReduced ≠ 0 := by
-    unfold RationalData.denReduced
-    intro hz
-    have h1 : r.den = gcd r.num r.den * (r.den / gcd r.num r.den) :=
-      (EuclideanDomain.mul_div_cancel' (gcd_ne_zero_of_right r.den_ne_zero)
-        (gcd_dvd_right _ _)).symm
-    rw [hz, mul_zero] at h1
-    exact r.den_ne_zero h1
+  have hdenR_ne_zero : r.denReduced ≠ 0 := r.denReduced_ne_zero
   have hid : Polynomial.derivative r.numReduced * r.denReduced
       = r.numReduced * Polynomial.derivative r.denReduced := by
     have h0' : Polynomial.derivative r.numReduced * r.denReduced
