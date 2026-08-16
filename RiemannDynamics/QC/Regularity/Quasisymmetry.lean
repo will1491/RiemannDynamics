@@ -15,7 +15,7 @@ import Mathlib.Topology.MetricSpace.Lipschitz
 This file derives the **regularity outputs** of the quasiconformal-modulus layer that the
 normal-family compactness theorem (`QC/Calculus/Compactness.lean`) consumes:
 
-* **(E) Equicontinuity / normal family**: a uniformly `K`-quasiconformal, suitably normalized
+* **Equicontinuity / normal family**: a uniformly `K`-quasiconformal, suitably normalized
   family `{fₙ}` and its inverses `{fₙ⁻¹}` are equicontinuous on every compact set, with a modulus
   of continuity depending only on `K` and the set.
 * **Inverse stability**: the inverse of a geometric `K`-quasiconformal map is geometric
@@ -30,7 +30,7 @@ assumes any derivative control.
 * `isQCGeometric_inv_of_isQCGeometric` — the inverse of a geometric `K`-qc map is geometric `K`-qc;
 * `exists_uniform_modulus` / `exists_uniform_image_bound` — uniform ring-modulus distortion data
   and image bounds for a uniformly `K`-qc family;
-* `equicontinuousOn_of_uniform_isQCGeometric` — **(E)**: a normalized uniformly `K`-qc family is
+* `equicontinuousOn_of_uniform_isQCGeometric` — a normalized uniformly `K`-qc family is
   equicontinuous on compacta;
 * `equicontinuousOn_inv_of_uniform_isQCGeometric` — the inverses are equicontinuous on compacta.
 -/
@@ -806,54 +806,40 @@ theorem inscriptionModulusData_of_uniform {ι : Type*} {f : ι → ℂ → ℂ} 
       rw [htabs]
       linarith [hd_le]
 
-/-- **(E) Equicontinuity of a normalized uniformly `K`-quasiconformal family.** Let `{fₙ}` be a
+/-- **Equicontinuity of a normalized uniformly `K`-quasiconformal family.** Let `{fₙ}` be a
 family of geometric `K`-quasiconformal maps that is *normalized* on a compact set `S`: there are
-points `p ≠ q` of `S` and a constant `M` with `dist (fₙ p) (fₙ q) ≤ M` and `δ ≤ dist (fₙ p) (fₙ q)`
-for all `n` (a two-point normalization bounding the family's scale above and below). Then `{fₙ}` is
-equicontinuous on `S`, with a modulus of continuity depending only on `K`, `S`, `M`, `δ`.
+points `p ≠ q` of `S` and a constant `M` with `dist (fₙ p) (fₙ q) ≤ M` for all `n` (a two-point
+normalization bounding the family's scale above). Then `{fₙ}` is equicontinuous on `S`, with a
+modulus of continuity depending only on `K`, `S`, `M`.
 
 Some normalization is unavoidable: without it `fₙ = n · id` is uniformly `1`-quasiconformal yet not
 equicontinuous. Under the two-point normalization, the `K`-only quasisymmetric distortion control
-of the ring-modulus layer converts the fixed scale `dist (fₙ p) (fₙ q) ∈ [δ, M]`
-into a uniform Hölder/modulus-of-continuity estimate on `S`. False for bare homeomorphisms; no
-derivative control assumed. -/
+of the ring-modulus layer converts the scale bound `dist (fₙ p) (fₙ q) ≤ M` into a uniform
+Hölder/modulus-of-continuity estimate on `S`; no lower scale bound is needed (a family collapsing
+towards a constant is all the more equicontinuous). False for bare homeomorphisms; no derivative
+control assumed. -/
 theorem equicontinuousOn_of_uniform_isQCGeometric {ι : Type*} {f : ι → ℂ → ℂ} {K : ℝ}
     (hfK : ∀ i, IsQCGeometric (f i) K) {S : Set ℂ} (hS : IsCompact S)
     {p q : ℂ} (hp : p ∈ S) (hq : q ∈ S) (hpq : p ≠ q)
-    {δ M : ℝ} (hδ : 0 < δ)
-    (hlb : ∀ i, δ ≤ dist (f i p) (f i q)) (hub : ∀ i, dist (f i p) (f i q) ≤ M) :
-    EquicontinuousOn f S := by
-  -- The metric-extraction engine reduces equicontinuity to the inscription+transport package.
-  -- The transported ring-modulus bound `geometric_shellRatio_star` supplies the per-configuration
-  -- shell data (`dist (f i x₀) (f i x) ≤ a'`, `ringModulus (f i x₀) a' b' ≤ M`,
-  -- `b' · exp (-2π / M.toReal) = a' ≤ ω (dist x₀ x)`); the outstanding content is the *uniform*
-  -- image-scale bound `a' ≤ ω (dist x₀ x)` with `ω → 0` independent of `i` and `x₀ ∈ S`, i.e.
-  -- Väisälä's equicontinuity theorem, produced from the two-point normalization by chaining the
-  -- shell bound across a cover of `S`.
-  refine equicontinuousOn_of_uniform_isQCGeometric_of_inscription hfK hS hp hq hpq hδ hlb hub ?_
-  exact inscriptionModulusData_of_uniform hfK hS hp hq hpq hub
+    {M : ℝ} (hub : ∀ i, dist (f i p) (f i q) ≤ M) :
+    EquicontinuousOn f S :=
+  equicontinuousOn_of_uniform_isQCGeometric_of_inscription
+    (inscriptionModulusData_of_uniform hfK hS hp hq hpq hub)
 
-set_option linter.unusedVariables false in
-/-- **Equicontinuity of the inverses of a normalized uniformly `K`-quasiconformal family.** Under
-the two-point normalization together with an *image-side* covering hypothesis `hTU : T ⊆ f i '' U`
-for a fixed compact `U` (equivalently `g i '' T ⊆ U`, uniformly in `i`), the inverse family
-`{fₙ⁻¹}` is equicontinuous on the compact set `T`. The image-side hypothesis is essential: without a
-uniform bound on `g i '' T` the inverses may expand `T` unboundedly (a scale jump across a fat
-annulus keeps `K` bounded while compressing a far ball onto a fixed neighborhood of `T`), so the
-bare-`T` statement is false. Given `hTU`, the inverses `g i` are geometric `K`-quasiconformal
-(`isQCGeometric_inv_of_isQCGeometric`) and two-point–normalized on `T`: the upper scale bound is
-`diam (insert p (insert q U))`, and the lower bound comes from the forward uniform modulus `ω_f`
-(`exists_uniform_modulus` for `f` on `insert p (insert q U)`), which forces the images of two fixed
-distinct points of `T` apart. Forward equicontinuity `equicontinuousOn_of_uniform_isQCGeometric`
-applied to `g` then finishes. -/
+/-- **Equicontinuity of the inverses of a uniformly `K`-quasiconformal family.** Under an
+*image-side* covering hypothesis `hTU : T ⊆ f i '' U` for a fixed compact `U` (equivalently
+`g i '' T ⊆ U`, uniformly in `i`), the inverse family `{fₙ⁻¹}` is equicontinuous on the compact set
+`T`. The image-side hypothesis is essential: without a uniform bound on `g i '' T` the inverses may
+expand `T` unboundedly (a scale jump across a fat annulus keeps `K` bounded while compressing a far
+ball onto a fixed neighborhood of `T`), so the bare-`T` statement is false. Given `hTU`, the
+inverses `g i` are geometric `K`-quasiconformal (`isQCGeometric_inv_of_isQCGeometric`) and
+two-point–normalized on `T`: for two distinct anchors `u₀ ≠ v₀` of `T` the scale
+`dist (g i u₀) (g i v₀)` is bounded by `diam U`, uniformly in `i`. Forward equicontinuity
+`equicontinuousOn_of_uniform_isQCGeometric` applied to `g` then finishes. -/
 theorem equicontinuousOn_inv_of_uniform_isQCGeometric {ι : Type*} {f : ι → ℂ → ℂ} {K : ℝ}
     (hfK : ∀ i, IsQCGeometric (f i) K)
     (g : ι → ℂ → ℂ)
     (hg : ∀ i, Function.LeftInverse (g i) (f i) ∧ Function.RightInverse (g i) (f i))
-    {S : Set ℂ} (hS : IsCompact S)
-    {p q : ℂ} (hp : p ∈ S) (hq : q ∈ S) (hpq : p ≠ q)
-    {δ M : ℝ} (hδ : 0 < δ)
-    (hlb : ∀ i, δ ≤ dist (f i p) (f i q)) (hub : ∀ i, dist (f i p) (f i q) ≤ M)
     {T U : Set ℂ} (hT : IsCompact T) (hU : IsCompact U) (hTU : ∀ i, T ⊆ f i '' U) :
     EquicontinuousOn g T := by
   classical
@@ -887,48 +873,10 @@ theorem equicontinuousOn_inv_of_uniform_isQCGeometric {ι : Type*} {f : ι → �
   · -- Two distinct anchors `u₀ ≠ v₀ ∈ T`.
     rw [Set.not_subsingleton_iff] at hTsub
     obtain ⟨u₀, hu₀, v₀, hv₀, huv⟩ := hTsub
-    -- Enlarge `U` to contain `p, q`.
-    set U' : Set ℂ := insert p (insert q U) with hU'def
-    have hU'cpt : IsCompact U' := (hU.insert q).insert p
-    have hpU' : p ∈ U' := Set.mem_insert _ _
-    have hqU' : q ∈ U' := Set.mem_insert_of_mem _ (Set.mem_insert _ _)
-    have hUU' : U ⊆ U' := (Set.subset_insert _ _).trans (Set.subset_insert _ _)
-    -- Forward uniform modulus `ω_f` on `U'`.
-    obtain ⟨ωf, hωfnn, hωflim, hωfdata⟩ :=
-      exists_uniform_modulus hfK hU'cpt hpU' hqU' hpq hub
-    -- `M' := diam U'` (upper bound for `dist (g i u₀)(g i v₀)`).
-    set M' : ℝ := Metric.diam U' with hM'def
-    have hU'bdd : Bornology.IsBounded U' := hU'cpt.isBounded
-    have hM'ub : ∀ i, dist (g i u₀) (g i v₀) ≤ M' := by
-      intro i
-      exact Metric.dist_le_diam_of_mem hU'bdd (hUU' (hgTU i u₀ hu₀)) (hUU' (hgTU i v₀ hv₀))
-    -- `δ' > 0` lower bound for `dist (g i u₀)(g i v₀)`.
-    have hd0 : 0 < dist u₀ v₀ := dist_pos.mpr huv
-    obtain ⟨δ', hδ'pos, hδ'⟩ :
-        ∃ δ' > 0, ∀ s : ℝ, 0 < s → s < δ' → ωf s < dist u₀ v₀ := by
-      have : ∀ᶠ s in 𝓝[>] (0 : ℝ), ωf s < dist u₀ v₀ := hωflim (Iio_mem_nhds hd0)
-      obtain ⟨δ', hδ'pos, hδ'⟩ := ((nhdsGT_basis (0 : ℝ)).eventually_iff).mp this
-      exact ⟨δ', hδ'pos, fun s hs1 hs2 => hδ' ⟨hs1, hs2⟩⟩
-    have hM'lb : ∀ i, δ' ≤ dist (g i u₀) (g i v₀) := by
-      intro i
-      by_contra hlt
-      rw [not_le] at hlt
-      -- `dist (g i u₀)(g i v₀) < δ'`.
-      have hgu : g i u₀ ∈ U' := hUU' (hgTU i u₀ hu₀)
-      have hgv : g i v₀ ∈ U' := hUU' (hgTU i v₀ hv₀)
-      have hfmod : dist (f i (g i u₀)) (f i (g i v₀)) ≤ ωf (dist (g i u₀) (g i v₀)) :=
-        hωfdata i (g i u₀) hgu (g i v₀) hgv
-      rw [(hg i).2 u₀, (hg i).2 v₀] at hfmod
-      -- If `dist (g i u₀)(g i v₀) = 0` then `g i u₀ = g i v₀`, so `u₀ = v₀`, contradiction.
-      rcases eq_or_lt_of_le (dist_nonneg (x := g i u₀) (y := g i v₀)) with h0 | hpos
-      · have hguv : g i u₀ = g i v₀ := dist_eq_zero.mp h0.symm
-        have : u₀ = v₀ := by
-          have h1 : f i (g i u₀) = f i (g i v₀) := by rw [hguv]
-          rwa [(hg i).2 u₀, (hg i).2 v₀] at h1
-        exact huv this
-      · have := hδ' (dist (g i u₀) (g i v₀)) hpos hlt
-        linarith [hfmod, this]
-    -- Apply forward equicontinuity (TARGET 1) to `g` on `T`.
-    exact equicontinuousOn_of_uniform_isQCGeometric hgK hT hu₀ hv₀ huv hδ'pos hM'lb hM'ub
+    -- `diam U` bounds `dist (g i u₀) (g i v₀)` uniformly in `i`, since `g i '' T ⊆ U`.
+    have hM'ub : ∀ i, dist (g i u₀) (g i v₀) ≤ Metric.diam U := fun i =>
+      Metric.dist_le_diam_of_mem hU.isBounded (hgTU i u₀ hu₀) (hgTU i v₀ hv₀)
+    -- Apply forward equicontinuity to `g` on `T`.
+    exact equicontinuousOn_of_uniform_isQCGeometric hgK hT hu₀ hv₀ huv hM'ub
 
 end RiemannDynamics
