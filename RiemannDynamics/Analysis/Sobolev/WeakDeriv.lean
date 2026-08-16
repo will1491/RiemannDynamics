@@ -190,7 +190,7 @@ theorem HasWeakDirDeriv.smul_smooth (hf : HasWeakDirDeriv v g f Ω)
     have hdφ : DifferentiableAt ℝ φ z := (hφ.differentiable (by norm_num)).differentiableAt
     change (fderiv ℝ (fun y => ψ y * φ y) z) v = _
     rw [fderiv_fun_mul hdψ hdφ]
-    simp only [ContinuousLinearMap.add_apply, ContinuousLinearMap.smul_apply, smul_eq_mul]
+    simp only [add_apply, smul_apply, smul_eq_mul]
   have hfΦ := hf Φ hΦsmooth hΦcs hΦtsupp
   have hcont_ψ : Continuous ψ := hψ.continuous
   have hcont_φ : Continuous φ := hφ.continuous

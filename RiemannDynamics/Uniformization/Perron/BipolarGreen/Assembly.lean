@@ -34,7 +34,7 @@ theorem not_bddAbove_image_greenFamily_of_compactSpace [CompactSpace M]
     (p₀ x : M) (hx : x ≠ p₀) :
     ¬ BddAbove ((fun v ↦ v x) '' greenFamily p₀) := by
   classical
-  haveI : LocallyConnectedSpace M := ChartedSpace.locallyConnectedSpace ℂ M
+  have : LocallyConnectedSpace M := ChartedSpace.locallyConnectedSpace ℂ M
   intro hbdd
   obtain ⟨s, hs⟩ := hbdd
   set B' : ℝ := max s 0 with hB'
@@ -122,7 +122,7 @@ theorem not_bddAbove_image_greenFamily_of_compactSpace [CompactSpace M]
     have hfrne :
         (closure (connectedComponentIn Ω xm) \ connectedComponentIn Ω xm).Nonempty := by
       by_contra hem
-      rw [Set.not_nonempty_iff_eq_empty, Set.diff_eq_empty] at hem
+      rw [Set.not_nonempty_iff_eq_empty, Set.sdiff_eq_empty] at hem
       have hclopen : IsClopen (connectedComponentIn Ω xm) :=
         ⟨closure_eq_iff_isClosed.1 (Set.Subset.antisymm hem subset_closure), hCco⟩
       have huniv : connectedComponentIn Ω xm = Set.univ := hclopen.eq_univ ⟨xm, hCcx⟩
@@ -143,7 +143,7 @@ theorem not_bddAbove_image_greenFamily_of_compactSpace [CompactSpace M]
       exact hyC (he2.trans he1.symm ▸ hyC')
     have hyfr : y ∈ closure Ω \ Ω := ⟨closure_mono hCcΩ hycl, hyΩ⟩
     obtain ⟨hyct, hyle⟩ := hfr y hyfr
-    haveI hne : (𝓝[connectedComponentIn Ω xm] y).NeBot :=
+    have hne : (𝓝[connectedComponentIn Ω xm] y).NeBot :=
       mem_closure_iff_nhdsWithin_neBot.1 hycl
     have h1 : Tendsto w (𝓝[connectedComponentIn Ω xm] y) (𝓝 (w y)) :=
       hyct.continuousWithinAt
@@ -413,15 +413,15 @@ theorem not_bddAbove_image_greenFamily_of_compactSpace [CompactSpace M]
       ∀ z : ↥(Wp n), z ≠ ⟨p₀, hp₀W n⟩ →
         BddAbove ((fun v ↦ v z) '' greenFamily (⟨p₀, hp₀W n⟩ : ↥(Wp n))) := by
     intro n
-    haveI := hConnW n
-    haveI := hNcW n
+    have := hConnW n
+    have := hNcW n
     exact ⟨(mharmonicOn_greenEnvelope (hGF n)).1,
       fun z hz ↦ (mharmonicOn_greenEnvelope (hGF n)).2 z hz⟩
   have hEnvPos : ∀ n (z : ↥(Wp n)), z ≠ ⟨p₀, hp₀W n⟩ →
       0 < greenEnvelope (⟨p₀, hp₀W n⟩ : ↥(Wp n)) z := by
     intro n
-    haveI := hConnW n
-    haveI := hNcW n
+    have := hConnW n
+    have := hNcW n
     exact greenEnvelope_pos (hGF n)
   /- ## The piece Green's functions read on the surface. -/
   set V : ℕ → M → ℝ := fun n y ↦
@@ -521,9 +521,9 @@ theorem not_bddAbove_image_greenFamily_of_compactSpace [CompactSpace M]
       (∃ C, ∀ᶠ y' in 𝓝[≠] p₀, w y' + Real.log ‖poleCoord p₀ y'‖ ≤ C) →
       (fun z : ↥(Wp m) ↦ w z) ∈ greenFamily (⟨p₀, hp₀W m⟩ : ↥(Wp m)) := by
     intro m w Kw hwsub hwcont hKwcomp hKwsub hKwzero hwpole
-    haveI := hNcW m
+    have := hNcW m
     have hKpre : IsCompact (Subtype.val ⁻¹' Kw : Set ↥(Wp m)) := by
-      haveI : CompactSpace ↥Kw := isCompact_iff_compactSpace.mp hKwcomp
+      have : CompactSpace ↥Kw := isCompact_iff_compactSpace.mp hKwcomp
       have himgK : (Subtype.val ⁻¹' Kw : Set ↥(Wp m)) =
           (fun z : ↥Kw ↦ (⟨z.1, hKwsub z.2⟩ : ↥(Wp m))) '' Set.univ := by
         ext z
@@ -607,7 +607,7 @@ theorem not_bddAbove_image_greenFamily_of_compactSpace [CompactSpace M]
     intro n₀
     set Ω : Opens M := ⟨(Wp n₀ : Set M) ∩ {p₀}ᶜ,
       (Wp n₀).2.inter isOpen_compl_singleton⟩ with hΩ
-    haveI := hConnW n₀
+    have := hConnW n₀
     have hnt : ∃ a b : ↥(Wp n₀), a ≠ b :=
       ⟨⟨x, hxW n₀⟩, ⟨p₀, hp₀W n₀⟩, fun hcon ↦ hx (congrArg Subtype.val hcon)⟩
     have hpcn : IsConnected ({(⟨p₀, hp₀W n₀⟩ : ↥(Wp n₀))}ᶜ : Set ↥(Wp n₀)) :=
@@ -629,7 +629,7 @@ theorem not_bddAbove_image_greenFamily_of_compactSpace [CompactSpace M]
     have hΩconn : IsConnected ((Wp n₀ : Set M) ∩ {p₀}ᶜ) := by
       rw [← himgc]
       exact hpcn.image _ continuous_subtype_val.continuousOn
-    haveI hΩcs : ConnectedSpace ↥Ω := isConnected_iff_connectedSpace.mp hΩconn
+    have hΩcs : ConnectedSpace ↥Ω := isConnected_iff_connectedSpace.mp hΩconn
     have hzW : ∀ (k : ℕ) (z : ↥Ω), (z : M) ∈ Wp (n₀ + k) :=
       fun k z ↦ hWmono n₀ (n₀ + k) (Nat.le_add_right n₀ k) z.2.1
     have hznp : ∀ z : ↥Ω, (z : M) ≠ p₀ := fun z ↦ z.2.2

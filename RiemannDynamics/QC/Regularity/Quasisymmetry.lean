@@ -83,7 +83,7 @@ theorem starSup_eq_reparam (f : ℂ → ℂ) (x₀ : ℂ) {a : ℝ} (ha : 0 ≤ 
   unfold starSup
   congr 1
   ext r
-  simp only [Set.mem_setOf_eq, Set.mem_image]
+  simp only [Set.mem_ofPred_eq, Set.mem_image]
   constructor
   · rintro ⟨ζ, ⟨w, hw, rfl⟩, rfl⟩
     rcases eq_or_lt_of_le ha with rfl | hapos
@@ -127,7 +127,7 @@ theorem starSup_bddAbove (f : ℂ → ℂ) (hf : Continuous f) (x₀ : ℂ) (a :
   have hKcpt : IsCompact (f '' Metric.closedBall x₀ a) := (isCompact_closedBall x₀ a).image hf
   have hSimg : {r : ℝ | ∃ ζ ∈ f '' Metric.closedBall x₀ a, r = dist ζ (f x₀)}
       = (fun ζ => dist ζ (f x₀)) '' (f '' Metric.closedBall x₀ a) := by
-    ext r; simp only [Set.mem_setOf_eq, Set.mem_image]
+    ext r; simp only [Set.mem_ofPred_eq, Set.mem_image]
     exact ⟨fun ⟨ζ, hζ, h⟩ => ⟨ζ, hζ, h.symm⟩, fun ⟨ζ, hζ, h⟩ => ⟨ζ, hζ, h.symm⟩⟩
   rw [hSimg]
   exact hKcpt.bddAbove_image (continuous_id.dist continuous_const).continuousOn
@@ -158,7 +158,7 @@ theorem starSup_zero (f : ℂ → ℂ) (x₀ : ℂ) : starSup f x₀ 0 = 0 := by
   unfold starSup
   have : {r : ℝ | ∃ ζ ∈ f '' Metric.closedBall x₀ 0, r = dist ζ (f x₀)} = {0} := by
     ext r
-    simp only [Metric.closedBall_zero, Set.image_singleton, Set.mem_setOf_eq,
+    simp only [Metric.closedBall_zero, Set.image_singleton, Set.mem_ofPred_eq,
       Set.mem_singleton_iff]
     constructor
     · rintro ⟨ζ, rfl, rfl⟩; exact dist_self _
@@ -727,7 +727,7 @@ theorem exists_uniform_modulus {ι : Type*} {f : ι → ℂ → ℂ} {K : ℝ}
   by_cases hne : Nonempty ι
   · obtain ⟨i₀⟩ := hne
     have hK1 : (1 : ℝ) ≤ K := (hfK i₀).1
-    haveI : Nonempty ι := ⟨i₀⟩
+    have : Nonempty ι := ⟨i₀⟩
     exact exists_uniform_modulus_aux hfK hS hp hq hpq hub hK1
   · exact ⟨fun _ => 0, fun _ => le_refl _, tendsto_const_nhds, fun i => absurd ⟨i⟩ hne⟩
 

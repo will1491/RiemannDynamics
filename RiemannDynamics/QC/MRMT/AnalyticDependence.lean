@@ -48,7 +48,7 @@ noncomputable def BeltramiCoeff.scale (b : BeltramiCoeff) (t : ℂ)
           rw [show (fun z => t • b.μ z) = t • b.μ from rfl,
             MeasureTheory.eLpNormEssSup_const_smul]
       _ = ENNReal.ofReal ‖t‖ * ENNReal.ofReal b.normInf := by
-          rw [hself, ofReal_norm_eq_enorm]
+          rw [hself, ofReal_norm]
       _ = ENNReal.ofReal (‖t‖ * b.normInf) :=
           (ENNReal.ofReal_mul (norm_nonneg t)).symm
       _ < 1 := ENNReal.ofReal_lt_one.mpr ht
@@ -155,7 +155,7 @@ theorem mrmt_holomorphic_dependence_principal (b : BeltramiCoeff) {R : ℝ}
       intro u hu husupp
       have hBmeas : MeasurableSet (Metric.closedBall (0 : ℂ) (max R 0)) :=
         measurableSet_closedBall
-      haveI : IsFiniteMeasure (volume.restrict (Metric.closedBall (0 : ℂ) (max R 0))) :=
+      have : IsFiniteMeasure (volume.restrict (Metric.closedBall (0 : ℂ) (max R 0))) :=
         ⟨by
           rw [Measure.restrict_apply_univ]
           exact (isCompact_closedBall _ _).measure_lt_top⟩
@@ -188,7 +188,7 @@ theorem mrmt_holomorphic_dependence_principal (b : BeltramiCoeff) {R : ℝ}
         _ = ‖t‖ₑ * eLpNormEssSup b.μ volume :=
             MeasureTheory.eLpNormEssSup_const_smul t b.μ
         _ = ENNReal.ofReal ‖t‖ * ENNReal.ofReal b.normInf := by
-            rw [hessSup_eq, ofReal_norm_eq_enorm]
+            rw [hessSup_eq, ofReal_norm]
         _ = ENNReal.ofReal (‖t‖ * b.normInf) := (ENNReal.ofReal_mul (norm_nonneg t)).symm
     have htμfin : eLpNormEssSup tμ volume ≠ ⊤ := by
       rw [hesstμ]
@@ -295,7 +295,7 @@ theorem mrmt_holomorphic_dependence_principal (b : BeltramiCoeff) {R : ℝ}
       refine Finset.sum_eq_zero fun m _ => ?_
       rw [hgsupp m z hz, mul_zero]
     have hsLp : ∀ n : ℕ, MemLp (s n) p volume := fun n =>
-      memLp_finset_sum _ fun m _ => (hgLp m).const_mul (t ^ (m + 1))
+      memLp_finsetSum _ fun m _ => (hgLp m).const_mul (t ^ (m + 1))
     -- Beurling of the partial sums, by finite linearity.
     have hSsum : ∀ n : ℕ, beurling (s n)
         =ᵐ[volume] fun z => ∑ m ∈ Finset.range n, t ^ (m + 1) * beurling (g m) z := by
@@ -428,7 +428,7 @@ theorem mrmt_holomorphic_dependence_principal (b : BeltramiCoeff) {R : ℝ}
         exact Finset.sum_congr rfl fun m _ => mul_div_assoc _ _ _
       change -(1 / (Real.pi : ℂ)) * ∫ ζ, s n ζ / (ζ - z)
           = ∑ m ∈ Finset.range n, t ^ (m + 1) * cauchyTransform (g m) z
-      rw [hsdiv, integral_finset_sum _ (fun m _ => (hint m).const_mul (t ^ (m + 1))),
+      rw [hsdiv, integral_finsetSum _ (fun m _ => (hint m).const_mul (t ^ (m + 1))),
         Finset.mul_sum]
       refine Finset.sum_congr rfl fun m _ => ?_
       change -(1 / (Real.pi : ℂ)) * ∫ ζ, t ^ (m + 1) * (g m ζ / (ζ - z))
@@ -638,13 +638,13 @@ theorem mrmt_holomorphic_dependence_principal (b : BeltramiCoeff) {R : ℝ}
         _ = ‖t‖ₑ * eLpNormEssSup b.μ volume :=
             MeasureTheory.eLpNormEssSup_const_smul t b.μ
         _ = ENNReal.ofReal ‖t‖ * ENNReal.ofReal b.normInf := by
-            rw [hessSup_eq, ofReal_norm_eq_enorm]
+            rw [hessSup_eq, ofReal_norm]
         _ = ENNReal.ofReal (‖t‖ * b.normInf) := (ENNReal.ofReal_mul (norm_nonneg t)).symm
     have hlt : eLpNormEssSup (fun z => t * b.μ z) volume < 1 := by
       rw [hesstμ]
       exact ENNReal.ofReal_lt_one.mpr ht
     obtain ⟨p, hp, hp2, C, hCb, hcontr⟩ :=
-      exists_p_gt_two_beurling_contraction (measurable_const.mul b.measurable) hlt
+      exists_p_gt_two_beurling_contraction (measurable_const.fun_mul b.measurable) hlt
     have htoReal : (eLpNormEssSup (fun z => t * b.μ z) volume).toReal
         = ‖t‖ * b.normInf := by
       rw [hesstμ, ENNReal.toReal_ofReal (mul_nonneg (norm_nonneg t) b.normInf_nonneg)]

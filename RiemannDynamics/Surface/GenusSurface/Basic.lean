@@ -559,7 +559,7 @@ theorem isClosed_genusRel (g : ℕ) [NeZero g] :
           = {p : ClosedDisc × ClosedDisc | (p.1.1, p.2.1) ∈ pairGraph g a}
             ∪ {p : ClosedDisc × ClosedDisc | (p.2.1, p.1.1) ∈ pairGraph g a} := by
         ext p
-        simp only [Set.mem_setOf_eq, Set.mem_union, ha, true_and]
+        simp only [Set.mem_ofPred_eq, Set.mem_union, ha, true_and]
       rw [hEq]
       have hc1 : IsClosed {p : ClosedDisc × ClosedDisc | (p.1.1, p.2.1) ∈ pairGraph g a} :=
         (hpg_cpt a).isClosed.preimage (hcoord1.prodMk hcoord2)
@@ -570,7 +570,7 @@ theorem isClosed_genusRel (g : ℕ) [NeZero g] :
           (a % 4 = 0 ∨ a % 4 = 1) ∧
             ((p.1.1, p.2.1) ∈ pairGraph g a ∨ (p.2.1, p.1.1) ∈ pairGraph g a)} = ∅ := by
         ext p
-        simp only [Set.mem_setOf_eq, Set.mem_empty_iff_false, iff_false]
+        simp only [Set.mem_ofPred_eq, Set.mem_empty_iff_false, iff_false]
         rintro ⟨hcontra, -⟩
         exact ha hcontra
       rw [hEq]

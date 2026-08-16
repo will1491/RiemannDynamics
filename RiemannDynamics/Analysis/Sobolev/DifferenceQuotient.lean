@@ -478,10 +478,10 @@ theorem hasWeakDirDeriv_of_ae_differentiable_of_differenceQuotient_L2
     have hVitali : Tendsto (fun n => eLpNorm (fun z => F n z - φ z • g z) 1 μ) atTop (𝓝 0) := by
       have := tendsto_Lp_finite_of_tendsto_ae (μ := μ) (p := 1) (by norm_num) (by norm_num)
         hFmeas hMemLp hUI hae_conv
-      simpa using this
+      simpa using! this
     -- `tendsto_integral_of_L1'`: pass the limit through the integral.
     have hL1tendsto : Tendsto (fun n => ∫ z, F n z ∂μ) atTop (𝓝 (∫ z, φ z • g z ∂μ)) := by
-      apply tendsto_integral_of_L1' (fun z => φ z • g z) (hMemLp.integrable le_rfl)
+      apply tendsto_integral_of_L1' (fun z => φ z • g z) hφgmeas
       · filter_upwards with n
         exact (hFintMemLp n).integrable le_rfl
       · exact hVitali
@@ -644,10 +644,10 @@ theorem ae_slice_re_im_eVariation_le_of_hasWeakDirDeriv_one
     have hmem : ∀ x : ℝ, ((y, x) ∈ T'') ↔ (f' (Complex.mk x y) ≠ f (Complex.mk x y)) := by
       intro x
       simp only [hT''def, hT'def, hTdef, Set.mem_preimage, Prod.swap_prod_mk,
-        Complex.measurableEquivRealProd_symm_apply, Set.mem_setOf_eq]
+        Complex.measurableEquivRealProd_symm_apply, Set.mem_ofPred_eq]
     rw [ae_iff] at hy
     have hset : {x : ℝ | f' (Complex.mk x y) ≠ f (Complex.mk x y)} = {x : ℝ | (y, x) ∈ T''} := by
-      ext x; rw [Set.mem_setOf_eq, Set.mem_setOf_eq, hmem x]
+      ext x; rw [Set.mem_ofPred_eq, Set.mem_ofPred_eq, hmem x]
     rw [hset]; simpa using hy
   filter_upwards [hacl, hslice] with y hy_acl hy_slice
   -- On this line `f'`'s slice is AC on every interval, hence continuous; `f`'s slice is continuous;
@@ -799,10 +799,10 @@ theorem ae_slice_re_im_eVariation_le_of_hasWeakDirDeriv_I
     have hmem : ∀ y : ℝ, ((x, y) ∈ T') ↔ (f' (Complex.mk x y) ≠ f (Complex.mk x y)) := by
       intro y
       simp only [hT'def, hTdef, Set.mem_preimage,
-        Complex.measurableEquivRealProd_symm_apply, Set.mem_setOf_eq]
+        Complex.measurableEquivRealProd_symm_apply, Set.mem_ofPred_eq]
     rw [ae_iff] at hx
     have hset : {y : ℝ | f' (Complex.mk x y) ≠ f (Complex.mk x y)} = {y : ℝ | (x, y) ∈ T'} := by
-      ext y; rw [Set.mem_setOf_eq, Set.mem_setOf_eq, hmem y]
+      ext y; rw [Set.mem_ofPred_eq, Set.mem_ofPred_eq, hmem y]
     rw [hset]; simpa using hx
   filter_upwards [hacl, hslice] with x hy_acl hy_slice
   -- On this line `f'`'s slice is AC on every interval, hence continuous; `f`'s slice is continuous;

@@ -43,9 +43,9 @@ theorem exists_theta_qd (hΓ : IsFuchsianGroup Γ)
             = κ w * (starRingEnd ℂ (moebiusDenom W w)) ^ 2) →
         (∫ ζ in {ζ : ℂ | 0 < ζ.im}, κ ζ / (ζ - z) ^ 4) = qdPairing κ Θ := by
   classical
-  haveI hPD : ProperlyDiscontinuousSMul Γ UpperHalfPlane := hΓ
-  haveI : Countable ↥Γ := IsFuchsianGroup.countable hΓ
-  haveI : IsIsometricSMul (↥Γ) UpperHalfPlane :=
+  have hPD : ProperlyDiscontinuousSMul Γ UpperHalfPlane := hΓ
+  have : Countable ↥Γ := IsFuchsianGroup.countable hΓ
+  have : IsIsometricSMul (↥Γ) UpperHalfPlane :=
     ⟨fun c => isometry_smul UpperHalfPlane (c : Matrix.SpecialLinearGroup (Fin 2) ℝ)⟩
   -- ## Ambient sets
   set U : Set ℂ := {ζ : ℂ | 0 < ζ.im} with hUdef
@@ -62,7 +62,7 @@ theorem exists_theta_qd (hΓ : IsFuchsianGroup Γ)
   have hDplmeas : MeasurableSet Dpl := hDplc.measurableSet
   have hDplsub : Dpl ⊆ U := by
     rintro w ⟨τ, -, rfl⟩
-    simpa using τ.im_pos
+    simpa using! τ.im_pos
   set Opl : Set ℂ := UpperHalfPlane.coe '' Ih with hOpl
   have hOplopen : IsOpen Opl :=
     UpperHalfPlane.isOpenEmbedding_coe.isOpenMap _ hIhopen
@@ -176,7 +176,6 @@ theorem exists_theta_qd (hΓ : IsFuchsianGroup Γ)
     rw [integral_image_eq_integral_abs_det_fderiv_smul volume hSmeas hfd hinj g]
     refine setIntegral_congr_fun hSmeas (fun ζ hζS => ?_)
     rw [det_fderiv_moebiusMap_of_im_pos γ (hSsub hζS), abs_of_nonneg (by positivity)]
-    rfl
   have hnullimg : ∀ (γ : Matrix.SpecialLinearGroup (Fin 2) ℝ) (S : Set ℂ),
       MeasurableSet S → S ⊆ U → volume S = 0 → volume (moebiusMap γ '' S) = 0 := by
     intro γ S hm hs h0
@@ -227,7 +226,7 @@ theorem exists_theta_qd (hΓ : IsFuchsianGroup Γ)
       have hnk : ‖k₀ ζ‖ = (‖ζ - z‖ ^ 4)⁻¹ := by
         simp only [hk₀def]
         rw [norm_inv, norm_pow]
-      rw [← ofReal_norm_eq_enorm, hnk, Real.enorm_eq_ofReal (by positivity), hC,
+      rw [← ofReal_norm, hnk, Real.enorm_eq_ofReal (by positivity), hC,
         ← ENNReal.ofReal_mul (by positivity)]
       refine ENNReal.ofReal_le_ofReal ?_
       rw [hrp]
@@ -379,7 +378,7 @@ theorem exists_theta_qd (hΓ : IsFuchsianGroup Γ)
       exact ⟨x, ⟨hx, fun hxO => hw2 ⟨x, hxO, rfl⟩⟩, rfl⟩
     · have hempty : moebiusMap (↑γ : Matrix.SpecialLinearGroup (Fin 2) ℝ) '' Opl
           \ moebiusMap (↑γ : Matrix.SpecialLinearGroup (Fin 2) ℝ) '' Dpl = ∅ := by
-        rw [Set.diff_eq_empty]
+        rw [Set.sdiff_eq_empty]
         exact Set.image_mono hOplsubD
       rw [hempty, measure_empty]
   have hpt : ∀ (γ : Matrix.SpecialLinearGroup (Fin 2) ℝ) (ζ : ℂ), 0 < ζ.im →
@@ -387,7 +386,7 @@ theorem exists_theta_qd (hΓ : IsFuchsianGroup Γ)
         = ‖trm γ ζ‖ₑ := by
     intro γ ζ hζ
     simp only [htrmdef, hk₀def]
-    rw [enorm_mul, ← ofReal_norm_eq_enorm ((moebiusDenom γ ζ ^ 4)⁻¹), norm_inv, norm_pow]
+    rw [enorm_mul, ← ofReal_norm ((moebiusDenom γ ζ ^ 4)⁻¹), norm_inv, norm_pow]
   have htileA : ∀ γ : Matrix.SpecialLinearGroup (Fin 2) ℝ,
       (∫⁻ w in moebiusMap γ '' Dpl, ‖k₀ w‖ₑ) = ∫⁻ ζ in Dpl, ‖trm γ ζ‖ₑ := by
     intro γ
@@ -417,7 +416,7 @@ theorem exists_theta_qd (hΓ : IsFuchsianGroup Γ)
             rw [hfib ℝ≥0∞ (fun w => ‖k₀ w‖ₑ) ζ γ₀ h₀, nsmul_eq_mul]
           · push Not at hc
             rw [tsum_congr fun γ => Set.indicator_of_notMem (hc γ) _, tsum_zero]
-            exact zero_le _
+            exact zero_le
       _ = (m : ℝ≥0∞) * ∫⁻ ζ in U, ‖k₀ ζ‖ₑ :=
           lintegral_const_mul' _ _ (ENNReal.natCast_ne_top m)
   have hStot_ne : (∑' γ : ↥Γ, ∫⁻ ζ in Dpl, ‖trm (↑γ) ζ‖ₑ) ≠ ⊤ :=
@@ -573,7 +572,7 @@ theorem exists_theta_qd (hΓ : IsFuchsianGroup Γ)
       rwa [toReal_enorm] at h3
   have hsummable' : ∀ ζ : ℂ, 0 < ζ.im → Summable fun γ : ↥Γ => ‖trm (↑γ) ζ‖ := by
     intro ζ hζ
-    obtain ⟨u, hu, hub⟩ := hMtest {ζ} isCompact_singleton (by simpa using hζ)
+    obtain ⟨u, hu, hub⟩ := hMtest {ζ} isCompact_singleton (by simpa using! hζ)
     exact hu.of_nonneg_of_le (fun γ => norm_nonneg _)
       (fun γ => hub γ ζ (Set.mem_singleton ζ))
   have hsummable : ∀ ζ : ℂ, 0 < ζ.im → Summable fun γ : ↥Γ => trm (↑γ) ζ :=
@@ -640,12 +639,12 @@ theorem exists_theta_qd (hΓ : IsFuchsianGroup Γ)
     rw [if_pos hζU]
     have hsum := hsummable' ζ hζU
     calc ‖∑' γ : ↥Γ, trm (↑γ) ζ‖ₑ
-        = ENNReal.ofReal ‖∑' γ : ↥Γ, trm (↑γ) ζ‖ := (ofReal_norm_eq_enorm _).symm
+        = ENNReal.ofReal ‖∑' γ : ↥Γ, trm (↑γ) ζ‖ := (ofReal_norm _).symm
       _ ≤ ENNReal.ofReal (∑' γ : ↥Γ, ‖trm (↑γ) ζ‖) :=
           ENNReal.ofReal_le_ofReal (norm_tsum_le_tsum_norm hsum)
       _ = ∑' γ : ↥Γ, ENNReal.ofReal ‖trm (↑γ) ζ‖ :=
           ENNReal.ofReal_tsum_of_nonneg (fun γ => norm_nonneg _) hsum
-      _ = ∑' γ : ↥Γ, ‖trm (↑γ) ζ‖ₑ := tsum_congr fun γ => ofReal_norm_eq_enorm _
+      _ = ∑' γ : ↥Γ, ‖trm (↑γ) ζ‖ₑ := tsum_congr fun γ => ofReal_norm _
   have hΘl1ne : Θqd.l1Norm ≠ ⊤ := ne_top_of_le_ne_top hStot_ne hΘl1
   -- ## The theta differential, normalized by the multiplicity
   refine ⟨((m : ℂ))⁻¹ • Θqd, ?_, ?_⟩
@@ -655,7 +654,7 @@ theorem exists_theta_qd (hΓ : IsFuchsianGroup Γ)
   have hMnn : 0 ≤ M := le_trans (norm_nonneg (κ 0)) (hκb 0)
   have hκe : ∀ w : ℂ, ‖κ w‖ₑ ≤ ENNReal.ofReal M := by
     intro w
-    rw [← ofReal_norm_eq_enorm]
+    rw [← ofReal_norm]
     exact ENNReal.ofReal_le_ofReal (hκb w)
   have hdom : ∀ (f : ℂ → ℂ) (S : Set ℂ), (∫⁻ ζ in S, ‖κ ζ * f ζ‖ₑ)
       ≤ ENNReal.ofReal M * ∫⁻ ζ in S, ‖f ζ‖ₑ := by

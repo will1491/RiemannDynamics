@@ -157,7 +157,7 @@ theorem sectionSpaceCarrier_eqOn_nonpoles_eq {r : RationalData} {s₁ s₂ : ℂ
       have hzz := h z hz'
       simp only at hzz
       exact mul_right_cancel₀ hq ((div_eq_div_iff hq hq).mp hzz)
-    · exact (Polynomial.finite_setOf_isRoot hden).infinite_compl
+    · exact (Polynomial.finite_setOfPred_isRoot hden).infinite_compl
   rw [hAB]
 
 /-- The section space has dimension `2d+1`: the parametrization
@@ -184,7 +184,7 @@ theorem finrank_sectionSpaceCarrier (r : RationalData) :
       have h0 : A.eval z / (r.denReduced.eval z) ^ 2 = 0 := congrFun hA z
       have := div_eq_zero_iff.mp h0
       exact this.resolve_right (pow_ne_zero _ hz')
-    · exact (Polynomial.finite_setOf_isRoot hden).infinite_compl
+    · exact (Polynomial.finite_setOfPred_isRoot hden).infinite_compl
   have e := Submodule.equivMapOfInjective (polyOverDenSq r) hinj
     (Polynomial.degreeLT ℂ (2 * r.degree + 1))
   have h1 : Module.finrank ℂ (SectionSpaceCarrier r)
@@ -218,7 +218,7 @@ theorem hasL2WeakDzbar_holomorphic_mul {Ω : Set ℂ} (hΩ : IsOpen Ω)
     intro Ω hΩ g hg
     rw [MeasureTheory.locallyIntegrableOn_iff hΩ.isLocallyClosed]
     intro k hk hkc
-    haveI : IsFiniteMeasure (volume.restrict k) :=
+    have : IsFiniteMeasure (volume.restrict k) :=
       ⟨by rw [Measure.restrict_apply_univ]; exact hkc.measure_lt_top⟩
     have h1le : (1 : ℝ≥0∞) ≤ 2 := by norm_num
     exact memLp_one_iff_integrable.mp ((hg k hk hkc).mono_exponent h1le)
@@ -300,7 +300,7 @@ theorem hasL2WeakDzbar_holomorphic_mul {Ω : Set ℂ} (hΩ : IsOpen Ω)
       intro z
       rcases hcover z with hz | hz
       · have hcomp : ContDiffAt ℝ ((⊤ : ℕ∞) : WithTop ℕ∞) (fun w => P (F w)) z := by
-          simpa [Function.comp] using (P.contDiff.contDiffAt).comp z (hFAt z hz)
+          simpa [Function.comp] using! (P.contDiff.contDiffAt).comp z (hFAt z hz)
         exact (hφ.contDiffAt).mul hcomp
       · have hev : (fun w => φ w * P (F w)) =ᶠ[𝓝 z] fun _ => 0 := by
           filter_upwards [(isClosed_tsupport φ).isOpen_compl.mem_nhds hz] with y hy
@@ -326,30 +326,30 @@ theorem hasL2WeakDzbar_holomorphic_mul {Ω : Set ℂ} (hΩ : IsOpen Ω)
             = Complex.reCLM.comp (fderiv ℝ F z) := by
           have h := fderiv_comp z (Complex.reCLM.differentiableAt) (hFdiffR z hz)
           rw [ContinuousLinearMap.fderiv] at h
-          simpa [Function.comp, Complex.reCLM_apply] using h
+          simpa [Function.comp, Complex.reCLM_apply] using! h
         have him_fdeq : fderiv ℝ (fun w => (F w).im) z
             = Complex.imCLM.comp (fderiv ℝ F z) := by
           have h := fderiv_comp z (Complex.imCLM.differentiableAt) (hFdiffR z hz)
           rw [ContinuousLinearMap.fderiv] at h
-          simpa [Function.comp, Complex.imCLM_apply] using h
+          simpa [Function.comp, Complex.imCLM_apply] using! h
         have hre_diff : DifferentiableAt ℝ (fun w => (F w).re) z := by
-          simpa [Function.comp, Complex.reCLM_apply] using
+          simpa [Function.comp, Complex.reCLM_apply] using!
             (Complex.reCLM.differentiableAt.comp z (hFdiffR z hz))
         have him_diff : DifferentiableAt ℝ (fun w => (F w).im) z := by
-          simpa [Function.comp, Complex.imCLM_apply] using
+          simpa [Function.comp, Complex.imCLM_apply] using!
             (Complex.imCLM.differentiableAt.comp z (hFdiffR z hz))
         have hx1 : (fderiv ℝ ψ₁ z) e
             = φ z * (deriv F z * e).re + (F z).re * ((fderiv ℝ φ z) e) := by
           rw [hψ₁def]
           rw [fderiv_fun_mul hdφ hre_diff]
-          simp only [ContinuousLinearMap.add_apply, ContinuousLinearMap.smul_apply,
+          simp only [add_apply, smul_apply,
             smul_eq_mul, hre_fdeq, ContinuousLinearMap.comp_apply, Complex.reCLM_apply]
           rw [hFapp z hz e]
         have hx2 : (fderiv ℝ ψ₂ z) e
             = φ z * (deriv F z * e).im + (F z).im * ((fderiv ℝ φ z) e) := by
           rw [hψ₂def]
           rw [fderiv_fun_mul hdφ him_diff]
-          simp only [ContinuousLinearMap.add_apply, ContinuousLinearMap.smul_apply,
+          simp only [add_apply, smul_apply,
             smul_eq_mul, him_fdeq, ContinuousLinearMap.comp_apply, Complex.imCLM_apply]
           rw [hFapp z hz e]
         rw [hx1, hx2]
@@ -501,7 +501,7 @@ theorem hasL2WeakDzbar_holomorphic_mul {Ω : Set ℂ} (hΩ : IsOpen Ω)
       have hdχ : DifferentiableAt ℝ χ z := (hχ_cd.differentiable (by norm_num)).differentiableAt
       have hdφ : DifferentiableAt ℝ φ z := (hφ.differentiable (by norm_num)).differentiableAt
       rw [fderiv_fun_mul hdχ hdφ]
-      simp only [ContinuousLinearMap.add_apply, ContinuousLinearMap.smul_apply, smul_eq_mul]
+      simp only [add_apply, smul_apply, smul_eq_mul]
     -- Both sides of the tested identity coincide with the goal's sides.
     have hLHS : (∫ z, ((fderiv ℝ (fun y => χ y * φ y) z) e) • f z)
         = ∫ z, ((fderiv ℝ φ z) e) • f z := by

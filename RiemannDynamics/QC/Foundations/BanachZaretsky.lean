@@ -297,7 +297,7 @@ theorem stieltjesMeasure_eq_volume_image_of_isOpen {f : ℝ → ℝ} (hf : Monot
     · intro x hx; exact ⟨C x, ⟨x, hx, rfl⟩, hCmem x hx⟩
     · rintro x ⟨s, ⟨y, hyU, rfl⟩, hxs⟩; exact hCsub y hyU hxs
   -- Index by the countable subtype `↥𝒞`.
-  haveI : Countable (↥𝒞) := h𝒞count.to_subtype
+  have : Countable (↥𝒞) := h𝒞count.to_subtype
   -- Each member of `𝒞` is an open ordConnected set (an interval): measurable.
   have h𝒞meas : ∀ s : 𝒞, MeasurableSet (s : Set ℝ) := by
     rintro ⟨s, ⟨x, hxU, rfl⟩⟩; exact hCmeas x
@@ -429,7 +429,7 @@ theorem monotone_absolutelyContinuous_of_luzinN {f : ℝ → ℝ} (hf : Monotone
   intro A hA
   have himg : volume (f '' A) = 0 := hN A hA
   exact le_antisymm (le_trans (stieltjesMeasure_le_volume_image hf hcont A) (le_of_eq himg))
-    (zero_le _)
+    (zero_le)
 
 /-! ## The converse direction: a monotone primitive satisfies condition (N) -/
 
@@ -485,7 +485,7 @@ theorem luzinN_of_primitive {φ : ℝ → ℝ} (hφnn : 0 ≤ φ)
   have hμS : hmono.stieltjesFunction.measure S = 0 := hac hS
   have hle := volume_image_le_stieltjesMeasure hmono hcont S
   rw [hμS] at hle
-  exact le_antisymm hle (zero_le _)
+  exact le_antisymm hle (zero_le)
 
 /-! ## The 1D Banach–Zaretsky fundamental theorem of calculus -/
 
@@ -637,11 +637,11 @@ theorem complex_bv_ftc_of_monotone_diff {s s' : ℝ → ℂ}
   have hre_eq : ∀ᵐ t : ℝ, deriv (fun u => (s u).re) t = (s' t).re := by
     filter_upwards [hderiv] with t ht
     have := Complex.reCLM.hasFDerivAt.comp_hasDerivAt t ht
-    simpa using this.deriv
+    simpa [Function.comp_def] using this.deriv
   have him_eq : ∀ᵐ t : ℝ, deriv (fun u => (s u).im) t = (s' t).im := by
     filter_upwards [hderiv] with t ht
     have := Complex.imCLM.hasFDerivAt.comp_hasDerivAt t ht
-    simpa using this.deriv
+    simpa [Function.comp_def] using this.deriv
   -- Rewrite the FTC integrals in terms of `(s' ·).re` / `(s' ·).im`.
   have hre_int : (s b).re - (s a).re = ∫ t in a..b, (s' t).re := by
     rw [hreFTC]; apply intervalIntegral.integral_congr_ae

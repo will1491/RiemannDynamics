@@ -39,7 +39,7 @@ theorem exists_vertex_cycle (hΓ : IsFuchsianGroup Γ)
       (∀ γ ∈ contactSet Γ τ₀ v, ∃! k, k < n ∧ γ • τ₀ = e k • τ₀) ∧
       ∀ k, IsSideElement Γ τ₀ ((e k)⁻¹ * e (k + 1)) := by
   classical
-  haveI : Nonempty ↥Γ := ⟨1⟩
+  have : Nonempty ↥Γ := ⟨1⟩
   have hPfin : (tileCenters Γ τ₀ v).Finite := (finite_contactSet hΓ τ₀ v).image _
   have hPne : (tileCenters Γ τ₀ v).Nonempty :=
     ⟨τ₀, 1, one_mem_contactSet hv.1, one_smul _ _⟩

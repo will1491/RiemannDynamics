@@ -211,14 +211,14 @@ theorem dirichletEnergy_le_of_compactSupport {u w : ℂ → ℝ} {U : Set ℂ} (
     have conv_u : ∫⁻ z in K, (‖fderiv ℝ u z‖₊ : ℝ≥0∞) ^ 2
         = ENNReal.ofReal (∫ z in K, ‖fderiv ℝ u z‖ ^ 2) := by
       have hi : Integrable (fun z => ((‖fderiv ℝ u z‖₊ ^ 2 : ℝ≥0) : ℝ)) (volume.restrict K) := by
-        simpa [NNReal.coe_pow, coe_nnnorm] using hint_u
+        simpa [NNReal.coe_pow, coe_nnnorm] using! hint_u
       simp_rw [← ENNReal.coe_pow]
       rw [lintegral_coe_eq_integral (fun z => ‖fderiv ℝ u z‖₊ ^ 2) hi]
       simp [NNReal.coe_pow, coe_nnnorm]
     have conv_w : ∫⁻ z in K, (‖fderiv ℝ w z‖₊ : ℝ≥0∞) ^ 2
         = ENNReal.ofReal (∫ z in K, ‖fderiv ℝ w z‖ ^ 2) := by
       have hi : Integrable (fun z => ((‖fderiv ℝ w z‖₊ ^ 2 : ℝ≥0) : ℝ)) (volume.restrict K) := by
-        simpa [NNReal.coe_pow, coe_nnnorm] using hint_w
+        simpa [NNReal.coe_pow, coe_nnnorm] using! hint_w
       simp_rw [← ENNReal.coe_pow]
       rw [lintegral_coe_eq_integral (fun z => ‖fderiv ℝ w z‖₊ ^ 2) hi]
       simp [NNReal.coe_pow, coe_nnnorm]
@@ -229,7 +229,7 @@ theorem dirichletEnergy_le_of_compactSupport {u w : ℂ → ℝ} {U : Set ℂ} (
       intro z hz
       rw [normsq_dual (fderiv ℝ w z), normsq_dual (fderiv ℝ u z), normsq_dual (fderiv ℝ φ z),
         hfdadd z hz]
-      simp only [ContinuousLinearMap.add_apply, hcross]; ring
+      simp only [add_apply, hcross]; ring
     have hcont_cross : ContinuousOn cross U := by
       have h1 : ContinuousOn (fun z => (fderiv ℝ u z) 1) U := hucont1.clm_apply continuousOn_const
       have h2 : ContinuousOn (fun z => (fderiv ℝ φ z) 1) U := hφcont1.clm_apply continuousOn_const
@@ -271,7 +271,7 @@ theorem dirichletEnergy_le_of_compactSupport {u w : ℂ → ℝ} {U : Set ℂ} (
         + ∫⁻ z in U \ K, (‖fderiv ℝ f z‖₊ : ℝ≥0∞) ^ 2 := by
     intro f
     unfold dirichletEnergy
-    rw [← lintegral_inter_add_diff (B := K) _ U hKmeas, Set.inter_eq_self_of_subset_right hKU]
+    rw [← lintegral_inter_add_sdiff (B := K) _ U hKmeas, Set.inter_eq_self_of_subset_right hKU]
   rw [hsplit u, hsplit w]
   have hUKeq : ∫⁻ z in U \ K, (‖fderiv ℝ u z‖₊ : ℝ≥0∞) ^ 2
       = ∫⁻ z in U \ K, (‖fderiv ℝ w z‖₊ : ℝ≥0∞) ^ 2 := by
@@ -554,7 +554,7 @@ theorem dirichletEnergy_le_of_compactSupport_lipschitz {u w : ℂ → ℝ} {U : 
     have hsupp : Function.support (fun z => (fderiv ℝ u z v) * (fderiv ℝ φ z v)) ⊆ Kc := by
       intro z hz
       by_contra hzKc
-      simp only [Function.mem_support, hφfd0 z hzKc, ContinuousLinearMap.zero_apply,
+      simp only [Function.mem_support, hφfd0 z hzKc, zero_apply,
         mul_zero, ne_eq, not_true] at hz
     rw [← integrableOn_iff_integrable_of_support_subset hsupp]
     obtain ⟨C, hC⟩ :=
@@ -649,21 +649,21 @@ theorem dirichletEnergy_le_of_compactSupport_lipschitz {u w : ℂ → ℝ} {U : 
   have hcross_int : IntegrableOn cross Kc volume := by
     have h1 := (hIab 1 (by simp)).integrableOn (s := Kc)
     have h2 := (hIab Complex.I (by simp)).integrableOn (s := Kc)
-    simpa only [hcross] using h1.add h2
+    simpa only [hcross] using! h1.add h2
   -- **The `Kc`-part energy inequality**: `∫⁻_Kc ‖∇u‖² ≤ ∫⁻_Kc ‖∇w‖²`.
   have hKpart : ∫⁻ z in Kc, (‖fderiv ℝ u z‖₊ : ℝ≥0∞) ^ 2
       ≤ ∫⁻ z in Kc, (‖fderiv ℝ w z‖₊ : ℝ≥0∞) ^ 2 := by
     have conv_u : ∫⁻ z in Kc, (‖fderiv ℝ u z‖₊ : ℝ≥0∞) ^ 2
         = ENNReal.ofReal (∫ z in Kc, ‖fderiv ℝ u z‖ ^ 2) := by
       have hi : Integrable (fun z => ((‖fderiv ℝ u z‖₊ ^ 2 : ℝ≥0) : ℝ)) (volume.restrict Kc) := by
-        simpa [NNReal.coe_pow, coe_nnnorm] using hu_int
+        simpa [NNReal.coe_pow, coe_nnnorm] using! hu_int
       simp_rw [← ENNReal.coe_pow]
       rw [lintegral_coe_eq_integral (fun z => ‖fderiv ℝ u z‖₊ ^ 2) hi]
       simp [NNReal.coe_pow, coe_nnnorm]
     have conv_w : ∫⁻ z in Kc, (‖fderiv ℝ w z‖₊ : ℝ≥0∞) ^ 2
         = ENNReal.ofReal (∫ z in Kc, ‖fderiv ℝ w z‖ ^ 2) := by
       have hi : Integrable (fun z => ((‖fderiv ℝ w z‖₊ ^ 2 : ℝ≥0) : ℝ)) (volume.restrict Kc) := by
-        simpa [NNReal.coe_pow, coe_nnnorm] using hw_int
+        simpa [NNReal.coe_pow, coe_nnnorm] using! hw_int
       simp_rw [← ENNReal.coe_pow]
       rw [lintegral_coe_eq_integral (fun z => ‖fderiv ℝ w z‖₊ ^ 2) hi]
       simp [NNReal.coe_pow, coe_nnnorm]
@@ -675,7 +675,7 @@ theorem dirichletEnergy_le_of_compactSupport_lipschitz {u w : ℂ → ℝ} {U : 
       filter_upwards [hfdadd_res] with z hz
       rw [normsq_dual (fderiv ℝ w z), normsq_dual (fderiv ℝ u z), normsq_dual (fderiv ℝ φ z),
         hz]
-      simp only [ContinuousLinearMap.add_apply, hcross]; ring
+      simp only [add_apply, hcross]; ring
     have hint_extra : IntegrableOn (fun z => 2 * cross z + ‖fderiv ℝ φ z‖ ^ 2) Kc volume :=
       (hcross_int.const_mul 2).add hφ2_int
     have hstep : ∫ z in Kc, ‖fderiv ℝ w z‖ ^ 2
@@ -700,7 +700,7 @@ theorem dirichletEnergy_le_of_compactSupport_lipschitz {u w : ℂ → ℝ} {U : 
         + ∫⁻ z in U \ Kc, (‖fderiv ℝ f z‖₊ : ℝ≥0∞) ^ 2 := by
     intro f
     unfold dirichletEnergy
-    rw [← lintegral_inter_add_diff (B := Kc) _ U hKcmeas, Set.inter_eq_self_of_subset_right hKcU]
+    rw [← lintegral_inter_add_sdiff (B := Kc) _ U hKcmeas, Set.inter_eq_self_of_subset_right hKcU]
   rw [hsplit u, hsplit w]
   have hUKeq : ∫⁻ z in U \ Kc, (‖fderiv ℝ u z‖₊ : ℝ≥0∞) ^ 2
       = ∫⁻ z in U \ Kc, (‖fderiv ℝ w z‖₊ : ℝ≥0∞) ^ 2 := by

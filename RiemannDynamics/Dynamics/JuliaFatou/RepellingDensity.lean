@@ -176,7 +176,7 @@ theorem countable_setOf_sphericalDeriv_eq_zero {g : ℂ → ℂ̂}
   set C : Set ℂ := {ζ₀ : ℂ | ∀ᶠ ζ in 𝓝 ζ₀, sphericalDeriv g ζ = 0} with hC_def
   have hC_open : IsOpen C := by
     rw [hC_def]
-    exact isOpen_setOf_eventually_nhds
+    exact isOpen_setOfPred_eventually_nhds
   have hC_closed : IsClosed C := by
     rw [← isOpen_compl_iff, isOpen_iff_forall_mem_open]
     intro ζ₀ hζ₀
@@ -418,8 +418,8 @@ theorem juliaSet_subset_closure_backwardOrbit {f : ℂ̂ → ℂ̂}
       by_contra hinf'
       have hinf : ((⋃ n : ℕ, f^[n] '' V)ᶜ).Infinite := hinf'
       obtain ⟨a, ha⟩ := hinf.nonempty
-      obtain ⟨b, hb⟩ := (hinf.diff (Set.finite_singleton a)).nonempty
-      obtain ⟨c, hc⟩ := (hinf.diff ((Set.finite_singleton b).insert a)).nonempty
+      obtain ⟨b, hb⟩ := (hinf.sdiff (Set.finite_singleton a)).nonempty
+      obtain ⟨c, hc⟩ := (hinf.sdiff ((Set.finite_singleton b).insert a)).nonempty
       have hba : b ≠ a := fun h => hb.2 (Set.mem_singleton_iff.mpr h)
       have hca : c ≠ a := fun h => hc.2 (Set.mem_insert_iff.mpr (Or.inl h))
       have hcb : c ≠ b := fun h =>
@@ -499,7 +499,7 @@ theorem juliaSet_subset_closure_diff_countable {f : ℂ̂ → ℂ̂}
   have hdiff : (closure (ball z (r / 2) ∩ JuliaSet f) \ B).Nonempty := by
     rw [Set.nonempty_iff_ne_empty]
     intro he
-    exact hDnc (hB.mono (Set.diff_eq_empty.mp he))
+    exact hDnc (hB.mono (Set.sdiff_eq_empty.mp he))
   obtain ⟨x, hxD, hxB⟩ := hdiff
   exact ⟨x, hDV hxD, hDJ hxD, hxB⟩
 
@@ -816,8 +816,8 @@ theorem juliaSet_subset_closure_repelling {f : ℂ̂ → ℂ̂}
       have hinf : (JuliaSet f \ T).Infinite := fun hfin => hdiff_unc hfin.countable
       -- three distinct omitted values force constancy by Picard
       obtain ⟨a, ha⟩ := hinf.nonempty
-      obtain ⟨b, hb⟩ := (hinf.diff (Set.finite_singleton a)).nonempty
-      obtain ⟨c, hc⟩ := (hinf.diff ((Set.finite_singleton b).insert a)).nonempty
+      obtain ⟨b, hb⟩ := (hinf.sdiff (Set.finite_singleton a)).nonempty
+      obtain ⟨c, hc⟩ := (hinf.sdiff ((Set.finite_singleton b).insert a)).nonempty
       have hba : b ≠ a := fun h => hb.2 (Set.mem_singleton_iff.mpr h)
       have hca : c ≠ a := fun h => hc.2 (Set.mem_insert_iff.mpr (Or.inl h))
       have hcb : c ≠ b := fun h =>

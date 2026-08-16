@@ -52,9 +52,9 @@ theorem isConnected_setOf_lt_norm (r : ℝ) :
     isConnected_sphere hrank 0 zero_le_one
   have hI : IsConnected (Set.Ioi r) := isConnected_Ioi
   have hP : IsConnected ((Metric.sphere (0 : ℂ) 1) ×ˢ Set.Ioi r) := hS.prod hI
-  haveI hns : NormSMulClass ℝ ℂ := NormedSpace.toNormSMulClass
-  haveI hbs : IsBoundedSMul ℝ ℂ := NormSMulClass.toIsBoundedSMul
-  haveI hcs : ContinuousSMul ℝ ℂ := IsBoundedSMul.continuousSMul
+  have hns : NormSMulClass ℝ ℂ := NormedSpace.toNormSMulClass
+  have hbs : IsBoundedSMul ℝ ℂ := NormSMulClass.toIsBoundedSMul
+  have hcs : ContinuousSMul ℝ ℂ := IsBoundedSMul.continuousSMul
   have hcont : Continuous (fun p : ℂ × ℝ => p.2 • p.1) :=
     continuous_snd.smul continuous_fst
   have himg : IsConnected
@@ -64,7 +64,7 @@ theorem isConnected_setOf_lt_norm (r : ℝ) :
       ((Metric.sphere (0 : ℂ) 1) ×ˢ Set.Ioi r) = {z : ℂ | r < ‖z‖} := by
     ext z
     simp only [Set.mem_image, Set.mem_prod, Metric.mem_sphere, dist_zero_right,
-      Set.mem_Ioi, Set.mem_setOf_eq, Prod.exists]
+      Set.mem_Ioi, Set.mem_ofPred_eq, Prod.exists]
     constructor
     · rintro ⟨u, t, ⟨hu, ht⟩, rfl⟩
       rw [Complex.real_smul, norm_mul, Complex.norm_real, Real.norm_eq_abs, hu, mul_one]
@@ -159,7 +159,7 @@ theorem nhds_basis_openPreconnected_infty :
     refine subset_trans ?_ hKt
     have hsub : {z : ℂ | R < ‖z‖} ⊆ Kᶜ := by
       intro z hz
-      simp only [Set.mem_setOf_eq] at hz
+      simp only [Set.mem_ofPred_eq] at hz
       intro hzK
       have : z ∈ Metric.closedBall (0 : ℂ) R := hKR hzK
       rw [Metric.mem_closedBall, dist_zero_right] at this

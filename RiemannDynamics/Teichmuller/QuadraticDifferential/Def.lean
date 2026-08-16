@@ -156,7 +156,7 @@ theorem lintegral_enorm_moebiusMap_image (γ : Matrix.SpecialLinearGroup (Fin 2)
   have hd : moebiusDenom γ z ≠ 0 := moebiusDenom_ne_zero_of_im_ne_zero γ hzim.ne'
   have hnd : ‖moebiusDenom γ z‖ ≠ 0 := norm_ne_zero_iff.mpr hd
   rw [det_fderiv_moebiusMap_of_im_pos γ hzim, abs_of_nonneg (by positivity), hq z hzim,
-    ← ofReal_norm_eq_enorm, ← ofReal_norm_eq_enorm, ← ENNReal.ofReal_mul (by positivity)]
+    ← ofReal_norm, ← ofReal_norm, ← ENNReal.ofReal_mul (by positivity)]
   congr 1
   rw [norm_mul, norm_pow]
   field_simp
@@ -223,7 +223,7 @@ theorem QuadraticDifferential.l1Norm_ne_top (q : QuadraticDifferential Γ)
   have hbound : (∫⁻ z in K, ‖q z‖ₑ) ≤ ENNReal.ofReal C * volume K := by
     rw [← setLIntegral_const K (ENNReal.ofReal C)]
     refine setLIntegral_mono' hKc.measurableSet fun z hz => ?_
-    rw [← ofReal_norm_eq_enorm]
+    rw [← ofReal_norm]
     exact ENNReal.ofReal_le_ofReal (hC z hz)
   have hfin : ENNReal.ofReal C * volume K < ⊤ :=
     ENNReal.mul_lt_top ENNReal.ofReal_lt_top hKc.measure_lt_top

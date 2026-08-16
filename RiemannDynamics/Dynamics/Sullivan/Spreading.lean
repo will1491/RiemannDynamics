@@ -581,10 +581,10 @@ theorem spreadCoeff_aemeasurable {r : RationalData} (hd : 1 ≤ r.degree)
     have h1 : r.toSphereMap^[n] ((z1 : ℂ̂)) = r.toSphereMap^[n] ((z2 : ℂ̂)) := by
       rw [← hcoeF n z1 (hfinU z1 hz1 n), ← hcoeF n z2 (hfinU z2 hz2 n), he]
     exact OnePoint.coe_eq_coe.mp (hinj n hz1 hz2 h1)
-  haveI hPol : PolishSpace ↥Uf := hUf_open.polishSpace
-  have hemb : ∀ n : ℕ, MeasurableEmbedding (Uf.restrict (F n)) := by
+  have hPol : PolishSpace ↥Uf := hUf_open.polishSpace
+  have hemb : ∀ n : ℕ, MeasurableEmbedding (Uf.domRestrict (F n)) := by
     intro n
-    exact Continuous.measurableEmbedding ((hUf_cont n).restrict)
+    exact Continuous.measurableEmbedding ((hUf_cont n).domRestrict)
       (Set.injOn_iff_injective.mp (hFinj n))
   -- measurability of the iterated derivative and the seed-side factor
   have hconj_meas : Measurable (fun w : ℂ => (starRingEnd ℂ) w) :=
@@ -609,7 +609,7 @@ theorem spreadCoeff_aemeasurable {r : RationalData} (hd : 1 ≤ r.degree)
     fun n => (((hiter_meas n).div (hconj_meas.comp (hiter_meas n))).mul hσm)
   -- measurable extension of the seed-side factor through the reading embedding
   have hext : ∀ n : ℕ, ∃ h : ℂ → ℂ, Measurable h ∧
-      ∀ u : ↥Uf, h (Uf.restrict (F n) u)
+      ∀ u : ↥Uf, h (Uf.domRestrict (F n) u)
         = iterDeriv r n (u : ℂ) / (starRingEnd ℂ) (iterDeriv r n (u : ℂ)) * σ (u : ℂ) := by
     intro n
     obtain ⟨h, hhm, hhc⟩ := (hemb n).exists_measurable_extend
@@ -623,14 +623,14 @@ theorem spreadCoeff_aemeasurable {r : RationalData} (hd : 1 ≤ r.degree)
     intro m n
     have hSsub : MeasurableSet ((Subtype.val : ↥Uf → ℂ) ⁻¹' S) :=
       measurable_subtype_coe hSm
-    have himg : MeasurableSet (Uf.restrict (F n) '' (Subtype.val ⁻¹' S)) :=
+    have himg : MeasurableSet (Uf.domRestrict (F n) '' (Subtype.val ⁻¹' S)) :=
       (hemb n).measurableSet_image' hSsub
     have hVopen : IsOpen {z : ℂ | r.toSphereMap^[m] ((z : ℂ̂)) ≠ ∞} := by
       have hc : Continuous fun z : ℂ => r.toSphereMap^[m] ((z : ℂ̂)) :=
         (r.continuous_toSphereMap.iterate m).comp OnePoint.continuous_coe
       exact OnePoint.isClosed_infty.isOpen_compl.preimage hc
     have hAeq : A m n = {z : ℂ | r.toSphereMap^[m] ((z : ℂ̂)) ≠ ∞}
-        ∩ (F m) ⁻¹' (Uf.restrict (F n) '' (Subtype.val ⁻¹' S)) := by
+        ∩ (F m) ⁻¹' (Uf.domRestrict (F n) '' (Subtype.val ⁻¹' S)) := by
       ext z
       constructor
       · rintro ⟨y, hyS, hw⟩
@@ -678,7 +678,7 @@ theorem spreadCoeff_aemeasurable {r : RationalData} (hd : 1 ≤ r.degree)
     have h1 : spreadCoeff r S σ z
         = spreadTwist r (Nat.unpair k).1 (Nat.unpair k).2 z y * σ y :=
       hval z y (Nat.unpair k).1 (Nat.unpair k).2 hyS hw
-    have hFeqz : F (Nat.unpair k).1 z = Uf.restrict (F (Nat.unpair k).2) ⟨y, hyUf⟩ := by
+    have hFeqz : F (Nat.unpair k).1 z = Uf.domRestrict (F (Nat.unpair k).2) ⟨y, hyUf⟩ := by
       change F (Nat.unpair k).1 z = F (Nat.unpair k).2 y
       rw [hFdef _ z, hFdef _ y, hw]
     have h2 := hHs (Nat.unpair k).2 ⟨y, hyUf⟩
@@ -693,7 +693,7 @@ theorem spreadCoeff_aemeasurable {r : RationalData} (hd : 1 ≤ r.degree)
     intro k
     have h1 : {z : ℂ | Q k z} = AP k ∪ (⋃ j : ℕ, AP j)ᶜ := by
       ext z
-      simp only [hQdef, Set.mem_setOf_eq, Set.mem_union, Set.mem_compl_iff,
+      simp only [hQdef, Set.mem_ofPred_eq, Set.mem_union, Set.mem_compl_iff,
         Set.mem_iUnion, not_exists]
     rw [h1]
     exact (hAPmeas k).union (MeasurableSet.iUnion hAPmeas).compl
@@ -759,7 +759,7 @@ theorem spreadCoeff_eLpNormEssSup_le {r : RationalData} (hd : 1 ≤ r.degree)
     have h1 : HasFDerivAt f ((deriv f x) • (ContinuousLinearMap.id ℝ ℂ : ℂ →L[ℝ] ℂ)) x := by
       rw [hasFDerivAt_iff_isLittleO]
       refine hf.hasDerivAt.isLittleO.congr_left fun y => ?_
-      simp only [ContinuousLinearMap.smul_apply, ContinuousLinearMap.id_apply, smul_eq_mul]
+      simp only [smul_apply, ContinuousLinearMap.id_apply, smul_eq_mul]
       ring
     exact h1.differentiableAt
   -- the map is rational of degree ≥ 1, hence open
@@ -860,13 +860,13 @@ theorem spreadCoeff_eLpNormEssSup_le {r : RationalData} (hd : 1 ≤ r.degree)
       · exact Polynomial.eq_zero_of_dvd_of_natDegree_lt hdvd'
           (Polynomial.natDegree_derivative_lt hd0)
     have hdD : (R m).denReduced.natDegree = 0 :=
-      Polynomial.natDegree_eq_zero_of_derivative_eq_zero hderD
+      Polynomial.derivative_eq_zero.mp hderD
     have hderN : Polynomial.derivative (R m).numReduced = 0 := by
       have h2 : Polynomial.derivative (R m).numReduced * (R m).denReduced = 0 := by
         rw [hid, hderD, mul_zero]
       exact (mul_eq_zero.mp h2).resolve_right hdenR_ne_zero
     have hdN : (R m).numReduced.natDegree = 0 :=
-      Polynomial.natDegree_eq_zero_of_derivative_eq_zero hderN
+      Polynomial.derivative_eq_zero.mp hderN
     have hmax : (R m).degree
         = max (R m).numReduced.natDegree (R m).denReduced.natDegree := rfl
     have hge := hdegR m
@@ -897,7 +897,7 @@ theorem spreadCoeff_eLpNormEssSup_le {r : RationalData} (hd : 1 ≤ r.degree)
         hdiff hSNnull
     -- split off the (finitely many) critical points of the `m`-th reading
     have hcritfin : ({z : ℂ | (R m).wronskian.IsRoot z} : Set ℂ).Finite :=
-      Polynomial.finite_setOf_isRoot (hwron m)
+      Polynomial.finite_setOfPred_isRoot (hwron m)
     have hsplit : {z : ℂ | r.toSphereMap^[m] ((z : ℂ̂)) ≠ ∞ ∧ F m z ∈ F n '' (S ∩ N)}
         ⊆ {z : ℂ | (R m).wronskian.IsRoot z}
           ∪ {z : ℂ | ((R m).denReduced.eval z ≠ 0 ∧ (R m).wronskian.eval z ≠ 0)
@@ -1040,7 +1040,7 @@ theorem spreadCoeff_eLpNormEssSup_le {r : RationalData} (hd : 1 ≤ r.degree)
           enorm_mul _ _
       _ ≤ 1 * ‖σ (Classical.choose hex).2.2‖ₑ := by
           refine mul_le_mul' ?_ le_rfl
-          rw [← ofReal_norm_eq_enorm]
+          rw [← ofReal_norm]
           exact ENNReal.ofReal_le_one.mpr htw
       _ = ‖σ (Classical.choose hex).2.2‖ₑ := one_mul _
       _ ≤ eLpNormEssSup σ volume := hyN
@@ -1222,7 +1222,7 @@ theorem isInvariantBeltrami_spreadCoeff {r : RationalData} (hd : 1 ≤ r.degree)
       ext w
       simp [Polynomial.IsRoot]
     rw [hsub]
-    exact (Polynomial.finite_setOf_isRoot hdenne).measure_zero volume
+    exact (Polynomial.finite_setOfPred_isRoot hdenne).measure_zero volume
   unfold IsInvariantBeltrami
   filter_upwards [hae] with z hz
   -- off the poles the image of `z` is finite and reads back faithfully

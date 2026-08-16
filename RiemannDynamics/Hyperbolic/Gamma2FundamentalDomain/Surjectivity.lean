@@ -702,8 +702,7 @@ theorem modularLambdaH_F_im_pos :
     refine ⟨?_, ?_, ?_, ?_⟩
     · simp [Complex.add_im, Complex.mul_im, Complex.I_im, Complex.I_re]
     · simp [Complex.add_re, Complex.mul_re, Complex.I_im, Complex.I_re]
-    · change ((1 + 4 * Complex.I) / 2 : ℂ).re < 1
-      rw [show ((1 + 4 * Complex.I) / 2 : ℂ) = (1 : ℂ) / 2 + 2 * Complex.I from by ring]
+    · rw [show ((1 + 4 * Complex.I) / 2 : ℂ) = (1 : ℂ) / 2 + 2 * Complex.I from by ring]
       simp [Complex.add_re, Complex.mul_re, Complex.I_im, Complex.I_re,
         Complex.normSq_ofNat]
       norm_num
@@ -1131,7 +1130,7 @@ theorem modularLambdaH_image_fundamentalDomainInterior :
   have hU_preconn : IsPreconnected U := by
     have hconv : Convex ℝ U := by
       intro w₁ hw₁ w₂ hw₂ s t hs ht hst
-      simp only [hU_def, Set.mem_setOf_eq] at hw₁ hw₂ ⊢
+      simp only [hU_def, Set.mem_ofPred_eq] at hw₁ hw₂ ⊢
       change 0 < (s • w₁ + t • w₂).im
       rw [Complex.add_im, Complex.smul_im, Complex.smul_im, smul_eq_mul, smul_eq_mul]
       rcases lt_or_eq_of_le hs with hs_pos | hs_zero
@@ -1149,8 +1148,7 @@ theorem modularLambdaH_image_fundamentalDomainInterior :
       refine ⟨?_, ?_, ?_, ?_⟩
       · simp [Complex.add_im, Complex.mul_im, Complex.I_im, Complex.I_re]
       · simp [Complex.add_re, Complex.mul_re, Complex.I_im, Complex.I_re]
-      · change ((1 + 4 * Complex.I) / 2 : ℂ).re < 1
-        rw [show ((1 + 4 * Complex.I) / 2 : ℂ) = (1 : ℂ) / 2 + 2 * Complex.I from by ring]
+      · rw [show ((1 + 4 * Complex.I) / 2 : ℂ) = (1 : ℂ) / 2 + 2 * Complex.I from by ring]
         simp [Complex.add_re, Complex.mul_re, Complex.I_im, Complex.I_re,
           Complex.normSq_ofNat]
         norm_num

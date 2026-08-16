@@ -711,7 +711,7 @@ theorem injective_bipolar_map [SimplyConnectedSpace M]
   /- ## Endgame case split on compactness of the surface. -/
   by_cases hcpt : CompactSpace M
   · -- Compact: a nonconstant holomorphic function has clopen plane image.
-    haveI := hcpt
+    have := hcpt
     have hnc : ¬ ∃ cc : ℂ, ∀ x : M, H x = cc := by
       rintro ⟨cc, hcc⟩
       apply hHp₁
@@ -733,7 +733,7 @@ theorem injective_bipolar_map [SimplyConnectedSpace M]
     have hCle : CB ≤ max CB 0 := le_max_left CB 0
     linarith
   · -- Noncompact: the bounded-ratio comparison forces a Green's function at `q`.
-    haveI hncM : NoncompactSpace M := not_compactSpace_iff.mp hcpt
+    have hncM : NoncompactSpace M := not_compactSpace_iff.mp hcpt
     /- ## The per-candidate Blaschke-type comparison at the pole `q`. -/
     have MAIN : ∀ Ψ : M → ℂ, (∀ y, ContMDiffAt 𝓘(ℂ) 𝓘(ℂ) ω Ψ y) →
         (∀ y, ‖Ψ y‖ < 1) → Ψ q = 0 → (∃ y₀, Ψ y₀ ≠ 0) →

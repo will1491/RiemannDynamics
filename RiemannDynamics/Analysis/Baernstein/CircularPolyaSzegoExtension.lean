@@ -70,7 +70,7 @@ theorem isOpen_annulus (p : ℂ) (rI rO : ℝ) :
     IsOpen {z : ℂ | rI < ‖z - p‖ ∧ ‖z - p‖ < rO} := by
   have h1 : IsOpen {z : ℂ | rI < ‖z - p‖} := isOpen_lt continuous_const (by fun_prop)
   have h2 : IsOpen {z : ℂ | ‖z - p‖ < rO} := isOpen_lt (by fun_prop) continuous_const
-  simpa [Set.setOf_and] using h1.inter h2
+  simpa [Set.ofPred_and] using h1.inter h2
 
 /-- The log-polar band `{log rI < Re w < log rO}` is open. -/
 theorem isOpen_logPolarBand (rI rO : ℝ) :
@@ -79,7 +79,7 @@ theorem isOpen_logPolarBand (rI rO : ℝ) :
     isOpen_lt continuous_const Complex.continuous_re
   have h2 : IsOpen {w : ℂ | w.re < Real.log rO} :=
     isOpen_lt Complex.continuous_re continuous_const
-  simpa [Set.setOf_and] using h1.inter h2
+  simpa [Set.ofPred_and] using h1.inter h2
 
 /-- Points of a closed ball have real part in the window `[Re w₀ − ρ, Re w₀ + ρ]`. -/
 theorem re_mem_window_of_mem_closedBall {w₀ w : ℂ} {ρ : ℝ}
@@ -142,7 +142,7 @@ theorem exists_norm_bound_arcPoint {p : ℂ} {u : ℂ → ℝ} {rI rO : ℝ}
       isClosed_le continuous_const (by fun_prop)
     have h2 : IsClosed {z : ℂ | ‖z - p‖ ≤ Real.exp b} :=
       isClosed_le (by fun_prop) continuous_const
-    simpa [Set.setOf_and] using h1.inter h2
+    simpa [Set.ofPred_and] using h1.inter h2
   have hKcompact : IsCompact K := by
     refine (isCompact_closedBall p (Real.exp b)).of_isClosed_subset hKclosed ?_
     rw [hKdef]
@@ -169,7 +169,7 @@ theorem arcIntegral_continuousOn {p : ℂ} {u : ℂ → ℝ} {rI rO : ℝ} {E : 
     obtain ⟨R, hR⟩ := (Metric.isBounded_iff_subset_closedBall (0 : ℝ)).1 hEbdd
     exact ne_top_of_le_ne_top (isCompact_closedBall (0 : ℝ) R).measure_lt_top.ne
       (measure_mono hR)
-  haveI : IsFiniteMeasure ((volume : Measure ℝ).restrict E) := isFiniteMeasure_restrict.2 hEfin
+  have : IsFiniteMeasure ((volume : Measure ℝ).restrict E) := isFiniteMeasure_restrict.2 hEfin
   intro w₀ hw₀
   obtain ⟨ρ, hρpos, hρsub⟩ :=
     Metric.nhds_basis_closedBall.mem_iff.1 ((isOpen_logPolarBand rI rO).mem_nhds hw₀)
@@ -261,8 +261,8 @@ theorem arcIntegral_le_circleAverage_indicator {p : ℂ} {u : ℂ → ℝ} {V : 
     obtain ⟨R, hR⟩ := (Metric.isBounded_iff_subset_closedBall (0 : ℝ)).1 hEbdd
     exact ne_top_of_le_ne_top (isCompact_closedBall (0 : ℝ) R).measure_lt_top.ne
       (measure_mono hR)
-  haveI : IsFiniteMeasure ((volume : Measure ℝ).restrict E) := isFiniteMeasure_restrict.2 hEfin
-  haveI : IsFiniteMeasure ((volume : Measure ℝ).restrict (Set.Ioc (0 : ℝ) (2 * π))) :=
+  have : IsFiniteMeasure ((volume : Measure ℝ).restrict E) := isFiniteMeasure_restrict.2 hEfin
+  have : IsFiniteMeasure ((volume : Measure ℝ).restrict (Set.Ioc (0 : ℝ) (2 * π))) :=
     isFiniteMeasure_restrict.2 (by rw [Real.volume_Ioc]; exact ENNReal.ofReal_ne_top)
   obtain ⟨hlo, hhi⟩ := log_window_of_closedBall_subset hρ hball
   obtain ⟨M, hM⟩ := exists_norm_bound_arcPoint hrI hrO hcont hlo hhi
@@ -500,7 +500,7 @@ private theorem indicator_arc_level_finite_or_const {p : ℂ} {u : ℂ → ℝ} 
     have hdlevel : IsClosed {t : ℝ | G t = d} := isClosed_eq hGcont continuous_const
     -- The propagation set: points near which the profile is identically `d`.
     set W : Set ℝ := {y : ℝ | ∀ᶠ z in 𝓝 y, G z = d} with hWdef
-    have hWopen : IsOpen W := isOpen_setOf_eventually_nhds
+    have hWopen : IsOpen W := isOpen_setOfPred_eventually_nhds
     have hWval : ∀ y ∈ W, G y = d := fun y hy => hy.self_of_nhds
     have hWx : x ∈ W := by
       have hfreq : ∃ᶠ z in 𝓝[≠] x, G z = d := by
@@ -580,7 +580,7 @@ theorem exists_attaining_structured_indicator_truncated {p : ℂ} {u : ℂ → �
     convert h2 using 1
     rw [hVdef, hAdef]
     ext z
-    simp only [Set.mem_setOf_eq, Set.mem_inter_iff, Set.mem_preimage, Set.mem_Ioi]
+    simp only [Set.mem_ofPred_eq, Set.mem_inter_iff, Set.mem_preimage, Set.mem_Ioi]
     tauto
   have hindm : Measurable ind := by
     have heq : ind = Set.indicator V (fun z => Set.indicator U u z - δt) := by
@@ -699,11 +699,11 @@ theorem exists_attaining_structured_indicator_truncated {p : ℂ} {u : ℂ → �
     have hempty : distribFun (2 * π) g (ENNReal.ofReal (max M0 0)) = 0 := by
       have hset : {y ∈ Icc (0 : ℝ) (2 * π) | ENNReal.ofReal (max M0 0) < g y} = ∅ := by
         ext y
-        simp only [mem_setOf_eq, mem_empty_iff_false, iff_false, not_and]
+        simp only [mem_ofPred_eq, mem_empty_iff_false, iff_false, not_and]
         exact fun _ => not_lt.mpr (hgleM y)
       rw [distribFun, hset, measure_empty]
     rw [hempty] at h2
-    exact absurd h2 (not_lt.mpr (zero_le _))
+    exact absurd h2 (not_lt.mpr (zero_le))
   set c' : ℝ := c.toReal with hc'def
   have hc'0 : 0 ≤ c' := ENNReal.toReal_nonneg
   have hcoe : c = ENNReal.ofReal c' := (ENNReal.ofReal_toReal hcne).symm
@@ -775,7 +775,7 @@ theorem exists_attaining_structured_indicator_truncated {p : ℂ} {u : ℂ → �
     have hP2 : ENNReal.ofReal (2 * θ) ≤ volume {x ∈ Icc (0 : ℝ) (2 * π) | c ≤ g x} := by
       rcases eq_or_ne c 0 with hc0 | hc0
       · have hset : {x ∈ Icc (0 : ℝ) (2 * π) | c ≤ g x} = Icc (0 : ℝ) (2 * π) := by
-          ext x; simp only [mem_setOf_eq, hc0, zero_le, and_true]
+          ext x; simp only [mem_ofPred_eq, hc0, zero_le, and_true]
         rw [hset, Real.volume_Icc, sub_zero]
         exact ENNReal.ofReal_le_ofReal (by linarith)
       · obtain ⟨v, hvmono, hvmem, hvtend⟩ :=
@@ -790,7 +790,7 @@ theorem exists_attaining_structured_indicator_truncated {p : ℂ} {u : ℂ → �
           rw [Real.volume_Icc]; exact ofReal_ne_top
         have hInter : ⋂ n, s n = {x ∈ Icc (0 : ℝ) (2 * π) | c ≤ g x} := by
           ext x
-          simp only [mem_iInter, hs, mem_setOf_eq]
+          simp only [mem_iInter, hs, mem_ofPred_eq]
           constructor
           · intro h; exact ⟨(h 0).1, le_of_tendsto' hvtend (fun n => (h n).2.le)⟩
           · rintro ⟨hxI, hxc⟩ n; exact ⟨hxI, lt_of_lt_of_le (hvmem n).2 hxc⟩
@@ -804,7 +804,7 @@ theorem exists_attaining_structured_indicator_truncated {p : ℂ} {u : ℂ → �
       have hset : {x ∈ Icc (0 : ℝ) (2 * π) | g x = c}
           = {x ∈ Icc (0 : ℝ) (2 * π) | G x = lv} := by
         ext x
-        simp only [mem_setOf_eq]
+        simp only [mem_ofPred_eq]
         exact and_congr_right (fun _ => heq_iff hc0 x)
       rw [hset]
       exact ((hlevfin 0 (2 * π)).countable).measure_zero _
@@ -932,7 +932,7 @@ theorem exists_attaining_structured_indicator_truncated {p : ℂ} {u : ℂ → �
     have hSmeas : MeasurableSet S := measurableSet_lt measurable_const hGcont.measurable
     have hFcore : S ∩ Ioo τ (τ + 2 * π) ⊆ F₀ := by
       rintro ψ ⟨hψgt, hψI⟩
-      rw [hSdef, mem_setOf_eq] at hψgt
+      rw [hSdef, mem_ofPred_eq] at hψgt
       obtain ⟨zb, hzbZ, hzblt⟩ := hlevbelow ψ hψI hψgt
       obtain ⟨za, hzaZ, hzagt⟩ := hlevabove ψ hψI hψgt
       have hbne : (Zs.filter (fun z => z < ψ)).Nonempty :=
@@ -1042,7 +1042,7 @@ theorem exists_attaining_structured_indicator_truncated {p : ℂ} {u : ℂ → �
             rw [← lintegral_union measurableSet_Ioc hdisj2, Ioc_union_Ioc_eq_Ioc hs₀0 hs₀2π]
     have hSmemper : ∀ (n : ℤ) (x : ℝ), x + 2 * π * n ∈ S ↔ x ∈ S := by
       intro n x
-      simp only [hSdef, mem_setOf_eq, hGperZ]
+      simp only [hSdef, mem_ofPred_eq, hGperZ]
     have hindper : ∀ (h : ℝ → ℝ≥0∞), (∀ (n : ℤ) (x : ℝ), h (x + 2 * π * n) = h x) →
         ∀ (n : ℤ) (x : ℝ), S.indicator h (x + 2 * π * n) = S.indicator h x := by
       intro h hper n x
@@ -1078,7 +1078,7 @@ theorem exists_attaining_structured_indicator_truncated {p : ℂ} {u : ℂ → �
     -- Identify the standard-window core with the super-level set of `g`.
     have hident : {x ∈ Icc (0 : ℝ) (2 * π) | c < g x} = S ∩ Icc (0 : ℝ) (2 * π) := by
       ext x
-      simp only [mem_setOf_eq, mem_inter_iff, hSdef]
+      simp only [mem_ofPred_eq, mem_inter_iff, hSdef]
       constructor
       · rintro ⟨h1, h2⟩; exact ⟨(hsuper_iff x).mp h2, h1⟩
       · rintro ⟨h1, h2⟩; exact ⟨h2, (hsuper_iff x).mpr h1⟩
@@ -1103,7 +1103,7 @@ theorem exists_attaining_structured_indicator_truncated {p : ℂ} {u : ℂ → �
         · have hset : {x ∈ {x ∈ Icc (0 : ℝ) (2 * π) | c < g x} | ENNReal.ofReal t < g x}
               = {x ∈ Icc (0 : ℝ) (2 * π) | ENNReal.ofReal t < g x} := by
             ext x
-            simp only [mem_setOf_eq]
+            simp only [mem_ofPred_eq]
             constructor
             · rintro ⟨⟨hxI, -⟩, hlt2⟩; exact ⟨hxI, hlt2⟩
             · rintro ⟨hxI, hlt2⟩; exact ⟨⟨hxI, lt_of_le_of_lt hct hlt2⟩, hlt2⟩
@@ -1113,11 +1113,11 @@ theorem exists_attaining_structured_indicator_truncated {p : ℂ} {u : ℂ → �
         · have hcne0 : c ≠ 0 := by
             intro h
             rw [h] at hct
-            exact absurd hct (not_lt.mpr (zero_le _))
+            exact absurd hct (not_lt.mpr (zero_le))
           have hset : {x ∈ {x ∈ Icc (0 : ℝ) (2 * π) | c < g x} | ENNReal.ofReal t < g x}
               = {x ∈ Icc (0 : ℝ) (2 * π) | c < g x} := by
             ext x
-            simp only [mem_setOf_eq]
+            simp only [mem_ofPred_eq]
             constructor
             · rintro ⟨hx, -⟩; exact hx
             · intro hx; exact ⟨hx, lt_trans hct hx.2⟩
@@ -1200,7 +1200,7 @@ theorem exists_attaining_structured_indicator_truncated {p : ℂ} {u : ℂ → �
       have hc'eq : c' = 0 := by rw [hc'def, hc0]; simp
       have hgz : ∀ x : ℝ, x ∉ S → g x = 0 := by
         intro x hxS
-        rw [hSdef, mem_setOf_eq] at hxS
+        rw [hSdef, mem_ofPred_eq] at hxS
         have hGx : G x ≤ lv := not_lt.mp hxS
         rw [hgG, hGδeq,
           max_eq_right (by rw [hlvdef, hc'eq] at hGx; linarith), ENNReal.ofReal_zero]
@@ -1221,7 +1221,7 @@ theorem exists_attaining_structured_indicator_truncated {p : ℂ} {u : ℂ → �
       set Aset : Set ℝ := Icc (τ + ε₁) (τ + 2 * π - ε₁) \ (S ∪ (Zs : Set ℝ)) with hAsetdef
       have hAmeas : MeasurableSet Aset :=
         measurableSet_Icc.diff (hSmeas.union Zs.measurableSet)
-      have hAsub : Aset ⊆ Icc (τ + ε₁) (τ + 2 * π - ε₁) := Set.diff_subset
+      have hAsub : Aset ⊆ Icc (τ + ε₁) (τ + 2 * π - ε₁) := Set.sdiff_subset
       have hcap : volume ((S ∪ (Zs : Set ℝ)) ∩ Icc (τ + ε₁) (τ + 2 * π - ε₁))
           ≤ ENNReal.ofReal vF := by
         have hsub2 : (S ∪ (Zs : Set ℝ)) ∩ Icc (τ + ε₁) (τ + 2 * π - ε₁)
@@ -1236,7 +1236,7 @@ theorem exists_attaining_structured_indicator_truncated {p : ℂ} {u : ℂ → �
       have hAvol : ENNReal.ofReal m₀ ≤ volume Aset := by
         have hdiffeq : Aset = Icc (τ + ε₁) (τ + 2 * π - ε₁)
             \ ((S ∪ (Zs : Set ℝ)) ∩ Icc (τ + ε₁) (τ + 2 * π - ε₁)) := by
-          rw [hAsetdef, Set.diff_inter_self_eq_diff]
+          rw [hAsetdef, Set.sdiff_inter_self_eq_sdiff]
         calc ENNReal.ofReal m₀
             ≤ ENNReal.ofReal (2 * π - 2 * ε₁) - ENNReal.ofReal vF := by
               refine ENNReal.le_sub_of_add_le_right ofReal_ne_top ?_
@@ -1252,7 +1252,7 @@ theorem exists_attaining_structured_indicator_truncated {p : ℂ} {u : ℂ → �
               ring
           _ ≤ volume Aset := by
               rw [hdiffeq]
-              exact le_measure_diff
+              exact le_measure_sdiff
       obtain ⟨B, hBsub, hBmeas, hBvol⟩ := exists_measurableSet_subset_volume
         (by linarith : τ + ε₁ ≤ τ + 2 * π - ε₁) Aset hAmeas hAsub hm₀0 hAvol
       set Fb : Set ℝ := Icc a (a + ℓ) ∪ (F₀ ∪ B) with hFbdef
@@ -1306,7 +1306,7 @@ theorem exists_attaining_structured_indicator_truncated {p : ℂ} {u : ℂ → �
             have hlt2 : G x < lv :=
               hzone x ⟨by linarith [hx.1, hε₁0], by linarith [hx.2, hℓa]⟩
             have hgt2 : lv < G x := by
-              rw [hSdef, mem_setOf_eq] at hxS
+              rw [hSdef, mem_ofPred_eq] at hxS
               exact hxS
             exact absurd hgt2 (not_lt.mpr hlt2.le)
           · exact hgz x (fun hxS => (hBsub hxB).2 (Or.inl hxS))
@@ -1357,7 +1357,7 @@ theorem starPlane_subharmonicOn_indicator {p : ℂ} {u : ℂ → ℝ} {U : Set �
       convert h2 using 1
       rw [hVdef]
       ext z
-      simp only [Set.mem_setOf_eq, Set.mem_inter_iff, Set.mem_preimage, Set.mem_Ioi]
+      simp only [Set.mem_ofPred_eq, Set.mem_inter_iff, Set.mem_preimage, Set.mem_Ioi]
       tauto
     have hind0 : ∀ z, 0 ≤ Set.indicator V (fun z => u z - δt) z := by
       intro z

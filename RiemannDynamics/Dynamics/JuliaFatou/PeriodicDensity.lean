@@ -215,7 +215,7 @@ theorem juliaSet_subset_closure_periodicPt {f : ℂ̂ → ℂ̂} (hf : IsRationa
   have e0 : ∀ w : ℂ, r.toSphereMap ((w : ℂ̂)) = if r.denReduced.eval w = 0 then ∞
       else (((r.numReduced.eval w / r.denReduced.eval w : ℂ)) : ℂ̂) := fun _ => rfl
   have hW : r.wronskian ≠ 0 := r.wronskian_ne_zero hrdeg
-  have hWfin : {x : ℂ | r.wronskian.IsRoot x}.Finite := Polynomial.finite_setOf_isRoot hW
+  have hWfin : {x : ℂ | r.wronskian.IsRoot x}.Finite := Polynomial.finite_setOfPred_isRoot hW
   -- The bad set of critical-type points and its forward images.
   obtain ⟨badcrit, hbaddef⟩ : ∃ s : Set ℂ̂,
       s = (fun x : ℂ => ((x : ℂ̂))) '' {x : ℂ | r.wronskian.IsRoot x} ∪ {∞} := ⟨_, rfl⟩
@@ -232,13 +232,13 @@ theorem juliaSet_subset_closure_periodicPt {f : ℂ̂ → ℂ̂} (hf : IsRationa
   have hUJinf : (U ∩ JuliaSet f).Infinite := by
     intro hfin
     have hopen : IsOpen (U \ ((U ∩ JuliaSet f) \ {z₀})) :=
-      hUo.sdiff ((hfin.subset Set.diff_subset).isClosed)
+      hUo.sdiff ((hfin.subset Set.sdiff_subset).isClosed)
     have hz₀mem : z₀ ∈ U \ ((U ∩ JuliaSet f) \ {z₀}) := ⟨hz₀U, fun hc => hc.2 rfl⟩
     obtain ⟨y, hy, hyne⟩ := accPt_iff_nhds.mp ((juliaSet_perfect hf hd).acc z₀ hz₀) _
       (hopen.mem_nhds hz₀mem)
     exact hy.1.2 ⟨⟨hy.1.1, hy.2⟩, hyne⟩
   -- Select a Julia point `p ∈ U` avoiding the bad images.
-  obtain ⟨p, hp⟩ := (hUJinf.diff hBfin).nonempty
+  obtain ⟨p, hp⟩ := (hUJinf.sdiff hBfin).nonempty
   have hpU : p ∈ U := hp.1.1
   have hpJ : p ∈ JuliaSet f := hp.1.2
   have hpB : p ∉ B := hp.2

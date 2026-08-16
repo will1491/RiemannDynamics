@@ -227,8 +227,8 @@ theorem hasWeakDirDeriv_of_tendsto {fₙ : ℕ → ℂ → ℂ} {g u : ℂ → �
   have hmint : Integrable (fun z => ‖m z‖) volume :=
     (hmcont.integrable_of_hasCompactSupport hmcs).norm
   -- Integrability of `m • h` for continuous `h`.
-  haveI : IsBoundedSMul ℝ ℂ := NormSMulClass.toIsBoundedSMul
-  haveI : ContinuousSMul ℝ ℂ := IsBoundedSMul.continuousSMul
+  have : IsBoundedSMul ℝ ℂ := NormSMulClass.toIsBoundedSMul
+  have : ContinuousSMul ℝ ℂ := IsBoundedSMul.continuousSMul
   have integ : ∀ {h : ℂ → ℂ}, Continuous h → Integrable (fun z => m z • h z) volume := by
     intro h hh
     exact (hmcont.smul hh).integrable_of_hasCompactSupport hmcs.smul_right
@@ -360,7 +360,7 @@ theorem tendsto_integral_jacobianWeak_smul {fₙ : ℕ → ℂ → ℂ} {g : ℂ
       Integrable (fun z => (h z).re * (w z).im * t z) volume := by
     intro h w t hh ht htcs htsub hw
     have hwK : MemLp w 2 (volume.restrict K) := hw K (Set.subset_univ K) hKc
-    haveI : IsFiniteMeasure (volume.restrict K) :=
+    have : IsFiniteMeasure (volume.restrict K) :=
       ⟨by rw [Measure.restrict_apply_univ]; exact hvolK⟩
     have hwim1 : Integrable (K.indicator fun z => (w z).im) volume := by
       rw [integrable_indicator_iff hKm]
@@ -385,7 +385,7 @@ theorem tendsto_integral_jacobianWeak_smul {fₙ : ℕ → ℂ → ℂ} {g : ℂ
       Filter.Tendsto (fun n => ∫ z, (fₙ n z).re * (wₙ n z).im * t z) Filter.atTop
         (nhds (∫ z, (g z).re * (wLim z).im * t z)) := by
     intro wₙ wLim t htc htsub hwn hwL hwweak hMw
-    haveI : IsFiniteMeasure (volume.restrict K) :=
+    have : IsFiniteMeasure (volume.restrict K) :=
       ⟨by rw [Measure.restrict_apply_univ]; exact hvolK⟩
     have htcs : HasCompactSupport t :=
       HasCompactSupport.of_support_subset_isCompact hKc (subset_trans subset_closure htsub)
@@ -454,7 +454,7 @@ theorem tendsto_integral_jacobianWeak_smul {fₙ : ℕ → ℂ → ℂ} {g : ℂ
         have hcs := integral_mul_le_Lp_mul_Lq_of_nonneg (μ := volume.restrict K) h2conj
           (f := fun z => |(wₙ n z).im|) (g := fun z => |t z|)
           (ae_of_all _ fun z => abs_nonneg _) (ae_of_all _ fun z => abs_nonneg _)
-          (by simpa using hwimLp.abs) (by simpa using htLp.abs)
+          (by simpa using! hwimLp.abs) (by simpa using! htLp.abs)
         rw [show (2 : ℝ) = ((2 : ℕ) : ℝ) by norm_num] at hcs
         simp only [Real.rpow_natCast] at hcs
         refine hcs.trans ?_
@@ -567,7 +567,7 @@ theorem tendsto_integral_jacobianWeak_smul {fₙ : ℕ → ℂ → ℂ} {g : ℂ
     intro h w t hh ht htcs htsub hw
     -- The imaginary part of `w`, restricted to `K` by an indicator, is `L¹`.
     have hwK : MemLp w 2 (volume.restrict K) := hw K (Set.subset_univ K) hKc
-    haveI : IsFiniteMeasure (volume.restrict K) :=
+    have : IsFiniteMeasure (volume.restrict K) :=
       ⟨by rw [Measure.restrict_apply_univ]; exact hvolK⟩
     have hwim1 : Integrable (K.indicator fun z => (w z).im) volume := by
       rw [integrable_indicator_iff hKm]

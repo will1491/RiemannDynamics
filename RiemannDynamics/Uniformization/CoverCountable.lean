@@ -23,6 +23,8 @@ over that base form a countable topological basis, and the cover is second count
 
 open scoped Manifold ContDiff
 
+set_option backward.isDefEq.respectTransparency false
+
 namespace RiemannDynamics
 
 /-- The genus surface is second countable: a compact space charted on `ℂ`. -/
@@ -387,16 +389,7 @@ theorem countable_pathClasses (M : Type*) [TopologicalSpace M] [ChartedSpace ℂ
           rw [Path.trans_apply]
           split_ifs with h
           · rw [hspfun t₀]
-            change γ.extend (2 * (u : ℝ) * (t₀ : ℝ)) =
-              γ.extend (if (u : ℝ) ≤ 1 / 2 then 2 * (u : ℝ) * (t₀ : ℝ)
-                else (1 - (2 * (u : ℝ) - 1)) * (t₀ : ℝ) + (2 * (u : ℝ) - 1) * (t : ℝ))
-            rw [if_pos h]
           · rw [hcfun]
-            change γ.extend
-                ((1 - (2 * (u : ℝ) - 1)) * (t₀ : ℝ) + (2 * (u : ℝ) - 1) * (t : ℝ)) =
-              γ.extend (if (u : ℝ) ≤ 1 / 2 then 2 * (u : ℝ) * (t₀ : ℝ)
-                else (1 - (2 * (u : ℝ) - 1)) * (t₀ : ℝ) + (2 * (u : ℝ) - 1) * (t : ℝ))
-            rw [if_neg h]
       refine ⟨η₀.trans c, htmem, ?_⟩
       have hfin : (⟦sp t⟧ : Path.Homotopic.Quotient x (γ t)) =
           pc.cls.trans ⟦η₀.trans c⟧ := by
@@ -445,7 +438,7 @@ theorem countable_pathClasses (M : Type*) [TopologicalSpace M] [ChartedSpace ℂ
     have hD'cnt : Set.Countable
         {rc : PathCover x | rc ∈ pathCoverSheet x pc (Vf z) ∧ rc.pt ∈ D} := by
       rw [← Set.countable_coe_iff]
-      haveI : Countable ↥D := hDcnt.to_subtype
+      have : Countable ↥D := hDcnt.to_subtype
       have hinj : Function.Injective fun rc :
           ↥{rc : PathCover x | rc ∈ pathCoverSheet x pc (Vf z) ∧ rc.pt ∈ D} =>
           (⟨rc.1.pt, rc.2.2⟩ : ↥D) := by
@@ -556,7 +549,7 @@ theorem countable_pathClasses (M : Type*) [TopologicalSpace M] [ChartedSpace ℂ
     have hFeq : F = ⋃ n, C n := Set.ext fun S => (hFmem S).trans Set.mem_iUnion.symm
     rw [hFeq]
     exact Set.countable_iUnion hCcnt
-  haveI : Countable ↥F := hFcnt.to_subtype
+  have : Countable ↥F := hFcnt.to_subtype
   have hchoose : ∀ c : Path.Homotopic.Quotient x y,
       ∃ S, S ∈ F ∧ (⟨y, c⟩ : PathCover x) ∈ S := by
     intro c
@@ -810,7 +803,7 @@ theorem secondCountableTopology_pathCover {g : ℕ} [NeZero g] (x₀ : GenusSurf
   -- The fibers of the projection are countable.
   have hfib : ∀ z : GenusSurface g, Set.Countable {rc : PathCover x₀ | rc.pt = z} := by
     intro z
-    haveI : Countable (Path.Homotopic.Quotient x₀ z) := countable_pathClasses _ x₀ z
+    have : Countable (Path.Homotopic.Quotient x₀ z) := countable_pathClasses _ x₀ z
     refine Set.Countable.mono ?_
       (Set.countable_range fun c : Path.Homotopic.Quotient x₀ z => (⟨z, c⟩ : PathCover x₀))
     rintro ⟨pt, cls⟩ hmem
@@ -831,7 +824,7 @@ theorem secondCountableTopology_pathCover {g : ℕ} [NeZero g] (x₀ : GenusSurf
       exact Set.mem_biUnion hV𝒱 ⟨pc, hpV, rfl⟩
     refine Set.Countable.mono hsub (Set.Countable.biUnion h𝒱cnt fun V hV𝒱 => ?_)
     obtain ⟨hVo, ⟨z, hzV⟩, hlin⟩ := h𝒱good V hV𝒱
-    haveI : Countable ↥{rc : PathCover x₀ | rc.pt = z} := (hfib z).to_subtype
+    have : Countable ↥{rc : PathCover x₀ | rc.pt = z} := (hfib z).to_subtype
     rw [← Set.countable_coe_iff]
     have hpick : ∀ S : ↥{S | ∃ pc : PathCover x₀, pc.pt ∈ V ∧ S = pathCoverSheet x₀ pc V},
         ∃ rc : PathCover x₀, rc ∈ S.1 ∧ rc.pt = z := by

@@ -1353,7 +1353,7 @@ theorem integral_boundary_upperHalfDisk_eq_zero_of_analyticOnNhd
     have h_z_in_U := h_bot_in_U x hx_Icc
     have h_F_at := hF_derivAt _ h_z_in_U
     have h_comp := h_F_at.comp x (h_bot_inner_deriv x)
-    simpa using h_comp
+    simpa using! h_comp
   -- ContinuousOn F on U and f on U.
   have hF_cont_on : ContinuousOn F U := fun z hz =>
     (hF_derivAt z hz).continuousAt.continuousWithinAt

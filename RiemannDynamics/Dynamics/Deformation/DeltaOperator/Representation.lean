@@ -474,7 +474,7 @@ theorem deltaField_growth_at_infty {r : RationalData} (hd : 1 ≤ r.degree)
             = (Polynomial.C c * r.denReduced).leadingCoeff := by
           rw [Polynomial.leadingCoeff_mul, Polynomial.leadingCoeff_C, hc,
             div_mul_cancel₀ _ hlcQ]
-        have hsub := Polynomial.degree_sub_lt hdegeq hN0 hlceq
+        have hsub := Polynomial.degree_sub_lt_left hdegeq hN0 hlceq
         have hdegN1 : (r.numReduced - Polynomial.C c * r.denReduced).natDegree + 1
             ≤ r.degree := by
           by_cases h0 : r.numReduced - Polynomial.C c * r.denReduced = 0
@@ -495,7 +495,7 @@ theorem deltaField_growth_at_infty {r : RationalData} (hd : 1 ≤ r.degree)
   -- (4) Beyond a radius, the reduced denominator does not vanish.
   obtain ⟨R0, hR0⟩ : ∃ R0 : ℝ, ∀ z : ℂ, R0 < ‖z‖ → r.denReduced.eval z ≠ 0 := by
     have hfin : {z : ℂ | r.denReduced.IsRoot z}.Finite :=
-      Polynomial.finite_setOf_isRoot hQ0
+      Polynomial.finite_setOfPred_isRoot hQ0
     obtain ⟨R0, hR0⟩ := hfin.isBounded.subset_closedBall 0
     refine ⟨R0, fun z hz h0 => ?_⟩
     have hmem : z ∈ Metric.closedBall (0 : ℂ) R0 := hR0 h0
@@ -660,7 +660,7 @@ theorem exists_sectionSpace_rep_of_pole_growth {r : RationalData} {g : ℂ → �
             have hmem := hball (Metric.ball_subset_ball (min_le_left ε δ) hz.1)
             simpa using hmem
           have hz' : z ∈ {w : ℂ | w ∉ insert p T} := by
-            simp only [Set.mem_setOf_eq, Finset.mem_insert, not_or]
+            simp only [Set.mem_ofPred_eq, Finset.mem_insert, not_or]
             exact ⟨hzp, hzT⟩
           exact ((hf z hz').differentiableAt
             (hopen_ins.mem_nhds hz')).differentiableWithinAt
@@ -686,7 +686,7 @@ theorem exists_sectionSpace_rep_of_pole_growth {r : RationalData} {g : ℂ → �
           · exact (hf'U.differentiableAt
               (Metric.ball_mem_nhds z hρ)).differentiableWithinAt
           · have hz' : z ∈ {w : ℂ | w ∉ insert p T} := by
-              simp only [Set.mem_setOf_eq, Finset.mem_insert, not_or]
+              simp only [Set.mem_ofPred_eq, Finset.mem_insert, not_or]
               exact ⟨hzp, hz⟩
             have hfz : DifferentiableAt ℂ f z :=
               (hf z hz').differentiableAt (hopen_ins.mem_nhds hz')
@@ -819,7 +819,7 @@ theorem exists_sectionSpace_rep_of_pole_growth {r : RationalData} {g : ℂ → �
       rw [Finset.mem_range, not_lt] at hn
       rw [hvanish n hn]
       ring
-    rw [← htay, hsum, hAdef, Polynomial.eval_finset_sum]
+    rw [← htay, hsum, hAdef, Polynomial.eval_finsetSum]
     simp [Polynomial.eval_mul, Polynomial.eval_pow]
   have hAdeg : A.natDegree ≤ 2 * r.degree := by
     rw [hAdef]
@@ -1081,7 +1081,7 @@ theorem sphereField_eq_zero_on_juliaSet_of_deltaField_eq_zero
       · have hperf := juliaSet_perfect hfr hdeg
         have hacc := hperf.acc x hx
         rw [accPt_iff_nhds] at hacc
-        have hBx_closed : IsClosed (B \ {x}) := (hBfin.subset Set.diff_subset).isClosed
+        have hBx_closed : IsClosed (B \ {x}) := (hBfin.subset Set.sdiff_subset).isClosed
         have hUx_open : IsOpen (U \ (B \ {x})) := hUopen.sdiff hBx_closed
         have hxUx : x ∈ U \ (B \ {x}) := ⟨hxU, fun h => h.2 rfl⟩
         obtain ⟨y, ⟨⟨hyU1, hyU2⟩, hyJ⟩, hyx⟩ := hacc _ (hUx_open.mem_nhds hxUx)

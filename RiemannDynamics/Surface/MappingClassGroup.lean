@@ -32,35 +32,9 @@ def _root_.Homeomorph.toCM {X Y : Type*} [TopologicalSpace X]
     [TopologicalSpace Y] (f : X ≃ₜ Y) : C(X, Y) :=
   ⟨f, f.continuous⟩
 
-/-- Self-homeomorphisms form a group under `mul f g = g.trans f`, so that
-`(f * g) x = f (g x)`. -/
-instance instGroupHomeomorph {X : Type*} [TopologicalSpace X] :
-    Group (X ≃ₜ X) where
-  mul f g := g.trans f
-  one := Homeomorph.refl X
-  inv := Homeomorph.symm
-  mul_assoc _ _ _ := Homeomorph.ext fun _ => rfl
-  one_mul _ := Homeomorph.ext fun _ => rfl
-  mul_one _ := Homeomorph.ext fun _ => rfl
-  inv_mul_cancel f := Homeomorph.ext f.symm_apply_apply
-
-/-- Product of self-homeomorphisms is composition. -/
-@[simp]
-theorem _root_.Homeomorph.mul_apply {X : Type*} [TopologicalSpace X]
-    (f g : X ≃ₜ X) (x : X) : (f * g) x = f (g x) :=
-  rfl
-
-/-- The identity self-homeomorphism is the group unit. -/
-@[simp]
-theorem _root_.Homeomorph.one_apply {X : Type*} [TopologicalSpace X] (x : X) :
-    (1 : X ≃ₜ X) x = x :=
-  rfl
-
-/-- The group inverse of a self-homeomorphism is its inverse map. -/
-@[simp]
-theorem _root_.Homeomorph.inv_apply {X : Type*} [TopologicalSpace X]
-    (f : X ≃ₜ X) (x : X) : f⁻¹ x = f.symm x :=
-  rfl
+/-! Self-homeomorphisms form a group under `mul f g = g.trans f`, so that
+`(f * g) x = f (g x)`; the instance and the simp lemmas `Homeomorph.mul_apply`,
+`Homeomorph.one_apply`, `Homeomorph.inv_apply` are now provided by Mathlib. -/
 
 /-! ## Isotopies through homeomorphisms -/
 
@@ -787,7 +761,7 @@ theorem isOrientationPreserving_of_isIsotopicToId {S : Type*}
       filter_upwards [hkey s₀] with s hiff
       exact isOrientationPreserving_of_isOrientationPreservingAt_point hS
         (ht.sliceHomeomorph s) p₀ (hiff.mpr (hs₀' p₀))
-    rwa [Filter.eventually_iff, Set.setOf_mem_eq] at hfinal
+    rwa [Filter.eventually_iff, Set.ofPred_mem_eq] at hfinal
   have hAcopen : IsOpen {w : I | (ht.sliceHomeomorph w).IsOrientationPreserving}ᶜ := by
     rw [isOpen_iff_mem_nhds]
     intro s₀ hs₀
@@ -799,7 +773,7 @@ theorem isOrientationPreserving_of_isIsotopicToId {S : Type*}
       have hcontra' : (ht.sliceHomeomorph s).IsOrientationPreserving := hcontra
       exact hs₀' (isOrientationPreserving_of_isOrientationPreservingAt_point hS
         (ht.sliceHomeomorph s₀) p₀ (hiff.mp (hcontra' p₀)))
-    rwa [Filter.eventually_iff, Set.setOf_mem_eq] at hfinal
+    rwa [Filter.eventually_iff, Set.ofPred_mem_eq] at hfinal
   have h1mem : (1 : I) ∈ {w : I | (ht.sliceHomeomorph w).IsOrientationPreserving} := by
     have hslice1 : ht.sliceHomeomorph 1 = Homeomorph.refl S :=
       Homeomorph.ext fun x => ht.toHomotopy.apply_one x

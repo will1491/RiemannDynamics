@@ -59,7 +59,7 @@ noncomputable def chainPotential (D A : Set ℂ) (g : ℂ → ℝ) (h : ℝ) (x 
 /-- Chain costs are nonnegative for a nonnegative density. -/
 theorem chainCosts_nonneg {D A : Set ℂ} {g : ℂ → ℝ} (hg0 : ∀ y, 0 ≤ g y) {h : ℝ} {x : ℂ}
     {r : ℝ} (hr : r ∈ chainCosts D A g h x) : 0 ≤ r := by
-  simp only [chainCosts, Set.mem_setOf_eq] at hr
+  simp only [chainCosts, Set.mem_ofPred_eq] at hr
   obtain ⟨n, z, -, -, -, -, rfl⟩ := hr
   exact Finset.sum_nonneg fun i _ => mul_nonneg (hg0 _) dist_nonneg
 
@@ -77,7 +77,7 @@ theorem chainCosts_nonempty {D A : Set ℂ} (hD : IsPreconnected D) {g : ℂ →
       ∀ w', w' ∈ D → dist w w' ≤ h → (chainCosts D A g h w').Nonempty := by
     intro w hwD hwne w' hw'D hdist
     obtain ⟨r, hr⟩ := hwne
-    simp only [chainCosts, Set.mem_setOf_eq] at hr
+    simp only [chainCosts, Set.mem_ofPred_eq] at hr
     obtain ⟨n, z, hzD, hzs, hz0, hzl, -⟩ := hr
     have hmemD : ∀ i, (Fin.snoc z w' : Fin (n + 1 + 1) → ℂ) i ∈ D := by
       intro i
@@ -156,7 +156,7 @@ has cost `0`. -/
 theorem chainPotential_eq_zero {D A : Set ℂ} {g : ℂ → ℝ} (hg0 : ∀ y, 0 ≤ g y) (h : ℝ)
     {x : ℂ} (hx : x ∈ A ∩ D) : chainPotential D A g h x = 0 := by
   have h0 : (0 : ℝ) ∈ chainCosts D A g h x := by
-    simp only [chainCosts, Set.mem_setOf_eq]
+    simp only [chainCosts, Set.mem_ofPred_eq]
     exact ⟨0, fun _ => x, fun _ => hx.2, fun i => i.elim0, hx.1, rfl, by simp⟩
   have hle : sInf (chainCosts D A g h x) ≤ 0 :=
     csInf_le ⟨0, fun r hr => chainCosts_nonneg hg0 hr⟩ h0
@@ -187,7 +187,7 @@ theorem chainPotential_local_bound {D A : Set ℂ} {g : ℂ → ℝ} {h : ℝ} (
   have append : ∀ x' ∈ D, ∀ y' ∈ D, dist x' y' ≤ h → ∀ r ∈ chainCosts D A g h x',
       r + g x' * dist x' y' ∈ chainCosts D A g h y' := by
     intro x' hx' y' hy' hd r hr
-    simp only [chainCosts, Set.mem_setOf_eq] at hr ⊢
+    simp only [chainCosts, Set.mem_ofPred_eq] at hr ⊢
     obtain ⟨n, z, hzD, hzs, hz0, hzl, rfl⟩ := hr
     refine ⟨n + 1, Fin.snoc z y', ?_, ?_, ?_, Fin.snoc_last _ _, ?_⟩
     · intro i

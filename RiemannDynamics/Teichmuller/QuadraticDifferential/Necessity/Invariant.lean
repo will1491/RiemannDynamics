@@ -56,7 +56,7 @@ theorem beltrami_invariant_of_isMarkedCandidate {x y : TeichRep Γ₀} {F : ℂ 
         (measurableSet_toMeasurable _ _).inter hopen.measurableSet
       have hSnull : volume
           (toMeasurable volume {w | ¬ P w} ∩ {w : ℂ | moebiusDenom W⁻¹ w ≠ 0}) = 0 := by
-        refine le_antisymm (le_trans (measure_mono Set.inter_subset_left) ?_) (zero_le _)
+        refine le_antisymm (le_trans (measure_mono Set.inter_subset_left) ?_) (zero_le)
         rw [measure_toMeasurable]
         exact hP.le
       have hfd : ∀ w ∈ toMeasurable volume {w | ¬ P w} ∩ {w : ℂ | moebiusDenom W⁻¹ w ≠ 0},
@@ -79,7 +79,7 @@ theorem beltrami_invariant_of_isMarkedCandidate {x y : TeichRep Γ₀} {F : ℂ 
       exact hcov
     refine measure_mono_null ?_ himg
     intro z hz
-    simp only [Set.mem_setOf_eq, Classical.not_imp] at hz
+    simp only [Set.mem_ofPred_eq, Classical.not_imp] at hz
     obtain ⟨hden, hbad⟩ := hz
     have hd1 : moebiusDenom W⁻¹ (moebiusMap W z) * moebiusDenom W z = 1 := by
       rw [moebiusDenom_mul W⁻¹ W z hden, inv_mul_cancel, moebiusDenom_one]

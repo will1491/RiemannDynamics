@@ -288,7 +288,7 @@ theorem qc_cov_bound {q : ℂ → ℂ} {bq : BeltramiCoeff} (hq : IsQCAnalytic q
       have hae : S =ᵐ[volume] s := by
         rw [MeasureTheory.ae_eq_set]
         refine ⟨hSs, ?_⟩
-        have hempty : s \ S = ∅ := Set.diff_eq_empty.mpr Set.inter_subset_left
+        have hempty : s \ S = ∅ := Set.sdiff_eq_empty.mpr Set.inter_subset_left
         rw [hempty]
         exact measure_empty
       rw [Measure.restrict_congr_set hae]
@@ -319,7 +319,7 @@ theorem qc_cov_bound {q : ℂ → ℂ} {bq : BeltramiCoeff} (hq : IsQCAnalytic q
       rw [hsq]
       have henorm2 : ‖(fderiv ℝ q w) e‖ₑ ^ (2 : ℝ)
           = ENNReal.ofReal (‖(fderiv ℝ q w) e‖ ^ 2) := by
-        rw [← ofReal_norm_eq_enorm,
+        rw [← ofReal_norm,
           ENNReal.ofReal_rpow_of_nonneg (norm_nonneg _) (by norm_num : (0:ℝ) ≤ 2)]
         norm_num [Real.rpow_natCast]
       rw [henorm2]
@@ -370,7 +370,7 @@ theorem mollify_L2_loc {h : ℂ → ℂ} (hm : Measurable h) (h2 : MemLpLocOn h 
   have hloc : MeasureTheory.LocallyIntegrable h volume := by
     rw [MeasureTheory.locallyIntegrable_iff]
     intro k hk
-    haveI : IsFiniteMeasure (volume.restrict k) :=
+    have : IsFiniteMeasure (volume.restrict k) :=
       ⟨by rw [Measure.restrict_apply_univ]; exact hk.measure_lt_top⟩
     exact memLp_one_iff_integrable.mp
       ((h2 k (Set.subset_univ k) hk).mono_exponent (by norm_num))
@@ -424,7 +424,7 @@ theorem mollify_L2_loc {h : ℂ → ℂ} (hm : Measurable h) (h2 : MemLpLocOn h 
       have hbz' : b - z = -a := by
         have : z = a + b := hab.symm
         rw [this]; ring
-      rw [edist_eq_enorm_sub, hbz', enorm_neg, ← ofReal_norm_eq_enorm]
+      rw [edist_eq_enorm_sub, hbz', enorm_neg, ← ofReal_norm]
       refine ENNReal.ofReal_le_ofReal ?_
       rw [Metric.mem_ball, dist_zero_right] at haball
       linarith
@@ -456,7 +456,7 @@ theorem mollify_L2_loc {h : ℂ → ℂ} (hm : Measurable h) (h2 : MemLpLocOn h 
   -- Conclude by squeezing against the in-tree global convergence.
   have hglobal := eLpNorm_convolution_normed_sub_tendsto_zero hh1L2 Φ hΦ
   refine tendsto_of_tendsto_of_tendsto_of_le_of_le' tendsto_const_nhds hglobal
-    (Filter.Eventually.of_forall fun n => zero_le _) ?_
+    (Filter.Eventually.of_forall fun n => zero_le) ?_
   filter_upwards [hdom] with n hn
   exact hn
 
@@ -485,9 +485,9 @@ theorem pairing_tendsto
       (fun m => ∫ z, φ z • ((QE m z).re • U m z + (QE m z).im • V m z)) Filter.atTop
       (nhds (∫ z, φ z • ((qe z).re • u z + (qe z).im • v z))) := by
   classical
-  haveI : NormSMulClass ℝ ℂ := NormedSpace.toNormSMulClass
-  haveI : IsBoundedSMul ℝ ℂ := NormSMulClass.toIsBoundedSMul
-  haveI : ContinuousSMul ℝ ℂ := IsBoundedSMul.continuousSMul
+  have : NormSMulClass ℝ ℂ := NormedSpace.toNormSMulClass
+  have : IsBoundedSMul ℝ ℂ := NormSMulClass.toIsBoundedSMul
+  have : ContinuousSMul ℝ ℂ := IsBoundedSMul.continuousSMul
   have hMφ0 : 0 ≤ Mφ := le_trans (norm_nonneg _) (hMφ 0)
   have hMX0 : 0 ≤ MX := le_trans (norm_nonneg _) (hub 0)
   have hMY0 : 0 ≤ MY := le_trans (norm_nonneg _) (hvb 0)
@@ -759,9 +759,9 @@ theorem comp_smooth_qc
       (fun z => (qe z).re • (fderiv ℝ G (q z)) 1 + (qe z).im • (fderiv ℝ G (q z)) Complex.I)
       (fun z => G (q z)) Set.univ := by
   classical
-  haveI : NormSMulClass ℝ ℂ := NormedSpace.toNormSMulClass
-  haveI : IsBoundedSMul ℝ ℂ := NormSMulClass.toIsBoundedSMul
-  haveI : ContinuousSMul ℝ ℂ := IsBoundedSMul.continuousSMul
+  have : NormSMulClass ℝ ℂ := NormedSpace.toNormSMulClass
+  have : IsBoundedSMul ℝ ℂ := NormSMulClass.toIsBoundedSMul
+  have : ContinuousSMul ℝ ℂ := IsBoundedSMul.continuousSMul
   have hone_top : (1 : WithTop ℕ∞) ≤ ((⊤ : ℕ∞) : WithTop ℕ∞) := by
     rw [← WithTop.coe_one]
     exact WithTop.coe_le_coe.mpr le_top
@@ -774,7 +774,7 @@ theorem comp_smooth_qc
   have hqeloc : MeasureTheory.LocallyIntegrable qe volume := by
     rw [MeasureTheory.locallyIntegrable_iff]
     intro k hk
-    haveI : IsFiniteMeasure (volume.restrict k) :=
+    have : IsFiniteMeasure (volume.restrict k) :=
       ⟨by rw [Measure.restrict_apply_univ]; exact hk.measure_lt_top⟩
     exact memLp_one_iff_integrable.mp
       ((hqe2 k (Set.subset_univ k) hk).mono_exponent (by norm_num))
@@ -955,7 +955,7 @@ theorem comp_smooth_qc
         (fun m => eLpNorm (fun z => QE m z - qe z) 1 (volume.restrict S))
         Filter.atTop (nhds 0) :=
       tendsto_of_tendsto_of_tendsto_of_le_of_le' tendsto_const_nhds hlim2
-        (Filter.Eventually.of_forall fun m => zero_le _)
+        (Filter.Eventually.of_forall fun m => zero_le)
         (Filter.Eventually.of_forall hle)
     have hint : ∀ m, ∫ z in S, ‖QE m z - qe z‖
         = (eLpNorm (fun z => QE m z - qe z) 1 (volume.restrict S)).toReal := by
@@ -1013,9 +1013,9 @@ theorem cov_pairing_bound
           * ((ENNReal.ofReal ((1 + bq.normInf) ^ 2 / (1 - bq.normInf ^ 2)) * volume S)
             ^ (1/2 : ℝ))) := by
   classical
-  haveI : NormSMulClass ℝ ℂ := NormedSpace.toNormSMulClass
-  haveI : IsBoundedSMul ℝ ℂ := NormSMulClass.toIsBoundedSMul
-  haveI : ContinuousSMul ℝ ℂ := IsBoundedSMul.continuousSMul
+  have : NormSMulClass ℝ ℂ := NormedSpace.toNormSMulClass
+  have : IsBoundedSMul ℝ ℂ := NormSMulClass.toIsBoundedSMul
+  have : ContinuousSMul ℝ ℂ := IsBoundedSMul.continuousSMul
   have hqcont : Continuous q := hq.1.1.continuous
   have habs_re : ∀ w : ℂ, |w.re| ≤ ‖w‖ := fun w => Complex.abs_re_le_norm w
   have habs_im : ∀ w : ℂ, |w.im| ≤ ‖w‖ := fun w => Complex.abs_im_le_norm w
@@ -1058,14 +1058,14 @@ theorem cov_pairing_bound
       nlinarith [norm_nonneg ((qe z).re • dX (q z) + (qe z).im • dY (q z))]
     calc ‖φ z • ((qe z).re • dX (q z) + (qe z).im • dY (q z))‖ₑ
         = ENNReal.ofReal ‖φ z • ((qe z).re • dX (q z) + (qe z).im • dY (q z))‖ :=
-          (ofReal_norm_eq_enorm _).symm
+          (ofReal_norm _).symm
       _ ≤ ENNReal.ofReal (Mφ * (‖qe z‖ * (‖dX (q z)‖ + ‖dY (q z)‖))) :=
           ENNReal.ofReal_le_ofReal hreal
       _ = ENNReal.ofReal Mφ * (‖qe z‖ₑ * (‖dX (q z)‖ₑ + ‖dY (q z)‖ₑ)) := by
           have hMφ0 : 0 ≤ Mφ := le_trans (norm_nonneg _) (hMφ 0)
           rw [ENNReal.ofReal_mul hMφ0, ENNReal.ofReal_mul (norm_nonneg _),
             ENNReal.ofReal_add (norm_nonneg _) (norm_nonneg _),
-            ofReal_norm_eq_enorm, ofReal_norm_eq_enorm, ofReal_norm_eq_enorm]
+            ofReal_norm, ofReal_norm, ofReal_norm]
   -- Assemble through the change-of-variables bound.
   have hqe_meas : Measurable fun z => ‖qe z‖ₑ := hqem.enorm
   have hdXq_meas : Measurable fun z => ‖dX (q z)‖ₑ :=
@@ -1077,7 +1077,7 @@ theorem cov_pairing_bound
         lintegral_mono hpt
     _ = ENNReal.ofReal Mφ *
         ∫⁻ z in S, ‖qe z‖ₑ * (‖dX (q z)‖ₑ + ‖dY (q z)‖ₑ) := by
-        rw [lintegral_const_mul _ (hqe_meas.mul (hdXq_meas.add hdYq_meas))]
+        rw [lintegral_const_mul _ (hqe_meas.fun_mul (hdXq_meas.fun_add hdYq_meas))]
     _ = ENNReal.ofReal Mφ *
         ∫⁻ z in S, (‖dX (q z)‖ₑ * ‖qe z‖ₑ + ‖dY (q z)‖ₑ * ‖qe z‖ₑ) := by
         congr 1
@@ -1145,9 +1145,9 @@ theorem pairing_tendsto_L2
       Filter.atTop
       (nhds (∫ z, φ z • ((qe z).re • gX (q z) + (qe z).im • gY (q z)))) := by
   classical
-  haveI : NormSMulClass ℝ ℂ := NormedSpace.toNormSMulClass
-  haveI : IsBoundedSMul ℝ ℂ := NormSMulClass.toIsBoundedSMul
-  haveI : ContinuousSMul ℝ ℂ := IsBoundedSMul.continuousSMul
+  have : NormSMulClass ℝ ℂ := NormedSpace.toNormSMulClass
+  have : IsBoundedSMul ℝ ℂ := NormSMulClass.toIsBoundedSMul
+  have : ContinuousSMul ℝ ℂ := IsBoundedSMul.continuousSMul
   have hqcont : Continuous q := hq.1.1.continuous
   have hMφ0 : 0 ≤ Mφ := le_trans (norm_nonneg _) (hMφ 0)
   have habs_re : ∀ w : ℂ, |w.re| ≤ ‖w‖ := fun w => Complex.abs_re_le_norm w
@@ -1291,7 +1291,7 @@ theorem pairing_tendsto_L2
               = ∫⁻ z, ‖φ z • ((qe z).re • (GX n (q z) - gX (q z))
                 + (qe z).im • (GY n (q z) - gY (q z)))‖ₑ := by
             refine lintegral_congr fun z => ?_
-            rw [hptdiff z, ofReal_norm_eq_enorm]
+            rw [hptdiff z, ofReal_norm]
           rw [h2] at h1
           calc ENNReal.ofReal ‖∫ z,
                 (φ z • ((qe z).re • GX n (q z) + (qe z).im • GY n (q z))
@@ -1318,7 +1318,7 @@ theorem pairing_tendsto_L2
         - ∫ z, φ z • ((qe z).re • gX (q z) + (qe z).im • gY (q z))‖)
       Filter.atTop (nhds 0) :=
     tendsto_of_tendsto_of_tendsto_of_le_of_le' tendsto_const_nhds hboundlim
-      (Filter.Eventually.of_forall fun n => zero_le _)
+      (Filter.Eventually.of_forall fun n => zero_le)
       (Filter.Eventually.of_forall hchain)
   have htr := (ENNReal.tendsto_toReal (by norm_num : (0:ℝ≥0∞) ≠ ⊤)).comp hzero
   refine Filter.Tendsto.congr ?_ htr

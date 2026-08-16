@@ -260,7 +260,7 @@ theorem hasSum_normSq_deriv_coeff {γ γ' : ℝ → ℂ}
   have hint : IntervalIntegrable γ' volume 0 1 := hcont'.intervalIntegrable 0 1
   -- `γ'` is square-integrable on the period: continuous, hence bounded on the compact `[0,1]`.
   have hmem : MemLp γ' 2 (volume.restrict (Set.Ioc (0 : ℝ) 1)) := by
-    haveI : IsFiniteMeasure (volume.restrict (Set.Ioc (0 : ℝ) 1)) :=
+    have : IsFiniteMeasure (volume.restrict (Set.Ioc (0 : ℝ) 1)) :=
       ⟨by rw [Measure.restrict_apply_univ]
           exact measure_Ioc_lt_top (μ := volume) (a := (0 : ℝ)) (b := 1)⟩
     obtain ⟨C, hC⟩ := (isCompact_Icc (a := (0 : ℝ)) (b := 1)).exists_bound_of_continuousOn
@@ -304,7 +304,7 @@ theorem area_hasSum {γ γ' : ℝ → ℂ}
     -- `MemLp _ 2` on the period for any continuous function (bounded on the compact `[0,1]`).
     have hmem : ∀ f : ℝ → ℂ, Continuous f → MemLp f 2 (volume.restrict (Set.Ioc (0 : ℝ) 1)) := by
       intro f hf
-      haveI : IsFiniteMeasure (volume.restrict (Set.Ioc (0 : ℝ) 1)) :=
+      have : IsFiniteMeasure (volume.restrict (Set.Ioc (0 : ℝ) 1)) :=
         ⟨by rw [Measure.restrict_apply_univ]
             exact measure_Ioc_lt_top (μ := volume) (a := (0 : ℝ)) (b := 1)⟩
       obtain ⟨C, hC⟩ := (isCompact_Icc (a := (0 : ℝ)) (b := 1)).exists_bound_of_continuousOn
@@ -321,8 +321,8 @@ theorem area_hasSum {γ γ' : ℝ → ℂ}
       rw [fourierCoeffOn_eq_integral, fourierCoeffOn_eq_integral, fourierCoeffOn_eq_integral]
       simp only [Pi.add_apply, smul_add, one_div, sub_zero, inv_one, one_smul]
       refine intervalIntegral.integral_add ?_ ?_
-      · exact (Continuous.smul (by continuity) hf).intervalIntegrable 0 1
-      · exact (Continuous.smul (by continuity) hg).intervalIntegrable 0 1
+      · exact (Continuous.fun_smul (by continuity) hf).intervalIntegrable 0 1
+      · exact (Continuous.fun_smul (by continuity) hg).intervalIntegrable 0 1
     -- Diagonal Parseval `∑ₙ ‖cₙ‖² = ∫₀¹ ‖f‖²`.
     have hpars : ∀ f : ℝ → ℂ, Continuous f →
         HasSum (fun n : ℤ => ‖fourierCoeffOn h01 f n‖ ^ 2) (∫ x in (0 : ℝ)..1, ‖f x‖ ^ 2) := by
@@ -340,6 +340,8 @@ theorem area_hasSum {γ γ' : ℝ → ℂ}
         have := fourierCoeffOn.const_smul g s n h01
         simp only [smul_eq_mul] at this
         convert this using 2
+        funext x
+        exact (smul_eq_mul s (g x)).symm
       rw [show (f + fun x => s * g x) = (fun x => f x + s * g x) from rfl] at e1
       rw [e1, e2]
     have hcont_s : ∀ s : ℂ, Continuous (fun x => f x + s * g x) := fun s => by fun_prop
@@ -499,7 +501,10 @@ theorem four_pi_area_le_length_sq {γ γ' : ℝ → ℂ} {L : ℝ}
   have harea' : HasSum (fun n : ℤ => 4 * π ^ 2 * (n : ℝ) * a n)
       (2 * π * ∫ x in (0 : ℝ)..1, (starRingEnd ℂ (γ x) * γ' x).im) := by
     have := harea.mul_left (2 * π)
-    convert this using 2 with n; ring
+    have heq : (fun n : ℤ => 4 * π ^ 2 * (n : ℝ) * a n)
+        = fun n : ℤ => 2 * π * (2 * π * (n : ℝ) * a n) := by funext n; ring
+    rw [heq]
+    exact this
   -- The difference is a sum of nonnegative terms `4π²·n(n−1)·aₙ`.
   have hdiff := hlen.sub harea'
   have hterm : ∀ n : ℤ, 0 ≤ 4 * π ^ 2 * (n : ℝ) ^ 2 * a n - 4 * π ^ 2 * (n : ℝ) * a n := by

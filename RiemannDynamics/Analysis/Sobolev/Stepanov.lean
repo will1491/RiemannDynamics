@@ -3,7 +3,14 @@ Copyright (c) 2026 Will (Ziang) Li. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Will (Ziang) Li
 -/
-/-
+import Mathlib.Analysis.Calculus.Rademacher
+import Mathlib.Analysis.Calculus.LocalExtr.Basic
+import Mathlib.Analysis.Complex.Norm
+import Mathlib.Analysis.Complex.UpperHalfPlane.Measure
+import Mathlib.LinearAlgebra.Complex.FiniteDimensional
+import Mathlib.Topology.MetricSpace.Lipschitz
+
+/-!
 # Stepanov's almost-everywhere differentiability theorem
 
 This file proves **Stepanov's theorem** for `ℂ → ℂ` (`≅ ℝ² → ℝ²`):
@@ -30,12 +37,6 @@ The reduction to real-valued functions is componentwise via `Complex.equivRealPr
 The real-valued core is `ae_differentiableAt_real_of_ae_isLittleO`; the main theorem is
 `ae_differentiableAt_of_ae_limsup_slope_lt_top`.
 -/
-import Mathlib.Analysis.Calculus.Rademacher
-import Mathlib.Analysis.Calculus.LocalExtr.Basic
-import Mathlib.Analysis.Complex.Norm
-import Mathlib.Analysis.Complex.UpperHalfPlane.Measure
-import Mathlib.LinearAlgebra.Complex.FiniteDimensional
-import Mathlib.Topology.MetricSpace.Lipschitz
 
 open MeasureTheory Metric Set Filter Topology Asymptotics
 open scoped NNReal ENNReal
@@ -165,7 +166,8 @@ theorem lipschitzWith_supConv {n : ℝ≥0} {s : Set α} {f : α → ℝ} {c : �
     LipschitzWith n (supConv n s f) := by
   have hlc : ∀ z ∈ s, -c ≤ -(f z) := fun z hz => neg_le_neg (hc z hz)
   have := lipschitzWith_infConv (n := n) (f := fun z => -(f z)) (c := -c) hs hlc
-  simpa only [supConv] using this.neg
+  unfold supConv
+  exact this.neg
 
 /-- `supConv n s f` lies above `f` on `s`. -/
 theorem self_le_supConv {n : ℝ≥0} {s : Set α} {f : α → ℝ} {c : ℝ}
@@ -188,7 +190,6 @@ theorem supConv_le_of_upperControl {n : ℝ≥0} {s : Set α} {f : α → ℝ} {
     linarith
   have := le_infConv_of_lowerControl (n := n) (f := fun z => -(f z)) hs hlc
   simp only [supConv]
-  simp only at this
   linarith
 
 /-! ## The real-valued core of Stepanov's theorem -/
@@ -207,10 +208,10 @@ theorem ae_differentiableAt_real_of_ae_isLittleO {f : ℂ → ℝ}
     ∀ᵐ x : ℂ, DifferentiableAt ℝ f x := by
   -- A countable dense subset `D` of `ℂ`.
   obtain ⟨D, hDc, hDd⟩ := TopologicalSpace.exists_countable_dense ℂ
-  haveI : Countable D := hDc.to_subtype
+  have : Countable D := hDc.to_subtype
   -- Index set: centre in `D`, positive rational radius, Lipschitz constant in `ℕ`.
   set J := D × { q : ℚ // 0 < q } × ℕ with hJ
-  haveI : Countable J := by infer_instance
+  have : Countable J := by infer_instance
   -- For each index, the ball, the constant, and the two auxiliary Lipschitz functions.
   set U : J → Set ℂ := fun j => ball (j.1 : ℂ) (j.2.1 : ℝ) with hU
   set N : J → ℝ≥0 := fun j => (j.2.2 : ℝ≥0) with hN

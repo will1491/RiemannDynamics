@@ -302,10 +302,10 @@ theorem hasGreenFunction_coordDisk_compl (D : CoordDisk M) (p : M)
     (hp : p ∈ D.compl) : HasGreenFunction (⟨p, hp⟩ : ↥D.compl) := by
   classical
   -- ## Instances on the piece
-  haveI hconnN : ConnectedSpace ↥D.compl :=
+  have hconnN : ConnectedSpace ↥D.compl :=
     Subtype.connectedSpace (isConnected_coordDisk_compl D)
-  haveI hncpN : NoncompactSpace ↥D.compl := noncompactSpace_coordDisk_compl D
-  haveI : LocallyConnectedSpace ↥D.compl := ChartedSpace.locallyConnectedSpace ℂ ↥D.compl
+  have hncpN : NoncompactSpace ↥D.compl := noncompactSpace_coordDisk_compl D
+  have : LocallyConnectedSpace ↥D.compl := ChartedSpace.locallyConnectedSpace ℂ ↥D.compl
   set p₀ : ↥D.compl := ⟨p, hp⟩ with hp₀def
   -- ## Generic helpers
   -- Transfer of plane subharmonicity along a pointwise equality on a subdomain.
@@ -460,7 +460,7 @@ theorem hasGreenFunction_coordDisk_compl (D : CoordDisk M) (p : M)
     have hfrne :
         (closure (connectedComponentIn Ω xm) \ connectedComponentIn Ω xm).Nonempty := by
       by_contra hem
-      rw [Set.not_nonempty_iff_eq_empty, Set.diff_eq_empty] at hem
+      rw [Set.not_nonempty_iff_eq_empty, Set.sdiff_eq_empty] at hem
       have hclopen : IsClopen (connectedComponentIn Ω xm) :=
         ⟨closure_eq_iff_isClosed.1 (Set.Subset.antisymm hem subset_closure), hCco⟩
       have huniv : connectedComponentIn Ω xm = Set.univ := hclopen.eq_univ ⟨xm, hCcx⟩
@@ -481,7 +481,7 @@ theorem hasGreenFunction_coordDisk_compl (D : CoordDisk M) (p : M)
       exact hyC (he2.trans he1.symm ▸ hyC')
     have hyfr : y ∈ closure Ω \ Ω := ⟨closure_mono hCcΩ hycl, hyΩ⟩
     obtain ⟨hyct, hyle⟩ := hfr y hyfr
-    haveI hne : (𝓝[connectedComponentIn Ω xm] y).NeBot :=
+    have hne : (𝓝[connectedComponentIn Ω xm] y).NeBot :=
       mem_closure_iff_nhdsWithin_neBot.1 hycl
     have h1 : Tendsto w (𝓝[connectedComponentIn Ω xm] y) (𝓝 (w y)) :=
       hyct.continuousWithinAt
@@ -532,7 +532,7 @@ theorem hasGreenFunction_coordDisk_compl (D : CoordDisk M) (p : M)
   set Ccol : Set M := e₀.symm '' (closedBall c₀ ρ₁ \ ball c₀ D.radius) with hCcol
   have hCcolcomp : IsCompact Ccol :=
     ((isCompact_closedBall c₀ ρ₁).diff isOpen_ball).image_of_continuousOn
-      (e₀.continuousOn_symm.mono (Set.diff_subset.trans hρ₁sub))
+      (e₀.continuousOn_symm.mono (Set.sdiff_subset.trans hρ₁sub))
   have hpCcol : p ∉ Ccol := by
     rintro ⟨w, hw, hwp⟩
     have hwt : w ∈ e₀.target := hρ₁sub hw.1
@@ -1059,6 +1059,7 @@ theorem hasGreenFunction_coordDisk_compl (D : CoordDisk M) (p : M)
         have hDharm : HarmonicOnNhd (fun w ↦ Q w - V w) (ball cx ρ) := by
           have := hQharm.sub hVharm
           convert this using 1
+          rfl
         have hDnn : ∀ w ∈ ball cx ρ, 0 ≤ Q w - V w := fun w hw ↦ by
           linarith [hQgeV w hw]
         have hD0 : Q (ex x) - V (ex x) = 0 := by rw [hQcx, hVcx, sub_self]
@@ -1102,11 +1103,11 @@ theorem hasGreenFunction_coordDisk_compl (D : CoordDisk M) (p : M)
     intro y
     constructor
     · rintro ⟨h1, h2⟩
-      rw [Set.mem_preimage, Set.mem_diff, mem_ball, mem_closedBall] at h2
+      rw [Set.mem_preimage, Set.mem_sdiff, mem_ball, mem_closedBall] at h2
       exact ⟨h1, not_le.1 h2.2, h2.1⟩
     · rintro ⟨h1, h2, h3⟩
       refine ⟨h1, ?_⟩
-      rw [Set.mem_preimage, Set.mem_diff, mem_ball, mem_closedBall]
+      rw [Set.mem_preimage, Set.mem_sdiff, mem_ball, mem_closedBall]
       exact ⟨h3, not_le.2 h2⟩
   have hAannChat : Aann ⊆ Chat := by
     intro y hy
@@ -1394,7 +1395,7 @@ theorem hasGreenFunction_coordDisk_compl (D : CoordDisk M) (p : M)
     -- the annulus region and the competitor
     set Ωσ : Set ↥D.compl := eN.symm '' (ball z₀ R \ closedBall z₀ σ) with hΩσ
     have hΩσsub : ball z₀ R \ closedBall z₀ σ ⊆ eN.target :=
-      (Set.diff_subset.trans ball_subset_closedBall).trans hRtgt
+      (Set.sdiff_subset.trans ball_subset_closedBall).trans hRtgt
     have hΩσopen : IsOpen Ωσ := by
       rw [hΩσ, himgN eN _ hΩσsub]
       exact eN.continuousOn.isOpen_inter_preimage eN.open_source
@@ -1404,14 +1405,14 @@ theorem hasGreenFunction_coordDisk_compl (D : CoordDisk M) (p : M)
       intro z hz
       rw [hΩσ, himgN eN _ hΩσsub] at hz
       obtain ⟨hz1, hz2⟩ := hz
-      rw [Set.mem_preimage, Set.mem_diff, mem_ball, mem_closedBall] at hz2
+      rw [Set.mem_preimage, Set.mem_sdiff, mem_ball, mem_closedBall] at hz2
       exact ⟨hz1, not_le.1 hz2.2, hz2.1⟩
     have hΩσmem' : ∀ z : ↥D.compl, z ∈ eN.source → σ < dist (eN z) z₀ →
         dist (eN z) z₀ < R → z ∈ Ωσ := by
       intro z hz1 hz2 hz3
       rw [hΩσ, himgN eN _ hΩσsub]
       refine ⟨hz1, ?_⟩
-      rw [Set.mem_preimage, Set.mem_diff, mem_ball, mem_closedBall]
+      rw [Set.mem_preimage, Set.mem_sdiff, mem_ball, mem_closedBall]
       exact ⟨hz3, not_le.2 hz2⟩
     have hp₀Ωσ : p₀ ∉ Ωσ := by
       intro hcon
@@ -1426,7 +1427,7 @@ theorem hasGreenFunction_coordDisk_compl (D : CoordDisk M) (p : M)
     set Kσ : Set ↥D.compl := eN.symm '' (closedBall z₀ R \ ball z₀ σ) with hKσ
     have hKσcomp : IsCompact Kσ :=
       ((isCompact_closedBall z₀ R).diff isOpen_ball).image_of_continuousOn
-        (eN.continuousOn_symm.mono (Set.diff_subset.trans hRtgt))
+        (eN.continuousOn_symm.mono (Set.sdiff_subset.trans hRtgt))
     have hΩσKσ : Ωσ ⊆ Kσ :=
       Set.image_mono (fun w hw ↦ ⟨ball_subset_closedBall hw.1,
         fun h ↦ hw.2 (ball_subset_closedBall h)⟩)

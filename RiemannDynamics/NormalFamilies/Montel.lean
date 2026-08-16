@@ -44,7 +44,7 @@ theorem montel_locallyBounded {𝓕 : Set (ℂ → ℂ)} {U : Set ℂ}
   -- Apply RMT4's total-boundedness Montel.
   have hTB : TotallyBounded (Set.range F') := montel hU hF_bdd hF_holo
   -- Build a countable cofinal sequence in compacts U via CompactExhaustion of ↑U.
-  haveI : LocallyCompactSpace ↑U := hU.locallyCompactSpace
+  have : LocallyCompactSpace ↑U := hU.locallyCompactSpace
   let exh : CompactExhaustion ↑U := default
   let E : ℕ → Set ℂ := fun n => Subtype.val '' (exh n)
   have hE_mono : Monotone E := fun m n hmn => Set.image_mono (exh.subset hmn)
@@ -66,7 +66,7 @@ theorem montel_locallyBounded {𝓕 : Set (ℂ → ℂ)} {U : Set ℂ}
     intro z hz
     exact ⟨⟨z, hsU hz⟩, hn hz, rfl⟩
   -- The uniformity on `UniformOnFun ℂ ℂ (compacts U)` is countably generated.
-  haveI : IsCountablyGenerated (𝓤 (UniformOnFun ℂ ℂ (compacts U))) :=
+  have : IsCountablyGenerated (𝓤 (UniformOnFun ℂ ℂ (compacts U))) :=
     UniformOnFun.isCountablyGenerated_uniformity (compacts U) hE_mem hE_mono hE_cofinal
   -- The closure of the range is compact in 𝓒 U (which is a complete uniform space).
   have hClosure_cpt : IsCompact (closure (Set.range F')) :=

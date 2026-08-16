@@ -46,9 +46,9 @@ theorem exists_invariant_extension_of_dirichlet (hΓ : IsFuchsianGroup Γ)
       (∀ᵐ z ∂(volume.restrict
         (UpperHalfPlane.coe '' dirichletDomain Γ UpperHalfPlane.I)), ν z = ν₀ z) := by
   classical
-  haveI hPD : ProperlyDiscontinuousSMul Γ UpperHalfPlane := hΓ
-  haveI : Countable ↥Γ := IsFuchsianGroup.countable hΓ
-  haveI : IsIsometricSMul (↥Γ) UpperHalfPlane :=
+  have hPD : ProperlyDiscontinuousSMul Γ UpperHalfPlane := hΓ
+  have : Countable ↥Γ := IsFuchsianGroup.countable hΓ
+  have : IsIsometricSMul (↥Γ) UpperHalfPlane :=
     ⟨fun c => isometry_smul UpperHalfPlane (c : Matrix.SpecialLinearGroup (Fin 2) ℝ)⟩
   -- ## Ambient sets
   set U : Set ℂ := {ζ : ℂ | 0 < ζ.im} with hUdef
@@ -65,7 +65,7 @@ theorem exists_invariant_extension_of_dirichlet (hΓ : IsFuchsianGroup Γ)
   have hDplmeas : MeasurableSet Dpl := hDplc.measurableSet
   have hDplsub : Dpl ⊆ U := by
     rintro w ⟨τ, -, rfl⟩
-    simpa using τ.im_pos
+    simpa using! τ.im_pos
   set Opl : Set ℂ := UpperHalfPlane.coe '' Ih with hOpl
   have hOplopen : IsOpen Opl :=
     UpperHalfPlane.isOpenEmbedding_coe.isOpenMap _ hIhopen
@@ -407,7 +407,7 @@ theorem exists_invariant_extension_of_dirichlet (hΓ : IsFuchsianGroup Γ)
       measure_union_null hBadnull (hnullimg W⁻¹ Bad hBadmeas hBadsubU hBadnull)
     rw [ae_restrict_iff' hUmeas, ae_iff]
     refine measure_mono_null (fun z hz => ?_) hNnull
-    rw [Set.mem_setOf_eq] at hz
+    rw [Set.mem_ofPred_eq] at hz
     push Not at hz
     by_contra hzN
     have hzU : (0 : ℝ) < z.im := hz.1
@@ -505,7 +505,7 @@ theorem exists_invariant_extension_of_dirichlet (hΓ : IsFuchsianGroup Γ)
   have hagree : ∀ᵐ z ∂(volume.restrict Dpl), ν z = ν₀ z := by
     rw [ae_restrict_iff' hDplmeas, ae_iff]
     refine measure_mono_null (fun z hz => ?_) hFplnull
-    rw [Set.mem_setOf_eq] at hz
+    rw [Set.mem_ofPred_eq] at hz
     push Not at hz
     rw [hFpl]
     exact ⟨hz.1, fun hO => hz.2 (hagreeO z hO)⟩

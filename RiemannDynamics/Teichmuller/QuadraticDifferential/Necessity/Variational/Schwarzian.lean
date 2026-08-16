@@ -53,7 +53,7 @@ theorem deriv_ne_zero_of_injOn {f : ℂ → ℂ} {U : Set ℂ} (hU : IsOpen U)
     have hdf_an : AnalyticAt ℂ (deriv f) z := hf_an.deriv
     have key := hf_an.analyticOrderAt_deriv_add_one
     have hge1 : 1 ≤ analyticOrderAt (deriv f) z := by
-      rw [ENat.one_le_iff_ne_zero, Ne, analyticOrderAt_eq_zero, not_or, not_not, not_ne_iff]
+      rw [Order.one_le_iff_ne_zero, Ne, analyticOrderAt_eq_zero, not_or, not_not, not_ne_iff]
       exact ⟨hdf_an, hderiv0⟩
     calc (2 : ℕ∞) = 1 + 1 := by rfl
       _ ≤ analyticOrderAt (deriv f) z + 1 := by gcongr
@@ -95,7 +95,7 @@ theorem deriv_ne_zero_of_injOn {f : ℂ → ℂ} {U : Set ℂ} (hU : IsOpen U)
       have hlog : AnalyticAt ℂ (fun w => Complex.log (c * G w)) z₀ := hcG_an.clog hval_slit
       have hdiv : AnalyticAt ℂ (fun w => Complex.log (c * G w) / n) z₀ :=
         hlog.div analyticAt_const (by exact_mod_cast (Nat.one_le_iff_ne_zero.mp hn))
-      simpa [Function.comp] using hdiv.cexp
+      exact hdiv.cexp'
     · exact div_ne_zero (Complex.exp_ne_zero _) hcr_ne
     · have hcont : ContinuousAt (fun w => c * G w) z₀ := hcG_an.continuousAt
       have hGne_ev : ∀ᶠ w in nhds z₀, c * G w ≠ 0 := hcont.eventually_ne (mul_ne_zero hc_ne hGz)
@@ -464,7 +464,7 @@ theorem exists_ratio_of_schwarzian_eq_zero {f : ℂ → ℂ} {U : Set ℂ} (hU :
       exact sub_eq_zero.mp hx
     have hord1 : 1 ≤ analyticOrderAt
         (fun x => iteratedDeriv 2 f x / deriv f x - (-2 * c) / (c * x + d)) z₀ := by
-      rw [ENat.one_le_iff_ne_zero, Ne, analyticOrderAt_eq_zero, not_or, not_not, not_ne_iff]
+      rw [Order.one_le_iff_ne_zero, Ne, analyticOrderAt_eq_zero, not_or, not_not, not_ne_iff]
       exact ⟨hdiffan, hh0⟩
     obtain ⟨m, hm⟩ : ∃ m : ℕ, analyticOrderAt
         (fun x => iteratedDeriv 2 f x / deriv f x - (-2 * c) / (c * x + d)) z₀ = (m : ℕ∞) := by
@@ -576,7 +576,7 @@ theorem exists_ratio_of_schwarzian_eq_zero {f : ℂ → ℂ} {U : Set ℂ} (hU :
     rintro ζ ⟨hζcl, hζU⟩
     by_cases hζA : ζ ∈ A
     · exact hζA
-    haveI hNB : (nhdsWithin ζ A).NeBot := mem_closure_iff_nhdsWithin_neBot.mp hζcl
+    have hNB : (nhdsWithin ζ A).NeBot := mem_closure_iff_nhdsWithin_neBot.mp hζcl
     have hζd : c * ζ + d ≠ 0 := by
       intro h0
       have hnum0 : a * ζ + b ≠ 0 := by

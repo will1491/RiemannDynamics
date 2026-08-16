@@ -427,10 +427,10 @@ private theorem ae_slice_hasDerivAt_of_G {G : ℂ → ℂ} (P : ℂ →L[ℝ] �
   rw [ae_iff]
   refine measure_mono_null (fun x hx => ?_) hy
   -- `hx : ¬ HasDerivAt (slice) (deriv slice x) x`. Show `⟨x,y⟩ ∈ T` (i.e. the fiber).
-  rw [Set.mem_setOf_eq]
+  rw [Set.mem_ofPred_eq]
   by_contra hmem
   apply hx
-  rw [Set.mem_setOf_eq, not_not] at hmem
+  rw [Set.mem_ofPred_eq, not_not] at hmem
   -- `G` differentiable at `⟨x,y⟩` ⟹ slice `x ↦ P(G⟨x,y⟩)` differentiable at `x`, so `HasDerivAt`.
   have hsliceDiff : DifferentiableAt ℝ (fun t : ℝ => P (G (Complex.mk t y))) x := by
     have h1 : DifferentiableAt ℝ (fun t : ℝ => (Complex.mk t y : ℂ)) x :=
@@ -603,7 +603,7 @@ theorem ae_slice_AC_of_maf {slice : ℝ → ℝ → ℝ}
           = ∫⁻ x in Set.Icc p q, ENNReal.ofReal (φ x) := by
         refine MeasureTheory.setLIntegral_congr_fun measurableSet_Icc (fun x _ => ?_)
         simp only [hφ]
-        exact ((ofReal_norm_eq_enorm (deriv (slice y) x)).trans (enorm_eq_nnnorm _)).symm
+        exact ((ofReal_norm (deriv (slice y) x)).trans (enorm_eq_nnnorm _)).symm
       rw [hstep1, intervalIntegral.integral_of_le hpq,
         ← MeasureTheory.integral_Icc_eq_integral_Ioc,
         ← MeasureTheory.ofReal_integral_eq_lintegral_ofReal hint_pq
@@ -662,7 +662,7 @@ private theorem ae_slice_AC_horizontal_of_data {G : ℂ → ℂ} (P : ℂ →L[�
   have hHloc : LocallyIntegrable (fun w => L ((fderiv ℝ G w) 1)) volume := by
     have hLmem : MemLpLocOn (fun w => L ((fderiv ℝ G w) 1)) (ENNReal.ofReal 2) Set.univ := by
       intro K hK hKc
-      haveI : IsFiniteMeasure (volume.restrict K) :=
+      have : IsFiniteMeasure (volume.restrict K) :=
         ⟨by rw [Measure.restrict_apply_univ]; exact hKc.measure_lt_top⟩
       have h2 : MemLp (fun w => (fderiv ℝ G w) 1) (ENNReal.ofReal 2) (volume.restrict K) := by
         have := hGpartial K hK hKc
@@ -679,7 +679,7 @@ private theorem ae_slice_AC_horizontal_of_data {G : ℂ → ℂ} (P : ℂ →L[�
         rw [← ae_iff]; exact hGdiff
       filter_upwards [ae_slice_re_null_of_null hnull] with y hy
       rw [ae_iff]; refine measure_mono_null (fun x hx => ?_) hy
-      rw [Set.mem_setOf_eq]; exact hx
+      rw [Set.mem_ofPred_eq]; exact hx
     filter_upwards [hae] with y hyae
     filter_upwards [hyae] with x hxdiff
     have hsliceHD : HasDerivAt (slice y) (P ((fderiv ℝ G (Complex.mk x y)) 1)) x := by
@@ -687,7 +687,7 @@ private theorem ae_slice_AC_horizontal_of_data {G : ℂ → ℂ} (P : ℂ →L[�
         hxdiff.hasFDerivAt
       have hcomp := hfd.comp_hasDerivAt x (hasDerivAt_mk_left y x)
       have := (P.hasFDerivAt.comp_hasDerivAt x hcomp)
-      simpa [hslice] using this
+      simpa [hslice] using! this
     exact hsliceHD.deriv
   -- (5) The slice-derivative norm is a.e.-`y`-interval-integrable.
   have hint : ∀ᵐ y : ℝ, ∀ u v : ℝ,
@@ -716,7 +716,7 @@ noncomputable def cswapCLM : ℂ →L[ℝ] ℂ :=
 
 @[simp] theorem cswapCLM_apply (z : ℂ) : cswapCLM z = Complex.mk z.im z.re := by
   have : cswapCLM z = (z.im : ℂ) * 1 + (z.re : ℂ) * Complex.I := by
-    simp only [cswapCLM, ContinuousLinearMap.add_apply, ContinuousLinearMap.smulRight_apply,
+    simp only [cswapCLM, add_apply, ContinuousLinearMap.smulRight_apply,
       Complex.reCLM_apply, Complex.imCLM_apply]
     congr 1
   rw [this]; apply Complex.ext <;> simp
@@ -734,6 +734,8 @@ theorem measurePreserving_cswap :
     Complex.volume_preserving_equiv_real_prod.symm Complex.measurableEquivRealProd
   have hcomp := (h3.comp (h2.comp h1))
   convert hcomp using 1
+  funext z
+  rfl
 
 /-- **Horizontal per-slice AC of the inverse, one component selector.** Instantiates the general
 core `ae_slice_AC_horizontal_of_data` with `G = g = f⁻¹`: the fibered Lusin-(N) is
@@ -811,7 +813,7 @@ private theorem IsQCAnalytic.inverse_ae_slice_AC_vertical {f : ℂ → ℂ} {b :
     have hbase : MemLpLocOn (fun w => (fderiv ℝ g w) Complex.I) (2 : ℝ≥0∞) Set.univ :=
       hf.inverse_partial_memLpLocOn Complex.I
     intro K hK hKc
-    haveI : IsFiniteMeasure (volume.restrict K) :=
+    have : IsFiniteMeasure (volume.restrict K) :=
       ⟨by rw [Measure.restrict_apply_univ]; exact hKc.measure_lt_top⟩
     have hcswapMEcont : Continuous (cswapME : ℂ → ℂ) := by
       have : (cswapME : ℂ → ℂ) = ⇑cswapCLM := by funext z; rw [hcswapME_eq]
@@ -1142,7 +1144,7 @@ theorem IsQCAnalytic.inverse_memW12loc {f : ℂ → ℂ} {b : BeltramiCoeff}
     filter_upwards [ae_le_eLpNormEssSup (f := b.μ) (μ := volume)] with z hz
     have hfin : eLpNormEssSup b.μ volume ≠ ⊤ := ne_top_of_lt b.bound
     have : ENNReal.ofReal ‖b.μ z‖ ≤ eLpNormEssSup b.μ volume := by
-      rw [ofReal_norm_eq_enorm]; exact hz
+      rw [ofReal_norm]; exact hz
     have h2 : ‖b.μ z‖ ≤ (eLpNormEssSup b.μ volume).toReal := by
       rw [← ENNReal.toReal_ofReal (norm_nonneg _)]
       exact ENNReal.toReal_mono hfin this

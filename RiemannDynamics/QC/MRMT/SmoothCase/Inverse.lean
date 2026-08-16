@@ -127,7 +127,7 @@ theorem isHomeomorph_of_contDiffOne_principalSolution {b : BeltramiCoeff}
     have hPd : DifferentiableAt ℝ (cauchyTransform h) z :=
       (hPhC1.differentiable one_ne_zero).differentiableAt
     have hdzbarid : dzbar (fun w : ℂ => w) z = 0 := by
-      rw [dzbar, fderiv_id']
+      rw [dzbar, fderiv_fun_id]
       simp only [ContinuousLinearMap.id_apply]
       linear_combination ((1 / 2 : ℂ)) * Complex.I_mul_I
     rw [hff, dzbar_add hidd hPd, hdzbarid, zero_add, dzbar, hx', hy']
@@ -194,7 +194,7 @@ theorem isHomeomorph_of_contDiffOne_principalSolution {b : BeltramiCoeff}
         calc ‖x‖ - ‖w‖ ≤ ‖x - w‖ := norm_sub_norm_le x w
           _ = dist w x := by rw [dist_comm, dist_eq_norm]
           _ ≤ 1 := hw
-      simp only [Set.mem_setOf_eq]
+      simp only [Set.mem_ofPred_eq]
       linarith
     have hdiff : DifferentiableOn ℂ (fun z => f z - z) (closure (Metric.ball x 1)) := by
       rw [closure_ball x one_ne_zero]
@@ -257,8 +257,8 @@ theorem isHomeomorph_of_contDiffOne_principalSolution {b : BeltramiCoeff}
           = fderiv ℝ f x - fderiv ℝ (fun w : ℂ => w) x := fderiv_fun_sub hd1' hd2'
       have h0 := hdzbarf_far x hx
       rw [dzbar] at h0
-      rw [dzbar, hfdsub, fderiv_id']
-      simp only [ContinuousLinearMap.sub_apply, ContinuousLinearMap.id_apply]
+      rw [dzbar, hfdsub, fderiv_fun_id]
+      simp only [sub_apply, ContinuousLinearMap.id_apply]
       linear_combination h0 + (-(1 / 2 : ℂ)) * Complex.I_mul_I
     have hderivsW : ∀ x ∈ Metric.closedBall z₁ (1 : ℝ),
         HasFDerivWithinAt (fun z => f z - z) (fderiv ℝ (fun z => f z - z) x)
@@ -438,7 +438,7 @@ theorem IsPrincipalSolution.inverse_principalSolution_of_contDiff
     have h1 : ∀ᵐ z ∂(volume : Measure ℂ), ‖b.μ z‖ₑ ≤ eLpNormEssSup b.μ volume :=
       ae_le_eLpNormEssSup
     filter_upwards [h1] with z hz
-    rw [← ofReal_norm_eq_enorm] at hz
+    rw [← ofReal_norm] at hz
     have h3 := ENNReal.toReal_mono hkfin hz
     rwa [ENNReal.toReal_ofReal (norm_nonneg _)] at h3
   have hμpt : ∀ z, ‖b.μ z‖ ≤ k := by
@@ -526,7 +526,7 @@ theorem IsPrincipalSolution.inverse_principalSolution_of_contDiff
   -- ===== 5. Wirtinger derivatives of the identity, and the dictionary =====
   have hdzid : ∀ z : ℂ, dz (fun w : ℂ => w) z = 1 ∧ dzbar (fun w : ℂ => w) z = 0 := by
     intro z
-    have hfd : fderiv ℝ (fun w : ℂ => w) z = ContinuousLinearMap.id ℝ ℂ := fderiv_id'
+    have hfd : fderiv ℝ (fun w : ℂ => w) z = ContinuousLinearMap.id ℝ ℂ := fderiv_fun_id
     constructor
     · rw [dz, hfd]
       simp only [ContinuousLinearMap.id_apply]
@@ -844,12 +844,12 @@ theorem IsPrincipalSolution.inverse_principalSolution_of_contDiff
     have hidI := HasWeakDirDeriv.of_contDiffOn (v := Complex.I) isOpen_univ hidC
     have hfder1 : (fun z : ℂ => (fderiv ℝ (fun z : ℂ => z) z) 1) = fun _ : ℂ => (1:ℂ) := by
       funext z
-      rw [fderiv_id']
+      rw [fderiv_fun_id]
       rfl
     have hfderI : (fun z : ℂ => (fderiv ℝ (fun z : ℂ => z) z) Complex.I)
         = fun _ : ℂ => Complex.I := by
       funext z
-      rw [fderiv_id']
+      rw [fderiv_fun_id]
       rfl
     rw [hfder1] at hid1
     rw [hfderI] at hidI

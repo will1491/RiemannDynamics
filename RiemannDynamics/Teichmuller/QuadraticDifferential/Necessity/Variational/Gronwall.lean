@@ -262,7 +262,7 @@ theorem circleIntegral_deriv_mul_inv_sub_eq_zero {f g₀ : ℂ → ℂ} {ρ Ms M
     rw [hUmem, hw]
     exact hρ
   obtain ⟨w₀, hw₀ρ, hTw₀⟩ := hzI
-  rw [Set.mem_setOf_eq] at hw₀ρ
+  rw [Set.mem_ofPred_eq] at hw₀ρ
   have hw₀U : w₀ ∈ U := by rw [hUmem]; linarith
   have hw₀0 : w₀ ≠ 0 := hUne w₀ hw₀U
   have hw₀pos : (0:ℝ) < ‖w₀‖ := norm_pos_iff.mpr hw₀0
@@ -444,7 +444,7 @@ theorem circleIntegral_deriv_mul_inv_sub_eq_zero {f g₀ : ℂ → ℂ} {ρ Ms M
           isOpen_lt continuous_const continuous_norm
         have heqOn : Set.EqOn g (fun v => (f v - z) / (v - w₀)) {v : ℂ | ‖w₀‖ < ‖v‖} := by
           intro v hv
-          rw [Set.mem_setOf_eq] at hv
+          rw [Set.mem_ofPred_eq] at hv
           have hvne : v - w₀ ≠ 0 := sub_ne_zero.mpr (by
             intro heq
             rw [heq] at hv
@@ -701,7 +701,7 @@ theorem lintegral_ball_enorm_inv_le (R : ℝ) (hR : 0 < R) :
       have hmemT : ((t, θ) : ℝ × ℝ) ∈ Set.Ioo (0:ℝ) R ×ˢ Set.Ioo (-Real.pi) Real.pi :=
         Set.mem_prod.mpr ⟨⟨ht0, htR⟩, hθ⟩
       rw [Set.indicator_of_mem hmem, Set.indicator_of_mem hmemT, smul_eq_mul,
-        ← ofReal_norm_eq_enorm, norm_inv, hnorm, ← ENNReal.ofReal_mul ht0.le,
+        ← ofReal_norm, norm_inv, hnorm, ← ENNReal.ofReal_mul ht0.le,
         mul_inv_cancel₀ ht0.ne', ENNReal.ofReal_one]
     · have hnmem : Complex.polarCoord.symm (t, θ) ∉ Metric.ball (0:ℂ) R := by
         rw [Metric.mem_ball, dist_zero_right, hnorm]; exact htR
@@ -791,7 +791,7 @@ theorem integral_ball_inv_sub_eq_pi_mul_conj {M : ℝ} {a0 : ℂ} (ha0M : ‖a0�
     have hd : ∀ z ∈ Metric.ball (0:ℂ) |t| \ (∅ : Set ℂ),
         DifferentiableAt ℂ (fun z => (a0 - z)⁻¹) z := by
       intro z hz
-      rw [Set.diff_empty, Metric.mem_ball, dist_zero_right, abs_of_pos ht] at hz
+      rw [Set.sdiff_empty, Metric.mem_ball, dist_zero_right, abs_of_pos ht] at hz
       exact ((differentiableAt_const a0).sub differentiableAt_fun_id).inv (hane z hz.le)
     have hmean := circleAverage_of_differentiable_on_off_countable
       Set.countable_empty hc hd
@@ -802,7 +802,7 @@ theorem integral_ball_inv_sub_eq_pi_mul_conj {M : ℝ} {a0 : ℂ} (ha0M : ‖a0�
     have h3 : (∫ θ in (0:ℝ)..(2 * Real.pi), (a0 - circleMap 0 t θ)⁻¹) =
         ((2 * Real.pi : ℝ) : ℂ) * a0⁻¹ := by
       have h4 := congrArg (fun x : ℂ => ((2 * Real.pi : ℝ) : ℂ) * x) hmean2
-      simp only at h4
+      try simp only at h4
       rw [← mul_assoc] at h4
       have h5 : ((2 * Real.pi : ℝ) : ℂ) * (((2 * Real.pi)⁻¹ : ℝ) : ℂ) = 1 := by
         rw [← Complex.ofReal_mul, mul_inv_cancel₀ h2π, Complex.ofReal_one]
@@ -887,7 +887,7 @@ theorem integral_ball_inv_sub_eq_pi_mul_conj {M : ℝ} {a0 : ℂ} (ha0M : ‖a0�
         ring
       have hi1 : CircleIntegrable (fun w : ℂ => a0⁻¹ • (w - 0)⁻¹) 0 t := by
         refine ContinuousOn.circleIntegrable ht.le ?_
-        refine ContinuousOn.smul continuousOn_const ?_
+        refine ContinuousOn.fun_smul continuousOn_const ?_
         refine ContinuousOn.inv₀ (continuousOn_id.sub continuousOn_const) ?_
         intro w hw
         rw [Metric.mem_sphere, dist_zero_right] at hw
@@ -897,7 +897,7 @@ theorem integral_ball_inv_sub_eq_pi_mul_conj {M : ℝ} {a0 : ℂ} (ha0M : ‖a0�
         linarith
       have hi2 : CircleIntegrable (fun w : ℂ => a0⁻¹ • (w - a0)⁻¹) 0 t := by
         refine ContinuousOn.circleIntegrable ht.le ?_
-        refine ContinuousOn.smul continuousOn_const ?_
+        refine ContinuousOn.fun_smul continuousOn_const ?_
         refine ContinuousOn.inv₀ (continuousOn_id.sub continuousOn_const) ?_
         intro w hw
         rw [Metric.mem_sphere, dist_zero_right] at hw
@@ -1008,7 +1008,7 @@ theorem integral_ball_inv_sub_eq_pi_mul_conj {M : ℝ} {a0 : ℂ} (ha0M : ‖a0�
     have hmem : Complex.polarCoord.symm (t, θ) ∈ Metric.ball (0:ℂ) M := by
       rw [Metric.mem_ball, dist_zero_right, hnorm]; exact ht.2
     rw [Set.indicator_of_mem hmem]
-    rw [← ofReal_norm_eq_enorm, ← ofReal_norm_eq_enorm, norm_mul, Complex.norm_real,
+    rw [← ofReal_norm, ← ofReal_norm, norm_mul, Complex.norm_real,
       Real.norm_eq_abs, abs_of_pos ht0, ENNReal.ofReal_mul ht0.le, smul_eq_mul]
   have hLptwise : ∀ p ∈ polarCoord.target,
       ENNReal.ofReal p.1 •
@@ -1370,7 +1370,7 @@ theorem abs_laurent_coeff_le_of_injOn {s : ℂ → ℂ}
       (T (circleMap 0 ρ θ)) := by
     intro θ
     have hy : (circleMap 0 ρ θ)⁻¹ ∈ Metric.eball (0:ℂ) (rrN : ℝ≥0∞) := by
-      rw [Metric.mem_eball, edist_zero_right, ← ofReal_norm_eq_enorm,
+      rw [Metric.mem_eball, edist_zero_right, ← ofReal_norm,
         ← ENNReal.ofReal_coe_nnreal]
       refine ENNReal.ofReal_lt_ofReal_iff_of_nonneg (norm_nonneg _) |>.mpr ?_
       rw [norm_inv, hcircnorm, hrrNcoe]
@@ -1521,7 +1521,7 @@ theorem abs_laurent_coeff_le_of_injOn {s : ℂ → ℂ}
           rw [hGdef]; ring
         rw [h4, enorm_mul]
         refine mul_le_mul_left ?_ _
-        rw [← ofReal_norm_eq_enorm]
+        rw [← ofReal_norm]
         refine ENNReal.ofReal_le_ofReal ?_
         rw [norm_mul, norm_mul, Complex.norm_I, mul_one, norm_circleMap_zero,
           abs_of_pos hρ0]
@@ -1629,7 +1629,7 @@ theorem abs_laurent_coeff_le_of_injOn {s : ℂ → ℂ}
               ≤ ∫⁻ _θ in Set.Ioc (0:ℝ) (2 * Real.pi),
                   ENNReal.ofReal ((Msr * ρ ^ m) * ((rrR * ρ)⁻¹) ^ j) := by
                 refine lintegral_mono fun θ => ?_
-                rw [← ofReal_norm_eq_enorm]
+                rw [← ofReal_norm]
                 exact ENNReal.ofReal_le_ofReal (hbnd2 j θ)
             _ = ENNReal.ofReal ((Msr * ρ ^ m) * ((rrR * ρ)⁻¹) ^ j) *
                   volume (Set.Ioc (0:ℝ) (2 * Real.pi)) := setLIntegral_const _ _
@@ -1730,7 +1730,7 @@ theorem abs_laurent_coeff_le_of_injOn {s : ℂ → ℂ}
               ≤ ∫⁻ _θ in Set.Ioc (0:ℝ) (2 * Real.pi),
                   ENNReal.ofReal ((Msr * ρ * (MA * ρ)) * ((rrR * ρ)⁻¹) ^ m) := by
                 refine lintegral_mono fun θ => ?_
-                rw [← ofReal_norm_eq_enorm]
+                rw [← ofReal_norm]
                 exact ENNReal.ofReal_le_ofReal (hbnd1 m θ)
             _ = ENNReal.ofReal ((Msr * ρ * (MA * ρ)) * ((rrR * ρ)⁻¹) ^ m) *
                   volume (Set.Ioc (0:ℝ) (2 * Real.pi)) := setLIntegral_const _ _

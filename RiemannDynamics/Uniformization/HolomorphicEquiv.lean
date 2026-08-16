@@ -44,7 +44,7 @@ homeomorphism. -/
 theorem simplyConnectedSpace_of_homeomorph {X Y : Type*} [TopologicalSpace X]
     [TopologicalSpace Y] (e : X ≃ₜ Y) (h : SimplyConnectedSpace X) :
     SimplyConnectedSpace Y := by
-  haveI := h
+  have := h
   exact e.toHomotopyEquiv.symm.simplyConnectedSpace
 
 /-! ## Producing biholomorphisms -/

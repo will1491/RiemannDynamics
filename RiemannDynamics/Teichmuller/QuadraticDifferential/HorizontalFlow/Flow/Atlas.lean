@@ -335,7 +335,7 @@ theorem Atlas.measurable_sel {q : ℂ → ℂ} (A : Atlas q) :
         ∩ (if n = 0 then Set.univ else ∅)) := by
     ext z
     simp only [Set.mem_preimage, Set.mem_singleton_iff, Set.mem_union, Set.mem_inter_iff,
-      Set.mem_setOf_eq, Set.mem_compl_iff, Set.mem_iInter, Set.mem_Iio]
+      Set.mem_ofPred_eq, Set.mem_compl_iff, Set.mem_iInter, Set.mem_Iio]
     constructor
     · intro hsel
       by_cases h : ∃ j, A.active j ∧ z ∈ Metric.ball (A.c j) (A.r j)
@@ -817,7 +817,7 @@ theorem slope_pin_forward {Φ : ℂ → ℂ} {σ : ℝ → ℂ} {T u u' s ε : �
     (hslope : SlopeAt Φ σ (Set.Icc 0 T) u s)
     (haff : ∀ v ∈ Set.Icc u u', Φ (σ v) = Φ (σ u) + ε * ((v - u : ℝ) : ℂ)) :
     ε = s := by
-  haveI hne : (nhdsWithin u (Set.Ioc u u')).NeBot := by
+  have hne : (nhdsWithin u (Set.Ioc u u')).NeBot := by
     refine mem_closure_iff_nhdsWithin_neBot.mp ?_
     rw [closure_Ioc huu'.ne]
     exact ⟨le_refl u, huu'.le⟩
@@ -845,7 +845,7 @@ theorem slope_transport {q Φ : ℂ → ℂ} {S : Set ℂ} (hS : IsOpen S)
   have hu'mem : u' ∈ Set.Icc 0 T := ⟨le_trans hu0 huu'.le, hu'T⟩
   obtain ⟨ε, hε, hgerm⟩ := traj_ambient_local hS hΦd hΦsq hσ
     (Set.Subset.refl _) hu'mem hxS
-  haveI hne : (nhdsWithin u' (Set.Ico u u')).NeBot := by
+  have hne : (nhdsWithin u' (Set.Ico u u')).NeBot := by
     refine mem_closure_iff_nhdsWithin_neBot.mp ?_
     rw [closure_Ico huu'.ne]
     exact ⟨huu'.le, le_refl u'⟩
@@ -1458,7 +1458,7 @@ theorem zeros_isolated {q : ℂ → ℂ}
       intro a ha b hb s t hs ht hst
       have him : (s • a + t • b).im = s * a.im + t * b.im := by
         simp [Complex.add_im]
-      rw [Set.mem_setOf_eq, him]
+      rw [Set.mem_ofPred_eq, him]
       rcases eq_or_lt_of_le hs with hs0 | hs0
       · rw [← hs0] at hst ⊢
         simp only [zero_mul, zero_add] at hst ⊢

@@ -659,7 +659,7 @@ theorem rectangleWindingNumber_inside_eq_one
           (((b : ℂ) + (y : ℂ) * Complex.I - w)⁻¹) * h1
       rw [show (-Complex.I) * (((b : ℂ) + (y : ℂ) * Complex.I - w)⁻¹ * Complex.I) =
           ((b : ℂ) + (y : ℂ) * Complex.I - w)⁻¹ from h_simp] at h_mul
-      convert h_mul using 1
+      simpa [Function.comp_def] using! h_mul
     · apply Continuous.intervalIntegrable
       have h_cont : Continuous fun y : ℝ => ((b : ℂ) + (y : ℂ) * Complex.I - w) := by
         fun_prop
@@ -702,7 +702,7 @@ theorem rectangleWindingNumber_inside_eq_one
       rw [show (-Complex.I) *
             ((-((a : ℂ) + (y : ℂ) * Complex.I - w))⁻¹ * (-Complex.I)) =
             ((a : ℂ) + (y : ℂ) * Complex.I - w)⁻¹ from h_simp] at h_mul
-      convert h_mul using 1
+      simpa [Function.comp_def] using! h_mul
     · apply Continuous.intervalIntegrable
       have h_cont : Continuous fun y : ℝ => ((a : ℂ) + (y : ℂ) * Complex.I - w) := by
         fun_prop
@@ -1529,7 +1529,7 @@ theorem cIntegralLogDeriv_isNat_of_nonzero_on_rectBoundary
       intro x hx
       rw [Set.uIcc_of_le hab.le] at hx
       exact h_logDeriv_r_eq _ (h_bot_mem x hx) (hg_bot x hx)
-    rw [h_pointwise, intervalIntegral.integral_finset_sum h_summand_int_bot]
+    rw [h_pointwise, intervalIntegral.integral_finsetSum h_summand_int_bot]
     apply Finset.sum_congr rfl
     intro u _
     simp_rw [div_eq_mul_inv]
@@ -1546,7 +1546,7 @@ theorem cIntegralLogDeriv_isNat_of_nonzero_on_rectBoundary
       intro x hx
       rw [Set.uIcc_of_le hab.le] at hx
       exact h_logDeriv_r_eq _ (h_top_mem x hx) (hg_top x hx)
-    rw [h_pointwise, intervalIntegral.integral_finset_sum h_summand_int_top]
+    rw [h_pointwise, intervalIntegral.integral_finsetSum h_summand_int_top]
     apply Finset.sum_congr rfl
     intro u _
     simp_rw [div_eq_mul_inv]
@@ -1563,7 +1563,7 @@ theorem cIntegralLogDeriv_isNat_of_nonzero_on_rectBoundary
       intro y hy
       rw [Set.uIcc_of_le hcd.le] at hy
       exact h_logDeriv_r_eq _ (h_right_mem y hy) (hg_right y hy)
-    rw [h_pointwise, intervalIntegral.integral_finset_sum h_summand_int_right]
+    rw [h_pointwise, intervalIntegral.integral_finsetSum h_summand_int_right]
     apply Finset.sum_congr rfl
     intro u _
     simp_rw [div_eq_mul_inv]
@@ -1580,7 +1580,7 @@ theorem cIntegralLogDeriv_isNat_of_nonzero_on_rectBoundary
       intro y hy
       rw [Set.uIcc_of_le hcd.le] at hy
       exact h_logDeriv_r_eq _ (h_left_mem y hy) (hg_left y hy)
-    rw [h_pointwise, intervalIntegral.integral_finset_sum h_summand_int_left]
+    rw [h_pointwise, intervalIntegral.integral_finsetSum h_summand_int_left]
     apply Finset.sum_congr rfl
     intro u _
     simp_rw [div_eq_mul_inv]

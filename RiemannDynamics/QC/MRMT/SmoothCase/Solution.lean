@@ -62,7 +62,7 @@ theorem exists_continuous_fixedPoint_beltrami_of_contDiff {μ g : ℂ → ℂ}
   have hδ0 : 0 < δ := by rw [hδdef]; linarith
   have hp1 : 1 ≤ p := le_trans (by norm_num) hp.le
   have hp0 : p ≠ 0 := by
-    intro h; rw [h] at hp; exact (not_lt_of_ge (zero_le _)) hp
+    intro h; rw [h] at hp; exact (not_lt_of_ge (zero_le)) hp
   -- ===== Differentiability shorthands. =====
   have hd1 : ∀ {u : ℂ → ℂ}, ContDiff ℝ ∞ u → Differentiable ℝ u := by
     intro u hu
@@ -234,7 +234,7 @@ theorem exists_continuous_fixedPoint_beltrami_of_contDiff {μ g : ℂ → ℂ}
       rw [eLpNorm_exponent_top] at h2
       exact h2.ne
     filter_upwards [h1] with z hz
-    rw [← ofReal_norm_eq_enorm] at hz
+    rw [← ofReal_norm] at hz
     have h3 := ENNReal.toReal_mono hfin hz
     rwa [ENNReal.toReal_ofReal (norm_nonneg _)] at h3
   -- ===== `Lᵖ` multiplication bound by an a.e.-bounded factor. =====
@@ -256,7 +256,7 @@ theorem exists_continuous_fixedPoint_beltrami_of_contDiff {μ g : ℂ → ℂ}
             funext z; rw [Pi.smul_apply, smul_eq_mul]
           rw [heq, eLpNorm_const_smul]
       _ = ENNReal.ofReal M * eLpNorm h p volume := by
-          rw [← ofReal_norm_eq_enorm, hMnorm]
+          rw [← ofReal_norm, hMnorm]
   -- ===== The core term bound: `‖a·S u‖ₚ ≤ (M·C)·‖u‖ₚ`. =====
   have hterm : ∀ (M : ℝ) (afn u : ℂ → ℂ), 0 ≤ M →
       (∀ᵐ z ∂(volume : Measure ℂ), ‖afn z‖ ≤ M) → MemLp u p volume →
@@ -655,7 +655,7 @@ theorem exists_continuous_fixedPoint_beltrami_of_contDiff {μ g : ℂ → ℂ}
     intro a b
     refine ContinuousLinearMap.opNorm_le_bound _
       (add_nonneg (norm_nonneg a) (norm_nonneg b)) (fun w => ?_)
-    simp only [ContinuousLinearMap.add_apply, ContinuousLinearMap.smulRight_apply,
+    simp only [add_apply, ContinuousLinearMap.smulRight_apply,
       Complex.reCLM_apply, Complex.imCLM_apply]
     calc ‖w.re • a + w.im • b‖
         ≤ ‖w.re • a‖ + ‖w.im • b‖ := norm_add_le _ _
@@ -721,13 +721,13 @@ theorem exists_continuous_fixedPoint_beltrami_of_contDiff {μ g : ℂ → ℂ}
           + Complex.imCLM.smulRight
               (Complex.I * ((u₁ z - ds m z) - (u₂ z - db m z))) := by
       refine hCLMext _ _ ?_ ?_
-      · rw [ContinuousLinearMap.sub_apply,
+      · rw [sub_apply,
           (hA_apply (u₁ z + u₂ z) (Complex.I * (u₁ z - u₂ z))).1,
           (hA_apply (ds m z + db m z) (Complex.I * (ds m z - db m z))).1,
           (hA_apply ((u₁ z - ds m z) + (u₂ z - db m z))
             (Complex.I * ((u₁ z - ds m z) - (u₂ z - db m z)))).1]
         ring
-      · rw [ContinuousLinearMap.sub_apply,
+      · rw [sub_apply,
           (hA_apply (u₁ z + u₂ z) (Complex.I * (u₁ z - u₂ z))).2,
           (hA_apply (ds m z + db m z) (Complex.I * (ds m z - db m z))).2,
           (hA_apply ((u₁ z - ds m z) + (u₂ z - db m z))
@@ -822,7 +822,7 @@ theorem exists_continuous_fixedPoint_beltrami_of_contDiff {μ g : ℂ → ℂ}
           rw [← norm_ne_zero_iff, hnorm]; exact ne_of_gt hq1
         rw [enorm_inv hsymm_ne]
         have henorm : ‖Complex.polarCoord.symm q‖ₑ = ENNReal.ofReal q.1 := by
-          rw [← ofReal_norm_eq_enorm, hnorm]
+          rw [← ofReal_norm, hnorm]
         rw [henorm, smul_eq_mul,
           ENNReal.mul_inv_cancel
             (by simp only [ne_eq, ENNReal.ofReal_eq_zero, not_le]; exact hq1)
@@ -868,7 +868,7 @@ theorem exists_continuous_fixedPoint_beltrami_of_contDiff {μ g : ℂ → ℂ}
     intro m
     have hc : ∀ n ∈ Finset.range m, Continuous (fun ζ => dz (v n) ζ) := fun n _ =>
       ((hdz_sm _ (hvprop n).1).1).continuous
-    simpa only [hdsdef] using continuous_finset_sum _ hc
+    simpa only [hdsdef] using continuous_finsetSum _ hc
   have hds_van : ∀ m, ∀ ζ, R < ‖ζ‖ → ds m ζ = 0 := by
     intro m ζ hζ
     simp only [hdsdef]
@@ -882,7 +882,7 @@ theorem exists_continuous_fixedPoint_beltrami_of_contDiff {μ g : ℂ → ℂ}
     simp only [cauchyTransform]
     rw [← Finset.mul_sum]
     congr 1
-    rw [← MeasureTheory.integral_finset_sum _ hint]
+    rw [← MeasureTheory.integral_finsetSum _ hint]
     congr 1
     funext ζ
     simp only [hdsdef]
@@ -913,9 +913,9 @@ theorem exists_continuous_fixedPoint_beltrami_of_contDiff {μ g : ℂ → ℂ}
     have hne : ‖t‖ₑ * volume (Metric.closedBall (0 : ℂ) R) ^ (1 / p.toReal) ≠ ⊤ := by
       refine ENNReal.mul_ne_top ?_ (ENNReal.rpow_lt_top_of_nonneg
         (div_nonneg zero_le_one hpt0.le) hVfin).ne
-      rw [← ofReal_norm_eq_enorm]; exact ENNReal.ofReal_ne_top
+      rw [← ofReal_norm]; exact ENNReal.ofReal_ne_top
     have h2 := ENNReal.toReal_mono hne hmono
-    rwa [ENNReal.toReal_mul, ← ofReal_norm_eq_enorm,
+    rwa [ENNReal.toReal_mul, ← ofReal_norm,
       ENNReal.toReal_ofReal (norm_nonneg _), Real.norm_eq_abs, abs_of_nonneg ht] at h2
   -- ===== The pointwise fixed-point equation. =====
   have heqn : ∀ z : ℂ, φ z = μ z * beurling φ z + g z := by
@@ -1046,7 +1046,7 @@ theorem exists_contDiffOne_principalSolution (b : BeltramiCoeff)
     have h1 : ∀ᵐ z ∂(volume : Measure ℂ), ‖b.μ z‖ₑ ≤ eLpNormEssSup b.μ volume :=
       ae_le_eLpNormEssSup
     filter_upwards [h1] with z hz
-    rw [← ofReal_norm_eq_enorm] at hz
+    rw [← ofReal_norm] at hz
     have h3 := ENNReal.toReal_mono hkfin hz
     rwa [ENNReal.toReal_ofReal (norm_nonneg _)] at h3
   have hμpt : ∀ z, ‖b.μ z‖ ≤ k := by
@@ -1424,7 +1424,7 @@ theorem exists_contDiffOne_principalSolution (b : BeltramiCoeff)
   have hA0 : Tendsto A (Filter.cocompact ℂ) (𝓝 0) := by
     have h1 : Tendsto (fun z => Complex.exp (σ z)) (Filter.cocompact ℂ) (𝓝 1) := by
       have h2 := (Complex.continuous_exp.tendsto 0).comp hσ0
-      simpa using h2
+      simpa using! h2
     have h2 := h1.sub_const 1
     simpa [hAdef] using h2
   have hB0 : Tendsto B (Filter.cocompact ℂ) (𝓝 0) :=
@@ -1466,7 +1466,7 @@ theorem exists_contDiffOne_principalSolution (b : BeltramiCoeff)
     fun z => (hPhC1.differentiable one_ne_zero).differentiableAt
   have hdzid : ∀ z : ℂ, dz (fun w : ℂ => w) z = 1 ∧ dzbar (fun w : ℂ => w) z = 0 := by
     intro z
-    have hfd : fderiv ℝ (fun w : ℂ => w) z = ContinuousLinearMap.id ℝ ℂ := fderiv_id'
+    have hfd : fderiv ℝ (fun w : ℂ => w) z = ContinuousLinearMap.id ℝ ℂ := fderiv_fun_id
     constructor
     · rw [dz, hfd]
       simp only [ContinuousLinearMap.id_apply]

@@ -203,7 +203,7 @@ theorem starProfile_eq_lintegral_min (hT : 0 ≤ T) (hθ0 : 0 ≤ θ) (hθT : θ
         = Icc (T / 2 - θ) (T / 2 + θ)
           ∩ {x ∈ Icc (0 : ℝ) T | ENNReal.ofReal t < decreasingRearrangeSymm T g x} := by
     ext x
-    simp only [mem_setOf_eq, mem_inter_iff]
+    simp only [mem_ofPred_eq, mem_inter_iff]
     constructor
     · rintro ⟨hxa, hlt⟩; exact ⟨hxa, harc hxa, hlt⟩
     · rintro ⟨hxa, _, hlt⟩; exact ⟨hxa, hlt⟩
@@ -309,7 +309,7 @@ theorem exists_attaining_set (hT : 0 < T) (hg : Measurable g) (hθ0 : 0 ≤ θ) 
     intro c hc
     rcases eq_or_ne c 0 with hc0 | hc0
     · have hset : {x ∈ Icc (0 : ℝ) T | c ≤ g x} = Icc (0 : ℝ) T := by
-        ext x; simp only [mem_setOf_eq, hc0, zero_le, and_true]
+        ext x; simp only [mem_ofPred_eq, hc0, zero_le, and_true]
       rw [hset, Real.volume_Icc, sub_zero]
       exact ENNReal.ofReal_le_ofReal (by linarith)
     · obtain ⟨u, humono, humem, hutend⟩ := exists_seq_strictMono_tendsto' (pos_iff_ne_zero.mpr hc0)
@@ -323,7 +323,7 @@ theorem exists_attaining_set (hT : 0 < T) (hg : Measurable g) (hθ0 : 0 ≤ θ) 
         rw [Real.volume_Icc]; exact ofReal_ne_top
       have hInter : ⋂ n, s n = {x ∈ Icc (0 : ℝ) T | c ≤ g x} := by
         ext x
-        simp only [mem_iInter, hs, mem_setOf_eq]
+        simp only [mem_iInter, hs, mem_ofPred_eq]
         constructor
         · intro h; exact ⟨(h 0).1, le_of_tendsto' hutend (fun n => (h n).2.le)⟩
         · rintro ⟨hxI, hxc⟩ n; exact ⟨hxI, lt_of_lt_of_le (humem n).2 hxc⟩
@@ -358,7 +358,7 @@ theorem exists_attaining_set (hT : 0 < T) (hg : Measurable g) (hθ0 : 0 ≤ θ) 
     rw [hdcdef, ENNReal.ofReal_toReal (distribFun_ne_top c)]
   have hcleq : {x ∈ Icc (0 : ℝ) T | c ≤ g x} = super ∪ atom := by
     ext x
-    simp only [hsuperdef, hatomdef, mem_setOf_eq, mem_union]
+    simp only [hsuperdef, hatomdef, mem_ofPred_eq, mem_union]
     constructor
     · rintro ⟨hxI, hle⟩
       rcases eq_or_lt_of_le hle with h | h
@@ -397,7 +397,7 @@ theorem exists_attaining_set (hT : 0 < T) (hg : Measurable g) (hθ0 : 0 ≤ θ) 
     · have hset : {x ∈ E | ENNReal.ofReal t < g x}
           = {x ∈ Icc (0 : ℝ) T | ENNReal.ofReal t < g x} := by
         ext x
-        simp only [mem_setOf_eq]
+        simp only [mem_ofPred_eq]
         constructor
         · rintro ⟨hxE, hlt⟩; exact ⟨hEsub hxE, hlt⟩
         · rintro ⟨hxI, hlt⟩
@@ -406,7 +406,7 @@ theorem exists_attaining_set (hT : 0 < T) (hg : Measurable g) (hθ0 : 0 ≤ θ) 
       rw [min_eq_right (le_trans (distribFun_antitone hct) hP1)]
     · have hset : {x ∈ E | ENNReal.ofReal t < g x} = E := by
         ext x
-        simp only [mem_setOf_eq]
+        simp only [mem_ofPred_eq]
         rw [and_iff_left_iff_imp]
         intro hxE
         have hxcle : c ≤ g x := by
@@ -520,12 +520,12 @@ theorem starFunction_lt_top {p : ℂ} {u : ℂ → ℝ} {r θ : ℝ} (_hθ0 : 0 
     have hempty : distribFun (2 * π) g (ENNReal.ofReal (max M 0)) = 0 := by
       have : {y ∈ Icc (0 : ℝ) (2 * π) | ENNReal.ofReal (max M 0) < g y} = ∅ := by
         ext y
-        simp only [mem_setOf_eq, mem_empty_iff_false, iff_false, not_and]
+        simp only [mem_ofPred_eq, mem_empty_iff_false, iff_false, not_and]
         intro _
         exact not_lt.mpr (hgle y)
       rw [distribFun, this, measure_empty]
     rw [hempty] at hlt
-    exact absurd hlt (not_lt.mpr (zero_le _))
+    exact absurd hlt (not_lt.mpr (zero_le))
   -- The star value is the arc integral of the rearrangement; bound by a finite constant integral.
   have hstar : starFunction p u r θ
       = ∫⁻ x in Icc ((2 * π) / 2 - θ) ((2 * π) / 2 + θ), decreasingRearrangeSymm (2 * π) g x := rfl
@@ -650,13 +650,13 @@ theorem hasFDerivAt_fibre {p : ℂ} {u : ℂ → ℝ} (φ : ℝ) {w : ℂ}
       (e • (ContinuousLinearMap.id ℝ ℂ)) w := by
     rw [hasFDerivAt_iff_isLittleO]
     refine (hasDerivAt_arcPoint p φ w).isLittleO.congr_left fun t => ?_
-    simp only [ContinuousLinearMap.smul_apply, ContinuousLinearMap.id_apply, smul_eq_mul, he]
+    simp only [smul_apply, ContinuousLinearMap.id_apply, smul_eq_mul, he]
     ring
   -- Compose with the real derivative of `u` at `z`.
   have hcomp := hu.hasFDerivAt.comp w hg
   refine hcomp.congr_fderiv ?_
   ext t
-  simp only [ContinuousLinearMap.comp_apply, ContinuousLinearMap.smul_apply,
+  simp only [ContinuousLinearMap.comp_apply, smul_apply,
     ContinuousLinearMap.id_apply, smul_eq_mul, Complex.reCLM_apply]
   rw [fderiv_eq_re_gradC_mul u z (e * t)]
   ring_nf
@@ -698,7 +698,7 @@ theorem arcIntegral_harmonicAt {p : ℂ} {u : ℂ → ℝ} {rI rO : ℝ} {E : Se
       isOpen_lt continuous_const (by fun_prop)
     have h2 : IsOpen {z : ℂ | ‖z - p‖ < rO} :=
       isOpen_lt (by fun_prop) continuous_const
-    simpa [hA, Set.setOf_and] using h1.inter h2
+    simpa [hA, Set.ofPred_and] using h1.inter h2
   -- Every log-polar image point of `B̄ × Icc a b` lies in the annulus.
   have himg : ∀ w ∈ Metric.closedBall w₀ ρ, ∀ φ : ℝ,
       (p + Complex.exp (w + φ * Complex.I)) ∈ A :=
@@ -765,7 +765,7 @@ theorem arcIntegral_harmonicAt {p : ℂ} {u : ℂ → ℝ} {rI rO : ℝ} {E : Se
   -- Integrability of the fibre derivative at each `w ∈ B̄` (bounded on a finite-measure set).
   have hErestr_finite : volume E ≠ ⊤ :=
     ne_top_of_le_ne_top (by rw [Real.volume_Icc]; exact ENNReal.ofReal_ne_top) (measure_mono hab)
-  haveI hEfinite : IsFiniteMeasure (volume.restrict E) := isFiniteMeasure_restrict.2 hErestr_finite
+  have hEfinite : IsFiniteMeasure (volume.restrict E) := isFiniteMeasure_restrict.2 hErestr_finite
   have hDφint : ∀ w ∈ Metric.closedBall w₀ ρ, Integrable (fun φ => Dφ φ w) (volume.restrict E) := by
     intro w hw
     refine Integrable.of_bound (hDφmeas w hw) (Cf * Cexp) ?_
@@ -807,6 +807,7 @@ theorem arcIntegral_harmonicAt {p : ℂ} {u : ℂ → ℝ} {rI rO : ℝ} {E : Se
     have hmul := hcomp.mul hexp
     rw [hDφ, hDφ']
     convert hmul using 1
+    any_goals rfl
     simp only [Function.comp_apply]
     ring
   -- Uniform integrable bound on the fibre derivative over `B`.
@@ -874,10 +875,10 @@ theorem arcIntegral_harmonicAt {p : ℂ} {u : ℂ → ℝ} {rI rO : ℝ} {E : Se
     have hGr : HasFDerivAt G (D w • (ContinuousLinearMap.id ℝ ℂ)) w := by
       rw [hasFDerivAt_iff_isLittleO]
       refine (hGderiv w hw).isLittleO.congr_left fun t => ?_
-      simp only [ContinuousLinearMap.smul_apply, ContinuousLinearMap.id_apply, smul_eq_mul]
+      simp only [smul_apply, ContinuousLinearMap.id_apply, smul_eq_mul]
       ring
     have := Complex.reCLM.hasFDerivAt.comp w hGr
-    simpa [Function.comp] using this
+    simpa [Function.comp_def] using! this
   -- Differentiability facts for `u` (harmonic ⟹ `C²` ⟹ differentiable) on the annulus.
   have hudiff : ∀ z ∈ A, DifferentiableAt ℝ u z :=
     fun z hz => (hu z hz).1.differentiableAt (by norm_num)
@@ -894,7 +895,7 @@ theorem arcIntegral_harmonicAt {p : ℂ} {u : ℂ → ℝ} {rI rO : ℝ} {E : Se
     refine le_trans (ContinuousLinearMap.opNorm_le_bound _ (by positivity) fun t => ?_)
       (hDφbound φ hφ w (hBsubcb hw))
     rw [hL]
-    simp only [ContinuousLinearMap.comp_apply, ContinuousLinearMap.smul_apply,
+    simp only [ContinuousLinearMap.comp_apply, smul_apply,
       ContinuousLinearMap.id_apply, smul_eq_mul, Complex.reCLM_apply, Real.norm_eq_abs]
     calc |(Dφ φ w * t).re| ≤ ‖Dφ φ w * t‖ := Complex.abs_re_le_norm _
       _ = ‖Dφ φ w‖ * ‖t‖ := by rw [norm_mul]
@@ -950,14 +951,14 @@ theorem arcIntegral_harmonicAt {p : ℂ} {u : ℂ → ℝ} {rI rO : ℝ} {E : Se
     have hpt : ∀ φ, (L φ w) t = Complex.reCLM (Dφ φ w * t) := by
       intro φ
       rw [hL]
-      simp [ContinuousLinearMap.comp_apply, ContinuousLinearMap.smul_apply,
+      simp [ContinuousLinearMap.comp_apply, smul_apply,
         ContinuousLinearMap.id_apply, mul_comm]
     simp only [hpt]
     rw [Complex.reCLM.integral_comp_comm ((hDφint w (hBsubcb hw)).mul_const t)]
     have hmc : (∫ x in E, Dφ x w * t) = (∫ x in E, Dφ x w) * t :=
       integral_mul_const t (fun x => Dφ x w)
     rw [hmc]
-    simp only [ContinuousLinearMap.comp_apply, ContinuousLinearMap.smul_apply,
+    simp only [ContinuousLinearMap.comp_apply, smul_apply,
       ContinuousLinearMap.id_apply, smul_eq_mul, Complex.reCLM_apply]
     rfl
   -- **Step 5: `Re G` and `arcIntegral` agree on the convex ball `B`.**

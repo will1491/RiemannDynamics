@@ -110,7 +110,7 @@ theorem isLogLiftOf_increment_eq {γ L₁ L₂ : C(I, ℂ)}
     · have hset : {t : I | L₁ t - L₂ t = L₁ 0 - L₂ 0} =
           {t : I | ‖L₁ t - L₂ t - (L₁ 0 - L₂ 0)‖ < 2 * Real.pi} := by
         ext t
-        simp only [mem_setOf_eq]
+        simp only [mem_ofPred_eq]
         constructor
         · intro h
           rw [h, sub_self, norm_zero]
@@ -938,7 +938,7 @@ theorem frontier_windingRegion_subset {γ : C(I, ℂ)} (hcl : γ 0 = γ 1) :
       ⟨0, ⟨le_refl 0, zero_le_one⟩,
         by change x + ((0 : ℝ) : ℂ) * (y - x) = x; push_cast; ring⟩
     exact windingNumber_eq_of_preconnected hcl hC hdisjC hyC hxC
-  rw [← closure_diff_interior] at hx
+  rw [← closure_sdiff_interior] at hx
   obtain ⟨hxcl, hxni⟩ := hx
   by_cases hwx : windingNumber γ x = 0
   · obtain ⟨y, hyS, hyd⟩ := Metric.mem_closure_iff.mp hxcl r hr

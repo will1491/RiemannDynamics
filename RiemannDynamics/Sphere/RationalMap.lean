@@ -83,7 +83,7 @@ theorem finite_setOf_eval_eq_zero {p : ℂ[X]} (hp : p ≠ 0) :
     {z : ℂ | p.eval z = 0}.Finite := by
   have hsub : {z : ℂ | p.eval z = 0} ⊆ (p.roots.toFinset : Set ℂ) := by
     intro z hz
-    simp only [Set.mem_setOf_eq] at hz
+    simp only [Set.mem_ofPred_eq] at hz
     simp [Multiset.mem_toFinset, Polynomial.mem_roots hp, hz, Polynomial.IsRoot]
   exact ((p.roots.toFinset : Set ℂ).toFinite).subset hsub
 
@@ -201,7 +201,7 @@ theorem homogenize_eval (P : ℂ[X]) (n : ℕ) (hP : P.natDegree ≤ n) {z : ℂ
         Polynomial.C (P.coeff i) * r₂.numReduced ^ i * r₂.denReduced ^ (n - i)).eval z
       = r₂.denReduced.eval z ^ n *
           P.eval (r₂.numReduced.eval z / r₂.denReduced.eval z) := by
-  simp only [Polynomial.eval_finset_sum, Polynomial.eval_mul, Polynomial.eval_C,
+  simp only [Polynomial.eval_finsetSum, Polynomial.eval_mul, Polynomial.eval_C,
              Polynomial.eval_pow]
   rw [Polynomial.eval_eq_sum_range' (n := n + 1) (by omega)
       (p := P) (x := r₂.numReduced.eval z / r₂.denReduced.eval z)]
@@ -268,7 +268,7 @@ theorem composeDen_ne_zero (h : 1 ≤ r₂.degree) : r₁.composeDen r₂ ≠ 0 
     have hsub : {z : ℂ | r₂.numReduced.eval z = α * r₂.denReduced.eval z} ⊆
         {z : ℂ | (r₂.numReduced - Polynomial.C α * r₂.denReduced).eval z = 0} := by
       intro z hz
-      simp only [Set.mem_setOf_eq] at hz ⊢
+      simp only [Set.mem_ofPred_eq] at hz ⊢
       rw [Polynomial.eval_sub, Polynomial.eval_mul, Polynomial.eval_C, hz, sub_self]
     exact (finite_setOf_eval_eq_zero hpoly_ne).subset hsub
   have hexists : ∃ z : ℂ, z ∉ S := by
@@ -281,7 +281,7 @@ theorem composeDen_ne_zero (h : 1 ≤ r₂.degree) : r₁.composeDen r₂ ≠ 0 
     intro heval
     apply hz_notin
     right
-    simp only [Set.mem_iUnion, Set.mem_setOf_eq]
+    simp only [Set.mem_iUnion, Set.mem_ofPred_eq]
     refine ⟨r₂.numReduced.eval z / r₂.denReduced.eval z, heval, ?_⟩
     field_simp
   have hden_eval_z := hden_eval z hz_D₂
@@ -902,7 +902,7 @@ theorem RationalData.composeRational_toSphereMap_eq (r₁ r₂ : RationalData)
             RationalData).toSphereMap (OnePoint.some w)) := by
       apply Continuous.ext_on hgood_dense hfg_finite_cont hcomp_finite_cont
       intro w hw
-      simp only [Set.mem_compl_iff, Set.mem_setOf_eq, not_or] at hw
+      simp only [Set.mem_compl_iff, Set.mem_ofPred_eq, not_or] at hw
       obtain ⟨hD₂_w, hden_w⟩ := hw
       have hD₁_quot_ne : D₁.eval (N₂.eval w / D₂.eval w) ≠ 0 := by
         intro hzero
@@ -955,6 +955,10 @@ theorem RationalData.composeRational_toSphereMap_eq (r₁ r₂ : RationalData)
       field_simp
     exact congrFun heq_fn w
 
+set_option maxHeartbeats 1600000 in
+-- Heavy elaboration: the natural-degree bound unfolds `composeNum`/`composeDen`
+-- into explicit `Finset.range` sums of polynomial powers and runs a long chain of
+-- `natDegree`/leading-coefficient estimates on them.
 /-- Lower bound on the natural degree of the composed polynomials: at least one
 of `composeNum r₁ r₂` or `composeDen r₁ r₂` has natural degree at least the
 product `r₁.degree * r₂.degree`. -/
@@ -1049,7 +1053,7 @@ theorem RationalData.mul_degree_le_max_natDegree_composeNum_composeDen
     -- num_comp.coeff (n * m) = N₁.coeff 0 * (lc D₂) ^ n.
     have hnum_coeff : num_comp.coeff (n * m) =
         N₁.coeff 0 * D₂.leadingCoeff ^ n := by
-      rw [hnum_comp_def, Polynomial.finset_sum_coeff]
+      rw [hnum_comp_def, Polynomial.finsetSum_coeff]
       rw [Finset.sum_eq_single 0]
       · rw [hterm_coeff (N₁.coeff 0) 0 (Nat.zero_le _)]
         have h0 : 0 * N₂.natDegree + (n - 0) * D₂.natDegree = n * m := by
@@ -1073,7 +1077,7 @@ theorem RationalData.mul_degree_le_max_natDegree_composeNum_composeDen
       · intro h0_ne; exfalso; apply h0_ne; rw [Finset.mem_range]; omega
     have hden_coeff : den_comp.coeff (n * m) =
         D₁.coeff 0 * D₂.leadingCoeff ^ n := by
-      rw [hden_comp_def, Polynomial.finset_sum_coeff]
+      rw [hden_comp_def, Polynomial.finsetSum_coeff]
       rw [Finset.sum_eq_single 0]
       · rw [hterm_coeff (D₁.coeff 0) 0 (Nat.zero_le _)]
         have h0 : 0 * N₂.natDegree + (n - 0) * D₂.natDegree = n * m := by
@@ -1120,7 +1124,7 @@ theorem RationalData.mul_degree_le_max_natDegree_composeNum_composeDen
     set α := N₂.leadingCoeff / D₂.leadingCoeff with hα_def
     have hnum_coeff : num_comp.coeff (n * m) =
         D₂.leadingCoeff ^ n * N₁.eval α := by
-      rw [hnum_comp_def, Polynomial.finset_sum_coeff]
+      rw [hnum_comp_def, Polynomial.finsetSum_coeff]
       have hsum : ∑ i ∈ Finset.range (n + 1),
           (Polynomial.C (N₁.coeff i) * N₂ ^ i * D₂ ^ (n - i)).coeff (n * m) =
           ∑ i ∈ Finset.range (n + 1),
@@ -1139,14 +1143,14 @@ theorem RationalData.mul_degree_le_max_natDegree_composeNum_composeDen
       have hlcD₂_i_ne : D₂.leadingCoeff ^ i ≠ 0 := pow_ne_zero _ hlc_D₂_ne
       have hpow_split : D₂.leadingCoeff ^ n =
           D₂.leadingCoeff ^ i * D₂.leadingCoeff ^ (n - i) := by
-        rw [← pow_add]; congr 1; omega
+        rw [← pow_add, Nat.add_sub_cancel' hi_le]
       have hsub : D₂.leadingCoeff ^ (n - i) =
           D₂.leadingCoeff ^ n / D₂.leadingCoeff ^ i := by
         rw [eq_div_iff hlcD₂_i_ne, mul_comm]; exact hpow_split.symm
       rw [hsub, hα_def, div_pow]; ring
     have hden_coeff : den_comp.coeff (n * m) =
         D₂.leadingCoeff ^ n * D₁.eval α := by
-      rw [hden_comp_def, Polynomial.finset_sum_coeff]
+      rw [hden_comp_def, Polynomial.finsetSum_coeff]
       have hsum : ∑ i ∈ Finset.range (n + 1),
           (Polynomial.C (D₁.coeff i) * N₂ ^ i * D₂ ^ (n - i)).coeff (n * m) =
           ∑ i ∈ Finset.range (n + 1),
@@ -1165,7 +1169,7 @@ theorem RationalData.mul_degree_le_max_natDegree_composeNum_composeDen
       have hlcD₂_i_ne : D₂.leadingCoeff ^ i ≠ 0 := pow_ne_zero _ hlc_D₂_ne
       have hpow_split : D₂.leadingCoeff ^ n =
           D₂.leadingCoeff ^ i * D₂.leadingCoeff ^ (n - i) := by
-        rw [← pow_add]; congr 1; omega
+        rw [← pow_add, Nat.add_sub_cancel' hi_le]
       have hsub : D₂.leadingCoeff ^ (n - i) =
           D₂.leadingCoeff ^ n / D₂.leadingCoeff ^ i := by
         rw [eq_div_iff hlcD₂_i_ne, mul_comm]; exact hpow_split.symm
@@ -1191,7 +1195,7 @@ theorem RationalData.mul_degree_le_max_natDegree_composeNum_composeDen
     have hm_eq_N₂ : m = N₂.natDegree := by rw [hm_eq_max]; exact max_eq_left hcmp.le
     have hnum_coeff : num_comp.coeff (n * m) =
         N₁.coeff n * N₂.leadingCoeff ^ n := by
-      rw [hnum_comp_def, Polynomial.finset_sum_coeff]
+      rw [hnum_comp_def, Polynomial.finsetSum_coeff]
       rw [Finset.sum_eq_single n]
       · rw [hterm_coeff (N₁.coeff n) n le_rfl]
         have h_eq : n * N₂.natDegree + (n - n) * D₂.natDegree = n * m := by
@@ -1215,7 +1219,7 @@ theorem RationalData.mul_degree_le_max_natDegree_composeNum_composeDen
       · intro hn_ne; exfalso; apply hn_ne; rw [Finset.mem_range]; omega
     have hden_coeff : den_comp.coeff (n * m) =
         D₁.coeff n * N₂.leadingCoeff ^ n := by
-      rw [hden_comp_def, Polynomial.finset_sum_coeff]
+      rw [hden_comp_def, Polynomial.finsetSum_coeff]
       rw [Finset.sum_eq_single n]
       · rw [hterm_coeff (D₁.coeff n) n le_rfl]
         have h_eq : n * N₂.natDegree + (n - n) * D₂.natDegree = n * m := by
@@ -1370,7 +1374,7 @@ theorem RationalData.composeRational_degree_eq (r₁ r₂ : RationalData)
       -- num_comp(α) at α with D₂(α) = 0: only i = n term survives.
       have hnum_at_α : num_comp.eval α = N₁.coeff n * N₂.eval α ^ n := by
         rw [hnum_comp_def]
-        simp only [Polynomial.eval_finset_sum, Polynomial.eval_mul, Polynomial.eval_C,
+        simp only [Polynomial.eval_finsetSum, Polynomial.eval_mul, Polynomial.eval_C,
                    Polynomial.eval_pow]
         rw [Finset.sum_eq_single n]
         · rw [hD₂α, Nat.sub_self, pow_zero, mul_one]
@@ -1382,7 +1386,7 @@ theorem RationalData.composeRational_degree_eq (r₁ r₂ : RationalData)
           exfalso; apply hn_ni; rw [Finset.mem_range]; omega
       have hden_at_α : den_comp.eval α = D₁.coeff n * N₂.eval α ^ n := by
         rw [hden_comp_def]
-        simp only [Polynomial.eval_finset_sum, Polynomial.eval_mul, Polynomial.eval_C,
+        simp only [Polynomial.eval_finsetSum, Polynomial.eval_mul, Polynomial.eval_C,
                    Polynomial.eval_pow]
         rw [Finset.sum_eq_single n]
         · rw [hD₂α, Nat.sub_self, pow_zero, mul_one]

@@ -129,7 +129,7 @@ theorem volume_eq_zero_of_subsingleton_vertical_slice {S : Set ℂ} (hmeas : Mea
     intro x
     have hsub : (Prod.mk x ⁻¹' S') = {y : ℝ | ((x : ℂ) + (y : ℂ) * Complex.I) ∈ S} := by
       ext y
-      simp only [Set.mem_preimage, hS', Set.mem_image, mem_setOf_eq]
+      simp only [Set.mem_preimage, hS', Set.mem_image, mem_ofPred_eq]
       constructor
       · rintro ⟨z, hzS, hz⟩
         have : z = (x : ℂ) + (y : ℂ) * Complex.I := by
@@ -158,7 +158,7 @@ theorem volume_eq_zero_of_subsingleton_horizontal_slice {S : Set ℂ} (hmeas : M
     intro y
     have hsub : ((fun x => (x, y)) ⁻¹' S') = {x : ℝ | ((x : ℂ) + (y : ℂ) * Complex.I) ∈ S} := by
       ext x
-      simp only [Set.mem_preimage, hS', Set.mem_image, mem_setOf_eq]
+      simp only [Set.mem_preimage, hS', Set.mem_image, mem_ofPred_eq]
       constructor
       · rintro ⟨z, hzS, hz⟩
         have : z = (x : ℂ) + (y : ℂ) * Complex.I := by
@@ -203,7 +203,7 @@ theorem subsingleton_vertical_slice_of_deriv_ne {u : ℂ → ℝ} {δ a₁ a₂ 
       have hline : HasDerivAt (fun t : ℝ => (x : ℂ) + (t : ℂ) * Complex.I) Complex.I s := by
         have h := (Complex.ofRealCLM.hasDerivAt (x := s)).mul_const Complex.I
         simpa using (h.const_add (x : ℂ))
-      simpa using (hdiff _ hsre hsim).hasFDerivAt.comp_hasDerivAt s hline
+      simpa using! (hdiff _ hsre hsim).hasFDerivAt.comp_hasDerivAt s hline
     have hcont : ContinuousOn g (Icc y1 y2) :=
       fun s hs => (hdg s hs).continuousAt.continuousWithinAt
     have hends : g y1 = g y2 := by rw [hg]; simp only []; rw [hgy1, hgy2]
@@ -254,7 +254,7 @@ theorem subsingleton_horizontal_slice_of_deriv_ne {u : ℂ → ℝ} {δ a₁ a�
       have hline : HasDerivAt (fun t : ℝ => (t : ℂ) + (y : ℂ) * Complex.I) 1 s := by
         have h := Complex.ofRealCLM.hasDerivAt (x := s)
         simpa using (h.add_const ((y : ℂ) * Complex.I))
-      simpa using (hdiff _ hsre hsim).hasFDerivAt.comp_hasDerivAt s hline
+      simpa using! (hdiff _ hsre hsim).hasFDerivAt.comp_hasDerivAt s hline
     have hcont : ContinuousOn g (Icc x1 x2) :=
       fun s hs => (hdg s hs).continuousAt.continuousWithinAt
     have hends : g x1 = g x2 := by rw [hg]; simp only []; rw [hgx1, hgx2]
@@ -313,7 +313,8 @@ theorem levelSet_volume_zero {u : ℂ → ℝ} {U : Set ℂ} {δ : ℝ} (hU : Is
     have hopen : IsOpen (U ∩ u ⁻¹' {x : ℝ | x ≠ δ}) :=
       hucont.isOpen_inter_preimage hU isOpen_ne
     have : L = U \ (U ∩ u ⁻¹' {x : ℝ | x ≠ δ}) := by
-      ext z; simp only [hL, mem_setOf_eq, mem_diff, mem_inter_iff, mem_preimage, mem_setOf_eq]
+      ext z
+      simp only [hL, mem_ofPred_eq, Set.mem_sdiff, mem_inter_iff, mem_preimage, mem_ofPred_eq]
       constructor
       · rintro ⟨hzU, hzδ⟩; exact ⟨hzU, fun h => h.2 hzδ⟩
       · rintro ⟨hzU, hne⟩; exact ⟨hzU, not_not.mp (fun h => hne ⟨hzU, h⟩)⟩
@@ -418,10 +419,10 @@ theorem levelSet_volume_zero {u : ℂ → ℝ} {U : Set ℂ} {δ : ℝ} (hU : Is
       intro z hz
       obtain ⟨i, hi, hiR⟩ := mem_iUnion₂.mp (hGcover hz)
       exact mem_biUnion hi ⟨(show z ∈ L from ⟨hz.1, hz.2.1⟩), hiR⟩
-    refine le_antisymm ?_ (zero_le _)
+    refine le_antisymm ?_ (zero_le)
     calc volume G ≤ volume (⋃ z0 ∈ T, (L ∩ R z0)) := measure_mono hGsub
       _ = 0 := (measure_biUnion_null_iff hTcount).2 hpiece
-  refine le_antisymm ?_ (zero_le _)
+  refine le_antisymm ?_ (zero_le)
   calc volume L ≤ volume (Zc ∪ G) := measure_mono hLsplit
     _ ≤ volume Zc + volume G := measure_union_le _ _
     _ = 0 := by rw [hZcnull, hGnull, add_zero]
@@ -466,7 +467,7 @@ theorem ae_angularSlice_levelSet_null {u : ℂ → ℝ} {U : Set ℂ} {δ : ℝ}
             Complex.exp ((ξ : ℂ) + (θ'' : ℂ) * Complex.I) ∈ L}).indicator
               (fun _ => (1 : ℝ≥0∞)) θ := by
           refine lintegral_congr fun θ => ?_
-          simp only [hgdef, Set.indicator_apply, mem_inter_iff, mem_setOf_eq, mem_Ioo]
+          simp only [hgdef, Set.indicator_apply, mem_inter_iff, mem_ofPred_eq, mem_Ioo]
           by_cases h1 : -π < θ ∧ θ < π <;> by_cases h2 : Complex.exp
               ((ξ : ℂ) + (θ : ℂ) * Complex.I) ∈ L <;> simp [h1, h2]
       _ = volume (S ξ) := by
@@ -551,7 +552,7 @@ theorem ae_angularSlice_levelSet_null {u : ℂ → ℝ} {U : Set ℂ} {δ : ℝ}
       have : MeasurableSet {p : ℝ × ℝ | p.2 ∈ Ioo (-π) π} :=
         measurable_snd measurableSet_Ioo
       exact h1.indicator this
-    simpa only [Function.uncurry, hgdef] using h2
+    simpa only [Function.uncurry_def, hgdef] using! h2
   have hglint_meas : Measurable fun ξ : ℝ => ∫⁻ θ, g ξ θ := hgjoint.lintegral_prod_right
   -- conclude: a.e.-ξ the slice measure vanishes
   have hae : ∀ᵐ ξ : ℝ, ENNReal.ofReal (Real.exp ξ)
@@ -604,7 +605,7 @@ theorem hasDerivAt_windowedTruncIntegrand_radial {u : ℂ → ℝ} {U : Set ℂ}
     rcases lt_or_gt_of_ne (hne hzU) with hlt | hgt
     · -- sublevel: `(u∘exp − δ)⁺ = 0` on a neighbourhood, so the integrand is locally `0`
       have hθP : θ ∉ P := by
-        simp only [hP, mem_setOf_eq, superLevelU, mem_setOf_eq, not_and]
+        simp only [hP, mem_ofPred_eq, superLevelU, mem_ofPred_eq, not_and]
         exact fun _ => not_lt.mpr hlt.le
       rw [Set.indicator_of_notMem hθP]
       have hloc : (fun x : ℝ => windowedTruncIntegrand u U δ ((x : ℂ) + (θ : ℂ) * Complex.I))
@@ -634,13 +635,13 @@ theorem hasDerivAt_windowedTruncIntegrand_radial {u : ℂ → ℝ} {U : Set ℂ}
       have hDre : HasDerivAt (fun x : ℝ => (expGrad u ((x : ℂ) + (θ : ℂ) * Complex.I)).re)
           ((deriv (expGrad u) ((ξ : ℂ) + (θ : ℂ) * Complex.I)).re) ξ := by
         have hcomp := Complex.reCLM.hasFDerivAt.comp_hasDerivAt ξ hD
-        simpa [Function.comp] using hcomp
+        simpa [Function.comp_def] using! hcomp
       have hprod := ((hu'.sub_const δ).mul hDre)
       refine (hprod.congr_deriv ?_).congr_of_eventuallyEq hloc
       ring
   · -- `exp w₀ ∉ U ⊆ᶜ K`: the integrand vanishes on a neighbourhood of `ξ`
     have hθP : θ ∉ P := by
-      simp only [hP, mem_setOf_eq, superLevelU, mem_setOf_eq, not_and]
+      simp only [hP, mem_ofPred_eq, superLevelU, mem_ofPred_eq, not_and]
       exact fun h => absurd h hzU
     rw [Set.indicator_of_notMem hθP]
     have hwK : z₀ ∉ closure (superLevelU U u δ ∩ RoundAnnulus 0 (Real.exp ζ₁) (Real.exp ζ₂)) :=
@@ -655,7 +656,7 @@ theorem hasDerivAt_windowedTruncIntegrand_radial {u : ℂ → ℝ} {U : Set ℂ}
       have hstrip : {x : ℝ | ((x : ℂ) + (θ : ℂ) * Complex.I) ∈
           stripBox ζ₁ ζ₂ (-π) π} ∈ nhds ξ :=
         Filter.mem_of_superset (isOpen_Ioo.mem_nhds hξ) (fun x hx => by
-          simp only [stripBox, mem_setOf_eq, re_logPolar, im_logPolar]
+          simp only [stripBox, mem_ofPred_eq, re_logPolar, im_logPolar]
           exact ⟨hx.1, hx.2, hθmem.1, hθmem.2⟩)
       filter_upwards [hnhd, hstrip] with x hx hxstrip
       exact windowedTruncIntegrand_eq_zero_of_notMem hxstrip hx
@@ -801,7 +802,7 @@ theorem lipschitzOnWith_truncRoughFlux {u : ℂ → ℝ} {U : Set ℂ} {δ ζ₁
   have hCcompact : IsCompact C := (isCompact_Icc.prod isCompact_Icc).image (by fun_prop)
   have hCsub : C ⊆ stripBox ζ₁' ζ₂' (-π) π := by
     rintro w ⟨⟨x, θ⟩, ⟨hx, hθ⟩, rfl⟩
-    simp only [stripBox, mem_setOf_eq, re_logPolar, im_logPolar]
+    simp only [stripBox, mem_ofPred_eq, re_logPolar, im_logPolar]
     exact ⟨lt_of_lt_of_le hζ₁'lt hx.1, lt_of_le_of_lt hx.2 hζ₂lt, hθ.1, hθ.2⟩
   obtain ⟨K₀, hK₀⟩ :=
     ((locallyLipschitzOn_windowedTruncIntegrand hU hu hK).mono
@@ -910,7 +911,7 @@ theorem hasDerivAt_truncRoughFlux_of_slice_null {u : ℂ → ℝ} {U : Set ℂ} 
   have hCsub : C ⊆ stripBox ζ₁' ζ₂' (-π) π := by
     rintro w ⟨⟨x, θ⟩, ⟨hx, hθ⟩, rfl⟩
     have hxIoo := hrsub hx
-    simp only [stripBox, mem_setOf_eq, re_logPolar, im_logPolar]
+    simp only [stripBox, mem_ofPred_eq, re_logPolar, im_logPolar]
     exact ⟨hxIoo.1, hxIoo.2, hθ.1, hθ.2⟩
   obtain ⟨K₀, hK₀⟩ :=
     ((locallyLipschitzOn_windowedTruncIntegrand hU hu hK).mono
@@ -1018,7 +1019,7 @@ theorem hasDerivAt_truncRoughFlux_of_slice_null {u : ℂ → ℝ} {U : Set ℂ} 
       set P : Set ℝ := {θ' : ℝ | Complex.exp ((ξ : ℂ) + (θ' : ℂ) * Complex.I) ∈ V} with hPdef
       have hSP : S = Ioo (-π) π ∩ P := by
         ext θ
-        simp only [hSdef, angularSliceδ, hPdef, hVdef, mem_inter_iff, mem_setOf_eq]
+        simp only [hSdef, angularSliceδ, hPdef, hVdef, mem_inter_iff, mem_ofPred_eq]
       have hSsubP : S ⊆ P := fun θ hθ => (hSP ▸ hθ).2
       -- every log-polar point at radius `ξ` lies in the compact window annulus
       have hannmem : ∀ t : ℝ, Complex.exp ((ξ : ℂ) + (t : ℂ) * Complex.I)
@@ -1026,7 +1027,7 @@ theorem hasDerivAt_truncRoughFlux_of_slice_null {u : ℂ → ℝ} {U : Set ℂ} 
         intro t
         have hdist : dist (Complex.exp ((ξ : ℂ) + (t : ℂ) * Complex.I)) 0 = Real.exp ξ := by
           rw [dist_zero_right, Complex.norm_exp, re_logPolar]
-        simp only [RoundAnnulus, mem_setOf_eq, hdist]
+        simp only [RoundAnnulus, mem_ofPred_eq, hdist]
         exact ⟨Real.exp_lt_exp.mpr hζ₁'lt, Real.exp_lt_exp.mpr hξlt2⟩
       set gRe : ℝ → ℝ := fun θ => (expGrad u ((ξ : ℂ) + (θ : ℂ) * Complex.I)).re with hgReD
       set gU : ℝ → ℝ := fun θ => u (Complex.exp ((ξ : ℂ) + (θ : ℂ) * Complex.I)) with hgUD
@@ -1276,7 +1277,7 @@ theorem hasDerivAt_truncRoughFlux_of_slice_null {u : ℂ → ℝ} {U : Set ℂ} 
     exact _root_.intervalIntegrable_const
   · -- `h_diff`: a.e.-θ radial derivative off the level set (helper 1)
     have haeπ : ∀ᵐ θ : ℝ, θ ≠ π :=
-      MeasureTheory.ae_iff.mpr (by simp only [not_ne_iff, setOf_eq_eq_singleton,
+      MeasureTheory.ae_iff.mpr (by simp only [not_ne_iff, ofPred_eq_eq_singleton,
         MeasureTheory.measure_singleton])
     filter_upwards [hae_ne, haeπ] with θ hθne hθπ hθΙ
     rw [Set.uIoc_of_le (by linarith : -π ≤ π)] at hθΙ
@@ -1319,7 +1320,7 @@ theorem truncRoughFlux_sub_le_dirichletEnergy {u : ℂ → ℝ} {U : Set ℂ} {�
       have hopen : IsOpen (U ∩ u ⁻¹' {x : ℝ | x ≠ δ}) :=
         hu.continuousOn.isOpen_inter_preimage hU isOpen_ne
       have : {z : ℂ | z ∈ U ∧ u z = δ} = U \ (U ∩ u ⁻¹' {x : ℝ | x ≠ δ}) := by
-        ext z; simp only [mem_setOf_eq, mem_diff, mem_inter_iff, mem_preimage, mem_setOf_eq]
+        ext z; simp only [mem_ofPred_eq, Set.mem_sdiff, mem_inter_iff, mem_preimage, mem_ofPred_eq]
         constructor
         · rintro ⟨hzU, hzδ⟩; exact ⟨hzU, fun h => h.2 hzδ⟩
         · rintro ⟨hzU, hne⟩; exact ⟨hzU, not_not.mp (fun h => hne ⟨hzU, h⟩)⟩
@@ -1338,7 +1339,7 @@ theorem truncRoughFlux_sub_le_dirichletEnergy {u : ℂ → ℝ} {U : Set ℂ} {�
     -- FTC + a.e. derivative identification
     have haeζ₂ : ∀ᵐ ξ : ℝ, ξ ≠ ζ₂ :=
       MeasureTheory.ae_iff.mpr (by
-        simp only [not_ne_iff, setOf_eq_eq_singleton, MeasureTheory.measure_singleton])
+        simp only [not_ne_iff, ofPred_eq_eq_singleton, MeasureTheory.measure_singleton])
     rw [← hAC.integral_deriv_eq_sub]
     refine intervalIntegral.integral_congr_ae ?_
     rw [Set.uIoc_of_le h12]

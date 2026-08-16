@@ -179,7 +179,7 @@ theorem dz_aeeq_beurling_dzbar_of_compactW12 {f gx gy : ℂ → ℂ}
     · exact Metric.closedBall_mem_nhds x one_pos
     · have hmem : MemLp h 2 (volume.restrict (Metric.closedBall x 1)) :=
         hh _ (Set.subset_univ _) (isCompact_closedBall x 1)
-      haveI : IsFiniteMeasure (volume.restrict (Metric.closedBall x 1)) :=
+      have : IsFiniteMeasure (volume.restrict (Metric.closedBall x 1)) :=
         isFiniteMeasure_restrict.2 (isCompact_closedBall x 1).measure_lt_top.ne
       exact hmem.integrable one_le_two
   have hfLI : LocallyIntegrable f volume := hLI hfLp
@@ -304,7 +304,7 @@ theorem dz_aeeq_beurling_dzbar_of_compactW12 {f gx gy : ℂ → ℂ}
         Filter.atTop (nhds (0 + 0)) := hPconv.add hQconv
     rw [add_zero] at hsum
     exact tendsto_of_tendsto_of_tendsto_of_le_of_le
-      (tendsto_const_nhds (x := (0 : ℝ≥0∞))) hsum (fun n => zero_le _) hS
+      (tendsto_const_nhds (x := (0 : ℝ≥0∞))) hsum (fun n => zero_le) hS
   -- The three constant `enorm`s appearing in the coefficient bounds, computed once.
   have hhalf_real : (1 / 2 : ℝ≥0∞) = ENNReal.ofReal (1 / 2) := by
     rw [ENNReal.ofReal_div_of_pos (by norm_num)]; simp
@@ -312,19 +312,19 @@ theorem dz_aeeq_beurling_dzbar_of_compactW12 {f gx gy : ℂ → ℂ}
     have h : ‖(1 / 2 : ℂ)‖ = (1 / 2 : ℝ) := by
       rw [show (1 / 2 : ℂ) = ((1 / 2 : ℝ) : ℂ) by push_cast; ring, Complex.norm_real,
         Real.norm_of_nonneg (by norm_num)]
-    rw [← ofReal_norm_eq_enorm, h, hhalf_real]
+    rw [← ofReal_norm, h, hhalf_real]
   have henorm_negHalfI : ‖(-(1 / 2 : ℂ) * Complex.I)‖ₑ = (1 / 2 : ℝ≥0∞) := by
     have h : ‖(-(1 / 2 : ℂ) * Complex.I)‖ = (1 / 2 : ℝ) := by
       rw [norm_mul, norm_neg, Complex.norm_I, mul_one,
         show (1 / 2 : ℂ) = ((1 / 2 : ℝ) : ℂ) by push_cast; ring, Complex.norm_real,
         Real.norm_of_nonneg (by norm_num)]
-    rw [← ofReal_norm_eq_enorm, h, hhalf_real]
+    rw [← ofReal_norm, h, hhalf_real]
   have henorm_halfI : ‖((1 / 2 : ℂ) * Complex.I)‖ₑ = (1 / 2 : ℝ≥0∞) := by
     have h : ‖((1 / 2 : ℂ) * Complex.I)‖ = (1 / 2 : ℝ) := by
       rw [norm_mul, Complex.norm_I, mul_one,
         show (1 / 2 : ℂ) = ((1 / 2 : ℝ) : ℂ) by push_cast; ring, Complex.norm_real,
         Real.norm_of_nonneg (by norm_num)]
-    rw [← ofReal_norm_eq_enorm, h, hhalf_real]
+    rw [← ofReal_norm, h, hhalf_real]
   -- The pointwise bound for `dz fn - A`.
   have hdz_bound : ∀ n, eLpNorm (fun z => dz (fn n) z - A z) 2 volume
       ≤ eLpNorm (Pn n - gx) 2 volume + eLpNorm (Qn n - gy) 2 volume := by
@@ -414,7 +414,7 @@ theorem dz_aeeq_beurling_dzbar_of_compactW12 {f gx gy : ℂ → ℂ}
       ENNReal.Tendsto.const_mul hdzbar_conv (Or.inr hCfin)
     rw [mul_zero] at hmul
     exact tendsto_of_tendsto_of_tendsto_of_le_of_le
-      (tendsto_const_nhds (x := (0 : ℝ≥0∞))) hmul (fun n => zero_le _) hbound
+      (tendsto_const_nhds (x := (0 : ℝ≥0∞))) hmul (fun n => zero_le) hbound
   -- `dz fn = beurling (dzbar fn)` pointwise, so `dz fn → beurling B` in `L²`.
   have hdz_conv' : Filter.Tendsto (fun n => eLpNorm (fun z => dz (fn n) z - beurling B z) 2 volume)
       Filter.atTop (nhds 0) := by
@@ -453,7 +453,7 @@ theorem dz_aeeq_beurling_dzbar_of_compactW12 {f gx gy : ℂ → ℂ}
     have := hdz_conv.add hdz_conv'; rwa [add_zero] at this
   have hle : eLpNorm (fun z => A z - beurling B z) 2 volume ≤ 0 :=
     le_of_tendsto_of_tendsto' tendsto_const_nhds hsum hbd
-  have hzero : eLpNorm (fun z => A z - beurling B z) 2 volume = 0 := le_antisymm hle (zero_le _)
+  have hzero : eLpNorm (fun z => A z - beurling B z) 2 volume = 0 := le_antisymm hle (zero_le)
   have hmeasAB : AEStronglyMeasurable (fun z => A z - beurling B z) volume :=
     hA_mem.1.sub hbeurlingB_meas
   have hae := (eLpNorm_eq_zero_iff hmeasAB (by norm_num)).1 hzero
@@ -536,7 +536,7 @@ theorem beurling_add_ae_lp {p : ℝ≥0∞} (hp : 2 < p) (hptop : p ≠ ⊤) {f 
   -- The Hölder conjugate exponent `p' = (1 - p⁻¹)⁻¹` and its instance.
   set p' : ℝ≥0∞ := (1 - p⁻¹)⁻¹ with hp'_def
   have hpinv_le_one : p⁻¹ ≤ 1 := by rw [ENNReal.inv_le_one]; exact hp1.le
-  haveI hHC : ENNReal.HolderConjugate p p' := by
+  have hHC : ENNReal.HolderConjugate p p' := by
     rw [hp'_def, ENNReal.holderConjugate_iff, inv_inv, add_tsub_cancel_of_le hpinv_le_one]
   -- Truncated-integrand integrability for `Lᵖ` inputs.
   have hint : ∀ {h : ℂ → ℂ}, MemLp h p volume → ∀ {r : ℝ}, 0 < r → ∀ x : ℂ,
@@ -597,7 +597,7 @@ theorem exists_memLp_solution_of_beltrami_fixedPoint {μ h : ℂ → ℂ} {p : �
   classical
   -- Basic facts about `p` and the CZ constant.
   have hp1 : (1 : ℝ≥0∞) ≤ p := le_of_lt (lt_trans (by norm_num : (1 : ℝ≥0∞) < 2) hp)
-  haveI : Fact (1 ≤ p) := ⟨hp1⟩
+  have : Fact (1 ≤ p) := ⟨hp1⟩
   obtain ⟨hC0, hCbound⟩ := hCb
   set k : ℝ := (eLpNormEssSup μ volume).toReal with hk_def
   have hk0 : 0 ≤ k := ENNReal.toReal_nonneg
@@ -742,7 +742,7 @@ theorem locallyIntegrable_of_memLpLocOn_two {h : ℂ → ℂ}
   · exact Metric.closedBall_mem_nhds x one_pos
   · have hmem : MemLp h 2 (volume.restrict (Metric.closedBall x 1)) :=
       hh _ (Set.subset_univ _) (isCompact_closedBall x 1)
-    haveI : IsFiniteMeasure (volume.restrict (Metric.closedBall x 1)) :=
+    have : IsFiniteMeasure (volume.restrict (Metric.closedBall x 1)) :=
       isFiniteMeasure_restrict.2 (isCompact_closedBall x 1).measure_lt_top.ne
     exact hmem.integrable one_le_two
 
@@ -773,7 +773,7 @@ theorem memLp_two_smul_of_continuous_compactSupport_memLpLocOn
   have huK : MemLp u 2 (volume.restrict K) := hu _ (Set.subset_univ _) hKcompact
   have hprodK : MemLp (fun z => (ψ z : ℂ) * u z) 2 (volume.restrict K) := by
     have := huK.smul (φ := fun z => (ψ z : ℂ)) hψtop (p := ⊤) (q := 2) (r := 2)
-    simpa only [smul_eq_mul] using this
+    simpa only [smul_eq_mul] using! this
   exact memLp_of_memLpLocOn_compact_vanishing hKcompact hprodK hvanish
 
 /-- A continuous compactly supported real function times a loc-`Lᵖ` function is
@@ -805,7 +805,7 @@ theorem memLp_smul_of_continuous_compactSupport_memLpLocOn {p : ℝ≥0∞} (_hp
   have huK : MemLp u p (volume.restrict K) := hu _ (Set.subset_univ _) hKcompact
   have hprodK : MemLp (fun z => (ψ z : ℂ) * u z) p (volume.restrict K) := by
     have := huK.smul (φ := fun z => (ψ z : ℂ)) hψtop (p := ⊤) (q := p) (r := p)
-    simpa only [smul_eq_mul] using this
+    simpa only [smul_eq_mul] using! this
   exact memLp_of_memLpLocOn_compact_vanishing hKcompact hprodK hvanish
 
 /-- A continuous compactly supported function is globally bounded, hence in `L∞`. -/
@@ -824,7 +824,7 @@ theorem beurling_congr_ae {a b : ℂ → ℂ} (ha : MemLp a 2 volume) (hb : MemL
   have hmeas : AEStronglyMeasurable (fun z => beurling a z - beurling b z) volume :=
     (memLp_beurling ha).1.sub (memLp_beurling hb).1
   have hzero : eLpNorm (fun z => beurling a z - beurling b z) 2 volume = 0 := by
-    refine le_antisymm ?_ (zero_le _)
+    refine le_antisymm ?_ (zero_le)
     refine le_trans (eLpNorm_beurling_sub_le ha hb) ?_
     have : eLpNorm (a - b) 2 volume = 0 := by
       rw [eLpNorm_eq_zero_iff (ha.1.sub hb.1) (by norm_num)]
@@ -923,10 +923,10 @@ theorem dz_cutoff_eq_beurling_repr {f gx gy : ℂ → ℂ}
   set Gy : ℂ → ℂ := fun z => χ z • gy z + ((fderiv ℝ χ z) Complex.I) • f z with hGy_def
   have hGxweak : HasWeakDirDeriv 1 Gx F Set.univ := by
     have := hgx.smul_smooth hχ hfon hgxon
-    simpa only [hF_def, hGx_def] using this
+    simpa only [hF_def, hGx_def] using! this
   have hGyweak : HasWeakDirDeriv Complex.I Gy F Set.univ := by
     have := hgy.smul_smooth hχ hfon hgyon
-    simpa only [hF_def, hGy_def] using this
+    simpa only [hF_def, hGy_def] using! this
   -- ===== (3) `Gx`, `Gy` are loc-`L²` (in fact globally `L²`; here loc suffices). =====
   -- `χ • gx`, `(∂₁χ) • f` etc. are smooth(-coeff) · loc-`L²`, compactly supported, so `L²`.
   have hχ1cont : Continuous (fun z => (fderiv ℝ χ z) 1) :=
@@ -1042,10 +1042,10 @@ theorem dz_cutoff_eq_beurling_repr {f gx gy : ℂ → ℂ}
     memLp_top_of_continuous_hasCompactSupport hdzbarχc_cont hdzbarχc_cs
   have hμdz_top : MemLp (fun z => μ z * dz χc z) ⊤ volume := by
     have := hdzχc_top.smul (φ := μ) hμtop (p := ⊤) (q := ⊤) (r := ⊤)
-    simpa only [smul_eq_mul] using this
+    simpa only [smul_eq_mul] using! this
   have hc_top : MemLp c ⊤ volume := by
     have hsub := hdzbarχc_top.sub hμdz_top
-    simpa only [hc_def, Pi.sub_apply] using hsub
+    simpa only [hc_def, Pi.sub_apply] using! hsub
   have hKcmeas : MeasurableSet Kc := hKc_compact.measurableSet
   have hR_mem : MemLp R 2 volume := by
     -- `R` vanishes off `Kc`, and equals `f · c` (`L²(Kc)`) on `Kc`.
@@ -1085,7 +1085,7 @@ theorem dz_cutoff_eq_beurling_repr {f gx gy : ℂ → ℂ}
       filter_upwards with z hz
       exact hC ⟨z, hz, rfl⟩
     have hcKc : MemLp c ⊤ (volume.restrict Kc) := hc_top.restrict Kc
-    haveI : IsFiniteMeasure (volume.restrict Kc) :=
+    have : IsFiniteMeasure (volume.restrict Kc) :=
       isFiniteMeasure_restrict.2 hKc_compact.measure_lt_top.ne
     -- `R = c • f ∈ L∞(Kc)`, then drop to `L³(Kc)` (finite measure).
     have hRKc_top : MemLp R ⊤ (volume.restrict Kc) := by
@@ -1113,7 +1113,7 @@ theorem dz_cutoff_eq_beurling_repr {f gx gy : ℂ → ℂ}
   -- `beurling WbarG =ᵐ beurling (μ·WG) + beurling R`.
   have hμWG_mem : MemLp (fun z => μ z * WG z) 2 volume := by
     have := hWG_mem.smul (φ := μ) hμtop (p := ⊤) (q := 2) (r := 2)
-    simpa only [smul_eq_mul] using this
+    simpa only [smul_eq_mul] using! this
   have hbeur_split : beurling WbarG =ᵐ[volume]
       beurling (fun z => μ z * WG z) + beurling R := by
     have h1 : beurling WbarG =ᵐ[volume] beurling ((fun z => μ z * WG z) + R) :=
@@ -1267,7 +1267,7 @@ theorem dz_memLpLocOn_of_beltrami {μ : ℂ → ℂ} (hμmeas : Measurable μ)
   -- On `ball 0 r`, `WG = Wdz`: `χ = 1`, `fderiv ℝ χ = 0` collapse `Gx → gx`, `Gy → gy`.
   have hWG_eq_Wdz : ∀ z ∈ Metric.ball (0 : ℂ) r, WG z = Wdz z := by
     intro z hz
-    simp only [hWG_def, hWdz_def, hχone z hz, hχfderiv0 z hz, ContinuousLinearMap.zero_apply]
+    simp only [hWG_def, hWdz_def, hχone z hz, hχfderiv0 z hz, zero_apply]
     simp
   -- ===== L5: the `L²` Beltrami representation of `WG`, with `WG ∈ L²`, plus the
   -- primitive bundle `(F, Gx, Gy)` and its `W^{1,2}` facts that the Gehring residual needs.

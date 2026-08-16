@@ -86,7 +86,7 @@ theorem qc_master_sum_sq_div_le_horizontal {f : ℂ → ℂ} {K : ℝ} (hf : Axi
   · subst hm
     simp only [Finset.univ_eq_empty, Finset.sum_empty]
     exact mul_nonneg (mul_nonneg (by norm_num) hK0.le) hD0
-  haveI : Nonempty (Fin m) := ⟨⟨0, hm⟩⟩
+  have : Nonempty (Fin m) := ⟨⟨0, hm⟩⟩
   -- distance between explicit complex points
   have hdist_mk : ∀ a b u v : ℝ, dist (⟨a, b⟩ : ℂ) ⟨u, v⟩ ≤ |a - u| + |b - v| := by
     intro a b u v
@@ -391,7 +391,7 @@ theorem qc_master_sum_sq_div_le_vertical {f : ℂ → ℂ} {K : ℝ} (hf : AxisR
   · subst hm
     simp only [Finset.univ_eq_empty, Finset.sum_empty]
     exact mul_nonneg (mul_nonneg (by norm_num) hK0.le) hD0
-  haveI : Nonempty (Fin m) := ⟨⟨0, hm⟩⟩
+  have : Nonempty (Fin m) := ⟨⟨0, hm⟩⟩
   -- distance between explicit complex points
   have hdist_mk : ∀ a b u v : ℝ, dist (⟨a, b⟩ : ℂ) ⟨u, v⟩ ≤ |a - u| + |b - v| := by
     intro a b u v
@@ -706,7 +706,7 @@ theorem AxisRectModulusBound.horizontal_family_sq_sum_le {f : ℂ → ℂ} {K : 
   · subst hN
     simp only [Finset.univ_eq_empty, Finset.sum_empty]
     exact mul_nonneg hK0.le hD0
-  haveI : Nonempty (Fin N) := ⟨⟨0, hN⟩⟩
+  have : Nonempty (Fin N) := ⟨⟨0, hN⟩⟩
   have hwd : ∀ i : Fin N, α ≤ c i ∧ d i ≤ β := fun i =>
     ⟨(hsub i ⟨le_refl _, (hcd i).le⟩).1, (hsub i ⟨(hcd i).le, le_refl _⟩).2⟩
   -- ★: the shrunken-chord estimate for every positive `ε`
@@ -911,7 +911,7 @@ theorem AxisRectModulusBound.vertical_family_sq_sum_le {f : ℂ → ℂ} {K : �
   · subst hN
     simp only [Finset.univ_eq_empty, Finset.sum_empty]
     exact mul_nonneg hK0.le hD0
-  haveI : Nonempty (Fin N) := ⟨⟨0, hN⟩⟩
+  have : Nonempty (Fin N) := ⟨⟨0, hN⟩⟩
   have hwd : ∀ i : Fin N, σ ≤ c i ∧ d i ≤ τ := fun i =>
     ⟨(hsub i ⟨le_refl _, (hcd i).le⟩).1, (hsub i ⟨(hcd i).le, le_refl _⟩).2⟩
   -- ★: the shrunken-chord estimate for every positive `ε`

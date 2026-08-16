@@ -49,7 +49,7 @@ theorem hasL2WeakDzbar_comp_holomorphic {Ω : Set ℂ} (hΩ : IsOpen Ω)
     intro Ω hΩ g hg
     rw [MeasureTheory.locallyIntegrableOn_iff hΩ.isLocallyClosed]
     intro k hk hkc
-    haveI : IsFiniteMeasure (volume.restrict k) :=
+    have : IsFiniteMeasure (volume.restrict k) :=
       ⟨by rw [Measure.restrict_apply_univ]; exact hkc.measure_lt_top⟩
     have h1le : (1 : ℝ≥0∞) ≤ 2 := by norm_num
     exact memLp_one_iff_integrable.mp ((hg k hk hkc).mono_exponent h1le)
@@ -194,14 +194,14 @@ theorem hasL2WeakDzbar_comp_holomorphic {Ω : Set ℂ} (hΩ : IsOpen Ω)
         analyticAt_clog hgp_slit
       have := AnalyticAt.comp (g := Complex.log) (f := fun z => g z / g p) (x := p)
         hclog hgdiv
-      simpa [Function.comp] using this
+      simpa [Function.comp] using! this
     have hm0C : (m : ℂ) ≠ 0 := Nat.cast_ne_zero.mpr (by omega)
     have hh_a : AnalyticAt ℂ h p := by
       apply analyticAt_const.mul
       have hdivm : AnalyticAt ℂ (fun z => Complex.log (g z / g p) / m) p :=
         hlog.div analyticAt_const hm0C
       have := analyticAt_cexp.comp hdivm
-      simpa [Function.comp] using this
+      simpa [Function.comp] using! this
     have hhp : h p = c := by
       rw [hhdef]
       simp only []
@@ -230,7 +230,7 @@ theorem hasL2WeakDzbar_comp_holomorphic {Ω : Set ℂ} (hΩ : IsOpen Ω)
       have hd1 : HasDerivAt (fun z : ℂ => z - p) 1 p := (hasDerivAt_id p).sub_const p
       have hd2 : HasDerivAt h (deriv h p) p := hh_a.differentiableAt.hasDerivAt
       have := hd1.mul hd2
-      simpa using this
+      simpa using! this
     have hu_strict : HasStrictDerivAt u (h p) p := by
       have hs := hu_a.hasStrictDerivAt
       rwa [hdu.deriv] at hs
@@ -410,7 +410,7 @@ theorem hasL2WeakDzbar_comp_holomorphic {Ω : Set ℂ} (hΩ : IsOpen Ω)
       simp
     have hsplit : (∫⁻ z in K, G (φ z) * ‖deriv φ z‖ₑ ^ (2 : ℕ) ∂volume)
         = ∫⁻ z in K ∩ U, G (φ z) * ‖deriv φ z‖ₑ ^ (2 : ℕ) ∂volume := by
-      have hKeq : K = (K ∩ U) ∪ (K \ U) := (Set.inter_union_diff K U).symm
+      have hKeq : K = (K ∩ U) ∪ (K \ U) := (Set.inter_union_sdiff K U).symm
       conv_lhs => rw [hKeq]
       rw [lintegral_union (hKc.measurableSet.diff hUopen.measurableSet)
         (Set.disjoint_sdiff_right.mono_left Set.inter_subset_right)]
@@ -500,7 +500,7 @@ theorem hasL2WeakDzbar_comp_holomorphic {Ω : Set ℂ} (hΩ : IsOpen Ω)
       dsimp only
       rw [e3_det, abs_of_nonneg (Complex.normSq_nonneg _)]
       rw [show Complex.normSq (deriv φ z) = ‖deriv φ z‖ ^ 2 from Complex.normSq_eq_norm_sq _]
-      rw [ENNReal.ofReal_pow (norm_nonneg _), ofReal_norm_eq_enorm]
+      rw [ENNReal.ofReal_pow (norm_nonneg _), ofReal_norm]
       ring
     -- Step 4: sum the image integrals against the multiplicity bound.
     have hEimg_meas : ∀ n, MeasurableSet (φ '' E n) := fun n =>
@@ -620,7 +620,7 @@ theorem hasL2WeakDzbar_comp_holomorphic {Ω : Set ℂ} (hΩ : IsOpen Ω)
       intro n z hz
       by_contra hzΩ
       have h1 := Set.mem_iInter₂.mp hz.2 z hzΩ
-      simp only [Set.mem_setOf_eq, dist_self] at h1
+      simp only [Set.mem_ofPred_eq, dist_self] at h1
       have : (0 : ℝ) < 1 / (n + 1 : ℝ) := by positivity
       linarith
     have hKn_cover : ∀ z ∈ Ω, ∃ n, z ∈ Kn n := by
@@ -643,7 +643,7 @@ theorem hasL2WeakDzbar_comp_holomorphic {Ω : Set ℂ} (hΩ : IsOpen Ω)
         refine ⟨max n₁ n₂, ⟨Metric.mem_closedBall.mpr hn2', ?_⟩⟩
         apply Set.mem_iInter₂.mpr
         intro y hy
-        simp only [Set.mem_setOf_eq]
+        simp only [Set.mem_ofPred_eq]
         have h1 : 1 / ((max n₁ n₂ : ℕ) + 1 : ℝ) ≤ 1 / ((n₁ : ℝ) + 1) := by
           apply one_div_le_one_div_of_le (by positivity)
           have : (n₁ : ℝ) ≤ (max n₁ n₂ : ℕ) := by exact_mod_cast le_max_left n₁ n₂
@@ -662,7 +662,7 @@ theorem hasL2WeakDzbar_comp_holomorphic {Ω : Set ℂ} (hΩ : IsOpen Ω)
         have hpt : ∀ w, ‖q w‖ₑ ^ (2 : ℕ) = E'.indicator (fun _ => (1 : ℝ≥0∞)) w := by
           intro w
           by_cases hw : w ∈ E' <;> simp [hqdef, hw]
-        apply le_antisymm _ (zero_le _)
+        apply le_antisymm _ (zero_le)
         calc (∫⁻ w in φ '' Kn n, ‖q w‖ₑ ^ (2 : ℕ) ∂volume)
             = ∫⁻ w in φ '' Kn n, E'.indicator (fun _ => (1 : ℝ≥0∞)) w ∂volume := by
               apply lintegral_congr
@@ -675,7 +675,7 @@ theorem hasL2WeakDzbar_comp_holomorphic {Ω : Set ℂ} (hΩ : IsOpen Ω)
               simp
           _ = 0 := hE'null
       have hCV0 : (∫⁻ z in Kn n, ‖q (φ z)‖ₑ ^ (2 : ℕ) * ‖deriv φ z‖ₑ ^ (2 : ℕ) ∂volume) = 0 := by
-        apply le_antisymm _ (zero_le _)
+        apply le_antisymm _ (zero_le)
         calc (∫⁻ z in Kn n, ‖q (φ z)‖ₑ ^ (2 : ℕ) * ‖deriv φ z‖ₑ ^ (2 : ℕ) ∂volume)
             ≤ N * ∫⁻ w in φ '' Kn n, ‖q w‖ₑ ^ (2 : ℕ) ∂volume := hCV q hqmeas
           _ = 0 := by rw [himg0, mul_zero]
@@ -812,12 +812,12 @@ theorem hasL2WeakDzbar_comp_holomorphic {Ω : Set ℂ} (hΩ : IsOpen Ω)
         ((bumps n).normed volume) gD (ContinuousLinearMap.lsmul ℝ ℝ) volume - gD)
         2 volume) ^ (2 : ℕ)) atTop (𝓝 0) := by
       have := ((ENNReal.continuous_pow 2).tendsto 0).comp hglobal
-      simpa using this
+      simpa using! this
     exact tendsto_of_tendsto_of_tendsto_of_le_of_le tendsto_const_nhds hsq
-      (fun n => zero_le _) hbound
+      (fun n => zero_le) hbound
   have e7_conj_enorm : ∀ (w : ℂ), ‖(starRingEnd ℂ) w‖ₑ = ‖w‖ₑ := by
     intro w
-    rw [← ofReal_norm_eq_enorm, ← ofReal_norm_eq_enorm]
+    rw [← ofReal_norm, ← ofReal_norm]
     congr 1
     simp
   have e7_habs : ∀ (a b d e : ℂ), ‖(1 / 2 : ℂ) * (a - Complex.I * b) * (d * e)
@@ -832,7 +832,7 @@ theorem hasL2WeakDzbar_comp_holomorphic {Ω : Set ℂ} (hΩ : IsOpen Ω)
         _ = ‖x‖ₑ + ‖y‖ₑ := by
             rw [enorm_mul]
             congr 1
-            rw [← ofReal_norm_eq_enorm, Complex.norm_I]
+            rw [← ofReal_norm, Complex.norm_I]
             simp
     have hIb' : ∀ x y : ℂ, ‖x + Complex.I * y‖ₑ ≤ ‖x‖ₑ + ‖y‖ₑ := by
       intro x y
@@ -840,10 +840,10 @@ theorem hasL2WeakDzbar_comp_holomorphic {Ω : Set ℂ} (hΩ : IsOpen Ω)
         _ = ‖x‖ₑ + ‖y‖ₑ := by
             rw [enorm_mul]
             congr 1
-            rw [← ofReal_norm_eq_enorm, Complex.norm_I]
+            rw [← ofReal_norm, Complex.norm_I]
             simp
     have hhalf : ‖(1 / 2 : ℂ)‖ₑ = ENNReal.ofReal (1 / 2) := by
-      rw [← ofReal_norm_eq_enorm]
+      rw [← ofReal_norm]
       congr 1
       simp
     calc ‖(1 / 2 : ℂ) * (a - Complex.I * b) * (d * e)
@@ -888,8 +888,8 @@ theorem hasL2WeakDzbar_comp_holomorphic {Ω : Set ℂ} (hΩ : IsOpen Ω)
       (fun z => v (φ z)) Ω := by
     intro Ω hΩ φ v hφ hv gx gy hgx_meas hgy_meas hwx hwy hgx2 hgy2 e
     classical
-    haveI : IsBoundedSMul ℝ ℂ := NormSMulClass.toIsBoundedSMul
-    haveI : ContinuousSMul ℝ ℂ := IsBoundedSMul.continuousSMul
+    have : IsBoundedSMul ℝ ℂ := NormSMulClass.toIsBoundedSMul
+    have : ContinuousSMul ℝ ℂ := IsBoundedSMul.continuousSMul
     have hφa : AnalyticOnNhd ℂ φ Ω := hφ.analyticOnNhd hΩ
     have hφcont : ContinuousOn φ Ω := hφ.continuousOn
     have hd'cont : ContinuousOn (deriv φ) Ω := hφa.deriv.continuousOn
@@ -1075,13 +1075,13 @@ theorem hasL2WeakDzbar_comp_holomorphic {Ω : Set ℂ} (hΩ : IsOpen Ω)
     -- Conjugation preserves the extended norm.
     have hconj_enorm : ∀ w : ℂ, ‖(starRingEnd ℂ) w‖ₑ = ‖w‖ₑ := by
       intro w
-      rw [← ofReal_norm_eq_enorm, ← ofReal_norm_eq_enorm]
+      rw [← ofReal_norm, ← ofReal_norm]
       congr 1
       simp
     have henorm_smul_le : ∀ (r : ℝ) (x : ℂ), ‖r • x‖ₑ ≤ ‖r‖ₑ * ‖x‖ₑ := by
       intro r x
-      rw [← ofReal_norm_eq_enorm, ← ofReal_norm_eq_enorm (a := x),
-        ← ofReal_norm_eq_enorm (a := r), ← ENNReal.ofReal_mul (norm_nonneg r)]
+      rw [← ofReal_norm, ← ofReal_norm (x := x),
+        ← ofReal_norm (x := r), ← ENNReal.ofReal_mul (norm_nonneg r)]
       exact ENNReal.ofReal_le_ofReal (norm_smul_le r x)
     -- The generic algebraic bound for the Wirtinger combination.
     have habs : ∀ a b d : ℂ,
@@ -1097,7 +1097,7 @@ theorem hasL2WeakDzbar_comp_holomorphic {Ω : Set ℂ} (hΩ : IsOpen Ω)
           _ = ‖x‖ₑ + ‖y‖ₑ := by
               rw [enorm_mul]
               congr 1
-              rw [← ofReal_norm_eq_enorm, Complex.norm_I]
+              rw [← ofReal_norm, Complex.norm_I]
               simp
       have hIb' : ∀ x y : ℂ, ‖x + Complex.I * y‖ₑ ≤ ‖x‖ₑ + ‖y‖ₑ := by
         intro x y
@@ -1105,10 +1105,10 @@ theorem hasL2WeakDzbar_comp_holomorphic {Ω : Set ℂ} (hΩ : IsOpen Ω)
           _ = ‖x‖ₑ + ‖y‖ₑ := by
               rw [enorm_mul]
               congr 1
-              rw [← ofReal_norm_eq_enorm, Complex.norm_I]
+              rw [← ofReal_norm, Complex.norm_I]
               simp
       have hhalf : ‖(1 / 2 : ℂ)‖ₑ = ENNReal.ofReal (1 / 2) := by
-        rw [← ofReal_norm_eq_enorm]
+        rw [← ofReal_norm]
         congr 1
         simp
       calc ‖(1 / 2 : ℂ) * (a - Complex.I * b) * (d * e)
@@ -1140,7 +1140,7 @@ theorem hasL2WeakDzbar_comp_holomorphic {Ω : Set ℂ} (hΩ : IsOpen Ω)
       have hfae' : AEMeasurable (fun z => ‖q (φ z)‖ₑ * ‖deriv φ z‖ₑ)
           (volume.restrict (tsupport ψ)) := by
         have h := (hq.comp_aemeasurable hφae).enorm.mul hd'ae.enorm
-        simpa [Function.comp] using h
+        simpa [Function.comp] using! h
       have h := ENNReal.lintegral_mul_le_Lp_mul_Lq (volume.restrict (tsupport ψ))
         hHolder hfae' (aemeasurable_const (b := (1 : ℝ≥0∞)))
       simp only [Pi.mul_apply, mul_one, ENNReal.one_rpow, lintegral_one,
@@ -1209,7 +1209,7 @@ theorem hasL2WeakDzbar_comp_holomorphic {Ω : Set ℂ} (hΩ : IsOpen Ω)
             _ ≤ ENNReal.ofReal Cψ * ((‖gx (φ z)‖ₑ + ‖gy (φ z)‖ₑ)
                 * (‖deriv φ z‖ₑ * ‖e‖ₑ)) := by
                 apply mul_le_mul'
-                · rw [← ofReal_norm_eq_enorm]
+                · rw [← ofReal_norm]
                   exact ENNReal.ofReal_le_ofReal (hCψ z)
                 · rw [hGedef]
                   exact habs _ _ _
@@ -1230,7 +1230,7 @@ theorem hasL2WeakDzbar_comp_holomorphic {Ω : Set ℂ} (hΩ : IsOpen Ω)
               have hax : AEMeasurable (fun z => ‖gx (φ z)‖ₑ * ‖deriv φ z‖ₑ)
                   (volume.restrict (tsupport ψ)) := by
                 have h := (hgx_meas.comp_aemeasurable hφae).enorm.mul hd'ae.enorm
-                simpa [Function.comp] using h
+                simpa [Function.comp] using! h
               rw [lintegral_add_left' hax]
               exact ENNReal.add_lt_top.mpr ⟨hK_fin_x, hK_fin_y⟩
     -- Integrability of the mollified right-hand sides.
@@ -1303,7 +1303,7 @@ theorem hasL2WeakDzbar_comp_holomorphic {Ω : Set ℂ} (hΩ : IsOpen Ω)
           _ ≤ ENNReal.ofReal Cψ * ((‖cx n (φ z) - gx (φ z)‖ₑ + ‖cy n (φ z) - gy (φ z)‖ₑ)
               * (‖deriv φ z‖ₑ * ‖e‖ₑ)) := by
               apply mul_le_mul'
-              · rw [← ofReal_norm_eq_enorm]
+              · rw [← ofReal_norm]
                 exact ENNReal.ofReal_le_ofReal (hCψ z)
               · rw [hdiff_eq]
                 exact habs _ _ _
@@ -1330,7 +1330,7 @@ theorem hasL2WeakDzbar_comp_holomorphic {Ω : Set ℂ} (hΩ : IsOpen Ω)
                 (volume.restrict (tsupport ψ)) := by
               have h := (((hcx_cont n).measurable.sub hgx_meas).comp_aemeasurable
                 hφae).enorm.mul hd'ae.enorm
-              simpa [Function.comp] using h
+              simpa [Function.comp] using! h
             rw [lintegral_add_left' hax]
             exact add_le_add
               (hCS (fun w => cx n w - gx w) ((hcx_cont n).measurable.sub hgx_meas))
@@ -1353,12 +1353,12 @@ theorem hasL2WeakDzbar_comp_holomorphic {Ω : Set ℂ} (hΩ : IsOpen Ω)
         have hc := (ENNReal.continuous_rpow_const (y := (1 / 2 : ℝ))).tendsto (0 : ℝ≥0∞)
         have h2 := hc.comp hX0
         rw [hrp0] at h2
-        simpa [Function.comp] using h2
+        simpa [Function.comp] using! h2
       have hYr : Tendsto (fun n => ((N : ℝ≥0∞) * Yn n) ^ (1 / 2 : ℝ)) atTop (𝓝 0) := by
         have hc := (ENNReal.continuous_rpow_const (y := (1 / 2 : ℝ))).tendsto (0 : ℝ≥0∞)
         have h2 := hc.comp hY0
         rw [hrp0] at h2
-        simpa [Function.comp] using h2
+        simpa [Function.comp] using! h2
       have hvol : (volume (tsupport ψ)) ^ (1 / 2 : ℝ) ≠ ⊤ :=
         (ENNReal.rpow_lt_top_of_nonneg (by norm_num) hKc.measure_lt_top.ne).ne
       have hXv : Tendsto (fun n => (((N : ℝ≥0∞) * Xn n) ^ (1 / 2 : ℝ))
@@ -1384,7 +1384,7 @@ theorem hasL2WeakDzbar_comp_holomorphic {Ω : Set ℂ} (hΩ : IsOpen Ω)
         ‖(∫ z, ψ z • ((fderiv ℝ (fun y => vn n (φ y)) z) e)) - ∫ z, ψ z • Ge z‖ₑ)
         atTop (𝓝 0) :=
       tendsto_of_tendsto_of_tendsto_of_le_of_le tendsto_const_nhds hbound_tendsto
-        (fun n => zero_le _) hdiff_bd
+        (fun n => zero_le) hdiff_bd
     have hRHS : Tendsto (fun n => ∫ z, ψ z • ((fderiv ℝ (fun y => vn n (φ y)) z) e))
         atTop (𝓝 (∫ z, ψ z • Ge z)) := by
       rw [tendsto_iff_norm_sub_tendsto_zero]
@@ -1503,7 +1503,7 @@ theorem hasL2WeakDzbar_comp_holomorphic {Ω : Set ℂ} (hΩ : IsOpen Ω)
           (fun z => ‖gx (φ z)‖ₑ ^ (2 : ℕ) * ‖deriv φ z‖ₑ ^ (2 : ℕ))
           (volume.restrict K) := by
         have h := (h1.enorm.pow_const 2).mul (hd'ae.enorm.pow_const 2)
-        simpa using h
+        simpa using! h
       have hfin : (∫⁻ z in K,
           ((‖gx (φ z)‖ₑ ^ (2 : ℕ) * ‖deriv φ z‖ₑ ^ (2 : ℕ))
             + (‖gy (φ z)‖ₑ ^ (2 : ℕ) * ‖deriv φ z‖ₑ ^ (2 : ℕ))) ∂volume) < ⊤ := by

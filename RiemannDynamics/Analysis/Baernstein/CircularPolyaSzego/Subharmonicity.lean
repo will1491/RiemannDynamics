@@ -84,7 +84,7 @@ theorem starPlane_continuousOn {p : ℂ} {u : ℂ → ℝ} {rI rO : ℝ}
       fun_prop
     refine hucont.comp hPhi.continuousOn ?_
     rintro ⟨ξ, φ⟩ ⟨hξ, -⟩
-    simp only [Set.mem_setOf_eq]
+    simp only [Set.mem_ofPred_eq]
     have hnorm : ‖p + (Real.exp ξ : ℂ) * Complex.exp ((φ - π : ℝ) * Complex.I) - p‖
         = Real.exp ξ := by
       rw [add_sub_cancel_left, norm_mul, Complex.norm_exp, Complex.norm_real,
@@ -118,12 +118,12 @@ theorem starPlane_continuousOn {p : ℂ} {u : ℂ → ℝ} {rI rO : ℝ}
     have hempty : distribFun (2 * π) (g ξ) (ENNReal.ofReal M) = 0 := by
       have hset : {y ∈ Icc (0 : ℝ) (2 * π) | ENNReal.ofReal M < g ξ y} = ∅ := by
         ext y
-        simp only [mem_setOf_eq, mem_empty_iff_false, iff_false, not_and]
+        simp only [mem_ofPred_eq, mem_empty_iff_false, iff_false, not_and]
         intro hy
         exact not_lt.mpr (hgle ξ hξ y hy)
       rw [distribFun, hset, measure_empty]
     rw [hempty] at hlt
-    exact absurd hlt (not_lt.mpr (zero_le _))
+    exact absurd hlt (not_lt.mpr (zero_le))
   -- Aperture Lipschitz bound: widening the centered arc adds at most the boundary mass.
   have hthetaLip : ∀ ξ ∈ Icc a b, ∀ θ θ' : ℝ, θ ≤ θ' →
       starProfile (2 * π) (g ξ) θ'
@@ -450,7 +450,7 @@ theorem starPlane_subMeanValue_small {p : ℂ} {u : ℂ → ℝ} {rI rO : ℝ} {
       isClosed_le continuous_const (by fun_prop)
     have h2 : IsClosed {z : ℂ | ‖z - p‖ ≤ Real.exp (w₀.re + ρ)} :=
       isClosed_le (by fun_prop) continuous_const
-    simpa [Set.setOf_and] using h1.inter h2
+    simpa [Set.ofPred_and] using h1.inter h2
   have hKcompact : IsCompact K := by
     refine (isCompact_closedBall p (Real.exp (w₀.re + ρ))).of_isClosed_subset hKclosed ?_
     rw [hKdef]
@@ -496,7 +496,7 @@ theorem starPlane_subMeanValue_small {p : ℂ} {u : ℂ → ℝ} {rI rO : ℝ} {
       Integrable (fun φ : ℝ => u (p + Complex.exp (w + φ * Complex.I)))
         ((volume : Measure ℝ).restrict E) := by
     intro w hw E hEfin
-    haveI : IsFiniteMeasure ((volume : Measure ℝ).restrict E) := isFiniteMeasure_restrict.2 hEfin
+    have : IsFiniteMeasure ((volume : Measure ℝ).restrict E) := isFiniteMeasure_restrict.2 hEfin
     have hfibmeas : Measurable (fun φ : ℝ => u (p + Complex.exp (w + φ * Complex.I))) := by
       apply hum.comp
       fun_prop
@@ -648,7 +648,7 @@ theorem starPlane_subMeanValue_small {p : ℂ} {u : ℂ → ℝ} {rI rO : ℝ} {
     have hab : τ + δ - α ≤ τ + 2 * π - δ + α := by linarith
     have hm0 : (0 : ℝ) ≤ 2 * w₀.im - 2 * α - t := by linarith
     have hDvol : volume ((Ep ∪ Em) \ (Ep ∩ Em)) = ENNReal.ofReal (ut - t) := by
-      rw [measure_diff (Set.inter_subset_left.trans Set.subset_union_left)
+      rw [measure_sdiff (Set.inter_subset_left.trans Set.subset_union_left)
         (hEpmeas.inter hEmmeas).nullMeasurableSet hIfin, hteq, huteq,
         ← ENNReal.ofReal_sub _ htnn]
     have hmD : ENNReal.ofReal (2 * w₀.im - 2 * α - t)
@@ -661,7 +661,7 @@ theorem starPlane_subMeanValue_small {p : ℂ} {u : ℂ → ℝ} {rI rO : ℝ} {
       ((Ep ∪ Em) \ (Ep ∩ Em)) hUImeas (fun x hx => hUsub hx.1) hm0 hmD
     have hCdisjI : Disjoint (Ep ∩ Em) C :=
       Set.disjoint_of_subset_right hCsub Set.disjoint_sdiff_right
-    have hCU : C ⊆ Ep ∪ Em := hCsub.trans Set.diff_subset
+    have hCU : C ⊆ Ep ∪ Em := hCsub.trans Set.sdiff_subset
     have hCfin : volume C ≠ ⊤ := by rw [hCvol]; exact ENNReal.ofReal_ne_top
     -- The re-glued competitors of the two target apertures.
     have hAvol : volume ((Ep ∩ Em) ∪ C) = ENNReal.ofReal (2 * wm.im) := by
@@ -670,7 +670,7 @@ theorem starPlane_subMeanValue_small {p : ℂ} {u : ℂ → ℝ} {rI rO : ℝ} {
       rw [hmim]
       ring
     have hBvol : volume ((Ep ∪ Em) \ C) = ENNReal.ofReal (2 * wp.im) := by
-      rw [measure_diff hCU hCmeas.nullMeasurableSet hCfin, huteq, hCvol,
+      rw [measure_sdiff hCU hCmeas.nullMeasurableSet hCfin, huteq, hCvol,
         ← ENNReal.ofReal_sub _ hm0]
       congr 1
       rw [hut4, hpim]
@@ -681,9 +681,9 @@ theorem starPlane_subMeanValue_small {p : ℂ} {u : ℂ → ℝ} {rI rO : ℝ} {
     -- The lintegral surgery: cut-and-glue preserves the total profile mass.
     have hsplitEm : Em = (Ep ∩ Em) ∪ (Em \ Ep) := by
       rw [Set.inter_comm Ep Em]
-      exact (Set.inter_union_diff Em Ep).symm
-    have hsplitU : Ep ∪ Em = Ep ∪ (Em \ Ep) := Set.union_diff_self.symm
-    have hUCsplit : Ep ∪ Em = C ∪ ((Ep ∪ Em) \ C) := (Set.union_diff_cancel hCU).symm
+      exact (Set.inter_union_sdiff Em Ep).symm
+    have hsplitU : Ep ∪ Em = Ep ∪ (Em \ Ep) := Set.union_sdiff_self.symm
+    have hUCsplit : Ep ∪ Em = C ∪ ((Ep ∪ Em) \ C) := (Set.union_sdiff_cancel hCU).symm
     have hEmPmeas : MeasurableSet (Em \ Ep) := hEmmeas.diff hEpmeas
     have hdisj1 : Disjoint (Ep ∩ Em) (Em \ Ep) :=
       Set.disjoint_of_subset_left Set.inter_subset_left Set.disjoint_sdiff_right

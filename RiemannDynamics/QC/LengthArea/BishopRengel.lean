@@ -398,7 +398,7 @@ theorem monotone_imageAreaProfileY {f : ℂ → ℂ} (hf : Continuous f) (α β 
   intro u v huv
   have hsub : axisRect α β σ u ⊆ axisRect α β σ v := by
     intro z hz
-    simp only [axisRect, Set.mem_setOf_eq] at hz ⊢
+    simp only [axisRect, Set.mem_ofPred_eq] at hz ⊢
     exact ⟨hz.1, hz.2.1, le_trans hz.2.2 huv⟩
   exact ENNReal.toReal_mono (((isCompact_axisRect α β σ v).image hf).measure_lt_top).ne
     (measure_mono (Set.image_mono hsub))
@@ -410,7 +410,7 @@ theorem monotone_imageAreaProfileX {f : ℂ → ℂ} (hf : Continuous f) (α σ 
   intro u v huv
   have hsub : axisRect α u σ τ ⊆ axisRect α v σ τ := by
     intro z hz
-    simp only [axisRect, Set.mem_setOf_eq] at hz ⊢
+    simp only [axisRect, Set.mem_ofPred_eq] at hz ⊢
     exact ⟨⟨hz.1.1, le_trans hz.1.2 huv⟩, hz.2⟩
   exact ENNReal.toReal_mono (((isCompact_axisRect α v σ τ).image hf).measure_lt_top).ne
     (measure_mono (Set.image_mono hsub))
@@ -433,11 +433,11 @@ theorem imageArea_strip_le_profileY_diff {f : ℂ → ℂ} (hf : Continuous f)
   have hAB : Disjoint (axisRect α β y (y + δ)) (axisRect α β σ (y - δ)) := by
     rw [Set.disjoint_left]
     intro z hzA hzB
-    simp only [axisRect, Set.mem_setOf_eq] at hzA hzB
+    simp only [axisRect, Set.mem_ofPred_eq] at hzA hzB
     linarith [hzA.2.1, hzB.2.2]
   -- … and their union is contained in the big rectangle.
   have hsub : axisRect α β y (y + δ) ∪ axisRect α β σ (y - δ) ⊆ axisRect α β σ (y + δ) := by
-    rintro z (hz | hz) <;> simp only [axisRect, Set.mem_setOf_eq] at hz ⊢
+    rintro z (hz | hz) <;> simp only [axisRect, Set.mem_ofPred_eq] at hz ⊢
     · exact ⟨hz.1, by linarith [hz.2.1], hz.2.2⟩
     · exact ⟨hz.1, hz.2.1, by linarith [hz.2.2]⟩
   -- Compactness gives measurability and finite volume for all three images.
@@ -473,11 +473,11 @@ theorem imageArea_strip_le_profileX_diff {f : ℂ → ℂ} (hf : Continuous f)
   have hAB : Disjoint (axisRect x (x + δ) σ τ) (axisRect α (x - δ) σ τ) := by
     rw [Set.disjoint_left]
     intro z hzA hzB
-    simp only [axisRect, Set.mem_setOf_eq] at hzA hzB
+    simp only [axisRect, Set.mem_ofPred_eq] at hzA hzB
     linarith [hzA.1.1, hzB.1.2]
   -- … and their union is contained in the big rectangle.
   have hsub : axisRect x (x + δ) σ τ ∪ axisRect α (x - δ) σ τ ⊆ axisRect α (x + δ) σ τ := by
-    rintro z (hz | hz) <;> simp only [axisRect, Set.mem_setOf_eq] at hz ⊢
+    rintro z (hz | hz) <;> simp only [axisRect, Set.mem_ofPred_eq] at hz ⊢
     · exact ⟨⟨by linarith [hz.1.1], hz.1.2⟩, hz.2⟩
     · exact ⟨⟨hz.1.1, by linarith [hz.1.2]⟩, hz.2⟩
   -- Compactness gives measurability and finite volume for all three images.
@@ -512,7 +512,7 @@ strip `[α,β] × [y, y+h]` is dominated by the one-sided profile increment
 `f '' ([α,β] × [σ,y])` must lie on the shared segment `[α,β] × {y}`; hence
 `f '' ([α,β] × [y,y+h]) ⊆ (f '' ([α,β] × [σ,y+h]) \ f '' ([α,β] × [σ,y])) ∪
 f '' ([α,β] × {y})`. The segment image is null by hypothesis, so `measure_union_le` and
-`measure_diff` (all sets compact, hence measurable and of finite volume) give the bound
+`measure_sdiff` (all sets compact, hence measurable and of finite volume) give the bound
 after `toReal` arithmetic.
 
 This is the step that lets the classical proofs compare a family of disjoint strips at
@@ -529,22 +529,22 @@ theorem imageArea_strip_le_profileY_diff_right {f : ℂ → ℂ} (hf : Continuou
   have hsubset : f '' axisRect α β y (y + h)
       ⊆ (f '' axisRect α β σ (y + h) \ f '' axisRect α β σ y) ∪ f '' axisRect α β y y := by
     rintro w ⟨z, hzS, rfl⟩
-    simp only [axisRect, Set.mem_setOf_eq] at hzS
+    simp only [axisRect, Set.mem_ofPred_eq] at hzS
     by_cases hwL : f z ∈ f '' axisRect α β σ y
     · right
       obtain ⟨z', hz'L, hz'eq⟩ := hwL
       have hzz' : z' = z := hinj hz'eq
       rw [hzz'] at hz'L
-      simp only [axisRect, Set.mem_setOf_eq] at hz'L
+      simp only [axisRect, Set.mem_ofPred_eq] at hz'L
       exact ⟨z, ⟨hzS.1, hzS.2.1, hz'L.2.2⟩, rfl⟩
     · left
       refine ⟨⟨z, ?_, rfl⟩, hwL⟩
-      simp only [axisRect, Set.mem_setOf_eq]
+      simp only [axisRect, Set.mem_ofPred_eq]
       exact ⟨hzS.1, by linarith [hzS.2.1], hzS.2.2⟩
   have hLC : f '' axisRect α β σ y ⊆ f '' axisRect α β σ (y + h) := by
     apply Set.image_mono
     intro z hz
-    simp only [axisRect, Set.mem_setOf_eq] at hz ⊢
+    simp only [axisRect, Set.mem_ofPred_eq] at hz ⊢
     exact ⟨hz.1, hz.2.1, by linarith [hz.2.2]⟩
   -- The segment image is null, so the strip image is dominated by the measure difference.
   have hle : volume (f '' axisRect α β y (y + h))
@@ -557,7 +557,7 @@ theorem imageArea_strip_le_profileY_diff_right {f : ℂ → ℂ} (hf : Continuou
       _ = volume (f '' axisRect α β σ (y + h) \ f '' axisRect α β σ y) := by
           rw [hseg, add_zero]
       _ = volume (f '' axisRect α β σ (y + h)) - volume (f '' axisRect α β σ y) :=
-          measure_diff hLC hcL.measurableSet.nullMeasurableSet hcL.measure_lt_top.ne
+          measure_sdiff hLC hcL.measurableSet.nullMeasurableSet hcL.measure_lt_top.ne
   have hvLC : volume (f '' axisRect α β σ y) ≤ volume (f '' axisRect α β σ (y + h)) :=
     measure_mono hLC
   have h2 := ENNReal.toReal_mono
@@ -581,22 +581,22 @@ theorem imageArea_strip_le_profileX_diff_right {f : ℂ → ℂ} (hf : Continuou
   have hsubset : f '' axisRect x (x + h) σ τ
       ⊆ (f '' axisRect α (x + h) σ τ \ f '' axisRect α x σ τ) ∪ f '' axisRect x x σ τ := by
     rintro w ⟨z, hzS, rfl⟩
-    simp only [axisRect, Set.mem_setOf_eq] at hzS
+    simp only [axisRect, Set.mem_ofPred_eq] at hzS
     by_cases hwL : f z ∈ f '' axisRect α x σ τ
     · right
       obtain ⟨z', hz'L, hz'eq⟩ := hwL
       have hzz' : z' = z := hinj hz'eq
       rw [hzz'] at hz'L
-      simp only [axisRect, Set.mem_setOf_eq] at hz'L
+      simp only [axisRect, Set.mem_ofPred_eq] at hz'L
       exact ⟨z, ⟨⟨hzS.1.1, hz'L.1.2⟩, hzS.2⟩, rfl⟩
     · left
       refine ⟨⟨z, ?_, rfl⟩, hwL⟩
-      simp only [axisRect, Set.mem_setOf_eq]
+      simp only [axisRect, Set.mem_ofPred_eq]
       exact ⟨⟨by linarith [hzS.1.1], hzS.1.2⟩, hzS.2⟩
   have hLC : f '' axisRect α x σ τ ⊆ f '' axisRect α (x + h) σ τ := by
     apply Set.image_mono
     intro z hz
-    simp only [axisRect, Set.mem_setOf_eq] at hz ⊢
+    simp only [axisRect, Set.mem_ofPred_eq] at hz ⊢
     exact ⟨⟨hz.1.1, by linarith [hz.1.2]⟩, hz.2⟩
   -- The segment image is null, so the strip image is dominated by the measure difference.
   have hle : volume (f '' axisRect x (x + h) σ τ)
@@ -609,7 +609,7 @@ theorem imageArea_strip_le_profileX_diff_right {f : ℂ → ℂ} (hf : Continuou
       _ = volume (f '' axisRect α (x + h) σ τ \ f '' axisRect α x σ τ) := by
           rw [hseg, add_zero]
       _ = volume (f '' axisRect α (x + h) σ τ) - volume (f '' axisRect α x σ τ) :=
-          measure_diff hLC hcL.measurableSet.nullMeasurableSet hcL.measure_lt_top.ne
+          measure_sdiff hLC hcL.measurableSet.nullMeasurableSet hcL.measure_lt_top.ne
   have hvLC : volume (f '' axisRect α x σ τ) ≤ volume (f '' axisRect α (x + h) σ τ) :=
     measure_mono hLC
   have h2 := ENNReal.toReal_mono
@@ -626,7 +626,7 @@ left-hand side is finite. (General-purpose one-dimensional fact; no quasiconform
 `HasDerivAt Φ (deriv Φ y) y` at a.e. `y` (the junk value of `deriv` elsewhere is irrelevant
 under the integral). Pointwise `ENNReal.ofReal (deriv Φ y) ≤ (‖deriv Φ y‖₊ : ℝ≥0∞)`, so
 `lintegral_nnnorm_deriv_le_eVariationOn` bounds the integral by
-`eVariationOn Φ (Icc s t)`, and `MonotoneOn.eVariationOn_le` (with the universal set)
+`eVariationOn Φ (Icc s t)`, and `MonotoneOn.eVariationOn_eq` (with the universal set)
 bounds the variation of the monotone `Φ` by `ofReal (Φ t − Φ s)`. -/
 theorem lintegral_ofReal_deriv_le_of_monotone {Φ : ℝ → ℝ} (hΦ : Monotone Φ) {s t : ℝ}
     (hst : s ≤ t) :
@@ -644,7 +644,7 @@ theorem lintegral_ofReal_deriv_le_of_monotone {Φ : ℝ → ℝ} (hΦ : Monotone
   have h2 : ∫⁻ y in Set.Icc s t, (‖deriv Φ y‖₊ : ℝ≥0∞) ≤ eVariationOn Φ (Set.Icc s t) :=
     lintegral_nnnorm_deriv_le_eVariationOn hst hderiv
   have h3 : eVariationOn Φ (Set.Icc s t) ≤ ENNReal.ofReal (Φ t - Φ s) := by
-    have := (hΦ.monotoneOn Set.univ).eVariationOn_le (Set.mem_univ s) (Set.mem_univ t)
+    have := ((hΦ.monotoneOn Set.univ).eVariationOn_eq (Set.mem_univ s) (Set.mem_univ t)).le
     rwa [Set.univ_inter] at this
   exact le_trans h1 (le_trans h2 h3)
 
@@ -684,7 +684,7 @@ theorem countable_pos_volume_image_horizontalSeg {f : ℂ → ℂ} (hf : Continu
     have hd : Disjoint (axisRect α β y y) (axisRect α β y' y') := by
       rw [Set.disjoint_left]
       intro z hz hz'
-      simp only [axisRect, Set.mem_setOf_eq] at hz hz'
+      simp only [axisRect, Set.mem_ofPred_eq] at hz hz'
       exact hne (by linarith [hz.2.1, hz.2.2, hz'.2.1, hz'.2.2])
     exact Set.disjoint_image_of_injective hinj hd
   have hset : {y : ℝ | volume (f '' axisRect α β y y) ≠ 0}
@@ -707,7 +707,7 @@ theorem countable_pos_volume_image_verticalSeg {f : ℂ → ℂ} (hf : Continuou
     have hd : Disjoint (axisRect x x σ τ) (axisRect x' x' σ τ) := by
       rw [Set.disjoint_left]
       intro z hz hz'
-      simp only [axisRect, Set.mem_setOf_eq] at hz hz'
+      simp only [axisRect, Set.mem_ofPred_eq] at hz hz'
       exact hne (by linarith [hz.1.1, hz.1.2, hz'.1.1, hz'.1.2])
     exact Set.disjoint_image_of_injective hinj hd
   have hset : {x : ℝ | volume (f '' axisRect x x σ τ) ≠ 0}

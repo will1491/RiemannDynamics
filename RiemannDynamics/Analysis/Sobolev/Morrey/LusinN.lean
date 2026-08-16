@@ -49,13 +49,13 @@ theorem lusinN_image_null_of_weakGradient {p : ℝ} (hp : 2 < p) {f gx gy : ℂ 
   have hgxloc : LocallyIntegrable gx (volume : Measure ℂ) := by
     rw [locallyIntegrable_iff]; intro K hK
     have hmemlp : MemLp gx (ENNReal.ofReal p) (volume.restrict K) := hgx K (Set.subset_univ _) hK
-    haveI : IsFiniteMeasure (volume.restrict K) := by
+    have : IsFiniteMeasure (volume.restrict K) := by
       constructor; rw [Measure.restrict_apply_univ]; exact hK.measure_lt_top
     exact hmemlp.integrable hp_one_le
   have hgyloc : LocallyIntegrable gy (volume : Measure ℂ) := by
     rw [locallyIntegrable_iff]; intro K hK
     have hmemlp : MemLp gy (ENNReal.ofReal p) (volume.restrict K) := hgy K (Set.subset_univ _) hK
-    haveI : IsFiniteMeasure (volume.restrict K) := by
+    have : IsFiniteMeasure (volume.restrict K) := by
       constructor; rw [Measure.restrict_apply_univ]; exact hK.measure_lt_top
     exact hmemlp.integrable hp_one_le
   have hgx_aesm : AEStronglyMeasurable gx (volume : Measure ℂ) := hgxloc.aestronglyMeasurable
@@ -72,7 +72,7 @@ theorem lusinN_image_null_of_weakGradient {p : ℝ} (hp : 2 < p) {f gx gy : ℂ 
       rw [← Set.image_iUnion]; congr 1
       rw [← Set.inter_iUnion, Metric.iUnion_ball_nat, Set.inter_univ]
     rw [hcover]
-    refine le_antisymm ?_ (zero_le _)
+    refine le_antisymm ?_ (zero_le)
     calc volume (⋃ R : ℕ, f '' (E ∩ ball (0:ℂ) (R:ℝ)))
         ≤ ∑' R : ℕ, volume (f '' (E ∩ ball (0:ℂ) (R:ℝ))) := measure_iUnion_le _
       _ = 0 := by simp [hkey]
@@ -300,7 +300,7 @@ theorem lusinN_image_null_of_weakGradient {p : ℝ} (hp : 2 < p) {f gx gy : ℂ 
         intro t g hg hsep
         have hcover : t = ⋃ n : ℕ, {x ∈ t | 1 / (n+1 : ℝ) < g x} := by
           ext x
-          simp only [mem_iUnion, mem_setOf_eq]
+          simp only [mem_iUnion, mem_ofPred_eq]
           constructor
           · intro hx
             obtain ⟨n, hn⟩ := exists_nat_gt (1 / g x)
@@ -334,7 +334,7 @@ theorem lusinN_image_null_of_weakGradient {p : ℝ} (hp : 2 < p) {f gx gy : ℂ 
           (∀ z ∈ W, 0 < g z) → (∀ x ∈ t, 0 < g x) → ∀ (y : ℂ),
           ∑' i : t, (ball (i:ℂ) (2 * g i)).indicator H y ≤ 58 * W.indicator H y := by
         intro t ht g hgL hsep H W hW hgposW hgpost y
-        haveI : Countable ↥t := ht.to_subtype
+        have : Countable ↥t := ht.to_subtype
         by_cases hyW : y ∈ W
         · rw [Set.indicator_of_mem hyW]
           have hgy : 0 < g y := hgposW y hyW
@@ -366,7 +366,7 @@ theorem lusinN_image_null_of_weakGradient {p : ℝ} (hp : 2 < p) {f gx gy : ℂ 
             intro i
             rw [Set.indicator_apply, Set.indicator_apply]
             have hiff : (y ∈ ball (i:ℂ) (2 * g i)) ↔ (i:ℂ) ∈ J := by
-              rw [mem_ball, hJdef]; simp only [mem_setOf_eq, i.2, true_and]; rw [dist_comm]
+              rw [mem_ball, hJdef]; simp only [mem_ofPred_eq, i.2, true_and]; rw [dist_comm]
             by_cases h : (i:ℂ) ∈ J
             · rw [if_pos (hiff.mpr h), if_pos h]
             · rw [if_neg (fun hy => h (hiff.mp hy)), if_neg h]
@@ -376,7 +376,7 @@ theorem lusinN_image_null_of_weakGradient {p : ℝ} (hp : 2 < p) {f gx gy : ℂ 
             intro i; rw [hfdef]; dsimp only; rw [Set.indicator_apply]
             split_ifs with h
             · exact le_refl _
-            · exact zero_le _
+            · exact zero_le
           have hsupp0 : ∀ i : ↥t, (i:ℂ) ∉ J → fI i = 0 := by
             intro i hi; rw [hfdef]; dsimp only; exact Set.indicator_of_notMem hi _
           have hSfin : {i : ↥t | (i:ℂ) ∈ J}.Finite :=
@@ -391,7 +391,7 @@ theorem lusinN_image_null_of_weakGradient {p : ℝ} (hp : 2 < p) {f gx gy : ℂ 
             have hinj : Set.InjOn (Subtype.val : ↥t → ℂ) sF := Subtype.val_injective.injOn
             have himg : sF.image (Subtype.val) ⊆ hJfin.toFinset := by
               intro x hx
-              simp only [Finset.mem_image, hsdef, Set.Finite.mem_toFinset, mem_setOf_eq] at hx
+              simp only [Finset.mem_image, hsdef, Set.Finite.mem_toFinset, mem_ofPred_eq] at hx
               obtain ⟨i, hi, rfl⟩ := hx
               rw [Set.Finite.mem_toFinset]; exact hi
             calc sF.card = (sF.image Subtype.val).card := (Finset.card_image_of_injOn hinj).symm
@@ -408,7 +408,7 @@ theorem lusinN_image_null_of_weakGradient {p : ℝ} (hp : 2 < p) {f gx gy : ℂ 
             split_ifs with hy
             · exact absurd (hW i i.2 hy) hyW
             · rfl
-          simp only [hz, tsum_zero]; exact zero_le _
+          simp only [hz, tsum_zero]; exact zero_le
       -- The Lipschitz gauge `g0 V x = min (1/100) ((1/8)·dist(x,Vᶜ))`.
       let g0 : Set ℂ → ℂ → ℝ := fun V x => min (1/100 : ℝ) ((1/8) * infDist x Vᶜ)
       have g0_lip : ∀ (V : Set ℂ), LipschitzWith (1/8 : ℝ≥0) (g0 V) := by
@@ -472,7 +472,7 @@ theorem lusinN_image_null_of_weakGradient {p : ℝ} (hp : 2 < p) {f gx gy : ℂ 
       have htV : t ⊆ V := fun x hx => hSV (htS hx)
       have hgpost : ∀ x ∈ t, 0 < g x := fun x hx => hgposV x (htV hx)
       have htcount : t.Countable := net_countable t g hgpost hsep
-      haveI : Countable ↥t := htcount.to_subtype
+      have : Countable ↥t := htcount.to_subtype
       refine ⟨t, g, htcount, htS, hgpost, ?_, ?_, ?_, ?_⟩
       · intro s hs
         obtain ⟨x, hxt, hx⟩ := hcov s hs
@@ -525,7 +525,7 @@ theorem lusinN_image_null_of_weakGradient {p : ℝ} (hp : 2 < p) {f gx gy : ℂ 
               rw [lintegral_const_mul' 58 _ (by norm_num),
                   lintegral_indicator hVmeas]
           _ ≤ 58 * ∫⁻ z in U, G z := by gcongr
-    haveI : Countable t := ht_count.to_subtype
+    have : Countable t := ht_count.to_subtype
     -- The per-ball volume bound, packaged with `a x := (ofReal (r x))^2` and
     -- `e x := ∫⁻_{ball x (2 r x)} G`.
     set a : t → ℝ≥0∞ := fun x => (ENNReal.ofReal (r (x : ℂ))) ^ 2 with hadef
@@ -611,8 +611,8 @@ theorem lusinN_image_null_of_weakGradient {p : ℝ} (hp : 2 < p) {f gx gy : ℂ 
     -- Discrete Hölder over the countable index `t`.
     have hHolder : ∑' x : t, (a x) ^ (1 / P) * (e x) ^ (1 / Q)
         ≤ (∑' x : t, a x) ^ (1 / P) * (∑' x : t, e x) ^ (1 / Q) := by
-      letI : MeasurableSpace t := ⊤
-      haveI : MeasurableSingletonClass t := ⟨fun _ => MeasurableSpace.measurableSet_top⟩
+      let this : MeasurableSpace t := ⊤
+      have : MeasurableSingletonClass t := ⟨fun _ => MeasurableSpace.measurableSet_top⟩
       have hmeas : ∀ (φ : t → ℝ≥0∞), AEMeasurable φ (Measure.count) :=
         fun φ => measurable_from_top.aemeasurable
       have key := ENNReal.lintegral_mul_le_Lp_mul_Lq (Measure.count : Measure t) hPQ

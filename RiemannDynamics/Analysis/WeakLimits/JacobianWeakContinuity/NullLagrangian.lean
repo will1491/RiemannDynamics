@@ -204,11 +204,11 @@ theorem integral_jacobian_smul_eq (hf : ContDiff ℝ 2 f)
   have hu_c2 : ContDiff ℝ 2 u := by
     rw [hu_def]
     have := Complex.reCLM.contDiff.comp hf
-    simpa [Function.comp] using this
+    simpa [Function.comp] using! this
   have hp_c2 : ContDiff ℝ 2 p := by
     rw [hp_def]
     have := Complex.imCLM.contDiff.comp hf
-    simpa [Function.comp] using this
+    simpa [Function.comp] using! this
   have hu_diff : Differentiable ℝ u := hu_c2.differentiable (by norm_num)
   have hp_diff : Differentiable ℝ p := hp_c2.differentiable (by norm_num)
   -- `fderiv ℝ p` is `C¹`, hence differentiable.
@@ -235,7 +235,7 @@ theorem integral_jacobian_smul_eq (hf : ContDiff ℝ 2 f)
     have hcomp : HasFDerivAt u (Complex.reCLM.comp (fderiv ℝ f z)) z := by
       rw [hu_def]
       have := (Complex.reCLM.hasFDerivAt (x := f z)).comp z hfd
-      simpa [Function.comp] using this
+      simpa [Function.comp] using! this
     rw [hcomp.fderiv]
     simp [ContinuousLinearMap.comp_apply, Complex.reCLM_apply]
   have hbridge_im : ∀ (z w : ℂ), (fderiv ℝ p z) w = ((fderiv ℝ f z) w).im := by
@@ -244,7 +244,7 @@ theorem integral_jacobian_smul_eq (hf : ContDiff ℝ 2 f)
     have hcomp : HasFDerivAt p (Complex.imCLM.comp (fderiv ℝ f z)) z := by
       rw [hp_def]
       have := (Complex.imCLM.hasFDerivAt (x := f z)).comp z hfd
-      simpa [Function.comp] using this
+      simpa [Function.comp] using! this
     rw [hcomp.fderiv]
     simp [ContinuousLinearMap.comp_apply, Complex.imCLM_apply]
   -- Differentiating the evaluation of `fderiv ℝ p` at a constant direction.
@@ -309,7 +309,7 @@ theorem integral_jacobian_smul_eq (hf : ContDiff ℝ 2 f)
     rw [show (fun z => a z * b z * c z) = (fun z => a z * b z) * c from rfl]
     rw [fderiv_mul hab hc]
     rw [show (fun z => a z * b z) = a * b from rfl, fderiv_mul ha hb]
-    simp only [ContinuousLinearMap.add_apply, ContinuousLinearMap.smul_apply, smul_eq_mul]
+    simp only [add_apply, smul_apply, smul_eq_mul]
     ring
   -- Pointwise divergence identity: the second derivatives of `p` cancel by Clairaut.
   have hpt : ∀ z, ((fderiv ℝ u z) 1 * py z - (fderiv ℝ u z) Complex.I * px z) * φ z
@@ -381,7 +381,7 @@ theorem integral_jacobian_smul_eq (hf : ContDiff ℝ 2 f)
         (HasCompactSupport.fderiv_apply ℝ hφc 1).mul_left
       have hsub : HasCompactSupport (fun z =>
           px z * (fderiv ℝ φ z) Complex.I - py z * (fderiv ℝ φ z) 1) := by
-        simpa [sub_eq_add_neg] using hsI.add hs1.neg
+        simpa [sub_eq_add_neg] using! hsI.add hs1.neg
       exact hsub.mul_left
     exact hcont.integrable_of_hasCompactSupport hcs
   -- Assemble: integrate the pointwise identity; the flux terms vanish.
@@ -442,7 +442,7 @@ theorem integral_jacobianWeak_smul_eq (hfcont : Continuous f)
     intro g hgl
     rw [← locallyIntegrableOn_univ, locallyIntegrableOn_univ, locallyIntegrable_iff]
     intro k hk
-    haveI : IsFiniteMeasure (volume.restrict k) :=
+    have : IsFiniteMeasure (volume.restrict k) :=
       ⟨by rw [Measure.restrict_apply_univ]; exact hk.measure_lt_top⟩
     exact memLp_one_iff_integrable.mp
       ((hgl k (Set.subset_univ _) hk).mono_exponent (by norm_num))
@@ -450,7 +450,7 @@ theorem integral_jacobianWeak_smul_eq (hfcont : Continuous f)
   have hgyLI : LocallyIntegrable gy := memLpLoc_to_loc hgy
   have hfLp : MemLpLocOn f 2 Set.univ := by
     intro k _ hkc
-    haveI : IsFiniteMeasure (volume.restrict k) :=
+    have : IsFiniteMeasure (volume.restrict k) :=
       ⟨by rw [Measure.restrict_apply_univ]; exact hkc.measure_lt_top⟩
     obtain ⟨Cf', hCf'⟩ := hkc.exists_bound_of_continuousOn hfcont.continuousOn
     refine MemLp.of_bound hfcont.aestronglyMeasurable.restrict Cf' ?_
@@ -617,8 +617,8 @@ theorem integral_jacobianWeak_smul_eq (hfcont : Continuous f)
             (heLpSq volume _).symm
     have hE2 := (ENNReal.continuous_pow 2).continuousAt.tendsto.comp hE
     refine tendsto_of_tendsto_of_tendsto_of_le_of_le' tendsto_const_nhds ?_
-      (Filter.Eventually.of_forall fun n => zero_le _) hbd
-    simpa [Function.comp] using hE2
+      (Filter.Eventually.of_forall fun n => zero_le) hbd
+    simpa [Function.comp] using! hE2
   have hTf := hloc f hfLI hfLp
   have hTx := hloc gx hgxLI hgx
   have hTy := hloc gy hgyLI hgy
@@ -756,7 +756,7 @@ theorem integral_jacobianWeak_smul_eq (hfcont : Continuous f)
             ENNReal.ofReal_add (by positivity) (by positivity),
             ENNReal.ofReal_mul (norm_nonneg _), ENNReal.ofReal_mul (norm_nonneg _),
             ENNReal.ofReal_mul (norm_nonneg _), ENNReal.ofReal_mul (norm_nonneg _)]
-          simp only [ofReal_norm_eq_enorm]
+          simp only [ofReal_norm]
   -- Measurability data on `K`.
   have hgxm : AEStronglyMeasurable gx (volume.restrict K) := hgxK.aestronglyMeasurable
   have hgym : AEStronglyMeasurable gy (volume.restrict K) := hgyK.aestronglyMeasurable
@@ -804,7 +804,8 @@ theorem integral_jacobianWeak_smul_eq (hfcont : Continuous f)
           ((Complex.continuous_re.comp (hYc n)).mul (Complex.continuous_im.comp (hXc n)))
       exact (hjc.mul hφ.continuous).integrable_of_hasCompactSupport hφc.mul_left
     -- The `L¹` convergence of the integrands, localized to `K`.
-    refine tendsto_integral_of_L1 _ hA_int (Filter.Eventually.of_forall hAn_int) ?_
+    refine tendsto_integral_of_L1 _ hA_int.aestronglyMeasurable
+      (Filter.Eventually.of_forall hAn_int) ?_
     have hred : ∀ n, (∫⁻ z, ‖jacobianWeak
           (convolution (ρ n) gx (ContinuousLinearMap.lsmul ℝ ℝ) volume)
           (convolution (ρ n) gy (ContinuousLinearMap.lsmul ℝ ℝ) volume) z * φ z
@@ -998,8 +999,9 @@ theorem integral_jacobianWeak_smul_eq (hfcont : Continuous f)
                     + ∫⁻ z in K, ‖gy z‖ₑ
                         * ‖convolution (ρ n) gx (ContinuousLinearMap.lsmul ℝ ℝ) volume z
                             - gx z‖ₑ) := by
-                  rw [lintegral_add_left' ((me1.mul me4).add (mgx.mul me2)),
-                    lintegral_add_left' (me1.mul me4), lintegral_add_left' (me2.mul me3)]
+                  rw [lintegral_add_left' ((me1.fun_mul me4).fun_add (mgx.fun_mul me2)),
+                    lintegral_add_left' (me1.fun_mul me4),
+                    lintegral_add_left' (me2.fun_mul me3)]
               _ ≤ _ := add_le_add (add_le_add e1 e2) (add_le_add e3 e4)
     -- squeeze, then transfer from `K` back to the whole plane
     have hKlim : Filter.Tendsto (fun n => ∫⁻ z in K, ‖jacobianWeak
@@ -1007,7 +1009,7 @@ theorem integral_jacobianWeak_smul_eq (hfcont : Continuous f)
           (convolution (ρ n) gy (ContinuousLinearMap.lsmul ℝ ℝ) volume) z * φ z
         - jacobianWeak gx gy z * φ z‖ₑ) Filter.atTop (nhds 0) :=
       tendsto_of_tendsto_of_tendsto_of_le_of_le' tendsto_const_nhds hD0
-        (Filter.Eventually.of_forall fun n => zero_le _) hDbd
+        (Filter.Eventually.of_forall fun n => zero_le) hDbd
     exact hKlim.congr fun n => (hred n).symm
   have hBtend : Filter.Tendsto (fun n =>
       ∫ z, (convolution (ρ n) f (ContinuousLinearMap.lsmul ℝ ℝ) volume z).re
@@ -1131,7 +1133,8 @@ theorem integral_jacobianWeak_smul_eq (hfcont : Continuous f)
               * (fderiv ℝ φ z) 1) := hpcs.mul_left
         exact h1.sub h2
       exact hcont.integrable_of_hasCompactSupport hcs.mul_left
-    refine tendsto_integral_of_L1 _ hB_int (Filter.Eventually.of_forall hBn_int) ?_
+    refine tendsto_integral_of_L1 _ hB_int.aestronglyMeasurable
+      (Filter.Eventually.of_forall hBn_int) ?_
     -- Reduce the `L¹` distance to `K`.
     have hred : ∀ n, (∫⁻ z,
         ‖(convolution (ρ n) f (ContinuousLinearMap.lsmul ℝ ℝ) volume z).re
@@ -1212,9 +1215,9 @@ theorem integral_jacobianWeak_smul_eq (hfcont : Continuous f)
         _ = ‖A - c‖ₑ * ‖a‖ₑ * ENNReal.ofReal Cq + ‖A - c‖ₑ * ‖b‖ₑ * ENNReal.ofReal Cp
               + (‖a - cx‖ₑ * (ENNReal.ofReal Cf * ENNReal.ofReal Cq)
                 + ‖b - cy‖ₑ * (ENNReal.ofReal Cf * ENNReal.ofReal Cp)) := by
-            rw [← ofReal_norm_eq_enorm (A - c), ← ofReal_norm_eq_enorm a,
-              ← ofReal_norm_eq_enorm b, ← ofReal_norm_eq_enorm (a - cx),
-              ← ofReal_norm_eq_enorm (b - cy),
+            rw [← ofReal_norm (A - c), ← ofReal_norm a,
+              ← ofReal_norm b, ← ofReal_norm (a - cx),
+              ← ofReal_norm (b - cy),
               ← ENNReal.ofReal_mul (norm_nonneg _), ← ENNReal.ofReal_mul (by positivity),
               ← ENNReal.ofReal_mul (norm_nonneg _), ← ENNReal.ofReal_mul (by positivity),
               ← ENNReal.ofReal_mul hCf0, ← ENNReal.ofReal_mul (by positivity),
@@ -1402,9 +1405,9 @@ theorem integral_jacobianWeak_smul_eq (hfcont : Continuous f)
               + (∫⁻ z in K,
                 ‖convolution (ρ n) gy (ContinuousLinearMap.lsmul ℝ ℝ) volume z - gy z‖ₑ)
                 * (ENNReal.ofReal Cf * ENNReal.ofReal Cp)) := by
-            rw [lintegral_add_left' (((mef.mul me3).mul_const _).add
-                ((mef.mul me4).mul_const _)),
-              lintegral_add_left' ((mef.mul me3).mul_const _),
+            rw [lintegral_add_left' (((mef.fun_mul me3).mul_const _).fun_add
+                ((mef.fun_mul me4).mul_const _)),
+              lintegral_add_left' ((mef.fun_mul me3).mul_const _),
               lintegral_add_left' (me1.mul_const _),
               lintegral_mul_const' _ _ ENNReal.ofReal_ne_top,
               lintegral_mul_const' _ _ ENNReal.ofReal_ne_top,
@@ -1425,7 +1428,7 @@ theorem integral_jacobianWeak_smul_eq (hfcont : Continuous f)
           - (f z).re * ((gx z).im * (fderiv ℝ φ z) Complex.I
               - (gy z).im * (fderiv ℝ φ z) 1)‖ₑ) Filter.atTop (nhds 0) :=
       tendsto_of_tendsto_of_tendsto_of_le_of_le' tendsto_const_nhds hD0
-        (Filter.Eventually.of_forall fun n => zero_le _) hDbd
+        (Filter.Eventually.of_forall fun n => zero_le) hDbd
     exact hKlim.congr fun n => (hred n).symm
   exact tendsto_nhds_unique (hAtend.congr hAB) hBtend
 

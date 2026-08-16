@@ -50,7 +50,7 @@ theorem sum_interiorAngle_vertexClass (hΓ : IsFuchsianGroup Γ)
   have hvd : ∀ k : ℕ, dist v (e k • τ₀) = Metric.infDist v (MulAction.orbit Γ τ₀) := by
     intro k
     have h1 := hecon k
-    simp only [contactSet, Set.mem_setOf_eq] at h1
+    simp only [contactSet, Set.mem_ofPred_eq] at h1
     exact h1
   have hveq : ∀ k j : ℕ, dist v (e k • τ₀) = dist v (e j • τ₀) := by
     intro k j
@@ -159,7 +159,7 @@ theorem sum_interiorAngle_vertexClass (hΓ : IsFuchsianGroup Γ)
     intro k x hx
     rw [← hσ k] at hx
     obtain ⟨y, hy, rfl⟩ := hx
-    haveI : IsIsometricSMul (↥Γ) UpperHalfPlane :=
+    have : IsIsometricSMul (↥Γ) UpperHalfPlane :=
       ⟨fun c => isometry_smul UpperHalfPlane (c : Matrix.SpecialLinearGroup (Fin 2) ℝ)⟩
     have h1 : dist y τ₀ = dist y (((e k)⁻¹ * e (k + 1)) • τ₀) := hy.2
     have e1 : dist (e k • y) (e k • τ₀) = dist y τ₀ := dist_smul (e k) y τ₀
@@ -273,7 +273,7 @@ theorem sum_interiorAngle_vertexClass (hΓ : IsFuchsianGroup Γ)
         intro h0
         have h1 := smul_basepoint_eq_of_sideSet_eq hΓ hfree (hadj k) (hδ'elem k) h0
         have h2 := congrArg (e k • ·) h1
-        simp only at h2
+        try simp only at h2
         rw [← mul_smul, ← mul_smul, mul_inv_cancel_left, mul_inv_cancel_left] at h2
         exact hmove_np k h2
       obtain ⟨s₁, hs₁, s₂, hs₂, hs12, he₁, he₂, hu2q⟩ :=
@@ -306,7 +306,7 @@ theorem sum_interiorAngle_vertexClass (hΓ : IsFuchsianGroup Γ)
       have h1 : (e k)⁻¹ • y = (e k)⁻¹ • v := hsub hz₁S hgS
       left
       have h2 := congrArg (e k • ·) h1
-      simp only at h2
+      try simp only at h2
       rw [smul_inv_smul, smul_inv_smul] at h2
       exact h2
   -- the working radius and chart scale
@@ -380,7 +380,7 @@ theorem sum_interiorAngle_vertexClass (hΓ : IsFuchsianGroup Γ)
         ((continuous_const.sub continuous_id).continuousOn) ?_
       intro u hu h0
       have h1 : u = 1 := by linear_combination -h0
-      rw [Set.mem_setOf_eq, h1] at hu
+      rw [Set.mem_ofPred_eq, h1] at hu
       simp at hu
     have hPOSpre : IsPreconnected POS := by
       have h1 : IsPreconnected ((fun u : ℂ =>
@@ -444,7 +444,7 @@ theorem sum_interiorAngle_vertexClass (hΓ : IsFuchsianGroup Γ)
       have h1 := smul_basepoint_ne hv (hecon k)
       apply h1
       have h2 := congrArg (e k • ·) h0
-      simp only at h2
+      try simp only at h2
       rw [smul_inv_smul] at h2
       exact h2.symm
     set d : ℝ := dist τ₀ ((e k)⁻¹ • v) with hddef
@@ -470,7 +470,7 @@ theorem sum_interiorAngle_vertexClass (hΓ : IsFuchsianGroup Γ)
     have hwtint : wt ∈ (e k • ·) '' interior (dirichletDomain Γ τ₀) := ⟨xt, hxtint, rfl⟩
     have hwtdist : dist v wt < r' := by
       have h1 : dist v wt = dist ((e k)⁻¹ • v) xt := by
-        haveI : IsIsometricSMul (↥Γ) UpperHalfPlane :=
+        have : IsIsometricSMul (↥Γ) UpperHalfPlane :=
           ⟨fun c => isometry_smul UpperHalfPlane (c : Matrix.SpecialLinearGroup (Fin 2) ℝ)⟩
         rw [hwtdef, ← dist_smul (e k) ((e k)⁻¹ • v) xt, smul_inv_smul]
       have h2 : dist ((e k)⁻¹ • v) xt = (1 - t) * d := by
@@ -564,7 +564,7 @@ theorem sum_interiorAngle_vertexClass (hΓ : IsFuchsianGroup Γ)
           Real.sin (φ - Complex.arg (discChart v (W j))) = 0} := by
       intro φ hφ
       by_contra hcon
-      simp only [Set.mem_union, Set.mem_setOf_eq, not_or, not_and] at hcon
+      simp only [Set.mem_union, Set.mem_ofPred_eq, not_or, not_and] at hcon
       obtain ⟨⟨⟨hz1, hz2⟩, hz3⟩, hz4⟩ := hcon
       obtain ⟨⟨hφw, hc1k, hc2k⟩, -, hc1j, hc2j⟩ := hφ
       have hstrict : ∀ (σv : ℝ), (σv = 1 ∨ σv = -1) → ∀ y : UpperHalfPlane, y ≠ v →
@@ -654,7 +654,7 @@ theorem sum_interiorAngle_vertexClass (hΓ : IsFuchsianGroup Γ)
           ∩ {φ : ℝ | 0 ≤ σ₂ k *
             (Complex.exp ((φ : ℂ) * Complex.I) / discChart v (W k)).im}) := by
       ext φ
-      simp only [hDirdef, Set.mem_setOf_eq, Set.mem_inter_iff, Set.mem_Ico]
+      simp only [hDirdef, Set.mem_ofPred_eq, Set.mem_inter_iff, Set.mem_Ico]
     rw [h1]
     refine measurableSet_Ico.inter (MeasurableSet.inter ?_ ?_)
     · exact measurableSet_le measurable_const (continuous_const.mul (hc _)).measurable
@@ -698,7 +698,7 @@ theorem sum_interiorAngle_vertexClass (hΓ : IsFuchsianGroup Γ)
       = geodSeg ((e k)⁻¹ • v) ((e k)⁻¹ • W (p k)) := by
     intro k
     have h1 := congrArg (fun S => ((e k)⁻¹ • ·) '' S) (hσ'eq k)
-    simp only at h1
+    try simp only at h1
     rw [smul_smul_image, inv_mul_cancel, himg_one, subgroup_smul_geodSeg] at h1
     exact h1
   have hgmem : ∀ k : ℕ, (e k)⁻¹ • v ∈ MulAction.orbit Γ v ∩ polygonVertices Γ τ₀ :=
@@ -731,7 +731,7 @@ theorem sum_interiorAngle_vertexClass (hΓ : IsFuchsianGroup Γ)
       intro h0
       have h1 := smul_basepoint_eq_of_sideSet_eq hΓ hfree (hadj k) (hδ'elem k) h0
       have h2 := congrArg (e k • ·) h1
-      simp only at h2
+      try simp only at h2
       rw [← mul_smul, ← mul_smul, mul_inv_cancel_left, mul_inv_cancel_left] at h2
       exact hmove_np k h2
     obtain ⟨t₁, ht₁, t₂, ht₂, ht12, hte₁, hte₂, htu⟩ :=
@@ -791,7 +791,7 @@ theorem sum_interiorAngle_vertexClass (hΓ : IsFuchsianGroup Γ)
     rw [Set.Finite.mem_toFinset]
     exact hgmem k
   · intro k₁ hk₁ k₂ hk₂ hkk
-    simp only at hkk
+    try simp only at hkk
     have h1 : (e k₂ * (e k₁)⁻¹) • v = v := by
       rw [mul_smul, hkk, smul_inv_smul]
     have h2 := hfree (e k₂ * (e k₁)⁻¹) ⟨v, h1⟩ (e k₁ • τ₀)
@@ -813,7 +813,6 @@ theorem sum_interiorAngle_vertexClass (hΓ : IsFuchsianGroup Γ)
         rw [inv_smul_smul]
     obtain ⟨k, ⟨hkn, hkc⟩, -⟩ := huniq η⁻¹ hcon
     refine ⟨k, Finset.mem_range.mpr hkn, ?_⟩
-    change (e k)⁻¹ • v = b
     have h1 := inv_smul_eq_of_basepoint_eq hfree hkc v
     rw [inv_inv] at h1
     rw [← h1, hη]
@@ -853,7 +852,7 @@ theorem sum_interiorAngle_total (hΓ : IsFuchsianGroup Γ)
       rw [h𝒬, Set.Finite.mem_toFinset] at hC
       exact hC
     ext w
-    simp only [Finset.coe_filter, Set.mem_setOf_eq, h𝒱, Set.Finite.mem_toFinset]
+    simp only [Finset.coe_filter, Set.mem_ofPred_eq, h𝒱, Set.Finite.mem_toFinset]
     exact ⟨fun h1 => h1.2, fun h1 => ⟨hCsub C hCmem h1, h1⟩⟩
   have hbi : 𝒱 = 𝒬.biUnion (fun C => 𝒱.filter (· ∈ C)) := by
     ext w
@@ -944,7 +943,7 @@ theorem apex_line_functional {z x : UpperHalfPlane} (_hxz : x ≠ z) :
     have h1 := setOf_dist_le_eq_of_im_eq' (a := ptP) (b := ptM)
       (by rw [hPim, hMim]) (by rw [hPre, hMre]; norm_num)
     have h2 := Set.ext_iff.mp h1 τ
-    simp only [Set.mem_setOf_eq, hPre, hMre] at h2
+    simp only [Set.mem_ofPred_eq, hPre, hMre] at h2
     rw [h2]
     norm_num
   have hminus : ∀ τ : UpperHalfPlane, dist τ ptM ≤ dist τ ptP ↔ τ.re ≤ 0 := by
@@ -1281,7 +1280,7 @@ theorem sum_apexAngle_basepoint (hΓ : IsFuchsianGroup Γ)
         ((continuous_const.sub continuous_id).continuousOn) ?_
       intro u hu h0
       have h1 : u = 1 := by linear_combination -h0
-      rw [Set.mem_setOf_eq, h1] at hu
+      rw [Set.mem_ofPred_eq, h1] at hu
       simp at hu
     have hPOSpre : IsPreconnected POS := by
       have h1 : IsPreconnected ((fun u : ℂ =>
@@ -1466,7 +1465,7 @@ theorem sum_apexAngle_basepoint (hΓ : IsFuchsianGroup Γ)
           Real.sin (φ - Complex.arg (discChart τ₀ (B s'))) = 0} := by
       intro φ hφ
       by_contra hcon
-      simp only [Set.mem_union, Set.mem_setOf_eq, not_or, not_and] at hcon
+      simp only [Set.mem_union, Set.mem_ofPred_eq, not_or, not_and] at hcon
       obtain ⟨⟨⟨hz1, hz2⟩, hz3⟩, hz4⟩ := hcon
       obtain ⟨⟨hφw, hc1k, hc2k⟩, -, hc1j, hc2j⟩ := hφ
       have hstrict : ∀ (σv : ℝ), (σv = 1 ∨ σv = -1) → ∀ y : UpperHalfPlane, y ≠ τ₀ →
@@ -1553,7 +1552,7 @@ theorem sum_apexAngle_basepoint (hΓ : IsFuchsianGroup Γ)
           ∩ {φ : ℝ | 0 ≤ σB s *
             (Complex.exp ((φ : ℂ) * Complex.I) / discChart τ₀ (B s)).im}) := by
       ext φ
-      simp only [hDirdef, Set.mem_setOf_eq, Set.mem_inter_iff, Set.mem_Ico]
+      simp only [hDirdef, Set.mem_ofPred_eq, Set.mem_inter_iff, Set.mem_Ico]
     rw [h1]
     refine measurableSet_Ico.inter (MeasurableSet.inter ?_ ?_)
     · exact measurableSet_le measurable_const (continuous_const.mul (hc _)).measurable

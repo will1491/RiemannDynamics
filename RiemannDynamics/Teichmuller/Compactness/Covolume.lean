@@ -36,7 +36,7 @@ namespace RiemannDynamics
 theorem exists_compact_covering (Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ))
     (hcc : CompactSpace (Quotient (MulAction.orbitRel Γ UpperHalfPlane))) :
     ∃ K : Set UpperHalfPlane, IsCompact K ∧ ∀ τ : UpperHalfPlane, ∃ γ : Γ, γ • τ ∈ K := by
-  haveI : ContinuousConstSMul (↥Γ) UpperHalfPlane :=
+  have : ContinuousConstSMul (↥Γ) UpperHalfPlane :=
     ⟨fun c => (isometry_smul UpperHalfPlane
       (c : Matrix.SpecialLinearGroup (Fin 2) ℝ)).continuous⟩
   have hq : IsOpenQuotientMap (Quotient.mk (MulAction.orbitRel Γ UpperHalfPlane)) :=
@@ -94,7 +94,7 @@ theorem exists_ball_gens_tuple {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2)
       (∀ i, dist UpperHalfPlane.I (gens i • UpperHalfPlane.I) ≤ R) ∧
       (∀ γ ∈ Γ, dist UpperHalfPlane.I (γ • UpperHalfPlane.I) ≤ R → ∃ i, gens i = γ) := by
   classical
-  haveI hPD : ProperlyDiscontinuousSMul (↥Γ) UpperHalfPlane := hΓ
+  have hPD : ProperlyDiscontinuousSMul (↥Γ) UpperHalfPlane := hΓ
   -- the displacement ball is a finite set
   have hfin1 : {γ : ↥Γ | ((fun x => γ • x) '' {UpperHalfPlane.I} ∩
       Metric.closedBall UpperHalfPlane.I R).Nonempty}.Finite :=
@@ -471,7 +471,7 @@ ball. -/
 theorem cocompact_of_orbit_dense {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)} {D : ℝ}
     (hdense : ∀ σ : UpperHalfPlane, ∃ g ∈ Γ, dist σ (g • UpperHalfPlane.I) ≤ D) :
     CompactSpace (Quotient (MulAction.orbitRel Γ UpperHalfPlane)) := by
-  haveI : ContinuousConstSMul (↥Γ) UpperHalfPlane :=
+  have : ContinuousConstSMul (↥Γ) UpperHalfPlane :=
     ⟨fun c => (isometry_smul UpperHalfPlane
       (c : Matrix.SpecialLinearGroup (Fin 2) ℝ)).continuous⟩
   refine ⟨?_⟩

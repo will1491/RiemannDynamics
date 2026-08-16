@@ -103,7 +103,7 @@ theorem AbsolutelyContinuousOnInterval.union_of_split {X : Type*} [PseudoMetricS
   obtain ⟨δ2, hδ2, hb2⟩ := h2 (ε / 2) (by positivity)
   refine ⟨min δ1 δ2, by positivity, ?_⟩
   rintro ⟨n, I⟩ hmem hlen
-  simp only [AbsolutelyContinuousOnInterval.disjWithin, Finset.mem_range, mem_setOf_eq] at hmem
+  simp only [AbsolutelyContinuousOnInterval.disjWithin, Finset.mem_range, mem_ofPred_eq] at hmem
   obtain ⟨hmemIcc, hdisj⟩ := hmem
   set Il : ℕ → ℝ × ℝ := fun i => (min (I i).1 c, min (I i).2 c) with hIl
   set Ir : ℕ → ℝ × ℝ := fun i => (max (I i).1 c, max (I i).2 c) with hIr
@@ -166,7 +166,7 @@ theorem AbsolutelyContinuousOnInterval.comp_affine {X : Type*} [PseudoMetricSpac
     simp only [hF, Real.dist_eq]
     rw [show m * (E.2 i).1 + k - (m * (E.2 i).2 + k) = m * ((E.2 i).1 - (E.2 i).2) from by ring,
       abs_mul, abs_of_pos hm]
-  simp only [AbsolutelyContinuousOnInterval.disjWithin, Finset.mem_range, mem_setOf_eq] at hE
+  simp only [AbsolutelyContinuousOnInterval.disjWithin, Finset.mem_range, mem_ofPred_eq] at hE
   obtain ⟨hEicc, hEdisj⟩ := hE
   have hmemF : (E.1, F) ∈ AbsolutelyContinuousOnInterval.disjWithin c d := by
     refine ⟨fun i hi => ?_, ?_⟩
@@ -207,7 +207,7 @@ theorem AbsolutelyContinuousOnInterval.congr {X : Type*} [PseudoMetricSpace X] {
   obtain ⟨δ, hδ, hδ'⟩ := hf ε hε
   refine ⟨δ, hδ, fun E hE hlen => ?_⟩
   have key := hδ' E hE hlen
-  simp only [AbsolutelyContinuousOnInterval.disjWithin, Finset.mem_range, mem_setOf_eq] at hE
+  simp only [AbsolutelyContinuousOnInterval.disjWithin, Finset.mem_range, mem_ofPred_eq] at hE
   rw [Finset.sum_congr rfl (fun i hi => by
     rw [← hfg _ (hE.1 i (Finset.mem_range.mp hi)).1, ← hfg _ (hE.1 i (Finset.mem_range.mp hi)).2])]
   exact key
@@ -262,7 +262,7 @@ private theorem arcLength_half {η γ : ℝ → ℂ} {m k p q : ℝ} (ρ : ℂ �
       have haff : HasDerivAt (fun s => m * s + k) m t := by
         simpa using ((hasDerivAt_id t).const_mul m).add_const k
       have hc : HasDerivAt (fun s => η (m * s + k)) (m • deriv η (m * t + k)) t := by
-        simpa [smul_eq_mul, mul_comm] using htd.hasDerivAt.scomp t haff
+        simpa [smul_eq_mul, mul_comm] using! htd.hasDerivAt.scomp t haff
       exact (hc.congr_of_eventuallyEq (hagree' t htmem)).deriv
     rw [hagree t htmem, hderiv,
       show (‖m • deriv η (m * t + k)‖₊ : ℝ≥0∞)
@@ -270,9 +270,9 @@ private theorem arcLength_half {η γ : ℝ → ℂ} {m k p q : ℝ} (ρ : ℂ �
     · rw [abs_of_pos hm]; ring
     · set w : ℂ := deriv η (m * t + k) with hw
       rw [show (‖m • w‖₊ : ℝ≥0∞) = ENNReal.ofReal ‖m • w‖ from by
-            rw [ofReal_norm_eq_enorm, enorm_eq_nnnorm],
+            rw [ofReal_norm, enorm_eq_nnnorm],
           show (‖w‖₊ : ℝ≥0∞) = ENNReal.ofReal ‖w‖ from by
-            rw [ofReal_norm_eq_enorm, enorm_eq_nnnorm],
+            rw [ofReal_norm, enorm_eq_nnnorm],
           Complex.real_smul, norm_mul, Complex.norm_real, Real.norm_eq_abs, abs_of_nonneg hm.le,
           ENNReal.ofReal_mul hm.le]
   · intro x _

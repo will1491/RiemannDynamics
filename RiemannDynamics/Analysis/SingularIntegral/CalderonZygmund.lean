@@ -219,7 +219,7 @@ theorem wnorm_le_of_ae_tendsto {α E : Type*} [MeasurableSpace α] {μ : Measure
           Tendsto.eventually_const_lt hxg hx
         filter_upwards [hev] with k hk
         rw [Set.indicator_of_mem (show x ∈ A k from hk)]
-      · rw [Set.indicator_of_notMem hxg]; exact zero_le _
+      · rw [Set.indicator_of_notMem hxg]; exact zero_le
     calc distribution g (t : ℝ≥0∞) μ
         = μ Bg := by rw [hdist_g, hBgdist]
       _ = ∫⁻ x, Bg.indicator (1 : α → ℝ≥0∞) x ∂μ := by rw [lintegral_indicator_one hBgmeas]
@@ -241,7 +241,7 @@ theorem wnorm_le_of_ae_tendsto {α E : Type*} [MeasurableSpace α] {μ : Measure
       -- `φ := t · (·)^a` is monotone and continuous on `ℝ≥0∞`, so it commutes with `liminf`.
       set φ : ℝ≥0∞ → ℝ≥0∞ := fun x => (t : ℝ≥0∞) * x ^ a with hφ_def
       have hmono : Monotone φ := fun x y hxy =>
-        mul_le_mul_of_nonneg_left (ENNReal.rpow_le_rpow hxy ha) (zero_le _)
+        mul_le_mul_of_nonneg_left (ENNReal.rpow_le_rpow hxy ha) (zero_le)
       set D : ℕ → ℝ≥0∞ := fun k => distribution (F k) (t : ℝ≥0∞) μ with hD_def
       have hcont : ContinuousAt φ (liminf D atTop) := by
         have h2 : ContinuousAt (fun x : ℝ≥0∞ => x ^ a) (liminf D atTop) :=

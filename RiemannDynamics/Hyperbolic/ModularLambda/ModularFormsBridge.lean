@@ -4,8 +4,8 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Will (Ziang) Li
 -/
 import Mathlib.NumberTheory.ModularForms.Basic
-import Mathlib.NumberTheory.ModularForms.LevelOne
-import Mathlib.NumberTheory.ModularForms.Delta
+import Mathlib.NumberTheory.ModularForms.LevelOne.Basic
+import Mathlib.NumberTheory.ModularForms.Discriminant
 import Mathlib.LinearAlgebra.Matrix.FixedDetMatrices
 import Mathlib.Geometry.Manifold.Notation
 import Mathlib.Analysis.Real.Pi.Bounds
@@ -27,7 +27,7 @@ The endpoint `dim S_4(SL(2, ℤ)) = 0` is captured here as
 `weight4_levelOne_cuspForm_vanishes`, via the `Δ`-division route:
 construct `F²/Δ` as a negative-weight modular form (which must vanish
 by Mathlib's `ModularFormClass.levelOne_neg_weight_eq_zero`), then
-deduce `F = 0` from `delta_ne_zero`.
+deduce `F = 0` from `discriminant_ne_zero`.
 -/
 
 namespace RiemannDynamics
@@ -72,7 +72,11 @@ theorem slash_T_eq_of_T_invariant {g : ℂ → ℂ} {k : ℤ}
   -- Goal: g (↑(1 : ℝ) + ↑σ) * denom T σ ^ (-k) = g ↑σ.
   -- denom T σ = 1, so the `(denom T σ) ^ (-k)` factor is 1.
   have h_denom : denom ModularGroup.T σ = 1 := by
-    simp [denom, ModularGroup.T]
+    have h0 : (ModularGroup.T : GL (Fin 2) ℝ) 1 0 = ((0 : ℤ) : ℝ) := by rfl
+    have h1 : (ModularGroup.T : GL (Fin 2) ℝ) 1 1 = ((1 : ℤ) : ℝ) := by rfl
+    rw [denom, h0, h1]
+    push_cast
+    ring
   rw [h_denom, one_zpow, mul_one]
   -- Goal: g (↑(1 : ℝ) + ↑σ) = g ↑σ.  Cast ↑(1 : ℝ) → 1, then apply h_T.
   rw [show ((1 : ℝ) : ℂ) + (↑σ : ℂ) = (↑σ : ℂ) + 1 from by push_cast; ring]
@@ -93,7 +97,11 @@ theorem slash_S_eq_of_S_weight_k {g : ℂ → ℂ} {k : ℤ}
     rw [ModularForm.SL_slash_apply, UpperHalfPlane.modular_S_smul]
     exact h_main
   have h_denom : denom ModularGroup.S σ = (↑σ : ℂ) := by
-    simp [denom, ModularGroup.S]
+    have h0 : (ModularGroup.S : GL (Fin 2) ℝ) 1 0 = ((1 : ℤ) : ℝ) := by rfl
+    have h1 : (ModularGroup.S : GL (Fin 2) ℝ) 1 1 = ((0 : ℤ) : ℝ) := by rfl
+    rw [denom, h0, h1]
+    push_cast
+    ring
   have h_arg : (-(↑σ : ℂ))⁻¹ = -1 / (↑σ : ℂ) := by field_simp
   rw [h_arg, h_S _ h_σ_pos, h_denom]
   rw [show (↑σ : ℂ) ^ k * g (↑σ : ℂ) * (↑σ : ℂ) ^ (-k)
@@ -153,34 +161,32 @@ theorem isZeroAtImInfty_of_exp_decay {g : ℂ → ℂ}
 
 /-! ### Bundling `Δ` as a Mathlib `CuspForm`
 
-Mathlib provides `delta : ℍ → ℂ` along with `delta_T_invariant`,
-`delta_S_invariant`, `delta_ne_zero`, and the q-product expansion
-`delta_eq_q_prod`, but does not bundle the discriminant as a
+Mathlib provides `discriminant : ℍ → ℂ` along with `discriminant_T_invariant`,
+`discriminant_S_invariant`, `discriminant_ne_zero`, and the q-product expansion
+`discriminant_eq_q_prod`, but does not bundle the discriminant as a
 `CuspForm Γ(1) 12`. We do so here. The three components are:
 - Slash invariance for every `γ ∈ SL(2, ℤ)`, via the generator-level
   invariances and `slashInvariant_via_S_T_in_SL2Z`.
-- Manifold holomorphy `MDiff delta`, via `Δ = η²⁴` and Mathlib's
+- Manifold holomorphy `MDiff discriminant`, via `Δ = η²⁴` and Mathlib's
   `differentiableAt_eta_of_mem_upperHalfPlaneSet`.
-- Vanishing at every cusp, reduced to `IsZeroAtImInfty delta` via
+- Vanishing at every cusp, reduced to `IsZeroAtImInfty discriminant` via
   the `IsArithmetic` cusp-iff-SL2Z lemma + slash invariance, with
-  the `IsZeroAtImInfty delta` step following from the leading
+  the `IsZeroAtImInfty discriminant` step following from the leading
   `q¹` factor in the q-expansion `Δ = q · ∏(1 − qⁿ)²⁴`. -/
 
-/-- The slash-action equation for `delta` under every `γ ∈ SL(2, ℤ)`,
+/-- The slash-action equation for `discriminant` under every `γ ∈ SL(2, ℤ)`,
 extending the two-generator invariance via `SL2Z_generators`. -/
 theorem delta_slash_action_eq (γ : SL(2, ℤ)) :
-    delta ∣[(12 : ℤ)] γ = delta :=
-  slashInvariant_via_S_T_in_SL2Z delta_S_invariant delta_T_invariant γ
+    discriminant ∣[(12 : ℤ)] γ = discriminant :=
+  slashInvariant_via_S_T_in_SL2Z discriminant_S_invariant discriminant_T_invariant γ
 
-/-- Manifold holomorphy of `delta : ℍ → ℂ`. Follows from
+/-- Manifold holomorphy of `discriminant : ℍ → ℂ`. Follows from
 `Δ = η²⁴` and the Mathlib `differentiableAt_eta_of_mem_upperHalfPlaneSet`. -/
-theorem delta_mdiff : MDiff (delta : ℍ → ℂ) := by
+theorem delta_mdiff : MDiff (discriminant : ℍ → ℂ) := by
   have h_eta : MDiff (fun τ : ℍ => η (↑τ : ℂ)) := fun τ =>
     (ModularForm.differentiableAt_eta_of_mem_upperHalfPlaneSet
       (z := (↑τ : ℂ)) τ.2).mdifferentiableAt.comp τ (UpperHalfPlane.mdifferentiable_coe τ)
-  have h_pow : MDiff (fun τ : ℍ => (η (↑τ : ℂ)) ^ 24) := by
-    simpa [Pi.pow_apply] using h_eta.pow 24
-  exact h_pow
+  exact fun τ => (h_eta τ).pow 24
 
 /-- **Boundedness of the eta-related product `∏(1 − qⁿ)` near `+i∞`.**
 For `τ.im ≥ 1`, the infinite product `∏' n, (1 − eta_q n τ)` is
@@ -324,14 +330,14 @@ theorem tprod_norm_one_sub_eta_q_le :
     Filter.Eventually.of_forall (fun n => h_partial_bound (Finset.range n))
   exact le_of_tendsto h_tendsto_norm h_ev
 
-/-- **Exponential decay bound for `delta` near the cusp.** For
-`τ.im ≥ 1`, the discriminant `delta τ = q · ∏(1 − qⁿ)²⁴` satisfies
-`‖delta τ‖ ≤ C · exp(−2π · τ.im)` for `C = M²⁴` where `M` is the
+/-- **Exponential decay bound for `discriminant` near the cusp.** For
+`τ.im ≥ 1`, the discriminant `discriminant τ = q · ∏(1 − qⁿ)²⁴` satisfies
+`‖discriminant τ‖ ≤ C · exp(−2π · τ.im)` for `C = M²⁴` where `M` is the
 product bound from `tprod_norm_one_sub_eta_q_le`. The factor
 `exp(−2π · τ.im) = ‖𝕢 1 τ‖` comes from `Function.Periodic.norm_qParam`. -/
 theorem delta_norm_le_exp_decay :
     ∃ C : ℝ, 0 < C ∧ ∀ τ : ℍ, 1 ≤ τ.im →
-      ‖delta τ‖ ≤ C * Real.exp (-2 * Real.pi * τ.im) := by
+      ‖discriminant τ‖ ≤ C * Real.exp (-2 * Real.pi * τ.im) := by
   obtain ⟨M, hM_pos, hM_bound⟩ := tprod_norm_one_sub_eta_q_le
   refine ⟨M ^ 24, by positivity, ?_⟩
   intro τ hτ_im
@@ -347,7 +353,7 @@ theorem delta_norm_le_exp_decay :
   have h_tprod_pow : ∏' n : ℕ, ((1 : ℂ) - eta_q n (↑τ : ℂ)) ^ 24
       = (∏' n : ℕ, ((1 : ℂ) - eta_q n (↑τ : ℂ))) ^ 24 :=
     h_mul'.tprod_pow 24
-  rw [delta_eq_q_prod, h_tprod_pow, norm_mul, norm_pow]
+  rw [discriminant_eq_q_prod, h_tprod_pow, norm_mul, norm_pow]
   -- `‖𝕢 1 τ‖ = exp(-2π τ.im)`.
   rw [Function.Periodic.norm_qParam]
   have h_div_one : Real.exp (-2 * Real.pi * (↑τ : ℂ).im / 1)
@@ -363,17 +369,17 @@ theorem delta_norm_le_exp_decay :
         mul_le_mul_of_nonneg_left h_pow_le h_exp_pos'.le
     _ = M ^ 24 * Real.exp (-2 * Real.pi * τ.im) := by ring
 
-/-- `delta : ℍ → ℂ` is zero at the cusp `+i∞`: this is the leading
+/-- `discriminant : ℍ → ℂ` is zero at the cusp `+i∞`: this is the leading
 `q¹` behaviour in the q-expansion `Δ = q · ∏(1 − qⁿ)²⁴`. The proof
 combines the explicit exponential decay bound `delta_norm_le_exp_decay`
 with a squeeze using `Real.tendsto_exp_atBot`. -/
-theorem delta_isZeroAtImInfty : IsZeroAtImInfty (delta : ℍ → ℂ) := by
+theorem delta_isZeroAtImInfty : IsZeroAtImInfty (discriminant : ℍ → ℂ) := by
   obtain ⟨C, hC_pos, h_bound⟩ := delta_norm_le_exp_decay
-  rw [show IsZeroAtImInfty (delta : ℍ → ℂ)
-        ↔ Filter.Tendsto (delta : ℍ → ℂ) atImInfty (nhds 0) from Iff.rfl]
+  rw [show IsZeroAtImInfty (discriminant : ℍ → ℂ)
+        ↔ Filter.Tendsto (discriminant : ℍ → ℂ) atImInfty (nhds 0) from Iff.rfl]
   rw [tendsto_zero_iff_norm_tendsto_zero]
   have h_bound_ev : ∀ᶠ τ : ℍ in atImInfty,
-      ‖delta τ‖ ≤ C * Real.exp (-2 * Real.pi * τ.im) := by
+      ‖discriminant τ‖ ≤ C * Real.exp (-2 * Real.pi * τ.im) := by
     rw [Filter.eventually_iff_exists_mem]
     refine ⟨{τ : ℍ | 1 ≤ τ.im}, ?_, fun τ hτ => h_bound τ hτ⟩
     rw [atImInfty_mem]
@@ -400,9 +406,9 @@ theorem delta_isZeroAtImInfty : IsZeroAtImInfty (delta : ℍ → ℂ) := by
     h_bound_ev h_rhs_tendsto
 
 /-- **`Δ` as a Mathlib `CuspForm`.** The modular discriminant
-`delta : ℍ → ℂ` packaged as a weight-12 cusp form for `Γ(1) = SL(2, ℤ)`. -/
+`discriminant : ℍ → ℂ` packaged as a weight-12 cusp form for `Γ(1) = SL(2, ℤ)`. -/
 noncomputable def delta_cuspForm : CuspForm Γ(1) 12 where
-  toFun := delta
+  toFun := discriminant
   slash_action_eq' := by
     intro γ_GL hγ_GL
     obtain ⟨g_SL, _hg_mem, h_eq⟩ := hγ_GL
@@ -422,13 +428,13 @@ noncomputable def delta_cuspForm : CuspForm Γ(1) 12 where
 
 Given a weight-4 cusp form `F`, the quotient `F²/Δ` is a weight `−4`
 modular form (since `F²` has weight 8, `Δ` has weight 12, and the
-quotient is well-defined by `delta_ne_zero`). By Mathlib's
+quotient is well-defined by `discriminant_ne_zero`). By Mathlib's
 `ModularFormClass.levelOne_neg_weight_eq_zero`, every weight `< 0`
 modular form for `SL(2,ℤ)` is zero, so `F²/Δ = 0`. Combined with
-`delta_ne_zero`, this gives `F² = 0`, hence `F = 0`. -/
+`discriminant_ne_zero`, this gives `F² = 0`, hence `F = 0`. -/
 
 /-- **Slash invariance of `F²/Δ`** under `Γ(1)`. Given a weight-4 cusp
-form `F`, the function `σ ↦ (F σ)² / delta σ` satisfies the weight `−4`
+form `F`, the function `σ ↦ (F σ)² / discriminant σ` satisfies the weight `−4`
 slash invariance for every `γ ∈ Γ(1)`. The proof combines the
 weight-4 slash invariance of `F` (squared to get weight 8) with the
 weight-12 slash invariance of `Δ` (from `delta_cuspForm`); the
@@ -436,8 +442,8 @@ quotient has weight `8 − 12 = −4`, and the slash equation
 `(F²/Δ)(γ•τ) · (denom γ τ)^4 = (F²/Δ) τ` collapses to identity. -/
 theorem cuspForm_sq_div_delta_slash_invariant (F : CuspForm Γ(1) 4)
     (γ_GL : GL (Fin 2) ℝ) (hγ : γ_GL ∈ (Γ(1) : Subgroup (GL (Fin 2) ℝ))) :
-    (fun σ : ℍ => (F σ) ^ 2 / delta σ) ∣[(-4 : ℤ)] γ_GL
-      = fun σ : ℍ => (F σ) ^ 2 / delta σ := by
+    (fun σ : ℍ => (F σ) ^ 2 / discriminant σ) ∣[(-4 : ℤ)] γ_GL
+      = fun σ : ℍ => (F σ) ^ 2 / discriminant σ := by
   funext τ
   -- F (γ_GL • τ) = denom γ_GL τ ^ 4 * F τ (weight-4 slash invariance of F).
   have h_F : F (γ_GL • τ) = denom γ_GL τ ^ 4 * F τ :=
@@ -445,8 +451,8 @@ theorem cuspForm_sq_div_delta_slash_invariant (F : CuspForm Γ(1) 4)
   -- delta_cuspForm (γ_GL • τ) = denom γ_GL τ ^ 12 * delta_cuspForm τ.
   have h_Δ : delta_cuspForm (γ_GL • τ) = denom γ_GL τ ^ 12 * delta_cuspForm τ :=
     SlashInvariantForm.slash_action_eqn'' delta_cuspForm hγ τ
-  -- `delta_cuspForm τ = delta τ` by definition.
-  have h_Δ' : delta (γ_GL • τ) = denom γ_GL τ ^ 12 * delta τ := h_Δ
+  -- `delta_cuspForm τ = discriminant τ` by definition.
+  have h_Δ' : discriminant (γ_GL • τ) = denom γ_GL τ ^ 12 * discriminant τ := h_Δ
   -- `γ_GL.det = 1` since `γ_GL ∈ Γ(1)-GL` (image of SL).
   have h_det_eq : Matrix.GeneralLinearGroup.det γ_GL = 1 :=
     Subgroup.HasDetOne.det_eq hγ
@@ -458,11 +464,11 @@ theorem cuspForm_sq_div_delta_slash_invariant (F : CuspForm Γ(1) 4)
     intro z
     simp [σ, h_det]
   -- Nonzero denominators.
-  have h_delta_ne : delta τ ≠ 0 := delta_ne_zero τ
+  have h_delta_ne : discriminant τ ≠ 0 := discriminant_ne_zero τ
   have h_denom_ne : (denom γ_GL τ : ℂ) ≠ 0 := denom_ne_zero γ_GL τ
   -- Compute the slash.
   rw [ModularForm.slash_apply, h_sigma_id]
-  change ((F (γ_GL • τ)) ^ 2 / delta (γ_GL • τ)) * _ * _ = (F τ) ^ 2 / delta τ
+  change ((F (γ_GL • τ)) ^ 2 / discriminant (γ_GL • τ)) * _ * _ = (F τ) ^ 2 / discriminant τ
   rw [h_F, h_Δ', h_det]
   -- Simplify `|↑1| = 1`, `1 ^ (-5) = 1`, then algebra.
   simp only [abs_one, Complex.ofReal_one, one_zpow, mul_one, neg_neg]
@@ -472,33 +478,34 @@ theorem cuspForm_sq_div_delta_slash_invariant (F : CuspForm Γ(1) 4)
 holomorphic functions with the denominator nonvanishing on `ℍ`.
 Uses `UpperHalfPlane.mdifferentiable_iff` to reduce to standard
 `DifferentiableOn`, then chains `DifferentiableOn.pow`,
-`DifferentiableOn.div`, plus `delta_ne_zero` on the open set
+`DifferentiableOn.div`, plus `discriminant_ne_zero` on the open set
 `{z | 0 < z.im}`. -/
 theorem cuspForm_sq_div_delta_mdiff (F : CuspForm Γ(1) 4) :
-    MDiff (fun σ : ℍ => (F σ) ^ 2 / delta σ) := by
+    MDiff (fun σ : ℍ => (F σ) ^ 2 / discriminant σ) := by
   rw [UpperHalfPlane.mdifferentiable_iff]
-  -- Goal: `DifferentiableOn ℂ ((fun σ => F σ^2 / delta σ) ∘ ↑ofComplex) {z | 0 < z.im}`.
-  -- `F ∘ ofComplex` and `delta ∘ ofComplex` are DifferentiableOn from MDiff.
+  -- Goal: `DifferentiableOn ℂ ((fun σ => F σ^2 / discriminant σ) ∘ ↑ofComplex) {z | 0 < z.im}`.
+  -- `F ∘ ofComplex` and `discriminant ∘ ofComplex` are DifferentiableOn from MDiff.
   have h_F_mdiff : MDiff (F : ℍ → ℂ) := ModularFormClass.holo F
   rw [UpperHalfPlane.mdifferentiable_iff] at h_F_mdiff
-  have h_delta_mdiff : MDiff (delta : ℍ → ℂ) := delta_mdiff
+  have h_delta_mdiff : MDiff (discriminant : ℍ → ℂ) := delta_mdiff
   rw [UpperHalfPlane.mdifferentiable_iff] at h_delta_mdiff
-  -- `delta ∘ ofComplex` is nonzero on `{z | 0 < z.im}`.
-  have h_delta_ne : ∀ z ∈ {z : ℂ | 0 < z.im}, (delta ∘ (↑UpperHalfPlane.ofComplex)) z ≠ 0 := by
+  -- `discriminant ∘ ofComplex` is nonzero on `{z | 0 < z.im}`.
+  have h_delta_ne :
+      ∀ z ∈ {z : ℂ | 0 < z.im}, (discriminant ∘ (↑UpperHalfPlane.ofComplex)) z ≠ 0 := by
     intro z hz
     rw [Function.comp_apply]
-    exact delta_ne_zero _
-  -- Compose: (F ∘ ofComplex)^2 / (delta ∘ ofComplex).
+    exact discriminant_ne_zero _
+  -- Compose: (F ∘ ofComplex)^2 / (discriminant ∘ ofComplex).
   have h_pow : DifferentiableOn ℂ
       (fun z => ((F : ℍ → ℂ) ∘ (↑UpperHalfPlane.ofComplex)) z ^ 2)
       {z : ℂ | 0 < z.im} := h_F_mdiff.pow 2
   have h_div : DifferentiableOn ℂ
       (fun z => ((F : ℍ → ℂ) ∘ (↑UpperHalfPlane.ofComplex)) z ^ 2
-              / (delta ∘ (↑UpperHalfPlane.ofComplex)) z)
+              / (discriminant ∘ (↑UpperHalfPlane.ofComplex)) z)
       {z : ℂ | 0 < z.im} :=
     h_pow.div h_delta_mdiff h_delta_ne
   -- Massage the form to match the goal.
-  convert h_div using 1
+  exact h_div
 
 /-- **Upper bound: a weight-`k` cusp form is `O(qParam 1)` near `+i∞`.**
 For τ.im sufficiently large, `‖F τ‖ ≤ M · ‖qParam 1 τ‖`. Closure uses
@@ -509,8 +516,9 @@ theorem cuspForm_norm_le_qParam (F : CuspForm Γ(1) 4) :
     ∃ M A : ℝ, 0 < M ∧ ∀ τ : ℍ, A ≤ τ.im →
       ‖F τ‖ ≤ M * ‖Function.Periodic.qParam 1 (↑τ : ℂ)‖ := by
   -- `1 ∈ Γ(1).strictPeriods` since `Γ(1) = ⊤` contains `T`.
-  have h_period : (1 : ℝ) ∈ (Γ(1) : Subgroup (GL (Fin 2) ℝ)).strictPeriods :=
-    ModularFormClass.one_mem_strictPeriods_SL2Z
+  have h_period : (1 : ℝ) ∈ (Γ(1) : Subgroup (GL (Fin 2) ℝ)).strictPeriods := by
+    rw [Gamma_one_coe_eq_SL]
+    exact one_mem_strictPeriods_SL
   -- Mathlib gives `F =O[atImInfty] exp(-2π·τ.im/1)`.
   have h_decay : (F : ℍ → ℂ) =O[atImInfty]
       (fun τ : ℍ => Real.exp (-2 * Real.pi * τ.im / 1)) :=
@@ -540,7 +548,7 @@ theorem cuspForm_norm_le_qParam (F : CuspForm Γ(1) 4) :
         mul_le_mul_of_nonneg_right (le_max_left _ _) (norm_nonneg _)
 
 /-- **Lower bound: `‖Δ τ‖ ≥ c · ‖qParam 1 τ‖` near `+i∞`.** `Δ` has
-a simple zero at the cusp: `delta τ = qParam 1 τ · ∏'(1 − eta_q n τ)²⁴`,
+a simple zero at the cusp: `discriminant τ = qParam 1 τ · ∏'(1 − eta_q n τ)²⁴`,
 and the product is bounded away from `0` for `τ.im ≥ 1` (since each
 factor `1 − eta_q n τ` is close to `1`). The lower bound on the
 product uses the reverse triangle inequality applied to
@@ -558,7 +566,7 @@ Numeric chain (for `τ.im ≥ 1`):
 * `‖Δ τ‖ = ‖qParam 1 τ‖ · ‖∏‖²⁴ ≥ (1/4)²⁴ · ‖qParam 1 τ‖`. -/
 theorem delta_norm_ge_qParam :
     ∃ c A : ℝ, 0 < c ∧ ∀ τ : ℍ, A ≤ τ.im →
-      c * ‖Function.Periodic.qParam 1 (↑τ : ℂ)‖ ≤ ‖delta τ‖ := by
+      c * ‖Function.Periodic.qParam 1 (↑τ : ℂ)‖ ≤ ‖discriminant τ‖ := by
   refine ⟨(1/4 : ℝ)^24, 1, by positivity, ?_⟩
   intro τ hτ_im
   have hτ_pos : 0 < (↑τ : ℂ).im := lt_of_lt_of_le zero_lt_one hτ_im
@@ -694,11 +702,11 @@ theorem delta_norm_ge_qParam :
     h_tendsto.norm
   have h_tprod_ge : (1/4 : ℝ) ≤ ‖∏' n : ℕ, ((1 : ℂ) - eta_q n (↑τ : ℂ))‖ :=
     ge_of_tendsto' h_tendsto_norm h_partial_ge
-  -- Step 6: combine with delta_eq_q_prod.
+  -- Step 6: combine with discriminant_eq_q_prod.
   have h_tprod_pow : ∏' n : ℕ, ((1 : ℂ) - eta_q n (↑τ : ℂ)) ^ 24
       = (∏' n : ℕ, ((1 : ℂ) - eta_q n (↑τ : ℂ))) ^ 24 :=
     h_mul'.tprod_pow 24
-  rw [delta_eq_q_prod, h_tprod_pow, norm_mul, norm_pow]
+  rw [discriminant_eq_q_prod, h_tprod_pow, norm_mul, norm_pow]
   -- Goal: (1/4)^24 * ‖qParam‖ ≤ ‖qParam‖ * ‖∏'‖^24.
   rw [show (1/4 : ℝ)^24 * ‖Function.Periodic.qParam 1 (↑τ : ℂ)‖
       = ‖Function.Periodic.qParam 1 (↑τ : ℂ)‖ * (1/4 : ℝ)^24 from by ring]
@@ -711,7 +719,7 @@ bound `delta_norm_ge_qParam` (gives `‖Δ‖ ≥ c·‖qParam‖`) to conclude
 `‖F²/Δ‖ ≤ (M²/c) · ‖qParam‖`, which is bounded since
 `‖qParam 1 τ‖ = exp(−2π·τ.im) ≤ 1` for `τ.im ≥ 0`. -/
 theorem cuspForm_sq_div_delta_isBoundedAtImInfty (F : CuspForm Γ(1) 4) :
-    IsBoundedAtImInfty (fun σ : ℍ => (F σ) ^ 2 / delta σ) := by
+    IsBoundedAtImInfty (fun σ : ℍ => (F σ) ^ 2 / discriminant σ) := by
   obtain ⟨M_F, A_F, hM_F_pos, hM_F_bound⟩ := cuspForm_norm_le_qParam F
   obtain ⟨c_Δ, A_Δ, hc_Δ_pos, hc_Δ_bound⟩ := delta_norm_ge_qParam
   -- Unfold `IsBoundedAtImInfty` and provide the bound via `IsBigO.of_bound`.
@@ -735,7 +743,7 @@ theorem cuspForm_sq_div_delta_isBoundedAtImInfty (F : CuspForm Γ(1) 4) :
       have h_pi_pos := Real.pi_pos
       have h_tau_pos : 0 < (↑τ : ℂ).im := τ.2
       nlinarith
-    have h_delta_pos : 0 < ‖delta τ‖ := by
+    have h_delta_pos : 0 < ‖discriminant τ‖ := by
       have := hc_Δ_bound τ h_AΔ
       have h_pos : 0 < c_Δ * ‖Function.Periodic.qParam 1 (↑τ : ℂ)‖ :=
         mul_pos hc_Δ_pos h_qParam_pos
@@ -751,7 +759,7 @@ theorem cuspForm_sq_div_delta_isBoundedAtImInfty (F : CuspForm Γ(1) 4) :
     -- ‖F‖² / ‖Δ‖ ≤ M_F²·‖q‖² / (c_Δ · ‖q‖) = (M_F²/c_Δ) · ‖q‖ ≤ M_F²/c_Δ.
     have h_cq_pos : 0 < c_Δ * ‖Function.Periodic.qParam 1 (↑τ : ℂ)‖ :=
       mul_pos hc_Δ_pos h_qParam_pos
-    have h_step1 : ‖F τ‖ ^ 2 / ‖delta τ‖
+    have h_step1 : ‖F τ‖ ^ 2 / ‖discriminant τ‖
         ≤ (M_F ^ 2 * ‖Function.Periodic.qParam 1 (↑τ : ℂ)‖ ^ 2)
           / (c_Δ * ‖Function.Periodic.qParam 1 (↑τ : ℂ)‖) := by
       rw [div_le_div_iff₀ h_delta_pos h_cq_pos]
@@ -759,7 +767,7 @@ theorem cuspForm_sq_div_delta_isBoundedAtImInfty (F : CuspForm Γ(1) 4) :
           ≤ (M_F ^ 2 * ‖Function.Periodic.qParam 1 (↑τ : ℂ)‖ ^ 2)
               * (c_Δ * ‖Function.Periodic.qParam 1 (↑τ : ℂ)‖) :=
             mul_le_mul_of_nonneg_right h_F_sq_bound h_cq_pos.le
-        _ ≤ (M_F ^ 2 * ‖Function.Periodic.qParam 1 (↑τ : ℂ)‖ ^ 2) * ‖delta τ‖ :=
+        _ ≤ (M_F ^ 2 * ‖Function.Periodic.qParam 1 (↑τ : ℂ)‖ ^ 2) * ‖discriminant τ‖ :=
             mul_le_mul_of_nonneg_left h_Δ (by positivity)
     have h_step2 : (M_F ^ 2 * ‖Function.Periodic.qParam 1 (↑τ : ℂ)‖ ^ 2)
         / (c_Δ * ‖Function.Periodic.qParam 1 (↑τ : ℂ)‖)
@@ -784,7 +792,7 @@ reduction `OnePoint.isBoundedAt_iff_forall_SL2Z` (using that
 `Γ(1)` is arithmetic so all cusps are SL(2,ℤ)-equivalent to `+i∞`). -/
 theorem cuspForm_sq_div_delta_bdd_at_cusps (F : CuspForm Γ(1) 4)
     {c : OnePoint ℝ} (hc : IsCusp c Γ(1)) :
-    c.IsBoundedAt (fun σ : ℍ => (F σ) ^ 2 / delta σ) (-4) := by
+    c.IsBoundedAt (fun σ : ℍ => (F σ) ^ 2 / discriminant σ) (-4) := by
   rw [Subgroup.IsArithmetic.isCusp_iff_isCusp_SL2Z] at hc
   rw [OnePoint.isBoundedAt_iff_forall_SL2Z hc]
   intro γ _hγ
@@ -793,8 +801,8 @@ theorem cuspForm_sq_div_delta_bdd_at_cusps (F : CuspForm Γ(1) 4)
     refine ⟨γ, ?_, rfl⟩
     rw [CongruenceSubgroup.Gamma_one_top]
     exact Subgroup.mem_top γ
-  have h_slash : (fun σ : ℍ => (F σ) ^ 2 / delta σ) ∣[(-4 : ℤ)] γ
-        = fun σ : ℍ => (F σ) ^ 2 / delta σ := by
+  have h_slash : (fun σ : ℍ => (F σ) ^ 2 / discriminant σ) ∣[(-4 : ℤ)] γ
+        = fun σ : ℍ => (F σ) ^ 2 / discriminant σ := by
     have h := cuspForm_sq_div_delta_slash_invariant F (γ : GL (Fin 2) ℝ) hγ_GL
     rwa [← ModularForm.SL_slash] at h
   rw [h_slash]
@@ -805,23 +813,27 @@ theorem cuspForm_sq_div_delta_bdd_at_cusps (F : CuspForm Γ(1) 4)
 zero-dimensional. The proof constructs `G := F²/Δ` as a weight `−4`
 modular form (using the three slash/holomorphy/cusp-bound helpers
 above), applies Mathlib's `ModularFormClass.levelOne_neg_weight_eq_zero`
-to get `G ≡ 0`, then deduces `F = 0` from `delta_ne_zero`. -/
+to get `G ≡ 0`, then deduces `F = 0` from `discriminant_ne_zero`. -/
 theorem weight4_levelOne_cuspForm_vanishes
     (F : CuspForm Γ(1) 4) (τ : ℍ) :
     F τ = 0 := by
   -- Construct G := F²/Δ as a weight-(-4) modular form.
   let G : ModularForm Γ(1) (-4) :=
-  { toFun := fun σ : ℍ => (F σ) ^ 2 / delta σ
+  { toFun := fun σ : ℍ => (F σ) ^ 2 / discriminant σ
     slash_action_eq' := cuspForm_sq_div_delta_slash_invariant F
     holo' := cuspForm_sq_div_delta_mdiff F
     bdd_at_cusps' := cuspForm_sq_div_delta_bdd_at_cusps F }
   -- Apply `levelOne_neg_weight_eq_zero` to get `G ≡ 0`.
-  have hG_zero : ⇑G = 0 :=
-    ModularFormClass.levelOne_neg_weight_eq_zero (show (-4 : ℤ) < 0 by norm_num) G
+  -- (Mathlib 4.33 states the lemma for `𝒮ℒ`; transport along `Γ(1)-GL = 𝒮ℒ`.)
+  have h_all_zero : ∀ G' : ModularForm (Γ(1) : Subgroup (GL (Fin 2) ℝ)) (-4), ⇑G' = 0 := by
+    rw [Gamma_one_coe_eq_SL]
+    intro G'
+    exact ModularFormClass.levelOne_neg_weight_eq_zero (show (-4 : ℤ) < 0 by norm_num) G'
+  have hG_zero : ⇑G = 0 := h_all_zero G
   -- Conclude `F τ = 0`.
   have h_val : G τ = 0 := congrFun hG_zero τ
-  have h_sq_zero : (F τ) ^ 2 / delta τ = 0 := h_val
-  have h_delta_ne : delta τ ≠ 0 := delta_ne_zero τ
+  have h_sq_zero : (F τ) ^ 2 / discriminant τ = 0 := h_val
+  have h_delta_ne : discriminant τ ≠ 0 := discriminant_ne_zero τ
   rw [div_eq_zero_iff] at h_sq_zero
   rcases h_sq_zero with h_pow | h_delta_zero
   · exact (pow_eq_zero_iff (by norm_num : (2 : ℕ) ≠ 0)).mp h_pow

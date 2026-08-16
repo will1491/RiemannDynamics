@@ -104,7 +104,7 @@ theorem dbarSolver_add {μ σ : ℂ → ℂ}
       · exact Or.inl ⟨z, ⟨hz, h0⟩, rfl⟩
     refine measure_mono_null hsub (measure_union_null ?_ (measure_singleton 0))
     refine addHaar_image_eq_zero_of_differentiableOn_of_addHaar_eq_zero volume
-      ?_ (measure_mono_null Set.diff_subset hN)
+      ?_ (measure_mono_null Set.sdiff_subset hN)
     intro z hz
     exact (differentiableAt_inv (𝕜 := ℝ) (by simpa using hz.2)).differentiableWithinAt
   -- hence it is quasi-measure-preserving (it is a measurable involution)
@@ -137,7 +137,7 @@ theorem dbarSolver_add {μ σ : ℂ → ℂ}
       · rw [Set.indicator_of_notMem hw]
         simp only [ballTruncation]
         rw [if_neg hw]
-    haveI hfin1 : IsFiniteMeasure (volume.restrict (Metric.closedBall (0:ℂ) 1)) :=
+    have hfin1 : IsFiniteMeasure (volume.restrict (Metric.closedBall (0:ℂ) 1)) :=
       ⟨by rw [Measure.restrict_apply_univ]
           exact (isCompact_closedBall _ _).measure_lt_top⟩
     have hballmem : MemLp (ballTruncation ν) 4 volume := by
@@ -179,16 +179,16 @@ theorem dbarSolver_add {μ σ : ℂ → ℂ}
             (fun w : ℂ => w ^ 2 / (starRingEnd ℂ w) ^ 2 * ν w⁻¹) := by
       funext w
       by_cases hw : w ∈ Metric.ball (0:ℂ) 1 ∧ w ≠ 0
-      · rw [Set.indicator_of_mem ((Set.mem_diff w).mpr ⟨hw.1, by simpa using hw.2⟩)]
+      · rw [Set.indicator_of_mem ((Set.mem_sdiff w).mpr ⟨hw.1, by simpa using hw.2⟩)]
         simp only [inftyChartCoeff]
         rw [if_pos hw]
       · rw [Set.indicator_of_notMem
           (fun hmem => hw ⟨hmem.1, by simpa using hmem.2⟩)]
         simp only [inftyChartCoeff]
         rw [if_neg hw]
-    haveI hfin2 : IsFiniteMeasure (volume.restrict (Metric.ball (0:ℂ) 1 \ {0})) :=
+    have hfin2 : IsFiniteMeasure (volume.restrict (Metric.ball (0:ℂ) 1 \ {0})) :=
       ⟨by rw [Measure.restrict_apply_univ]
-          exact lt_of_le_of_lt (measure_mono Set.diff_subset) measure_ball_lt_top⟩
+          exact lt_of_le_of_lt (measure_mono Set.sdiff_subset) measure_ball_lt_top⟩
     have hinftymem : MemLp (inftyChartCoeff ν) 4 volume := by
       rw [hinfty_eq, memLp_indicator_iff_restrict
         (measurableSet_ball.diff (measurableSet_singleton 0))]
@@ -213,7 +213,7 @@ theorem dbarSolver_add {μ σ : ℂ → ℂ}
             rw [norm_mul]
             exact mul_le_of_le_one_left (norm_nonneg _) hfac
         _ ≤ (eLpNormEssSup ν volume).toReal := by
-            rw [← ofReal_norm_eq_enorm] at hw
+            rw [← ofReal_norm] at hw
             exact (ENNReal.ofReal_le_iff_le_toReal hνb.ne).mp hw
     exact ⟨fun w => integrable_div_sub_of_memLp_of_support
         (by norm_num : (2:ℝ≥0∞) < 4) (by norm_num) hballmem hballsupp w,
@@ -296,7 +296,7 @@ theorem isSphereVectorField_dbarSolver {μ : ℂ → ℂ}
       · exact Or.inl ⟨z, ⟨hz, h0⟩, rfl⟩
     refine measure_mono_null hsub (measure_union_null ?_ (measure_singleton 0))
     refine addHaar_image_eq_zero_of_differentiableOn_of_addHaar_eq_zero volume
-      ?_ (measure_mono_null Set.diff_subset hN)
+      ?_ (measure_mono_null Set.sdiff_subset hN)
     intro z hz
     exact (differentiableAt_inv (𝕜 := ℝ) (by simpa using hz.2)).differentiableWithinAt
   have hqmp : Measure.QuasiMeasurePreserving (fun z : ℂ => z⁻¹)
@@ -321,7 +321,7 @@ theorem isSphereVectorField_dbarSolver {μ : ℂ → ℂ}
     · rw [Set.indicator_of_notMem hw]
       simp only [ballTruncation]
       rw [if_neg hw]
-  haveI hfin1 : IsFiniteMeasure (volume.restrict (Metric.closedBall (0:ℂ) 1)) :=
+  have hfin1 : IsFiniteMeasure (volume.restrict (Metric.closedBall (0:ℂ) 1)) :=
     ⟨by rw [Measure.restrict_apply_univ]
         exact (isCompact_closedBall _ _).measure_lt_top⟩
   have hballmem : MemLp (ballTruncation μ) 4 volume := by
@@ -362,16 +362,16 @@ theorem isSphereVectorField_dbarSolver {μ : ℂ → ℂ}
           (fun w : ℂ => w ^ 2 / (starRingEnd ℂ w) ^ 2 * μ w⁻¹) := by
     funext w
     by_cases hw : w ∈ Metric.ball (0:ℂ) 1 ∧ w ≠ 0
-    · rw [Set.indicator_of_mem ((Set.mem_diff w).mpr ⟨hw.1, by simpa using hw.2⟩)]
+    · rw [Set.indicator_of_mem ((Set.mem_sdiff w).mpr ⟨hw.1, by simpa using hw.2⟩)]
       simp only [inftyChartCoeff]
       rw [if_pos hw]
     · rw [Set.indicator_of_notMem
         (fun hmem => hw ⟨hmem.1, by simpa using hmem.2⟩)]
       simp only [inftyChartCoeff]
       rw [if_neg hw]
-  haveI hfin2 : IsFiniteMeasure (volume.restrict (Metric.ball (0:ℂ) 1 \ {0})) :=
+  have hfin2 : IsFiniteMeasure (volume.restrict (Metric.ball (0:ℂ) 1 \ {0})) :=
     ⟨by rw [Measure.restrict_apply_univ]
-        exact lt_of_le_of_lt (measure_mono Set.diff_subset) measure_ball_lt_top⟩
+        exact lt_of_le_of_lt (measure_mono Set.sdiff_subset) measure_ball_lt_top⟩
   have hinftymem : MemLp (inftyChartCoeff μ) 4 volume := by
     rw [hinfty_eq, memLp_indicator_iff_restrict
       (measurableSet_ball.diff (measurableSet_singleton 0))]
@@ -396,7 +396,7 @@ theorem isSphereVectorField_dbarSolver {μ : ℂ → ℂ}
           rw [norm_mul]
           exact mul_le_of_le_one_left (norm_nonneg _) hfac
       _ ≤ (eLpNormEssSup μ volume).toReal := by
-          rw [← ofReal_norm_eq_enorm] at hw
+          rw [← ofReal_norm] at hw
           exact (ENNReal.ofReal_le_iff_le_toReal hb.ne).mp hw
   -- ===== the Cauchy-transform calculus for the two pieces =====
   have h24 : (2:ℝ≥0∞) < 4 := by norm_num

@@ -148,7 +148,7 @@ theorem pathContourIntegral_inv_eq_log_lift_diff_F_Y_image_curve
       refine MeasureTheory.measure_mono_null (t := {b}) ?_
         (MeasureTheory.measure_singleton b)
       intro x hx
-      simp only [Set.mem_setOf_eq] at hx
+      simp only [Set.mem_ofPred_eq] at hx
       push Not at hx
       obtain ⟨hx_ioc, hx_ne⟩ := hx
       rw [Set.uIoc_of_le hab] at hx_ioc
@@ -216,10 +216,10 @@ theorem pathContourIntegral_inv_eq_log_lift_diff_F_Y_image_curve
     have h_outer := hasDerivAt_circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀
       (Real.pi * (2 - t))
     have h_comp := h_outer.scomp t h_inner
-    simpa [Function.comp] using h_comp
+    simpa [Function.comp_def] using! h_comp
   have h1_cont : Continuous (fun t : ℝ => (Real.pi * -1 : ℝ) •
       (_root_.circleMap 0 R₀ (Real.pi * (2 - t)) * Complex.I)) := by
-    refine Continuous.const_smul ?_ _
+    refine Continuous.fun_const_smul ?_ _
     refine Continuous.mul ?_ continuous_const
     exact (continuous_circleMap 0 R₀).comp (by fun_prop)
   have h1_im : ∀ t ∈ Set.Icc (1 : ℝ) 2,
@@ -571,7 +571,7 @@ theorem continuous_log_lift_of_continuous_ne_zero_Icc
   refine ⟨L, ?_, ?_⟩
   · -- Continuity of L.
     refine continuous_const.add ?_
-    refine continuous_finset_sum _ ?_
+    refine continuous_finsetSum _ ?_
     intro j hj
     have hj_lt : j < N := Finset.mem_range.mp hj
     have h_u_σ_cont : Continuous (fun t => u (σ j t)) :=
@@ -973,7 +973,7 @@ theorem continuous_log_lift_param_of_continuous_ne_zero
       + ∑ j ∈ Finset.range M, Complex.log (u (ρ p.1) (σt j p.2) / u (ρ p.1) (tt j))
     refine Continuous.add (Continuous.add continuous_const ?_) ?_
     · -- s-direction sum: each term depends only on p.1.
-      refine continuous_finset_sum _ ?_
+      refine continuous_finsetSum _ ?_
       intro i hi
       have hi_lt : i < N := Finset.mem_range.mp hi
       have h_num_cont : Continuous (fun p : ℝ × ℝ => u (σs i p.1) c) :=
@@ -984,7 +984,7 @@ theorem continuous_log_lift_param_of_continuous_ne_zero
       refine h_log_contOn.comp_continuous h_quot_cont (fun p => h_ball_slit ?_)
       exact h_quot_s_in_ball i hi_lt _ (hσs_mem i hi_lt p.1)
     · -- t-direction sum: jointly continuous via the clamps ρ and σt.
-      refine continuous_finset_sum _ ?_
+      refine continuous_finsetSum _ ?_
       intro j hj
       have hj_lt : j < M := Finset.mem_range.mp hj
       have h_num_cont : Continuous (fun p : ℝ × ℝ => u (ρ p.1) (σt j p.2)) :=

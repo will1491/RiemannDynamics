@@ -83,7 +83,7 @@ theorem horizontalDensity_sq_add_verticalDensity_sq (q : ℂ → ℂ) (γ : ℝ 
   have h2 := norm_add_re_div_two_nonneg (q (γ t) * deriv γ t ^ 2)
   unfold horizontalDensity verticalDensity
   rw [← ENNReal.ofReal_pow (Real.sqrt_nonneg _), ← ENNReal.ofReal_pow (Real.sqrt_nonneg _),
-    Real.sq_sqrt h1, Real.sq_sqrt h2, ← ENNReal.ofReal_add h1 h2, ← ofReal_norm_eq_enorm]
+    Real.sq_sqrt h1, Real.sq_sqrt h2, ← ENNReal.ofReal_add h1 h2, ← ofReal_norm]
   congr 1
   ring
 
@@ -104,7 +104,7 @@ theorem horizontalDensity_le (q : ℂ → ℂ) (γ : ℝ → ℂ) (t : ℝ) :
     _ = ENNReal.ofReal (Real.sqrt ‖q (γ t)‖) * ENNReal.ofReal ‖deriv γ t‖ :=
         ENNReal.ofReal_mul (Real.sqrt_nonneg _)
     _ = ENNReal.ofReal (Real.sqrt ‖q (γ t)‖) * ‖deriv γ t‖₊ := by
-        rw [ofReal_norm_eq_enorm, enorm_eq_nnnorm]
+        rw [ofReal_norm, enorm_eq_nnnorm]
 
 /-- The vertical density is dominated by the flat length density. -/
 theorem verticalDensity_le (q : ℂ → ℂ) (γ : ℝ → ℂ) (t : ℝ) :
@@ -123,7 +123,7 @@ theorem verticalDensity_le (q : ℂ → ℂ) (γ : ℝ → ℂ) (t : ℝ) :
     _ = ENNReal.ofReal (Real.sqrt ‖q (γ t)‖) * ENNReal.ofReal ‖deriv γ t‖ :=
         ENNReal.ofReal_mul (Real.sqrt_nonneg _)
     _ = ENNReal.ofReal (Real.sqrt ‖q (γ t)‖) * ‖deriv γ t‖₊ := by
-        rw [ofReal_norm_eq_enorm, enorm_eq_nnnorm]
+        rw [ofReal_norm, enorm_eq_nnnorm]
 
 /-- The horizontal variation of a curve is at most its flat length. -/
 theorem horizontalVariation_le_qdLength (q : ℂ → ℂ) (γ : ℝ → ℂ) :
@@ -227,9 +227,9 @@ theorem qdLength_moebiusMap_comp {q : ℂ → ℂ} (γd : Matrix.SpecialLinearGr
       Real.sqrt_mul (by positivity), show ‖moebiusDenom γd (γ t)‖ ^ 4
         = (‖moebiusDenom γd (γ t)‖ ^ 2) ^ 2 by ring, Real.sqrt_sq (by positivity)]
     field_simp
-  rw [happ, ← enorm_eq_nnnorm, ← ofReal_norm_eq_enorm,
+  rw [happ, ← enorm_eq_nnnorm, ← ofReal_norm,
     ← ENNReal.ofReal_mul (Real.sqrt_nonneg _), hreal,
-    ENNReal.ofReal_mul (Real.sqrt_nonneg _), ofReal_norm_eq_enorm, enorm_eq_nnnorm]
+    ENNReal.ofReal_mul (Real.sqrt_nonneg _), ofReal_norm, enorm_eq_nnnorm]
 
 /-- **Deck invariance of the horizontal variation**: the pullback `Q = q (γ t) (γ' t)²` is
 exactly invariant under precomposition with a Möbius deck transformation. -/

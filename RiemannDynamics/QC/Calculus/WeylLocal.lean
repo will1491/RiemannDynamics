@@ -208,7 +208,7 @@ theorem weyl_lemma_on {V : Set ℂ} {f gx gy : ℂ → ℂ} (hV : IsOpen V)
           ((fderiv ℝ (ρ n) (z - u)).comp (-ContinuousLinearMap.id ℝ ℂ)) u :=
         (hρ_diff n (z - u)).hasFDerivAt.comp u hsub
       rw [hcomp.fderiv]
-      simp only [ContinuousLinearMap.comp_apply, ContinuousLinearMap.neg_apply,
+      simp only [ContinuousLinearMap.comp_apply, neg_apply,
         ContinuousLinearMap.id_apply, map_neg]
     -- Under the derivative weight, `F` can be swapped for `f`.
     have hswap : ∀ (v u : ℂ),

@@ -484,7 +484,7 @@ theorem continuousOn_mobiusApply :
   -- Assembly: case analysis on the argument and the relevant coefficient.
   intro q hq
   obtain ⟨⟨a, b, c, d⟩, w⟩ := q
-  simp only [Set.mem_setOf_eq] at hq
+  simp only [Set.mem_ofPred_eq] at hq
   cases w with
   | coe x =>
     by_cases hcd : c * x + d = 0

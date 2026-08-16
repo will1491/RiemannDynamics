@@ -107,8 +107,8 @@ theorem exists_green_map [T2Space M] [SimplyConnectedSpace M] [NoncompactSpace M
         have hgc : Filter.Tendsto (fun v => (f / g) z₁ * g v) (𝓝[U] z₀)
             (𝓝 ((f / g) z₁ * g z₀)) :=
           (continuousAt_const.mul (hg z₀ hz₀b).continuousAt).continuousWithinAt
-        haveI : (𝓝[U] z₀).NeBot := by
-          have h2 : U = {z₀}ᶜ ∩ ball z₀ ρ := by rw [hU, Set.diff_eq, Set.inter_comm]
+        have : (𝓝[U] z₀).NeBot := by
+          have h2 : U = {z₀}ᶜ ∩ ball z₀ ρ := by rw [hU, Set.sdiff_eq, Set.inter_comm]
           rw [h2,
             nhdsWithin_inter_of_mem' (nhdsWithin_le_nhds (isOpen_ball.mem_nhds hz₀b))]
           exact Module.punctured_nhds_neBot ℝ ℂ z₀
@@ -1276,7 +1276,7 @@ theorem exists_green_map [T2Space M] [SimplyConnectedSpace M] [NoncompactSpace M
       (fun u => if u ≤ 1/2 then ΦF q (2*u) else ΦF q 1) hIC0 hIC1
     rw [hη01] at hfinal
     have hn12 : ¬((1:ℝ) ≤ 1/2) := by norm_num
-    have hval1 : (fun u => if u ≤ (1:ℝ)/2 then ΦF q (2*u) else ΦF q 1) 1 = ΦF q 1 :=
+    have hval1 : (if (1:ℝ) ≤ 1/2 then ΦF q (2*1) else ΦF q 1) = ΦF q 1 :=
       if_neg hn12
     rw [hval1] at hfinal
     exact hfinal.symm

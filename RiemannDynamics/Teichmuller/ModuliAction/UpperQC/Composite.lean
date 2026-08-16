@@ -38,9 +38,9 @@ theorem hasWeakDirDeriv_comp_qc
       (fun w => (qe w).re • Fx (q w) + (qe w).im • Fy (q w)) (fun w => F (q w))
       Set.univ := by
   classical
-  haveI : NormSMulClass ℝ ℂ := NormedSpace.toNormSMulClass
-  haveI : IsBoundedSMul ℝ ℂ := NormSMulClass.toIsBoundedSMul
-  haveI : ContinuousSMul ℝ ℂ := IsBoundedSMul.continuousSMul
+  have : NormSMulClass ℝ ℂ := NormedSpace.toNormSMulClass
+  have : IsBoundedSMul ℝ ℂ := NormSMulClass.toIsBoundedSMul
+  have : ContinuousSMul ℝ ℂ := IsBoundedSMul.continuousSMul
   have hone_top : (1 : WithTop ℕ∞) ≤ ((⊤ : ℕ∞) : WithTop ℕ∞) := by
     rw [← WithTop.coe_one]
     exact WithTop.coe_le_coe.mpr le_top
@@ -52,7 +52,7 @@ theorem hasWeakDirDeriv_comp_qc
   have hqeloc : MeasureTheory.LocallyIntegrable qe volume := by
     rw [MeasureTheory.locallyIntegrable_iff]
     intro k hk
-    haveI : IsFiniteMeasure (volume.restrict k) :=
+    have : IsFiniteMeasure (volume.restrict k) :=
       ⟨by rw [Measure.restrict_apply_univ]; exact hk.measure_lt_top⟩
     exact memLp_one_iff_integrable.mp
       ((hqe2 k (Set.subset_univ k) hk).mono_exponent (by norm_num))
@@ -264,9 +264,9 @@ theorem fderiv_ae_eq_weakDirDeriv_on
     (hdiff : ∀ᵐ z ∂(volume.restrict Ω), DifferentiableAt ℝ v z) :
     ∀ᵐ z ∂(volume.restrict Ω), (fderiv ℝ v z) ed = g z := by
   classical
-  haveI : NormSMulClass ℝ ℂ := NormedSpace.toNormSMulClass
-  haveI : IsBoundedSMul ℝ ℂ := NormSMulClass.toIsBoundedSMul
-  haveI : ContinuousSMul ℝ ℂ := IsBoundedSMul.continuousSMul
+  have : NormSMulClass ℝ ℂ := NormedSpace.toNormSMulClass
+  have : IsBoundedSMul ℝ ℂ := NormSMulClass.toIsBoundedSMul
+  have : ContinuousSMul ℝ ℂ := IsBoundedSMul.continuousSMul
   have hdiff' : ∀ᵐ z : ℂ, z ∈ Ω → DifferentiableAt ℝ v z :=
     (ae_restrict_iff' hΩ.measurableSet).mp hdiff
   -- The per-ball statement.
@@ -375,7 +375,6 @@ theorem fderiv_ae_eq_weakDirDeriv_on
       have hφχcs : HasCompactSupport (fun z => φ z * χ z) := by
         refine HasCompactSupport.intro hφc ?_
         intro z hz
-        change φ z * χ z = 0
         rw [image_eq_zero_of_notMem_tsupport hz, zero_mul]
       have hφχsupp : tsupport (fun z => φ z * χ z) ⊆ Ω := by
         refine subset_trans (closure_minimal ?_ (isClosed_tsupport χ)) htsΩ
@@ -394,7 +393,7 @@ theorem fderiv_ae_eq_weakDirDeriv_on
           (hχsm.differentiable htop_ne).differentiableAt
         have h1 : (fun w => φ w * χ w) = φ * χ := rfl
         rw [h1, fderiv_mul hφd hχd]
-        simp only [ContinuousLinearMap.add_apply, ContinuousLinearMap.smul_apply,
+        simp only [add_apply, smul_apply,
           smul_eq_mul]
       -- The three integrable pieces.
       have hdφcont : Continuous fun z => (fderiv ℝ φ z) ed := by
@@ -446,7 +445,6 @@ theorem fderiv_ae_eq_weakDirDeriv_on
           have h3 : (0:ℝ) ≤ |φ z| := abs_nonneg _
           nlinarith [abs_nonneg (χ z)]
         · intro z hz
-          change φ z * χ z = 0
           rw [hcompl z hz, mul_zero]
       have hI1g_int : Integrable
           (fun z => (φ z * χ z) • g z + (φ z * ((fderiv ℝ χ z) ed)) • v z) volume :=
@@ -571,7 +569,7 @@ theorem fderiv_ae_eq_weakDirDeriv_on
   refine measure_mono_null (t := ⋃ p ∈ T, {z : ℂ | z ∈ s p ∧ ¬ (fderiv ℝ v z) ed = g z})
     ?_ ?_
   · intro z hz
-    simp only [Set.mem_setOf_eq, not_forall] at hz
+    simp only [Set.mem_ofPred_eq, not_forall] at hz
     obtain ⟨hzΩ, hzne⟩ := hz
     obtain ⟨p, hpT, hps⟩ := Set.mem_iUnion₂.mp (hcov hzΩ)
     exact Set.mem_iUnion₂.mpr ⟨p, hpT, ⟨hps, hzne⟩⟩
@@ -581,7 +579,7 @@ theorem fderiv_ae_eq_weakDirDeriv_on
     rw [MeasureTheory.ae_iff] at hp
     refine measure_mono_null ?_ hp
     intro z hz
-    simp only [Set.mem_setOf_eq] at hz ⊢
+    simp only [Set.mem_ofPred_eq] at hz ⊢
     intro hcontra
     exact hz.2 (hcontra hz.1)
 
@@ -608,9 +606,9 @@ theorem cutoff_hasWeakDirDeriv
       ∧ Continuous (fun z => ((fderiv ℝ χ z) ed) • v z)
       ∧ Integrable (fun z => χ z • g z + ((fderiv ℝ χ z) ed) • v z) volume := by
   classical
-  haveI : NormSMulClass ℝ ℂ := NormedSpace.toNormSMulClass
-  haveI : IsBoundedSMul ℝ ℂ := NormSMulClass.toIsBoundedSMul
-  haveI : ContinuousSMul ℝ ℂ := IsBoundedSMul.continuousSMul
+  have : NormSMulClass ℝ ℂ := NormedSpace.toNormSMulClass
+  have : IsBoundedSMul ℝ ℂ := NormSMulClass.toIsBoundedSMul
+  have : ContinuousSMul ℝ ℂ := IsBoundedSMul.continuousSMul
   have htop_ne : ((⊤ : ℕ∞) : WithTop ℕ∞) ≠ 0 := by simp
   have hχcont : Continuous χ := hχsm.continuous
   have hcompl : ∀ z : ℂ, z ∉ tsupport χ → χ z = 0 := fun z hz =>
@@ -653,7 +651,6 @@ theorem cutoff_hasWeakDirDeriv
     · intro z hzΩ
       exact (hχcont.continuousAt).smul (hvcont.continuousAt (hΩ.mem_nhds hzΩ))
     · intro z hz
-      change χ z • v z = 0
       rw [hcompl z hz]
       exact zero_smul ℝ _
   have hdχvcont : Continuous (fun z => ((fderiv ℝ χ z) ed) • v z) := by
@@ -661,7 +658,6 @@ theorem cutoff_hasWeakDirDeriv
     · intro z hzΩ
       exact (hdχcont.continuousAt).smul (hvcont.continuousAt (hΩ.mem_nhds hzΩ))
     · intro z hz
-      change ((fderiv ℝ χ z) ed) • v z = 0
       rw [hdχsupp z hz]
       exact zero_smul ℝ _
   have hgK : IntegrableOn g (tsupport χ) volume :=
@@ -690,7 +686,6 @@ theorem cutoff_hasWeakDirDeriv
   have hdχv_cs : HasCompactSupport (fun z => ((fderiv ℝ χ z) ed) • v z) := by
     refine HasCompactSupport.intro hKχ ?_
     intro z hz
-    change ((fderiv ℝ χ z) ed) • v z = 0
     rw [hdχsupp z hz]
     exact zero_smul ℝ _
   have hFg_int : Integrable (fun z => χ z • g z + ((fderiv ℝ χ z) ed) • v z) volume :=
@@ -703,7 +698,6 @@ theorem cutoff_hasWeakDirDeriv
   have hφχcs : HasCompactSupport (fun z => φ z * χ z) := by
     refine HasCompactSupport.intro hφc ?_
     intro z hz
-    change φ z * χ z = 0
     rw [image_eq_zero_of_notMem_tsupport hz, zero_mul]
   have hφχsupp : tsupport (fun z => φ z * χ z) ⊆ Ω := by
     refine subset_trans (closure_minimal ?_ (isClosed_tsupport χ)) htsΩ
@@ -719,7 +713,7 @@ theorem cutoff_hasWeakDirDeriv
     have hχd : DifferentiableAt ℝ χ z := (hχsm.differentiable htop_ne).differentiableAt
     have h1 : (fun w => φ w * χ w) = φ * χ := rfl
     rw [h1, fderiv_mul hφd hχd]
-    simp only [ContinuousLinearMap.add_apply, ContinuousLinearMap.smul_apply,
+    simp only [add_apply, smul_apply,
       smul_eq_mul]
   have hdφcont : Continuous fun z => (fderiv ℝ φ z) ed := by
     have h1 : Continuous (fderiv ℝ φ) :=
@@ -732,13 +726,11 @@ theorem cutoff_hasWeakDirDeriv
       exact ((hφcont.mul hdχcont).continuousAt).smul
         (hvcont.continuousAt (hΩ.mem_nhds hzΩ))
     · intro z hz
-      change (φ z * ((fderiv ℝ χ z) ed)) • v z = 0
       rw [hdχsupp z hz, mul_zero]
       exact zero_smul ℝ _
   have hI1cs : HasCompactSupport fun z => (φ z * ((fderiv ℝ χ z) ed)) • v z := by
     refine HasCompactSupport.intro hKχ ?_
     intro z hz
-    change (φ z * ((fderiv ℝ χ z) ed)) • v z = 0
     rw [hdχsupp z hz, mul_zero]
     exact zero_smul ℝ _
   have hI1int : Integrable (fun z => (φ z * ((fderiv ℝ χ z) ed)) • v z) volume :=
@@ -770,7 +762,6 @@ theorem cutoff_hasWeakDirDeriv
       have h3 : (0:ℝ) ≤ |φ z| := abs_nonneg _
       nlinarith [abs_nonneg (χ z), hχ1 z]
     · intro z hz
-      change φ z * χ z = 0
       rw [hcompl z hz, mul_zero]
   have hsplit : ∫ z, ((fderiv ℝ (fun w => φ w * χ w) z) ed) • v z
       = (∫ z, (φ z * ((fderiv ℝ χ z) ed)) • v z)
@@ -861,7 +852,7 @@ theorem smooth_cutoff {K U : Set ℂ} (hK : IsCompact K) (hU : IsOpen U)
         exact haA
       have h5 : edist z a ≤ ENNReal.ofReal (δ/4) := by
         have h6 : z - a = b := by rw [← hab]; ring
-        rw [edist_eq_enorm_sub, h6, ← ofReal_norm_eq_enorm]
+        rw [edist_eq_enorm_sub, h6, ← ofReal_norm]
         refine ENNReal.ofReal_le_ofReal ?_
         rw [Metric.mem_ball, dist_zero_right] at hbball
         linarith
@@ -913,7 +904,7 @@ theorem smooth_cutoff {K U : Set ℂ} (hK : IsCompact K) (hU : IsOpen U)
       Metric.mem_thickening_iff_infEDist_lt.mp hz
     have h5 : edist (z - t) z ≤ ENNReal.ofReal (δ/4) := by
       have h6 : (z - t) - z = -t := by ring
-      rw [edist_eq_enorm_sub, h6, enorm_neg, ← ofReal_norm_eq_enorm]
+      rw [edist_eq_enorm_sub, h6, enorm_neg, ← ofReal_norm]
       refine ENNReal.ofReal_le_ofReal ?_
       rw [Metric.mem_ball, dist_zero_right] at ht
       linarith
@@ -1027,9 +1018,9 @@ theorem composite_holomorphic
     (_hui1 : ∀ z, uinv (u.w z) = z) (hui2 : ∀ z, u.w (uinv z) = z) :
     DifferentiableOn ℂ (fun w => v (uinv w)) {z : ℂ | 0 < z.im} := by
   classical
-  haveI : NormSMulClass ℝ ℂ := NormedSpace.toNormSMulClass
-  haveI : IsBoundedSMul ℝ ℂ := NormSMulClass.toIsBoundedSMul
-  haveI : ContinuousSMul ℝ ℂ := IsBoundedSMul.continuousSMul
+  have : NormSMulClass ℝ ℂ := NormedSpace.toNormSMulClass
+  have : IsBoundedSMul ℝ ℂ := NormSMulClass.toIsBoundedSMul
+  have : ContinuousSMul ℝ ℂ := IsBoundedSMul.continuousSMul
   set Ω : Set ℂ := {z : ℂ | 0 < z.im} with hΩdef
   have hΩ : IsOpen Ω := isOpen_lt continuous_const Complex.continuous_im
   have hΩm : MeasurableSet Ω := hΩ.measurableSet
@@ -1091,7 +1082,7 @@ theorem composite_holomorphic
     intro h hh
     rw [MeasureTheory.locallyIntegrableOn_iff hΩ.isLocallyClosed]
     intro k hk1 hk2
-    haveI : IsFiniteMeasure (volume.restrict k) :=
+    have : IsFiniteMeasure (volume.restrict k) :=
       ⟨by rw [Measure.restrict_apply_univ]; exact hk2.measure_lt_top⟩
     exact memLp_one_iff_integrable.mp ((hh k hk1 hk2).mono_exponent (by norm_num))
   have hgxli : MeasureTheory.LocallyIntegrableOn gx Ω volume := hlocOn hgx2
@@ -1119,7 +1110,7 @@ theorem composite_holomorphic
     refine integral_congr_ae ?_
     have h1 : {z : ℂ | ¬ φ z • g z = φ z • g' z} ⊆ {z | z ∈ Ω ∧ g z ≠ g' z} := by
       intro z hz
-      simp only [Set.mem_setOf_eq] at hz ⊢
+      simp only [Set.mem_ofPred_eq] at hz ⊢
       by_cases hzs : z ∈ tsupport φ
       · refine ⟨hφs hzs, ?_⟩
         intro heq
@@ -1208,7 +1199,7 @@ theorem composite_holomorphic
     intro h hh
     rw [MeasureTheory.locallyIntegrable_iff]
     intro k hk
-    haveI : IsFiniteMeasure (volume.restrict k) :=
+    have : IsFiniteMeasure (volume.restrict k) :=
       ⟨by rw [Measure.restrict_apply_univ]; exact hk.measure_lt_top⟩
     exact memLp_one_iff_integrable.mp
       ((hh k (Set.subset_univ k) hk).mono_exponent (by norm_num))
@@ -1318,7 +1309,6 @@ theorem composite_holomorphic
   have hFcs : HasCompactSupport (fun z => χ2 z • v z) := by
     refine HasCompactSupport.intro hχ2cs ?_
     intro z hz
-    change χ2 z • v z = 0
     rw [hχ2compl z hz]
     exact zero_smul ℝ _
   -- Measurability and square-integrability of the localized weak gradient.
@@ -1357,7 +1347,6 @@ theorem composite_holomorphic
     intro ed
     refine HasCompactSupport.intro hχ2cs ?_
     intro z hz
-    change ((fderiv ℝ χ2 z) ed) • v z = 0
     rw [hdχ2supp ed z hz]
     exact zero_smul ℝ _
   have hFx2 : MemLp (fun z => χ2 z • gx' z + ((fderiv ℝ χ2 z) 1) • v z) 2 volume :=
@@ -1569,7 +1558,7 @@ theorem composite_holomorphic
       rw [hχ2z, hdχ2z]
       have e1 : (1:ℝ) • gx' (uinv w') = gx' (uinv w') := one_smul ℝ _
       have e2 : ((0 : ℂ →L[ℝ] ℝ) 1) • v (uinv w') = 0 := by
-        rw [ContinuousLinearMap.zero_apply]
+        rw [zero_apply]
         exact zero_smul ℝ _
       rw [e1, e2, add_zero]
     have hFyz : FyD (uinv w') = gy' (uinv w') := by
@@ -1578,7 +1567,7 @@ theorem composite_holomorphic
       rw [hχ2z, hdχ2z]
       have e1 : (1:ℝ) • gy' (uinv w') = gy' (uinv w') := one_smul ℝ _
       have e2 : ((0 : ℂ →L[ℝ] ℝ) Complex.I) • v (uinv w') = 0 := by
-        rw [ContinuousLinearMap.zero_apply]
+        rw [zero_apply]
         exact zero_smul ℝ _
       rw [e1, e2, add_zero]
     have hA : ∀ u' : ℂ, (fderiv ℝ u.w (uinv w'))

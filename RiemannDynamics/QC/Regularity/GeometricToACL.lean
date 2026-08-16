@@ -114,7 +114,7 @@ theorem rectQuadT_image (p : ℂ) (w h : ℝ) (hw : 0 < w) (hh : 0 < h) :
       = {z : ℂ | p.re ≤ z.re ∧ z.re ≤ p.re + w ∧ p.im ≤ z.im ∧ z.im ≤ p.im + h} := by
   ext z
   simp only [Quadrilateral.image, rectQuadT, unitSquare, Set.mem_image, Set.mem_prod,
-    Set.mem_Icc, Set.mem_setOf_eq, Prod.exists]
+    Set.mem_Icc, Set.mem_ofPred_eq, Prod.exists]
   constructor
   · rintro ⟨s, t, ⟨⟨hs0, hs1⟩, ht0, ht1⟩, rfl⟩
     simp only [Complex.add_re, Complex.ofReal_re, Complex.mul_re, Complex.ofReal_im, Complex.I_re,
@@ -148,7 +148,7 @@ theorem rectQuadT_modulus_le (p : ℂ) (w h : ℝ) (hw : 0 < w) (hh : 0 < h) :
         = Complex.measurableEquivRealProd ⁻¹'
           (Set.Icc p.re (p.re + w) ×ˢ Set.Icc p.im (p.im + h)) := by
       ext z
-      simp only [Set.mem_setOf_eq, Set.mem_preimage, Complex.measurableEquivRealProd_apply,
+      simp only [Set.mem_ofPred_eq, Set.mem_preimage, Complex.measurableEquivRealProd_apply,
         Set.mem_prod, Set.mem_Icc]
       tauto
     rw [hset, Complex.volume_preserving_equiv_real_prod.measure_preimage
@@ -204,7 +204,7 @@ theorem rectQuadT_modulus_le (p : ℂ) (w h : ℝ) (hw : 0 < w) (hh : 0 < h) :
         rw [Set.uIcc_of_le zero_le_one]; exact Set.Ioo_subset_Icc_self htmem
       have h2 : HasDerivAt (fun s => (γ s).im) (deriv γ t).im t := by
         have hh := (Complex.imCLM.hasFDerivAt.comp t (htd htu).hasDerivAt.hasFDerivAt).hasDerivAt
-        simpa using hh
+        simpa using! hh
       exact h2.deriv
     have hintIm : IntervalIntegrable (deriv (fun s => (γ s).im)) volume 0 1 :=
       himAC.intervalIntegrable_deriv
@@ -232,7 +232,7 @@ theorem rectQuadT_modulus_le (p : ℂ) (w h : ℝ) (hw : 0 < w) (hh : 0 < h) :
             intro t
             simp only
             rw [show (‖deriv γ t‖₊ : ℝ≥0∞) = ENNReal.ofReal ‖deriv γ t‖ from by
-              rw [ofReal_norm_eq_enorm, enorm_eq_nnnorm]]
+              rw [ofReal_norm, enorm_eq_nnnorm]]
             exact ENNReal.ofReal_le_ofReal (Complex.abs_im_le_norm _)
     -- Assemble: `arcLengthLineIntegral ρ₀ γ = (1/h)·∫⁻ ‖deriv γ‖₊ ≥ (1/h)·h = 1`.
     have hdensity : ∀ t ∈ Set.Ioo (0:ℝ) 1, ρ₀ (γ t) = ENNReal.ofReal (1 / h) := by
@@ -363,7 +363,7 @@ theorem foliation_lower_rectQuadT {f : ℂ → ℂ}
     have hnormderiv : ∀ t, ‖deriv γ t‖ = |qq - pp| := by
       intro t; rw [hderiveq, norm_mul, Complex.norm_real, Complex.norm_I, mul_one,
         Real.norm_eq_abs]
-    have hlipγ : LipschitzWith (⟨|qq - pp|, abs_nonneg _⟩ : ℝ≥0) γ := by
+    have hlipγ : LipschitzWith (NNReal.mk |qq - pp| (abs_nonneg _)) γ := by
       apply LipschitzWith.of_dist_le_mul
       intro u v
       rw [dist_eq_norm, dist_eq_norm, hγ, hemb, hL]
@@ -449,7 +449,7 @@ theorem foliation_lower_rectQuadT {f : ℂ → ℂ}
       apply lintegral_congr
       intro t
       rw [show (‖deriv γ t‖₊ : ℝ≥0∞) = ENNReal.ofReal ‖deriv γ t‖ from by
-        rw [ofReal_norm_eq_enorm, enorm_eq_nnnorm], hnormderiv, mul_comm]
+        rw [ofReal_norm, enorm_eq_nnnorm], hnormderiv, mul_comm]
     have hlow : 1 ≤ ∫⁻ y in Set.Ioo (min pp qq) (max pp qq), ρ (emb x y) := by
       rw [← harc]; exact hadm
     set I := Set.Ioo (min pp qq) (max pp qq) with hI
@@ -648,7 +648,7 @@ theorem geometric_lineIncrement_bound {f : ℂ → ℂ} {K : ℝ} (hf : IsQCGeom
             = Complex.measurableEquivRealProd ⁻¹'
               ((Set.univ : Set ℝ) ×ˢ {y : ℝ | ¬ Good y}) := by
           ext w
-          simp only [Set.mem_setOf_eq, Set.mem_preimage,
+          simp only [Set.mem_ofPred_eq, Set.mem_preimage,
             Complex.measurableEquivRealProd_apply, Set.mem_prod, Set.mem_univ, true_and]
         rw [hset, Complex.volume_preserving_equiv_real_prod.measure_preimage
           ((MeasurableSet.univ.nullMeasurableSet).prod hbadmeas),

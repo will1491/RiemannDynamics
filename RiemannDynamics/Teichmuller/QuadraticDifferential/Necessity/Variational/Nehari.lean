@@ -63,7 +63,7 @@ theorem schwarzian_le_of_injOn_ball {f : ℂ → ℂ} {c : ℂ} {R : ℝ} (hR : 
     have hψ₀0 : ψ₀ 0 = 1 := by
       have hder : HasDerivAt (fun v => v * ψ₀ v) (ψ₀ 0) 0 := by
         have h1 := (hasDerivAt_id (0 : ℂ)).mul (hψ₀_an.differentiableAt.hasDerivAt)
-        simpa using h1
+        simpa using! h1
       have hde := Filter.EventuallyEq.deriv_eq hfact'
       rw [hg1, hder.deriv] at hde
       exact hde.symm

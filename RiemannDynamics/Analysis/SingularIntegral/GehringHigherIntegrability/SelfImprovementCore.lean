@@ -340,11 +340,11 @@ private theorem closedBall_aeEq_ball' (c : ℂ) (ρ : ℝ) :
   · -- `closedBall \ ball ⊆ sphere`, null.
     refine measure_mono_null ?_ (Measure.addHaar_sphere volume c ρ)
     intro z hz
-    rw [Set.mem_diff, Metric.mem_closedBall, Metric.mem_ball, not_lt] at hz
+    rw [Set.mem_sdiff, Metric.mem_closedBall, Metric.mem_ball, not_lt] at hz
     rw [Metric.mem_sphere]; linarith [hz.1, hz.2]
   · -- `ball \ closedBall = ∅`.
     convert measure_empty (μ := (volume : Measure ℂ)) using 2
-    rw [Set.diff_eq_empty]
+    rw [Set.sdiff_eq_empty]
     exact Metric.ball_subset_closedBall
 
 /-- **Per-point density witness ball** (helper for the good-λ measure bound).  For a
@@ -414,10 +414,10 @@ countable subfamily that preserves the union, then the Carleson Vitali engine
 `Set.Countable.measure_biUnion_le_lintegral` (planar doubling `A_dbl = 4`, `A_dbl² = 16`)
 internalizes the overlap. -/
 theorem gehring_engine_bound (l : ℝ≥0∞) (u : ℂ → ℝ≥0∞) (T : Set ℂ) (R : ℂ → ℝ)
-    (Rbd : ℝ) (hRbd : ∀ c ∈ T, R c ≤ Rbd)
+    (Rbd : ℝ) (_hRbd : ∀ c ∈ T, R c ≤ Rbd)
     (h2u : ∀ c ∈ T, l * volume (Metric.ball c (R c)) ≤ ∫⁻ z in Metric.ball c (R c), u z) :
     l * volume (⋃ c ∈ T, Metric.ball c (R c)) ≤ (16 : ℝ≥0∞) * ∫⁻ z, u z := by
-  haveI hdbl : (volume : Measure ℂ).IsDoubling (2 ^ Module.finrank ℝ ℂ) :=
+  have hdbl : (volume : Measure ℂ).IsDoubling (2 ^ Module.finrank ℝ ℂ) :=
     InnerProductSpace.IsDoubling
   -- Extract a countable subfamily preserving the union.
   obtain ⟨Tc, hTcsub, hTccount, hTcU⟩ :=
@@ -425,9 +425,9 @@ theorem gehring_engine_bound (l : ℝ≥0∞) (u : ℂ → ℝ≥0∞) (T : Set 
       (fun c _ => Metric.isOpen_ball)
   rw [← hTcU]
   -- Engine on the countable family `Tc ⊆ T`.
-  have hengine := hTccount.measure_biUnion_le_lintegral (μ := (volume : Measure ℂ))
-    (A := 2 ^ Module.finrank ℝ ℂ) (c := id) (r := R) l u Rbd
-    (fun c hc => hRbd c (hTcsub hc)) (fun c hc => h2u c (hTcsub hc))
+  have hengine := measure_biUnion_le_lintegral (μ := (volume : Measure ℂ))
+    (A := 2 ^ Module.finrank ℝ ℂ) (c := id) (r := R) Tc l u
+    (fun c hc => h2u c (hTcsub hc))
   -- `A_dbl² = 16`.
   have hA2 : ((2 ^ Module.finrank ℝ ℂ : ℝ≥0) : ℝ≥0∞) ^ 2 = (16 : ℝ≥0∞) := by
     rw [Complex.finrank_real_complex]; norm_num
@@ -464,7 +464,7 @@ theorem gehring_goodLambda_measure {q A : ℝ} (hq : 1 < q) (hA : 0 ≤ A)
             (∫⁻ z in Metric.ball x₀ s, b z ^ q) := by
   classical
   -- The planar doubling instance (`A_dbl = 2^finrank ℝ ℂ = 4`) for the Carleson engine.
-  haveI hdbl : (volume : Measure ℂ).IsDoubling (2 ^ Module.finrank ℝ ℂ) :=
+  have hdbl : (volume : Measure ℂ).IsDoubling (2 ^ Module.finrank ℝ ℂ) :=
     InnerProductSpace.IsDoubling
   have hAdbl : (2 ^ Module.finrank ℝ ℂ : ℝ≥0) = 4 := by
     rw [Complex.finrank_real_complex]; norm_num
@@ -861,7 +861,7 @@ theorem gehring_dyadic_global_cover {q : ℝ} (hq0 : 0 < q) {w : ℂ → ℝ≥0
     rw [setLAverage_eq]
     rcases eq_or_ne (∫⁻ z in Bs, w z ^ q) 0 with hI0 | hIpos
     · -- numerator `0`: average `= 0 < Λ`.
-      have : ∫⁻ z in Q, f z = 0 := le_antisymm (le_trans hintf_le (le_of_eq hI0)) (zero_le _)
+      have : ∫⁻ z in Q, f z = 0 := le_antisymm (le_trans hintf_le (le_of_eq hI0)) (zero_le)
       rw [this, ENNReal.zero_div]; exact hΛpos
     · -- positive numerator: strict via `vol Q > vol Bs`.
       have hvolBs0 : volume Bs ≠ 0 := by
@@ -964,14 +964,14 @@ theorem gehring_dyadic_global_cover {q : ℝ} (hq0 : 0 < q) {w : ℂ → ℝ≥0
     have hf0 : ∫⁻ z in dyadicSquare (nj j i) (kj j i), f z = 0 := by
       rw [hfint, hempty]; simp
     rw [setLAverage_eq, hf0, ENNReal.zero_div] at havg
-    exact absurd havg (not_lt.mpr (zero_le _))
+    exact absurd havg (not_lt.mpr (zero_le))
   · -- a.e.-cover of `{lam < w.toReal} ∩ ball s`.
     have hbad_sub : (Metric.ball x₀ s ∩ {z : ℂ | lam < (w z).toReal}) \
         ⋃ i ∈ B, dyadicSquare i.1 i.2
         ⊆ ⋃ j : ℤ × ℤ, ({z ∈ dyadicSquare M j | Λ < f z} \
             ⋃ i ∈ Bj j, dyadicSquare (nj j i) (kj j i)) := by
       rintro z ⟨⟨hzs, hzlam⟩, hznotcov⟩
-      simp only [Set.mem_setOf_eq] at hzlam
+      simp only [Set.mem_ofPred_eq] at hzlam
       -- `z` lies in its gen-`M` ambient square.
       set j₀ : ℤ × ℤ := dyadicIndexAt M z with hj₀
       have hzj₀ : z ∈ dyadicSquare M j₀ := mem_dyadicSquare_dyadicIndexAt M z
@@ -1024,15 +1024,15 @@ theorem gehring_dyadic_global_cover {q : ℝ} (hq0 : 0 < q) {w : ℂ → ℝ≥0
 cube-identifier-indexed analogue of `gehring_engine_bound`: a countable family of balls
 `ball (c i) (r i)` (`i ∈ 𝓑`), each with the per-ball averaging property
 `l·vol ≤ ∫ u`, has `l·vol(⋃) ≤ 16·∫⁻ u` (planar doubling `A_dbl = 4`, `A_dbl² = 16`). -/
-theorem gehring_engine_idx {ι : Type} (𝓑 : Set ι) (hct : 𝓑.Countable)
+theorem gehring_engine_idx {ι : Type} (𝓑 : Set ι) (_hct : 𝓑.Countable)
     (c : ι → ℂ) (r : ι → ℝ) (l : ℝ≥0∞) (u : ℂ → ℝ≥0∞) (Rbd : ℝ)
-    (hRbd : ∀ i ∈ 𝓑, r i ≤ Rbd)
+    (_hRbd : ∀ i ∈ 𝓑, r i ≤ Rbd)
     (h2u : ∀ i ∈ 𝓑, l * volume (Metric.ball (c i) (r i)) ≤ ∫⁻ z in Metric.ball (c i) (r i), u z) :
     l * volume (⋃ i ∈ 𝓑, Metric.ball (c i) (r i)) ≤ (16 : ℝ≥0∞) * ∫⁻ z, u z := by
-  haveI hdbl : (volume : Measure ℂ).IsDoubling (2 ^ Module.finrank ℝ ℂ) :=
+  have hdbl : (volume : Measure ℂ).IsDoubling (2 ^ Module.finrank ℝ ℂ) :=
     InnerProductSpace.IsDoubling
-  have hengine := hct.measure_biUnion_le_lintegral (μ := (volume : Measure ℂ))
-    (A := 2 ^ Module.finrank ℝ ℂ) (c := c) (r := r) l u Rbd hRbd h2u
+  have hengine := measure_biUnion_le_lintegral (μ := (volume : Measure ℂ))
+    (A := 2 ^ Module.finrank ℝ ℂ) (c := c) (r := r) 𝓑 l u h2u
   have hA2 : ((2 ^ Module.finrank ℝ ℂ : ℝ≥0) : ℝ≥0∞) ^ 2 = (16 : ℝ≥0∞) := by
     rw [Complex.finrank_real_complex]; norm_num
   simpa only [hA2] using hengine
@@ -1095,7 +1095,7 @@ theorem gehring_goodLambda_integral_core {q A : ℝ} (hq : 1 < q) (hA : 0 ≤ A)
   have hst : 0 < s - t := by linarith
   have hspos : 0 < s := by linarith
   -- Planar doubling instance for the Carleson engine.
-  haveI hdbl : (volume : Measure ℂ).IsDoubling (2 ^ Module.finrank ℝ ℂ) :=
+  have hdbl : (volume : Measure ℂ).IsDoubling (2 ^ Module.finrank ℝ ℂ) :=
     InnerProductSpace.IsDoubling
   -- Abbreviation `Ã = π^{1/q}·A + 1 > 0` (the reverse-Hölder constant, padded by 1).
   set P : ℝ := Real.pi ^ (1 / q) with hPdef
@@ -1296,7 +1296,7 @@ theorem gehring_goodLambda_integral_core {q A : ℝ} (hq : 1 < q) (hA : 0 ≤ A)
         by_cases hzE : z ∈ Esub
         · rw [Set.indicator_of_mem hzE]; exact le_add_right le_rfl
         · rw [Set.indicator_of_notMem hzE, zero_add]
-          rw [hEsubdef, Set.mem_setOf_eq, not_lt] at hzE
+          rw [hEsubdef, Set.mem_ofPred_eq, not_lt] at hzE
           rw [← ENNReal.ofReal_toReal hzfin]
           exact ENNReal.ofReal_le_ofReal hzE
       rwa [lintegral_add_right' _ aemeasurable_const, setLIntegral_const] at hstep
@@ -1348,7 +1348,7 @@ theorem gehring_goodLambda_integral_core {q A : ℝ} (hq : 1 < q) (hA : 0 ≤ A)
         by_cases hzF : z ∈ Fsub
         · rw [Set.indicator_of_mem hzF]; exact le_add_right le_rfl
         · rw [Set.indicator_of_notMem hzF, zero_add]
-          rw [hFsubdef, Set.mem_setOf_eq, not_lt] at hzF
+          rw [hFsubdef, Set.mem_ofPred_eq, not_lt] at hzF
           rw [← ENNReal.ofReal_toReal hzfin,
             ENNReal.ofReal_rpow_of_nonneg ENNReal.toReal_nonneg hq0.le]
           exact ENNReal.ofReal_le_ofReal (Real.rpow_le_rpow ENNReal.toReal_nonneg hzF hq0.le)
@@ -1435,8 +1435,8 @@ theorem gehring_goodLambda_integral_core {q A : ℝ} (hq : 1 < q) (hA : 0 ≤ A)
   -- `∫_S wᵠ ≤ ∫_{⋃_{i∈B} Cset i} wᵠ`.
   set U : Set ℂ := ⋃ i ∈ B, Cset i with hUdef
   have hLHS1 : ∫⁻ z in S, w z ^ q ≤ ∫⁻ z in U, w z ^ q := by
-    have h1 : (S \ (S \ U) : Set ℂ) =ᵐ[volume] S := diff_null_ae_eq_self hScov
-    have h2 : S \ (S \ U) = S ∩ U := Set.diff_diff_right_self S U
+    have h1 : (S \ (S \ U) : Set ℂ) =ᵐ[volume] S := sdiff_null_ae_eq_self hScov
+    have h2 : S \ (S \ U) = S ∩ U := Set.sdiff_sdiff_right_self S U
     rw [h2] at h1
     rw [setLIntegral_congr h1.symm]
     exact lintegral_mono_set Set.inter_subset_right
@@ -1446,7 +1446,7 @@ theorem gehring_goodLambda_integral_core {q A : ℝ} (hq : 1 < q) (hA : 0 ≤ A)
       = (⋃ i ∈ Inn, Cset i) ∪ (⋃ i ∈ B \ Inn, Cset i) := by
     rw [← Set.biUnion_union]
     congr 1
-    rw [Set.union_diff_cancel hInnsubB]
+    rw [Set.union_sdiff_cancel hInnsubB]
   have hUdisj : Disjoint (⋃ i ∈ Inn, Cset i) (⋃ i ∈ B \ Inn, Cset i) := by
     rw [Set.disjoint_iff_forall_ne]
     rintro x hx y hy rfl
@@ -1456,7 +1456,7 @@ theorem gehring_goodLambda_integral_core {q A : ℝ} (hq : 1 < q) (hA : 0 ≤ A)
     have hij : i ≠ j := fun h => hjnI (h ▸ hiI)
     exact (hCdisj (hInnsubB hiI) hjB hij).le_bot ⟨hxi, hxj⟩ |>.elim
   have hUmeasBd : MeasurableSet (⋃ i ∈ B \ Inn, Cset i) := by
-    apply MeasurableSet.biUnion (hBct.mono (Set.diff_subset))
+    apply MeasurableSet.biUnion (hBct.mono (Set.sdiff_subset))
     exact fun i _ => hCmeas i
   -- `∫_{⋃_B} = ∫_{⋃_Inn} + ∫_{⋃_{B\Inn}}`.
   have hLHS2 : ∫⁻ z in ⋃ i ∈ B, Cset i, w z ^ q

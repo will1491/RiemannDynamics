@@ -360,7 +360,7 @@ theorem gridPathIntegral_eq_zero {T : Set ℂ} (hT : IsOpen T)
   have hset : (Set.Icc (δ * (p.1 : ℝ)) (δ * ((p.1 : ℝ) + 1)) ×ℂ
       Set.Icc (δ * (p.2 : ℝ)) (δ * ((p.2 : ℝ) + 1))) = gridSquare δ p := by
     ext z
-    simp only [Complex.mem_reProdIm, gridSquare, Set.mem_setOf_eq]
+    simp only [Complex.mem_reProdIm, gridSquare, Set.mem_ofPred_eq]
   have hdiff : DifferentiableOn ℂ f
       (Set.Icc (δ * (p.1 : ℝ)) (δ * ((p.1 : ℝ) + 1)) ×ℂ
         Set.Icc (δ * (p.2 : ℝ)) (δ * ((p.2 : ℝ) + 1))) :=

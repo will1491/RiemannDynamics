@@ -139,7 +139,7 @@ theorem separatingModulus_roundAnnulus {z₀ : ℂ} {r R : ℝ} (hr : 0 < r) (hr
       refine ⟨fun s => γ s - z₀, ⟨hcont.sub continuous_const, lipComp_ac hLipχ hac, ?_,
         L, hacL, ?_, hinc⟩, ?_⟩
       · intro t ht
-        simp only [RoundAnnulus, Set.mem_setOf_eq, hdistχ]
+        simp only [RoundAnnulus, Set.mem_ofPred_eq, hdistχ]
         simpa [RoundAnnulus] using hsub t ht
       · intro t ht
         rw [sub_zero, ← hexp t ht]
@@ -147,11 +147,11 @@ theorem separatingModulus_roundAnnulus {z₀ : ℂ} {r R : ℝ} (hr : 0 < r) (hr
     · rintro ⟨γ₀, ⟨hcont, hac, hsub, L, hacL, hexp, hinc⟩, rfl⟩
       refine ⟨?_, ?_, ?_, L, hacL, ?_, hinc⟩
       · have : Continuous (fun s => φ (γ₀ s)) := hLipφ.continuous.comp hcont
-        simpa [hφ, Function.comp] using this
+        simpa [hφ, Function.comp_def] using! this
       · have : AbsolutelyContinuousOnInterval (fun s => φ (γ₀ s)) 0 1 := lipComp_ac hLipφ hac
-        simpa [hφ, Function.comp] using this
+        simpa [hφ, Function.comp_def] using! this
       · intro t ht
-        simp only [Function.comp_apply, hφ, RoundAnnulus, Set.mem_setOf_eq]
+        simp only [Function.comp_apply, hφ, RoundAnnulus, Set.mem_ofPred_eq]
         rw [show γ₀ t + z₀ = φ (γ₀ t) from rfl, hdistφ]
         simpa [RoundAnnulus] using hsub t ht
       · intro t ht
@@ -189,7 +189,7 @@ theorem separatingModulus_roundAnnulus {z₀ : ℂ} {r R : ℝ} (hr : 0 < r) (hr
       simp only [hrho0, smul_eq_mul]
       by_cases hmem : Complex.polarCoord.symm p ∈ RoundAnnulus 0 r R
       · have hmemIoo : p.1 ∈ Set.Ioo r R := by
-          simp only [RoundAnnulus, Set.mem_setOf_eq, dist_zero_right, hnorm] at hmem
+          simp only [RoundAnnulus, Set.mem_ofPred_eq, dist_zero_right, hnorm] at hmem
           exact ⟨hmem.1, hmem.2⟩
         rw [Set.indicator_of_mem hmem, Set.indicator_of_mem hmemIoo, hnorm]
         rw [← ENNReal.ofReal_pow (by positivity), ← ENNReal.ofReal_mul (le_of_lt hp1)]
@@ -198,7 +198,7 @@ theorem separatingModulus_roundAnnulus {z₀ : ℂ} {r R : ℝ} (hr : 0 < r) (hr
         field_simp
         ring
       · have hmemIoo : p.1 ∉ Set.Ioo r R := by
-          simp only [RoundAnnulus, Set.mem_setOf_eq, dist_zero_right, hnorm] at hmem
+          simp only [RoundAnnulus, Set.mem_ofPred_eq, dist_zero_right, hnorm] at hmem
           simpa only [Set.mem_Ioo] using hmem
         rw [Set.indicator_of_notMem hmem, Set.indicator_of_notMem hmemIoo]
         simp
@@ -302,7 +302,7 @@ theorem separatingModulus_roundAnnulus {z₀ : ℂ} {r R : ℝ} (hr : 0 < r) (hr
       have hd := htd htu
       have h2 : HasDerivAt (fun s => (L s).im) (deriv L t).im t := by
         have hh := (Complex.imCLM.hasFDerivAt.comp t hd.hasDerivAt.hasFDerivAt).hasDerivAt
-        simpa using hh
+        simpa [Function.comp_def] using! hh
       exact h2.deriv
     have hintIm : IntervalIntegrable (deriv (fun s => (L s).im)) volume 0 1 :=
       hLimAC.intervalIntegrable_deriv
@@ -334,7 +334,7 @@ theorem separatingModulus_roundAnnulus {z₀ : ℂ} {r R : ℝ} (hr : 0 < r) (hr
             intro t
             simp only
             rw [show (‖deriv L t‖₊ : ℝ≥0∞) = ENNReal.ofReal ‖deriv L t‖ from by
-              rw [ofReal_norm_eq_enorm, enorm_eq_nnnorm]]
+              rw [ofReal_norm, enorm_eq_nnnorm]]
             exact ENNReal.ofReal_le_ofReal (Complex.abs_im_le_norm _)
     -- pointwise: rho0(γ t)*‖deriv γ t‖₊ = ofReal(1/2π)*‖deriv L t‖₊ a.e.
     have hline : arcLengthLineIntegral rho0 γ
@@ -372,9 +372,9 @@ theorem separatingModulus_roundAnnulus {z₀ : ℂ} {r R : ℝ} (hr : 0 < r) (hr
       rw [hrhoeq, hderivγ]
       rw [show (‖γ t * deriv L t‖₊ : ℝ≥0∞) = ENNReal.ofReal (‖γ t‖ * ‖deriv L t‖) from by
         rw [show ENNReal.ofReal (‖γ t‖ * ‖deriv L t‖) = ENNReal.ofReal ‖γ t * deriv L t‖ from by
-          rw [norm_mul], ofReal_norm_eq_enorm, enorm_eq_nnnorm]]
+          rw [norm_mul], ofReal_norm, enorm_eq_nnnorm]]
       rw [show (‖deriv L t‖₊ : ℝ≥0∞) = ENNReal.ofReal ‖deriv L t‖ from by
-        rw [ofReal_norm_eq_enorm, enorm_eq_nnnorm]]
+        rw [ofReal_norm, enorm_eq_nnnorm]]
       rw [← ENNReal.ofReal_mul (by positivity), ← ENNReal.ofReal_mul (by positivity)]
       apply le_of_eq
       congr 1
@@ -454,7 +454,8 @@ theorem separatingModulus_roundAnnulus {z₀ : ℂ} {r R : ℝ} (hr : 0 < r) (hr
     have hlipc : LipschitzOnWith (⟨2 * Real.pi * s, by positivity⟩ : ℝ≥0) c (Set.uIcc 0 1) := by
       apply LipschitzOnWith.of_dist_le_mul
       intro x hx y hy
-      rw [dist_eq_norm, dist_eq_norm, NNReal.coe_mk]
+      rw [dist_eq_norm, dist_eq_norm]
+      change ‖c x - c y‖ ≤ 2 * Real.pi * s * ‖x - y‖
       have hbound : ∀ z ∈ Set.uIcc (0 : ℝ) 1, ‖deriv c z‖ ≤ 2 * Real.pi * s :=
         fun z _ => le_of_eq (hderivnorm z)
       have hmv := (convex_uIcc (0 : ℝ) 1).norm_image_sub_le_of_norm_deriv_le
@@ -471,7 +472,9 @@ theorem separatingModulus_roundAnnulus {z₀ : ℂ} {r R : ℝ} (hr : 0 < r) (hr
     have hlipL : LipschitzWith (⟨2 * Real.pi, by positivity⟩ : ℝ≥0) Lift := by
       apply LipschitzWith.of_dist_le_mul
       intro x y
-      rw [dist_eq_norm, dist_eq_norm, hLift, NNReal.coe_mk]
+      rw [dist_eq_norm, dist_eq_norm, hLift]
+      change ‖((Real.log s : ℂ) + ((2 * x - 1) * Real.pi : ℝ) * Complex.I)
+          - ((Real.log s : ℂ) + ((2 * y - 1) * Real.pi : ℝ) * Complex.I)‖ ≤ 2 * Real.pi * ‖x - y‖
       rw [show ((Real.log s : ℂ) + ((2 * x - 1) * Real.pi : ℝ) * Complex.I)
             - ((Real.log s : ℂ) + ((2 * y - 1) * Real.pi : ℝ) * Complex.I)
           = (((2 * x - 1) * Real.pi - (2 * y - 1) * Real.pi : ℝ) : ℂ) * Complex.I from by
@@ -485,7 +488,7 @@ theorem separatingModulus_roundAnnulus {z₀ : ℂ} {r R : ℝ} (hr : 0 < r) (hr
     have hcmem : c ∈ separatingCurveFamily 0 (RoundAnnulus 0 r R) := by
       refine ⟨hcontc, hacc, ?_, Lift, haccL, ?_, ?_⟩
       · intro t ht
-        simp only [RoundAnnulus, Set.mem_setOf_eq, dist_zero_right, hnormc]
+        simp only [RoundAnnulus, Set.mem_ofPred_eq, dist_zero_right, hnormc]
         exact ⟨hs.1, hs.2⟩
       · intro t ht
         rw [sub_zero, hceq, hLift, Complex.exp_add, ← Complex.ofReal_exp, Real.exp_log hspos]
@@ -500,7 +503,7 @@ theorem separatingModulus_roundAnnulus {z₀ : ℂ} {r R : ℝ} (hr : 0 < r) (hr
       apply lintegral_congr
       intro t
       rw [show (‖deriv c t‖₊ : ℝ≥0∞) = ENNReal.ofReal ‖deriv c t‖ from by
-        rw [ofReal_norm_eq_enorm, enorm_eq_nnnorm], hderivnorm, mul_comm]
+        rw [ofReal_norm, enorm_eq_nnnorm], hderivnorm, mul_comm]
     rw [harc] at hadm
     -- Cauchy–Schwarz on [0,1]: ∫_{Ioo} ρ(c·)² ≥ 1/(4π²s²).
     have hmeasf : Measurable (fun t => ρ (c t)) := hρ.1.comp hcontc.measurable

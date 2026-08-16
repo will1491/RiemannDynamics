@@ -551,7 +551,7 @@ theorem collar_correction_estimate {sd : ℂ → ℝ} {η : ℝ → ℝ} {S : Se
               ‖dz (fun w => matMoebius (correctionPath c (η (sd w))) w) z‖) ∧
         Set.InjOn (fun w => matMoebius (correctionPath c (η (sd w))) w) S := by
   obtain ⟨c₀', C', hc₀'pos, hC'pos, hbnd⟩ := correctionPath_bounds
-  haveI hCSRC : ContinuousSMul ℝ ℂ := ⟨by
+  have hCSRC : ContinuousSMul ℝ ℂ := ⟨by
     have h : (fun p : ℝ × ℂ => p.1 • p.2) = fun p : ℝ × ℂ => (p.1 : ℂ) * p.2 := by
       funext p
       exact Complex.real_smul
@@ -785,7 +785,7 @@ theorem collar_correction_estimate {sd : ℂ → ℝ} {η : ℝ → ℝ} {S : Se
         / ((p10 : ℂ) * z + (p11 : ℂ)) ^ 2, ?_, ?_, ?_, ?_⟩
     · intro v
       rw [hfd0, hfd1, hDu_def, hp00, hp01, hp10, hp11]
-      simp only [ContinuousLinearMap.add_apply, ContinuousLinearMap.smul_apply,
+      simp only [add_apply, smul_apply,
         ContinuousLinearMap.comp_apply, ContinuousLinearMap.id_apply,
         Complex.ofRealCLM_apply, smul_eq_mul]
       push_cast
@@ -976,7 +976,7 @@ theorem collar_correction_estimate {sd : ℂ → ℝ} {η : ℝ → ℝ} {S : Se
       have hev : (fderiv ℝ (fun w => matMoebius (correctionPath c (η (sd w))) w) x
           - ContinuousLinearMap.id ℝ ℂ) v
           = (Sw - 1) * v + Su * ((fderiv ℝ (fun w => η (sd w)) x) v : ℂ) := by
-        rw [ContinuousLinearMap.sub_apply, ContinuousLinearMap.id_apply, hLv v]
+        rw [sub_apply, ContinuousLinearMap.id_apply, hLv v]
         ring
       rw [hev]
       have h1 := norm_add_le ((Sw - 1) * v)

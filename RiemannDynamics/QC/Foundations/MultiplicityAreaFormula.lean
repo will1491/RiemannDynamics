@@ -3,7 +3,14 @@ Copyright (c) 2026 Will (Ziang) Li. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Will (Ziang) Li
 -/
-/-
+import Mathlib.MeasureTheory.Function.Jacobian
+import Mathlib.MeasureTheory.Function.AEEqOfLIntegral
+import Mathlib.LinearAlgebra.Complex.Determinant
+import Mathlib.Topology.Algebra.Module.FiniteDimension
+import Mathlib.Analysis.Complex.UpperHalfPlane.Measure
+import RiemannDynamics.QC.Foundations.BanachIndicatrix
+
+/-!
 # The planar multiplicity area formula (Federer `≤`), for `y`-fibered selectors
 
 This file proves the **per-slice multiplicity area formula with no singular part**, a genuine
@@ -20,12 +27,6 @@ from rational to real intervals — on top of the single core lemma
 `core_integrated_indicatrix_le` (the 2-D Federer multiplicity / co-area inequality
 `∫⁻_y ∫⁻_t N(slice y) ≤ ∫⁻_box |det DΦ|`).
 -/
-import Mathlib.MeasureTheory.Function.Jacobian
-import Mathlib.MeasureTheory.Function.AEEqOfLIntegral
-import Mathlib.LinearAlgebra.Complex.Determinant
-import Mathlib.Topology.Algebra.Module.FiniteDimension
-import Mathlib.Analysis.Complex.UpperHalfPlane.Measure
-import RiemannDynamics.QC.Foundations.BanachIndicatrix
 
 open MeasureTheory Complex Set Function Filter Topology
 open scoped ENNReal
@@ -47,11 +48,11 @@ theorem fiber_det (α : ℂ →L[ℝ] ℝ) :
   simp only [LinearMap.toMatrix_apply, Complex.coe_basisOneI, Complex.coe_basisOneI_repr,
     Matrix.cons_val_zero, Matrix.cons_val_one]
   have h1 : D 1 = (α 1 : ℂ) := by
-    simp only [hD, ContinuousLinearMap.add_apply,
+    simp only [hD, add_apply,
       ContinuousLinearMap.smulRight_apply, Complex.imCLM_apply, Complex.one_im, zero_smul, add_zero]
     change (α 1 : ℝ) • (1 : ℂ) = ((α 1 : ℝ) : ℂ); simp
   have h2 : D Complex.I = (α Complex.I : ℂ) + Complex.I := by
-    simp only [hD, ContinuousLinearMap.add_apply,
+    simp only [hD, add_apply,
       ContinuousLinearMap.smulRight_apply, Complex.imCLM_apply, Complex.I_im, one_smul]
     change (α Complex.I : ℝ) • (1 : ℂ) + Complex.I = ((α Complex.I : ℝ) : ℂ) + Complex.I
     simp
@@ -71,14 +72,19 @@ theorem fiber_hasFDerivAt {G : ℂ → ℂ} (P : ℂ →L[ℝ] ℝ) (p : ℂ) (h
   have hcomp1 : HasFDerivAt (fun q : ℂ => (P (G q) : ℝ) • (1 : ℂ))
       (LP1.comp (P.comp (fderiv ℝ G p))) p := by
     have := LP1.hasFDerivAt.comp p hPG
-    convert this using 1
+    exact this
   set LQI : ℝ →L[ℝ] ℂ := (1 : ℝ →L[ℝ] ℝ).smulRight Complex.I with hLQI
   have hcomp2 : HasFDerivAt (fun q : ℂ => (q.im : ℝ) • Complex.I)
       (LQI.comp Complex.imCLM) p := by
     have := LQI.hasFDerivAt.comp p Complex.imCLM.hasFDerivAt
-    convert this using 1
+    exact this
   have hsum := hcomp1.add hcomp2
-  convert hsum using 1
+  have hCLM : (((P.comp (fderiv ℝ G p)).smulRight (1 : ℂ)) + Complex.imCLM.smulRight Complex.I)
+      = LP1.comp (P.comp (fderiv ℝ G p)) + LQI.comp Complex.imCLM := by
+    ext q
+    simp [hLP1, hLQI]
+  rw [hCLM]
+  exact hsum
 
 /-! ## The injective decomposition of `{det ≠ 0}` -/
 
@@ -165,7 +171,7 @@ private noncomputable def Vrat (slice : ℝ → ℝ → ℝ) (a c : ℝ) (y : �
 private theorem continuous_partSum {slice : ℝ → ℝ → ℝ} {a c : ℝ}
     (hjoint : Continuous (fun p : ℝ × ℝ => slice p.1 p.2)) (P : RatPart a c) :
     Continuous (fun y => partSum slice P y) := by
-  apply continuous_finset_sum
+  apply continuous_finsetSum
   intro i _
   exact (hjoint.comp (continuous_id.prodMk continuous_const)).edist
     (hjoint.comp (continuous_id.prodMk continuous_const))
@@ -259,11 +265,11 @@ private theorem eVariationOn_le_Vrat {slice : ℝ → ℝ → ℝ}
   have hcont : Continuous h := hjoint.comp (continuous_const.prodMk continuous_id)
   rcases lt_or_ge c a with hca | hac
   · rw [Set.Icc_eq_empty (not_le.mpr hca), eVariationOn.subsingleton h Set.subsingleton_empty]
-    exact zero_le _
+    exact zero_le
   rcases eq_or_lt_of_le hac with hac' | hac'
   · subst hac'
     rw [eVariationOn.subsingleton h (Set.subsingleton_Icc_of_ge le_rfl)]
-    exact zero_le _
+    exact zero_le
   have hδexists : ∀ η : ℝ, 0 < η → ∃ δ > 0, ∀ x ∈ Icc a c, ∀ z ∈ Icc a c,
       |x - z| < δ → |h x - h z| < η := by
     intro η hη
@@ -403,11 +409,11 @@ theorem eVariationOn_Icc_le_of_rational {h : ℝ → ℝ} {φ : ℝ → ℝ≥0�
     eVariationOn h (Set.Icc a c) ≤ ∫⁻ x in Set.Icc a c, φ x := by
   rcases lt_or_ge c a with hca | hac
   · rw [Set.Icc_eq_empty (not_le.mpr hca), eVariationOn.subsingleton h Set.subsingleton_empty]
-    exact zero_le _
+    exact zero_le
   rcases eq_or_lt_of_le hac with hac' | hac'
   · subst hac'
     rw [eVariationOn.subsingleton h (Set.subsingleton_Icc_of_ge le_rfl)]
-    exact zero_le _
+    exact zero_le
   have hδexists : ∀ η : ℝ, 0 < η → ∃ δ > 0, ∀ x ∈ Icc a c, ∀ y ∈ Icc a c,
       |x - y| < δ → |h x - h y| < η := by
     intro η hη
@@ -561,7 +567,7 @@ theorem slice_deriv_eq_det (x y : ℝ) (hG : DifferentiableAt ℝ G (Complex.mk 
       funext x; apply Complex.ext <;> simp
     rw [heq]
     have h1 : HasDerivAt (fun x : ℝ => (x : ℂ)) (1 : ℂ) x := by
-      simpa using (Complex.ofRealCLM.hasDerivAt : HasDerivAt _ _ x)
+      simpa using! (Complex.ofRealCLM.hasDerivAt : HasDerivAt _ _ x)
     simpa using h1.add_const ((y : ℂ) * Complex.I)
   -- slice y = P ∘ G ∘ (mk · y)
   have hGd : HasFDerivAt G (fderiv ℝ G (Complex.mk x y)) (Complex.mk x y) := hG.hasFDerivAt
@@ -570,7 +576,7 @@ theorem slice_deriv_eq_det (x y : ℝ) (hG : DifferentiableAt ℝ G (Complex.mk 
     have h2 : HasFDerivAt (fun p : ℂ => P (G p)) (P.comp (fderiv ℝ G (Complex.mk x y)))
         (Complex.mk x y) := P.hasFDerivAt.comp _ hGd
     have h3 := h2.comp_hasDerivAt x hmk
-    simpa [slice, ContinuousLinearMap.comp_apply] using h3
+    simpa [slice, ContinuousLinearMap.comp_apply] using! h3
   rw [hcomp.deriv]
   -- det DΦ = P ((fderiv G) 1)
   have hΦd : HasFDerivAt (Φ G P)
@@ -599,7 +605,7 @@ theorem fiber_image (S : Set ℂ) (y : ℝ) :
     (fun x : ℝ => (x, y)) ⁻¹' (e '' (Φ G P '' S))
       = slice G P y '' {x : ℝ | Complex.mk x y ∈ S} := by
   ext x
-  simp only [Set.mem_preimage, Set.mem_image, Set.mem_setOf_eq]
+  simp only [Set.mem_preimage, Set.mem_image, Set.mem_ofPred_eq]
   constructor
   · rintro ⟨z, ⟨p, hpS, rfl⟩, hz⟩
     -- e (Φ p) = (x, y) ⟹ (Φ p).re = x, (Φ p).im = y
@@ -666,7 +672,7 @@ theorem integral_fiber_eq_zero_of_null {N : Set ℂ} (hN : volume (Φ G P '' N) 
     apply measure_mono
     rw [← fiber_image]
     exact Set.preimage_mono (Set.image_mono hMsup)
-  refine le_antisymm ?_ (zero_le _)
+  refine le_antisymm ?_ (zero_le)
   calc ∫⁻ y, volume (slice G P y '' {x : ℝ | Complex.mk x y ∈ N})
       ≤ ∫⁻ y, volume ((fun x : ℝ => (x, y)) ⁻¹' (e '' M)) := lintegral_mono hbound
     _ = (volume : Measure (ℝ × ℝ)) (e '' M) := (Measure.prod_apply_symm heM_meas).symm
@@ -709,7 +715,7 @@ theorem measurableSet_Box {a c : ℝ} {Y : Set ℝ} (hY : MeasurableSet Y) :
 
 /-- `(‖r‖₊ : ℝ≥0∞) = ofReal |r|` for a real `r`. -/
 theorem nnnorm_real_eq_ofReal_abs (r : ℝ) : ((‖r‖₊ : NNReal) : ENNReal) = ENNReal.ofReal |r| := by
-  rw [← Real.norm_eq_abs, ofReal_norm_eq_enorm]; rfl
+  rw [← Real.norm_eq_abs, ofReal_norm]; rfl
 
 /-- **Step 1.** The box `det`-integral equals the iterated slice-derivative-norm integral. -/
 theorem box_det_eq_rhs (_hGcont : Continuous G) (hGdiff : ∀ᵐ w : ℂ, DifferentiableAt ℝ G w)
@@ -729,7 +735,7 @@ theorem box_det_eq_rhs (_hGcont : Continuous G) (hGdiff : ∀ᵐ w : ℂ, Differ
   -- box transports to `Icc a c ×ˢ Y` under e.
   have hbox_eq : e.symm '' (Set.Icc a c ×ˢ Y) = Box a c Y := by
     ext z
-    simp only [Set.mem_image, e_symm_apply, Box, Set.mem_setOf_eq, Set.mem_prod]
+    simp only [Set.mem_image, e_symm_apply, Box, Set.mem_ofPred_eq, Set.mem_prod]
     constructor
     · rintro ⟨⟨x, y⟩, ⟨hx, hy⟩, rfl⟩; exact ⟨by simpa using hx, by simpa using hy⟩
     · rintro ⟨hzr, hzi⟩
@@ -747,7 +753,7 @@ theorem box_det_eq_rhs (_hGcont : Continuous G) (hGdiff : ∀ᵐ w : ℂ, Differ
   -- now: ∫_x in Icc ∫_y in Y, H(mk x y); swap to ∫_y∫_x.
   rw [lintegral_lintegral_swap (by
     have : Measurable (Function.uncurry (fun (x y : ℝ) => H (e.symm (x, y)))) := by
-      simpa [Function.uncurry] using hFmeas
+      simpa [Function.uncurry_def] using hFmeas
     exact this.aemeasurable)]
   -- identify with slice-derivative norm: a.e. y, ∫_x H(mk x y) = ∫_x ‖deriv slice‖.
   -- transport hGdiff to ℝ×ℝ (volume = map e volume), pulled back along e.
@@ -796,7 +802,7 @@ theorem indicatrix_eq_countOn (f : ℝ → ℝ) (a c t : ℝ) :
 theorem slice_injOn_of_Φ_injOn {S : Set ℂ} (y : ℝ) (hinj : Set.InjOn (Φ G P) S) :
     Set.InjOn (slice G P y) {x : ℝ | Complex.mk x y ∈ S} := by
   intro x hx x' hx' hxx'
-  simp only [Set.mem_setOf_eq] at hx hx'
+  simp only [Set.mem_ofPred_eq] at hx hx'
   have : Φ G P (Complex.mk x y) = Φ G P (Complex.mk x' y) := by
     rw [Φ_mk, Φ_mk, hxx']
   have := hinj hx hx' this
@@ -907,7 +913,7 @@ theorem core_attempt {G : ℂ → ℂ} (P : ℂ →L[ℝ] ℝ)
     have hset : {x ∈ Set.Icc a c | slice G P y x = t} ∩ Pre (V n) y
         = {x ∈ Pre (V n) y | slice G P y x = t} := by
       ext x
-      simp only [Set.mem_inter_iff, Set.mem_setOf_eq]
+      simp only [Set.mem_inter_iff, Set.mem_ofPred_eq]
       exact ⟨fun ⟨⟨_, hslx⟩, hpre⟩ => ⟨hpre, hslx⟩,
         fun ⟨hpre, hslx⟩ => ⟨⟨hPreV_sub n y hpre, hslx⟩, hpre⟩⟩
     rw [hset]
@@ -941,10 +947,10 @@ theorem core_attempt {G : ℂ → ℂ} (P : ℂ →L[ℝ] ℝ)
     match n with
     | 0 =>
       rw [integral_fiber_eq_zero_of_null P (hV0 ▸ hBad_img_null)]
-      exact zero_le _
+      exact zero_le
     | 1 =>
       rw [integral_fiber_eq_zero_of_null P (hV1 ▸ hZer_img_null)]
-      exact zero_le _
+      exact zero_le
     | (k + 2) =>
       have hVk : V (k + 2) = (Sdet ∩ dt k) ∩ B := hVn k
       have hVmeas : MeasurableSet (V (k + 2)) := hV_meas (k + 2)
@@ -998,7 +1004,7 @@ theorem core_attempt {G : ℂ → ℂ} (P : ℂ →L[ℝ] ℝ)
         have hle1 : Set.encard {x ∈ Pre (V (k+2)) y | slice G P y x = t} ≤ 1 := by
           rw [Set.encard_le_one_iff]
           intro p q hp hq
-          simp only [Set.mem_setOf_eq] at hp hq
+          simp only [Set.mem_ofPred_eq] at hp hq
           exact hinj hp.1 hq.1 (hp.2.trans hq.2.symm)
         calc (Set.encard {x ∈ Pre (V (k+2)) y | slice G P y x = t} : ℝ≥0∞)
             ≤ ((1 : ℕ∞) : ℝ≥0∞) := by exact_mod_cast hle1
@@ -1008,7 +1014,7 @@ theorem core_attempt {G : ℂ → ℂ} (P : ℂ →L[ℝ] ℝ)
       unfold countOn
       have : {x ∈ Pre (V n) y | slice G P y x = t} = ∅ := by
         ext x
-        simp only [Set.mem_setOf_eq, Set.mem_empty_iff_false, iff_false, not_and]
+        simp only [Set.mem_ofPred_eq, Set.mem_empty_iff_false, iff_false, not_and]
         intro hpre hslx
         -- (t,y) = e (Φ (mk x y)) ∈ e '' Φ '' V n ⊆ e '' Img n.
         apply ht
@@ -1052,9 +1058,9 @@ theorem core_attempt {G : ℂ → ℂ} (P : ℂ →L[ℝ] ℝ)
     -- area formula / nullity per case.
     match n with
     | 0 =>
-      rw [hV0, hBad_img_null, mul_zero]; exact zero_le _
+      rw [hV0, hBad_img_null, mul_zero]; exact zero_le
     | 1 =>
-      rw [hV1, hZer_img_null, mul_zero]; exact zero_le _
+      rw [hV1, hZer_img_null, mul_zero]; exact zero_le
     | (k + 2) =>
       have hcfval : cf (k + 2) = 1 := by simp [hcf]
       rw [hcfval, one_mul]
@@ -1092,7 +1098,7 @@ theorem core_attempt {G : ℂ → ℂ} (P : ℂ →L[ℝ] ℝ)
         ≤ ∫⁻ y in Y, ∑' n, ∫⁻ t, D n y t := by
           refine setLIntegral_mono_ae ?_ ?_
           · refine Measurable.aemeasurable ?_
-            apply Measurable.ennreal_tsum
+            apply Measurable.tsum
             intro n
             exact (hD_meas n).lintegral_prod_right'
           · filter_upwards with y hyY using hstep y hyY

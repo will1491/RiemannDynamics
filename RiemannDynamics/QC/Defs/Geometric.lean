@@ -145,7 +145,7 @@ theorem imageCurveFamily_eq_pushforward_of_conformal {φ : ℂ → ℂ}
       have hdη_an : AnalyticAt ℂ (deriv η) z := (hη_an z).deriv
       have key := (hη_an z).analyticOrderAt_deriv_add_one
       have hge1 : 1 ≤ analyticOrderAt (deriv η) z := by
-        rw [ENat.one_le_iff_ne_zero, Ne, analyticOrderAt_eq_zero, not_or, not_not, not_ne_iff]
+        rw [Order.one_le_iff_ne_zero, Ne, analyticOrderAt_eq_zero, not_or, not_not, not_ne_iff]
         exact ⟨hdη_an, hderiv0⟩
       calc (2 : ℕ∞) = 1 + 1 := by rfl
         _ ≤ analyticOrderAt (deriv η) z + 1 := by gcongr
@@ -184,7 +184,7 @@ theorem imageCurveFamily_eq_pushforward_of_conformal {φ : ℂ → ℂ}
         have hlog : AnalyticAt ℂ (fun z => Complex.log (c * G z)) z₀ := hcG_an.clog hval_slit
         have hdiv : AnalyticAt ℂ (fun z => Complex.log (c * G z) / n) z₀ :=
           hlog.div analyticAt_const (by exact_mod_cast (Nat.one_le_iff_ne_zero.mp hn))
-        simpa [Function.comp] using hdiv.cexp
+        simpa [Function.comp] using! hdiv.cexp
       · exact div_ne_zero (Complex.exp_ne_zero _) hcr_ne
       · have hcont : ContinuousAt (fun z => c * G z) z₀ := hcG_an.continuousAt
         have hGne_ev : ∀ᶠ z in 𝓝 z₀, c * G z ≠ 0 := hcont.eventually_ne (mul_ne_zero hc_ne hGz)
@@ -299,7 +299,7 @@ theorem imageCurveFamily_eq_pushforward_of_conformal {φ : ℂ → ℂ}
     obtain ⟨K, hK⟩ : ∃ K : NNReal, LipschitzOnWith K ψ (Metric.closedBall (0 : ℂ) R) := by
       refine ⟨⟨C, hCnn⟩, Convex.lipschitzOnWith_of_nnnorm_fderiv_le
         (fun x _ => hψ.differentiableAt) (fun x hx => ?_) (convex_closedBall _ _)⟩
-      rw [← NNReal.coe_le_coe]; exact hC x hx
+      exact NNReal.coe_le_coe.mp (hC x hx)
     have hηac' := hηac
     rw [absolutelyContinuousOnInterval_iff] at hηac' ⊢
     intro ε hε

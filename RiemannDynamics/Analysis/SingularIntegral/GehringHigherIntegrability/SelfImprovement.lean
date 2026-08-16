@@ -54,7 +54,7 @@ private theorem gehring_goodLambda_integral_noCollar {q A : ℝ} (hq : 1 < q) (h
   have hst : 0 < s - t := by linarith
   have hspos : 0 < s := by linarith
   -- Planar doubling instance for the Carleson engine.
-  haveI hdbl : (volume : Measure ℂ).IsDoubling (2 ^ Module.finrank ℝ ℂ) :=
+  have hdbl : (volume : Measure ℂ).IsDoubling (2 ^ Module.finrank ℝ ℂ) :=
     InnerProductSpace.IsDoubling
   -- Abbreviation `Ã = π^{1/q}·A + 1 > 0` (the reverse-Hölder constant, padded by 1).
   set P : ℝ := Real.pi ^ (1 / q) with hPdef
@@ -255,7 +255,7 @@ private theorem gehring_goodLambda_integral_noCollar {q A : ℝ} (hq : 1 < q) (h
         by_cases hzE : z ∈ Esub
         · rw [Set.indicator_of_mem hzE]; exact le_add_right le_rfl
         · rw [Set.indicator_of_notMem hzE, zero_add]
-          rw [hEsubdef, Set.mem_setOf_eq, not_lt] at hzE
+          rw [hEsubdef, Set.mem_ofPred_eq, not_lt] at hzE
           rw [← ENNReal.ofReal_toReal hzfin]
           exact ENNReal.ofReal_le_ofReal hzE
       rwa [lintegral_add_right' _ aemeasurable_const, setLIntegral_const] at hstep
@@ -307,7 +307,7 @@ private theorem gehring_goodLambda_integral_noCollar {q A : ℝ} (hq : 1 < q) (h
         by_cases hzF : z ∈ Fsub
         · rw [Set.indicator_of_mem hzF]; exact le_add_right le_rfl
         · rw [Set.indicator_of_notMem hzF, zero_add]
-          rw [hFsubdef, Set.mem_setOf_eq, not_lt] at hzF
+          rw [hFsubdef, Set.mem_ofPred_eq, not_lt] at hzF
           rw [← ENNReal.ofReal_toReal hzfin,
             ENNReal.ofReal_rpow_of_nonneg ENNReal.toReal_nonneg hq0.le]
           exact ENNReal.ofReal_le_ofReal (Real.rpow_le_rpow ENNReal.toReal_nonneg hzF hq0.le)
@@ -467,9 +467,9 @@ private theorem gehring_goodLambda_integral_noCollar {q A : ℝ} (hq : 1 < q) (h
   have hUmeasInn : MeasurableSet (⋃ i ∈ Inn, Cset i) :=
     MeasurableSet.biUnion hInnct (fun i _ => hCmeas i)
   have hLHS1 : ∫⁻ z in S, w z ^ q ≤ ∫⁻ z in ⋃ i ∈ Inn, Cset i, w z ^ q := by
-    have h1 : (S \ (S \ (⋃ i ∈ Inn, Cset i)) : Set ℂ) =ᵐ[volume] S := diff_null_ae_eq_self hScov
+    have h1 : (S \ (S \ (⋃ i ∈ Inn, Cset i)) : Set ℂ) =ᵐ[volume] S := sdiff_null_ae_eq_self hScov
     have h2 : S \ (S \ (⋃ i ∈ Inn, Cset i)) = S ∩ (⋃ i ∈ Inn, Cset i) :=
-      Set.diff_diff_right_self S _
+      Set.sdiff_sdiff_right_self S _
     rw [h2] at h1
     rw [setLIntegral_congr h1.symm]
     exact lintegral_mono_set Set.inter_subset_right
@@ -669,7 +669,7 @@ private theorem gehring_mass_layerCake {q ε : ℝ} (_hq0 : 0 < q) (hε : 0 < ε
   rw [hμdef, withDensity_apply₀ _ hmslt, Measure.restrict_restrict₀ hmslt]
   have hseteq : {a : ℂ | lam < g a} ∩ Metric.ball x₀ t
       = Metric.ball x₀ t ∩ {z | lam < (min (w z) (N:ℝ≥0∞)).toReal} := by
-    rw [hgdef]; ext z; simp only [Set.mem_inter_iff, Set.mem_setOf_eq]; tauto
+    rw [hgdef]; ext z; simp only [Set.mem_inter_iff, Set.mem_ofPred_eq]; tauto
   rw [hseteq]
 
 private theorem gehring_recon {p β : ℝ} (hp : 0 < p) (hβ : 0 < β) {D : ℂ → ℝ≥0∞} {θ : ℂ → ℝ}
@@ -695,7 +695,7 @@ private theorem gehring_recon {p β : ℝ} (hp : 0 < p) (hβ : 0 < β) {D : ℂ 
   set hθ : ℂ → ℝ := fun z => θ z / β with hθdef
   have hνset : ∀ lam : ℝ, ν {z | β * lam < θ z} = ν {z | lam < hθ z} := by
     intro lam; congr 1; ext z
-    simp only [Set.mem_setOf_eq, hθdef, lt_div_iff₀ hβ, mul_comm]
+    simp only [Set.mem_ofPred_eq, hθdef, lt_div_iff₀ hβ, mul_comm]
   simp_rw [hνset]
   have hhnn : 0 ≤ᵐ[ν] hθ := Filter.Eventually.of_forall (fun z => by
     rw [hθdef]; exact div_nonneg (hθnn z) hβ.le)
@@ -764,7 +764,7 @@ private theorem gehring_crux_le {q ε : ℝ} (hq : 1 < q) (hε : 0 ≤ ε) (w : 
       subst hN0
       simp only [Nat.cast_zero, ENNReal.toReal_zero]
       rw [Real.zero_rpow (by linarith : q + ε - 1 ≠ 0), ENNReal.ofReal_zero, mul_zero]
-      exact zero_le _
+      exact zero_le
     · have hNreal : ((N:ℝ≥0∞)).toReal = (N:ℝ) := by simp
       rw [hNreal]
       -- RHS factor `(N:ℝ≥0∞)^ε = ofReal((N:ℝ)^ε)`.
@@ -944,7 +944,7 @@ private theorem gehring_assembly {q A ε : ℝ} (hq : 1 < q) (_hA : 0 ≤ A) (h�
       rcases eq_or_ne (b z) ⊤ with hbtop | hbfin
       · rw [hbtop]
         simp only [ENNReal.toReal_top, Real.zero_rpow hεpos.ne', ENNReal.ofReal_zero, mul_zero]
-        exact zero_le _
+        exact zero_le
       · rw [← ENNReal.ofReal_rpow_of_nonneg ENNReal.toReal_nonneg hεpos.le,
           ENNReal.ofReal_toReal hbfin]
         rw [← ENNReal.rpow_add_of_nonneg q ε hq0.le hεpos.le]
@@ -1588,7 +1588,7 @@ theorem gehring_selfImprovement {q A : ℝ} (hq : 1 < q) (hA : 0 ≤ A) :
             ((hwmeas.pow_const q).indicator measurableSet_ball)
           rw [lintegral_indicator measurableSet_ball]; exact hWfin16.ne
         refine measure_mono_null ?_ htop
-        intro z hz; simp only [Set.mem_inter_iff, Set.mem_setOf_eq] at hz ⊢
+        intro z hz; simp only [Set.mem_inter_iff, Set.mem_ofPred_eq] at hz ⊢
         rw [Set.indicator_of_mem hz.2, hz.1, ENNReal.top_rpow_of_pos (by linarith : (0:ℝ) < q)]
       -- The level-set equality up to `{w = ⊤}` (null on the ball), via symmetric-difference
       -- nullity.
@@ -1604,13 +1604,13 @@ theorem gehring_selfImprovement {q A : ℝ} (hq : 1 < q) (hA : 0 ≤ A) :
               ↔ z ∈ Metric.ball x₀ r ∩ {z | c < (w z).toReal})}
             ⊆ {z : ℂ | w z = ⊤} ∩ Metric.ball x₀ r from ?_) hnull
         intro z hz
-        simp only [Set.mem_setOf_eq] at hz
-        simp only [Set.mem_inter_iff, Set.mem_setOf_eq]
+        simp only [Set.mem_ofPred_eq] at hz
+        simp only [Set.mem_inter_iff, Set.mem_ofPred_eq]
         by_cases hzr : z ∈ Metric.ball x₀ r
         · refine ⟨?_, hzr⟩
           by_contra hwtop
           apply hz
-          simp only [Set.mem_inter_iff, Set.mem_setOf_eq, hzr, true_and]
+          simp only [Set.mem_inter_iff, Set.mem_ofPred_eq, hzr, true_and]
           rw [ENNReal.toReal_min hwtop (ENNReal.natCast_ne_top N), ENNReal.toReal_natCast]
           constructor
           · intro h2; exact lt_of_lt_of_le h2 (min_le_left _ _)
@@ -1660,7 +1660,7 @@ theorem gehring_selfImprovement {q A : ℝ} (hq : 1 < q) (hA : 0 ≤ A) :
             Metric.ball x₀ t' ∩ {z | lam < (min (w z) (N:ℝ≥0∞)).toReal} = (∅ : Set ℂ) := by
           rw [Set.eq_empty_iff_forall_notMem]
           rintro z ⟨_, hlt⟩
-          simp only [Set.mem_setOf_eq] at hlt
+          simp only [Set.mem_ofPred_eq] at hlt
           have hle : (min (w z) (N:ℝ≥0∞)).toReal ≤ (N:ℝ) := by
             rcases eq_or_ne (w z) ⊤ with hwt | hwf
             · rw [hwt]; simp

@@ -543,8 +543,8 @@ theorem mharmonicOn_greenEnvelope [T2Space M] [ConnectedSpace M] [NoncompactSpac
   have hnt : ∃ x y : M, x ≠ y := by
     by_contra hcon
     push Not at hcon
-    haveI : Subsingleton M := ⟨fun a b => hcon a b⟩
-    haveI : CompactSpace M := Finite.compactSpace
+    have : Subsingleton M := ⟨fun a b => hcon a b⟩
+    have : CompactSpace M := Finite.compactSpace
     exact NoncompactSpace.noncompact_univ (X := M) isCompact_univ
   have hconn : IsConnected ({p₀}ᶜ : Set M) :=
     isConnected_compl_singleton_of_connected hnt p₀
@@ -892,7 +892,7 @@ theorem exists_harmonic_pole_extension [T2Space M] [ConnectedSpace M] [Noncompac
       (hgh.continuousOn.mono hsphere).circleIntegrable hρ.le
     rw [Real.circleAverage_fun_add hfci hgci]
     have hgavg : Real.circleAverage g a ρ = g a := by
-      apply HarmonicOnNhd.circleAverage_eq
+      apply InnerProductSpace.HarmonicOnNhd.circleAverage_eq
       rw [abs_of_pos hρ]
       exact hgh.mono hb
     have hfavg : f a ≤ Real.circleAverage f a ρ := hf.2 a ha ρ hρ hb
@@ -1184,7 +1184,7 @@ theorem exists_harmonic_pole_extension [T2Space M] [ConnectedSpace M] [Noncompac
     -- The annulus `A` and its closure/frontier geometry.
     set A : Set ℂ := ball c s \ closedBall c σ with hAdef
     have hAopen : IsOpen A := isOpen_ball.sdiff isClosed_closedBall
-    have hAbdd : Bornology.IsBounded A := isBounded_ball.subset Set.diff_subset
+    have hAbdd : Bornology.IsBounded A := isBounded_ball.subset Set.sdiff_subset
     have hAsub : A ⊆ ball c r \ {c} := by
       intro z hz
       refine ⟨ball_subset_ball hsr.le hz.1, ?_⟩
@@ -1193,13 +1193,13 @@ theorem exists_harmonic_pole_extension [T2Space M] [ConnectedSpace M] [Noncompac
       exact hz.2 (by rw [hcon]; exact mem_closedBall_self hσ0.le)
     have hclA : closure A ⊆ closedBall c s \ ball c σ := by
       intro z hz
-      rw [hAdef, Set.diff_eq] at hz
+      rw [hAdef, Set.sdiff_eq] at hz
       have h2 := closure_inter_subset_inter_closure (ball c s) ((closedBall c σ)ᶜ) hz
       rw [closure_ball c hs0.ne', closure_compl, interior_closedBall c hσ0.ne'] at h2
       exact ⟨h2.1, h2.2⟩
     have hfrA : frontier A ⊆ sphere c s ∪ sphere c σ := by
       intro z hz
-      rw [hAdef, Set.diff_eq] at hz
+      rw [hAdef, Set.sdiff_eq] at hz
       rcases frontier_inter_subset (ball c s) ((closedBall c σ)ᶜ) hz with h2 | h2
       · have h3 := h2.1
         rw [frontier_ball c hs0.ne'] at h3

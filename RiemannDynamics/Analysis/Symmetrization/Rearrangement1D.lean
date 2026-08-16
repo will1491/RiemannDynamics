@@ -85,7 +85,7 @@ theorem distribFun_ne_top (t : ℝ≥0∞) : distribFun T f t ≠ ∞ :=
 since the super-level set above `⊤` is empty. -/
 theorem distribFun_top : distribFun T f ⊤ = 0 := by
   have : {x ∈ Icc (0 : ℝ) T | (⊤ : ℝ≥0∞) < f x} = ∅ := by
-    ext x; simp only [mem_setOf_eq, mem_empty_iff_false, iff_false, not_and]
+    ext x; simp only [mem_ofPred_eq, mem_empty_iff_false, iff_false, not_and]
     intro _; exact not_top_lt
   rw [distribFun, this, measure_empty]
 
@@ -98,10 +98,10 @@ theorem distribFun_decreasingRearrange_le (x : ℝ) :
   set s₀ := decreasingRearrange T f x with hs₀def
   -- The defining set `S = {t | D t ≤ ofReal x}` is nonempty (contains `⊤`).
   have hSne : (⊤ : ℝ≥0∞) ∈ {t : ℝ≥0∞ | distribFun T f t ≤ ENNReal.ofReal x} := by
-    simp only [mem_setOf_eq, distribFun_top]; exact zero_le _
+    simp only [mem_ofPred_eq, distribFun_top]; exact zero_le
   -- Case `s₀ = ⊤`: the super-level set above `⊤` is empty.
   rcases eq_or_ne s₀ ⊤ with htop | htop
-  · rw [htop, distribFun_top]; exact zero_le _
+  · rw [htop, distribFun_top]; exact zero_le
   -- The monotone sequence of approximating super-level sets.
   set A : ℕ → Set ℝ := fun n => {y ∈ Icc (0 : ℝ) T | s₀ + ((n : ℝ≥0∞) + 1)⁻¹ < f y}
     with hAdef
@@ -112,7 +112,7 @@ theorem distribFun_decreasingRearrange_le (x : ℝ) :
   -- The union of the `A n` is the super-level set above `s₀`.
   have hunion : ⋃ n, A n = {y ∈ Icc (0 : ℝ) T | s₀ < f y} := by
     ext y
-    simp only [hAdef, mem_iUnion, mem_setOf_eq]
+    simp only [hAdef, mem_iUnion, mem_ofPred_eq]
     constructor
     · rintro ⟨n, hyI, hlt⟩
       exact ⟨hyI, lt_of_le_of_lt le_self_add hlt⟩
@@ -153,7 +153,7 @@ theorem lt_decreasingRearrange_iff (x : ℝ) (t : ℝ≥0∞) :
     -- `D t ≤ ofReal x` means `t ∈ S`, so `sInf S ≤ t`, contradicting `t < sInf S`.
     have hcon' : distribFun T f t ≤ ENNReal.ofReal x := not_lt.mp hcon
     have : decreasingRearrange T f x ≤ t :=
-      sInf_le (by simp only [mem_setOf_eq]; exact hcon')
+      sInf_le (by simp only [mem_ofPred_eq]; exact hcon')
     exact absurd hlt (not_lt.mpr this)
   · intro hlt
     -- `D (f♯ x) ≤ ofReal x < D t`; if `f♯ x ≤ t` then `D t ≤ D (f♯ x)`, contradiction.
@@ -175,7 +175,7 @@ theorem distribFun_decreasingRearrange (hT : 0 ≤ T) (t : ℝ≥0∞) :
   have hseteq : {x ∈ Icc (0 : ℝ) T | t < decreasingRearrange T f x} =
       Ico (0 : ℝ) (distribFun T f t).toReal := by
     ext x
-    simp only [mem_setOf_eq, mem_Ico]
+    simp only [mem_ofPred_eq, mem_Ico]
     rw [lt_decreasingRearrange_iff]
     constructor
     · rintro ⟨⟨hx0, _⟩, hlt⟩
@@ -201,7 +201,7 @@ theorem decreasingRearrange_antitone : Antitone (decreasingRearrange T f) := by
   intro x y hxy
   apply sInf_le_sInf
   intro t ht
-  simp only [mem_setOf_eq] at ht ⊢
+  simp only [mem_ofPred_eq] at ht ⊢
   exact le_trans ht (ENNReal.ofReal_le_ofReal hxy)
 
 /-- The decreasing rearrangement is measurable (being antitone). -/
@@ -220,7 +220,7 @@ theorem distribFun_const (c : ℝ≥0∞) (t : ℝ≥0∞) :
   · rw [if_neg h]
     have hempty : {x ∈ Icc (0 : ℝ) T | t < (fun _ => c) x} = ∅ := by
       ext x
-      simp only [mem_setOf_eq, mem_empty_iff_false, iff_false, not_and]
+      simp only [mem_ofPred_eq, mem_empty_iff_false, iff_false, not_and]
       exact fun _ => h
     rw [hempty, measure_empty]
 
@@ -233,7 +233,7 @@ theorem decreasingRearrange_const (c : ℝ≥0∞) {T : ℝ} {x : ℝ}
   unfold decreasingRearrange
   have hset : {t : ℝ≥0∞ | distribFun T (fun _ => c) t ≤ ENNReal.ofReal x} = Ici c := by
     ext t
-    rw [Set.mem_setOf_eq, distribFun_const c t, mem_Ici]
+    rw [Set.mem_ofPred_eq, distribFun_const c t, mem_Ici]
     constructor
     · intro h
       by_contra hc
@@ -243,7 +243,7 @@ theorem decreasingRearrange_const (c : ℝ≥0∞) {T : ℝ} {x : ℝ}
       linarith
     · intro h
       rw [if_neg (not_lt.mpr h)]
-      exact zero_le _
+      exact zero_le
   rw [hset, csInf_Ici]
 
 /-- **`ℝ≥0∞`-valued Cavalieri / layer-cake principle on a measurable set.** For a
@@ -266,10 +266,10 @@ theorem lintegral_eq_lintegral_meas_lt_ennreal {s : Set ℝ}
         Measure.restrict_apply MeasurableSet.univ, univ_inter, one_mul]
     rcases eq_top_or_lt_top (g x) with hgx | hfin
     · have hset : {u : ℝ | ENNReal.ofReal u < g x} ∩ Ioi 0 = Ioi 0 := by
-        ext u; simp only [mem_inter_iff, mem_setOf_eq, mem_Ioi, hgx, ofReal_lt_top, true_and]
+        ext u; simp only [mem_inter_iff, mem_ofPred_eq, mem_Ioi, hgx, ofReal_lt_top, true_and]
       rw [Measure.restrict_apply hmeas, hset, Real.volume_Ioi, hgx]
     · have hset : {u : ℝ | ENNReal.ofReal u < g x} ∩ Ioi 0 = Ioo 0 (g x).toReal := by
-        ext u; simp only [mem_inter_iff, mem_setOf_eq, mem_Ioi, mem_Ioo]
+        ext u; simp only [mem_inter_iff, mem_ofPred_eq, mem_Ioi, mem_Ioo]
         constructor
         · rintro ⟨hc, hu⟩
           exact ⟨hu, by rw [← ENNReal.ofReal_toReal hfin.ne,
@@ -283,7 +283,7 @@ theorem lintegral_eq_lintegral_meas_lt_ennreal {s : Set ℝ}
   have hjoint : Measurable (Function.uncurry ind) := by
     have heq : Function.uncurry ind
          = Set.indicator {p : ℝ × ℝ | ENNReal.ofReal p.2 < g p.1} (fun _ => (1 : ℝ≥0∞)) := by
-      ext ⟨x, t⟩; simp only [hind, Function.uncurry, Set.indicator, mem_setOf_eq]
+      ext ⟨x, t⟩; simp only [hind, Function.uncurry, Set.indicator, mem_ofPred_eq]
     rw [heq]
     exact (Measurable.indicator measurable_const
       (measurableSet_lt (Measurable.ennreal_ofReal measurable_snd) (hg.comp measurable_fst)))
@@ -292,7 +292,7 @@ theorem lintegral_eq_lintegral_meas_lt_ennreal {s : Set ℝ}
     intro t
     have hfn : (fun x => ind x t) =
         Set.indicator {x | ENNReal.ofReal t < g x} (fun _ => (1 : ℝ≥0∞)) := by
-      ext x; simp only [hind, Set.indicator, mem_setOf_eq]
+      ext x; simp only [hind, Set.indicator, mem_ofPred_eq]
     have hmst : MeasurableSet {x | ENNReal.ofReal t < g x} :=
       measurableSet_lt (Measurable.ennreal_ofReal measurable_const) hg
     rw [hfn, lintegral_indicator hmst, lintegral_const,
@@ -336,7 +336,7 @@ theorem lintegral_rpow_decreasingRearrange_eq (hT : 0 ≤ T) (hf : Measurable f)
         = {x ∈ Icc (0 : ℝ) T | (ENNReal.ofReal t) ^ (p⁻¹) < g x} := by
     intro g
     ext x
-    simp only [mem_setOf_eq, and_congr_right_iff]
+    simp only [mem_ofPred_eq, and_congr_right_iff]
     intro _
     constructor
     · intro h
@@ -392,10 +392,10 @@ theorem lintegral_mul_eq_lintegral_meas_lt_ennreal {s : Set ℝ}
         Measure.restrict_apply MeasurableSet.univ, univ_inter, one_mul]
     rcases eq_top_or_lt_top (f x) with hgx | hfin
     · have hset : {u : ℝ | ENNReal.ofReal u < f x} ∩ Ioi 0 = Ioi 0 := by
-        ext u; simp only [mem_inter_iff, mem_setOf_eq, mem_Ioi, hgx, ofReal_lt_top, true_and]
+        ext u; simp only [mem_inter_iff, mem_ofPred_eq, mem_Ioi, hgx, ofReal_lt_top, true_and]
       rw [Measure.restrict_apply hmeas, hset, Real.volume_Ioi, hgx]
     · have hset : {u : ℝ | ENNReal.ofReal u < f x} ∩ Ioi 0 = Ioo 0 (f x).toReal := by
-        ext u; simp only [mem_inter_iff, mem_setOf_eq, mem_Ioi, mem_Ioo]
+        ext u; simp only [mem_inter_iff, mem_ofPred_eq, mem_Ioi, mem_Ioo]
         constructor
         · rintro ⟨hc, hu⟩
           exact ⟨hu, by rw [← ENNReal.ofReal_toReal hfin.ne,
@@ -414,10 +414,10 @@ theorem lintegral_mul_eq_lintegral_meas_lt_ennreal {s : Set ℝ}
         Measure.restrict_apply MeasurableSet.univ, univ_inter, one_mul]
     rcases eq_top_or_lt_top (g x) with hgx | hfin
     · have hset : {u : ℝ | ENNReal.ofReal u < g x} ∩ Ioi 0 = Ioi 0 := by
-        ext u; simp only [mem_inter_iff, mem_setOf_eq, mem_Ioi, hgx, ofReal_lt_top, true_and]
+        ext u; simp only [mem_inter_iff, mem_ofPred_eq, mem_Ioi, hgx, ofReal_lt_top, true_and]
       rw [Measure.restrict_apply hmeas, hset, Real.volume_Ioi, hgx]
     · have hset : {u : ℝ | ENNReal.ofReal u < g x} ∩ Ioi 0 = Ioo 0 (g x).toReal := by
-        ext u; simp only [mem_inter_iff, mem_setOf_eq, mem_Ioi, mem_Ioo]
+        ext u; simp only [mem_inter_iff, mem_ofPred_eq, mem_Ioi, mem_Ioo]
         constructor
         · rintro ⟨hc, hu⟩
           exact ⟨hu, by rw [← ENNReal.ofReal_toReal hfin.ne,
@@ -452,14 +452,14 @@ theorem lintegral_mul_eq_lintegral_meas_lt_ennreal {s : Set ℝ}
   have hjointF : Measurable (Function.uncurry indF) := by
     have heq : Function.uncurry indF
          = Set.indicator {p : ℝ × ℝ | ENNReal.ofReal p.2 < f p.1} (fun _ => (1 : ℝ≥0∞)) := by
-      ext ⟨x, a⟩; simp only [hindF, Function.uncurry, Set.indicator, mem_setOf_eq]
+      ext ⟨x, a⟩; simp only [hindF, Function.uncurry, Set.indicator, mem_ofPred_eq]
     rw [heq]
     exact (Measurable.indicator measurable_const
       (measurableSet_lt (Measurable.ennreal_ofReal measurable_snd) (hf.comp measurable_fst)))
   have hjointG : Measurable (Function.uncurry indG) := by
     have heq : Function.uncurry indG
          = Set.indicator {p : ℝ × ℝ | ENNReal.ofReal p.2 < g p.1} (fun _ => (1 : ℝ≥0∞)) := by
-      ext ⟨x, b⟩; simp only [hindG, Function.uncurry, Set.indicator, mem_setOf_eq]
+      ext ⟨x, b⟩; simp only [hindG, Function.uncurry, Set.indicator, mem_ofPred_eq]
     rw [heq]
     exact (Measurable.indicator measurable_const
       (measurableSet_lt (Measurable.ennreal_ofReal measurable_snd) (hg.comp measurable_fst)))
@@ -479,7 +479,7 @@ theorem lintegral_mul_eq_lintegral_meas_lt_ennreal {s : Set ℝ}
         = Set.indicator {x | ENNReal.ofReal a < f x ∧ ENNReal.ofReal b < g x}
             (fun _ => (1 : ℝ≥0∞)) := by
       ext x
-      simp only [hindF, hindG, Set.indicator, mem_setOf_eq]
+      simp only [hindF, hindG, Set.indicator, mem_ofPred_eq]
       by_cases hA : ENNReal.ofReal a < f x <;> by_cases hB : ENNReal.ofReal b < g x <;>
         simp [hA, hB]
     have hms : MeasurableSet {x | ENNReal.ofReal a < f x ∧ ENNReal.ofReal b < g x} :=
@@ -537,7 +537,7 @@ theorem superlevel_decreasingRearrange_eq_Ico (hT : 0 ≤ T) (t : ℝ≥0∞) :
       = Ico (0 : ℝ) (distribFun T f t).toReal := by
   have hDtop : distribFun T f t ≠ ⊤ := distribFun_ne_top t
   ext x
-  simp only [mem_setOf_eq, mem_Ico]
+  simp only [mem_ofPred_eq, mem_Ico]
   rw [lt_decreasingRearrange_iff]
   constructor
   · rintro ⟨⟨hx0, _⟩, hlt⟩
@@ -675,7 +675,7 @@ theorem superlevel_decreasingRearrangeSymm_eq_Ioo (hT : 0 ≤ T) (t : ℝ≥0∞
     calc D ≤ (ENNReal.ofReal T).toReal := ENNReal.toReal_mono ofReal_ne_top this
       _ = T := ENNReal.toReal_ofReal hT
   ext x
-  simp only [Set.mem_setOf_eq, Set.mem_Ioo]
+  simp only [Set.mem_ofPred_eq, Set.mem_Ioo]
   unfold decreasingRearrangeSymm
   rw [lt_decreasingRearrange_iff (2 * |x - T / 2|) t]
   have hnn : (0 : ℝ) ≤ 2 * |x - T / 2| := by positivity
@@ -731,7 +731,7 @@ theorem lintegral_rpow_decreasingRearrangeSymm_eq (hT : 0 ≤ T) (hf : Measurabl
         = {x ∈ Icc (0 : ℝ) T | (ENNReal.ofReal t) ^ (p⁻¹) < g x} := by
     intro g
     ext x
-    simp only [mem_setOf_eq, and_congr_right_iff]
+    simp only [mem_ofPred_eq, and_congr_right_iff]
     intro _
     constructor
     · intro h
@@ -804,7 +804,7 @@ theorem decreasingRearrangeSymm_symmetric_trough {T : ℝ} {g : ℝ → ℝ≥0�
   · -- lower bound: any admissible level `t` dominates `g x₀` by a continuity margin
     apply le_sInf
     intro t ht
-    simp only [Set.mem_setOf_eq] at ht
+    simp only [Set.mem_ofPred_eq] at ht
     by_contra hcon
     push Not at hcon
     have hcw : ContinuousWithinAt g (Icc (T / 2) T) x₀ := hcont x₀ hx₀mem

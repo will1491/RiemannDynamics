@@ -678,7 +678,7 @@ theorem subset_fatouSet_of_finite_preimage_subset {f : ℂ̂ → ℂ̂}
     rw [← himg]
     exact ⟨x, hx, rfl⟩
   have hinjOn : Set.InjOn f S := by
-    haveI := hS.to_subtype
+    have := hS.to_subtype
     have hFsurj : Function.Surjective (hmapsTo.restrict f S S) := by
       rintro ⟨y, hy⟩
       rw [← himg] at hy
@@ -713,7 +713,7 @@ theorem subset_fatouSet_of_finite_preimage_subset {f : ℂ̂ → ℂ̂}
         rw [Function.iterate_succ_apply, Function.iterate_succ_apply] at h
         exact hinjOn hx hy (ih (f x) (f y) (hmapsTo hx) (hmapsTo hy) h)
   obtain ⟨i, j, hij, hijeq⟩ : ∃ i j : ℕ, i < j ∧ f^[i] p = f^[j] p := by
-    haveI := hS.to_subtype
+    have := hS.to_subtype
     obtain ⟨i, j, hne, heq'⟩ := Finite.exists_ne_map_eq_of_infinite
       fun i : ℕ => (⟨f^[i] p, horbit i⟩ : S)
     have heqv : f^[i] p = f^[j] p := congrArg Subtype.val heq'
@@ -814,8 +814,8 @@ theorem juliaSet_perfect {f : ℂ̂ → ℂ̂} (hf : IsRational f)
     by_contra hinf'
     have hinf : (JuliaSet f \ forwardOrbit f x).Infinite := hinf'
     obtain ⟨w₁, hw₁⟩ := hinf.nonempty
-    obtain ⟨w₂, hw₂⟩ := (hinf.diff (Set.finite_singleton w₁)).nonempty
-    obtain ⟨w₃, hw₃⟩ := (hinf.diff ((Set.finite_singleton w₂).insert w₁)).nonempty
+    obtain ⟨w₂, hw₂⟩ := (hinf.sdiff (Set.finite_singleton w₁)).nonempty
+    obtain ⟨w₃, hw₃⟩ := (hinf.sdiff ((Set.finite_singleton w₂).insert w₁)).nonempty
     have h21 : w₂ ≠ w₁ := fun h => hw₂.2 (Set.mem_singleton_iff.mpr h)
     have h31 : w₃ ≠ w₁ := fun h => hw₃.2 (Set.mem_insert_iff.mpr (Or.inl h))
     have h32 : w₃ ≠ w₂ := fun h =>

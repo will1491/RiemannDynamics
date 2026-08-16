@@ -160,7 +160,7 @@ theorem ncard_polygonSides (hΓ : IsFuchsianGroup Γ)
       rw [h𝒬, Set.Finite.mem_toFinset] at hP
       exact hP
     ext s
-    simp only [Finset.coe_filter, Set.mem_setOf_eq, h𝒮, Set.Finite.mem_toFinset]
+    simp only [Finset.coe_filter, Set.mem_ofPred_eq, h𝒮, Set.Finite.mem_toFinset]
     exact ⟨fun h1 => h1.2, fun h1 => ⟨pair_subset_sides hPmem h1, h1⟩⟩
   have hcard2 : ∀ P ∈ 𝒬, (𝒮.filter (· ∈ P)).card = 2 := by
     intro P hP
@@ -307,7 +307,7 @@ theorem sin_window_weak {δ : ℝ} (hδ0 : 0 < δ) (hδπ : δ < Real.pi) :
       = Set.Icc 0 δ := by
   have hπ := Real.pi_pos
   ext ψ
-  simp only [Set.mem_setOf_eq, Set.mem_Ico, Set.mem_Icc]
+  simp only [Set.mem_ofPred_eq, Set.mem_Ico, Set.mem_Icc]
   constructor
   · rintro ⟨⟨h0, h2π⟩, hs1, hs2⟩
     refine ⟨h0, ?_⟩
@@ -338,7 +338,7 @@ theorem sin_window_strict {δ : ℝ} (hδ0 : 0 < δ) (hδπ : δ < Real.pi) :
       = Set.Ioo 0 δ := by
   have hπ := Real.pi_pos
   ext ψ
-  simp only [Set.mem_setOf_eq, Set.mem_Ico, Set.mem_Ioo]
+  simp only [Set.mem_ofPred_eq, Set.mem_Ico, Set.mem_Ioo]
   constructor
   · rintro ⟨⟨h0, h2π⟩, hs1, hs2⟩
     have hweak : ψ ∈ Set.Icc 0 δ := by
@@ -490,7 +490,7 @@ theorem vol_arc_pos {u₁ u₂ : ℂ} {σ₁ σ₂ : ℝ}
       = (fun ψ => ψ + a₁) ''
           (T ∩ Set.Ico (-Real.pi - a₁) (Real.pi - a₁)) := by
     ext φ
-    simp only [Set.mem_setOf_eq, Set.mem_image, Set.mem_inter_iff, Set.mem_Ico, hTdef]
+    simp only [Set.mem_ofPred_eq, Set.mem_image, Set.mem_inter_iff, Set.mem_Ico, hTdef]
     constructor
     · rintro ⟨⟨hφ1, hφ2⟩, hc1, hc2⟩
       rw [exp_div_im φ hu₁, hσ₁1, one_mul] at hc1
@@ -520,7 +520,7 @@ theorem vol_arc_pos {u₁ u₂ : ℂ} {σ₁ σ₂ : ℝ}
         measurable_const
   have hTper : ∀ x, x ∈ T ↔ x + 2 * Real.pi ∈ T := by
     intro x
-    simp only [hTdef, Set.mem_setOf_eq]
+    simp only [hTdef, Set.mem_ofPred_eq]
     rw [Real.sin_add_two_pi, show x + 2 * Real.pi - δ = x - δ + 2 * Real.pi by ring,
       Real.sin_add_two_pi]
   have ht0 : (0 : ℝ) ≤ Real.pi + a₁ := by
@@ -550,7 +550,7 @@ theorem vol_arc_pos {u₁ u₂ : ℂ} {σ₁ σ₂ : ℝ}
   have e3 : T ∩ Set.Ico 0 (2 * Real.pi) = Set.Icc 0 δ := by
     rw [← sin_window_weak hδpos hδπ]
     ext ψ
-    simp only [hTdef, Set.mem_inter_iff, Set.mem_setOf_eq]
+    simp only [hTdef, Set.mem_inter_iff, Set.mem_ofPred_eq]
     tauto
   rw [hset, himg, measure_preimage_add, ← hshift, e3, Real.volume_Icc, sub_zero,
     abs_of_pos hδpos]
@@ -599,7 +599,7 @@ theorem vol_arc {u₁ u₂ : ℂ} {σ₁ σ₂ : ℝ}
         0 ≤ σ₂ * (Complex.exp ((φ : ℂ) * Complex.I) / u₂).im ∧
         0 ≤ σ₁ * (Complex.exp ((φ : ℂ) * Complex.I) / u₁).im} := by
       ext φ
-      simp only [Set.mem_setOf_eq]
+      simp only [Set.mem_ofPred_eq]
       tauto
     rw [hsets, h1, harginv, abs_neg]
   · exact vol_arc_pos hσ₁ hσ₂ hu₁ hu₂ h12 h21 hδpos
@@ -711,7 +711,7 @@ theorem sector_eq_polar {u₁ u₂ : ℂ} {σ₁ σ₂ : ℝ} {s : ℝ}
       nlinarith [norm_pos_iff.mpr (div_ne_zero hu₁ hu₂)]
     · exact h2
   ext x
-  simp only [Set.mem_setOf_eq, Set.mem_image, Set.mem_prod, Set.mem_Ioo]
+  simp only [Set.mem_ofPred_eq, Set.mem_image, Set.mem_prod, Set.mem_Ioo]
   constructor
   · rintro ⟨hxs, hc1, hc2⟩
     have hx0 : x ≠ 0 := by
@@ -812,7 +812,7 @@ theorem sector_comm {u₁ u₂ : ℂ} {σ₁ σ₂ : ℝ} {s : ℝ} :
     {x : ℂ | ‖x‖ < s ∧ 0 < σ₁ * (x / u₁).im ∧ 0 < σ₂ * (x / u₂).im}
       = {x : ℂ | ‖x‖ < s ∧ 0 < σ₂ * (x / u₂).im ∧ 0 < σ₁ * (x / u₁).im} := by
   ext x
-  simp only [Set.mem_setOf_eq]
+  simp only [Set.mem_ofPred_eq]
   tauto
 
 /-- The zero set of a sine shifted by a principal argument on the principal window is
@@ -1108,7 +1108,7 @@ theorem side_functional (hΓ : IsFuchsianGroup Γ) {R : ℝ}
   have hint : ∀ w ∈ (b • ·) '' interior (dirichletDomain Γ τ₀),
       0 < C * (discChart v w / discChart v Wn).im := by
     rintro w ⟨y, hy, rfl⟩
-    haveI : IsIsometricSMul (↥Γ) UpperHalfPlane :=
+    have : IsIsometricSMul (↥Γ) UpperHalfPlane :=
       ⟨fun c => isometry_smul UpperHalfPlane (c : Matrix.SpecialLinearGroup (Fin 2) ℝ)⟩
     have hbc' : (b⁻¹ * c) • τ₀ ≠ τ₀ := by
       intro h0

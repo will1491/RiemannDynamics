@@ -54,7 +54,7 @@ theorem SubharmonicOn.sub_harmonicOnNhd {f h : ℂ → ℝ} {U : Set ℂ}
   -- The circle average splits, and the harmonic term has the mean-value equality.
   rw [Real.circleAverage_fun_sub hfci hhci]
   have hhavg : Real.circleAverage h c r = h c := by
-    apply HarmonicOnNhd.circleAverage_eq
+    apply InnerProductSpace.HarmonicOnNhd.circleAverage_eq
     rw [abs_of_pos hr]
     exact hh.mono hsub
   have hfavg : f c ≤ Real.circleAverage f c r := hfmv c hc r hr hsub

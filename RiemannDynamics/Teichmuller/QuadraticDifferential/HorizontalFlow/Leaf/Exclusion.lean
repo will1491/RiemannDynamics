@@ -309,11 +309,9 @@ theorem leaf_visit_height {q Ψ : ℂ → ℂ} {V : Set ℂ} (hV : IsOpen V)
       rwa [Set.preimage_univ] at h5
     refine hbigon arc (fun v => τ (v + w₁)) T (w₂ - w₁) (5 * R / 4) hT
       (by linarith) hμ harcq (traj_mono hτh (Set.subset_univ _)) ?_ ?_
-    · change τ (0 + w₁) = arc T
-      rw [zero_add, hTdef]
+    · rw [zero_add, hTdef]
       exact harcT.symm
-    · change τ (w₂ - w₁ + w₁) = arc 0
-      rw [show w₂ - w₁ + w₁ = w₂ from by ring]
+    · rw [show w₂ - w₁ + w₁ = w₂ from by ring]
       exact harc0.symm
   · have hτh : IsTrajOn (fun z => -q z) (fun v => τ (w₁ - v)) Set.univ := by
       have h5 := traj_shift (-w₁) (traj_reverse hτ)
@@ -327,11 +325,9 @@ theorem leaf_visit_height {q Ψ : ℂ → ℂ} {V : Set ℂ} (hV : IsOpen V)
       rwa [hfun] at h5
     refine hbigon arc (fun v => τ (w₁ - v)) T (w₁ - w₂) (5 * R / 4) hT
       (by linarith) hμ harcq (traj_mono hτh (Set.subset_univ _)) ?_ ?_
-    · change τ (w₁ - 0) = arc T
-      rw [sub_zero, hTdef]
+    · rw [sub_zero, hTdef]
       exact harcT.symm
-    · change τ (w₁ - (w₁ - w₂)) = arc 0
-      rw [show w₁ - (w₁ - w₂) = w₂ from by ring]
+    · rw [show w₁ - (w₁ - w₂) = w₂ from by ring]
       exact harc0.symm
 
 /-- **Long corridor crossing of one chart**: under a uniform image margin along the
@@ -949,7 +945,7 @@ theorem anchor_dev {q Ψ : ℂ → ℂ} {V : Set ℂ} (hV : IsOpen V)
     ring
   have h2 : Ψ (ϑ t) - Ψ (ϑ tb) = -Complex.I * ((ε₀ : ℂ) * ((t - tb : ℝ) : ℂ)) := by
     have h3 := congrArg (fun z => -Complex.I * z) hkey
-    simp only at h3
+    try simp only at h3
     rw [show -Complex.I * (Complex.I * Ψ (ϑ t) - Complex.I * Ψ (ϑ tb))
         = -(Complex.I * Complex.I) * (Ψ (ϑ t) - Ψ (ϑ tb)) from by ring,
       Complex.I_mul_I] at h3

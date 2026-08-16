@@ -63,7 +63,7 @@ theorem leaf_follow_on {q Φ : ℂ → ℂ} {S : Set ℂ} (hS : IsOpen S)
         have h0m : (0 : ℝ) ∈ Set.Icc (0 : ℝ) h := Set.left_mem_Icc.mpr hh.le
         have hc := hτ.cont 0 h0m
         have h4 := hc (hS.mem_nhds (by simpa using htS))
-        simpa using h4
+        simpa using! h4
       filter_upwards [hdevε, hcS, eventually_mem_nhdsWithin] with u hd hcSu hum
       refine hΦinj hcSu (localFlow_mem (hsegm u hum)) ?_
       rw [hd, localFlow_dev (hsegm u hum)]
@@ -552,7 +552,7 @@ theorem tails_zero {q : ℂ → ℂ}
   have hKH : K ⊆ {z : ℂ | 0 < z.im} := by
     intro z hz
     have h2 := hz.2
-    simp only [Set.mem_setOf_eq] at h2 ⊢
+    simp only [Set.mem_ofPred_eq] at h2 ⊢
     linarith
   -- a leaf point outside the region has zero winding
   have hzero : ∀ u : ℝ, u ≠ vs → σ u ∉ K → windingNumber γ (σ u) = 0 := by

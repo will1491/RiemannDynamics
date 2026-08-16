@@ -73,7 +73,7 @@ theorem dirichletEnergy_le_of_compactSupport_weakDeriv {u w : ℂ → ℝ} {U : 
   have hKcc : IsCompact Kc := hcs
   have hKcU : Kc ⊆ U := hsub
   have hKcmeas : MeasurableSet Kc := (isClosed_tsupport φ).measurableSet
-  haveI : Fact (volume Kc < ⊤) := ⟨hKcc.measure_lt_top⟩
+  have : Fact (volume Kc < ⊤) := ⟨hKcc.measure_lt_top⟩
   -- `φ` continuous, locally integrable, a.e. differentiable.
   have hcont_φ : Continuous φ := hcont
   have hφloc : LocallyIntegrable φ := hcont_φ.locallyIntegrable
@@ -258,7 +258,7 @@ theorem dirichletEnergy_le_of_compactSupport_weakDeriv {u w : ℂ → ℝ} {U : 
     have hsupp : Function.support (fun z => (fderiv ℝ u z v) * (fderiv ℝ φ z v)) ⊆ Kc := by
       intro z hz
       by_contra hzKc
-      simp only [Function.mem_support, hφfd0 z hzKc, ContinuousLinearMap.zero_apply,
+      simp only [Function.mem_support, hφfd0 z hzKc, zero_apply,
         mul_zero, ne_eq, not_true] at hz
     rw [← integrableOn_iff_integrable_of_support_subset hsupp]
     obtain ⟨C, hC⟩ :=
@@ -336,21 +336,21 @@ theorem dirichletEnergy_le_of_compactSupport_weakDeriv {u w : ℂ → ℝ} {U : 
   have hcross_int : IntegrableOn cross Kc volume := by
     have h1 := (hIab 1 (by simp)).integrableOn (s := Kc)
     have h2 := (hIab Complex.I (by simp)).integrableOn (s := Kc)
-    simpa only [hcross] using h1.add h2
+    simpa only [hcross] using! h1.add h2
   -- **The `Kc`-part energy inequality**: `∫⁻_Kc ‖∇u‖² ≤ ∫⁻_Kc ‖∇w‖²`.
   have hKpart : ∫⁻ z in Kc, (‖fderiv ℝ u z‖₊ : ℝ≥0∞) ^ 2
       ≤ ∫⁻ z in Kc, (‖fderiv ℝ w z‖₊ : ℝ≥0∞) ^ 2 := by
     have conv_u : ∫⁻ z in Kc, (‖fderiv ℝ u z‖₊ : ℝ≥0∞) ^ 2
         = ENNReal.ofReal (∫ z in Kc, ‖fderiv ℝ u z‖ ^ 2) := by
       have hi : Integrable (fun z => ((‖fderiv ℝ u z‖₊ ^ 2 : ℝ≥0) : ℝ)) (volume.restrict Kc) := by
-        simpa [NNReal.coe_pow, coe_nnnorm] using hu_int
+        simpa [NNReal.coe_pow, coe_nnnorm] using! hu_int
       simp_rw [← ENNReal.coe_pow]
       rw [lintegral_coe_eq_integral (fun z => ‖fderiv ℝ u z‖₊ ^ 2) hi]
       simp [NNReal.coe_pow, coe_nnnorm]
     have conv_w : ∫⁻ z in Kc, (‖fderiv ℝ w z‖₊ : ℝ≥0∞) ^ 2
         = ENNReal.ofReal (∫ z in Kc, ‖fderiv ℝ w z‖ ^ 2) := by
       have hi : Integrable (fun z => ((‖fderiv ℝ w z‖₊ ^ 2 : ℝ≥0) : ℝ)) (volume.restrict Kc) := by
-        simpa [NNReal.coe_pow, coe_nnnorm] using hw_int
+        simpa [NNReal.coe_pow, coe_nnnorm] using! hw_int
       simp_rw [← ENNReal.coe_pow]
       rw [lintegral_coe_eq_integral (fun z => ‖fderiv ℝ w z‖₊ ^ 2) hi]
       simp [NNReal.coe_pow, coe_nnnorm]
@@ -361,7 +361,7 @@ theorem dirichletEnergy_le_of_compactSupport_weakDeriv {u w : ℂ → ℝ} {U : 
       filter_upwards [hfdadd_res] with z hz
       rw [normsq_dual (fderiv ℝ w z), normsq_dual (fderiv ℝ u z), normsq_dual (fderiv ℝ φ z),
         hz]
-      simp only [ContinuousLinearMap.add_apply, hcross]; ring
+      simp only [add_apply, hcross]; ring
     have hint_extra : IntegrableOn (fun z => 2 * cross z + ‖fderiv ℝ φ z‖ ^ 2) Kc volume :=
       (hcross_int.const_mul 2).add hφ2_int
     have hstep : ∫ z in Kc, ‖fderiv ℝ w z‖ ^ 2
@@ -386,7 +386,7 @@ theorem dirichletEnergy_le_of_compactSupport_weakDeriv {u w : ℂ → ℝ} {U : 
         + ∫⁻ z in U \ Kc, (‖fderiv ℝ f z‖₊ : ℝ≥0∞) ^ 2 := by
     intro f
     unfold dirichletEnergy
-    rw [← lintegral_inter_add_diff (B := Kc) _ U hKcmeas, Set.inter_eq_self_of_subset_right hKcU]
+    rw [← lintegral_inter_add_sdiff (B := Kc) _ U hKcmeas, Set.inter_eq_self_of_subset_right hKcU]
   rw [hsplit u, hsplit w]
   have hUKeq : ∫⁻ z in U \ Kc, (‖fderiv ℝ u z‖₊ : ℝ≥0∞) ^ 2
       = ∫⁻ z in U \ Kc, (‖fderiv ℝ w z‖₊ : ℝ≥0∞) ^ 2 := by
@@ -742,7 +742,7 @@ theorem dirichletEnergy_le_of_lipschitz_boundaryVanishing {u w : ℂ → ℝ} {U
     intro n z hz
     simp only [hg, Function.mem_support, ne_eq, mul_eq_zero, not_or] at hz
     obtain ⟨hχ0, _⟩ := hz
-    simp only [hKn, Set.mem_setOf_eq]
+    simp only [hKn, Set.mem_ofPred_eq]
     by_contra hlt
     push Not at hlt
     apply hχ0
@@ -919,7 +919,7 @@ theorem dirichletEnergy_le_of_lipschitz_boundaryVanishing {u w : ℂ → ℝ} {U
             have hopen : IsOpen {x : ℂ | 1 < ((n:ℝ)+1) * d x - 1} :=
               isOpen_lt continuous_const hcont
             have hzmem : z ∈ {x : ℂ | 1 < ((n:ℝ)+1) * d x - 1} := by
-              simp only [Set.mem_setOf_eq]; rw [div_lt_iff₀ (hn1 n)] at hdz2; nlinarith
+              simp only [Set.mem_ofPred_eq]; rw [div_lt_iff₀ (hn1 n)] at hdz2; nlinarith
             filter_upwards [hopen.mem_nhds hzmem] with x hx
             have hx' : 1 < ((n:ℝ)+1) * d x - 1 := hx
             simp only [hwn, hg, hχ]
@@ -1071,7 +1071,7 @@ theorem dirichletEnergy_le_of_hardy_boundaryVanishing {u w : ℂ → ℝ} {U : S
   -- **a.e. differentiability of `φ` on `U`** (Rademacher on the open cover `{1/(m+1) < d}`).
   have hφ_aediffU : ∀ᵐ z : ℂ, z ∈ U → DifferentiableAt ℝ φ z := by
     have hcover : U = ⋃ m : ℕ, {z | 1/((m:ℝ)+1) < d z} := by
-      ext z; simp only [Set.mem_iUnion, Set.mem_setOf_eq, hdU z]
+      ext z; simp only [Set.mem_iUnion, Set.mem_ofPred_eq, hdU z]
       refine ⟨fun hz => ?_, ?_⟩
       · obtain ⟨m, hm⟩ := exists_nat_gt (1 / d z)
         refine ⟨m, ?_⟩
@@ -1081,7 +1081,7 @@ theorem dirichletEnergy_le_of_hardy_boundaryVanishing {u w : ℂ → ℝ} {U : S
     have hVopen : ∀ m : ℕ, IsOpen {z | 1/((m:ℝ)+1) < d z} :=
       fun m => isOpen_lt continuous_const hdcont
     have hVsub : ∀ m : ℕ, {z | 1/((m:ℝ)+1) < d z} ⊆ Tc m := by
-      intro m z hz; simp only [Set.mem_setOf_eq] at hz ⊢; exact le_of_lt hz
+      intro m z hz; simp only [Set.mem_ofPred_eq] at hz ⊢; exact le_of_lt hz
     have hstep : ∀ m : ℕ, ∀ᵐ z : ℂ, z ∈ {z | 1/((m:ℝ)+1) < d z} → DifferentiableAt ℝ φ z := by
       intro m
       obtain ⟨L, hL⟩ := hφTlip m
@@ -1137,7 +1137,7 @@ theorem dirichletEnergy_le_of_hardy_boundaryVanishing {u w : ℂ → ℝ} {U : S
         (continuous_const.mul hdcont).sub continuous_const
       have hopen : IsOpen {w : ℂ | ((n:ℝ)+1) * d w - 1 < 0} := isOpen_lt hcont continuous_const
       have hzmem : z ∈ {w : ℂ | ((n:ℝ)+1) * d w - 1 < 0} := by
-        simp only [Set.mem_setOf_eq]; rw [lt_div_iff₀ (hn1 n)] at hz; nlinarith
+        simp only [Set.mem_ofPred_eq]; rw [lt_div_iff₀ (hn1 n)] at hz; nlinarith
       filter_upwards [hopen.mem_nhds hzmem] with w hw
       have hw' : ((n:ℝ)+1) * d w - 1 < 0 := hw
       rw [hχ]; simp only
@@ -1150,7 +1150,7 @@ theorem dirichletEnergy_le_of_hardy_boundaryVanishing {u w : ℂ → ℝ} {U : S
         (continuous_const.mul hdcont).sub continuous_const
       have hopen : IsOpen {w : ℂ | 1 < ((n:ℝ)+1) * d w - 1} := isOpen_lt continuous_const hcont
       have hzmem : z ∈ {w : ℂ | 1 < ((n:ℝ)+1) * d w - 1} := by
-        simp only [Set.mem_setOf_eq]; rw [div_lt_iff₀ (hn1 n)] at hz; nlinarith
+        simp only [Set.mem_ofPred_eq]; rw [div_lt_iff₀ (hn1 n)] at hz; nlinarith
       filter_upwards [hopen.mem_nhds hzmem] with w hw
       have hw' : 1 < ((n:ℝ)+1) * d w - 1 := hw
       rw [hχ]; simp only
@@ -1167,7 +1167,7 @@ theorem dirichletEnergy_le_of_hardy_boundaryVanishing {u w : ℂ → ℝ} {U : S
     simp only [hg, Function.mem_support, ne_eq, mul_eq_zero, not_or] at hz
     obtain ⟨hχ0z, _⟩ := hz
     by_contra hlt
-    simp only [hKn, Set.mem_setOf_eq, not_le] at hlt
+    simp only [hKn, Set.mem_ofPred_eq, not_le] at hlt
     exact hχ0z (hχ0 n z hlt)
   have hgcs : ∀ n, HasCompactSupport (g n) := fun n =>
     HasCompactSupport.of_support_subset_isCompact (hKncpt n) (hgsupp n)
@@ -1181,7 +1181,7 @@ theorem dirichletEnergy_le_of_hardy_boundaryVanishing {u w : ℂ → ℝ} {U : S
     have hab : 1/(2*(n:ℝ)+2) < 1/((n:ℝ)+1) := by
       rw [div_lt_div_iff₀ (by positivity) (hn1 n)]; nlinarith [Nat.cast_nonneg (α := ℝ) n]
     have hTeq : {z | 1/(2*(n:ℝ)+2) ≤ d z} = Tc (2 * n + 1) := by
-      rw [hTc, hKn]; ext z; simp only [Set.mem_setOf_eq]
+      rw [hTc, hKn]; ext z; simp only [Set.mem_ofPred_eq]
       rw [show ((2 * n + 1 : ℕ):ℝ) + 1 = 2 * (n:ℝ) + 2 by push_cast; ring]
     refine lipschitzWith_tapered_prod (dd := d) (Lφ := L) (a := 1/((n:ℝ)+1))
       (b := 1/(2*(n:ℝ)+2)) hab hBnn (hχlip n) (hχ01 n) (fun z hz => hχ0 n z hz) ?_ ?_ hd1
@@ -1279,7 +1279,7 @@ theorem dirichletEnergy_le_of_hardy_boundaryVanishing {u w : ℂ → ℝ} {U : S
           push_cast [ha1, hb1, hc1, Real.coe_toNNReal _ (show (0:ℝ) ≤ 2*|φ z|/d z by positivity)]
           linarith [hnorm]
         have hcsq : (‖fderiv ℝ (wn n) z‖₊) ^ 2 ≤ 3 * (a1 ^ 2 + b1 ^ 2 + c1 ^ 2) := by
-          refine le_trans (pow_le_pow_left₀ (zero_le _) hnn 2) ?_
+          refine le_trans (pow_le_pow_left₀ (zero_le) hnn 2) ?_
           rw [← NNReal.coe_le_coe]; push_cast
           nlinarith [sq_nonneg ((a1:ℝ)-b1), sq_nonneg ((b1:ℝ)-c1), sq_nonneg ((a1:ℝ)-c1)]
         have hc1sq : ((c1 : ℝ≥0∞) ^ 2) = ENNReal.ofReal (4 * φ z ^ 2 / d z ^ 2) := by
@@ -1359,7 +1359,7 @@ theorem dirichletEnergy_le_of_hardy_boundaryVanishing {u w : ℂ → ℝ} {U : S
             have hopen : IsOpen {x : ℂ | 1 < ((n:ℝ)+1) * d x - 1} :=
               isOpen_lt continuous_const hcont
             have hzmem : z ∈ {x : ℂ | 1 < ((n:ℝ)+1) * d x - 1} := by
-              simp only [Set.mem_setOf_eq]; rw [div_lt_iff₀ (hn1 n)] at hdz2; nlinarith
+              simp only [Set.mem_ofPred_eq]; rw [div_lt_iff₀ (hn1 n)] at hdz2; nlinarith
             filter_upwards [hopen.mem_nhds hzmem] with x hx
             have hx' : 1 < ((n:ℝ)+1) * d x - 1 := hx
             simp only [hwn, hg, hχ]
@@ -1435,7 +1435,7 @@ private theorem HasWeakDirDeriv_univ_of_U {v : ℂ} {g f : ℂ → ℂ} {U : Set
     have hdφ : DifferentiableAt ℝ φ z := (hφ.differentiable (by norm_num)).differentiableAt
     change (fderiv ℝ (fun y => η y * φ y) z) v = _
     rw [fderiv_fun_mul hdη hdφ]
-    simp only [ContinuousLinearMap.add_apply, ContinuousLinearMap.smul_apply, smul_eq_mul]
+    simp only [add_apply, smul_apply, smul_eq_mul]
   -- RHS: `∫ Φ • g = ∫ φ • g` (where `g ≠ 0` we have `η = 1`; elsewhere `g = 0`).
   have hRHS : (∫ z, Φ z • g z) = ∫ z, φ z • g z := by
     apply integral_congr_ae
@@ -1540,7 +1540,7 @@ theorem dirichletEnergy_le_of_hardy_boundaryVanishing_aeDiff {u w : ℂ → ℝ}
         (Filter.Eventually.of_forall fun z => ?_)
       calc ‖fderiv ℝ φ z v‖ ≤ ‖fderiv ℝ φ z‖ * ‖v‖ := (fderiv ℝ φ z).le_opNorm v
         _ = ‖fderiv ℝ φ z‖ := by rw [hv, mul_one]
-    haveI : IsFiniteMeasure (volume.restrict K) :=
+    have : IsFiniteMeasure (volume.restrict K) :=
       ⟨by rw [Measure.restrict_apply_univ]; exact hKcpt.measure_lt_top⟩
     have hintv : IntegrableOn (fun z => fderiv ℝ φ z v) K volume := hL2v.integrable (by norm_num)
     exact hintv.ofReal
@@ -1567,7 +1567,7 @@ theorem dirichletEnergy_le_of_hardy_boundaryVanishing_aeDiff {u w : ℂ → ℝ}
     simp only [hg, Function.mem_support, ne_eq, mul_eq_zero, not_or] at hz
     obtain ⟨hχ0z, _⟩ := hz
     by_contra hlt
-    simp only [hKn, Set.mem_setOf_eq, not_le] at hlt
+    simp only [hKn, Set.mem_ofPred_eq, not_le] at hlt
     exact hχ0z (hχfd0_lo n z hlt)
   have hgcs : ∀ n, HasCompactSupport (g n) := fun n =>
     HasCompactSupport.of_support_subset_isCompact (hKncpt n) (hgsupp n)
@@ -1613,7 +1613,7 @@ theorem dirichletEnergy_le_of_hardy_boundaryVanishing_aeDiff {u w : ℂ → ℝ}
     -- `∇(g n)` (complex embedding) vanishes off the compact `Kn n`, hence is loc integrable.
     have hgnfd_supp : ∀ z, z ∉ Kn n → fderiv ℝ (g n) z = 0 := by
       intro z hz
-      simp only [hKn, Set.mem_setOf_eq, not_le] at hz
+      simp only [hKn, Set.mem_ofPred_eq, not_le] at hz
       have hopen : IsOpen {y : ℂ | d y < 1/((n:ℝ)+1)} := isOpen_lt hdcont continuous_const
       have heq : g n =ᶠ[𝓝 z] fun _ => (0:ℝ) := by
         filter_upwards [hopen.mem_nhds (show z ∈ _ from hz)] with y hy
@@ -1636,7 +1636,7 @@ theorem dirichletEnergy_le_of_hardy_boundaryVanishing_aeDiff {u w : ℂ → ℝ}
           =ᵐ[volume] (fun z => ((fderiv ℝ (g n) z v : ℝ) : ℂ)) := by
         filter_upwards [hgfd_ae] with z hzfd
         rw [hzfd]
-        simp only [ContinuousLinearMap.add_apply, ContinuousLinearMap.smul_apply,
+        simp only [add_apply, smul_apply,
           Complex.ofReal_add, Complex.ofReal_mul, Complex.real_smul, smul_eq_mul]
         ring
       rw [hfeq] at hL
@@ -1666,7 +1666,7 @@ theorem dirichletEnergy_le_of_hardy_boundaryVanishing_aeDiff {u w : ℂ → ℝ}
         have hbnd : IntegrableOn (fun z => ‖fderiv ℝ φ z‖
             + |φ z| * (4 * (Dst:ℝ) * ((n:ℝ)+1))) (Kn n) volume := by
           have h1 : IntegrableOn (fun z => ‖fderiv ℝ φ z‖) (Kn n) volume := by
-            haveI : IsFiniteMeasure (volume.restrict (Kn n)) :=
+            have : IsFiniteMeasure (volume.restrict (Kn n)) :=
               ⟨by rw [Measure.restrict_apply_univ]; exact (hKncpt n).measure_lt_top⟩
             exact (hgradφ_L2U (Kn n) (hKnU n) (hKncpt n)).integrable (by norm_num)
           have h2 : IntegrableOn (fun z => |φ z| * (4 * (Dst:ℝ) * ((n:ℝ)+1))) (Kn n) volume :=
@@ -1687,7 +1687,7 @@ theorem dirichletEnergy_le_of_hardy_boundaryVanishing_aeDiff {u w : ℂ → ℝ}
             exact le_trans ((fderiv ℝ (χ n) z).le_opNorm v) (by rw [hv, mul_one]) |>.trans
               (hχfd_le n z)
           rw [hzfd]
-          simp only [ContinuousLinearMap.add_apply, ContinuousLinearMap.smul_apply, smul_eq_mul]
+          simp only [add_apply, smul_apply, smul_eq_mul]
           calc |χ n z * fderiv ℝ φ z v + φ z * fderiv ℝ (χ n) z v|
               ≤ |χ n z * fderiv ℝ φ z v| + |φ z * fderiv ℝ (χ n) z v| := abs_add_le _ _
             _ = |χ n z| * |fderiv ℝ φ z v| + |φ z| * |fderiv ℝ (χ n) z v| := by
@@ -1711,7 +1711,7 @@ theorem dirichletEnergy_le_of_hardy_boundaryVanishing_aeDiff {u w : ℂ → ℝ}
       have hdom : IntegrableOn (fun z => 2 * ‖fderiv ℝ φ z‖ ^ 2 + 2 * (|φ z| * B) ^ 2)
           (Kn n) volume := by
         have h1 : IntegrableOn (fun z => ‖fderiv ℝ φ z‖ ^ 2) (Kn n) volume := by
-          haveI : IsFiniteMeasure (volume.restrict (Kn n)) :=
+          have : IsFiniteMeasure (volume.restrict (Kn n)) :=
             ⟨by rw [Measure.restrict_apply_univ]; exact (hKncpt n).measure_lt_top⟩
           exact (memLp_two_iff_integrable_sq hφfd_meas.norm.aestronglyMeasurable.restrict).mp
             (hgradφ_L2U (Kn n) (hKnU n) (hKncpt n))
@@ -1836,7 +1836,7 @@ theorem dirichletEnergy_le_of_hardy_boundaryVanishing_aeDiff {u w : ℂ → ℝ}
             Real.coe_toNNReal _ (show (0:ℝ) ≤ 2 * Bc * |φ z|/d z by positivity)]
           linarith [hnorm]
         have hcsq : (‖fderiv ℝ (wn n) z‖₊) ^ 2 ≤ 3 * (a1 ^ 2 + b1 ^ 2 + c1 ^ 2) := by
-          refine le_trans (pow_le_pow_left₀ (zero_le _) hnn 2) ?_
+          refine le_trans (pow_le_pow_left₀ (zero_le) hnn 2) ?_
           rw [← NNReal.coe_le_coe]; push_cast
           nlinarith [sq_nonneg ((a1:ℝ)-b1), sq_nonneg ((b1:ℝ)-c1), sq_nonneg ((a1:ℝ)-c1)]
         have hc1sq : ((c1 : ℝ≥0∞) ^ 2) = ENNReal.ofReal ((2 * Bc) ^ 2 * φ z ^ 2 / d z ^ 2) := by

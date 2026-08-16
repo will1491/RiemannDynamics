@@ -257,7 +257,7 @@ theorem exists_finiteVariation_path_of_connected_finite_hausdorff {Γ : Set ℂ}
     exact Metric.cthickening_mono h2εle Γ
       (Metric.mem_cthickening_of_dist_le _ w (2 * ε k) Γ hwΓ hwdist)
   -- Lift each `δ k` (restricted to the compact `[0,1]`) to a bounded continuous function.
-  haveI hcs : CompactSpace (↥I) := by rw [hI]; exact isCompact_iff_compactSpace.mp isCompact_Icc
+  have hcs : CompactSpace (↥I) := by rw [hI]; exact isCompact_iff_compactSpace.mp isCompact_Icc
   set F : ℕ → BoundedContinuousFunction (↥I) ℂ :=
     fun k => BoundedContinuousFunction.mkOfCompact
       ⟨fun x => δ k x.1, ((hδcont k).comp continuous_subtype_val)⟩ with hFdef
@@ -272,7 +272,7 @@ theorem exists_finiteVariation_path_of_connected_finite_hausdorff {Γ : Set ℂ}
         LipschitzWith K (fun (x : ↥I) => ((↑c : BoundedContinuousFunction (↥I) ℂ)) x) := by
       rintro ⟨f, k, rfl⟩
       intro a b
-      simpa [hFdef, BoundedContinuousFunction.mkOfCompact] using (hδLip k) (a : ℝ) (b : ℝ)
+      simpa [hFdef, BoundedContinuousFunction.mkOfCompact] using! (hδLip k) (a : ℝ) (b : ℝ)
     exact (LipschitzWith.uniformEquicontinuous _ K hlipA).equicontinuous
   have hcompact : IsCompact (closure A) :=
     BoundedContinuousFunction.arzela_ascoli K0 hK0cpt A hFmem hequi
@@ -483,7 +483,7 @@ theorem geodesicMinimizer_of_connected_finite_hausdorff {Γ : Set ℂ}
   -- **Arzelà–Ascoli extraction.** Lift each `g n` (restricted to the compact `[0,1]`) to a
   -- bounded continuous function; the family is valued in the compact `Γ` and is equi-`K`-Lipschitz,
   -- hence equicontinuous. Arzelà–Ascoli gives a uniformly convergent subsequence.
-  haveI hcs : CompactSpace (↥I) := by rw [hI]; exact isCompact_iff_compactSpace.mp isCompact_Icc
+  have hcs : CompactSpace (↥I) := by rw [hI]; exact isCompact_iff_compactSpace.mp isCompact_Icc
   set F : ℕ → BoundedContinuousFunction (↥I) ℂ :=
     fun n => BoundedContinuousFunction.mkOfCompact
       ⟨fun x => g n x.1, ((hgcont n).comp continuous_subtype_val)⟩ with hFdef
@@ -498,7 +498,7 @@ theorem geodesicMinimizer_of_connected_finite_hausdorff {Γ : Set ℂ}
         LipschitzWith K (fun (x : ↥I) => ((↑c : BoundedContinuousFunction (↥I) ℂ)) x) := by
       rintro ⟨f, n, rfl⟩
       intro a b
-      simpa [hFdef, BoundedContinuousFunction.mkOfCompact] using (hgLipK n) (a : ℝ) (b : ℝ)
+      simpa [hFdef, BoundedContinuousFunction.mkOfCompact] using! (hgLipK n) (a : ℝ) (b : ℝ)
     exact (LipschitzWith.uniformEquicontinuous _ K hlipA).equicontinuous
   have hcompact : IsCompact (closure A) :=
     BoundedContinuousFunction.arzela_ascoli Γ hΓcpt A hFmem hequi
@@ -680,7 +680,7 @@ theorem simpleRectifiableArc_of_compact_connected_finite_hausdorff {Γ : Set ℂ
         have e2 : m * c + (t - s) = t := by rw [hcm]; ring
         rw [e1] at e2 ⊢
         rw [e2]; exact hst
-      simpa only [hηdef] using
+      simpa only [hηdef] using!
         (Continuous.if_le hcont1 hcont2 continuous_id continuous_const (fun x hx => by
           subst hx; exact hagree))
     -- `η 0 = p`, `η 1 = q`.
@@ -947,7 +947,7 @@ theorem arcLengthLineIntegral_le_setLIntegral_hausdorff {σ : ℂ → ℝ≥0∞
         intro y v
         rw [hf'def]
         simp only
-        rw [ContinuousLinearMap.smulRight_apply, ContinuousLinearMap.one_apply,
+        rw [ContinuousLinearMap.smulRight_apply, one_apply_eq_self,
           ContinuousLinearMap.norm_smulRight_apply, norm_one, one_mul, norm_smul, mul_comm]
       -- nfsl: a.e. ‖f' x - A‖ ≤ δ on s where δ is ApproximatesLinearOn (copied from Foundations)
       have nfsl : ∀ (A : ℝ →L[ℝ] ℂ) (d : ℝ≥0) (s : Set ℝ),
@@ -996,7 +996,7 @@ theorem arcLengthLineIntegral_le_setLIntegral_hausdorff {σ : ℂ → ℝ≥0∞
             _ = ‖δ y - δ x - A (y - x) - (δ y - δ x - (f' x) (y - x))‖ := by
                 congr 1
                 simp only [ya, add_sub_cancel_left, sub_sub_sub_cancel_left,
-                  ContinuousLinearMap.coe_sub', Pi.sub_apply, map_smul]
+                  FunLike.coe_sub, Pi.sub_apply, map_smul]
                 module
             _ ≤ ‖δ y - δ x - A (y - x)‖ + ‖δ y - δ x - (f' x) (y - x)‖ := norm_sub_le _ _
             _ ≤ d * ‖y - x‖ + ε * ‖y - x‖ := (add_le_add (hf _ ys _ xs) (hρ ⟨rρ hy, ys⟩))
@@ -1007,7 +1007,7 @@ theorem arcLengthLineIntegral_le_setLIntegral_hausdorff {σ : ℂ → ℝ≥0∞
             _ ≤ r * (d + ε) * (‖z‖ + ε) := by gcongr
         calc ‖(f' x - A) z‖ = ‖(f' x - A) a + (f' x - A) (z - a)‖ := by
               congr 1
-              simp only [ContinuousLinearMap.coe_sub', map_sub, Pi.sub_apply]; abel
+              simp only [FunLike.coe_sub, map_sub, Pi.sub_apply]; abel
           _ ≤ ‖(f' x - A) a‖ + ‖(f' x - A) (z - a)‖ := norm_add_le _ _
           _ ≤ (d + ε) * (‖z‖ + ε) + ‖f' x - A‖ * ‖z - a‖ := by
               apply add_le_add
@@ -1027,10 +1027,10 @@ theorem arcLengthLineIntegral_le_setLIntegral_hausdorff {σ : ℂ → ℝ≥0∞
           linarith
         have hKcoe : (K : ℝ) = (‖A‖ - d)⁻¹ := by
           rw [hK, NNReal.coe_inv, NNReal.coe_sub hclt.le, coe_nnnorm]
-        have hanti : AntilipschitzWith K (t.restrict δ) := by
+        have hanti : AntilipschitzWith K (t.domRestrict δ) := by
           apply AntilipschitzWith.of_le_mul_dist
           rintro ⟨x, hx⟩ ⟨w, hw⟩
-          simp only [Set.restrict_apply, Subtype.dist_eq, Real.dist_eq, Complex.dist_eq]
+          simp only [Set.domRestrict_apply, Subtype.dist_eq, Real.dist_eq, Complex.dist_eq]
           have hlb : (‖A‖ - d) * ‖x - w‖ ≤ ‖δ x - δ w‖ := by
             have h1 : ‖A (x - w)‖ - ‖δ x - δ w‖ ≤ ‖δ x - δ w - A (x - w)‖ := by
               calc ‖A (x - w)‖ - ‖δ x - δ w‖ ≤ ‖A (x - w) - (δ x - δ w)‖ := norm_sub_norm_le _ _
@@ -1046,7 +1046,7 @@ theorem arcLengthLineIntegral_le_setLIntegral_hausdorff {σ : ℂ → ℝ≥0∞
           isometry_subtype_coe.hausdorffMeasure_image (Or.inl (by norm_num)) _
         have himt : (Subtype.val '' (univ : Set ↥t)) = t := by simp
         rw [himt] at him1
-        have himg : (t.restrict δ) '' (univ : Set ↥t) = δ '' t := by
+        have himg : (t.domRestrict δ) '' (univ : Set ↥t) = δ '' t := by
           ext z; constructor
           · rintro ⟨⟨a, ha⟩, _, rfl⟩; exact ⟨a, ha, rfl⟩
           · rintro ⟨a, ha, rfl⟩; exact ⟨⟨a, ha⟩, mem_univ _, rfl⟩
@@ -1209,7 +1209,7 @@ theorem arcLengthLineIntegral_le_setLIntegral_hausdorff {σ : ℂ → ℝ≥0∞
         -- A \ D = A \ Dgood ⊆ {x ∈ uIcc 0 1 | ¬ diff} (since A ⊆ [0,1]), which is null.
         have hsub : A \ D ⊆ {x : ℝ | ¬ (x ∈ Set.uIcc (0:ℝ) 1 → DifferentiableAt ℝ δ x)} := by
           intro x hx
-          rw [mem_setOf_eq, Classical.not_imp]
+          rw [mem_ofPred_eq, Classical.not_imp]
           refine ⟨Set.mem_uIcc.mpr (Or.inl (hAIcc hx.1)), ?_⟩
           intro hxd
           exact hx.2 ⟨hx.1, hxd⟩
@@ -1219,7 +1219,7 @@ theorem arcLengthLineIntegral_le_setLIntegral_hausdorff {σ : ℂ → ℝ≥0∞
         have haeeq : A =ᵐ[volume] D := by
           rw [ae_eq_set]
           refine ⟨hADnull, ?_⟩
-          rw [Set.diff_eq_empty.mpr (inter_subset_left)]; simp
+          rw [Set.sdiff_eq_empty.mpr (inter_subset_left)]; simp
         exact setLIntegral_congr haeeq
       -- δ''D ⊆ δ''A
       have himgSub : δ '' D ⊆ δ '' A := Set.image_mono inter_subset_left

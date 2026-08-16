@@ -53,7 +53,7 @@ theorem gamma2_tile_id_F {z : ℂ} (hz_im : 0 < z.im)
   obtain ⟨hre_lo, hre_hi⟩ := abs_le.mp hz_re
   have hn := hz_norm
   rw [Complex.normSq_apply] at hn
-  simp only [Gamma2FundamentalDomain, Set.mem_setOf_eq]
+  simp only [Gamma2FundamentalDomain, Set.mem_ofPred_eq]
   refine ⟨hz_im, h_sign, by linarith, ?_⟩
   have hq : (1 : ℝ) ≤ Complex.normSq (2 * z - 1) := by
     rw [Complex.normSq_apply]
@@ -72,7 +72,7 @@ theorem gamma2_tile_id_Fsigma {z : ℂ} (hz_im : 0 < z.im)
   obtain ⟨hre_lo, hre_hi⟩ := abs_le.mp hz_re
   have hn := hz_norm
   rw [Complex.normSq_apply] at hn
-  simp only [Gamma2FundamentalDomainReflected, Set.mem_setOf_eq]
+  simp only [Gamma2FundamentalDomainReflected, Set.mem_ofPred_eq]
   refine ⟨hz_im, by linarith, h_sign, ?_⟩
   have hq : (1 : ℝ) ≤ Complex.normSq (2 * z + 1) := by
     rw [Complex.normSq_apply]
@@ -102,7 +102,7 @@ theorem gamma2_tile_S_F {z : ℂ} (hz_im : 0 < z.im)
   have hre : (-1 / z).re = -z.re / Complex.normSq z := by
     rw [Complex.div_re]
     simp [neg_div]
-  simp only [Gamma2FundamentalDomain, Set.mem_setOf_eq]
+  simp only [Gamma2FundamentalDomain, Set.mem_ofPred_eq]
   refine ⟨?_, ?_, ?_, ?_⟩
   · rw [him]
     exact div_pos hz_im h_nsq_pos
@@ -142,7 +142,7 @@ theorem gamma2_tile_S_Fsigma {z : ℂ} (hz_im : 0 < z.im)
   have hre : (-1 / z).re = -z.re / Complex.normSq z := by
     rw [Complex.div_re]
     simp [neg_div]
-  simp only [Gamma2FundamentalDomainReflected, Set.mem_setOf_eq]
+  simp only [Gamma2FundamentalDomainReflected, Set.mem_ofPred_eq]
   refine ⟨?_, ?_, ?_, ?_⟩
   · rw [him]
     exact div_pos hz_im h_nsq_pos

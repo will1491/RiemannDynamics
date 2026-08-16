@@ -111,7 +111,7 @@ theorem modularLambdaH_iy_tendsto_zero_atTop :
   have h3_pow : Tendsto (fun y : ℝ => (theta3 (Complex.I * y))^4) atTop (𝓝 (1 ^ 4)) := h3.pow 4
   have h3_pow_ne : (1 : ℂ) ^ 4 ≠ 0 := by norm_num
   have h_div := h2_pow.div h3_pow h3_pow_ne
-  simpa using h_div
+  simpa using! h_div
 
 /-- **Cusp `0`:** `λ(iy) → 1` as `y → 0⁺` (along the imaginary axis).
 Proof via the Jacobi sum identity `λ(τ) + λ(−1/τ) = 1` (derived inline

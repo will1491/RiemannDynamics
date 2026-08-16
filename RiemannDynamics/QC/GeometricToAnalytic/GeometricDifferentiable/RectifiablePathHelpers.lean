@@ -263,15 +263,8 @@ theorem eVariationOn_lineMap (a b : ℂ) :
     refine hcomp.trans ?_
     -- eVariationOn id (Icc 0 1) = edist 0 1 = 1
     have hidvar : eVariationOn (id : ℝ → ℝ) (Icc (0 : ℝ) 1) = 1 := by
-      apply le_antisymm
-      · -- id monotone: variation ≤ ofReal (id 1 - id 0) = 1
-        have hmono : MonotoneOn (id : ℝ → ℝ) (Icc (0 : ℝ) 1) := fun _ _ _ _ h => h
-        have := hmono.eVariationOn_le (a := 0) (b := 1) (by simp) (by simp)
-        rw [show (Icc (0:ℝ) 1) ∩ Icc (0:ℝ) 1 = Icc (0:ℝ) 1 from by rw [Set.inter_self]] at this
-        simpa using this
-      · have := eVariationOn.edist_le (id : ℝ → ℝ) (s := Icc (0:ℝ) 1)
-          (x := 1) (y := 0) (by simp) (by simp)
-        simpa [edist_dist, Real.dist_eq] using this
+      -- `eVariationOn_id_Icc` : variation of `id` on `Icc 0 1` is `ofReal (1 - 0) = 1`.
+      simp
     rw [hidvar, mul_one]
     rw [edist_nndist]
   · -- ≥ : edist of the two endpoints lineMap 0 = a, lineMap 1 = b is ≤ variation.

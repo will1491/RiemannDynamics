@@ -1179,7 +1179,7 @@ functional. -/
 theorem exists_ann_functional {W : Type*} [AddCommGroup W] [Module ℝ W]
     [FiniteDimensional ℝ W] {U : Submodule ℝ W} (hU : U ≠ ⊤) :
     ∃ h : W →ₗ[ℝ] ℝ, h ≠ 0 ∧ ∀ u ∈ U, h u = 0 := by
-  haveI : Nontrivial (W ⧸ U) := Submodule.Quotient.nontrivial_iff.mpr hU
+  have : Nontrivial (W ⧸ U) := Submodule.Quotient.nontrivial_iff.mpr hU
   obtain ⟨q₀, hq₀⟩ := exists_ne (0 : W ⧸ U)
   set b := Module.finBasis ℝ (W ⧸ U) with hbdef
   have hrep : b.repr q₀ ≠ 0 := fun h => hq₀ (by
@@ -1209,7 +1209,7 @@ theorem finiteDimensional_cycleConstrained (hΓ : IsFuchsianGroup Γ)
     (hgap : ∀ γ ∈ Γ, actsNontrivially γ → ε ≤ translationLength γ)
     (hdense : ∀ σ : UpperHalfPlane, Metric.infDist σ (MulAction.orbit Γ τ₀) ≤ R) :
     FiniteDimensional ℝ (cycleConstrained Γ τ₀) := by
-  haveI := finiteDimensional_oddSideFunctions hΓ hfree hε hgap hdense
+  have := finiteDimensional_oddSideFunctions hΓ hfree hε hgap hdense
   exact Submodule.finiteDimensional_of_le (fun α hα => hα.1)
 
 /-- **Dimension of the constrained space**: the vertex-loop constraints impose one linear
@@ -1227,13 +1227,13 @@ theorem finrank_cycleConstrained_add_classCount (hΓ : IsFuchsianGroup Γ)
     Module.finrank ℝ (cycleConstrained Γ τ₀) + polygonVertexClassCount Γ τ₀
       = polygonSideCount Γ τ₀ + 1 := by
   classical
-  haveI hFD := finiteDimensional_oddSideFunctions hΓ hfree hε hgap hdense
+  have hFD := finiteDimensional_oddSideFunctions hΓ hfree hε hgap hdense
   have hVfin := finite_polygonVertices hΓ hfree hε hgap hdense
   have hclassfin : (polygonVertexClasses Γ τ₀).Finite := by
     refine (hVfin.image (fun v => MulAction.orbit Γ v ∩ polygonVertices Γ τ₀)).subset ?_
     rintro C ⟨v, hv, rfl⟩
     exact ⟨v, hv, rfl⟩
-  haveI := hclassfin.fintype
+  have := hclassfin.fintype
   obtain ⟨Φ, εs, hεpm, hadd, hsmul, hP1, hP2, hP3, hP5⟩ :=
     exists_constraint_data hΓ hfree hε hgap hdense
   set Ψ : ↥(oddSideFunctions Γ τ₀) →ₗ[ℝ] (↥(polygonVertexClasses Γ τ₀) → ℝ) :=
@@ -1518,11 +1518,11 @@ theorem restrictSides_eq_zero_imp (hΓ : IsFuchsianGroup Γ)
       one_mem' := homSubmodule_apply_one F
       mul_mem' := by
         intro a b ha hb
-        simp only [Set.mem_setOf_eq] at ha hb ⊢
+        simp only [Set.mem_ofPred_eq] at ha hb ⊢
         rw [F.2 a b, ha, hb, add_zero]
       inv_mem' := by
         intro a ha
-        simp only [Set.mem_setOf_eq] at ha ⊢
+        simp only [Set.mem_ofPred_eq] at ha ⊢
         rw [hom_apply_inv F a, ha, neg_zero] } with hK
   have htop : Subgroup.closure ({δ : ↥Γ | IsSideElement Γ τ₀ δ} ∪
       {δ : ↥Γ | ∀ τ : UpperHalfPlane, δ • τ = τ}) ≤ K := by
@@ -1534,7 +1534,7 @@ theorem restrictSides_eq_zero_imp (hΓ : IsFuchsianGroup Γ)
   apply Subtype.ext
   funext γ
   have hγK : γ ∈ K := htop (Subgroup.mem_top γ)
-  simpa using hγK
+  simpa using! hγK
 
 /-- Restriction to side values is injective: the side elements generate the group modulo
 trivially-acting elements, on which every character vanishes. -/
@@ -1558,7 +1558,7 @@ theorem finiteDimensional_homSubmodule (hΓ : IsFuchsianGroup Γ)
     (hgap : ∀ γ ∈ Γ, actsNontrivially γ → ε ≤ translationLength γ)
     (hdense : ∀ σ : UpperHalfPlane, Metric.infDist σ (MulAction.orbit Γ τ₀) ≤ R) :
     FiniteDimensional ℝ (homSubmodule (↥Γ)) := by
-  haveI := finiteDimensional_cycleConstrained hΓ hfree hε hgap hdense
+  have := finiteDimensional_cycleConstrained hΓ hfree hε hgap hdense
   set φ : homSubmodule (↥Γ) →ₗ[ℝ] cycleConstrained Γ τ₀ :=
     LinearMap.codRestrict (cycleConstrained Γ τ₀) (restrictSides Γ τ₀)
       (fun f => restrictSides_mem_cycleConstrained hΓ hfree hε hgap hdense f) with hφ
@@ -1581,7 +1581,7 @@ theorem finrank_homSubmodule_add_classCount (hΓ : IsFuchsianGroup Γ)
     Module.finrank ℝ (homSubmodule (↥Γ)) + polygonVertexClassCount Γ τ₀
       = polygonSideCount Γ τ₀ + 1 := by
   classical
-  haveI := finiteDimensional_cycleConstrained hΓ hfree hε hgap hdense
+  have := finiteDimensional_cycleConstrained hΓ hfree hε hgap hdense
   obtain ⟨Φ, hΦ⟩ := exists_crossingSum_hom hΓ hfree hε hgap hdense
   set φ : homSubmodule (↥Γ) →ₗ[ℝ] cycleConstrained Γ τ₀ :=
     LinearMap.codRestrict (cycleConstrained Γ τ₀) (restrictSides Γ τ₀)

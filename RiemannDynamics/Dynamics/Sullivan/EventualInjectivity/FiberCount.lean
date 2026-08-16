@@ -79,8 +79,8 @@ theorem exists_avoidance_index {f : ℂ̂ → ℂ̂}
         ∪ {∞} := ⟨_, rfl⟩
   have hBfin : B.Finite := by
     rw [hBdef]
-    exact (((Polynomial.finite_setOf_isRoot hWr).union
-      (Polynomial.finite_setOf_isRoot hdenR)).image _).union (Set.finite_singleton _)
+    exact (((Polynomial.finite_setOfPred_isRoot hWr).union
+      (Polynomial.finite_setOfPred_isRoot hdenR)).image _).union (Set.finite_singleton _)
   -- Indices whose orbit component meets the bad set; a choice of witness.
   obtain ⟨S, hSdef⟩ : ∃ s : Set ℕ,
       s = {m : ℕ | (fcOrbit f U m ∩ B).Nonempty} := ⟨_, rfl⟩
@@ -287,9 +287,9 @@ theorem exists_fiberCount {f : ℂ̂ → ℂ̂}
       rfl
     -- eventually on the punctured neighbourhood the denominator is nonzero
     have hZfin : {t : ℂ | r.denReduced.IsRoot t}.Finite :=
-      Polynomial.finite_setOf_isRoot hdenR
+      Polynomial.finite_setOfPred_isRoot hdenR
     have hclosed : IsClosed ({t : ℂ | r.denReduced.IsRoot t} \ {x}) :=
-      (hZfin.subset Set.diff_subset).isClosed
+      (hZfin.subset Set.sdiff_subset).isClosed
     have hxmem : x ∈ ({t : ℂ | r.denReduced.IsRoot t} \ {x})ᶜ := fun h => h.2 rfl
     have hev_ne : ∀ᶠ t in 𝓝[≠] x, r.denReduced.eval t ≠ 0 := by
       filter_upwards [nhdsWithin_le_nhds (hclosed.isOpen_compl.mem_nhds hxmem),
@@ -355,7 +355,7 @@ theorem exists_fiberCount {f : ℂ̂ → ℂ̂}
       refine ⟨x, ?_, rfl⟩
       change (r.numReduced - Polynomial.C y * r.denReduced).eval x = 0
       rw [Polynomial.eval_sub, Polynomial.eval_mul, Polynomial.eval_C, hdiv, sub_self]
-    exact ((Polynomial.finite_setOf_isRoot hq).image _).subset hsub
+    exact ((Polynomial.finite_setOfPred_isRoot hq).image _).subset hsub
   -- Local injectivity: near each finite non-critical point `f` is injective
   have hloc : ∀ x : ℂ, ((x : ℂ̂) ∈ S) → ∃ Wc : Set ℂ, IsOpen Wc ∧ x ∈ Wc ∧
       ∀ t₁ ∈ Wc, ∀ t₂ ∈ Wc, f ((t₁ : ℂ̂)) = f ((t₂ : ℂ̂)) → t₁ = t₂ := by
@@ -468,7 +468,7 @@ theorem exists_fiberCount {f : ℂ̂ → ℂ̂}
       have hle : ℱ ≤ 𝓟 (closure S) := by
         rw [hℱdef]
         exact le_trans inf_le_right
-          (Filter.principal_mono.mpr (Set.diff_subset.trans subset_closure))
+          (Filter.principal_mono.mpr (Set.sdiff_subset.trans subset_closure))
       obtain ⟨u, hucl, hclust⟩ := isClosed_closure.isCompact.exists_clusterPt hle
       have hfu : f u = ((a : ℂ̂)) := by
         have ht : Tendsto f ℱ (𝓝 ((a : ℂ̂))) := by
@@ -492,7 +492,7 @@ theorem exists_fiberCount {f : ℂ̂ → ℂ̂}
       have hstray : (S \ ⋃ x ∈ Fc, Onb x) ∈ ℱ := by
         rw [hℱdef]
         exact Filter.mem_inf_of_right (Filter.mem_principal_self _)
-      haveI : (𝓝 ((x : ℂ̂)) ⊓ ℱ).NeBot := hclust
+      have : (𝓝 ((x : ℂ̂)) ⊓ ℱ).NeBot := hclust
       obtain ⟨v, hvO, hvS⟩ := Filter.nonempty_of_mem
         (Filter.inter_mem (Filter.mem_inf_of_left (hOnr x hxFc))
           (Filter.mem_inf_of_right hstray))
@@ -696,7 +696,7 @@ theorem simplyConnectedSpace_of_unbounded_components {T : Set ℂ}
     rw [← himg] at hw
     obtain ⟨x, hxT, hfx⟩ := hw
     exact ⟨⟨x, hxT⟩, Subtype.ext hfx⟩
-  have hFcont : Continuous F := hdf.continuousOn.restrict.subtype_mk hmemB
+  have hFcont : Continuous F := hdf.continuousOn.domRestrict.subtype_mk hmemB
   have hFopen : IsOpenMap F := by
     intro V hV
     have hval : IsOpen (Subtype.val '' V) := hT.isOpenMap_subtype_val V hV
@@ -716,13 +716,13 @@ theorem simplyConnectedSpace_of_unbounded_components {T : Set ℂ}
     (Equiv.ofBijective F ⟨hFinj, hFsurj⟩).toHomeomorphOfContinuousOpen hFcont hFopen
   -- The ball is convex, hence contractible, hence simply connected;
   -- transport along the homotopy equivalence induced by the homeomorphism.
-  haveI : ContinuousSMul ℝ ℂ := by
+  have : ContinuousSMul ℝ ℂ := by
     refine ⟨?_⟩
     have h : (fun p : ℝ × ℂ => p.1 • p.2) = fun p : ℝ × ℂ => (p.1 : ℂ) * p.2 := by
       funext p; exact Complex.real_smul
     rw [h]
     exact (Complex.continuous_ofReal.comp continuous_fst).mul continuous_snd
-  haveI : ContractibleSpace (Metric.ball (0 : ℂ) 1) :=
+  have : ContractibleSpace (Metric.ball (0 : ℂ) 1) :=
     (convex_ball (0 : ℂ) 1).contractibleSpace (Metric.nonempty_ball.mpr one_pos)
   exact hhomeo.toHomotopyEquiv.simplyConnectedSpace
 
@@ -813,7 +813,7 @@ theorem fiberCount_eq_one_of_simplyConnected {f : ℂ̂ → ℂ̂}
   -- ## Stage 0: the sphere is locally path-connected.
   -- Finite points have bases of coe-images of balls; `∞` has the basis of
   -- complements of closed balls, each path-connected via radial rays to `∞`.
-  haveI hlpc : LocPathConnectedSpace ℂ̂ := by
+  have hlpc : LocallyPathConnectedSpace ℂ̂ := by
     constructor
     intro x
     rw [Filter.hasBasis_self]
@@ -973,9 +973,9 @@ theorem fiberCount_eq_one_of_simplyConnected {f : ℂ̂ → ℂ̂}
       rw [hr, hread x, if_pos h0]
       rfl
     have hZfin : {t : ℂ | r.denReduced.IsRoot t}.Finite :=
-      Polynomial.finite_setOf_isRoot hdenR
+      Polynomial.finite_setOfPred_isRoot hdenR
     have hclosed : IsClosed ({t : ℂ | r.denReduced.IsRoot t} \ {x}) :=
-      (hZfin.subset Set.diff_subset).isClosed
+      (hZfin.subset Set.sdiff_subset).isClosed
     have hxmem : x ∈ ({t : ℂ | r.denReduced.IsRoot t} \ {x})ᶜ := fun h => h.2 rfl
     have hev_ne : ∀ᶠ t in 𝓝[≠] x, r.denReduced.eval t ≠ 0 := by
       filter_upwards [nhdsWithin_le_nhds (hclosed.isOpen_compl.mem_nhds hxmem),
@@ -1039,7 +1039,7 @@ theorem fiberCount_eq_one_of_simplyConnected {f : ℂ̂ → ℂ̂}
       refine ⟨x, ?_, rfl⟩
       change (r.numReduced - Polynomial.C y * r.denReduced).eval x = 0
       rw [Polynomial.eval_sub, Polynomial.eval_mul, Polynomial.eval_C, hdiv, sub_self]
-    exact ((Polynomial.finite_setOf_isRoot hq).image _).subset hsub
+    exact ((Polynomial.finite_setOfPred_isRoot hq).image _).subset hsub
   -- local injectivity near each finite non-critical point
   have hloc : ∀ x : ℂ, ((x : ℂ̂) ∈ S) → ∃ Wc : Set ℂ, IsOpen Wc ∧ x ∈ Wc ∧
       ∀ t₁ ∈ Wc, ∀ t₂ ∈ Wc, f ((t₁ : ℂ̂)) = f ((t₂ : ℂ̂)) → t₁ = t₂ := by
@@ -1158,9 +1158,9 @@ theorem fiberCount_eq_one_of_simplyConnected {f : ℂ̂ → ℂ̂}
     rw [hpre]
     exact Set.Finite.preimage Subtype.coe_injective.injOn (hfib_fin y)
   -- local homeomorphism records for the packaged map
-  haveI hSne : Nonempty ↥S := hSfc.nonempty.to_subtype
+  have hSne : Nonempty ↥S := hSfc.nonempty.to_subtype
   have hFloc : ∀ e : ↥S, ∃ φ : OpenPartialHomeomorph ↥S ↥T,
-      e ∈ φ.source ∧ ⇑φ = F := by
+      e ∈ φ.source ∧ F = ⇑φ := by
     intro e
     have hene : (e : ℂ̂) ≠ ∞ := fun h => hinf (h ▸ e.2)
     obtain ⟨x, hx⟩ := OnePoint.ne_infty_iff_exists.mp hene
@@ -1196,12 +1196,12 @@ theorem fiberCount_eq_one_of_simplyConnected {f : ℂ̂ → ℂ̂}
     · rfl
   -- ## Stage 3: the packaged map is a covering map.
   have hcovOn : IsCoveringMapOn F Set.univ :=
-    hFclosed.isCoveringMapOn_of_openPartialHomeomorph
+    hFclosed.isCoveringMapOn_of_isLocalHomeomorphOn
       (fun w _ => hFfib w) (fun e _ => hFloc e)
   have hcov : IsCoveringMap F := isCoveringMap_iff_isCoveringMapOn_univ.mpr hcovOn
   -- ## Stage 4: lift the identity of the simply connected target through `F`.
-  haveI := hsc
-  haveI : LocPathConnectedSpace ↥T := hTfc.isOpen.locPathConnectedSpace
+  have := hsc
+  have : LocallyPathConnectedSpace ↥T := hTfc.isOpen.locallyPathConnectedSpace
   obtain ⟨w₀, hw₀T⟩ := hTfc.nonempty
   have hw₀' : w₀ ∈ f '' S := by
     rw [himg]
@@ -1214,7 +1214,7 @@ theorem fiberCount_eq_one_of_simplyConnected {f : ℂ̂ → ℂ̂}
   obtain ⟨σ, ⟨hσ0, hσlift⟩, -⟩ := hcov.existsUnique_continuousMap_lifts
     (ContinuousMap.id ↥T) ⟨w₀, hw₀T⟩ ⟨u₀, hu₀S⟩ hbase
   -- ## Stage 5: the section retracts, so the packaged map is injective.
-  haveI : PreconnectedSpace ↥S :=
+  have : PreconnectedSpace ↥S :=
     Subtype.preconnectedSpace hSfc.isConnected.isPreconnected
   have hσF : ⇑σ ∘ F = id := by
     apply hcov.eq_of_comp_eq (σ.continuous.comp hFcont) continuous_id ?_

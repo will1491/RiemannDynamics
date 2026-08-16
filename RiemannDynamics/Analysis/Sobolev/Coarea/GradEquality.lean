@@ -49,7 +49,7 @@ theorem curve_antilipschitz (γ : ℝ → ℂ) (A : ℝ →L[ℝ] ℂ) (s : Set 
     linarith
   apply AntilipschitzWith.of_le_mul_dist
   rintro ⟨x, hx⟩ ⟨y, hy⟩
-  simp only [Set.restrict_apply, Subtype.dist_eq, Real.dist_eq, Complex.dist_eq]
+  simp only [Set.domRestrict, Set.domRestrict, Subtype.dist_eq, Real.dist_eq, Complex.dist_eq]
   have hApprox : ‖γ x - γ y - A (x - y)‖ ≤ (c : ℝ) * |x - y| := by
     have := hALO x hx y hy; rwa [Real.norm_eq_abs] at this
   have hAxy : ‖A (x - y)‖ = |x - y| * ‖A 1‖ := hnormAt (x - y)
@@ -75,7 +75,8 @@ theorem hausdorffMeasure_one_le_of_restrict_antilipschitz (γ : ℝ → ℂ) (K 
     μH[(1 : ℝ)] P ≤ (K : ℝ≥0∞) * μH[(1 : ℝ)] (γ '' P) := by
   have h := hanti.le_hausdorffMeasure_image zero_le_one (univ : Set P)
   rw [ENNReal.rpow_one] at h
-  have himg : (P.restrict γ) '' univ = γ '' P := by rw [image_univ, Set.range_restrict]
+  have himg : (P.restrict γ) '' univ = γ '' P := by
+    rw [image_univ]; exact Set.range_domRestrict γ P
   have huniv : μH[(1 : ℝ)] (univ : Set P) = μH[(1 : ℝ)] P := by
     have h2 := (isometry_subtype_coe (s := P)).hausdorffMeasure_image
       (Or.inl zero_le_one) (univ : Set P)
@@ -159,7 +160,7 @@ theorem approximatesLinearOn_norm_fderiv_sub_le
       _ = ‖γ y - γ x - A (y - x) - (γ y - γ x - (f' x) (y - x))‖ := by
           congr 1
           simp only [ya, add_sub_cancel_left, sub_sub_sub_cancel_left,
-            ContinuousLinearMap.coe_sub', Pi.sub_apply, map_smul]
+            FunLike.coe_sub, Pi.sub_apply, map_smul]
           module
       _ ≤ ‖γ y - γ x - A (y - x)‖ + ‖γ y - γ x - (f' x) (y - x)‖ := norm_sub_le _ _
       _ ≤ δ * ‖y - x‖ + ε * ‖y - x‖ := (add_le_add (hf _ ys _ xs) (hρ ⟨rρ hy, ys⟩))
@@ -169,7 +170,7 @@ theorem approximatesLinearOn_norm_fderiv_sub_le
       _ ≤ r * (δ + ε) * (‖z‖ + ε) := by gcongr
   calc ‖(f' x - A) z‖ = ‖(f' x - A) a + (f' x - A) (z - a)‖ := by
         congr 1
-        simp only [ContinuousLinearMap.coe_sub', map_sub, Pi.sub_apply]
+        simp only [FunLike.coe_sub, map_sub, Pi.sub_apply]
         abel
     _ ≤ ‖(f' x - A) a‖ + ‖(f' x - A) (z - a)‖ := norm_add_le _ _
     _ ≤ (δ + ε) * (‖z‖ + ε) + ‖f' x - A‖ * ‖z - a‖ := by
@@ -205,7 +206,7 @@ theorem lintegral_nnnorm_deriv_le_hausdorffMeasure_one_image
   have hfd : ∀ x ∈ I, HasFDerivWithinAt γ (f' x) I x := fun x hx => hγ' x hx
   have hf'1 : ∀ x, f' x 1 = γ' x := by
     intro x
-    simp only [hf'def, ContinuousLinearMap.smulRight_apply, ContinuousLinearMap.one_apply, one_smul]
+    simp only [hf'def, ContinuousLinearMap.smulRight_apply, one_apply_eq_self, one_smul]
   have hHvol : (μH[(1 : ℝ)] : Measure ℝ) = volume := hausdorffMeasure_real
   have hcontI : ContinuousOn γ I := fun x hx => (hfd x hx).continuousWithinAt
   -- AUX1: a finite-error lower estimate on a measurable subset `s ⊆ I` on which `γ` is injective.
@@ -244,7 +245,7 @@ theorem lintegral_nnnorm_deriv_le_hausdorffMeasure_one_image
       intro x hx
       have hstep : (‖γ' x‖₊ : ℝ≥0) ≤ ‖A n 1‖₊ + ε := by
         have h1 : γ' x = A n 1 + (f' x - A n) 1 := by
-          rw [ContinuousLinearMap.sub_apply, hf'1]; ring
+          rw [sub_apply, hf'1]; ring
         calc (‖γ' x‖₊ : ℝ≥0) = ‖A n 1 + (f' x - A n) 1‖₊ := by rw [h1]
           _ ≤ ‖A n 1‖₊ + ‖(f' x - A n) 1‖₊ := nnnorm_add_le _ _
           _ ≤ ‖A n 1‖₊ + ‖f' x - A n‖₊ * ‖(1 : ℝ)‖₊ := by
@@ -376,7 +377,7 @@ theorem coarea_piece_ge {u : ℂ → ℝ} {Ψ : ℂ → ℂ} {Ψ' : ℂ → (ℂ
   -- (2)  `det (Ψ' z) ≠ 0` a.e. on `S` (small perturbation of `A`).
   -- =================================================================
   have hAne : ‖(A.symm : ℂ →L[ℝ] ℂ)‖₊ ≠ 0 := by
-    intro h0; rw [h0, inv_zero] at hδ; exact absurd hδ (not_lt.mpr (zero_le _))
+    intro h0; rw [h0, inv_zero] at hδ; exact absurd hδ (not_lt.mpr (zero_le))
   have hApos : (0 : ℝ≥0) < ‖(A.symm : ℂ →L[ℝ] ℂ)‖₊ := pos_of_ne_zero hAne
   -- the perturbation lemma: ‖T₀ - A‖ ≤ δ ⟹ T₀.det ≠ 0
   have hdet_of_close : ∀ T₀ : ℂ →L[ℝ] ℂ, ‖T₀ - (A : ℂ →L[ℝ] ℂ)‖₊ ≤ δ → T₀.det ≠ 0 := by
@@ -396,7 +397,7 @@ theorem coarea_piece_ge {u : ℂ → ℝ} {Ψ : ℂ → ℂ} {Ψ' : ℂ → (ℂ
               (T₀ - (A : ℂ →L[ℝ] ℂ)).le_opNNNorm v
           _ ≤ δ * ‖v‖₊ := by gcongr
       have hTeq : T₀ v = (A : ℂ →L[ℝ] ℂ) v + (T₀ - (A : ℂ →L[ℝ] ℂ)) v := by
-        rw [ContinuousLinearMap.sub_apply]; ring
+        rw [sub_apply]; ring
       have hTv0 : (A : ℂ →L[ℝ] ℂ) v + (T₀ - (A : ℂ →L[ℝ] ℂ)) v = 0 := by rw [← hTeq]; exact hv
       have hAvnorm : ‖(A : ℂ →L[ℝ] ℂ) v‖₊ = ‖(T₀ - (A : ℂ →L[ℝ] ℂ)) v‖₊ := by
         rw [eq_neg_of_add_eq_zero_left hTv0, nnnorm_neg]
@@ -498,9 +499,9 @@ theorem coarea_piece_ge {u : ℂ → ℝ} {Ψ : ℂ → ℂ} {Ψ' : ℂ → (ℂ
       have e2 : (T₀.det * w.im) ^ 2 = a ^ 2 := by rw [hdetim]
       nlinarith [e1, e2]
     have hwnn : ((‖(Te.symm : ℂ →L[ℝ] ℂ) Complex.I‖₊ : ℝ≥0∞)) = ENNReal.ofReal ‖w‖ := by
-      rw [← hw, ← enorm_eq_nnnorm, ← ofReal_norm_eq_enorm]
+      rw [← hw, ← enorm_eq_nnnorm, ← ofReal_norm]
     have hLnn : ((‖Complex.reCLM.comp T₀‖₊ : ℝ≥0∞)) = ENNReal.ofReal ‖Complex.reCLM.comp T₀‖ := by
-      rw [← enorm_eq_nnnorm, ← ofReal_norm_eq_enorm]
+      rw [← enorm_eq_nnnorm, ← ofReal_norm]
     change ENNReal.ofReal |T₀.det| * ((‖(Te.symm : ℂ →L[ℝ] ℂ) Complex.I‖₊ : ℝ≥0∞))
         = ((‖Complex.reCLM.comp T₀‖₊ : ℝ≥0∞))
     rw [hwnn, hLnn, ← ENNReal.ofReal_mul (abs_nonneg _), hprod, hLval]
@@ -548,7 +549,7 @@ theorem coarea_piece_ge {u : ℂ → ℝ} {Ψ : ℂ → ℂ} {Ψ' : ℂ → (ℂ
       (volume.restrict S) := by
     have hcompcont : Continuous (fun M : ℂ →L[ℝ] ℂ => Complex.reCLM.comp M) := by
       have := (ContinuousLinearMap.compL ℝ ℂ ℂ ℝ Complex.reCLM).continuous
-      simpa only [ContinuousLinearMap.compL_apply] using this
+      simpa only [ContinuousLinearMap.compL_apply] using! this
     have hc1 : AEMeasurable (fun z => (‖Complex.reCLM.comp (Ψ' z)‖₊ : ℝ≥0∞))
         (volume.restrict S) := by
       apply measurable_coe_nnreal_ennreal.comp_aemeasurable
@@ -1085,12 +1086,15 @@ theorem coarea_regular_ge {u : ℂ → ℝ} {K : ℝ≥0} (hu : LipschitzWith K 
     have hcomp1 : HasFDerivAt (fun w : ℂ => (u w : ℝ) • (1 : ℂ))
         (LP1.comp (fderiv ℝ u z)) z := by
       have := LP1.hasFDerivAt.comp z hPG; convert this using 1
+      all_goals exact rfl
     set LQI : ℝ →L[ℝ] ℂ := (1 : ℝ →L[ℝ] ℝ).smulRight Complex.I with hLQI
     have hcomp2 : HasFDerivAt (fun w : ℂ => (w.im : ℝ) • Complex.I)
         (LQI.comp Complex.imCLM) z := by
       have := LQI.hasFDerivAt.comp z Complex.imCLM.hasFDerivAt; convert this using 1
+      all_goals exact rfl
     have hsum := hcomp1.add hcomp2
     rw [hΨim, hΨim']; convert hsum using 1
+    all_goals exact rfl
   have hΨim_re : ∀ z, (Ψim z).re = u z := by
     intro z; rw [hΨim]; simp [Complex.real_smul]
   have hΨim_det : ∀ z, (Ψim' z).det = (fderiv ℝ u z) (1:ℂ) := by
@@ -1105,12 +1109,12 @@ theorem coarea_regular_ge {u : ℂ → ℝ} {K : ℝ≥0} (hu : LipschitzWith K 
     simp only [LinearMap.toMatrix_apply, Complex.coe_basisOneI, Complex.coe_basisOneI_repr,
       Matrix.cons_val_zero, Matrix.cons_val_one]
     have h1 : D 1 = ((fderiv ℝ u z) (1:ℂ) : ℂ) := by
-      simp only [hD, ContinuousLinearMap.add_apply,
+      simp only [hD, add_apply,
         ContinuousLinearMap.smulRight_apply, Complex.imCLM_apply, Complex.one_im, zero_smul,
         add_zero]
       change ((fderiv ℝ u z) (1:ℂ) : ℝ) • (1 : ℂ) = (((fderiv ℝ u z) (1:ℂ) : ℝ) : ℂ); simp
     have h2 : D Complex.I = ((fderiv ℝ u z) Complex.I : ℂ) + Complex.I := by
-      simp only [hD, ContinuousLinearMap.add_apply,
+      simp only [hD, add_apply,
         ContinuousLinearMap.smulRight_apply, Complex.imCLM_apply, Complex.I_im, one_smul]
       change ((fderiv ℝ u z) Complex.I : ℝ) • (1 : ℂ) + Complex.I
         = (((fderiv ℝ u z) Complex.I : ℝ) : ℂ) + Complex.I; simp
@@ -1128,12 +1132,15 @@ theorem coarea_regular_ge {u : ℂ → ℝ} {K : ℝ≥0} (hu : LipschitzWith K 
     have hcomp1 : HasFDerivAt (fun w : ℂ => (u w : ℝ) • (1 : ℂ))
         (LP1.comp (fderiv ℝ u z)) z := by
       have := LP1.hasFDerivAt.comp z hPG; convert this using 1
+      all_goals exact rfl
     set LQI : ℝ →L[ℝ] ℂ := (1 : ℝ →L[ℝ] ℝ).smulRight Complex.I with hLQI
     have hcomp2 : HasFDerivAt (fun w : ℂ => (w.re : ℝ) • Complex.I)
         (LQI.comp Complex.reCLM) z := by
       have := LQI.hasFDerivAt.comp z Complex.reCLM.hasFDerivAt; convert this using 1
+      all_goals exact rfl
     have hsum := hcomp1.add hcomp2
     rw [hΨre_def, hΨre']; convert hsum using 1
+    all_goals exact rfl
   have hΨre_re : ∀ z, (Ψre z).re = u z := by
     intro z; rw [hΨre_def]; simp [Complex.real_smul]
   have hΨre_det : ∀ z, (Ψre' z).det = - (fderiv ℝ u z) Complex.I := by
@@ -1148,12 +1155,12 @@ theorem coarea_regular_ge {u : ℂ → ℝ} {K : ℝ≥0} (hu : LipschitzWith K 
     simp only [LinearMap.toMatrix_apply, Complex.coe_basisOneI, Complex.coe_basisOneI_repr,
       Matrix.cons_val_zero, Matrix.cons_val_one]
     have h1 : D 1 = ((fderiv ℝ u z) (1:ℂ) : ℂ) + Complex.I := by
-      simp only [hD, ContinuousLinearMap.add_apply,
+      simp only [hD, add_apply,
         ContinuousLinearMap.smulRight_apply, Complex.reCLM_apply, Complex.one_re, one_smul]
       change ((fderiv ℝ u z) (1:ℂ) : ℝ) • (1 : ℂ) + Complex.I
         = (((fderiv ℝ u z) (1:ℂ) : ℝ) : ℂ) + Complex.I; simp
     have h2 : D Complex.I = ((fderiv ℝ u z) Complex.I : ℂ) := by
-      simp only [hD, ContinuousLinearMap.add_apply,
+      simp only [hD, add_apply,
         ContinuousLinearMap.smulRight_apply, Complex.reCLM_apply, Complex.I_re, zero_smul, add_zero]
       change ((fderiv ℝ u z) Complex.I : ℝ) • (1 : ℂ) = (((fderiv ℝ u z) Complex.I : ℝ) : ℂ); simp
     change (D 1).re * (D Complex.I).im - (D Complex.I).re * (D 1).im = - (fderiv ℝ u z) Complex.I
@@ -1217,7 +1224,7 @@ theorem coarea_regular_ge {u : ℂ → ℝ} {K : ℝ≥0} (hu : LipschitzWith K 
     have hfg : ∀ z ∈ (A ∩ {z | fderiv ℝ u z ≠ 0} ∩ Diffᶜ),
         (‖fderiv ℝ u z‖₊ : ℝ≥0∞) = (fun _ => (0 : ℝ≥0∞)) z := by
       rintro z ⟨_, hzD⟩
-      simp only [hDiff_def, Set.mem_compl_iff, Set.mem_setOf_eq] at hzD
+      simp only [hDiff_def, Set.mem_compl_iff, Set.mem_ofPred_eq] at hzD
       rw [fderiv_zero_of_not_differentiableAt hzD]; simp
     rw [setLIntegral_congr_fun ((hA.inter hReg_meas).inter hDiff_meas.compl) hfg, lintegral_zero]
   have hint_eq : ∫⁻ z in (A ∩ {z | fderiv ℝ u z ≠ 0}), (‖fderiv ℝ u z‖₊ : ℝ≥0∞)
@@ -1277,7 +1284,7 @@ theorem coarea_set_ge {u : ℂ → ℝ} {K : ℝ≥0} (hu : LipschitzWith K u)
       have hfg : ∀ z ∈ (A ∩ {z | fderiv ℝ u z = 0}), (‖fderiv ℝ u z‖₊ : ℝ≥0∞)
           = (fun _ => (0 : ℝ≥0∞)) z := by
         rintro z ⟨_, hz2⟩
-        simp only [Set.mem_setOf_eq] at hz2; rw [hz2]; simp
+        simp only [Set.mem_ofPred_eq] at hz2; rw [hz2]; simp
       rw [setLIntegral_congr_fun (hA.inter hCrit_meas) hfg, lintegral_zero]
     rw [hcrit0, add_zero]
   rw [hint_reg]
@@ -1590,7 +1597,7 @@ theorem coarea_level_cauchySchwarz {u : ℂ → ℝ} (hu : Measurable (fderiv �
         rw [Pi.mul_apply, hf_def, hg_def, ← ENNReal.mul_rpow_of_nonneg _ _ (by norm_num),
           ENNReal.mul_inv_cancel hane (haux z), ENNReal.one_rpow]
       rw [Set.indicator_of_mem hz, this]
-    · rw [Set.indicator_of_notMem hz]; exact zero_le _
+    · rw [Set.indicator_of_notMem hz]; exact zero_le
   -- Length of the regular part is an indicator integral, dominated by `∫⁻ (f · g)`.
   have hR_meas : MeasurableSet R := by
     have : R = fderiv ℝ u ⁻¹' {(0 : ℂ →L[ℝ] ℝ)}ᶜ := by ext z; simp [hR_def]

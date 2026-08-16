@@ -33,7 +33,7 @@ theorem vertexChart_isOpen_image (g : ℕ) [NeZero g] :
   classical
   intro Wo hWsub hWopen
   have hg1 : 1 ≤ g := Nat.one_le_iff_ne_zero.mpr (NeZero.ne g)
-  haveI : NeZero (4 * g) := ⟨by omega⟩
+  have : NeZero (4 * g) := ⟨by omega⟩
   have hgR : (0 : ℝ) < g := by exact_mod_cast hg1
   have hg1R : (1 : ℝ) ≤ g := by exact_mod_cast hg1
   have hgC : (g : ℂ) ≠ 0 := Nat.cast_ne_zero.mpr (NeZero.ne g)
@@ -882,7 +882,7 @@ theorem vertexChart_isOpen_image (g : ℕ) [NeZero g] :
     have hUpopen : IsOpen Up := by
       have h1 : Up = {v : ℂ | 0 < v.re} ∪ {v : ℂ | 0 < v.im} := by
         rw [hUp]
-        exact Set.setOf_or
+        exact Set.ofPred_or
       rw [h1]
       exact (isOpen_lt continuous_const Complex.continuous_re).union
         (isOpen_lt continuous_const Complex.continuous_im)
@@ -1083,7 +1083,6 @@ theorem vertexChart_isOpen_image (g : ℕ) [NeZero g] :
       rw [Complex.exp_eq_exp_iff_exists_int]
       have hj₂Z : ((j₂ : ℤ) : ZMod (4 * g)) = ((n + 1 : ℤ) : ZMod (4 * g)) := by
         push_cast
-        push_cast at hj₂c
         rw [hj₂c]
       rw [ZMod.intCast_eq_intCast_iff] at hj₂Z
       obtain ⟨q, hq⟩ := Int.ModEq.dvd hj₂Z
@@ -1641,7 +1640,7 @@ theorem chart_sources_cover (g : ℕ) [NeZero g] (p : GenusSurface g) :
   have hg1 : 1 ≤ g := Nat.one_le_iff_ne_zero.mpr (NeZero.ne g)
   have hgR : (0 : ℝ) < g := by exact_mod_cast hg1
   have hπ : (0 : ℝ) < Real.pi := Real.pi_pos
-  haveI : NeZero (4 * g) := ⟨by omega⟩
+  have : NeZero (4 * g) := ⟨by omega⟩
   have harc : ∀ (k : ℤ) (t : ℝ), ‖arcPoint g k t‖ = 1 := by
     intro k t
     have hrw : arcPoint g k t
@@ -1774,7 +1773,7 @@ theorem chart_sources_cover (g : ℕ) [NeZero g] (p : GenusSurface g) :
             push_cast
             ring⟩
         · unfold edgeChartFun
-          rw [if_pos (harc m' t).le]
+          refine (if_pos (harc m' t).le).trans ?_
           exact congrArg (Quotient.mk (genusSetoid g)) (Subtype.ext (by
             rw [projDisc_eq (harc m' t).le]
             exact harcz'))
@@ -1790,7 +1789,7 @@ theorem chart_sources_cover (g : ℕ) [NeZero g] (p : GenusSurface g) :
               push_cast
               ring⟩
         · unfold edgeChartFun
-          rw [if_pos (harc (m' - 2) (1 - t)).le]
+          refine (if_pos (harc (m' - 2) (1 - t)).le).trans ?_
           have hpair : ((projDisc (arcPoint g (m' - 2) (1 - t))).1, z.1)
               ∈ pairGraph g (m' - 2) := by
             refine ⟨⟨1 - t, Set.mem_Icc.mpr ⟨by linarith, by linarith⟩⟩,
@@ -1858,7 +1857,7 @@ theorem pairingRoot_vertexSlot (g : ℕ) [NeZero g] (m : ℕ)
       polyVertex g ((vertexSlot g ((m : ZMod (4 * g)) + 1)).val : ℤ) =
       polyVertex g ((vertexSlot g (m : ZMod (4 * g))).val : ℤ) := by
   have hg1 : 1 ≤ g := Nat.one_le_iff_ne_zero.mpr (NeZero.ne g)
-  haveI : NeZero (4 * g) := ⟨by omega⟩
+  have : NeZero (4 * g) := ⟨by omega⟩
   set c := vertexSlot g (m : ZMod (4 * g)) with hc
   set v := c.val with hv
   have hvlt : v < 4 * g := ZMod.val_lt c

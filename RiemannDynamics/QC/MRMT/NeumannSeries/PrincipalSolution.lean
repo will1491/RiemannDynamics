@@ -115,13 +115,13 @@ theorem hasWeakGradient_cauchyTransform {h : ℂ → ℂ} {p : ℝ≥0∞} {R : 
     refine ⟨?_, hpr0, hqr0⟩
     rw [hqr_def, inv_inv, inv_one]
     ring
-  haveI hpq2 : ENNReal.HolderConjugate 2 2 := by
+  have hpq2 : ENNReal.HolderConjugate 2 2 := by
     rw [ENNReal.holderConjugate_iff]
     simp [ENNReal.inv_two_add_inv_two]
   have hpq22 : (2:ℝ).HolderConjugate 2 := ⟨by norm_num, two_pos, two_pos⟩
   -- ===== PART 1: radial kernel machinery (CT2 pattern) =====
   have hpt : ∀ w : ℂ, ‖w⁻¹‖ₑ ^ qr = ENNReal.ofReal (‖w‖ ^ (-qr)) := fun w => by
-    rw [← ofReal_norm_eq_enorm, ENNReal.ofReal_rpow_of_nonneg (norm_nonneg _) hqr0.le,
+    rw [← ofReal_norm, ENNReal.ofReal_rpow_of_nonneg (norm_nonneg _) hqr0.le,
       norm_inv, Real.inv_rpow (norm_nonneg w), ← Real.rpow_neg (norm_nonneg w)]
   have hnegpow_int : ∀ r : ℝ, 0 < r →
       IntegrableOn (fun w : ℂ => ‖w‖ ^ (-qr)) (Metric.ball (0:ℂ) r) volume := by
@@ -185,12 +185,12 @@ theorem hasWeakGradient_cauchyTransform {h : ℂ → ℂ} {p : ℝ≥0∞} {R : 
     have hinner : ∫ y in Set.Ioi (0:ℝ), y ^ (2 - 1) • f y = r ^ (2 - qr) / (2 - qr) := by
       have hsub' : ∫ y in Set.Ioi (0:ℝ), y ^ (2 - 1) • f y
           = ∫ y in Set.Ioo (0:ℝ) r, y ^ (2 - 1) • f y := by
-        apply setIntegral_eq_of_subset_of_forall_diff_eq_zero measurableSet_Ioi
+        apply setIntegral_eq_of_subset_of_forall_sdiff_eq_zero measurableSet_Ioi
         · intro x hx
           simp only [Set.mem_Ioo, Set.mem_Ioi] at *
           exact hx.1
         · intro x hx
-          simp only [Set.mem_Ioi, Set.mem_Ioo, Set.mem_diff, not_and, not_lt] at hx
+          simp only [Set.mem_Ioi, Set.mem_Ioo, Set.mem_sdiff, not_and, not_lt] at hx
           obtain ⟨hx0, hxR⟩ := hx
           have hnlt : ¬ (x < r) := not_lt.mpr (hxR hx0)
           rw [hf]; simp only [if_neg hnlt, smul_zero]
@@ -270,7 +270,7 @@ theorem hasWeakGradient_cauchyTransform {h : ℂ → ℂ} {p : ℝ≥0∞} {R : 
   have hBfin : volume B < ⊤ := by
     rw [hB_def]
     exact (isCompact_closedBall _ _).measure_lt_top
-  haveI : IsFiniteMeasure (volume.restrict B) :=
+  have : IsFiniteMeasure (volume.restrict B) :=
     ⟨by rw [Measure.restrict_apply_univ]; exact hBfin⟩
   -- L² membership of `h`
   have hL2h : MemLp h 2 volume := by
@@ -330,7 +330,7 @@ theorem hasWeakGradient_cauchyTransform {h : ℂ → ℂ} {p : ℝ≥0∞} {R : 
       ENNReal.mul_ne_top hu.2.ne hψ.2.ne
     calc ‖∫ z, u z * ψ z‖
         = (‖∫ z, u z * ψ z‖ₑ).toReal := by
-          rw [← ofReal_norm_eq_enorm, ENNReal.toReal_ofReal (norm_nonneg _)]
+          rw [← ofReal_norm, ENNReal.toReal_ofReal (norm_nonneg _)]
       _ ≤ (eLpNorm u 2 volume * eLpNorm ψ 2 volume).toReal := ENNReal.toReal_mono hfin henorm
       _ = _ := ENNReal.toReal_mul
   have hintpair : ∀ (u ψ : ℂ → ℂ), MemLp u 2 volume → MemLp ψ 2 volume →
@@ -456,7 +456,7 @@ theorem hasWeakGradient_cauchyTransform {h : ℂ → ℂ} {p : ℝ≥0∞} {R : 
               rw [← norm_ne_zero_iff, hnorm]; exact ne_of_gt hq1
             rw [enorm_inv hsymm_ne]
             have henorm : ‖Complex.polarCoord.symm q‖ₑ = ENNReal.ofReal q.1 := by
-              rw [← ofReal_norm_eq_enorm, hnorm]
+              rw [← ofReal_norm, hnorm]
             rw [henorm, smul_eq_mul,
               ENNReal.mul_inv_cancel
                 (by simp only [ne_eq, ENNReal.ofReal_eq_zero, not_le]; exact hq1)
@@ -577,7 +577,7 @@ theorem hasWeakGradient_cauchyTransform {h : ℂ → ℂ} {p : ℝ≥0∞} {R : 
     rw [hconv] at hmain
     have hXle : ‖∫ ζ, w ζ / (ζ - z)‖
         ≤ ((2*Real.pi/(2-qr)) * (ρ+T+1)^(2-qr))^(1/qr) * (eLpNorm w p volume).toReal := by
-      rw [← ofReal_norm_eq_enorm] at hmain
+      rw [← ofReal_norm] at hmain
       exact (ENNReal.ofReal_le_ofReal_iff
         (mul_nonneg (Real.rpow_nonneg hCnn _) ENNReal.toReal_nonneg)).mp hmain
     exact mul_le_mul_of_nonneg_left hXle (by positivity)
@@ -709,7 +709,7 @@ theorem hasWeakGradient_cauchyTransform {h : ℂ → ℂ} {p : ℝ≥0∞} {R : 
       _ = eLpNorm
             (fun z => (beurling (hseq n) z - beurling h z) - (hseq n z - h z)) 2 volume := by
           rw [show ‖Complex.I‖ₑ = 1 by
-            rw [← ofReal_norm_eq_enorm, Complex.norm_I, ENNReal.ofReal_one], one_mul]
+            rw [← ofReal_norm, Complex.norm_I, ENNReal.ofReal_one], one_mul]
       _ ≤ eLpNorm (fun z => beurling (hseq n) z - beurling h z) 2 volume
             + eLpNorm (fun z => hseq n z - h z) 2 volume :=
           eLpNorm_sub_le
@@ -768,7 +768,7 @@ theorem exists_lp_fixedPoint_beltrami {μ g : ℂ → ℂ} {p : ℝ≥0∞} {C :
   classical
   -- Basic facts about `p` and the CZ constant.
   have hp1 : (1 : ℝ≥0∞) ≤ p := le_of_lt (lt_trans (by norm_num : (1 : ℝ≥0∞) < 2) hp)
-  haveI : Fact (1 ≤ p) := ⟨hp1⟩
+  have : Fact (1 ≤ p) := ⟨hp1⟩
   obtain ⟨hC0, hCbound⟩ := hCb
   set k : ℝ := (eLpNormEssSup μ volume).toReal with hk_def
   have hk0 : 0 ≤ k := ENNReal.toReal_nonneg
@@ -957,7 +957,7 @@ theorem exists_isPrincipalSolution (b : BeltramiCoeff) {R : ℝ}
     set m : ℝ := max R 0 with hm_def
     set B : Set ℂ := Metric.closedBall (0:ℂ) m with hB_def
     have hBmeas : MeasurableSet B := by rw [hB_def]; exact measurableSet_closedBall
-    haveI : IsFiniteMeasure (volume.restrict B) :=
+    have : IsFiniteMeasure (volume.restrict B) :=
       ⟨by
         rw [Measure.restrict_apply_univ]
         exact (isCompact_closedBall _ _).measure_lt_top⟩
@@ -1027,12 +1027,12 @@ theorem IsPrincipalSolution.hasWeakGradient {b : BeltramiCoeff} {f : ℂ → ℂ
     have hidI := HasWeakDirDeriv.of_contDiffOn (v := Complex.I) isOpen_univ hid
     have hfder1 : (fun z : ℂ => (fderiv ℝ (fun z : ℂ => z) z) 1) = fun _ : ℂ => (1:ℂ) := by
       funext z
-      rw [fderiv_id']
+      rw [fderiv_fun_id]
       rfl
     have hfderI : (fun z : ℂ => (fderiv ℝ (fun z : ℂ => z) z) Complex.I)
         = fun _ : ℂ => Complex.I := by
       funext z
-      rw [fderiv_id']
+      rw [fderiv_fun_id]
       rfl
     rw [hfder1] at hid1
     rw [hfderI] at hidI
@@ -1063,7 +1063,7 @@ theorem IsPrincipalSolution.hasWeakGradient {b : BeltramiCoeff} {f : ℂ → ℂ
       exact hadd
   · -- `gx` is locally `L²`
     intro K _ hKc
-    haveI : IsFiniteMeasure (volume.restrict K) :=
+    have : IsFiniteMeasure (volume.restrict K) :=
       ⟨by rw [Measure.restrict_apply_univ]; exact hKc.measure_lt_top⟩
     have h1 : MemLp (fun _ : ℂ => (1:ℂ)) 2 (volume.restrict K) := memLp_const _
     have h2 : MemLp (fun z => beurling h z + h z) 2 (volume.restrict K) :=
@@ -1071,7 +1071,7 @@ theorem IsPrincipalSolution.hasWeakGradient {b : BeltramiCoeff} {f : ℂ → ℂ
     exact h1.add h2
   · -- `gy` is locally `L²`
     intro K _ hKc
-    haveI : IsFiniteMeasure (volume.restrict K) :=
+    have : IsFiniteMeasure (volume.restrict K) :=
       ⟨by rw [Measure.restrict_apply_univ]; exact hKc.measure_lt_top⟩
     have h1 : MemLp (fun _ : ℂ => (1:ℂ)) 2 (volume.restrict K) := memLp_const _
     have h2 : MemLp (fun z => beurling h z - h z) 2 (volume.restrict K) :=
@@ -1087,7 +1087,7 @@ theorem IsPrincipalSolution.memW12loc {b : BeltramiCoeff} {f : ℂ → ℂ}
   obtain ⟨p, h, hp, hp', hmem, heq, hgrad, hgx, hgy⟩ := hf.hasWeakGradient
   refine ⟨?_, _, _, hgrad, hgx, hgy⟩
   intro K _ hKc
-  haveI : IsFiniteMeasure (volume.restrict K) :=
+  have : IsFiniteMeasure (volume.restrict K) :=
     ⟨by rw [Measure.restrict_apply_univ]; exact hKc.measure_lt_top⟩
   obtain ⟨C, hC⟩ := hKc.exists_bound_of_continuousOn hcont.continuousOn
   refine MemLp.of_bound hcont.aestronglyMeasurable.restrict C ?_
@@ -1132,7 +1132,7 @@ theorem isPrincipalSolution_unique {b : BeltramiCoeff} {f₁ f₂ : ℂ → ℂ}
     set m : ℝ := max R 0 with hm_def
     set B : Set ℂ := Metric.closedBall (0:ℂ) m with hB_def
     have hBmeas : MeasurableSet B := by rw [hB_def]; exact measurableSet_closedBall
-    haveI : IsFiniteMeasure (volume.restrict B) :=
+    have : IsFiniteMeasure (volume.restrict B) :=
       ⟨by
         rw [Measure.restrict_apply_univ]
         exact (isCompact_closedBall _ _).measure_lt_top⟩

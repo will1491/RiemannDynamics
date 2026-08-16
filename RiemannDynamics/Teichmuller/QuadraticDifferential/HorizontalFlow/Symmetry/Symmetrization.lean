@@ -41,8 +41,8 @@ theorem label_decomp {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
           × (↥Γ ⧸ MulAction.stabilizer ↥Γ UpperHalfPlane.I),
           ∫⁻ w in symRet Γ B t i, G w * ‖q w‖ₑ := by
   classical
-  haveI : Countable ↥Γ := IsFuchsianGroup.countable hΓ
-  haveI : Countable (↥Γ ⧸ MulAction.stabilizer ↥Γ UpperHalfPlane.I) :=
+  have : Countable ↥Γ := IsFuchsianGroup.countable hΓ
+  have : Countable (↥Γ ⧸ MulAction.stabilizer ↥Γ UpperHalfPlane.I) :=
     QuotientGroup.mk_surjective.countable
   obtain ⟨hBadm, hBadnull⟩ := symBad_facts hΓ hdense
   have hωm : MeasurableSet (symOmega Γ) :=
@@ -373,7 +373,7 @@ theorem main_disamb {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
         (fun u => moebiusMap ↑(Quotient.out cq) (τ' u)) (Set.Icc 0 t) :=
       fun u hu => congrArg (moebiusMap ↑(Quotient.out cq)) (hEqτ hu)
     have hslope2 := slope_congr hEqc (Set.left_mem_Icc.mpr ht.le) hund
-    haveI := nebot_left ht
+    have := nebot_left ht
     have hcond := slope_eq hslope2 hund'
     cases b <;> cases b'
     · exact hbne rfl
@@ -619,7 +619,7 @@ theorem sym_total {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
       (G (A.flow t z) + G (A.flow (-t) z)) * ‖q z‖ₑ
       = (∫⁻ z in symOmega Γ, G (A.flow t z) * ‖q z‖ₑ)
         + ∫⁻ z in symOmega Γ, G (A.flow (-t) z) * ‖q z‖ₑ := by
-    rw [← lintegral_add_left (hGm1.mul q.measurable.enorm)]
+    rw [← lintegral_add_left (hGm1.fun_mul q.measurable.enorm)]
     exact lintegral_congr fun z => add_mul _ _ _
   have h1 : (∑' i : symIdx Γ,
         ∫⁻ w in symRet Γ (symLab A i.1) t i.2, G w * ‖q w‖ₑ)
@@ -657,8 +657,8 @@ theorem sym_upper {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
     ∫⁻ z in symOmega Γ, (G (A.flow t z) + G (A.flow (-t) z)) * ‖q z‖ₑ
       ≤ 2 * ∫⁻ z in symOmega Γ, G z * ‖q z‖ₑ := by
   classical
-  haveI : Countable ↥Γ := IsFuchsianGroup.countable hΓ
-  haveI : Countable (↥Γ ⧸ MulAction.stabilizer ↥Γ UpperHalfPlane.I) :=
+  have : Countable ↥Γ := IsFuchsianGroup.countable hΓ
+  have : Countable (↥Γ ⧸ MulAction.stabilizer ↥Γ UpperHalfPlane.I) :=
     QuotientGroup.mk_surjective.countable
   obtain ⟨hBadm, hBadnull⟩ := symBad_facts hΓ hdense
   have hUm : MeasurableSet {z : ℂ | 0 < z.im} :=
@@ -710,7 +710,7 @@ theorem sym_upper {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
     (fun i : symIdx Γ => (hretm i).1.diff hZm) (hG.mul q.measurable.enorm) hmult
   rw [sym_total hΓ hfree hcc q hq0 hdense A ht hG hGinv, tsum_congr htrim]
   refine le_trans hbound (mul_le_mul_right (lintegral_mono_set ?_) 2)
-  exact Set.iUnion_subset fun i => Set.diff_subset.trans (hretm i).2
+  exact Set.iUnion_subset fun i => Set.sdiff_subset.trans (hretm i).2
 
 /-- The quasiconformal map is almost everywhere differentiable along a Möbius shift. -/
 theorem ae_diffAt_moebius {h hinv : ℂ → ℂ} {κ : ℝ} (hqc : IsQCUpper h hinv κ)
@@ -828,7 +828,7 @@ theorem sym_iter {a : ℝ → ℝ≥0∞} {Fb : ℝ≥0∞}
     refine ENNReal.le_of_forall_pos_le_add fun ε hε _ => ?_
     by_cases hc0 : 2 * Fb = 0
     · rw [hc0]
-      exact zero_le _
+      exact zero_le
     obtain ⟨n, hn⟩ := ENNReal.exists_inv_two_pow_lt
       (a := (ε : ℝ≥0∞) / (2 * Fb))
       (ENNReal.div_pos (ENNReal.coe_ne_zero.mpr hε.ne') h2Fb).ne'
@@ -905,7 +905,7 @@ theorem pair_step {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
             (F (A.flow (2 * s) z) + F (A.flow (-(2 * s)) z)) * ‖q z‖ₑ := by
     have hm2 : Measurable fun z : ℂ => 2 * (F z * ‖q z‖ₑ) :=
       (hF.mul q.measurable.enorm).const_mul 2
-    rw [← lintegral_const_mul 2 (hF.mul q.measurable.enorm),
+    rw [← lintegral_const_mul 2 (hF.fun_mul q.measurable.enorm),
       ← lintegral_add_left hm2]
     exact lintegral_congr fun z => by ring
   calc 2 * (∫⁻ z in symOmega Γ, F z * ‖q z‖ₑ)
@@ -986,7 +986,7 @@ theorem sym_invar_engine {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
       rw [neg_zero, flow_zero A (symOmega_upper hzω) hqz]
       ring
     rw [lintegral_congr_ae hcongr,
-      lintegral_const_mul 2 (hF.mul q.measurable.enorm)]
+      lintegral_const_mul 2 (hF.fun_mul q.measurable.enorm)]
   · exact hpos t htp
 
 /-- **Symmetrized flow invariance of the first Cauchy–Schwarz factor** against the
@@ -1114,7 +1114,7 @@ theorem pathJoin_horVar_le (q : ℂ → ℂ) (γ₁ γ₂ : ℝ → ℂ) :
     intro c A
     rw [Measure.restrict_apply (measurableSet_singleton c)]
     refine le_antisymm
-      (le_trans (measure_mono Set.inter_subset_left) ?_) (zero_le _)
+      (le_trans (measure_mono Set.inter_subset_left) ?_) (zero_le)
     simp
   have h1 : ∫⁻ s in Set.Icc (0 : ℝ) (1 / 2),
       horizontalDensity q (pathJoin γ₁ γ₂) s = horizontalVariation q γ₁ := by

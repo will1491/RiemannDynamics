@@ -117,7 +117,7 @@ theorem curveModulus_le_qdArea_div_sq {q : ℂ → ℂ} (hq : Measurable q) {S :
       by_cases hz : z ∈ S
       · rw [hρ₀, Set.indicator_of_mem hz, Set.indicator_of_mem hz, hf,
           ← ENNReal.ofReal_pow (Real.sqrt_nonneg _), Real.sq_sqrt (norm_nonneg _),
-          ofReal_norm_eq_enorm]
+          ofReal_norm]
       · rw [hρ₀, Set.indicator_of_notMem hz, Set.indicator_of_notMem hz]
         exact zero_pow two_ne_zero
     rw [hpt, lintegral_indicator hS]

@@ -240,10 +240,10 @@ theorem ring_image_modulus_le {f : ℂ → ℂ} {K : ℝ} (hf : IsQCGeometric f 
         rw [ae_restrict_iff' measurableSet_Icc, ae_iff]
         apply measure_mono_null _ hBnull
         intro t ht
-        simp only [Set.mem_setOf_eq, Classical.not_imp] at ht
+        simp only [Set.mem_ofPred_eq, Classical.not_imp] at ht
         obtain ⟨hmem, hd, hnotgood⟩ := ht
         refine ⟨⟨hd, ?_⟩, hmem⟩
-        simp only [hNf, Set.mem_setOf_eq]; exact hnotgood
+        simp only [hNf, Set.mem_ofPred_eq]; exact hnotgood
       have hdiffγ : ∀ᵐ t : ℝ ∂(volume.restrict (Set.Icc (0 : ℝ) 1)),
           DifferentiableAt ℝ γ t := by
         rw [ae_restrict_iff' measurableSet_Icc]

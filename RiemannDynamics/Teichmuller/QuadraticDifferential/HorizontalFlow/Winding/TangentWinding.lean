@@ -621,8 +621,7 @@ theorem theta_band_neg {θ : ℝ → ℝ} {a b : ℝ} {k : ℤ}
   · intro u hu
     rw [Real.sin_sub_pi]
     linarith [hsin u hu]
-  · change θ a - Real.pi = 2 * Real.pi * k
-    rw [hstart]
+  · rw [hstart]
     ring
 
 /-- **The one-crossing winding count**: a closed nonvanishing curve starting on the
@@ -810,19 +809,19 @@ theorem min_im_deriv_zero {γ g : ℝ → ℂ}
       HasDerivAt (fun u => (γ u).im) ((g t).im) t := by
     intro t ht
     have h2 := Complex.imCLM.hasFDerivAt.comp_hasDerivAt t (hd t ht)
-    simpa using h2
+    simpa using! h2
   have hge : 0 ≤ (g 0).im := by
     have h1 : HasDerivWithinAt (fun u => (γ u).im) ((g 0).im) (Set.Ioc 0 1) 0 :=
       (him_deriv 0 (by norm_num)).hasDerivWithinAt
     rw [hasDerivWithinAt_iff_tendsto_slope] at h1
     have h2 : Set.Ioc (0:ℝ) 1 \ {0} = Set.Ioc 0 1 := by
       ext x
-      simp only [Set.mem_diff, Set.mem_Ioc, Set.mem_singleton_iff]
+      simp only [Set.mem_sdiff, Set.mem_Ioc, Set.mem_singleton_iff]
       constructor
       · exact fun h => h.1
       · exact fun h => ⟨h, by linarith [h.1]⟩
     rw [h2] at h1
-    haveI := left_nhdsWithin_Ioc_neBot (by norm_num : (0:ℝ) < 1)
+    have := left_nhdsWithin_Ioc_neBot (by norm_num : (0:ℝ) < 1)
     refine ge_of_tendsto h1 ?_
     filter_upwards [self_mem_nhdsWithin] with t ht
     rw [slope_def_field]
@@ -835,12 +834,12 @@ theorem min_im_deriv_zero {γ g : ℝ → ℂ}
     rw [hasDerivWithinAt_iff_tendsto_slope] at h1
     have h2 : Set.Ico (0:ℝ) 1 \ {1} = Set.Ico 0 1 := by
       ext x
-      simp only [Set.mem_diff, Set.mem_Ico, Set.mem_singleton_iff]
+      simp only [Set.mem_sdiff, Set.mem_Ico, Set.mem_singleton_iff]
       constructor
       · exact fun h => h.1
       · exact fun h => ⟨h, by linarith [h.2]⟩
     rw [h2] at h1
-    haveI := right_nhdsWithin_Ico_neBot (by norm_num : (0:ℝ) < 1)
+    have := right_nhdsWithin_Ico_neBot (by norm_num : (0:ℝ) < 1)
     refine le_of_tendsto h1 ?_
     filter_upwards [self_mem_nhdsWithin] with t ht
     rw [slope_def_field]
@@ -1153,7 +1152,7 @@ theorem winding_reverse {γ : C(I, ℂ)} {q : ℂ} (hcl : γ 0 = γ 1)
       (shiftedCurve R q) := by
     intro t
     have h1 := hL (unitInterval.symm t)
-    simpa [shiftedCurve] using h1
+    simpa [shiftedCurve] using! h1
   have hspecR := windingNumber_spec hRcl hRne hLR
   have h2 : (L.comp ⟨unitInterval.symm, unitInterval.continuous_symm⟩) 1
       - (L.comp ⟨unitInterval.symm, unitInterval.continuous_symm⟩) 0
@@ -1209,7 +1208,7 @@ theorem tangent_winding_neg {γ g : ℝ → ℂ}
     have h1 : HasDerivAt (fun u : ℝ => 1 - u) (-1) t := by
       simpa using (hasDerivAt_id t).const_sub 1
     have h2 := HasDerivAt.scomp t (hd (1 - t) (hmem t ht)) h1
-    simpa [hγ'def, hg'def] using h2
+    simpa [hγ'def, hg'def] using! h2
   have hg'c : ContinuousOn g' (Set.Icc 0 1) := by
     refine ContinuousOn.neg (hg.comp ?_ hmem)
     exact (continuous_const.sub continuous_id).continuousOn
@@ -1466,7 +1465,7 @@ theorem circle_hasDerivAt (c : ℂ) (r α ω t : ℝ) :
     exact h1.comp_ofReal
   have hexp := hinner.cexp
   have h3 := (hexp.const_mul ((r : ℂ))).const_add c
-  convert h3 using 1
+  convert! h3 using 1
   ring
 
 /-- **The chart phase identity**: along any curve, the chart velocity squares to the

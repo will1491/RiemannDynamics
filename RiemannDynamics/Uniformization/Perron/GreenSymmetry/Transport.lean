@@ -73,7 +73,7 @@ theorem unbounded_connectedComponentIn_compl_of_simplyConnectedSpace
       rw [Metric.mem_ball]
       linarith
     -- pass to the compact subspace `K`
-    haveI : CompactSpace K := isCompact_iff_compactSpace.mp hKcpt
+    have : CompactSpace K := isCompact_iff_compactSpace.mp hKcpt
     set z' : K := ⟨z, hzK⟩
     have hccinter := connectedComponent_eq_iInter_isClopen z'
     have hWclosed : IsClosed W := hKcpt.isClosed.sdiff Metric.isOpen_ball
@@ -138,7 +138,7 @@ theorem unbounded_connectedComponentIn_compl_of_simplyConnectedSpace
         rw [← hVeq]
         exact hxV
     have hFAclosed : IsClosed (F \ A) := by
-      rw [hAeq, Set.diff_self_inter]
+      rw [hAeq, Set.sdiff_self_inter]
       exact hFclosed.sdiff (hVopen.inter Metric.isOpen_ball)
     -- metric separation of the compact clopen piece from the rest
     have hdisjAB : Disjoint A (F \ A) := disjoint_sdiff_self_right
@@ -201,7 +201,7 @@ theorem exists_riemannMap_of_simplyConnectedSpace {U : Set ℂ} (hU : IsOpen U)
     (hne : U ≠ Set.univ) (hsc : SimplyConnectedSpace ↥U) :
     ∃ f : ℂ → ℂ, DifferentiableOn ℂ f U ∧ Set.InjOn f U ∧
       f '' U = Metric.ball 0 1 := by
-  haveI := hsc
+  have := hsc
   have hUc : IsConnected U := isConnected_iff_connectedSpace.mpr inferInstance
   exact RMT hU hUc hne (has_primitives_of_simplyConnectedSpace hU hsc)
 
@@ -223,10 +223,10 @@ theorem greenEnvelope_unitDisc_eq {a b : ℂ} (ha : ‖a‖ < 1) (hb : ‖b‖ <
   -- Points of the disc have norm below one.
   have hmem : ∀ y : ↥discOpens, ‖(↑y : ℂ)‖ < 1 := fun y => mem_ball_zero_iff.mp y.2
   -- Instances on the disc subtype.
-  haveI hne : Nonempty ↥discOpens := ⟨p₀⟩
-  haveI : ConnectedSpace ↥discOpens :=
+  have hne : Nonempty ↥discOpens := ⟨p₀⟩
+  have : ConnectedSpace ↥discOpens :=
     Subtype.connectedSpace ((convex_ball (0 : ℂ) 1).isConnected ⟨0, mem_ball_self one_pos⟩)
-  haveI : NoncompactSpace ↥discOpens := by
+  have : NoncompactSpace ↥discOpens := by
     rw [← not_compactSpace_iff]
     intro hcomp
     have hK : IsCompact (ball (0 : ℂ) 1) := by

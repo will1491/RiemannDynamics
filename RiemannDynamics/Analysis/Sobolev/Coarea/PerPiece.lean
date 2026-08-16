@@ -254,7 +254,7 @@ theorem eilenberg_coarea_planar_metric_meas {u : ℂ → ℝ} {K : ℝ≥0} {A :
         rintro (h | h)
         · exact one_ne_zero h
         · exact (ENNReal.add_ne_top.mpr ⟨ENNReal.natCast_ne_top n, ENNReal.one_ne_top⟩) h
-      exact hA.exists_isCompact_diff_lt hAfin' hεne
+      exact hA.exists_isCompact_sdiff_lt hAfin' hεne
     choose Q hQsub hQcomp hQdiff using hexc
     -- Monotone exhaustion `Kₙ := ⋃_{m ≤ n} Qₘ`.
     set Kset : ℕ → Set ℂ := fun n => ⋃ m ∈ Finset.range (n + 1), Q m with hKset_def
@@ -285,7 +285,7 @@ theorem eilenberg_coarea_planar_metric_meas {u : ℂ → ℝ} {K : ℝ≥0} {A :
     -- `N := A \ U` is measurable, `volume N = 0`, `N ⊆ A`.
     set N : Set ℂ := A \ U with hN_def
     have hNmeas : MeasurableSet N := hA.diff hUmeas
-    have hNsubA : N ⊆ A := diff_subset
+    have hNsubA : N ⊆ A := sdiff_subset
     have hN0 : volume N = 0 := by
       -- `volume N ≤ volume (A \ Kₙ) ≤ volume (A \ Qₙ) < 1/(n+1)` for all `n`.
       rw [← nonpos_iff_eq_zero]
@@ -296,7 +296,7 @@ theorem eilenberg_coarea_planar_metric_meas {u : ℂ → ℝ} {K : ℝ≥0} {A :
       have hNle : volume N ≤ (1 : ℝ≥0∞) / (n + 1) := by
         have h1 : N ⊆ A \ Q n := by
           rw [hN_def]
-          apply diff_subset_diff_right
+          apply sdiff_subset_sdiff_right
           calc Q n ⊆ Kset n := hQsubK n
             _ ⊆ U := subset_iUnion Kset n
         calc volume N ≤ volume (A \ Q n) := measure_mono h1
@@ -636,7 +636,7 @@ theorem coarea_piece_le {u : ℂ → ℝ} {Ψ : ℂ → ℂ} {Ψ' : ℂ → (ℂ
   -- (2)  `det (Ψ' z) ≠ 0` a.e. on `S` (small perturbation of `A`).
   -- =================================================================
   have hAne : ‖(A.symm : ℂ →L[ℝ] ℂ)‖₊ ≠ 0 := by
-    intro h0; rw [h0, inv_zero] at hδ; exact absurd hδ (not_lt.mpr (zero_le _))
+    intro h0; rw [h0, inv_zero] at hδ; exact absurd hδ (not_lt.mpr (zero_le))
   have hApos : (0 : ℝ≥0) < ‖(A.symm : ℂ →L[ℝ] ℂ)‖₊ := pos_of_ne_zero hAne
   -- the perturbation lemma: ‖T₀ - A‖ ≤ δ ⟹ T₀.det ≠ 0
   have hdet_of_close : ∀ T₀ : ℂ →L[ℝ] ℂ, ‖T₀ - (A : ℂ →L[ℝ] ℂ)‖₊ ≤ δ → T₀.det ≠ 0 := by
@@ -656,7 +656,7 @@ theorem coarea_piece_le {u : ℂ → ℝ} {Ψ : ℂ → ℂ} {Ψ' : ℂ → (ℂ
               (T₀ - (A : ℂ →L[ℝ] ℂ)).le_opNNNorm v
           _ ≤ δ * ‖v‖₊ := by gcongr
       have hTeq : T₀ v = (A : ℂ →L[ℝ] ℂ) v + (T₀ - (A : ℂ →L[ℝ] ℂ)) v := by
-        rw [ContinuousLinearMap.sub_apply]; ring
+        rw [sub_apply]; ring
       have hTv0 : (A : ℂ →L[ℝ] ℂ) v + (T₀ - (A : ℂ →L[ℝ] ℂ)) v = 0 := by rw [← hTeq]; exact hv
       have hAvnorm : ‖(A : ℂ →L[ℝ] ℂ) v‖₊ = ‖(T₀ - (A : ℂ →L[ℝ] ℂ)) v‖₊ := by
         rw [eq_neg_of_add_eq_zero_left hTv0, nnnorm_neg]
@@ -758,9 +758,9 @@ theorem coarea_piece_le {u : ℂ → ℝ} {Ψ : ℂ → ℂ} {Ψ' : ℂ → (ℂ
       have e2 : (T₀.det * w.im) ^ 2 = a ^ 2 := by rw [hdetim]
       nlinarith [e1, e2]
     have hwnn : ((‖(Te.symm : ℂ →L[ℝ] ℂ) Complex.I‖₊ : ℝ≥0∞)) = ENNReal.ofReal ‖w‖ := by
-      rw [← hw, ← enorm_eq_nnnorm, ← ofReal_norm_eq_enorm]
+      rw [← hw, ← enorm_eq_nnnorm, ← ofReal_norm]
     have hLnn : ((‖Complex.reCLM.comp T₀‖₊ : ℝ≥0∞)) = ENNReal.ofReal ‖Complex.reCLM.comp T₀‖ := by
-      rw [← enorm_eq_nnnorm, ← ofReal_norm_eq_enorm]
+      rw [← enorm_eq_nnnorm, ← ofReal_norm]
     change ENNReal.ofReal |T₀.det| * ((‖(Te.symm : ℂ →L[ℝ] ℂ) Complex.I‖₊ : ℝ≥0∞))
         = ((‖Complex.reCLM.comp T₀‖₊ : ℝ≥0∞))
     rw [hwnn, hLnn, ← ENNReal.ofReal_mul (abs_nonneg _), hprod, hLval]
@@ -808,7 +808,7 @@ theorem coarea_piece_le {u : ℂ → ℝ} {Ψ : ℂ → ℂ} {Ψ' : ℂ → (ℂ
       (volume.restrict S) := by
     have hcompcont : Continuous (fun M : ℂ →L[ℝ] ℂ => Complex.reCLM.comp M) := by
       have := (ContinuousLinearMap.compL ℝ ℂ ℂ ℝ Complex.reCLM).continuous
-      simpa only [ContinuousLinearMap.compL_apply] using this
+      simpa only [ContinuousLinearMap.compL_apply] using! this
     have hc1 : AEMeasurable (fun z => (‖Complex.reCLM.comp (Ψ' z)‖₊ : ℝ≥0∞))
         (volume.restrict S) := by
       apply measurable_coe_nnreal_ennreal.comp_aemeasurable
@@ -874,7 +874,7 @@ theorem coarea_piece_le {u : ℂ → ℝ} {Ψ : ℂ → ℂ} {Ψ' : ℂ → (ℂ
     filter_upwards [hslice] with c hc
     have hseteq : {s : ℝ | Complex.mk c s ∈ W} = Prod.mk c ⁻¹' P := by
       ext s
-      simp only [hP, Set.mem_preimage, Complex.measurableEquivRealProd_symm_apply, mem_setOf_eq]
+      simp only [hP, Set.mem_preimage, Complex.measurableEquivRealProd_symm_apply, mem_ofPred_eq]
     rw [hseteq]; exact hc
   -- The line map `s ↦ mk c s` and its derivative `I`.
   have hline : ∀ (c s : ℝ), HasDerivWithinAt (fun t : ℝ => Complex.mk c t) Complex.I
@@ -954,7 +954,7 @@ theorem coarea_piece_le {u : ℂ → ℝ} {Ψ : ℂ → ℂ} {Ψ' : ℂ → (ℂ
       obtain ⟨z, hz, hzeq⟩ := htT
       have hgS : g (Complex.mk c t) ∈ S := hgmem _ ⟨z, hz, hzeq⟩
       have hgZ : g (Complex.mk c t) ∈ Z :=
-        hZsub ⟨by simp only [mem_setOf_eq, not_not]; exact hdet0, hgS⟩
+        hZsub ⟨by simp only [mem_ofPred_eq, not_not]; exact hdet0, hgS⟩
       apply hBsup
       change Complex.mk c t ∈ W
       rw [hW, ← hright _ ⟨z, hz, hzeq⟩]
@@ -963,7 +963,7 @@ theorem coarea_piece_le {u : ℂ → ℝ} {Ψ : ℂ → ℂ} {Ψ' : ℂ → (ℂ
     have hfiber : u ⁻¹' {c} ∩ S
         = (fun s : ℝ => g (Complex.mk c s)) '' Tc := by
       ext z
-      simp only [mem_inter_iff, mem_preimage, mem_singleton_iff, mem_image, mem_setOf_eq, hTc]
+      simp only [mem_inter_iff, mem_preimage, mem_singleton_iff, mem_image, mem_ofPred_eq, hTc]
       constructor
       · rintro ⟨huc, hzS⟩
         have hΨze : Complex.mk c (Ψ z).im = Ψ z := by
@@ -981,7 +981,7 @@ theorem coarea_piece_le {u : ℂ → ℝ} {Ψ : ℂ → ℂ} {Ψ' : ℂ → (ℂ
           ∪ (fun s : ℝ => g (Complex.mk c s)) '' Tbad := by
       rw [← image_union]
       congr 1
-      rw [hTgood, hTbad, diff_union_inter]
+      rw [hTgood, hTbad, sdiff_union_inter]
     -- good-part Hausdorff bound via arc-length
     have hgoodbound : μH[1] ((fun s : ℝ => g (Complex.mk c s)) '' Tgood)
         ≤ ∫⁻ s in Tc, Φ (Complex.mk c s) := by
@@ -1001,7 +1001,7 @@ theorem coarea_piece_le {u : ℂ → ℝ} {Ψ : ℂ → ℂ} {Ψ' : ℂ → (ℂ
       have hTbad_null : μH[1] Tbad = 0 := by
         rw [hHvol]; exact measure_mono_null inter_subset_right hB0
       have hsub : Tbad ⊆ {t : ℝ | Complex.mk c t ∈ T} := fun t ht => ht.1
-      refine le_antisymm ?_ (zero_le _)
+      refine le_antisymm ?_ (zero_le)
       calc μH[1] ((fun s : ℝ => g (Complex.mk c s)) '' Tbad)
           ≤ ((‖(A.symm : ℂ →L[ℝ] ℂ)‖₊⁻¹ - δ)⁻¹ : ℝ≥0) ^ (1:ℝ) * μH[1] Tbad :=
             ((hsliceLip c).mono hsub).hausdorffMeasure_image_le (by norm_num)

@@ -123,7 +123,7 @@ lemma partition_sum_eq_lintegral_mult (f : ℝ → ℝ) (u : ℕ → ℝ) (n : �
     (∑ i ∈ Finset.range n, edist (f (u (i + 1))) (f (u i)))
       = ∫⁻ y, ∑ i ∈ Finset.range n,
           (betw (f (u i)) (f (u (i + 1)))).indicator (fun _ => (1 : ℝ≥0∞)) y := by
-  rw [lintegral_finset_sum]
+  rw [lintegral_finsetSum]
   · refine Finset.sum_congr rfl (fun i _ => ?_)
     rw [lintegral_indicator_const (measurableSet_betw _ _), one_mul, volume_betw, edist_real]
   · exact fun i _ => measurable_const.indicator (measurableSet_betw _ _)
@@ -228,7 +228,7 @@ lemma indicatrix_le_indicator_image_of_injOn {f : ℝ → ℝ} {a b : ℝ}
     have hsub : Set.encard {x ∈ Set.Icc a b | f x = y} ≤ 1 := by
       rw [Set.encard_le_one_iff]
       intro p q hp hq
-      simp only [Set.mem_setOf_eq] at hp hq
+      simp only [Set.mem_ofPred_eq] at hp hq
       exact hinj hp.1 hq.1 (hp.2.trans hq.2.symm)
     calc (Set.encard {x ∈ Set.Icc a b | f x = y} : ℝ≥0∞) ≤ ((1 : ℕ∞) : ℝ≥0∞) := by
           exact_mod_cast hsub
@@ -236,7 +236,7 @@ lemma indicatrix_le_indicator_image_of_injOn {f : ℝ → ℝ} {a b : ℝ}
   · rw [Set.indicator_of_notMem hy]
     have hempty : {x ∈ Set.Icc a b | f x = y} = ∅ := by
       ext x
-      simp only [Set.mem_setOf_eq, Set.mem_empty_iff_false, iff_false, not_and]
+      simp only [Set.mem_ofPred_eq, Set.mem_empty_iff_false, iff_false, not_and]
       exact fun hx hfx => hy ⟨x, hx, hfx⟩
     rw [hempty]; simp
 

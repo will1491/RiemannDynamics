@@ -129,7 +129,7 @@ theorem ae_slice_of_ae_planar {F G : ℂ → ℝ} (hF : Measurable F) (hG : Meas
   rw [Set.indicator_apply_eq_zero] at hφ
   have hnotmem : Complex.polarCoord.symm (r, φ) ∉ S := by
     intro hz; exact absurd (hφ hz) one_ne_zero
-  rw [hSdef, Set.mem_setOf_eq, not_not] at hnotmem
+  rw [hSdef, Set.mem_ofPred_eq, not_not] at hnotmem
   rw [hpsymm] at hnotmem
   exact hnotmem
 
@@ -166,7 +166,7 @@ theorem ae_planar_of_ae_slice {F G : ℂ → ℝ} (hF : Measurable F) (hG : Meas
       rw [hpsymm, hNdef]
       simp only [Set.indicator_apply_eq_zero]
       intro hmem
-      rw [hSdef, Set.mem_setOf_eq] at hmem
+      rw [hSdef, Set.mem_ofPred_eq] at hmem
       exact absurd hφ hmem
     calc (∫⁻ φ in Ioo (-π) π, ENNReal.ofReal r • N (Complex.polarCoord.symm (r, φ)))
         = ENNReal.ofReal r * ∫⁻ φ in Ioo (-π) π, N (Complex.polarCoord.symm (r, φ)) := by
@@ -320,7 +320,7 @@ theorem ae_eq_of_superlevel_ae_eq {s : Set ℝ} (hs : MeasurableSet s)
   have hlev' : ∀ t ∈ L, ∀ᵐ x ∂volume, (x ∈ s ∧ t < f x) ↔ (x ∈ s ∧ t < h x) := by
     intro t ht
     filter_upwards [hlev t ht] with x hx
-    simpa only [Set.mem_setOf_eq, eq_iff_iff] using hx
+    simpa only [Set.mem_ofPred_eq, eq_iff_iff] using! hx
   -- Collect over the countable set of levels.
   have hall : ∀ᵐ x ∂volume, ∀ t ∈ L, (x ∈ s ∧ t < f x) ↔ (x ∈ s ∧ t < h x) :=
     (MeasureTheory.ae_ball_iff hLcount).mpr hlev'

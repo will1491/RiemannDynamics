@@ -106,13 +106,13 @@ private theorem aeSliceHasDerivAt_x {g : ℂ → ℂ} (hgdiff : ∀ᵐ w, Differ
       simpa [Complex.measurableEquivRealProd_symm_apply] using hp
     have := (Measure.measurePreserving_swap (μ := (volume : Measure ℝ))
       (ν := (volume : Measure ℝ))).quasiMeasurePreserving.ae hpb
-    simpa [Prod.swap] using this
+    simpa [Prod.swap] using! this
   have hline : ∀ᵐ y : ℝ, ∀ᵐ x : ℝ, DifferentiableAt ℝ g ⟨x, y⟩ :=
     MeasureTheory.Measure.ae_ae_of_ae_prod hprod
   filter_upwards [hline] with y hy
   filter_upwards [hy] with x hx
   have := hx.hasFDerivAt.comp_hasDerivAt x (hasDerivAt_hSlice y x)
-  simpa using this
+  simpa [Function.comp_def] using! this
 
 /-- **The vertical-slice derivative, a.e., from a.e. differentiability (Fubini).** Symmetric to
 `aeSliceHasDerivAt_x`. -/
@@ -130,7 +130,7 @@ private theorem aeSliceHasDerivAt_y {g : ℂ → ℂ} (hgdiff : ∀ᵐ w, Differ
   filter_upwards [hline] with x hx
   filter_upwards [hx] with y hy
   have := hy.hasFDerivAt.comp_hasDerivAt y (hasDerivAt_vSlice x y)
-  simpa using this
+  simpa [Function.comp_def] using! this
 
 /-! ## Slice-AC ⟹ ACL (proven)
 

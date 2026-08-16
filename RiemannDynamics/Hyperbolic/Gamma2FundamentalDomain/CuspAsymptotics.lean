@@ -1247,7 +1247,7 @@ theorem modularLambdaH_deriv_norm_sub_three_term_le_of_im_ge_one
       ((Real.pi * Complex.I) * q) τ := by
     have h_comp := (Complex.hasDerivAt_exp (Real.pi * Complex.I * τ)).comp τ h_lin_hasDeriv
     -- h_comp : HasDerivAt (exp ∘ (πi·)) (exp(πi τ) * πi) τ
-    convert h_comp using 1
+    convert! h_comp using 1
     rw [hq_def]; ring
   -- Cusp differentiable at q.
   have h_cusp_diff_at_q : DifferentiableAt ℂ modularLambdaH_cusp q :=
@@ -1637,7 +1637,7 @@ theorem modularLambdaH_im_nonneg_strip_left_edge (w : ℂ)
     -- Chain rule via scomp (explicit IsScalarTower).
     have hst : IsScalarTower ℝ ℂ ℂ := IsScalarTower.right
     have h_chain := @HasDerivAt.scomp ℝ _ ℂ _ _ t ℂ _ _ _ hst _ _ _ _ h_lam_hda h_inner
-    simpa using h_chain
+    simpa using! h_chain
   -- Continuity of the integrand on uIcc.
   have h_int_cont : ContinuousOn
       (fun t : ℝ => deriv modularLambdaH ((↑t : ℂ) + (↑y : ℂ) * Complex.I))
@@ -1650,7 +1650,7 @@ theorem modularLambdaH_im_nonneg_strip_left_edge (w : ℂ)
         Set.MapsTo (fun t : ℝ => ((↑t : ℂ) + (↑y : ℂ) * Complex.I))
           (Set.uIcc 0 x) { z : ℂ | 0 < z.im } := by
       intro t _
-      simp only [Set.mem_setOf_eq, Complex.add_im, Complex.mul_im, Complex.ofReal_re,
+      simp only [Set.mem_ofPred_eq, Complex.add_im, Complex.mul_im, Complex.ofReal_re,
         Complex.I_im, mul_one, Complex.ofReal_im, Complex.I_re, mul_zero, add_zero, zero_add]
       exact hy_pos
     have h_deriv_cont :

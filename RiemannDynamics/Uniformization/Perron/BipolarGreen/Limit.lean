@@ -350,7 +350,7 @@ theorem exists_bipolar_green [SecondCountableTopology M] (D₀ : CoordDisk M)
       (∃ C : ℝ, ∃ V₁ ∈ 𝓝 p₁, ∃ V₂ ∈ 𝓝 p₂, IsCompact (closure V₁) ∧
         IsCompact (closure V₂) ∧ ∀ x ∉ V₁ ∪ V₂, |G x| ≤ C) := by
   classical
-  haveI : LocallyConnectedSpace M := ChartedSpace.locallyConnectedSpace ℂ M
+  have : LocallyConnectedSpace M := ChartedSpace.locallyConnectedSpace ℂ M
   /- ## Images under an inverse chart, in preimage form. -/
   have himg : ∀ (f : OpenPartialHomeomorph M ℂ) (u : Set ℂ), u ⊆ f.target →
       f.symm '' u = f.source ∩ f ⁻¹' u := by
@@ -504,8 +504,8 @@ theorem exists_bipolar_green [SecondCountableTopology M] (D₀ : CoordDisk M)
       NoncompactSpace ↥P → HasGreenFunction (⟨p, hp⟩ : ↥P) →
       ∀ y, y ∈ P → y ≠ p → MHarmonicAt (pieceGreen P p) y := by
     intro P p hp hcs hnc hGF y hy hyp
-    haveI := hcs
-    haveI := hnc
+    have := hcs
+    have := hnc
     have h1 := (mharmonicOn_greenEnvelope hGF).1
     have h2 : MHarmonicAt (greenEnvelope (⟨p, hp⟩ : ↥P)) ⟨y, hy⟩ :=
       h1 _ (Set.mem_compl_singleton_iff.mpr

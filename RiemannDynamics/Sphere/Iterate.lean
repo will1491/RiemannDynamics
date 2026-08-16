@@ -118,7 +118,7 @@ forward iterates of `z`. -/
 theorem grandOrbit_eq_union_iterate :
     grandOrbit f z = ⋃ m : ℕ, backwardOrbit f (f^[m] z) := by
   ext w
-  simp only [grandOrbit, backwardOrbit, Set.mem_setOf_eq, Set.mem_iUnion]
+  simp only [grandOrbit, backwardOrbit, Set.mem_ofPred_eq, Set.mem_iUnion]
   constructor
   · rintro ⟨m, n, h⟩
     exact ⟨m, n, h.symm⟩

@@ -93,11 +93,11 @@ theorem poincare_one_one_ball :
       refine le_trans (enorm_integral_le_lintegral_enorm _) (lintegral_mono (fun t => ?_))
       calc ‖(fderiv ℝ u (w + t • (z - w))) (z - w)‖ₑ
           ≤ ‖fderiv ℝ u (w + t • (z - w))‖ₑ * ‖z - w‖ₑ := by
-            rw [← ofReal_norm_eq_enorm (((fderiv ℝ u (w + t • (z - w))) (z - w))),
-              ← ofReal_norm_eq_enorm (z - w),
+            rw [← ofReal_norm (((fderiv ℝ u (w + t • (z - w))) (z - w))),
+              ← ofReal_norm (z - w),
               show ‖fderiv ℝ u (w + t • (z - w))‖ₑ
                 = ENNReal.ofReal ‖fderiv ℝ u (w + t • (z - w))‖ from
-                (ofReal_norm_eq_enorm _).symm,
+                (ofReal_norm _).symm,
               ← ENNReal.ofReal_mul (norm_nonneg _)]
             exact ENNReal.ofReal_le_ofReal ((fderiv ℝ u (w + t • (z - w))).le_opNorm (z - w))
         _ = g (w + t • (z - w)) * ‖z - w‖ₑ := rfl
@@ -116,7 +116,7 @@ theorem poincare_one_one_ball :
             have := hconv hw hz (by linarith [ht1.1] : (0:ℝ) ≤ 1 - t) ht1.1 (by ring)
             simpa using this
           rw [Set.indicator_of_mem hw, Set.indicator_of_mem hin]
-        · simp only []; rw [Set.indicator_of_notMem hw]; exact zero_le _
+        · simp only []; rw [Set.indicator_of_notMem hw]; exact zero_le
       refine (lintegral_mono hmono).trans_eq ?_
       set h : ℂ → ℝ≥0∞ := B.indicator g with hh
       have hhmeas : Measurable h := hgmeas.indicator hBmeas
@@ -150,7 +150,7 @@ theorem poincare_one_one_ball :
             have := hconv hw hz (by linarith [ht1.2] : (0:ℝ) ≤ 1 - t) ht1.1 (by ring)
             simpa using this
           rw [Set.indicator_of_mem hz, Set.indicator_of_mem hin]
-        · simp only []; rw [Set.indicator_of_notMem hz]; exact zero_le _
+        · simp only []; rw [Set.indicator_of_notMem hz]; exact zero_le
       refine (lintegral_mono hmono).trans_eq ?_
       set h : ℂ → ℝ≥0∞ := B.indicator g with hh
       have hhmeas : Measurable h := hgmeas.indicator hBmeas
@@ -211,7 +211,7 @@ theorem poincare_one_one_ball :
     -- D ≤ ofReal(2r) * T, where T is the triple integral.
     have hzw_le : ∀ z ∈ B, ∀ w ∈ B, ‖z - w‖ₑ ≤ ENNReal.ofReal (2 * r) := by
       intro z hz w hw
-      rw [← ofReal_norm_eq_enorm]
+      rw [← ofReal_norm]
       apply ENNReal.ofReal_le_ofReal
       have htri : ‖z - w‖ ≤ ‖z - x‖ + ‖x - w‖ := by
         calc ‖z - w‖ = ‖(z - x) + (x - w)‖ := by rw [sub_add_sub_cancel]
@@ -510,7 +510,7 @@ theorem poincare_one_one_ball :
         intro z hz
         have h1 : z ∈ tsupport ((φ n).normed volume) := subset_tsupport _ hz
         rwa [(φ n).tsupport_normed_eq] at h1
-      haveI : MeasureTheory.IsFiniteMeasure (volume.restrict Kset) := by
+      have : MeasureTheory.IsFiniteMeasure (volume.restrict Kset) := by
         constructor; rw [MeasureTheory.Measure.restrict_apply_univ]; exact hKfin
       set D : ℕ → ℂ → ℂ := fun n => Cn n - h with hD
       have hrestrict : ∀ᶠ n in Filter.atTop,
@@ -533,7 +533,7 @@ theorem poincare_one_one_ball :
           refine ⟨(M.toNNReal + 1), fun n => ?_⟩
           have hempty : {x | (M.toNNReal + 1 : ℝ≥0) ≤ ‖Cn n x‖₊} = (∅ : Set ℂ) := by
             ext x
-            simp only [Set.mem_setOf_eq, Set.mem_empty_iff_false, iff_false, not_le]
+            simp only [Set.mem_ofPred_eq, Set.mem_empty_iff_false, iff_false, not_le]
             have hb' : ‖Cn n x‖₊ ≤ M.toNNReal := by
               rw [← NNReal.coe_le_coe, Real.coe_toNNReal M hM0]; exact hCnbd n x
             exact lt_of_le_of_lt hb' (by simp)
@@ -711,7 +711,7 @@ theorem poincare_one_one_ball :
           ((fderiv ℝ ρ (z - u)).comp (-ContinuousLinearMap.id ℝ ℂ)) u :=
         (hρ_diff (z - u)).hasFDerivAt.comp u hsub
       rw [hcomp.fderiv]
-      simp only [ContinuousLinearMap.comp_apply, ContinuousLinearMap.neg_apply,
+      simp only [ContinuousLinearMap.comp_apply, neg_apply,
         ContinuousLinearMap.id_apply, map_neg]
     have hint_eq :
         (∫ u, ((fderiv ℝ ρ (z - u)) v) • f u ∂volume)
@@ -733,7 +733,6 @@ theorem poincare_one_one_ball :
         (fun t => (L (ρ t)) (gv (z - t))) volume z]
     refine MeasureTheory.integral_congr_ae (Filter.Eventually.of_forall (fun u => ?_))
     simp only [hφz, sub_sub_cancel, hL, ContinuousLinearMap.lsmul_apply]
-    rfl
   -- L¹(B) integral convergence helper (from L²(B) convergence). 
   have limconv : ∀ (B : Set ℂ), MeasurableSet B → volume B ≠ ⊤ →
       ∀ (fF : ℂ → ℂ) (fnF : ℕ → ℂ → ℂ),
@@ -763,7 +762,7 @@ theorem poincare_one_one_ball :
           * (volume B) ^ (1/2 : ℝ)) atTop (𝓝 0) := by
         have := ENNReal.Tendsto.mul_const hconv (Or.inr hVBfin); simpa using this
       exact tendsto_of_tendsto_of_tendsto_of_le_of_le (g := fun _ => (0:ℝ≥0∞)) tendsto_const_nhds
-        hrhs (fun n => zero_le _) hbound
+        hrhs (fun n => zero_le) hbound
     set If := ∫⁻ z in B, ‖f z‖ₑ ∂volume with hIf
     set dn := fun n => ∫⁻ z in B, ‖fn n z - f z‖ₑ ∂volume with hdn
     have hae : ∀ n, AEMeasurable (fun z => ‖fn n z - f z‖ₑ) (volume.restrict B) :=
@@ -802,7 +801,7 @@ theorem poincare_one_one_ball :
       Tendsto (fun n => eLpNorm (fun z => fnF n z - fF z) 1 (volume.restrict B)) atTop (𝓝 0) →
       Tendsto (fun n => ⨍ w in B, fnF n w ∂volume) atTop (𝓝 (⨍ w in B, fF w ∂volume)) := by
     intro B hBfin hBpos F Fn hFn_int hF_int hconvF
-    haveI : IsFiniteMeasure (volume.restrict B) :=
+    have : IsFiniteMeasure (volume.restrict B) :=
       ⟨by rw [Measure.restrict_apply_univ]; exact hBfin.lt_top⟩
     rw [tendsto_iff_norm_sub_tendsto_zero]
     have hbound : ∀ n, ‖(⨍ w in B, Fn n w ∂volume) - (⨍ w in B, F w ∂volume)‖
@@ -825,7 +824,8 @@ theorem poincare_one_one_ball :
       have htoreal : Tendsto
           (fun n => (eLpNorm (fun z => Fn n z - F z) 1 (volume.restrict B)).toReal)
           atTop (𝓝 0) := by
-        have := (ENNReal.tendsto_toReal (by norm_num)).comp hconvF; simpa using this
+        have := (ENNReal.tendsto_toReal (by norm_num)).comp hconvF
+        simpa [Function.comp_def] using this
       have := htoreal.const_mul ((volume.real B)⁻¹); simpa using this
     exact squeeze_zero (fun n => norm_nonneg _) hbound hrhs
   -- LHS oscillation L²(B) convergence helper.
@@ -837,7 +837,7 @@ theorem poincare_one_one_ball :
       Tendsto (fun n => eLpNorm (fun z => (fnF n z - (⨍ w in B, fnF n w ∂volume))
           - (fF z - (⨍ w in B, fF w ∂volume))) 2 (volume.restrict B)) atTop (𝓝 0) := by
     intro B hBfin hBpos F Fn hFn_cont hFmem hconvF hcn
-    haveI : IsFiniteMeasure (volume.restrict B) :=
+    have : IsFiniteMeasure (volume.restrict B) :=
       ⟨by rw [Measure.restrict_apply_univ]; exact hBfin.lt_top⟩
     have hμne : (volume.restrict B) ≠ 0 := by
       rw [← Measure.measure_univ_ne_zero, Measure.restrict_apply_univ]; exact hBpos
@@ -860,14 +860,15 @@ theorem poincare_one_one_ball :
     have hrhs : Tendsto (fun n => eLpNorm (fun z => Fn n z - F z) 2 (volume.restrict B)
         + ‖cn n‖ₑ * (volume B) ^ (1 / (2:ℝ))) atTop (𝓝 0) := by
       have hc : Tendsto (fun n => ‖cn n‖ₑ) atTop (𝓝 0) := by
-        have := (continuous_enorm.tendsto (0:ℂ)).comp hcn; simpa using this
+        have := (continuous_enorm.tendsto (0:ℂ)).comp hcn
+        simpa [Function.comp_def] using this
       have hVBfin : ((volume B) ^ (1/2 : ℝ)) ≠ ⊤ :=
         ENNReal.rpow_ne_top_of_nonneg (by norm_num) hBfin
       have hc2 : Tendsto (fun n => ‖cn n‖ₑ * (volume B) ^ (1 / (2:ℝ))) atTop (𝓝 0) := by
         have := ENNReal.Tendsto.mul_const hc (Or.inr hVBfin); simpa using this
       have := hconvF.add hc2; simpa using this
     exact tendsto_of_tendsto_of_tendsto_of_le_of_le (g := fun _ => (0:ℝ≥0∞))
-      tendsto_const_nhds hrhs (fun n => zero_le _) hbound
+      tendsto_const_nhds hrhs (fun n => zero_le) hbound
   -- ============================================================
   -- WIRING: mollify F, apply the smooth Poincaré, pass to the limit.
   -- ============================================================
@@ -907,23 +908,23 @@ theorem poincare_one_one_ball :
     HasCompactSupport.continuous_convolution_left _ (hρ_cs n) (hρ_cont n) hGx_li
   have hGyn_cont : ∀ n, Continuous (Gyn n) := fun n =>
     HasCompactSupport.continuous_convolution_left _ (hρ_cs n) (hρ_cont n) hGy_li
-  haveI hBfinm : IsFiniteMeasure (volume.restrict B) :=
+  have hBfinm : IsFiniteMeasure (volume.restrict B) :=
     ⟨by rw [Measure.restrict_apply_univ]; exact hBfin.lt_top⟩
   -- L²(B) and L¹(B) convergence of Fn, Gxn, Gyn.
   have hconvF2 : Tendsto (fun n => eLpNorm (fun z => Fn n z - F z) 2 (volume.restrict B))
       atTop (𝓝 0) :=
     tendsto_of_tendsto_of_tendsto_of_le_of_le (g := fun _ => (0:ℝ≥0∞))
-      tendsto_const_nhds (conv_tendsto hF φ₀ hφ₀rout) (fun n => zero_le _)
+      tendsto_const_nhds (conv_tendsto hF φ₀ hφ₀rout) (fun n => zero_le)
       (fun n => eLpNorm_mono_measure _ Measure.restrict_le_self)
   have hconvGx : Tendsto (fun n => eLpNorm (fun z => Gxn n z - Gx z) 2 (volume.restrict B))
       atTop (𝓝 0) :=
     tendsto_of_tendsto_of_tendsto_of_le_of_le (g := fun _ => (0:ℝ≥0∞))
-      tendsto_const_nhds (conv_tendsto hGx φ₀ hφ₀rout) (fun n => zero_le _)
+      tendsto_const_nhds (conv_tendsto hGx φ₀ hφ₀rout) (fun n => zero_le)
       (fun n => eLpNorm_mono_measure _ Measure.restrict_le_self)
   have hconvGy : Tendsto (fun n => eLpNorm (fun z => Gyn n z - Gy z) 2 (volume.restrict B))
       atTop (𝓝 0) :=
     tendsto_of_tendsto_of_tendsto_of_le_of_le (g := fun _ => (0:ℝ≥0∞))
-      tendsto_const_nhds (conv_tendsto hGy φ₀ hφ₀rout) (fun n => zero_le _)
+      tendsto_const_nhds (conv_tendsto hGy φ₀ hφ₀rout) (fun n => zero_le)
       (fun n => eLpNorm_mono_measure _ Measure.restrict_le_self)
   have hconvF1 : Tendsto (fun n => eLpNorm (fun z => Fn n z - F z) 1 (volume.restrict B))
       atTop (𝓝 0) := by
@@ -938,7 +939,7 @@ theorem poincare_one_one_ball :
     have hVBfin : ((volume B) ^ (1/2 : ℝ)) ≠ ⊤ :=
       ENNReal.rpow_ne_top_of_nonneg (by norm_num) hBfin
     refine tendsto_of_tendsto_of_tendsto_of_le_of_le (g := fun _ => (0:ℝ≥0∞))
-      tendsto_const_nhds ?_ (fun n => zero_le _) hb
+      tendsto_const_nhds ?_ (fun n => zero_le) hb
     have := ENNReal.Tendsto.mul_const hconvF2 (Or.inr hVBfin); simpa using this
   have hFn_intB : ∀ n, IntegrableOn (Fn n) B volume := fun n =>
     ((hFn_cd n).continuous.locallyIntegrable.integrableOn_isCompact
@@ -1016,7 +1017,7 @@ theorem poincare_one_one_ball :
         _ = (‖(fderiv ℝ (Fn n) z) 1‖ + ‖(fderiv ℝ (Fn n) z) Complex.I‖) * ‖w‖ := by ring
     calc ‖fderiv ℝ (Fn n) z‖ₑ
         ≤ ‖(fderiv ℝ (Fn n) z) 1‖ₑ + ‖(fderiv ℝ (Fn n) z) Complex.I‖ₑ := by
-          rw [← ofReal_norm_eq_enorm, ← ofReal_norm_eq_enorm, ← ofReal_norm_eq_enorm,
+          rw [← ofReal_norm, ← ofReal_norm, ← ofReal_norm,
             ← ENNReal.ofReal_add (norm_nonneg _) (norm_nonneg _)]
           exact ENNReal.ofReal_le_ofReal hptw
       _ = ‖Gxn n z‖ₑ + ‖Gyn n z‖ₑ := by rw [hdx n z, hdy n z]

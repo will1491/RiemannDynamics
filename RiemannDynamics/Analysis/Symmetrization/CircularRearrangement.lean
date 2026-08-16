@@ -116,7 +116,7 @@ theorem measurable_circRearrange (p : ℂ) (σ : ℂ → ℝ≥0∞) (hσ : Meas
       = {z : ℂ | ENNReal.ofReal (2 * |Complex.arg (z - p)|)
           < distribFun (2 * π) (angularProfile p σ ‖z - p‖) c} := by
     ext z
-    simp only [mem_setOf_eq, circRearrange, hfold]
+    simp only [mem_ofPred_eq, circRearrange, hfold]
     exact lt_decreasingRearrange_iff (T := 2 * π) (f := angularProfile p σ ‖z - p‖)
       (2 * |Complex.arg (z - p)|) c
   rw [hchar]

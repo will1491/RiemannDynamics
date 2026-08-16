@@ -98,8 +98,8 @@ theorem sensePreserving_of_tendstoLocallyUniformly {fₙ : ℕ → ℂ → ℂ} 
         rw [hwf_spec t ht, mul_div_assoc, div_self h2pi_ne, mul_one]
       exact ContinuousOn.congr (hdcont.continuousOn.div_const _) heq
     have hwf_int_cont : ContinuousOn wfun (Set.Icc (0 : ℝ) τ) := by
-      rw [continuousOn_iff_continuous_restrict] at hwf_cont ⊢
-      exact Complex.closedEmbedding_intCast.isEmbedding.continuous_iff.mpr hwf_cont
+      rw [continuousOn_iff_continuous_domRestrict] at hwf_cont ⊢
+      exact Complex.isClosedEmbedding_intCast.isEmbedding.continuous_iff.mpr hwf_cont
     have hconst : wfun 0 = wfun τ :=
       isPreconnected_Icc.constant hwf_int_cont ⟨le_refl _, hτ_nonneg⟩ ⟨hτ_nonneg, le_refl _⟩
     have hdd : d τ = d 0 := by
@@ -155,8 +155,8 @@ theorem sensePreserving_of_tendstoLocallyUniformly {fₙ : ℕ → ℂ → ℂ} 
         rw [hkf_spec s hs, mul_div_assoc, div_self h2pi_ne, mul_one]
       exact ContinuousOn.congr (hWcont.continuousOn.div_const _) heq
     have hkf_int_cont : ContinuousOn kfun (Set.Icc α β) := by
-      rw [continuousOn_iff_continuous_restrict] at hkf_cont ⊢
-      exact Complex.closedEmbedding_intCast.isEmbedding.continuous_iff.mpr hkf_cont
+      rw [continuousOn_iff_continuous_domRestrict] at hkf_cont ⊢
+      exact Complex.isClosedEmbedding_intCast.isEmbedding.continuous_iff.mpr hkf_cont
     have hkconst : kfun α = kfun β :=
       isPreconnected_Icc.constant hkf_int_cont hα_mem hβ_mem
     -- At s = α the increment is 2πi (by well-definedness against the input log).
@@ -178,7 +178,7 @@ theorem sensePreserving_of_tendstoLocallyUniformly {fₙ : ℕ → ℂ → ℂ} 
   -- Global log lift: extend a winding-`+1` log on `[0, τ]` of a continuous,
   -- nonvanishing, `τ`-periodic loop `F` to all of `ℝ`.
   ----------------------------------------------------------------------------
-  haveI hfact : Fact ((0 : ℝ) < τ) := ⟨hτ_pos⟩
+  have hfact : Fact ((0 : ℝ) < τ) := ⟨hτ_pos⟩
   have globalLog : ∀ (F : ℝ → ℂ), Continuous F → (∀ θ, F θ ≠ 0) →
       Function.Periodic F τ →
       ∀ (L₀ : ℝ → ℂ), Continuous L₀ →
@@ -504,8 +504,8 @@ theorem pointwise_bounded_of_equicontinuousOn
   have hScpt : IsCompact S := isCompact_closedBall p (dist p z)
   have heq := heqc S hScpt
   rw [← equicontinuous_restrict_iff] at heq
-  haveI : CompactSpace S := isCompact_iff_compactSpace.mp hScpt
-  have hueq : UniformEquicontinuous (S.restrict ∘ F) :=
+  have : CompactSpace S := isCompact_iff_compactSpace.mp hScpt
+  have hueq : UniformEquicontinuous (S.domRestrict ∘ F) :=
     CompactSpace.uniformEquicontinuous_of_equicontinuous heq
   rw [Metric.uniformEquicontinuous_iff] at hueq
   obtain ⟨δ, hδ0, hδ⟩ := hueq 1 one_pos
@@ -552,7 +552,7 @@ theorem pointwise_bounded_of_equicontinuousOn
     have hxS : γ k ∈ S := hγS k (le_of_lt hk)
     have hyS : γ (k + 1) ∈ S := hγS (k + 1) hk
     have hd := hδ ⟨γ k, hxS⟩ ⟨γ (k + 1), hyS⟩ (by rw [Subtype.dist_eq]; exact hconsδ k) i
-    simp only [Function.comp_apply, Set.restrict_apply] at hd
+    simp only [Function.comp_apply, Set.domRestrict_apply] at hd
     exact le_of_lt hd
   have hbound := dist_le_range_sum_of_dist_le (f := fun k => F i (γ k)) M
     (d := fun _ => (1 : ℝ)) (by intro k hk; exact hFstep k hk)
@@ -581,7 +581,8 @@ theorem exists_subseq_tendsto_continuousMap
     rw [show (⇑(UniformOnFun.ofFun 𝔖) ∘ (DFunLike.coe : C(ℂ, ℂ) → (ℂ → ℂ)))
           = ContinuousMap.toUniformOnFunIsCompact from rfl,
         ContinuousMap.range_toUniformOnFunIsCompact]
-    exact UniformOnFun.isClosed_setOf_continuous (CompactlyCoherentSpace.isCoherentWith (X := ℂ))
+    exact UniformOnFun.isClosed_setOfPred_continuous
+      (CompactlyCoherentSpace.isCoherentWith (X := ℂ))
   set s : Set C(ℂ, ℂ) := Set.range Fn with hs
   have hKcpt : IsCompact (closure s) := by
     refine ArzelaAscoli.isCompact_closure_of_isClosedEmbedding

@@ -732,11 +732,11 @@ theorem modularLambdaH_iy_re_mem_Ioo {y : ℝ} (hy : 0 < y) :
   have h0 : Filter.Tendsto (fun t : ℝ => (modularLambdaH (Complex.I * (t : ℂ))).re)
       Filter.atTop (nhds (0 : ℝ)) := by
     have := (Complex.continuous_re.tendsto (0 : ℂ)).comp modularLambdaH_iy_tendsto_zero_atTop
-    simpa using this
+    simpa using! this
   have h1 : Filter.Tendsto (fun t : ℝ => (modularLambdaH (Complex.I * (t : ℂ))).re)
       (nhdsWithin 0 (Set.Ioi 0)) (nhds (1 : ℝ)) := by
     have := (Complex.continuous_re.tendsto (1 : ℂ)).comp modularLambdaH_iy_tendsto_one_atZeroPos
-    simpa using this
+    simpa using! this
   -- membership facts
   have hy_mem : y ∈ Set.Ioi (0 : ℝ) := Set.mem_Ioi.mpr hy
   have hy2_mem : y / 2 ∈ Set.Ioi (0 : ℝ) := Set.mem_Ioi.mpr (by linarith)
@@ -1270,7 +1270,7 @@ theorem analyticAt_localOpen_with_multiplicity
   -- (deriv f)(z₀) = 0, and deriv f is analytic, so analyticOrderAt (deriv f) z₀ ≥ 1.
   -- Specifically: if order = 0, then (deriv f)(z₀) ≠ 0 by definition.
   have h_deriv_order_ge_one : 1 ≤ analyticOrderAt (deriv f) z₀ := by
-    rw [ENat.one_le_iff_ne_zero]
+    rw [Order.one_le_iff_ne_zero]
     intro h_eq
     rw [h_deriv_at.analyticOrderAt_eq_zero] at h_eq
     exact h_eq h_dz

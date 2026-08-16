@@ -61,7 +61,7 @@ theorem HarmonicOnNhd.subharmonicOn {f : ℂ → ℝ} {U : Set ℂ}
   have habs : |r| = r := abs_of_pos hr
   have hmono : InnerProductSpace.HarmonicOnNhd f (Metric.closedBall c |r|) := by
     rw [habs]; exact hf.mono hsub
-  rw [HarmonicOnNhd.circleAverage_eq hmono]
+  rw [InnerProductSpace.HarmonicOnNhd.circleAverage_eq hmono]
 
 /-- **The pointwise maximum of two subharmonic functions is subharmonic.** The max of two continuous
 functions is continuous, and `max f g c ≤ max (⨍ f) (⨍ g) ≤ ⨍ (max f g)` by monotonicity of the
@@ -323,7 +323,7 @@ theorem poissonModify_ge {f : ℂ → ℝ} {U : Set ℂ} (hf : SubharmonicOn f U
         hfmv c₁ (hballρU (Metric.mem_closedBall_self hρ.le)) ρ hρ hballρU
       have hρabs : |ρ| = ρ := abs_of_pos hρ
       have hpmmean : Real.circleAverage (poissonModify f c R) c₁ ρ = poissonModify f c R c₁ := by
-        apply HarmonicOnNhd.circleAverage_eq
+        apply InnerProductSpace.HarmonicOnNhd.circleAverage_eq
         rw [hρabs]; exact hpmharm.mono hballρ
       -- Circle integrability of `f` and `poissonModify` on the circle.
       have hsphereρU : Metric.sphere c₁ ρ ⊆ U :=
@@ -557,7 +557,7 @@ theorem SubharmonicOn.poissonModify {f : ℂ → ℝ} {U : Set ℂ}
     have hHcontcl : ContinuousOn H (closure (Metric.ball c₀ r)) := by
       rw [closure_ball c₀ hrne]; exact hHcb
     have hHmean : Real.circleAverage H c₀ r = H c₀ := by
-      apply HarmonicContOnCl.circleAverage_eq
+      apply InnerProductSpace.HarmonicContOnCl.circleAverage_eq
       refine ⟨?_, ?_⟩
       · rw [abs_of_pos hr]; exact hHharm
       · rw [abs_of_pos hr]; exact hHcontcl
@@ -583,7 +583,7 @@ theorem SubharmonicOn.poissonModify {f : ℂ → ℝ} {U : Set ℂ}
         have hfmean : f p ≤ Real.circleAverage f p ρ :=
           hfmv p (hballρU (Metric.mem_closedBall_self hρ.le)) ρ hρ hballρU
         have hHmean' : Real.circleAverage H p ρ = H p :=
-          HarmonicOnNhd.circleAverage_eq (by rw [hρabs]; exact hHharm.mono hballρ)
+          InnerProductSpace.HarmonicOnNhd.circleAverage_eq (by rw [hρabs]; exact hHharm.mono hballρ)
         have hfci : CircleIntegrable f p ρ := (hfcU.mono hsphereρU).circleIntegrable hρ.le
         have hHci : CircleIntegrable H p ρ :=
           (hHcb.mono ((Metric.sphere_subset_closedBall).trans
@@ -824,7 +824,7 @@ theorem subharmonicOn_of_locally {f : ℂ → ℝ} {U : Set ℂ} (hU : IsOpen U)
       -- Sub-mean-value for `g` on this circle: `f` by `hloc`, `P` by harmonicity.
       have hfmean : f p ≤ Real.circleAverage f p ρ := hsmv ρ hρpos hρltr₀ hballρU
       have hPmeanρ : Real.circleAverage P p ρ = P p :=
-        HarmonicOnNhd.circleAverage_eq (by rw [hρabs]; exact hPharm.mono hballρ)
+        InnerProductSpace.HarmonicOnNhd.circleAverage_eq (by rw [hρabs]; exact hPharm.mono hballρ)
       have hgmean : g p ≤ Real.circleAverage g p ρ := by
         rw [hg]; simp only
         rw [show Real.circleAverage (fun z => f z - P z) p ρ
@@ -876,7 +876,7 @@ theorem subharmonicOn_of_locally {f : ℂ → ℝ} {U : Set ℂ} (hU : IsOpen U)
   have hPcontcl : ContinuousOn P (closure (Metric.ball c r)) := by
     rw [closure_ball c hrne]; exact hPcb
   have hPmean : Real.circleAverage P c r = P c := by
-    apply HarmonicContOnCl.circleAverage_eq
+    apply InnerProductSpace.HarmonicContOnCl.circleAverage_eq
     refine ⟨?_, ?_⟩
     · rw [abs_of_pos hr]; exact hPharm
     · rw [abs_of_pos hr]; exact hPcontcl
@@ -918,7 +918,7 @@ theorem subharmonicOn_indicator_of_harmonicOnNhd {u : ℂ → ℝ} {V W : Set �
       rw [habs] at hz
       exact Set.indicator_of_mem (hball (Metric.sphere_subset_closedBall hz)).1 u
     have hmean : Real.circleAverage u c r = u c :=
-      HarmonicOnNhd.circleAverage_eq (by rw [habs]; exact hu.mono hball)
+      InnerProductSpace.HarmonicOnNhd.circleAverage_eq (by rw [habs]; exact hu.mono hball)
     have heq : Set.indicator V u c = Real.circleAverage (Set.indicator V u) c r := by
       rw [Set.indicator_of_mem hcV, havg, hmean]
     exact heq.le

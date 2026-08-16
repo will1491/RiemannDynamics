@@ -40,7 +40,7 @@ lemma czOperator_beurling_pairing_symm {p p' : ℝ≥0∞} (hp1 : 1 < p) (hp_top
     (hf : BoundedFiniteSupport f volume) (hg : MemLp g p' volume) :
     ∫ x, czOperator beurlingKernel r f x * g x ∂volume
       = ∫ x, f x * czOperator beurlingKernel r g x ∂volume := by
-  haveI : ENNReal.HolderConjugate p' p := ENNReal.HolderConjugate.symm
+  have : ENNReal.HolderConjugate p' p := ENNReal.HolderConjugate.symm
   have hp'_top : p' ≠ ⊤ := ((ENNReal.HolderConjugate.lt_top_iff_one_lt p' p).mpr hp1).ne
   have hp'1 : 1 < p' :=
     (ENNReal.HolderConjugate.lt_top_iff_one_lt p p').mp (lt_of_le_of_ne le_top hp_top)
@@ -80,17 +80,17 @@ lemma czOperator_beurling_pairing_symm {p p' : ℝ≥0∞} (hp1 : 1 < p) (hp_top
       have hnorm : ‖Complex.polarCoord.symm pp‖ = pp.1 := by
         rw [Complex.norm_polarCoord_symm, abs_of_pos hpp1]
       by_cases hmem : Complex.polarCoord.symm pp ∈ {u : ℂ | r ≤ ‖u‖}
-      · have hpR : r ≤ pp.1 := by rw [Set.mem_setOf_eq, hnorm] at hmem; exact hmem
+      · have hpR : r ≤ pp.1 := by rw [Set.mem_ofPred_eq, hnorm] at hmem; exact hmem
         rw [Set.indicator_of_mem hmem,
           Set.indicator_of_mem (Set.mem_prod.mpr ⟨Set.mem_Ici.mpr hpR, hpp2⟩)]
         have henorm : ‖Complex.polarCoord.symm pp‖ₑ = ENNReal.ofReal pp.1 := by
-          rw [← ofReal_norm_eq_enorm, hnorm]
+          rw [← ofReal_norm, hnorm]
         rw [henorm, smul_eq_mul,
           show ((ENNReal.ofReal pp.1 ^ 2)⁻¹) ^ q = ENNReal.ofReal (((pp.1^2)⁻¹)^q) by
             rw [← ENNReal.ofReal_pow hpp1.le, ← ENNReal.ofReal_inv_of_pos (by positivity),
               ENNReal.ofReal_rpow_of_pos (by positivity)],
           ← ENNReal.ofReal_mul hpp1.le]
-      · rw [Set.indicator_of_notMem hmem, smul_zero]; exact zero_le _
+      · rw [Set.indicator_of_notMem hmem, smul_zero]; exact zero_le
     refine lt_of_le_of_lt (setLIntegral_mono
       (hmeas_polar.indicator (measurableSet_Ici.prod measurableSet_Ioo)) hbound) ?_
     calc ∫⁻ pp in polarCoord.target, box pp
@@ -128,7 +128,7 @@ lemma czOperator_beurling_pairing_symm {p p' : ℝ≥0∞} (hp1 : 1 < p) (hp_top
                 ((measurable_id.pow_const 2).inv)
             · simp only [Set.mem_Ici] at hy
               have hypos : 0 < y := lt_of_lt_of_le hr hy
-              rw [← ofReal_norm_eq_enorm, Real.norm_eq_abs, abs_of_nonneg (by positivity)]
+              rw [← ofReal_norm, Real.norm_eq_abs, abs_of_nonneg (by positivity)]
   -- The kernel section centered at `y` lies in `Lᵖ`, with a `y`-independent `Lᵖ` norm bound.
   have hkermem_p : ∀ y : ℂ,
       eLpNorm (fun x => (Metric.ball y r)ᶜ.indicator (fun x => beurlingKernel y x) x) p volume
@@ -162,7 +162,7 @@ lemma czOperator_beurling_pairing_symm {p p' : ℝ≥0∞} (hp1 : 1 < p) (hp_top
         = (fun x => {u : ℂ | r ≤ ‖u‖}.indicator (fun u => ((‖u‖ₑ ^ 2)⁻¹) ^ q) (y - x)) := by
       funext x
       have hiff : (x ∈ (Metric.ball y r)ᶜ) ↔ (y - x ∈ {u : ℂ | r ≤ ‖u‖}) := by
-        rw [Set.mem_compl_iff, Metric.mem_ball, not_lt, Set.mem_setOf_eq, dist_comm,
+        rw [Set.mem_compl_iff, Metric.mem_ball, not_lt, Set.mem_ofPred_eq, dist_comm,
           Complex.dist_eq]
       by_cases h : x ∈ (Metric.ball y r)ᶜ
       · rw [Set.indicator_of_mem h, Set.indicator_of_mem (hiff.mp h)]
@@ -232,11 +232,11 @@ lemma czOperator_beurling_pairing_symm {p p' : ℝ≥0∞} (hp1 : 1 < p) (hp_top
       by_cases h : z.2 ∈ (Metric.ball z.1 r)ᶜ
       · have hz : z ∈ {z : ℂ × ℂ | r ≤ dist z.2 z.1} := by
           simp only [Set.mem_compl_iff, Metric.mem_ball, not_lt] at h
-          rw [Set.mem_setOf_eq]; exact h
+          rw [Set.mem_ofPred_eq]; exact h
         rw [Set.indicator_of_mem h, Set.indicator_of_mem hz]
       · have hz : z ∉ {z : ℂ × ℂ | r ≤ dist z.2 z.1} := by
           simp only [Set.mem_compl_iff, Metric.mem_ball, not_not] at h
-          rw [Set.mem_setOf_eq, not_le]; exact h
+          rw [Set.mem_ofPred_eq, not_le]; exact h
         rw [Set.indicator_of_notMem h, Set.indicator_of_notMem hz]
     have hmeasF : AEStronglyMeasurable (Function.uncurry F) (volume.prod volume) := by
       rw [huncEq]
@@ -337,7 +337,7 @@ lemma eLpNorm_czOperator_beurling_Lp_high {p p' : ℝ≥0∞} (hp2 : 2 < p) (hp_
     [ENNReal.HolderConjugate p p'] {r : ℝ} (hr : 0 < r) {f : ℂ → ℂ} (hf : MemLp f p volume) :
     eLpNorm (czOperator beurlingKernel r f) p volume
       ≤ (beurlingTruncLpConst p' : ℝ≥0∞) * eLpNorm f p volume := by
-  haveI : ENNReal.HolderConjugate p' p := ENNReal.HolderConjugate.symm
+  have : ENNReal.HolderConjugate p' p := ENNReal.HolderConjugate.symm
   have hp1 : 1 < p := lt_trans (by norm_num) hp2
   have hp0 : p ≠ 0 := by rintro rfl; exact absurd hp1 (by simp)
   -- The conjugate exponent lies in `(1, 2)`.
@@ -439,7 +439,7 @@ lemma eLpNorm_czOperator_beurling_Lp_high {p p' : ℝ≥0∞} (hp2 : 2 < p) (hp_
           rw [hnorm, zpow_neg, zpow_neg, zpow_two, zpow_two]
           exact inv_anti₀ (by positivity) (mul_le_mul hr_le hr_le hr.le hxy_pos.le)
         calc ‖beurlingKernel x y‖ₑ = ENNReal.ofReal ‖beurlingKernel x y‖ :=
-              (ofReal_norm_eq_enorm _).symm
+              (ofReal_norm _).symm
           _ ≤ ENNReal.ofReal ((r : ℝ) ^ (-2 : ℤ)) := ENNReal.ofReal_le_ofReal hle
       have hczeq : czOperator beurlingKernel r h x
           = ∫ y in (Metric.ball x r)ᶜ, beurlingKernel x y * h y := rfl
@@ -463,7 +463,7 @@ lemma eLpNorm_czOperator_beurling_Lp_high {p p' : ℝ≥0∞} (hp2 : 2 < p) (hp_
         (aestronglyMeasurable_czOperator_beurling' hhLp.aestronglyMeasurable) M ?_
       filter_upwards with x
       have hbE := hOpBoundE x
-      rw [← ofReal_norm_eq_enorm] at hbE
+      rw [← ofReal_norm] at hbE
       have hh1 : eLpNorm h 1 volume ≠ ⊤ := (hh.memLp 1).2.ne
       have hprod : ENNReal.ofReal ((r : ℝ) ^ (-2 : ℤ)) * eLpNorm h 1 volume
           = ENNReal.ofReal M := by
@@ -503,7 +503,7 @@ lemma eLpNorm_czOperator_beurling_Lp_high {p p' : ℝ≥0∞} (hp2 : 2 < p) (hp_
       refine ENNReal.tendsto_ofReal (Tendsto.div_atTop tendsto_const_nhds ?_)
       exact tendsto_atTop_add_const_right _ 1 tendsto_natCast_atTop_atTop
     exact tendsto_of_tendsto_of_tendsto_of_le_of_le tendsto_const_nhds hto0
-      (fun n => zero_le _) hggle
+      (fun n => zero_le) hggle
   -- The kernel section centered at `x` is in `Lᵖ'` (`∫_{|u|≥r}|u|^{-2 p'.toReal} < ∞`).
   set q' : ℝ := p'.toReal with hq'_def
   have hq'1 : 1 < q' := by
@@ -531,17 +531,17 @@ lemma eLpNorm_czOperator_beurling_Lp_high {p p' : ℝ≥0∞} (hp2 : 2 < p) (hp_
       have hnorm : ‖Complex.polarCoord.symm pp‖ = pp.1 := by
         rw [Complex.norm_polarCoord_symm, abs_of_pos hpp1]
       by_cases hmem : Complex.polarCoord.symm pp ∈ {u : ℂ | r ≤ ‖u‖}
-      · have hpR : r ≤ pp.1 := by rw [Set.mem_setOf_eq, hnorm] at hmem; exact hmem
+      · have hpR : r ≤ pp.1 := by rw [Set.mem_ofPred_eq, hnorm] at hmem; exact hmem
         rw [Set.indicator_of_mem hmem,
           Set.indicator_of_mem (Set.mem_prod.mpr ⟨Set.mem_Ici.mpr hpR, hpp2⟩)]
         have henorm : ‖Complex.polarCoord.symm pp‖ₑ = ENNReal.ofReal pp.1 := by
-          rw [← ofReal_norm_eq_enorm, hnorm]
+          rw [← ofReal_norm, hnorm]
         rw [henorm, smul_eq_mul,
           show ((ENNReal.ofReal pp.1 ^ 2)⁻¹) ^ q' = ENNReal.ofReal (((pp.1^2)⁻¹)^q') by
             rw [← ENNReal.ofReal_pow hpp1.le, ← ENNReal.ofReal_inv_of_pos (by positivity),
               ENNReal.ofReal_rpow_of_pos (by positivity)],
           ← ENNReal.ofReal_mul hpp1.le]
-      · rw [Set.indicator_of_notMem hmem, smul_zero]; exact zero_le _
+      · rw [Set.indicator_of_notMem hmem, smul_zero]; exact zero_le
     refine lt_of_le_of_lt (setLIntegral_mono
       (hmeas_polar.indicator (measurableSet_Ici.prod measurableSet_Ioo)) hbound) ?_
     calc ∫⁻ pp in polarCoord.target, box pp
@@ -579,7 +579,7 @@ lemma eLpNorm_czOperator_beurling_Lp_high {p p' : ℝ≥0∞} (hp2 : 2 < p) (hp_
                 ((measurable_id.pow_const 2).inv)
             · simp only [Set.mem_Ici] at hy
               have hypos : 0 < y := lt_of_lt_of_le hr hy
-              rw [← ofReal_norm_eq_enorm, Real.norm_eq_abs, abs_of_nonneg (by positivity)]
+              rw [← ofReal_norm, Real.norm_eq_abs, abs_of_nonneg (by positivity)]
   have hkersec : ∀ x : ℂ, MemLp
       (fun y => (Metric.ball x r)ᶜ.indicator (fun y => beurlingKernel x y) y) p' volume := by
     intro x
@@ -616,7 +616,7 @@ lemma eLpNorm_czOperator_beurling_Lp_high {p p' : ℝ≥0∞} (hp2 : 2 < p) (hp_
         = (fun y => {u : ℂ | r ≤ ‖u‖}.indicator (fun u => ((‖u‖ₑ ^ 2)⁻¹) ^ q') (x - y)) := by
       funext y
       have hiff : (y ∈ (Metric.ball x r)ᶜ) ↔ (x - y ∈ {u : ℂ | r ≤ ‖u‖}) := by
-        rw [Set.mem_compl_iff, Metric.mem_ball, not_lt, Set.mem_setOf_eq, dist_comm,
+        rw [Set.mem_compl_iff, Metric.mem_ball, not_lt, Set.mem_ofPred_eq, dist_comm,
           Complex.dist_eq]
       by_cases h : y ∈ (Metric.ball x r)ᶜ
       · rw [Set.indicator_of_mem h, Set.indicator_of_mem (hiff.mp h)]
@@ -677,9 +677,9 @@ lemma eLpNorm_czOperator_beurling_Lp_high {p p' : ℝ≥0∞} (hp2 : 2 < p) (hp_
         (fun n => ‖czOperator beurlingKernel r (gg n) x - czOperator beurlingKernel r f x‖ₑ)
         atTop (𝓝 0) :=
       tendsto_of_tendsto_of_tendsto_of_le_of_le tendsto_const_nhds hRHS0
-        (fun n => zero_le _) hbdE
+        (fun n => zero_le) hbdE
     have := (ENNReal.tendsto_toReal (by simp)).comp henorm0
-    simpa [Function.comp, toReal_enorm] using this
+    simpa [Function.comp_def, toReal_enorm] using this
   -- Fatou: pass the BFS bound `eLpNorm (czOp r (gg n)) p ≤ C_{p'} · ‖gg n‖_p` to the limit.
   have hggnorm : Tendsto (fun n => eLpNorm (gg n) p volume) atTop (𝓝 (eLpNorm f p volume)) := by
     set L := eLpNorm f p volume with hL
@@ -743,7 +743,7 @@ lemma exists_eLpNorm_simpleNontangential_beurling_Lp_high {p : ℝ≥0∞} (hp2 
   -- needed for the duality (`p > 2`) truncation bound `eLpNorm_czOperator_beurling_Lp_high`.
   set p' : ℝ≥0∞ := (1 - p⁻¹)⁻¹ with hp'_def
   have hpinv_le_one : p⁻¹ ≤ 1 := by rw [ENNReal.inv_le_one]; exact hp1.le
-  haveI hHC : ENNReal.HolderConjugate p p' := by
+  have hHC : ENNReal.HolderConjugate p p' := by
     rw [hp'_def, ENNReal.holderConjugate_iff, inv_inv, add_tsub_cancel_of_le hpinv_le_one]
   -- `p` as an `ℝ≥0`, with `1 < pnn`.
   set pnn : ℝ≥0 := p.toNNReal with hpnn_def
@@ -753,14 +753,16 @@ lemma exists_eLpNorm_simpleNontangential_beurling_Lp_high {p : ℝ≥0∞} (hp2 
     exact_mod_cast this
   -- The HL maximal `Lᵖ` strong-type bound (constant `Cgmf`).
   -- Use the `defaultA 4` doubling structure (the one carried by the Carleson lemmas).
-  haveI hA4 : (volume : Measure ℂ).IsDoubling ((defaultA 4 : ℕ) : ℝ≥0) :=
+  have hA4 : (volume : Measure ℂ).IsDoubling ((defaultA 4 : ℕ) : ℝ≥0) :=
     doublingMeasure_complex_defaultA4.toIsDoubling
-  set Cgmf : ℝ≥0 := C2_0_6' ((defaultA 4 : ℕ) : ℝ≥0) 1 pnn with hCgmf_def
+  set Cgmf : ℝ≥0 := C2_0_6 ((defaultA 4 : ℕ) : ℝ≥0) 1 pnn with hCgmf_def
   have hgmf : HasStrongType
-      (globalMaximalFunction (X := ℂ) (E := ℂ) (A := ((defaultA 4 : ℕ) : ℝ≥0)) volume 1)
-      (pnn : ℝ≥0∞) (pnn : ℝ≥0∞) volume volume Cgmf :=
-    hasStrongType_globalMaximalFunction (X := ℂ) (E := ℂ) (μ := volume)
-      (A := ((defaultA 4 : ℕ) : ℝ≥0)) (p₁ := 1) (p₂ := pnn) zero_lt_one hpnn1
+      (globalMaximalFunction (X := ℂ) (ε := ℂ) volume 1)
+      (pnn : ℝ≥0∞) (pnn : ℝ≥0∞) volume volume Cgmf := by
+    have h := hasStrongType_maximalFunction (X := ℂ) (ε' := ℂ) (μ := volume)
+      (A := ((defaultA 4 : ℕ) : ℝ≥0)) (𝓑 := Set.univ (α := ℂ × ℝ)) (c := (·.fst))
+      (r := (·.snd)) (p₁ := 1) (p₂ := pnn) zero_lt_one hpnn1
+    norm_cast at h
   -- Abbreviations for the truncation constant (the duality constant `beurlingTruncLpConst p'`).
   set Ctr : ℝ≥0 := beurlingTruncLpConst p' with hCtr_def
   -- **Part (a): the BFS bound at a positive scale `r`.**
@@ -819,9 +821,9 @@ lemma exists_eLpNorm_simpleNontangential_beurling_Lp_high {p : ℝ≥0∞} (hp2 
     -- Measurability for `eLpNorm_add_le`.
     have hm_czg : AEStronglyMeasurable
         (globalMaximalFunction volume 1 (czOperator beurlingKernel r g)) volume :=
-      MeasureTheory.AEStronglyMeasurable.globalMaximalFunction
+      measurable_maximalFunction.aestronglyMeasurable
     have hm_g : AEStronglyMeasurable (globalMaximalFunction volume 1 g) volume :=
-      MeasureTheory.AEStronglyMeasurable.globalMaximalFunction
+      measurable_maximalFunction.aestronglyMeasurable
     rw [hpw_def, show (4 : ℂ → ℝ≥0∞)
           * globalMaximalFunction volume 1 (czOperator beurlingKernel r g)
         = (4 : ℝ≥0) • globalMaximalFunction volume 1 (czOperator beurlingKernel r g) by
@@ -898,7 +900,7 @@ lemma exists_eLpNorm_simpleNontangential_beurling_Lp_high {p : ℝ≥0∞} (hp2 
     have mct := eLpNorm_iSup' (p := p) (f := fseq) (μ := volume)
       (fun n => aestronglyMeasurable_simpleNontangentialOperator.aemeasurable)
       (by filter_upwards; exact f_mon)
-    rw [← snt0, ← mct]
+    rw [← snt0, show (⨆ n, fseq n) = fun x => ⨆ n, fseq n x from funext fun _ => iSup_apply, mct]
     apply iSup_le
     intro n
     exact hBFSscale (r := (n + 1 : ℝ)⁻¹) (by positivity) g hg
@@ -936,7 +938,7 @@ lemma exists_eLpNorm_simpleNontangential_beurling_Lp_high {p : ℝ≥0∞} (hp2 
           volume := by
     intro x' R hR
     -- The membership via the `Lᵖ'` lintegral finiteness.
-    haveI : ENNReal.HolderConjugate p' p := ENNReal.HolderConjugate.symm
+    have : ENNReal.HolderConjugate p' p := ENNReal.HolderConjugate.symm
     have hp'_top : p' ≠ ⊤ := ((ENNReal.HolderConjugate.lt_top_iff_one_lt p' p).mpr hp1).ne
     have hp'1 : 1 < p' :=
       (ENNReal.HolderConjugate.lt_top_iff_one_lt p p').mp (lt_of_le_of_ne le_top hp_top)
@@ -968,17 +970,17 @@ lemma exists_eLpNorm_simpleNontangential_beurling_Lp_high {p : ℝ≥0∞} (hp2 
         have hnorm : ‖Complex.polarCoord.symm pp‖ = pp.1 := by
           rw [Complex.norm_polarCoord_symm, abs_of_pos hpp1]
         by_cases hmem : Complex.polarCoord.symm pp ∈ {u : ℂ | R ≤ ‖u‖}
-        · have hpR : R ≤ pp.1 := by rw [Set.mem_setOf_eq, hnorm] at hmem; exact hmem
+        · have hpR : R ≤ pp.1 := by rw [Set.mem_ofPred_eq, hnorm] at hmem; exact hmem
           rw [Set.indicator_of_mem hmem,
             Set.indicator_of_mem (Set.mem_prod.mpr ⟨Set.mem_Ici.mpr hpR, hpp2⟩)]
           have henorm : ‖Complex.polarCoord.symm pp‖ₑ = ENNReal.ofReal pp.1 := by
-            rw [← ofReal_norm_eq_enorm, hnorm]
+            rw [← ofReal_norm, hnorm]
           rw [henorm, smul_eq_mul,
             show ((ENNReal.ofReal pp.1 ^ 2)⁻¹) ^ q' = ENNReal.ofReal (((pp.1^2)⁻¹)^q') by
               rw [← ENNReal.ofReal_pow hpp1.le, ← ENNReal.ofReal_inv_of_pos (by positivity),
                 ENNReal.ofReal_rpow_of_pos (by positivity)],
             ← ENNReal.ofReal_mul hpp1.le]
-        · rw [Set.indicator_of_notMem hmem, smul_zero]; exact zero_le _
+        · rw [Set.indicator_of_notMem hmem, smul_zero]; exact zero_le
       refine lt_of_le_of_lt (setLIntegral_mono
         (hmeas_polar.indicator (measurableSet_Ici.prod measurableSet_Ioo)) hbound) ?_
       calc ∫⁻ pp in polarCoord.target, box pp
@@ -1017,7 +1019,7 @@ lemma exists_eLpNorm_simpleNontangential_beurling_Lp_high {p : ℝ≥0∞} (hp2 
                   ((measurable_id.pow_const 2).inv)
               · simp only [Set.mem_Ici] at hy
                 have hypos : 0 < y := lt_of_lt_of_le hR hy
-                rw [← ofReal_norm_eq_enorm, Real.norm_eq_abs, abs_of_nonneg (by positivity)]
+                rw [← ofReal_norm, Real.norm_eq_abs, abs_of_nonneg (by positivity)]
     have hmeas : AEStronglyMeasurable
         (fun y => (Metric.ball x' R)ᶜ.indicator (fun y => beurlingKernel x' y) y) volume := by
       apply AEStronglyMeasurable.indicator _ measurableSet_ball.compl
@@ -1051,7 +1053,7 @@ lemma exists_eLpNorm_simpleNontangential_beurling_Lp_high {p : ℝ≥0∞} (hp2 
         = (fun y => {u : ℂ | R ≤ ‖u‖}.indicator (fun u => ((‖u‖ₑ ^ 2)⁻¹) ^ q') (x' - y)) := by
       funext y
       have hiff : (y ∈ (Metric.ball x' R)ᶜ) ↔ (x' - y ∈ {u : ℂ | R ≤ ‖u‖}) := by
-        rw [Set.mem_compl_iff, Metric.mem_ball, not_lt, Set.mem_setOf_eq, dist_comm,
+        rw [Set.mem_compl_iff, Metric.mem_ball, not_lt, Set.mem_ofPred_eq, dist_comm,
           Complex.dist_eq]
       by_cases h : y ∈ (Metric.ball x' R)ᶜ
       · rw [Set.indicator_of_mem h, Set.indicator_of_mem (hiff.mp h)]
@@ -1106,7 +1108,7 @@ lemma exists_eLpNorm_simpleNontangential_beurling_Lp_high {p : ℝ≥0∞} (hp2 
       refine ENNReal.tendsto_ofReal (Tendsto.div_atTop tendsto_const_nhds ?_)
       exact tendsto_atTop_add_const_right _ 1 tendsto_natCast_atTop_atTop
     exact tendsto_of_tendsto_of_tendsto_of_le_of_le tendsto_const_nhds hto0
-      (fun n => zero_le _) hggle
+      (fun n => zero_le) hggle
   -- Per-point: `simpleNTO 0 g x ≤ liminf (simpleNTO 0 gₙ x)`.
   have hsup : ∀ x, simpleNontangentialOperator beurlingKernel 0 g x
       ≤ liminf (fun n => simpleNontangentialOperator beurlingKernel 0 (gg n) x) atTop := by
@@ -1278,7 +1280,7 @@ lemma czOperator_beurling_ae_tendsto_Lp_high {p : ℝ≥0∞} (hp2 : 2 < p) (hp_
       refine ENNReal.tendsto_ofReal (Tendsto.div_atTop tendsto_const_nhds ?_)
       exact tendsto_atTop_add_const_right _ 1 tendsto_natCast_atTop_atTop
     refine tendsto_of_tendsto_of_tendsto_of_le_of_le tendsto_const_nhds hto0
-      (fun n => zero_le _) hgle
+      (fun n => zero_le) hgle
   -- The maximal-`Lᵖ` Chebyshev bound (inline version of `volume_simpleNontangential_ge_le`).
   obtain ⟨C, hC⟩ := exists_eLpNorm_simpleNontangential_beurling_Lp_high hp2 hp_top
   have vol_ge : ∀ {h : ℂ → ℂ}, MemLp h p volume → ∀ {a : ℝ≥0∞}, a ≠ 0 → a ≠ ⊤ →
@@ -1305,7 +1307,7 @@ lemma czOperator_beurling_ae_tendsto_Lp_high {p : ℝ≥0∞} (hp2 : 2 < p) (hp_
     have hsubset : ∀ n, B ⊆ {z | b ≤ simpleNontangentialOperator beurlingKernel 0 (f - g n) z} := by
       intro n z hz
       by_contra hlt
-      rw [Set.mem_setOf_eq, not_le] at hlt
+      rw [Set.mem_ofPred_eq, not_le] at hlt
       apply hz
       refine edist_lt_of_conv (hg n) z ha
         ⟨_, czOperator_beurling_tendsto_neg_pi ((hgsmooth n).of_le (by exact_mod_cast le_top))
@@ -1337,7 +1339,7 @@ lemma czOperator_beurling_ae_tendsto_Lp_high {p : ℝ≥0∞} (hp2 : 2 < p) (hp_
       have h3 := ENNReal.Tendsto.const_mul (a := b⁻¹ ^ p.toReal) h2 (Or.inr hbinv)
       rw [mul_zero] at h3
       exact h3
-    exact le_antisymm (ge_of_tendsto hto0 (Eventually.of_forall hmeas)) (zero_le _)
+    exact le_antisymm (ge_of_tendsto hto0 (Eventually.of_forall hmeas)) (zero_le)
   -- Assemble: union over the levels `1/(k+1)`, then `tendsto_of_cauchy_edist`.
   set Bk := fun k : ℕ => {z | ¬ ∀ᶠ q in (𝓝[>] (0:ℝ)) ×ˢ (𝓝[>] (0:ℝ)),
       edist (czOperator beurlingKernel q.1 f z) (czOperator beurlingKernel q.2 f z)
@@ -1354,7 +1356,7 @@ lemma czOperator_beurling_ae_tendsto_Lp_high {p : ℝ≥0∞} (hp2 : 2 < p) (hp_
   rw [ae_iff]
   refine measure_mono_null ?_ hunionnull
   intro z hz
-  rw [Set.mem_setOf_eq] at hz
+  rw [Set.mem_ofPred_eq] at hz
   rw [Set.mem_iUnion]
   by_contra hnot
   push Not at hnot
@@ -1363,7 +1365,7 @@ lemma czOperator_beurling_ae_tendsto_Lp_high {p : ℝ≥0∞} (hp2 : 2 < p) (hp_
   intro ε hε
   obtain ⟨k, hk⟩ := ENNReal.exists_inv_nat_lt (ne_of_gt hε)
   have hmem := hnot k
-  simp only [hBk, Set.mem_setOf_eq, not_not] at hmem
+  simp only [hBk, Set.mem_ofPred_eq, not_not] at hmem
   refine hmem.mono (fun q hq => lt_of_lt_of_le hq ?_)
   rw [one_div]
   calc ((k:ℝ≥0∞)+1)⁻¹ ≤ ((k:ℝ≥0∞))⁻¹ := ENNReal.inv_le_inv.mpr le_self_add
@@ -1399,7 +1401,7 @@ lemma eLpNorm_beurling_Lp_le_high {p : ℝ≥0∞} (hp2 : 2 < p) (hp_top : p ≠
   -- The conjugate exponent `p' = (1 - p⁻¹)⁻¹` and its `HolderConjugate` instance.
   set p' : ℝ≥0∞ := (1 - p⁻¹)⁻¹ with hp'_def
   have hpinv_le_one : p⁻¹ ≤ 1 := by rw [ENNReal.inv_le_one]; exact hp1.le
-  haveI hHC : ENNReal.HolderConjugate p p' := by
+  have hHC : ENNReal.HolderConjugate p p' := by
     rw [hp'_def, ENNReal.holderConjugate_iff, inv_inv, add_tsub_cancel_of_le hpinv_le_one]
   -- The duality constant.
   set C : ℝ := 1 / π * (beurlingTruncLpConst p' : ℝ) with hCC_def
@@ -1422,7 +1424,7 @@ lemma eLpNorm_beurling_Lp_le_high {p : ℝ≥0∞} (hp2 : 2 < p) (hp_top : p ≠
     rw [Set.mem_Ioi] at hr
     rw [hFdef, eLpNorm_const_smul]
     have hnorm : ‖(-(1 / π : ℂ))‖ₑ = ENNReal.ofReal (1 / π) := by
-      rw [← ofReal_norm_eq_enorm, norm_neg]
+      rw [← ofReal_norm, norm_neg]
       congr 1
       rw [norm_div, norm_one, Complex.norm_real, Real.norm_eq_abs, abs_of_pos Real.pi_pos]
     rw [hnorm, hCdef, mul_assoc]
@@ -1494,7 +1496,7 @@ lemma integrableOn_beurling_two_four {r : ℝ} (hr : 0 < r) (x : ℂ) {f : ℂ �
     IntegrableOn (fun y => beurlingKernel x y * f y) (Metric.ball x r)ᶜ volume := by
   rcases hf with hf | hf
   · exact integrableOn_beurlingKernel_mul hr x hf
-  · haveI : ENNReal.HolderConjugate (4 : ℝ≥0∞) ((1 - (4 : ℝ≥0∞)⁻¹)⁻¹) :=
+  · have : ENNReal.HolderConjugate (4 : ℝ≥0∞) ((1 - (4 : ℝ≥0∞)⁻¹)⁻¹) :=
       ENNReal.holderConjugate_iff.mpr (by
         rw [inv_inv]; exact add_tsub_cancel_of_le (ENNReal.inv_le_one.mpr (by norm_num)))
     exact integrableOn_beurlingKernel_mul_Lp (p' := (1 - (4 : ℝ≥0∞)⁻¹)⁻¹) hr x

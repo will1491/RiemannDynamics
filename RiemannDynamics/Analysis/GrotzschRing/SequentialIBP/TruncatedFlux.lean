@@ -304,7 +304,7 @@ theorem exists_seq_tendsto_zero_atBot_of_lintegral_ne_top_ae {f : ℝ → ℝ} {
       exact (ENNReal.add_ne_top.mpr ⟨hfinT, hgefin⟩) (top_le_iff.mp hle)
     -- removing the null set `N` keeps `T` nonempty
     have hTN : volume (T \ N) = ⊤ := by
-      rw [measure_diff_null hNnull]; exact hTinf
+      rw [measure_sdiff_null hNnull]; exact hTinf
     obtain ⟨x, hxT, hxN⟩ := nonempty_of_measure_ne_zero (by rw [hTN]; exact ENNReal.top_ne_zero)
     exact ⟨x, hxT.1, hxT.2, not_not.mp hxN⟩
   choose ξ hξ using key
@@ -359,7 +359,7 @@ theorem ae_integrableOn_slice_normSq_of_energy_lt_top {u : ℂ → ℝ} {U : Set
           Complex.exp ((p.1 : ℂ) + (p.2 : ℂ) * Complex.I) ∈ U}
         = (Prod.snd ⁻¹' Ioo (-π) π) ∩
           ((fun p : ℝ × ℝ => Complex.exp ((p.1 : ℂ) + (p.2 : ℂ) * Complex.I)) ⁻¹' U) := by
-      ext p; simp only [mem_setOf_eq, mem_inter_iff, mem_preimage]
+      ext p; simp only [mem_ofPred_eq, mem_inter_iff, mem_preimage]
     rw [this]; exact (isOpen_Ioo.preimage continuous_snd).inter (hU.preimage hcontmap)
   have hgmeas : Measurable g := by
     refine Measurable.lintegral_prod_right (ν := volume.restrict (Ioo (-π) π)) ?_
@@ -812,7 +812,7 @@ theorem integral_posPart_re_deriv_expGrad_arc {u : ℂ → ℝ} {U : Set ℂ} {�
     intro θ hθ
     have hD := hasDerivAt_expGrad_angular (hdiffC θ hθ)
     have hcomp := Complex.imCLM.hasFDerivAt.comp_hasDerivAt θ hD
-    simpa [hgdef, hg'def, Function.comp, Complex.mul_im] using hcomp
+    simpa [hgdef, hg'def, Function.comp, Complex.mul_im] using! hcomp
   have hgcont : ContinuousOn g (Ioo a b) := fun θ hθ =>
     (hgderiv θ hθ).continuousAt.continuousWithinAt
   -- `(deriv f)² = g² ≤ normSq (expGrad u)` gives square-integrability of `deriv f`
@@ -831,7 +831,7 @@ theorem integral_posPart_re_deriv_expGrad_arc {u : ℂ → ℝ} {U : Set ℂ} {�
         (expGrad u ((ξ : ℂ) + (θ : ℂ) * Complex.I)).re]
     simpa [hgdef] using this
   have hg2int : IntegrableOn (fun θ => (g θ) ^ 2) (Ioo a b) :=
-    hf2.congr_fun (fun θ hθ => by rw [hfg θ hθ]; simp [hgdef]) measurableSet_Ioo
+    hf2.congr_fun (fun θ hθ => by simp only [hfg θ hθ]; simp [hgdef]) measurableSet_Ioo
   have hgint : IntegrableOn g (Ioo a b) := by
     have hvol : volume (Ioo a b) ≠ ⊤ := by rw [Real.volume_Ioo]; exact ENNReal.ofReal_ne_top
     have hconst : IntegrableOn (fun _ : ℝ => (1 : ℝ) / 2) (Ioo a b) :=
@@ -1069,7 +1069,7 @@ theorem integral_full_posPart_re_deriv_expGrad {u : ℂ → ℝ} {U : Set ℂ} {
     intro θ
     have hD := hasDerivAt_expGrad_angular (hdiffC θ)
     have hcomp := Complex.imCLM.hasFDerivAt.comp_hasDerivAt θ hD
-    simpa [hgdef, hg'def, Function.comp, Complex.mul_im] using hcomp
+    simpa [hgdef, hg'def, Function.comp, Complex.mul_im] using! hcomp
   have hcont_g : Continuous g :=
     continuous_iff_continuousAt.mpr (fun θ => (hgderiv θ).continuousAt)
   -- `deriv (expGrad u)` is continuous on the open preimage `O = exp ⁻¹' U`, which the circle enters
@@ -1181,13 +1181,13 @@ theorem setIntegral_slice_posPart_re_deriv_expGrad {u : ℂ → ℝ} {U : Set �
     rw [hloctwo θ, ← deriv_comp_add_const (expGrad u) (2 * (π : ℂ) * Complex.I), hshiftfun]
   have hPper : Function.Periodic (P.indicator F) (2 * π) := by
     intro θ
-    simp only [hP, Set.indicator_apply, hF, mem_setOf_eq, hexpper θ, hDEGper θ]
+    simp only [hP, Set.indicator_apply, hF, mem_ofPred_eq, hexpper θ, hDEGper θ]
   have hQper : Function.Periodic (P.indicator G) (2 * π) := by
     intro θ
-    simp only [hP, Set.indicator_apply, hG, mem_setOf_eq, hexpper θ, hEGper θ]
+    simp only [hP, Set.indicator_apply, hG, mem_ofPred_eq, hexpper θ, hEGper θ]
   -- `angularSliceδ = Ioo(-π)π ∩ P`, so its set integral is the indicator interval integral
   have hslicedef : angularSliceδ U u δ ξ = Ioo (-π) π ∩ P := by
-    ext θ; simp only [angularSliceδ, hP, mem_inter_iff, mem_setOf_eq]; tauto
+    ext θ; simp only [angularSliceδ, hP, mem_inter_iff, mem_ofPred_eq]; tauto
   have hindF : (∫ θ in angularSliceδ U u δ ξ, F θ) = ∫ θ in (-π)..π, P.indicator F θ := by
     rw [hslicedef, ← setIntegral_indicator hPmeas,
       ← integral_Ioo_eq_intervalIntegral hπ]
@@ -1252,7 +1252,7 @@ theorem setIntegral_slice_posPart_re_deriv_expGrad {u : ℂ → ℝ} {U : Set �
   by_cases hfull : ∀ θ : ℝ, Complex.exp ((ξ : ℂ) + (θ : ℂ) * Complex.I) ∈ V
   · -- FULL CASE: `P = ℝ`, so the indicator drops and the periodic IBP applies directly
     have hPeq : P = univ := by
-      ext θ; simp only [hP, mem_setOf_eq, mem_univ, iff_true]; exact hfull θ
+      ext θ; simp only [hP, mem_ofPred_eq, mem_univ, iff_true]; exact hfull θ
     have hFind : ∀ θ : ℝ, P.indicator F θ = F θ := fun θ => by rw [hPeq]; simp
     have hGind : ∀ θ : ℝ, P.indicator G θ = G θ := fun θ => by rw [hPeq]; simp
     simp only [hFind, hGind]
@@ -1330,7 +1330,7 @@ theorem truncRoughFlux_eq_setIntegral_slice {u : ℂ → ℝ} {U : Set ℂ} (hU 
   rw [angularSliceδ, superLevelU]
   refine (ae_eq_set.mpr ⟨?_, ?_⟩) <;>
     · refine measure_mono_null (fun θ hθ => ?_) measure_empty
-      simp only [mem_diff, mem_inter_iff, mem_setOf_eq] at hθ
+      simp only [Set.mem_sdiff, mem_inter_iff, mem_ofPred_eq] at hθ
       tauto
 
 /-- **`δ → 0` recovery of the rough flux via the truncated flux.** For `u` harmonic and strictly

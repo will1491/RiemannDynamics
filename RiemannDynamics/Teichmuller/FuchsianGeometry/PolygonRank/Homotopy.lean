@@ -1113,7 +1113,7 @@ theorem sideElement_smul_ne_inv
       ∀ τ' : UpperHalfPlane, γ • τ' = τ')
     {β : ↥Γ} (hβ : IsSideElement Γ τ₀ β) : β • τ₀ ≠ β⁻¹ • τ₀ := by
   intro h
-  haveI : IsIsometricSMul (↥Γ) UpperHalfPlane :=
+  have : IsIsometricSMul (↥Γ) UpperHalfPlane :=
     ⟨fun c => isometry_smul UpperHalfPlane (c : Matrix.SpecialLinearGroup (Fin 2) ℝ)⟩
   have hp : β • τ₀ ≠ τ₀ := hβ.1
   obtain ⟨m, ⟨h1, h2⟩, huniq⟩ := exists_unique_mid τ₀ (β • τ₀) (Ne.symm hp)

@@ -196,7 +196,7 @@ theorem eq_affine_of_differentiable_of_injective {f : ℂ → ℂ}
       rw [Finset.mem_range, not_lt] at hn
       rw [hvanish n hn]
       ring
-    rw [← htay, hsum, hp_def, Polynomial.eval_finset_sum]
+    rw [← htay, hsum, hp_def, Polynomial.eval_finsetSum]
     simp [Polynomial.eval_mul, Polynomial.eval_pow]
   -- Injectivity forces degree one, via the fiber of `f` over `c = f 0`:
   -- `p - C c` splits with all roots equal to `0`, so `f z = a z^N + c`.
@@ -430,10 +430,10 @@ theorem mrmt_unique_normalized (b : BeltramiCoeff) :
       (hz1.hasFDerivAt.sub_const (f₀ 0)).const_mul a
     have hffderiv : fderiv ℝ f z = a • fderiv ℝ f₀ z := hfd.fderiv
     have hdzf : dz f z = a * dz f₀ z := by
-      simp only [dz, hffderiv, ContinuousLinearMap.smul_apply, smul_eq_mul]
+      simp only [dz, hffderiv, smul_apply, smul_eq_mul]
       ring
     have hdzbarf : dzbar f z = a * dzbar f₀ z := by
-      simp only [dzbar, hffderiv, ContinuousLinearMap.smul_apply, smul_eq_mul]
+      simp only [dzbar, hffderiv, smul_apply, smul_eq_mul]
       ring
     refine ⟨?_, ?_⟩
     · have key : (fderiv ℝ f z).det = ‖a‖ ^ 2 * (fderiv ℝ f₀ z).det := by
@@ -453,7 +453,7 @@ theorem mrmt_unique_normalized (b : BeltramiCoeff) :
     intro h hh
     rw [← locallyIntegrableOn_univ, locallyIntegrableOn_univ, locallyIntegrable_iff]
     intro k hk
-    haveI : MeasureTheory.IsFiniteMeasure (volume.restrict k) :=
+    have : MeasureTheory.IsFiniteMeasure (volume.restrict k) :=
       ⟨by rw [MeasureTheory.Measure.restrict_apply_univ]; exact hk.measure_lt_top⟩
     have hmem1 : MemLp h 1 (volume.restrict k) :=
       (hh k (Set.subset_univ _) hk).mono_exponent (by norm_num)
@@ -490,7 +490,7 @@ theorem mrmt_unique_normalized (b : BeltramiCoeff) :
     rwa [heq1, heq2] at hsmul
   have hfL2 : MemLpLocOn f 2 Set.univ := by
     intro Kc _ hKc
-    haveI : MeasureTheory.IsFiniteMeasure (volume.restrict Kc) :=
+    have : MeasureTheory.IsFiniteMeasure (volume.restrict Kc) :=
       ⟨by rw [MeasureTheory.Measure.restrict_apply_univ]; exact hKc.measure_lt_top⟩
     obtain ⟨C, hC⟩ := hKc.exists_bound_of_continuousOn hfcont.continuousOn
     have hmeas : AEStronglyMeasurable f (volume.restrict Kc) :=

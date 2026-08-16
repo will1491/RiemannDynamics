@@ -123,7 +123,7 @@ lemma memLp_fpow_comp (s : MeasureTheory.SimpleFunc ℂ ℂ) (c : ℂ)
     rw [Finset.sum_apply]
     exact fpow_comp_eq_sum (R := s.range) (fun x => SimpleFunc.mem_range_self s x) c x
   rw [hsum]
-  apply memLp_finset_sum'
+  apply memLp_finsetSum'
   intro y _
   rcases eq_or_ne y 0 with hy | hy
   · exact memLp_indicator_const q (s.measurableSet_fiber y) (fpow c y) (Or.inl (by simp [hy]))
@@ -152,7 +152,7 @@ lemma T_finset_sum
     simpa using hx
   | insert a R ha ih =>
     have hmemR : ∀ i ∈ R, MemLp (h i) p₀ volume := fun i hi => hmem i (Finset.mem_insert_of_mem hi)
-    have hsumR : MemLp (∑ i ∈ R, h i) p₀ volume := memLp_finset_sum' R hmemR
+    have hsumR : MemLp (∑ i ∈ R, h i) p₀ volume := memLp_finsetSum' R hmemR
     have hha : MemLp (h a) p₀ volume := hmem a (Finset.mem_insert_self a R)
     rw [Finset.sum_insert ha, Finset.sum_insert ha]
     have hstep := hadd (h a) (∑ i ∈ R, h i) (Or.inl hha) (Or.inl hsumR)
@@ -265,15 +265,15 @@ lemma integral_T_fpow_eq_double_sum
     ring
   rw [hexp]
   -- (d) push the integral through the two finite sums and pull out constants.
-  rw [integral_finset_sum]
+  rw [integral_finsetSum]
   · apply Finset.sum_congr rfl; intro y hy
-    rw [integral_finset_sum]
+    rw [integral_finsetSum]
     · apply Finset.sum_congr rfl; intro y' hy'
       exact integral_const_mul (fpow c y * fpow d y') (fun x => uf y x * vg y' x)
     · intro y' hy'
       exact ((hint y hy y' hy').const_mul _)
   · intro y hy
-    apply integrable_finset_sum
+    apply integrable_finsetSum
     intro y' hy'
     exact ((hint y hy y' hy').const_mul _)
 
@@ -305,7 +305,7 @@ then `‖∫ F·g‖ₑ ≤ eLpNorm F q · eLpNorm g q'`. -/
 lemma enorm_integral_mul_le {q q' : ℝ≥0∞} [hqq' : ENNReal.HolderConjugate q q']
     {F g : ℂ → ℂ} (hF : AEStronglyMeasurable F volume) (hg : AEStronglyMeasurable g volume) :
     ‖∫ x, F x * g x ∂volume‖ₑ ≤ eLpNorm F q volume * eLpNorm g q' volume := by
-  haveI : ENNReal.HolderTriple q' q 1 := ENNReal.HolderTriple.symm
+  have : ENNReal.HolderTriple q' q 1 := ENNReal.HolderTriple.symm
   have hholder : eLpNorm (g • F) 1 volume ≤ eLpNorm g q' volume * eLpNorm F q volume :=
     eLpNorm_smul_le_mul_eLpNorm (f := F) (φ := g) hF hg
   calc ‖∫ x, F x * g x ∂volume‖ₑ
@@ -320,7 +320,7 @@ lemma enorm_integral_mul_le {q q' : ℝ≥0∞} [hqq' : ENNReal.HolderConjugate 
 lemma integrable_mul_of_memLp {q q' : ℝ≥0∞} [hqq' : ENNReal.HolderConjugate q q']
     {F G : ℂ → ℂ} (hF : MemLp F q volume) (hG : MemLp G q' volume) :
     Integrable (fun x => F x * G x) volume := by
-  haveI : ENNReal.HolderTriple q' q 1 := ENNReal.HolderTriple.symm
+  have : ENNReal.HolderTriple q' q 1 := ENNReal.HolderTriple.symm
   have hsmul : MemLp (G • F) 1 volume := hF.smul (f := F) (φ := G) hG
   rw [memLp_one_iff_integrable] at hsmul
   have heq : (fun x => F x * G x) = G • F := by
@@ -496,7 +496,7 @@ lemma enorm_truncCompl_rpow_le {r : ℂ → ℂ} {a₀ a : ℝ} (ha₀pos : 0 < 
     ‖MeasureTheory.truncCompl r 1 x‖ₑ ^ a₀ ≤ ‖r x‖ₑ ^ a := by
   rw [MeasureTheory.truncCompl]
   split_ifs with h
-  · rw [enorm_zero, ENNReal.zero_rpow_of_pos ha₀pos]; exact zero_le _
+  · rw [enorm_zero, ENNReal.zero_rpow_of_pos ha₀pos]; exact zero_le
   · rw [not_le] at h
     exact ENNReal.rpow_le_rpow_of_exponent_le (le_of_lt h) ha₀a
 
@@ -505,7 +505,7 @@ lemma enorm_trunc_rpow_le {r : ℂ → ℂ} {a₁ a : ℝ} (ha₁pos : 0 < a₁)
   rw [MeasureTheory.trunc]
   split_ifs with h
   · exact ENNReal.rpow_le_rpow_of_exponent_ge h haa₁
-  · rw [enorm_zero, ENNReal.zero_rpow_of_pos ha₁pos]; exact zero_le _
+  · rw [enorm_zero, ENNReal.zero_rpow_of_pos ha₁pos]; exact zero_le
 
 /-- The `L^{q}`-norm of `truncCompl r 1` (large part) is at most `(eLpNorm r p)^{p/q}`. -/
 lemma eLpNorm_truncCompl_le {r : ℂ → ℂ} {q p : ℝ≥0∞}
@@ -598,7 +598,7 @@ lemma pairing_le_of_simple {Tsf : ℂ → ℂ} {p p' : ℝ≥0∞} {M : ℝ≥0�
       = (∫ x, Tsf x * (gε : ℂ → ℂ) x ∂volume)
         + ∫ x, Tsf x * (g x - (gε : ℂ → ℂ) x) ∂volume := by
     rw [← integral_add hintegrable_gε
-      (by simpa [mul_sub] using hintegrable_g.sub hintegrable_gε)]
+      (by simpa [Pi.sub_def, mul_sub] using hintegrable_g.sub hintegrable_gε)]
     congr 1; ext x; ring
   -- Bound the error term via Hölder.
   have hg_sub_mem : MemLp (fun x => g x - (gε : ℂ → ℂ) x) p' volume := hg.sub hgε_mem
@@ -674,7 +674,7 @@ lemma three_lines_bound
   obtain ⟨hptop, hp0, h1p⟩ := p_ne_top_of_interp hp₀ hp₁ hp₁top ⟨hθ0, hθ1⟩ hp
   -- The conjugate exponent `p' = (1 - p⁻¹)⁻¹`.
   set p' : ℝ≥0∞ := (1 - p⁻¹)⁻¹ with hp'def
-  haveI hpp' : ENNReal.HolderConjugate p p' := holderConjugate_inv h1p
+  have hpp' : ENNReal.HolderConjugate p p' := holderConjugate_inv h1p
   -- `p₁ > 1` since `p₀ < p₁` and `p₀ ≥ 1`.
   have h1p₁ : 1 < p₁ := lt_of_le_of_lt hp₀ hp₀p₁
   -- Real exponents.
@@ -696,8 +696,8 @@ lemma three_lines_bound
   -- Conjugate exponents and their reals.
   set p₀' : ℝ≥0∞ := (1 - p₀⁻¹)⁻¹ with hp₀'def
   set p₁' : ℝ≥0∞ := (1 - p₁⁻¹)⁻¹ with hp₁'def
-  haveI hp₀p₀' : ENNReal.HolderConjugate p₀ p₀' := holderConjugate_inv hp₀
-  haveI hp₁p₁' : ENNReal.HolderConjugate p₁ p₁' := holderConjugate_inv hp₁
+  have hp₀p₀' : ENNReal.HolderConjugate p₀ p₀' := holderConjugate_inv hp₀
+  have hp₁p₁' : ENNReal.HolderConjugate p₁ p₁' := holderConjugate_inv hp₁
   set a' := p'.toReal with ha'
   -- `a₀ < a₁` since `p₀ < p₁` (both finite).
   have ha₀a₁ : a₀ < a₁ := (ENNReal.toReal_lt_toReal hp₀top hp₁top).mpr hp₀p₁
@@ -1057,7 +1057,7 @@ lemma pairing_simple_g
     have hdrpos : 0 < d.toReal := ENNReal.toReal_pos hd0 hdtop
     set dr : ℝ := d.toReal with hdr
     have hnorm_inv : ‖(dr⁻¹ : ℂ)‖ₑ = ENNReal.ofReal dr⁻¹ := by
-      rw [show (dr⁻¹ : ℂ) = ((dr⁻¹ : ℝ) : ℂ) by push_cast; ring, ← ofReal_norm_eq_enorm,
+      rw [show (dr⁻¹ : ℂ) = ((dr⁻¹ : ℝ) : ℂ) by push_cast; ring, ← ofReal_norm,
         Complex.norm_real, Real.norm_of_nonneg (by positivity)]
     set sg' : MeasureTheory.SimpleFunc ℂ ℂ := (dr⁻¹ : ℂ) • sg with hsg'
     have hcoe : (sg' : ℂ → ℂ) = (dr⁻¹ : ℂ) • (sg : ℂ → ℂ) := SimpleFunc.coe_smul _ _
@@ -1145,7 +1145,7 @@ lemma core_normalized
         nlinarith [hinterp]
   -- The conjugate exponent `p'`.
   set p' : ℝ≥0∞ := (1 - p⁻¹)⁻¹ with hp'def
-  haveI hpp' : ENNReal.HolderConjugate p p' := holderConjugate_inv h1p
+  have hpp' : ENNReal.HolderConjugate p p' := holderConjugate_inv h1p
   have hp'top : p' ≠ ⊤ := ((ENNReal.HolderConjugate.lt_top_iff_one_lt p' p).mpr h1p_lt).ne
   -- `T sf ∈ L^p` via `L^{p₀} ∩ L^{p₁}`.
   have hsf₀ : MemLp (sf : ℂ → ℂ) p₀ volume :=
@@ -1232,18 +1232,18 @@ lemma core_simple
     have hsfp₀0 : eLpNorm (sf : ℂ → ℂ) p₀ volume = 0 := eLpNorm_eq_zero_of_ae_zero hsf0
     have hTsf₀0 : eLpNorm (T (sf : ℂ → ℂ)) p₀ volume = 0 := by
       have := hT₀ _ hsf₀; rw [hsfp₀0, mul_zero] at this
-      exact le_antisymm this (zero_le _)
+      exact le_antisymm this (zero_le)
     have hTsf0 : T (sf : ℂ → ℂ) =ᵐ[volume] 0 :=
       (eLpNorm_eq_zero_iff (hmeas _ hfmem) hp₀0).mp hTsf₀0
     rw [eLpNorm_eq_zero_of_ae_zero hTsf0]
-    exact zero_le _
+    exact zero_le
   · -- Scale `sf` to norm 1.
     have hcrpos : 0 < c.toReal := ENNReal.toReal_pos hc0 hctop
     set cr : ℝ := c.toReal with hcr
     set sf' : MeasureTheory.SimpleFunc ℂ ℂ := (cr⁻¹ : ℂ) • sf with hsf'
     have hcoe : (sf' : ℂ → ℂ) = (cr⁻¹ : ℂ) • (sf : ℂ → ℂ) := SimpleFunc.coe_smul _ _
     have hnorm_inv : ‖(cr⁻¹ : ℂ)‖ₑ = ENNReal.ofReal cr⁻¹ := by
-      rw [show (cr⁻¹ : ℂ) = ((cr⁻¹ : ℝ) : ℂ) by push_cast; ring, ← ofReal_norm_eq_enorm,
+      rw [show (cr⁻¹ : ℂ) = ((cr⁻¹ : ℝ) : ℂ) by push_cast; ring, ← ofReal_norm,
         Complex.norm_real, Real.norm_of_nonneg (by positivity)]
     have hsf'mem : MemLp (sf' : ℂ → ℂ) p volume := by rw [hcoe]; exact hfmem.const_smul _
     have hsf'1 : eLpNorm (sf' : ℂ → ℂ) p volume = 1 := by
@@ -1544,7 +1544,7 @@ lemma core
   -- `eLpNorm (r n) p → 0`.
   have hr_tendsto : atTop.Tendsto (fun n => eLpNorm (r n) p volume) (𝓝 0) := by
     refine tendsto_of_tendsto_of_tendsto_of_le_of_le tendsto_const_nhds hε_tendsto
-      (fun n => zero_le _) (fun n => (hr_lt n).le)
+      (fun n => zero_le) (fun n => (hr_lt n).le)
   -- `(eLpNorm (r n) p)^c → 0` for positive `c`.
   have hrpow_tendsto : ∀ c : ℝ, 0 < c →
       atTop.Tendsto (fun n => eLpNorm (r n) p volume ^ c) (𝓝 0) := by
@@ -1560,7 +1560,7 @@ lemma core
         (hrpow_tendsto (p.toReal / p₀.toReal) (by positivity)) (Or.inr (by simp))
       rwa [mul_zero] at this
     exact tendsto_of_tendsto_of_tendsto_of_le_of_le tendsto_const_nhds hbnd
-      (fun n => zero_le _) (fun n => hTb_bound n)
+      (fun n => zero_le) (fun n => hTb_bound n)
   have hTg_zero : atTop.Tendsto (fun n => eLpNorm (T (g n)) p₁ volume) (𝓝 0) := by
     have hbnd : atTop.Tendsto
         (fun n => (M₁ : ℝ≥0∞) * eLpNorm (r n) p volume ^ (p.toReal / p₁.toReal)) (𝓝 0) := by
@@ -1568,7 +1568,7 @@ lemma core
         (hrpow_tendsto (p.toReal / p₁.toReal) (by positivity)) (Or.inr (by simp))
       rwa [mul_zero] at this
     exact tendsto_of_tendsto_of_tendsto_of_le_of_le tendsto_const_nhds hbnd
-      (fun n => zero_le _) (fun n => hTg_bound n)
+      (fun n => zero_le) (fun n => hTg_bound n)
   -- `b n` and `g n` are also in `L^p` (dominated by `r n`), giving measurability of their images.
   have hb_memp : ∀ n, MemLp (b n) p volume := fun n => (hr_mem n).truncCompl
   have hg_memp : ∀ n, MemLp (g n) p volume := fun n => (hr_mem n).trunc

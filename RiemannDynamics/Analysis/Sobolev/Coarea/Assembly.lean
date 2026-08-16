@@ -98,11 +98,11 @@ theorem coarea_critical_le {u : ℂ → ℝ} {K : ℝ≥0} (hu : LipschitzWith K
       have hsub : u ⁻¹' {c} ∩ (T ∩ B) ⊆ u ⁻¹' {c} ∩ B := fun z hz => ⟨hz.1, hz.2.2⟩
       have hfin' : μH[1] (u ⁻¹' {c} ∩ (T ∩ B)) ≠ ∞ :=
         ne_top_of_le_ne_top hc (measure_mono hsub)
-      rw [measure_diff hsub
+      rw [measure_sdiff hsub
         ((hucont.measurable (measurableSet_singleton c)).inter
           (hTmeas.inter hBcompact.measurableSet)).nullMeasurableSet hfin']
     · intro f hdisj hfmeas hPf
-      refine AEMeasurable.congr (AEMeasurable.ennreal_tsum hPf) ?_
+      refine AEMeasurable.congr (AEMeasurable.tsum (L := .unconditional _) hPf) ?_
       filter_upwards with c
       have hset : u ⁻¹' {c} ∩ ((⋃ i, f i) ∩ B) = ⋃ i, (u ⁻¹' {c} ∩ (f i ∩ B)) := by
         rw [Set.iUnion_inter, Set.inter_iUnion]
@@ -253,15 +253,15 @@ theorem coarea_critical_le {u : ℂ → ℝ} {K : ℝ≥0} (hu : LipschitzWith K
       have hae : ∀ᵐ z, DifferentiableAt ℝ u z := hu.ae_differentiableAt
       have hae' : ∀ᵐ z, z ∉ (Diffᶜ : Set ℂ) := by
         filter_upwards [hae] with z hz
-        simp only [hDiff_def, Set.mem_compl_iff, Set.mem_setOf_eq, not_not]
+        simp only [hDiff_def, Set.mem_compl_iff, Set.mem_ofPred_eq, not_not]
         exact hz
       have := (MeasureTheory.ae_iff).1 hae'
-      simpa only [not_not, Set.setOf_mem_eq] using this
+      simpa only [not_not, Set.ofPred_mem_eq] using this
     exact measure_mono_null Set.inter_subset_right hDiffc0
   -- On `Diffᶜ`, `fderiv u = 0`, so `Diffᶜ ⊆ Crit` and `A ∩ Crit = D ∪ (A ∩ Diffᶜ)`.
   have hNDsubCrit : Diffᶜ ⊆ Crit := by
     intro z hz
-    simp only [hCrit_def, Set.mem_setOf_eq]
+    simp only [hCrit_def, Set.mem_ofPred_eq]
     exact fderiv_zero_of_not_differentiableAt hz
   have hsplit : A ∩ Crit = (A ∩ Crit ∩ Diff) ∪ (A ∩ Diffᶜ) := by
     apply Set.Subset.antisymm
@@ -341,7 +341,7 @@ theorem coarea_critical_le {u : ℂ → ℝ} {K : ℝ≥0} (hu : LipschitzWith K
   have hND_ae : (fun c => μH[1] (u ⁻¹' {c} ∩ (A ∩ Diffᶜ))) =ᵐ[volume] 0 :=
     (lintegral_eq_zero_iff' (slice_aemeas (hA.inter hDiff_meas.compl))).1 hND_int
   rw [lintegral_eq_zero_iff'
-    ((slice_aemeas hD_meas).add (slice_aemeas (hA.inter hDiff_meas.compl)))]
+    ((slice_aemeas hD_meas).fun_add (slice_aemeas (hA.inter hDiff_meas.compl)))]
   filter_upwards [hD_ae, hND_ae] with c hc hcn
   simp only [Pi.zero_apply] at hc hcn ⊢
   rw [hc, hcn, add_zero]
@@ -415,11 +415,11 @@ theorem coarea_regular_le {u : ℂ → ℝ} {K : ℝ≥0} (hu : LipschitzWith K 
       have hsub : u ⁻¹' {c} ∩ (T ∩ B) ⊆ u ⁻¹' {c} ∩ B := fun z hz => ⟨hz.1, hz.2.2⟩
       have hfin' : μH[1] (u ⁻¹' {c} ∩ (T ∩ B)) ≠ ∞ :=
         ne_top_of_le_ne_top hc (measure_mono hsub)
-      rw [measure_diff hsub
+      rw [measure_sdiff hsub
         ((hucont.measurable (measurableSet_singleton c)).inter
           (hTmeas.inter hBcompact.measurableSet)).nullMeasurableSet hfin']
     · intro f hdisj hfmeas hPf
-      refine AEMeasurable.congr (AEMeasurable.ennreal_tsum hPf) ?_
+      refine AEMeasurable.congr (AEMeasurable.tsum (L := .unconditional _) hPf) ?_
       filter_upwards with c
       have hset : u ⁻¹' {c} ∩ ((⋃ i, f i) ∩ B) = ⋃ i, (u ⁻¹' {c} ∩ (f i ∩ B)) := by
         rw [Set.iUnion_inter, Set.inter_iUnion]
@@ -648,13 +648,13 @@ theorem coarea_regular_le {u : ℂ → ℝ} {K : ℝ≥0} (hu : LipschitzWith K 
     set LP1 : ℝ →L[ℝ] ℂ := (1 : ℝ →L[ℝ] ℝ).smulRight (1 : ℂ) with hLP1
     have hcomp1 : HasFDerivAt (fun w : ℂ => (u w : ℝ) • (1 : ℂ))
         (LP1.comp (fderiv ℝ u z)) z := by
-      have := LP1.hasFDerivAt.comp z hPG; convert this using 1
+      have := LP1.hasFDerivAt.comp z hPG; convert! this using 1
     set LQI : ℝ →L[ℝ] ℂ := (1 : ℝ →L[ℝ] ℝ).smulRight Complex.I with hLQI
     have hcomp2 : HasFDerivAt (fun w : ℂ => (w.im : ℝ) • Complex.I)
         (LQI.comp Complex.imCLM) z := by
-      have := LQI.hasFDerivAt.comp z Complex.imCLM.hasFDerivAt; convert this using 1
+      have := LQI.hasFDerivAt.comp z Complex.imCLM.hasFDerivAt; convert! this using 1
     have hsum := hcomp1.add hcomp2
-    rw [hΨim, hΨim']; convert hsum using 1
+    rw [hΨim, hΨim']; convert! hsum using 1
   have hΨim_re : ∀ z, (Ψim z).re = u z := by
     intro z; rw [hΨim]; simp [Complex.real_smul]
   have hΨim_det : ∀ z, (Ψim' z).det = (fderiv ℝ u z) (1:ℂ) := by
@@ -669,12 +669,12 @@ theorem coarea_regular_le {u : ℂ → ℝ} {K : ℝ≥0} (hu : LipschitzWith K 
     simp only [LinearMap.toMatrix_apply, Complex.coe_basisOneI, Complex.coe_basisOneI_repr,
       Matrix.cons_val_zero, Matrix.cons_val_one]
     have h1 : D 1 = ((fderiv ℝ u z) (1:ℂ) : ℂ) := by
-      simp only [hD, ContinuousLinearMap.add_apply,
+      simp only [hD, add_apply,
         ContinuousLinearMap.smulRight_apply, Complex.imCLM_apply, Complex.one_im, zero_smul,
         add_zero]
       change ((fderiv ℝ u z) (1:ℂ) : ℝ) • (1 : ℂ) = (((fderiv ℝ u z) (1:ℂ) : ℝ) : ℂ); simp
     have h2 : D Complex.I = ((fderiv ℝ u z) Complex.I : ℂ) + Complex.I := by
-      simp only [hD, ContinuousLinearMap.add_apply,
+      simp only [hD, add_apply,
         ContinuousLinearMap.smulRight_apply, Complex.imCLM_apply, Complex.I_im, one_smul]
       change ((fderiv ℝ u z) Complex.I : ℝ) • (1 : ℂ) + Complex.I
         = (((fderiv ℝ u z) Complex.I : ℝ) : ℂ) + Complex.I; simp
@@ -691,13 +691,13 @@ theorem coarea_regular_le {u : ℂ → ℝ} {K : ℝ≥0} (hu : LipschitzWith K 
     set LP1 : ℝ →L[ℝ] ℂ := (1 : ℝ →L[ℝ] ℝ).smulRight (1 : ℂ) with hLP1
     have hcomp1 : HasFDerivAt (fun w : ℂ => (u w : ℝ) • (1 : ℂ))
         (LP1.comp (fderiv ℝ u z)) z := by
-      have := LP1.hasFDerivAt.comp z hPG; convert this using 1
+      have := LP1.hasFDerivAt.comp z hPG; convert! this using 1
     set LQI : ℝ →L[ℝ] ℂ := (1 : ℝ →L[ℝ] ℝ).smulRight Complex.I with hLQI
     have hcomp2 : HasFDerivAt (fun w : ℂ => (w.re : ℝ) • Complex.I)
         (LQI.comp Complex.reCLM) z := by
-      have := LQI.hasFDerivAt.comp z Complex.reCLM.hasFDerivAt; convert this using 1
+      have := LQI.hasFDerivAt.comp z Complex.reCLM.hasFDerivAt; convert! this using 1
     have hsum := hcomp1.add hcomp2
-    rw [hΨre_def, hΨre']; convert hsum using 1
+    rw [hΨre_def, hΨre']; convert! hsum using 1
   have hΨre_re : ∀ z, (Ψre z).re = u z := by
     intro z; rw [hΨre_def]; simp [Complex.real_smul]
   have hΨre_det : ∀ z, (Ψre' z).det = - (fderiv ℝ u z) Complex.I := by
@@ -712,12 +712,12 @@ theorem coarea_regular_le {u : ℂ → ℝ} {K : ℝ≥0} (hu : LipschitzWith K 
     simp only [LinearMap.toMatrix_apply, Complex.coe_basisOneI, Complex.coe_basisOneI_repr,
       Matrix.cons_val_zero, Matrix.cons_val_one]
     have h1 : D 1 = ((fderiv ℝ u z) (1:ℂ) : ℂ) + Complex.I := by
-      simp only [hD, ContinuousLinearMap.add_apply,
+      simp only [hD, add_apply,
         ContinuousLinearMap.smulRight_apply, Complex.reCLM_apply, Complex.one_re, one_smul]
       change ((fderiv ℝ u z) (1:ℂ) : ℝ) • (1 : ℂ) + Complex.I
         = (((fderiv ℝ u z) (1:ℂ) : ℝ) : ℂ) + Complex.I; simp
     have h2 : D Complex.I = ((fderiv ℝ u z) Complex.I : ℂ) := by
-      simp only [hD, ContinuousLinearMap.add_apply,
+      simp only [hD, add_apply,
         ContinuousLinearMap.smulRight_apply, Complex.reCLM_apply, Complex.I_re, zero_smul, add_zero]
       change ((fderiv ℝ u z) Complex.I : ℝ) • (1 : ℂ) = (((fderiv ℝ u z) Complex.I : ℝ) : ℂ); simp
     change (D 1).re * (D Complex.I).im - (D Complex.I).re * (D 1).im = - (fderiv ℝ u z) Complex.I
@@ -755,9 +755,9 @@ theorem coarea_regular_le {u : ℂ → ℝ} {K : ℝ≥0} (hu : LipschitzWith K 
       have hae : ∀ᵐ z, DifferentiableAt ℝ u z := hu.ae_differentiableAt
       have hae' : ∀ᵐ z, z ∉ (Diffᶜ : Set ℂ) := by
         filter_upwards [hae] with z hz
-        simp only [hDiff_def, Set.mem_compl_iff, Set.mem_setOf_eq, not_not]; exact hz
+        simp only [hDiff_def, Set.mem_compl_iff, Set.mem_ofPred_eq, not_not]; exact hz
       have := (MeasureTheory.ae_iff).1 hae'
-      simpa only [not_not, Set.setOf_mem_eq] using this
+      simpa only [not_not, Set.ofPred_mem_eq] using this
     exact measure_mono_null Set.inter_subset_right hDiffc0
   have hND_int : ∫⁻ c, μH[1] (u ⁻¹' {c} ∩ (A ∩ {z | fderiv ℝ u z ≠ 0} ∩ Diffᶜ)) = 0 := by
     apply coarea_null_le hu ((hA.inter hNECrit_meas).inter hDiff_meas.compl)
@@ -903,12 +903,12 @@ theorem coarea_set_sharp {u : ℂ → ℝ} {K : ℝ≥0} (hu : LipschitzWith K u
       have hsub : u ⁻¹' {c} ∩ (T ∩ B) ⊆ u ⁻¹' {c} ∩ B := fun z hz => ⟨hz.1, hz.2.2⟩
       have hfin' : μH[1] (u ⁻¹' {c} ∩ (T ∩ B)) ≠ ∞ :=
         ne_top_of_le_ne_top hc (measure_mono hsub)
-      rw [measure_diff hsub
+      rw [measure_sdiff hsub
         ((hucont.measurable (measurableSet_singleton c)).inter
           (hTmeas.inter hBcompact.measurableSet)).nullMeasurableSet hfin']
     · -- countable disjoint union
       intro f hdisj hfmeas hPf
-      refine AEMeasurable.congr (AEMeasurable.ennreal_tsum hPf) ?_
+      refine AEMeasurable.congr (AEMeasurable.tsum (L := .unconditional _) hPf) ?_
       filter_upwards with c
       have hset : u ⁻¹' {c} ∩ ((⋃ i, f i) ∩ B) = ⋃ i, (u ⁻¹' {c} ∩ (f i ∩ B)) := by
         rw [Set.iUnion_inter, Set.inter_iUnion]
@@ -981,7 +981,7 @@ theorem coarea_set_sharp {u : ℂ → ℝ} {K : ℝ≥0} (hu : LipschitzWith K u
         = (u ⁻¹' {c} ∩ (A ∩ Crit))
           ∪ (u ⁻¹' {c} ∩ (A ∩ {z | fderiv ℝ u z ≠ 0})) := by
       ext z
-      simp only [hCrit_def, Set.mem_inter_iff, Set.mem_union, Set.mem_setOf_eq,
+      simp only [hCrit_def, Set.mem_inter_iff, Set.mem_union, Set.mem_ofPred_eq,
         Set.mem_preimage, Set.mem_singleton_iff]
       constructor
       · rintro ⟨hzc, hzA⟩
@@ -997,7 +997,7 @@ theorem coarea_set_sharp {u : ℂ → ℝ} {K : ℝ≥0} (hu : LipschitzWith K u
       exact hzReg hzCrit
     · have hReg_meas : MeasurableSet {z : ℂ | fderiv ℝ u z ≠ 0} := by
         have : {z : ℂ | fderiv ℝ u z ≠ 0} = Critᶜ := by
-          ext z; simp only [hCrit_def, Set.mem_compl_iff, Set.mem_setOf_eq]
+          ext z; simp only [hCrit_def, Set.mem_compl_iff, Set.mem_ofPred_eq]
         rw [this]; exact hCrit_meas.compl
       exact (hucont.measurable (measurableSet_singleton c)).inter (hA.inter hReg_meas)
   have hcongr : (fun c => μH[1] (u ⁻¹' {c} ∩ A))
@@ -1107,12 +1107,12 @@ theorem eilenberg_coarea_grad_le {u : ℂ → ℝ} {K : ℝ≥0} (hu : Lipschitz
       have hsub : u ⁻¹' {c} ∩ (T ∩ B) ⊆ u ⁻¹' {c} ∩ B := fun z hz => ⟨hz.1, hz.2.2⟩
       have hfin' : μH[1] (u ⁻¹' {c} ∩ (T ∩ B)) ≠ ∞ :=
         ne_top_of_le_ne_top hc (measure_mono hsub)
-      rw [measure_diff hsub
+      rw [measure_sdiff hsub
         ((hucont.measurable (measurableSet_singleton c)).inter
           (hTmeas.inter hBcompact.measurableSet)).nullMeasurableSet hfin']
     · -- countable disjoint union
       intro f hdisj hfmeas hPf
-      refine AEMeasurable.congr (AEMeasurable.ennreal_tsum hPf) ?_
+      refine AEMeasurable.congr (AEMeasurable.tsum (L := .unconditional _) hPf) ?_
       filter_upwards with c
       have hset : u ⁻¹' {c} ∩ ((⋃ i, f i) ∩ B) = ⋃ i, (u ⁻¹' {c} ∩ (f i ∩ B)) := by
         rw [Set.iUnion_inter, Set.inter_iUnion]
@@ -1186,7 +1186,7 @@ theorem eilenberg_coarea_grad_le {u : ℂ → ℝ} {K : ℝ≥0} (hu : Lipschitz
       intro x _
       rw [Measure.restrict_apply (s.measurableSet_preimage {x})]
     rw [lintegral_congr hslice_sum]
-    rw [lintegral_finset_sum']
+    rw [lintegral_finsetSum']
     · -- Bound each term by `coarea_set_sharp`.
       have hbound : ∀ x ∈ s.range,
           (∫⁻ c, x * μH[1] (s ⁻¹' {x} ∩ u ⁻¹' {c}))

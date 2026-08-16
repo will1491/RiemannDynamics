@@ -85,10 +85,7 @@ theorem norm_fderiv_comp_lie (g : ℂ → ℝ) (R : ℂ ≃ₗᵢ[ℝ] ℂ) (z :
   have hfun : (fun w => g (R w)) = g ∘ (R.toContinuousLinearEquiv : ℂ → ℂ) := by
     funext w; simp only [Function.comp_apply, LinearIsometryEquiv.coe_toContinuousLinearEquiv]
   rw [hfun, ContinuousLinearEquiv.comp_right_fderiv]
-  have h : (R.toContinuousLinearEquiv : ℂ →L[ℝ] ℂ)
-      = R.toLinearIsometry.toContinuousLinearMap := rfl
-  rw [h, ContinuousLinearMap.opNorm_comp_linearIsometryEquiv]
-  simp only [LinearIsometryEquiv.coe_toContinuousLinearEquiv]
+  exact ContinuousLinearMap.opNorm_comp_linearIsometryEquiv (fderiv ℝ g (R z)) R
 
 /-- The Dirichlet energy of `g ∘ R⁻¹` equals that of `g`, since `R⁻¹` is a measure-preserving
 linear isometry: the norm of the derivative is unchanged pointwise up to the change of variables. -/

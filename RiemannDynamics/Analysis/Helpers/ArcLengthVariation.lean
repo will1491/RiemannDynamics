@@ -89,14 +89,14 @@ theorem eVariationOn_eq_lintegral_norm_deriv {γ : ℝ → ℂ} {a b : ℝ} (hab
       filter_upwards [hγ_diff] with t ht ht'
       have hd : HasDerivAt γ (deriv γ t) t := (ht (Set.uIoc_subset_uIcc ht')).hasDerivAt
       have := Complex.reCLM.hasFDerivAt.comp_hasDerivAt t hd
-      simpa using this.deriv
+      simpa [Function.comp_def] using this.deriv
     have him_eq : (deriv (fun t => (γ t).im)) =ᵐ[volume.restrict (Set.uIoc x y)]
         (fun t => (deriv γ t).im) := by
       rw [Filter.EventuallyEq, ae_restrict_iff' measurableSet_uIoc]
       filter_upwards [hγ_diff] with t ht ht'
       have hd : HasDerivAt γ (deriv γ t) t := (ht (Set.uIoc_subset_uIcc ht')).hasDerivAt
       have := Complex.imCLM.hasFDerivAt.comp_hasDerivAt t hd
-      simpa using this.deriv
+      simpa [Function.comp_def] using this.deriv
     have hre_int' : IntervalIntegrable (fun t => (deriv γ t).re) volume x y := by
       rw [intervalIntegrable_iff]; exact (hre_int.def'.congr hre_eq)
     have him_int' : IntervalIntegrable (fun t => (deriv γ t).im) volume x y := by
@@ -116,11 +116,11 @@ theorem eVariationOn_eq_lintegral_norm_deriv {γ : ℝ → ℂ} {a b : ℝ} (hab
     have hre_deriv : ∀ᵐ t : ℝ ∂(volume.restrict (Set.uIoc x y)),
         HasDerivAt (fun s => (γ s).re) (deriv γ t).re t := by
       filter_upwards [hderiv] with t ht
-      have := Complex.reCLM.hasFDerivAt.comp_hasDerivAt t ht; simpa using this
+      have := Complex.reCLM.hasFDerivAt.comp_hasDerivAt t ht; simpa [Function.comp_def] using this
     have him_deriv : ∀ᵐ t : ℝ ∂(volume.restrict (Set.uIoc x y)),
         HasDerivAt (fun s => (γ s).im) (deriv γ t).im t := by
       filter_upwards [hderiv] with t ht
-      have := Complex.imCLM.hasFDerivAt.comp_hasDerivAt t ht; simpa using this
+      have := Complex.imCLM.hasFDerivAt.comp_hasDerivAt t ht; simpa [Function.comp_def] using this
     have hre_deriv_eq : ∀ᵐ t : ℝ ∂(volume.restrict (Set.uIoc x y)),
         deriv (fun s => (γ s).re) t = (deriv γ t).re := by
       filter_upwards [hre_deriv] with t ht using ht.deriv
@@ -176,14 +176,14 @@ theorem eVariationOn_eq_lintegral_norm_deriv {γ : ℝ → ℂ} {a b : ℝ} (hab
         filter_upwards [hγ_diff] with t ht ht'
         have hd : HasDerivAt γ (deriv γ t) t := (ht (Set.uIoc_subset_uIcc ht')).hasDerivAt
         have := Complex.reCLM.hasFDerivAt.comp_hasDerivAt t hd
-        simpa using this.deriv
+        simpa [Function.comp_def] using this.deriv
       have him_eq : (deriv (fun t => (γ t).im)) =ᵐ[volume.restrict (Set.uIoc x y)]
           (fun t => (deriv γ t).im) := by
         rw [Filter.EventuallyEq, ae_restrict_iff' measurableSet_uIoc]
         filter_upwards [hγ_diff] with t ht ht'
         have hd : HasDerivAt γ (deriv γ t) t := (ht (Set.uIoc_subset_uIcc ht')).hasDerivAt
         have := Complex.imCLM.hasFDerivAt.comp_hasDerivAt t hd
-        simpa using this.deriv
+        simpa [Function.comp_def] using this.deriv
       have hre_int' : IntervalIntegrable (fun t => (deriv γ t).re) volume x y := by
         rw [intervalIntegrable_iff]; exact (hre_int.def'.congr hre_eq)
       have him_int' : IntervalIntegrable (fun t => (deriv γ t).im) volume x y := by
@@ -279,14 +279,14 @@ theorem eVariationOn_eq_lintegral_norm_deriv {γ : ℝ → ℂ} {a b : ℝ} (hab
       filter_upwards [hγ_diff] with t ht ht'
       have hd : HasDerivAt γ (deriv γ t) t := (ht (Set.uIoc_subset_uIcc ht')).hasDerivAt
       have := Complex.reCLM.hasFDerivAt.comp_hasDerivAt t hd
-      simpa using this.deriv
+      simpa [Function.comp_def] using this.deriv
     have him_eq : (deriv (fun t => (γ t).im)) =ᵐ[volume.restrict (Set.uIoc a b)]
         (fun t => (deriv γ t).im) := by
       rw [Filter.EventuallyEq, ae_restrict_iff' measurableSet_uIoc]
       filter_upwards [hγ_diff] with t ht ht'
       have hd : HasDerivAt γ (deriv γ t) t := (ht (Set.uIoc_subset_uIcc ht')).hasDerivAt
       have := Complex.imCLM.hasFDerivAt.comp_hasDerivAt t hd
-      simpa using this.deriv
+      simpa [Function.comp_def] using this.deriv
     have hre_int' : IntervalIntegrable (fun t => (deriv γ t).re) volume a b := by
       rw [intervalIntegrable_iff]; exact (hre_int.def'.congr hre_eq)
     have him_int' : IntervalIntegrable (fun t => (deriv γ t).im) volume a b := by

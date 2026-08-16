@@ -54,7 +54,7 @@ theorem differentiableAt_stereoEmbed_comp_coe {u : ℂ → ℂ} {z : ℂ}
       ((deriv u z) • (ContinuousLinearMap.id ℝ ℂ : ℂ →L[ℝ] ℂ)) z := by
     rw [hasFDerivAt_iff_isLittleO]
     refine hu.hasDerivAt.isLittleO.congr_left fun y => ?_
-    simp only [ContinuousLinearMap.smul_apply, ContinuousLinearMap.id_apply, smul_eq_mul]
+    simp only [smul_apply, ContinuousLinearMap.id_apply, smul_eq_mul]
     ring
   -- the stereographic reading of the identity chart is real-differentiable
   have hS : ∀ a : ℂ, DifferentiableAt ℝ (fun b : ℂ => stereoEmbed (b : ℂ̂)) a := by
@@ -99,7 +99,7 @@ theorem sphericalDeriv_eq_of_eventuallyEq_coe {F : ℂ → ℂ̂} {u : ℂ → �
       ((deriv u z) • (ContinuousLinearMap.id ℝ ℂ : ℂ →L[ℝ] ℂ)) z := by
     rw [hasFDerivAt_iff_isLittleO]
     refine hu.hasDerivAt.isLittleO.congr_left fun y => ?_
-    simp only [ContinuousLinearMap.smul_apply, ContinuousLinearMap.id_apply, smul_eq_mul]
+    simp only [smul_apply, ContinuousLinearMap.id_apply, smul_eq_mul]
     ring
   have heq : (fun w => stereoEmbed (F w)) =ᶠ[nhds z] fun w => stereoEmbed ((u w : ℂ̂)) :=
     h.mono fun w hw => by simp only [hw]

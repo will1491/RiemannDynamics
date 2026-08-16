@@ -135,7 +135,7 @@ theorem exists_reflectGlue {F : ℂ → ℂ} {b : BeltramiCoeff} (hF : IsQCAnaly
       have hup : F z + ((ε / 2 : ℝ) : ℂ) * Complex.I ∈ {z : ℂ | 0 < z.im} := by
         have him : (F z + ((ε / 2 : ℝ) : ℂ) * Complex.I).im = ε / 2 := by
           simp [Complex.add_im, Complex.mul_im, h0]
-        simp only [Set.mem_setOf_eq, him]
+        simp only [Set.mem_ofPred_eq, him]
         linarith
       have h1 : F z + ((ε / 2 : ℝ) : ℂ) * Complex.I ∈ F '' {z : ℂ | 0 < z.im} := by
         rw [hVeq]
@@ -585,7 +585,7 @@ theorem exists_symmetric_extremal (hΓ₀ : IsFuchsianGroup Γ₀)
     rw [Filter.EventuallyEq, ae_iff]
     refine measure_mono_null ?_ volume_imZero
     intro z hz
-    simp only [Set.mem_setOf_eq] at hz ⊢
+    simp only [Set.mem_ofPred_eq] at hz ⊢
     by_contra him
     apply hz
     rw [hb'μ, hμtdef]

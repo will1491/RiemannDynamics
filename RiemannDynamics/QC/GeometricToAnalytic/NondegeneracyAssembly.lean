@@ -215,7 +215,7 @@ theorem IsQCGeometric.forwardW12Data {f : ℂ → ℂ} {K : ℝ} (hf : IsQCGeome
   -- (5) `MemW12loc f`: `f ∈ L²_loc` from continuity on compacts, plus the ACL package.
   have hfL2 : MemLpLocOn f (2 : ℝ≥0∞) Set.univ := by
     intro Kc _ hKc
-    haveI : IsFiniteMeasure (volume.restrict Kc) := by
+    have : IsFiniteMeasure (volume.restrict Kc) := by
       constructor; rw [Measure.restrict_apply_univ]; exact hKc.measure_lt_top
     obtain ⟨C, hC⟩ := hKc.exists_bound_of_continuousOn hfcont.continuousOn
     have hbound : ∀ᵐ x ∂(volume.restrict Kc), ‖f x‖ ≤ C := by
@@ -371,7 +371,7 @@ theorem IsQCGeometric.inverse_axisRectModulusBound {f g : ℂ → ℂ} {K : ℝ}
           have h1 : Measurable (fun t => ‖fderiv ℝ f (γ t)‖) :=
             ((measurable_fderiv ℝ f).norm).comp hγcont.measurable
           have h2 : Measurable (fun t => ‖deriv γ t‖) := (measurable_deriv γ).norm
-          simpa only [fdNormMulDeriv] using h1.mul h2
+          simpa only [fdNormMulDeriv] using! h1.mul h2
         rw [MeasureTheory.integral_eq_lintegral_of_nonneg_ae
           (Filter.Eventually.of_forall (fun t => hnn t)) hmeas.aestronglyMeasurable]
         apply ENNReal.toReal_mono hγfin
@@ -380,9 +380,9 @@ theorem IsQCGeometric.inverse_axisRectModulusBound {f g : ℂ → ℂ} {K : ℝ}
           intro t
           rw [fdNormMulDeriv, ENNReal.ofReal_mul (norm_nonneg _),
             show ENNReal.ofReal ‖fderiv ℝ f (γ t)‖ = (‖fderiv ℝ f (γ t)‖₊ : ℝ≥0∞) from by
-              rw [ofReal_norm_eq_enorm, enorm_eq_nnnorm],
+              rw [ofReal_norm, enorm_eq_nnnorm],
             show ENNReal.ofReal ‖deriv γ t‖ = (‖deriv γ t‖₊ : ℝ≥0∞) from by
-              rw [ofReal_norm_eq_enorm, enorm_eq_nnnorm]]
+              rw [ofReal_norm, enorm_eq_nnnorm]]
         calc ∫⁻ t in Set.uIoc (0:ℝ) 1, ENNReal.ofReal (fdNormMulDeriv f γ t)
             = ∫⁻ t in Set.uIoc (0:ℝ) 1, G (γ t) * (‖deriv γ t‖₊ : ℝ≥0∞) := by
               simp_rw [hpt]
@@ -437,7 +437,7 @@ theorem IsQCGeometric.inverse_axisRectModulusBound {f g : ℂ → ℂ} {K : ℝ}
       have hTSae : S =ᵐ[volume] T := by
         rw [MeasureTheory.ae_eq_set]
         constructor
-        · rw [Set.diff_eq_empty.mpr Set.inter_subset_left]
+        · rw [Set.sdiff_eq_empty.mpr Set.inter_subset_left]
           exact measure_empty
         · refine measure_mono_null ?_ (MeasureTheory.ae_iff.mp hdiff)
           rintro z ⟨hzT, hzS⟩
@@ -454,7 +454,7 @@ theorem IsQCGeometric.inverse_axisRectModulusBound {f g : ℂ → ℂ} {K : ℝ}
         have h1 : G z ^ 2 = ENNReal.ofReal (‖fderiv ℝ f z‖ ^ 2) := by
           rw [hG, ENNReal.ofReal_pow (norm_nonneg _)]
           congr 1
-          rw [ofReal_norm_eq_enorm, enorm_eq_nnnorm]
+          rw [ofReal_norm, enorm_eq_nnnorm]
         rw [h1, abs_of_nonneg hdet0, ← ENNReal.ofReal_mul (le_of_lt hK0)]
         exact ENNReal.ofReal_le_ofReal hdil2
       have hSdil : (∫⁻ z in S, G z ^ 2)
@@ -608,12 +608,12 @@ theorem IsQCGeometric.exists_weakGradient_memLpLocOn_gt_two {f : ℂ → ℂ} {K
     have h1 : Measurable (fun w : ℂ => (fderiv ℝ f w) 1) := measurable_fderiv_apply_const ℝ f 1
     have h2 : Measurable (fun w : ℂ => (fderiv ℝ f w) Complex.I) :=
       measurable_fderiv_apply_const ℝ f Complex.I
-    simpa only [dz] using (measurable_const.mul (h1.sub (measurable_const.mul h2)))
+    simpa only [dz] using! (measurable_const.mul (h1.sub (measurable_const.mul h2)))
   have hdzbarf_meas : Measurable (fun w : ℂ => dzbar f w) := by
     have h1 : Measurable (fun w : ℂ => (fderiv ℝ f w) 1) := measurable_fderiv_apply_const ℝ f 1
     have h2 : Measurable (fun w : ℂ => (fderiv ℝ f w) Complex.I) :=
       measurable_fderiv_apply_const ℝ f Complex.I
-    simpa only [dzbar] using (measurable_const.mul (h1.add (measurable_const.mul h2)))
+    simpa only [dzbar] using! (measurable_const.mul (h1.add (measurable_const.mul h2)))
   have hraw_meas : Measurable raw := hdzbarf_meas.div hdzf_meas
   have hμ_meas : Measurable μ :=
     Measurable.ite (measurableSet_le hraw_meas.norm measurable_const) hraw_meas measurable_const
@@ -658,7 +658,7 @@ theorem IsQCGeometric.exists_weakGradient_memLpLocOn_gt_two {f : ℂ → ℂ} {K
   -- STEP 6 — `f ∈ L²_loc` from continuity on compacts.
   have hfL2 : MemLpLocOn f (2 : ℝ≥0∞) Set.univ := by
     intro Kc _ hKc
-    haveI : IsFiniteMeasure (volume.restrict Kc) := by
+    have : IsFiniteMeasure (volume.restrict Kc) := by
       constructor; rw [Measure.restrict_apply_univ]; exact hKc.measure_lt_top
     obtain ⟨C, hC⟩ := hKc.exists_bound_of_continuousOn hfcont.continuousOn
     have hbound : ∀ᵐ x ∂(volume.restrict Kc), ‖f x‖ ≤ C := by
@@ -768,7 +768,7 @@ theorem IsQCGeometric.inverse_pointwise_data {f g : ℂ → ℂ} {K : ℝ}
     · intro hw
       exact ⟨g w, hw, hfg w⟩
     · rintro ⟨z, hzB, rfl⟩
-      simpa only [Set.mem_setOf_eq, hgf z] using hzB
+      simpa only [Set.mem_ofPred_eq, hgf z] using hzB
   -- The bad set `B` in the source and the nullity of its image.
   set B : Set ℂ := {z : ℂ | ¬ (DifferentiableAt ℝ f z ∧ 0 < (fderiv ℝ f z).det)} with hB
   have hfB : volume (f '' B) = 0 := by
@@ -778,7 +778,7 @@ theorem IsQCGeometric.inverse_pointwise_data {f g : ℂ → ℂ} {K : ℝ}
           ∪ {z : ℂ | DifferentiableAt ℝ f z ∧ fderiv ℝ f z ≠ 0
               ∧ ¬ 0 < (fderiv ℝ f z).det}) := by
       intro z hz
-      simp only [hB, Set.mem_setOf_eq, not_and] at hz
+      simp only [hB, Set.mem_ofPred_eq, not_and] at hz
       by_cases hd : DifferentiableAt ℝ f z
       · by_cases h0 : fderiv ℝ f z = 0
         · exact Or.inr (Or.inl ⟨hd, h0⟩)
@@ -969,12 +969,12 @@ theorem IsQCGeometric.inverse_weakGradient_beltrami {f g : ℂ → ℂ} {K : ℝ
     have h1 : Measurable (fun w : ℂ => (fderiv ℝ g w) 1) := measurable_fderiv_apply_const ℝ g 1
     have h2 : Measurable (fun w : ℂ => (fderiv ℝ g w) Complex.I) :=
       measurable_fderiv_apply_const ℝ g Complex.I
-    simpa only [dz] using (measurable_const.mul (h1.sub (measurable_const.mul h2)))
+    simpa only [dz] using! (measurable_const.mul (h1.sub (measurable_const.mul h2)))
   have hdzbarg_meas : Measurable (fun w : ℂ => dzbar g w) := by
     have h1 : Measurable (fun w : ℂ => (fderiv ℝ g w) 1) := measurable_fderiv_apply_const ℝ g 1
     have h2 : Measurable (fun w : ℂ => (fderiv ℝ g w) Complex.I) :=
       measurable_fderiv_apply_const ℝ g Complex.I
-    simpa only [dzbar] using (measurable_const.mul (h1.add (measurable_const.mul h2)))
+    simpa only [dzbar] using! (measurable_const.mul (h1.add (measurable_const.mul h2)))
   have hraw_meas : Measurable raw := hdzbarg_meas.div hdzg_meas
   have hμ_meas : Measurable μ :=
     Measurable.ite (measurableSet_le hraw_meas.norm measurable_const) hraw_meas measurable_const
@@ -1049,7 +1049,7 @@ theorem IsQCGeometric.inverse_exists_weakGradient_memLpLocOn_gt_two {f g : ℂ �
   -- `g ∈ L²_loc` from continuity on compacts.
   have hgL2 : MemLpLocOn g (2 : ℝ≥0∞) Set.univ := by
     intro Kc _ hKc
-    haveI : IsFiniteMeasure (volume.restrict Kc) := by
+    have : IsFiniteMeasure (volume.restrict Kc) := by
       constructor; rw [Measure.restrict_apply_univ]; exact hKc.measure_lt_top
     obtain ⟨C, hC⟩ := hKc.exists_bound_of_continuousOn hgcont.continuousOn
     have hbound : ∀ᵐ x ∂(volume.restrict Kc), ‖g x‖ ≤ C := by
@@ -1064,7 +1064,7 @@ theorem IsQCGeometric.inverse_exists_weakGradient_memLpLocOn_gt_two {f g : ℂ �
   have hμle : ∀ᵐ w : ℂ, ‖μ w‖ ≤ 1 := by
     filter_upwards [ae_le_eLpNormEssSup (f := μ) (μ := volume)] with w hw
     have h1 : ENNReal.ofReal ‖μ w‖ ≤ 1 := by
-      rw [ofReal_norm_eq_enorm]; exact le_trans hw hμ_bound.le
+      rw [ofReal_norm]; exact le_trans hw hμ_bound.le
     exact ENNReal.ofReal_le_one.mp h1
   -- `∂̄g ∈ Lᵖ_loc` via `dzbar g =ᵐ μ · dz g`.
   have hdzbarp : MemLpLocOn (fun w => dzbar g w) (ENNReal.ofReal p) Set.univ := by
@@ -1183,7 +1183,7 @@ theorem IsQCGeometric.ae_fderiv_ne_zero {f : ℂ → ℂ} {K : ℝ} (hf : IsQCGe
   -- `volume E = 0` is the complement of the a.e. statement.
   rw [MeasureTheory.ae_iff]
   have hset : {x : ℂ | ¬ (DifferentiableAt ℝ f x → fderiv ℝ f x ≠ 0)} = E := by
-    ext x; simp only [hE, Set.mem_setOf_eq, Classical.not_imp, not_not]
+    ext x; simp only [hE, Set.mem_ofPred_eq, Classical.not_imp, not_not]
   rw [hset]; exact hgfE
 
 /-- **Worst-orientation Wirtinger bracket from the modulus blow-up.** At almost every point of

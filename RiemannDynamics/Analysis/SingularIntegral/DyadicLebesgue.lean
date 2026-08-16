@@ -356,7 +356,7 @@ theorem exists_dyadic_CZ_stopping {f : ℂ → ℝ≥0∞} (hf : AEMeasurable f 
     have hnull : volume {z | z ∈ Q ∧ lam < f z ∧ ¬ captured z} = 0 := by
       apply measure_mono_null _ (ae_iff.mp hcomb)
       intro z hz
-      simp only [mem_setOf_eq] at hz ⊢
+      simp only [mem_ofPred_eq] at hz ⊢
       obtain ⟨hzQ, hflt, hncap⟩ := hz
       rintro ⟨htends, hfne⟩
       apply hncap
@@ -396,7 +396,7 @@ theorem exists_dyadic_CZ_stopping {f : ℂ → ℝ≥0∞} (hf : AEMeasurable f 
     -- Now: the uncovered super-level set ⊆ the non-captured null set.
     refine measure_mono_null ?_ hnull
     intro z hz
-    simp only [Set.mem_diff, Set.mem_setOf_eq] at hz
+    simp only [Set.mem_sdiff, Set.mem_ofPred_eq] at hz
     obtain ⟨⟨hzQ, hflt⟩, hncov⟩ := hz
     refine ⟨hzQ, hflt, ?_⟩
     intro hcapt

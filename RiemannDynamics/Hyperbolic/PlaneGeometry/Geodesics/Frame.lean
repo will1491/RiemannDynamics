@@ -45,14 +45,14 @@ theorem right_mem_geodSeg (a b : UpperHalfPlane) : b ∈ geodSeg a b := by
 /-- The geodesic segment is symmetric in its endpoints. -/
 theorem geodSeg_comm (a b : UpperHalfPlane) : geodSeg a b = geodSeg b a := by
   ext z
-  simp only [geodSeg, Set.mem_setOf_eq]
+  simp only [geodSeg, Set.mem_ofPred_eq]
   rw [dist_comm a z, dist_comm z b, dist_comm a b]
   constructor <;> intro h <;> linarith
 
 /-- A degenerate segment is a single point. -/
 theorem geodSeg_self (a : UpperHalfPlane) : geodSeg a a = {a} := by
   ext z
-  simp only [geodSeg, Set.mem_setOf_eq, dist_self, Set.mem_singleton_iff]
+  simp only [geodSeg, Set.mem_ofPred_eq, dist_self, Set.mem_singleton_iff]
   constructor
   · intro h
     have h1 : 0 ≤ dist a z := dist_nonneg
@@ -68,12 +68,12 @@ theorem smul_geodSeg (g : SL(2, ℝ)) (a b : UpperHalfPlane) :
   ext z
   constructor
   · rintro ⟨w, hw, rfl⟩
-    simp only [geodSeg, Set.mem_setOf_eq] at hw ⊢
+    simp only [geodSeg, Set.mem_ofPred_eq] at hw ⊢
     rw [dist_smul g a w, dist_smul g w b, dist_smul g a b]
     exact hw
   · intro hz
     refine ⟨g⁻¹ • z, ?_, smul_inv_smul g z⟩
-    simp only [geodSeg, Set.mem_setOf_eq] at hz ⊢
+    simp only [geodSeg, Set.mem_ofPred_eq] at hz ⊢
     have e1 : dist a (g⁻¹ • z) = dist (g • a) z := by
       calc dist a (g⁻¹ • z) = dist (g⁻¹ • (g • a)) (g⁻¹ • z) := by rw [inv_smul_smul]
         _ = dist (g • a) z := dist_smul g⁻¹ (g • a) z
@@ -423,7 +423,7 @@ theorem exists_smul_of_norm_sub {u u' : ℂ} (h : ‖u - u'‖ = ‖u‖ - ‖u'
     ring
   have hkey : (u' * (starRingEnd ℂ) v).re = ‖u'‖ * ‖v‖ := by
     have hsq := congrArg (· ^ 2) hsum
-    simp only at hsq
+    try simp only at hsq
     rw [Complex.sq_norm, Complex.normSq_add, ← Complex.sq_norm u', ← Complex.sq_norm v] at hsq
     nlinarith [hsq]
   set ζ := u' * (starRingEnd ℂ) v with hζ
@@ -446,7 +446,7 @@ theorem exists_smul_of_norm_sub {u u' : ℂ} (h : ‖u - u'‖ = ‖u‖ - ‖u'
   have hspos : 0 < s := div_pos hnormpos hnsqpos
   have hu'v : u' = (s : ℂ) * v := by
     have hmul := congrArg (· * v) hζval
-    simp only at hmul
+    try simp only at hmul
     rw [hζ, mul_assoc, mul_comm ((starRingEnd ℂ) v) v, Complex.mul_conj] at hmul
     push_cast at hmul
     rw [hs]

@@ -54,13 +54,13 @@ theorem modularLambda_exists_holomorphic_lift_ball {f : ℂ → ℂ}
   -- below from the junk-value lemma.
   have _ := he₀
   -- Instances making the ball simply connected and locally path-connected.
-  haveI : LocPathConnectedSpace (ball c r) :=
-    Metric.isOpen_ball.locPathConnectedSpace
-  haveI : ContractibleSpace (ball c r) :=
+  have : LocallyPathConnectedSpace (ball c r) :=
+    Metric.isOpen_ball.locallyPathConnectedSpace
+  have : ContractibleSpace (ball c r) :=
     (convex_ball c r).contractibleSpace ⟨c, hc⟩
   -- The map to lift, as a continuous map on the ball subtype.
   have hΦ_cont : Continuous fun a : ball c r => f ↑a :=
-    continuousOn_iff_continuous_restrict.mp hd.continuousOn
+    continuousOn_iff_continuous_domRestrict.mp hd.continuousOn
   obtain ⟨Φ, hΦ⟩ : ∃ Φ : C(ball c r, ℂ), ∀ a, Φ a = f ↑a :=
     ⟨⟨fun a => f ↑a, hΦ_cont⟩, fun _ => rfl⟩
   -- The prescribed fibre point lies over the value at the center.
@@ -94,8 +94,8 @@ theorem modularLambda_exists_holomorphic_lift_ball {f : ℂ → ℂ}
     rw [hF_comm z hz] at h0
     exact (hf z hz).1 h0
   have hF_contOn : ContinuousOn F (ball c r) := by
-    rw [continuousOn_iff_continuous_restrict]
-    have hrestr : (ball c r).restrict F = ⇑Fhat := by
+    rw [continuousOn_iff_continuous_domRestrict]
+    have hrestr : (ball c r).domRestrict F = ⇑Fhat := by
       funext a
       exact hF_eq a.1 a.2
     rw [hrestr]

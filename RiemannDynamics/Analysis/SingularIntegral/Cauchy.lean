@@ -67,7 +67,7 @@ theorem cauchyTransform_dzbar (hω : ContDiff ℝ 1 ω) (hωc : HasCompactSuppor
   have hgC : ContDiff ℝ 1 g := hω.comp (contDiff_const.add contDiff_id)
   have hgc : HasCompactSupport g := by
     have h := hωc.comp_homeomorph (Homeomorph.addLeft z)
-    simpa [Function.comp, hg_def] using h
+    simpa [Function.comp_def, hg_def] using h
   -- Translation identity for `∂̄`.
   have hdzbar : ∀ ξ : ℂ, dzbar ω (z + ξ) = dzbar g ξ := by
     intro ξ
@@ -78,7 +78,7 @@ theorem cauchyTransform_dzbar (hω : ContDiff ℝ 1 ω) (hωc : HasCompactSuppor
       have hcomp : g = ω ∘ (fun ξ : ℂ => z + ξ) := rfl
       rw [hcomp, fderiv_comp ξ hωd htransd]
       have ht : fderiv ℝ (fun ξ : ℂ => z + ξ) ξ = ContinuousLinearMap.id ℝ ℂ := by
-        rw [fderiv_const_add (𝕜 := ℝ) (f := fun ξ : ℂ => ξ), fderiv_id']
+        rw [fderiv_const_add (𝕜 := ℝ) (f := fun ξ : ℂ => ξ), fderiv_fun_id]
       rw [ht, ContinuousLinearMap.comp_id]
     rw [dzbar, dzbar, hfd]
   -- The translated integral.
@@ -241,7 +241,7 @@ theorem cauchyTransform_dzbar (hω : ContDiff ℝ 1 ω) (hωc : HasCompactSuppor
         apply Measure.integrableOn_of_bounded hSfin hφc.aestronglyMeasurable
           (M := Mφ)
         exact ae_of_all _ (fun p => hφb p)
-      apply hintS.of_forall_diff_eq_zero hT_meas
+      apply hintS.of_forall_sdiff_eq_zero hT_meas
       intro p hp
       obtain ⟨hpT, hpnS⟩ := hp
       apply hφsupp
@@ -513,7 +513,7 @@ theorem dzbar_cauchyTransform_eq (hω : ContDiff ℝ 1 ω) (hωc : HasCompactSup
           rw [← norm_ne_zero_iff, hnorm]; exact ne_of_gt hp1
         rw [enorm_inv hsymm_ne]
         have henorm : ‖Complex.polarCoord.symm p‖ₑ = ENNReal.ofReal p.1 := by
-          rw [← ofReal_norm_eq_enorm, hnorm]
+          rw [← ofReal_norm, hnorm]
         rw [henorm, smul_eq_mul,
           ENNReal.mul_inv_cancel (by simp only [ne_eq, ENNReal.ofReal_eq_zero, not_le]; exact hp1)
             ENNReal.ofReal_lt_top.ne]
@@ -610,7 +610,7 @@ theorem dzbar_cauchyTransform_eq (hω : ContDiff ℝ 1 ω) (hωc : HasCompactSup
     exact MeasureTheory.integral_const_mul Complex.I B
   -- Step E: assemble the Wirtinger derivative of `Pω` from the directional values.
   rw [hRHS, dzbar, hfderiv]
-  rw [ContinuousLinearMap.smul_apply, ContinuousLinearMap.smul_apply, smul_eq_mul, smul_eq_mul]
+  rw [smul_apply, smul_apply, smul_eq_mul, smul_eq_mul]
   rw [hD₀1, hD₀I]
   ring
 

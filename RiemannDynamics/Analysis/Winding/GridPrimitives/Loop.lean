@@ -1248,13 +1248,13 @@ theorem exists_gridLoop_winding_ne_zero {T : Set ℂ} (hT : IsOpen T)
     have hqU : q ∈ U := by
       by_contra hqn
       rw [hU_def] at hqn
-      simp only [Set.mem_union, Set.mem_setOf_eq, not_or, not_lt] at hqn
+      simp only [Set.mem_union, Set.mem_ofPred_eq, not_or, not_lt] at hqn
       exact hq ((hsq_mem p q).mpr ⟨⟨hqn.1.1, hqn.2.1⟩, hqn.1.2, hqn.2.2⟩)
     have hdisjU : ∀ z ∈ U, z ∉ gridSquare δ p := by
       intro z hz hzsq
       obtain ⟨⟨h1, h2⟩, h3, h4⟩ := (hsq_mem p z).mp hzsq
       rw [hU_def] at hz
-      simp only [Set.mem_union, Set.mem_setOf_eq] at hz
+      simp only [Set.mem_union, Set.mem_ofPred_eq] at hz
       rcases hz with (h | h) | h | h <;> linarith
     -- A far reference point in `U`.
     set qf : ℂ := ((δ * p.1 - 3 * δ : ℝ) : ℂ) +
@@ -1263,7 +1263,7 @@ theorem exists_gridLoop_winding_ne_zero {T : Set ℂ} (hT : IsOpen T)
       simp [hqf_def]
     have hqfU : qf ∈ U := by
       rw [hU_def]
-      simp only [Set.mem_union, Set.mem_setOf_eq]
+      simp only [Set.mem_union, Set.mem_ofPred_eq]
       left; left
       rw [hqf_re]
       linarith
@@ -1272,25 +1272,25 @@ theorem exists_gridLoop_winding_ne_zero {T : Set ℂ} (hT : IsOpen T)
       have hpc1 : IsPathConnected {z : ℂ | z.re < δ * p.1} := by
         refine (convex_halfSpace_lt (.mk Complex.add_re Complex.smul_re)
           _).isPathConnected ⟨((δ * p.1 - 1 : ℝ) : ℂ), ?_⟩
-        simp [Set.mem_setOf_eq]
+        simp [Set.mem_ofPred_eq]
       have hpc2 : IsPathConnected {z : ℂ | δ * (p.1 + 1) < z.re} := by
         refine (convex_halfSpace_gt (.mk Complex.add_re Complex.smul_re)
           _).isPathConnected ⟨((δ * (p.1 + 1) + 1 : ℝ) : ℂ), ?_⟩
-        simp [Set.mem_setOf_eq]
+        simp [Set.mem_ofPred_eq]
       have hpc3 : IsPathConnected {z : ℂ | z.im < δ * p.2} := by
         refine (convex_halfSpace_lt (.mk Complex.add_im Complex.smul_im)
           _).isPathConnected ⟨((δ * p.2 - 1 : ℝ) : ℂ) * Complex.I, ?_⟩
-        simp [Set.mem_setOf_eq]
+        simp [Set.mem_ofPred_eq]
       have hpc4 : IsPathConnected {z : ℂ | δ * (p.2 + 1) < z.im} := by
         refine (convex_halfSpace_gt (.mk Complex.add_im Complex.smul_im)
           _).isPathConnected ⟨((δ * (p.2 + 1) + 1 : ℝ) : ℂ) * Complex.I, ?_⟩
-        simp [Set.mem_setOf_eq]
+        simp [Set.mem_ofPred_eq]
       -- below-left corner joins piece 1 and piece 3
       have h13 : IsPathConnected
           ({z : ℂ | z.re < δ * p.1} ∪ {z : ℂ | z.im < δ * p.2}) := by
         refine hpc1.union hpc3
           ⟨((δ * p.1 - 1 : ℝ) : ℂ) + ((δ * p.2 - 1 : ℝ) : ℂ) * Complex.I,
-            ?_, ?_⟩ <;> simp [Set.mem_setOf_eq]
+            ?_, ?_⟩ <;> simp [Set.mem_ofPred_eq]
       -- above-right corner joins piece 2 and piece 4
       have h24 : IsPathConnected
           ({z : ℂ | δ * (p.1 + 1) < z.re} ∪
@@ -1298,7 +1298,7 @@ theorem exists_gridLoop_winding_ne_zero {T : Set ℂ} (hT : IsOpen T)
         refine hpc2.union hpc4
           ⟨((δ * (p.1 + 1) + 1 : ℝ) : ℂ) +
             ((δ * (p.2 + 1) + 1 : ℝ) : ℂ) * Complex.I, ?_, ?_⟩ <;>
-          simp [Set.mem_setOf_eq]
+          simp [Set.mem_ofPred_eq]
       -- below-right corner joins the two pairs (below piece ∋ it, right
       -- piece ∋ it)
       have hU : IsPathConnected U := by
@@ -1307,9 +1307,9 @@ theorem exists_gridLoop_winding_ne_zero {T : Set ℂ} (hT : IsOpen T)
           ⟨((δ * (p.1 + 1) + 1 : ℝ) : ℂ) +
             ((δ * p.2 - 1 : ℝ) : ℂ) * Complex.I, ?_, ?_⟩
         · right
-          simp [Set.mem_setOf_eq]
+          simp [Set.mem_ofPred_eq]
         · left
-          simp [Set.mem_setOf_eq]
+          simp [Set.mem_ofPred_eq]
       exact hU.isConnected.isPreconnected
     -- Winding at the far point is zero: trace inside a ball missing `qf`.
     have htrace_ball : ∀ t : unitInterval, gridLoopCurve δ (sqB p) t ∈

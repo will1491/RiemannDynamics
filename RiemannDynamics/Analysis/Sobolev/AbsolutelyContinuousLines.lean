@@ -182,7 +182,8 @@ theorem hasWeakDirDeriv_one_of_aclHorizontal
       have hFr_deriv : ∀ᵐ t : ℝ, deriv Fr t = Gr t := by
         filter_upwards [hF_deriv] with t ht
         have : HasDerivAt Fr (proj (G t)) t := by
-          have := proj.hasFDerivAt.comp_hasDerivAt t ht; simpa [hFr] using this
+          have := proj.hasFDerivAt.comp_hasDerivAt t ht
+          simpa [hFr, Function.comp_def] using this
         exact this.deriv
       have hIBP := (hΦ_ac (-R) R).integral_mul_deriv_eq_deriv_mul (hFr_ac (-R) R)
       rw [hΦa, hΦb] at hIBP
@@ -250,10 +251,8 @@ theorem hasWeakDirDeriv_one_of_aclHorizontal
       Integrable (fun p : ℝ × ℝ => W ⟨p.1, p.2⟩) (volume.prod volume) := by
     intro W hW
     rw [← Measure.volume_eq_prod]
-    have hmeas : AEStronglyMeasurable (fun p : ℝ × ℝ => W ⟨p.1, p.2⟩) volume := by
-      have := hW.aestronglyMeasurable.comp_quasiMeasurePreserving hmpsymm.quasiMeasurePreserving
-      convert this using 1
-    rw [← hmp.integrable_comp hmeas]; convert hW using 1
+    exact (hmpsymm.integrable_comp_of_integrable hW).congr
+      (Filter.Eventually.of_forall fun p => rfl)
   change (∫ z, Lc z) = - ∫ z, Rc z
   rw [transInt Lc, transInt Rc]
   rw [Measure.volume_eq_prod] at *
@@ -295,7 +294,7 @@ theorem hasWeakDirDeriv_one_of_aclHorizontal
       rw [he]; simpa using (Complex.ofRealCLM.hasDerivAt (x := x)).add_const ((y : ℂ) * Complex.I)
     have hfd : HasFDerivAt φ (fderiv ℝ φ ⟨x, y⟩) ⟨x, y⟩ :=
       (hφ_smooth.differentiable (by norm_num)).differentiableAt.hasFDerivAt
-    simpa using hfd.comp_hasDerivAt x haff
+    simpa [Function.comp_def] using hfd.comp_hasDerivAt x haff
   have hLeq : (fun x => Lc ⟨x, y⟩) = fun x => deriv (fun t : ℝ => φ ⟨t, y⟩) x • f ⟨x, y⟩ := by
     funext x; rw [hLc, (hsliceΦ x).deriv]
   have hReq : (fun x => Rc ⟨x, y⟩) = fun x => (fun t : ℝ => φ ⟨t, y⟩) x • g ⟨x, y⟩ := by
@@ -382,7 +381,8 @@ theorem hasWeakDirDeriv_I_of_aclVertical
       have hFr_deriv : ∀ᵐ t : ℝ, deriv Fr t = Gr t := by
         filter_upwards [hF_deriv] with t ht
         have : HasDerivAt Fr (proj (G t)) t := by
-          have := proj.hasFDerivAt.comp_hasDerivAt t ht; simpa [hFr] using this
+          have := proj.hasFDerivAt.comp_hasDerivAt t ht
+          simpa [hFr, Function.comp_def] using this
         exact this.deriv
       have hIBP := (hΦ_ac (-R) R).integral_mul_deriv_eq_deriv_mul (hFr_ac (-R) R)
       rw [hΦa, hΦb] at hIBP
@@ -450,10 +450,8 @@ theorem hasWeakDirDeriv_I_of_aclVertical
       Integrable (fun p : ℝ × ℝ => W ⟨p.1, p.2⟩) (volume.prod volume) := by
     intro W hW
     rw [← Measure.volume_eq_prod]
-    have hmeas : AEStronglyMeasurable (fun p : ℝ × ℝ => W ⟨p.1, p.2⟩) volume := by
-      have := hW.aestronglyMeasurable.comp_quasiMeasurePreserving hmpsymm.quasiMeasurePreserving
-      convert this using 1
-    rw [← hmp.integrable_comp hmeas]; convert hW using 1
+    exact (hmpsymm.integrable_comp_of_integrable hW).congr
+      (Filter.Eventually.of_forall fun p => rfl)
   change (∫ z, Lc z) = - ∫ z, Rc z
   rw [transInt Lc, transInt Rc]
   rw [Measure.volume_eq_prod] at *
@@ -498,7 +496,7 @@ theorem hasWeakDirDeriv_I_of_aclVertical
       simpa using h1.const_add ((x : ℂ))
     have hfd : HasFDerivAt φ (fderiv ℝ φ ⟨x, y⟩) ⟨x, y⟩ :=
       (hφ_smooth.differentiable (by norm_num)).differentiableAt.hasFDerivAt
-    simpa using hfd.comp_hasDerivAt y haff
+    simpa [Function.comp_def] using hfd.comp_hasDerivAt y haff
   have hLeq : (fun y => Lc ⟨x, y⟩) = fun y => deriv (fun t : ℝ => φ ⟨x, t⟩) y • f ⟨x, y⟩ := by
     funext y; rw [hLc, (hsliceΦ y).deriv]
   have hReq : (fun y => Rc ⟨x, y⟩) = fun y => (fun t : ℝ => φ ⟨x, t⟩) y • g ⟨x, y⟩ := by
@@ -841,8 +839,8 @@ theorem exists_absolutelyContinuous_of_oneDim_weakDeriv
       exact hACprim _ hu'imII a b
   -- **Step 1b: a.e. `HasDerivAt v (u' t) t`** (Lebesgue differentiation, componentwise).
   have hv_deriv : ∀ᵐ t : ℝ, HasDerivAt v (u' t) t := by
-    have hre := @LocallyIntegrable.ae_hasDerivAt_integral _ hu'reLI
-    have him := @LocallyIntegrable.ae_hasDerivAt_integral _ hu'imLI
+    have hre := LocallyIntegrable.ae_hasDerivAt_integral hu'reLI
+    have him := LocallyIntegrable.ae_hasDerivAt_integral hu'imLI
     filter_upwards [hre, him] with t htre htim
     have h1 : HasDerivAt (fun x => (v x).re) ((u' t).re) t := by
       rw [show (fun x => (v x).re) = (fun x => ∫ s in (0:ℝ)..x, (u' s).re) from funext hvre]
@@ -852,12 +850,11 @@ theorem exists_absolutelyContinuous_of_oneDim_weakDeriv
       exact htim 0
     have heq : v = fun x => (↑(v x).re : ℂ) + (↑(v x).im : ℂ) * Complex.I := by
       funext x; exact (Complex.re_add_im (v x)).symm
-    rw [heq]
+    rw [heq, show u' t = (↑(u' t).re + ↑(u' t).im * Complex.I : ℂ) from
+      (Complex.re_add_im (u' t)).symm]
     have hh3 : HasDerivAt (fun x => (↑(v x).im : ℂ) * Complex.I) (↑(u' t).im * Complex.I) t :=
       h2.ofReal_comp.mul_const Complex.I
-    have := h1.ofReal_comp.add hh3
-    convert this using 1
-    exact (Complex.re_add_im (u' t)).symm
+    exact h1.ofReal_comp.add hh3
   -- **Step 2: `v` has the same weak derivative `u'`** (one-dimensional IBP for AC
   -- functions on `[−R, R] ⊇ supp Φ`, componentwise through `reCLM`/`imCLM`; the
   -- boundary terms vanish since `Φ` has compact support — modelled on the `lineIBP`
@@ -904,7 +901,8 @@ theorem exists_absolutelyContinuous_of_oneDim_weakDeriv
       have hFr_deriv : ∀ᵐ t : ℝ, deriv Fr t = Gr t := by
         filter_upwards [hv_deriv] with t ht
         have : HasDerivAt Fr (proj (u' t)) t := by
-          have := proj.hasFDerivAt.comp_hasDerivAt t ht; simpa [hFr] using this
+          have := proj.hasFDerivAt.comp_hasDerivAt t ht
+          simpa [hFr, Function.comp_def] using this
         exact this.deriv
       have hIBP := (hΦ_ac (-R) R).integral_mul_deriv_eq_deriv_mul (hFr_ac (-R) R)
       rw [hΦa, hΦb] at hIBP

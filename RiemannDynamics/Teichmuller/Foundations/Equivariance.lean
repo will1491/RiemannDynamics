@@ -479,7 +479,7 @@ theorem exists_isQCAnalytic_inversionTransport {h : ℂ → ℂ} {bh : BeltramiC
     intro g0 hg0
     rw [locallyIntegrableOn_univ, locallyIntegrable_iff]
     intro k hk
-    haveI : IsFiniteMeasure (volume.restrict k) :=
+    have : IsFiniteMeasure (volume.restrict k) :=
       ⟨by rw [Measure.restrict_apply_univ]; exact hk.measure_lt_top⟩
     exact memLp_one_iff_integrable.mp
       ((hg0 k (Set.subset_univ _) hk).mono_exponent (by norm_num))
@@ -535,7 +535,7 @@ theorem exists_isQCAnalytic_inversionTransport {h : ℂ → ℂ} {bh : BeltramiC
     have hSmeas : MeasurableSet (toMeasurable volume N ∩ {(0 : ℂ)}ᶜ) :=
       (measurableSet_toMeasurable _ _).inter isOpen_compl_singleton.measurableSet
     have hSnull : volume (toMeasurable volume N ∩ {(0 : ℂ)}ᶜ) = 0 := by
-      refine le_antisymm (le_trans (measure_mono Set.inter_subset_left) ?_) (zero_le _)
+      refine le_antisymm (le_trans (measure_mono Set.inter_subset_left) ?_) (zero_le)
       rw [measure_toMeasurable]
       exact hN.le
     have hfd : ∀ z ∈ toMeasurable volume N ∩ {(0 : ℂ)}ᶜ,
@@ -544,7 +544,7 @@ theorem exists_isQCAnalytic_inversionTransport {h : ℂ → ℂ} {bh : BeltramiC
       intro z hz
       have hz' : z ≠ 0 := by simpa using hz.2
       have hder : HasDerivAt (fun z' : ℂ => -z'⁻¹) ((z ^ 2)⁻¹) z := by
-        simpa using (hasDerivAt_inv hz').neg
+        simpa using! (hasDerivAt_inv hz').neg
       exact ((hder.complexToReal_fderiv).differentiableAt.hasFDerivAt).hasFDerivWithinAt
     have hinjOn : Set.InjOn (fun z' : ℂ => -z'⁻¹)
         (toMeasurable volume N ∩ {(0 : ℂ)}ᶜ) :=
@@ -558,7 +558,7 @@ theorem exists_isQCAnalytic_inversionTransport {h : ℂ → ℂ} {bh : BeltramiC
     rw [ae_iff] at hP ⊢
     refine measure_mono_null ?_ (himgnull _ hP)
     intro z hz
-    simp only [Set.mem_setOf_eq] at hz
+    simp only [Set.mem_ofPred_eq] at hz
     rw [Classical.not_imp] at hz
     refine ⟨-z⁻¹, ⟨hz.2, ?_⟩, ?_⟩
     · simpa using neg_ne_zero.mpr (inv_ne_zero hz.1)
@@ -568,12 +568,12 @@ theorem exists_isQCAnalytic_inversionTransport {h : ℂ → ℂ} {bh : BeltramiC
     have htop : eLpNormEssSup bh.μ volume ≠ ⊤ := (lt_of_lt_of_le bh.bound le_top).ne
     filter_upwards [ae_le_eLpNormEssSup (f := bh.μ) (μ := volume)] with ζ hζ
     have hle : ENNReal.ofReal ‖bh.μ ζ‖ ≤ eLpNormEssSup bh.μ volume := by
-      rw [ofReal_norm_eq_enorm]
+      rw [ofReal_norm]
       exact hζ
     exact (ENNReal.ofReal_le_iff_le_toReal htop).mp hle
   have hne0 : ∀ᵐ z : ℂ, z ≠ 0 := by
     rw [ae_iff]
-    simp only [not_not, Set.setOf_eq_eq_singleton]
+    simp only [not_not, Set.ofPred_eq_eq_singleton]
     exact measure_singleton 0
   -- ==== the transported Beltrami coefficient ====
   set μG : ℂ → ℂ :=
@@ -610,7 +610,7 @@ theorem exists_isQCAnalytic_inversionTransport {h : ℂ → ℂ} {bh : BeltramiC
       rw [fderiv_zero_of_not_differentiableAt hnd] at hdet0
       simp [ContinuousLinearMap.det] at hdet0
     have hm₁der : HasDerivAt (fun z' : ℂ => -z'⁻¹) ((z ^ 2)⁻¹) z := by
-      simpa using (hasDerivAt_inv hz0).neg
+      simpa using! (hasDerivAt_inv hz0).neg
     have hm₁C : DifferentiableAt ℂ (fun z' : ℂ => -z'⁻¹) z := hm₁der.differentiableAt
     have hm₁R : DifferentiableAt ℝ (fun z' : ℂ => -z'⁻¹) z :=
       (hm₁der.complexToReal_fderiv).differentiableAt
@@ -626,7 +626,7 @@ theorem exists_isQCAnalytic_inversionTransport {h : ℂ → ℂ} {bh : BeltramiC
         (-(((gc z - h 0) ^ 2)⁻¹)) (gc z) := by
       have hsub : HasDerivAt (fun u : ℂ => u - h 0) 1 (gc z) := by
         simpa using (hasDerivAt_id (gc z)).sub_const (h 0)
-      simpa using (hasDerivAt_inv (sub_ne_zero.mpr hgz_ne)).comp (gc z) hsub
+      simpa using! (hasDerivAt_inv (sub_ne_zero.mpr hgz_ne)).comp (gc z) hsub
     have hm₂C : DifferentiableAt ℂ (fun u : ℂ => (u - h 0)⁻¹) (gc z) :=
       hm₂der.differentiableAt
     have hm₂R : DifferentiableAt ℝ (fun u : ℂ => (u - h 0)⁻¹) (gc z) :=
@@ -779,7 +779,7 @@ theorem exists_isQCAnalytic_inversionTransport {h : ℂ → ℂ} {bh : BeltramiC
     have hφat : ∀ z ∈ ({(0 : ℂ)}ᶜ : Set ℂ),
         HasDerivAt (fun z' : ℂ => -z'⁻¹) ((z ^ 2)⁻¹) z := by
       intro z hz
-      simpa using (hasDerivAt_inv (show z ≠ 0 by simpa using hz)).neg
+      simpa using! (hasDerivAt_inv (show z ≠ 0 by simpa using hz)).neg
     have hφ0 : ∀ z ∈ ({(0 : ℂ)}ᶜ : Set ℂ), (z ^ 2)⁻¹ ≠ 0 := by
       intro z hz
       exact inv_ne_zero (pow_ne_zero 2 (show z ≠ 0 by simpa using hz))
@@ -791,7 +791,7 @@ theorem exists_isQCAnalytic_inversionTransport {h : ℂ → ℂ} {bh : BeltramiC
       have hu' : u - h 0 ≠ 0 := sub_ne_zero.mpr (by simpa using hu)
       have hsub : HasDerivAt (fun u' : ℂ => u' - h 0) 1 u := by
         simpa using (hasDerivAt_id u).sub_const (h 0)
-      simpa using (hasDerivAt_inv hu').comp u hsub
+      simpa using! (hasDerivAt_inv hu').comp u hsub
     have hmaps : Set.MapsTo h ((fun z' : ℂ => -z'⁻¹) '' {(0 : ℂ)}ᶜ) {h 0}ᶜ := by
       rw [himg]
       intro ζ hζ
@@ -827,14 +827,14 @@ theorem exists_isQCAnalytic_inversionTransport {h : ℂ → ℂ} {bh : BeltramiC
     have hSGc : volume {z : ℂ | 0 < (fderiv ℝ (inversionTransport h) z).det}ᶜ = 0 := by
       have hae := hdetG
       rw [ae_iff] at hae
-      simpa [Set.compl_setOf] using hae
+      simpa [Set.compl_ofPred] using hae
     set SK := K ∩ {z : ℂ | 0 < (fderiv ℝ (inversionTransport h) z).det} with hSK
     have hKae : K =ᵐ[volume] SK := by
       rw [ae_eq_set]
       constructor
-      · rw [hSK, Set.diff_self_inter]
+      · rw [hSK, Set.sdiff_self_inter]
         exact measure_mono_null (fun z hz => hz.2) hSGc
-      · rw [hSK, Set.diff_eq_empty.mpr Set.inter_subset_left]
+      · rw [hSK, Set.sdiff_eq_empty.mpr Set.inter_subset_left]
         exact measure_empty
     have hSKmeas : MeasurableSet SK := hKc.measurableSet.inter hSGmeas
     have hfd : ∀ z ∈ SK, HasFDerivWithinAt (inversionTransport h)
@@ -877,7 +877,7 @@ theorem exists_isQCAnalytic_inversionTransport {h : ℂ → ℂ} {bh : BeltramiC
       refine ae_restrict_of_ae ?_
       filter_upwards [hFbd] with z hz
       calc ‖F z‖ₑ ^ (2 : ℕ) = ENNReal.ofReal (‖F z‖ ^ 2) := by
-            rw [← ofReal_norm_eq_enorm, ← ENNReal.ofReal_pow (norm_nonneg _)]
+            rw [← ofReal_norm, ← ENNReal.ofReal_pow (norm_nonneg _)]
         _ ≤ ENNReal.ofReal (bh.K * (fderiv ℝ (inversionTransport h) z).det) :=
             ENNReal.ofReal_le_ofReal hz
         _ = ENNReal.ofReal bh.K
@@ -915,18 +915,18 @@ theorem exists_isQCAnalytic_inversionTransport {h : ℂ → ℂ} {bh : BeltramiC
   have hWxU : HasWeakDirDeriv 1 (GF 1) (inversionTransport h) Set.univ := by
     refine HasWeakDirDeriv.removable_singleton (p := 0) ?_ isOpen_univ
       hGhomeo.continuous.continuousOn hGxL2
-    rw [← Set.compl_eq_univ_diff]
+    rw [← Set.compl_eq_univ_sdiff]
     exact (hcc 1).1
   have hWyU : HasWeakDirDeriv Complex.I (GF Complex.I) (inversionTransport h)
       Set.univ := by
     refine HasWeakDirDeriv.removable_singleton (p := 0) ?_ isOpen_univ
       hGhomeo.continuous.continuousOn hGyL2
-    rw [← Set.compl_eq_univ_diff]
+    rw [← Set.compl_eq_univ_sdiff]
     exact (hcc Complex.I).1
   -- ==== local square integrability of the map itself, and membership in W^{1,2} ====
   have hGL2 : MemLpLocOn (inversionTransport h) 2 Set.univ := by
     intro K _ hKc
-    haveI : IsFiniteMeasure (volume.restrict K) :=
+    have : IsFiniteMeasure (volume.restrict K) :=
       ⟨by rw [Measure.restrict_apply_univ]; exact hKc.measure_lt_top⟩
     obtain ⟨C, hC⟩ := hKc.exists_bound_of_continuousOn hGhomeo.continuous.continuousOn
     exact MemLp.of_bound hGhomeo.continuous.aestronglyMeasurable C
@@ -943,7 +943,7 @@ theorem exists_isQCAnalytic_inversionTransport {h : ℂ → ℂ} {bh : BeltramiC
       rw [norm_div, norm_mul, norm_pow, norm_pow]
       rw [show ‖(starRingEnd ℂ) z‖ = ‖z‖ from by simp]
       rw [mul_div_assoc, div_self (pow_ne_zero 2 (norm_ne_zero_iff.mpr hz0)), mul_one]
-    rw [← ofReal_norm_eq_enorm, hnorm, ofReal_norm_eq_enorm]
+    rw [← ofReal_norm, hnorm, ofReal_norm]
     exact hb
   have hbGtop : eLpNormEssSup bh.μ volume ≠ ⊤ := (lt_of_lt_of_le bh.bound le_top).ne
   have hμGess : eLpNormEssSup μG volume ≤ eLpNormEssSup bh.μ volume :=
@@ -960,6 +960,7 @@ theorem exists_isQCAnalytic_inversionTransport {h : ℂ → ℂ} {bh : BeltramiC
 
 /-! ## General case via the Bruhat factorization -/
 
+set_option backward.isDefEq.respectTransparency false in
 /-- Bruhat factorization in `SL(2, ℝ)`: a matrix with nonvanishing lower-left entry is a
 product `A₁ · S · A₂` with `A₁, A₂` upper triangular and `S` the inversion, explicitly
 `!![a, b; c, d] = !![1, a c⁻¹; 0, 1] · !![0, -1; 1, 0] · !![c, d; 0, c⁻¹]`. -/
@@ -1113,7 +1114,7 @@ theorem exists_sl2_equivariant_of_lowerLeft_ne_zero {f : ℂ → ℂ} {b : Beltr
       rw [det_fderiv_eq_wirtinger, dzbar_eq_zero_of_differentiableAt hdiff,
         dz_eq_deriv_of_differentiableAt hdiff]
       have hd : deriv (fun w : ℂ => c * w) 0 = c := by
-        simpa using ((hasDerivAt_id (0 : ℂ)).const_mul c).deriv
+        simp
       rw [hd]
       simp [Complex.normSq_eq_norm_sq]
     have hdetL : LinearMap.det
@@ -1141,7 +1142,7 @@ theorem exists_sl2_equivariant_of_lowerLeft_ne_zero {f : ℂ → ℂ} {b : Beltr
   have hu0 : ∀ᵐ z : ℂ, c₂ * z + d₂ ≠ 0 := by
     rw [ae_iff]
     refine measure_mono_null (fun z hz => ?_) (measure_singleton (-d₂ / c₂))
-    rw [Set.mem_setOf_eq, not_not] at hz
+    rw [Set.mem_ofPred_eq, not_not] at hz
     have hzval : z = -d₂ / c₂ := by
       rw [eq_div_iff hc₂ne]
       linear_combination hz
@@ -1446,7 +1447,7 @@ theorem mul_mem_fuchsianImageCarrier {f : ℂ → ℂ} (hf : Function.Injective 
         (measurableSet_toMeasurable _ _).inter hopen.measurableSet
       have hSnull : volume
           (toMeasurable volume {w | ¬ P w} ∩ {w : ℂ | moebiusDenom δ⁻¹ w ≠ 0}) = 0 := by
-        refine le_antisymm (le_trans (measure_mono Set.inter_subset_left) ?_) (zero_le _)
+        refine le_antisymm (le_trans (measure_mono Set.inter_subset_left) ?_) (zero_le)
         rw [measure_toMeasurable]
         exact hP.le
       have hfd : ∀ w ∈ toMeasurable volume {w | ¬ P w} ∩ {w : ℂ | moebiusDenom δ⁻¹ w ≠ 0},
@@ -1469,7 +1470,7 @@ theorem mul_mem_fuchsianImageCarrier {f : ℂ → ℂ} (hf : Function.Injective 
       exact hcov
     refine measure_mono_null ?_ himg
     intro z hz
-    simp only [Set.mem_setOf_eq, Classical.not_imp] at hz
+    simp only [Set.mem_ofPred_eq, Classical.not_imp] at hz
     obtain ⟨hden, hbad⟩ := hz
     have hd1 : moebiusDenom δ⁻¹ (moebiusMap δ z) * moebiusDenom δ z = 1 := by
       rw [moebiusDenom_mul δ⁻¹ δ z hden, inv_mul_cancel, moebiusDenom_one]
@@ -1511,7 +1512,7 @@ theorem mul_mem_fuchsianImageCarrier {f : ℂ → ℂ} (hf : Function.Injective 
     rw [ae_iff]
     refine measure_mono_null ?_ (hpre.measure_zero volume)
     intro z hz
-    simp only [Set.mem_setOf_eq, ne_eq, not_not] at hz
+    simp only [Set.mem_ofPred_eq, ne_eq, not_not] at hz
     exact hz
   refine ⟨γ₁ * γ₂, mul_mem hγ₁ hγ₂, ?_⟩
   have hpull := haeMoeb γ₂ (fun w => f (moebiusMap γ₁ w) = moebiusMap W₁ (f w)) hae₁
@@ -1540,7 +1541,7 @@ theorem inv_mem_fuchsianImageCarrier {f : ℂ → ℂ} (hf : Function.Injective 
         (measurableSet_toMeasurable _ _).inter hopen.measurableSet
       have hSnull : volume
           (toMeasurable volume {w | ¬ P w} ∩ {w : ℂ | moebiusDenom δ⁻¹ w ≠ 0}) = 0 := by
-        refine le_antisymm (le_trans (measure_mono Set.inter_subset_left) ?_) (zero_le _)
+        refine le_antisymm (le_trans (measure_mono Set.inter_subset_left) ?_) (zero_le)
         rw [measure_toMeasurable]
         exact hP.le
       have hfd : ∀ w ∈ toMeasurable volume {w | ¬ P w} ∩ {w : ℂ | moebiusDenom δ⁻¹ w ≠ 0},
@@ -1563,7 +1564,7 @@ theorem inv_mem_fuchsianImageCarrier {f : ℂ → ℂ} (hf : Function.Injective 
       exact hcov
     refine measure_mono_null ?_ himg
     intro z hz
-    simp only [Set.mem_setOf_eq, Classical.not_imp] at hz
+    simp only [Set.mem_ofPred_eq, Classical.not_imp] at hz
     obtain ⟨hden, hbad⟩ := hz
     have hd1 : moebiusDenom δ⁻¹ (moebiusMap δ z) * moebiusDenom δ z = 1 := by
       rw [moebiusDenom_mul δ⁻¹ δ z hden, inv_mul_cancel, moebiusDenom_one]
@@ -1600,7 +1601,7 @@ theorem inv_mem_fuchsianImageCarrier {f : ℂ → ℂ} (hf : Function.Injective 
     rw [ae_iff]
     refine measure_mono_null ?_ (hpre.measure_zero volume)
     intro z hz
-    simp only [Set.mem_setOf_eq, ne_eq, not_not] at hz
+    simp only [Set.mem_ofPred_eq, ne_eq, not_not] at hz
     exact hz
   refine ⟨γ⁻¹, inv_mem hγ, ?_⟩
   have haePole : ∀ᵐ z : ℂ, moebiusDenom γ⁻¹ z ≠ 0 := by
@@ -1947,7 +1948,7 @@ theorem fuchsianImage_cocompact
             (e (e.symm σ)) := rfl
     rw [hq, e.apply_symm_apply]
     exact hσ
-  haveI := hcc
+  have := hcc
   exact ⟨by rw [← hsurj.range_eq]; exact isCompact_range hcont⟩
 
 end RiemannDynamics
