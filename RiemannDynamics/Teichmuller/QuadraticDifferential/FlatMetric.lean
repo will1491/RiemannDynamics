@@ -252,8 +252,6 @@ theorem qdDist_moebiusMap {q : ℂ → ℂ} (γd : Matrix.SpecialLinearGroup (Fi
       inv_mul_cancel, moebiusMap_one]
   rwa [hzfix, hwfix] at h2
 
-set_option maxHeartbeats 1600000 in
--- Heartbeats: the invariance transport plus the compact-track lintegral calc is whnf-heavy.
 /-- **The uniform displacement bound**: an upper-half-plane quasiconformal map commuting
 elementwise with a cocompact free Fuchsian group moves every point of the upper half plane
 by a uniformly bounded flat distance of any automorphic quadratic differential — the
@@ -298,7 +296,7 @@ theorem exists_qdDist_displacement_bound
       = moebiusMap (γ : Matrix.SpecialLinearGroup (Fin 2) ℝ) z :=
     coe_smul_eq_moebiusMap (γ : Matrix.SpecialLinearGroup (Fin 2) ℝ) ⟨z, hz⟩
   set w : ℂ := moebiusMap (γ : Matrix.SpecialLinearGroup (Fin 2) ℝ) z with hwdef
-  have hwK' : w ∈ K' := ⟨γ • ⟨z, hz⟩, hγK, hcoe⟩
+  have hwK' : w ∈ K' := ⟨γ • (⟨z, hz⟩ : UpperHalfPlane), hγK, hcoe⟩
   have hwim : 0 < w.im := moebiusMap_im_pos _ hz
   have hinvar : qdDist q z (h z) = qdDist q w (h w) := by
     have hstep := qdDist_moebiusMap (γ : Matrix.SpecialLinearGroup (Fin 2) ℝ)

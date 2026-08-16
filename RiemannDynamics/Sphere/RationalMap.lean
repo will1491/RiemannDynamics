@@ -955,10 +955,6 @@ theorem RationalData.composeRational_toSphereMap_eq (r₁ r₂ : RationalData)
       field_simp
     exact congrFun heq_fn w
 
-set_option maxHeartbeats 1600000 in
--- Heavy elaboration: the natural-degree bound unfolds `composeNum`/`composeDen`
--- into explicit `Finset.range` sums of polynomial powers and runs a long chain of
--- `natDegree`/leading-coefficient estimates on them.
 /-- Lower bound on the natural degree of the composed polynomials: at least one
 of `composeNum r₁ r₂` or `composeDen r₁ r₂` has natural degree at least the
 product `r₁.degree * r₂.degree`. -/
