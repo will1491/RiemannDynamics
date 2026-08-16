@@ -597,8 +597,7 @@ theorem TeichRep.pull_w' (x : TeichRep Γ₀) (F : ℂ ≃ₜ ℂ) (hF : F ∈ m
 values, hence so do their pullbacks. -/
 theorem pull_mk_congr (F : ℂ ≃ₜ ℂ) (hF : F ∈ modGroup Γ₀) :
     ∀ x y : TeichRep Γ₀, Inseparable x y →
-      (SeparationQuotient.mk (x.pull F hF) : Teich Γ₀)
-        = SeparationQuotient.mk (y.pull F hF) := by
+      Teich.mk (x.pull F hF) = Teich.mk (y.pull F hF) := by
   intro x y hxy
   have hb : ∀ t : ℝ, x.w t = y.w t := inseparable_iff_boundary_eq.mp hxy
   have hreal : ∀ s : ℝ, x.w (F (s : ℂ)) = y.w (F (s : ℂ)) := by
@@ -614,8 +613,7 @@ theorem pull_mk_congr (F : ℂ ≃ₜ ℂ) (hF : F ∈ modGroup Γ₀) :
   have h1 : x.w (F 1) = y.w (F 1) := by
     have h := hreal 1
     rwa [Complex.ofReal_one] at h
-  rw [Teich.mk_eq_mk_iff_boundary]
-  intro t
+  refine Teich.mk_eq_mk_iff_boundary.mpr fun t => ?_
   rw [x.pull_w' F hF, y.pull_w' F hF]
   simp only [hreal t, h0, h1]
 
@@ -623,11 +621,9 @@ theorem pull_mk_congr (F : ℂ ≃ₜ ℂ) (hF : F ∈ modGroup Γ₀) :
 representatives along `F⁻¹`. -/
 noncomputable def Teich.modSMul (F : modGroup Γ₀) (ξ : Teich Γ₀) : Teich Γ₀ :=
   SeparationQuotient.lift
-    (fun x : TeichRep Γ₀ =>
-      (SeparationQuotient.mk (x.pull (↑(F⁻¹)) (F⁻¹).2) : Teich Γ₀))
+    (fun x : TeichRep Γ₀ => Teich.mk (x.pull (↑(F⁻¹)) (F⁻¹).2))
     (pull_mk_congr (↑(F⁻¹)) (F⁻¹).2) ξ
 
-set_option backward.isDefEq.respectTransparency false in
 /-- The identity of the moduli group acts trivially: the renormalization of `x.w` at its
 values `x.w 0 = 0` and `x.w 1 = 1` is `x.w` itself. -/
 theorem Teich.modSMul_one (ξ : Teich Γ₀) : Teich.modSMul 1 ξ = ξ := by
@@ -642,14 +638,13 @@ theorem Teich.modSMul_one (ξ : Teich Γ₀) : Teich.modSMul 1 ξ = ξ := by
     rfl
   simp only [h1, x.w_zero, x.w_one, sub_zero, div_one]
 
-set_option backward.isDefEq.respectTransparency false in
 /-- Pull-by-inverse is a left action: `(F G)⁻¹ = G⁻¹ F⁻¹` composes contravariantly with the
 contravariant pullback. -/
 theorem Teich.modSMul_mul (F G : modGroup Γ₀) (ξ : Teich Γ₀) :
     Teich.modSMul (F * G) ξ = Teich.modSMul F (Teich.modSMul G ξ) := by
   obtain ⟨x, rfl⟩ := SeparationQuotient.surjective_mk ξ
-  unfold Teich.modSMul
-  rw [SeparationQuotient.lift_mk, SeparationQuotient.lift_mk, SeparationQuotient.lift_mk]
+  change Teich.mk (x.pull (↑((F * G)⁻¹)) ((F * G)⁻¹).2)
+    = Teich.mk ((x.pull (↑(G⁻¹)) (G⁻¹).2).pull (↑(F⁻¹)) (F⁻¹).2)
   refine Teich.mk_eq_mk_iff_boundary.mpr fun t => ?_
   rw [TeichRep.pull_w', TeichRep.pull_w', TeichRep.pull_w']
   have h1 : ∀ z : ℂ, (↑((F * G)⁻¹) : ℂ ≃ₜ ℂ) z

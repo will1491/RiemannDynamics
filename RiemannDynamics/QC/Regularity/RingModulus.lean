@@ -44,10 +44,6 @@ here and is part of the extremal theory.) Two canonical extremal rings are recor
 * `grotzschModulus s`, `teichmullerModulus t` — their moduli.
 -/
 
--- With the v4.33 toolchain `rw`/kabstract respects transparency, which breaks rewrites through
--- the `NNReal` alias and its re-derived order instances; restore the pre-4.33 behaviour.
-set_option backward.isDefEq.respectTransparency false
-
 open MeasureTheory
 open scoped ENNReal NNReal Topology Real
 
@@ -406,7 +402,7 @@ theorem ringModulus_roundAnnulus {z₀ : ℂ} {r R : ℝ} (hr : 0 < r) (hrR : r 
       intro t ht
       rw [Set.uIcc_of_le zero_le_one] at ht
       exact ⟨(hubound t ht).1, (hubound t ht).2⟩
-    have hlogLip : LipschitzOnWith (⟨1/r, by positivity⟩ : ℝ≥0) Real.log (Set.Icc r R) := by
+    have hlogLip : LipschitzOnWith (NNReal.mk (1/r) (by positivity)) Real.log (Set.Icc r R) := by
       apply (convex_Icc r R).lipschitzOnWith_of_nnnorm_deriv_le
       · intro x hx
         rw [Set.mem_Icc] at hx
@@ -558,7 +554,7 @@ theorem ringModulus_roundAnnulus {z₀ : ℂ} {r R : ℝ} (hr : 0 < r) (hrR : r 
       have : Continuous (fun t : ℝ => (r + t * (R - r) : ℝ) * e) :=
         (Complex.continuous_ofReal.comp hreal).mul continuous_const
       exact this.congr (fun t => (hγeq t).symm)
-    have hlipγ : LipschitzWith (⟨R - r, by linarith⟩ : ℝ≥0) γ := by
+    have hlipγ : LipschitzWith (NNReal.mk (R - r) (by linarith)) γ := by
       apply LipschitzWith.of_dist_le_mul
       intro x y
       rw [dist_eq_norm, dist_eq_norm, hγeq, hγeq, ← sub_mul, norm_mul, hnorme, mul_one]
@@ -886,7 +882,7 @@ theorem isAdmissibleDensity_radialDensity_roundAnnulus {z₀ : ℂ} {r R : ℝ}
       intro t ht
       rw [Set.uIcc_of_le zero_le_one] at ht
       exact ⟨(hubound t ht).1, (hubound t ht).2⟩
-    have hlogLip : LipschitzOnWith (⟨1/r, by positivity⟩ : ℝ≥0) Real.log (Set.Icc r R) := by
+    have hlogLip : LipschitzOnWith (NNReal.mk (1/r) (by positivity)) Real.log (Set.Icc r R) := by
       apply (convex_Icc r R).lipschitzOnWith_of_nnnorm_deriv_le
       · intro x hx
         rw [Set.mem_Icc] at hx
@@ -1340,7 +1336,7 @@ theorem Quadrilateral.isAdmissibleDensity_radialDensity_ofRoundAnnulus {z₀ : �
       intro t ht
       rw [Set.uIcc_of_le zero_le_one] at ht
       exact ⟨(hubound t ht).1, (hubound t ht).2⟩
-    have hlogLip : LipschitzOnWith (⟨1/r, by positivity⟩ : ℝ≥0) Real.log (Set.Icc r R) := by
+    have hlogLip : LipschitzOnWith (NNReal.mk (1/r) (by positivity)) Real.log (Set.Icc r R) := by
       apply (convex_Icc r R).lipschitzOnWith_of_nnnorm_deriv_le
       · intro x hx
         rw [Set.mem_Icc] at hx

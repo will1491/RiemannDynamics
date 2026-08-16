@@ -246,7 +246,6 @@ theorem exists_mobius_of_diffeomorph_unitDisc
   rw [h1]
   exact mul_comm _ _
 
-set_option backward.isDefEq.respectTransparency false in
 /-- **Disc automorphisms act as `SL(2, ℝ)` on the upper half plane**: the
 Cayley conjugate of a rotation-Möbius automorphism of the disc is a real
 fractional linear map of positive determinant, normalized to determinant
@@ -384,7 +383,8 @@ theorem exists_sl2_of_diffeomorph_unitDisc
       + (-Complex.I * G * (1 + η * mobiusDisk w ζ) * (x - (starRingEnd ℂ) x))
         * Complex.I_sq
   -- Assemble the `SL(2, ℝ)` element and verify the action pointwise.
-  refine ⟨⟨!![a, b; c, d], hdetM⟩, fun z => ?_⟩
+  set A : Matrix.SpecialLinearGroup (Fin 2) ℝ := ⟨!![a, b; c, d], hdetM⟩
+  refine ⟨A, fun z => ?_⟩
   have hz : (z : ℂ) ∈ ball (0 : ℂ) 1 := z.2
   have hez : ((e z : ℂ)) ∈ ball (0 : ℂ) 1 := (e z).2
   refine ⟨⟨cayleyToHalfPlane (z : ℂ), cayleyToHalfPlane_im_pos hz⟩,

@@ -23,8 +23,6 @@ variable {f : ℂ → ℂ} {a b s t : ℝ} (hab : a < b) (hst : s < t) {ρ σ : 
 
 section RectifiablePathHelpers
 
-set_option linter.unusedDecidableInType false
-
 /-! ## Eilenberg-Harrold rectifiable-path construction (polygon + chain helpers, inlined) -/
 
 /-- Clamp a real number into `[0,1]`. -/
@@ -600,10 +598,11 @@ theorem exists_nodup_isChain_of_isChain_aux {α : Type*}
 
 /-- **Main theorem.** If `a` and `b` are related by the reflexive transitive closure of `r`,
 then there is a *duplicate-free* `r`-chain from `a` to `b`. -/
-theorem exists_nodup_isChain_of_reflTransGen {α : Type*} [DecidableEq α]
+theorem exists_nodup_isChain_of_reflTransGen {α : Type*}
     {r : α → α → Prop} {a b : α} (h : Relation.ReflTransGen r a b) :
     ∃ l : List α, ∃ (hl : l ≠ []), l.head hl = a ∧ l.getLast hl = b ∧
       l.IsChain r ∧ l.Nodup := by
+  classical
   -- start from some (possibly looping) chain provided by Mathlib
   obtain ⟨l, hne, hc, hhead, hlast⟩ :=
     List.exists_isChain_ne_nil_of_relationReflTransGen h
@@ -615,12 +614,13 @@ theorem exists_nodup_isChain_of_reflTransGen {α : Type*} [DecidableEq α]
 /-- **Corollary.** If every `r`-step lands inside a finite set `C` containing `a` and `b`, and
 `a` reaches `b` under `ReflTransGen r`, then there is a `Nodup`-free (hence length `≤ C.card`)
 `r`-chain from `a` to `b` all of whose vertices lie in `C`. -/
-theorem exists_nodup_isChain_subset_card {α : Type*} [DecidableEq α]
+theorem exists_nodup_isChain_subset_card {α : Type*}
     {r : α → α → Prop} {C : Finset α} {a b : α} (ha : a ∈ C) (_hb : b ∈ C)
     (hr : ∀ x y, r x y → y ∈ C)
     (h : Relation.ReflTransGen r a b) :
     ∃ l : List α, ∃ (hl : l ≠ []), l.head hl = a ∧ l.getLast hl = b ∧
       l.IsChain r ∧ (∀ x ∈ l, x ∈ C) ∧ l.length ≤ C.card := by
+  classical
   obtain ⟨l, hl, hhead, hlast, hc, hnd⟩ := exists_nodup_isChain_of_reflTransGen h
   -- every element of `l` is in `C`: the head is `a ∈ C`, every other is an `r`-target
   have hmem : ∀ x ∈ l, x ∈ C := by
@@ -645,8 +645,6 @@ theorem exists_nodup_isChain_subset_card {α : Type*} [DecidableEq α]
     exact hmem x (List.mem_toFinset.mp hx)
   calc l.length = l.toFinset.card := (List.toFinset_card_of_nodup hnd).symm
     _ ≤ C.card := Finset.card_le_card hsub
-
-
 
 /-- **List → vertex sequence.** Given a nonempty list `L` of complex numbers that is a chain for
 the relation `dist · · ≤ 2ε`, with all elements in `Γ`, with head `p` and last `q`, and with

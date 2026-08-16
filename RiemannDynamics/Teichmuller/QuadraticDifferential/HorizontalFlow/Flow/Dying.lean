@@ -768,7 +768,7 @@ theorem window_dying {q : ℂ → ℂ}
       traj_glue_overlap ha.le hac hσm hτ' hEq
     exact hmaxm ⟨σ'', hE'', hσ''⟩
 
-set_option maxHeartbeats 1600000 in
+set_option maxHeartbeats 400000 in
 -- Heavy elaboration: long induction over trajectory segments with repeated `UpperHalfPlane`
 -- smul / set-abbreviation unfolding in `isDefEq`; the default budget is not enough.
 /-- **Uniform hyperbolic displacement bound**: a trajectory of flat duration `T` moves

@@ -23,8 +23,6 @@ over that base form a countable topological basis, and the cover is second count
 
 open scoped Manifold ContDiff
 
-set_option backward.isDefEq.respectTransparency false
-
 namespace RiemannDynamics
 
 /-- The genus surface is second countable: a compact space charted on `ℂ`. -/
@@ -43,7 +41,7 @@ theorem countable_pathClasses (M : Type*) [TopologicalSpace M] [ChartedSpace ℂ
       ∃ V : Set M, V ⊆ W ∧ IsOpen V ∧ ycen ∈ V ∧
         (∀ z, z ∈ V → ∀ w, w ∈ V → ∃ η : Path z w, ∀ t, η t ∈ V) ∧
         (∀ (a b : M) (η₁ η₂ : Path a b), (∀ t, η₁ t ∈ V) → (∀ t, η₂ t ∈ V) →
-          (⟦η₁⟧ : Path.Homotopic.Quotient a b) = ⟦η₂⟧) := by
+          Path.Homotopic.Quotient.mk η₁ = Path.Homotopic.Quotient.mk η₂) := by
     intro ycen W hW hyW
     set φ := chartAt ℂ ycen
     have hy : ycen ∈ φ.source := mem_chart_source ℂ ycen
@@ -156,8 +154,8 @@ theorem countable_pathClasses (M : Type*) [TopologicalSpace M] [ChartedSpace ℂ
     · exact hs ▸ hq s
   -- Concatenation of homotopy classes of paths.
   have hq1 : ∀ {a b c : M} (p : Path a b) (q : Path b c),
-      Path.Homotopic.Quotient.trans ⟦p⟧ ⟦q⟧ =
-        (⟦p.trans q⟧ : Path.Homotopic.Quotient a c) := by
+      Path.Homotopic.Quotient.trans (Path.Homotopic.Quotient.mk p) (Path.Homotopic.Quotient.mk q) =
+        Path.Homotopic.Quotient.mk (p.trans q) := by
     intros
     rfl
   -- Reversals of paths inside a set stay inside the set.
@@ -168,10 +166,11 @@ theorem countable_pathClasses (M : Type*) [TopologicalSpace M] [ChartedSpace ℂ
     exact hp _
   -- Cancellation of a path class against its reverse.
   have hcancel : ∀ {a b : M} (cls : Path.Homotopic.Quotient x a) (η : Path a b),
-      (cls.trans ⟦η⟧).trans ⟦η.symm⟧ = cls := by
+      (cls.trans (Path.Homotopic.Quotient.mk η)).trans (Path.Homotopic.Quotient.mk η.symm) =
+        cls := by
     intro a b cls η
     rw [Path.Homotopic.Quotient.trans_assoc, hq1 η η.symm]
-    have h2 : (⟦η.trans η.symm⟧ : Path.Homotopic.Quotient a a) =
+    have h2 : Path.Homotopic.Quotient.mk (η.trans η.symm) =
         Path.Homotopic.Quotient.refl a :=
       Quotient.sound (Path.Homotopic.trans_symm η)
     rw [h2, Path.Homotopic.Quotient.trans_refl]
@@ -220,11 +219,11 @@ theorem countable_pathClasses (M : Type*) [TopologicalSpace M] [ChartedSpace ℂ
       ∀ z ∈ V, ∃ rc, rc ∈ pathCoverSheet x pc V ∧ rc.pt = z := by
     intro pc V hlinV hpV z hzV
     obtain ⟨η, hη⟩ := hlinV pc.pt hpV z hzV
-    exact ⟨⟨z, pc.cls.trans ⟦η⟧⟩, ⟨η, hη, rfl⟩, rfl⟩
+    exact ⟨⟨z, pc.cls.trans (Path.Homotopic.Quotient.mk η)⟩, ⟨η, hη, rfl⟩, rfl⟩
   -- A sheet over a homotopy-rigid open meets each fiber at most once.
   have hfiber1 : ∀ (pc : PathCover x) (V : Set M),
       (∀ (a b : M) (η₁ η₂ : Path a b), (∀ t, η₁ t ∈ V) → (∀ t, η₂ t ∈ V) →
-        (⟦η₁⟧ : Path.Homotopic.Quotient a b) = ⟦η₂⟧) →
+        Path.Homotopic.Quotient.mk η₁ = Path.Homotopic.Quotient.mk η₂) →
       ∀ qc rc : PathCover x, qc ∈ pathCoverSheet x pc V → rc ∈ pathCoverSheet x pc V →
         qc.pt = rc.pt → qc = rc := by
     intro pc V hhomoV qc rc hqc hrc hpteq
@@ -233,15 +232,15 @@ theorem countable_pathClasses (M : Type*) [TopologicalSpace M] [ChartedSpace ℂ
     obtain rfl : qpt = rpt := hpteq
     obtain ⟨η₁, hη₁, hcls₁⟩ := hqc
     obtain ⟨η₂, hη₂, hcls₂⟩ := hrc
-    have hcls₁' : qcls = pc.cls.trans ⟦η₁⟧ := hcls₁
-    have hcls₂' : rcls = pc.cls.trans ⟦η₂⟧ := hcls₂
+    have hcls₁' : qcls = pc.cls.trans (Path.Homotopic.Quotient.mk η₁) := hcls₁
+    have hcls₂' : rcls = pc.cls.trans (Path.Homotopic.Quotient.mk η₂) := hcls₂
     have hcc : qcls = rcls := by
       rw [hcls₁', hcls₂', hhomoV pc.pt qpt η₁ η₂ hη₁ hη₂]
     exact congrArg (PathCover.mk qpt) hcc
   have hkey : ∀ {a b c d : M} (γ' : Path c d) (p q : Path a b) (f g : unitInterval → ℝ),
       Continuous f → Continuous g → f 0 = g 0 → f 1 = g 1 →
       (∀ u, p u = γ'.extend (f u)) → (∀ u, q u = γ'.extend (g u)) →
-      (⟦p⟧ : Path.Homotopic.Quotient a b) = ⟦q⟧ := by
+      Path.Homotopic.Quotient.mk p = Path.Homotopic.Quotient.mk q := by
     intro a b c d γ' p q f g hf hg h0 h1 hp hq
     refine Quotient.sound ⟨⟨⟨⟨fun st =>
       γ'.extend ((1 - (st.1 : ℝ)) * f st.2 + (st.1 : ℝ) * g st.2), ?_⟩, ?_, ?_⟩, ?_⟩⟩
@@ -268,7 +267,8 @@ theorem countable_pathClasses (M : Type*) [TopologicalSpace M] [ChartedSpace ℂ
         rw [hp 1, ← h1, show ((1 - (s : ℝ)) * f 1 + (s : ℝ) * f 1) = f 1 by ring]
   -- Equality of cover points across an equality of endpoints, through `Path.cast`.
   have hPC : ∀ {a b : M} (h : a = b) (p : Path x a),
-      (⟨a, ⟦p⟧⟩ : PathCover x) = ⟨b, ⟦p.cast rfl h.symm⟧⟩ := by
+      (⟨a, Path.Homotopic.Quotient.mk p⟩ : PathCover x) =
+        ⟨b, Path.Homotopic.Quotient.mk (p.cast rfl h.symm)⟩ := by
     rintro a b rfl p
     rfl
   -- Every point of the cover is joined to the basepoint class by the canonical lift.
@@ -287,14 +287,15 @@ theorem countable_pathClasses (M : Type*) [TopologicalSpace M] [ChartedSpace ℂ
         rw [show (((1 : unitInterval) : ℝ) * (t : ℝ)) = (t : ℝ) by norm_num]
         exact γ.extend_extends' t
     -- Continuity of the canonical lift into the sheet topology.
-    have hLcont : Continuous fun t : unitInterval => (⟨γ t, ⟦sp t⟧⟩ : PathCover x) := by
+    have hLcont : Continuous fun t : unitInterval =>
+        (⟨γ t, Path.Homotopic.Quotient.mk (sp t)⟩ : PathCover x) := by
       refine continuous_generateFrom_iff.mpr ?_
       rintro s ⟨pc, U, hUopen, -, rfl⟩
       rw [isOpen_iff_forall_mem_open]
       intro t₀ ht₀
       obtain ⟨η₀, hη₀, hcls₀⟩ := ht₀
-      have hcls₀' : (⟦sp t₀⟧ : Path.Homotopic.Quotient x (γ t₀)) =
-          pc.cls.trans ⟦η₀⟧ := hcls₀
+      have hcls₀' : Path.Homotopic.Quotient.mk (sp t₀) =
+          pc.cls.trans (Path.Homotopic.Quotient.mk η₀) := hcls₀
       have hγt₀U : γ t₀ ∈ U := by
         have h := hη₀ 1
         rw [η₀.target] at h
@@ -368,8 +369,8 @@ theorem countable_pathClasses (M : Type*) [TopologicalSpace M] [ChartedSpace ℂ
             exact hsegU v
           exact hv ▸ hcv
       -- The class of `sp t` is the class of `sp t₀` continued by the connector.
-      have hclseq : (⟦sp t⟧ : Path.Homotopic.Quotient x (γ t)) =
-          ⟦(sp t₀).trans c⟧ := by
+      have hclseq : Path.Homotopic.Quotient.mk (sp t) =
+          Path.Homotopic.Quotient.mk ((sp t₀).trans c) := by
         refine hkey γ (sp t) ((sp t₀).trans c) (fun u => (u : ℝ) * (t : ℝ))
           (fun u => if (u : ℝ) ≤ 1 / 2 then 2 * (u : ℝ) * (t₀ : ℝ)
             else (1 - (2 * (u : ℝ) - 1)) * (t₀ : ℝ) + (2 * (u : ℝ) - 1) * (t : ℝ))
@@ -391,12 +392,12 @@ theorem countable_pathClasses (M : Type*) [TopologicalSpace M] [ChartedSpace ℂ
           · rw [hspfun t₀]
           · rw [hcfun]
       refine ⟨η₀.trans c, htmem, ?_⟩
-      have hfin : (⟦sp t⟧ : Path.Homotopic.Quotient x (γ t)) =
-          pc.cls.trans ⟦η₀.trans c⟧ := by
+      have hfin : Path.Homotopic.Quotient.mk (sp t) =
+          pc.cls.trans (Path.Homotopic.Quotient.mk (η₀.trans c)) := by
         rw [hclseq, ← hq1 (sp t₀) c, hcls₀', Path.Homotopic.Quotient.trans_assoc, hq1]
       exact hfin
     -- Endpoint identifications of the canonical lift.
-    have hL0 : (⟨γ 0, ⟦sp 0⟧⟩ : PathCover x) = pathCoverBase x := by
+    have hL0 : (⟨γ 0, Path.Homotopic.Quotient.mk (sp 0)⟩ : PathCover x) = pathCoverBase x := by
       rw [hPC γ.source (sp 0)]
       have hpath : (sp 0).cast rfl γ.source.symm = Path.refl x := by
         ext u
@@ -405,7 +406,8 @@ theorem countable_pathClasses (M : Type*) [TopologicalSpace M] [ChartedSpace ℂ
         norm_num
       rw [hpath]
       rfl
-    have hL1 : (⟨γ 1, ⟦sp 1⟧⟩ : PathCover x) = ⟨w, ⟦γ⟧⟩ := by
+    have hL1 : (⟨γ 1, Path.Homotopic.Quotient.mk (sp 1)⟩ : PathCover x) =
+        ⟨w, Path.Homotopic.Quotient.mk γ⟩ := by
       rw [hPC γ.target (sp 1)]
       have hpath : (sp 1).cast rfl γ.target.symm = γ := by
         ext u
@@ -413,12 +415,12 @@ theorem countable_pathClasses (M : Type*) [TopologicalSpace M] [ChartedSpace ℂ
         rw [hspfun 1 u, show ((u : ℝ) * ((1 : unitInterval) : ℝ)) = (u : ℝ) by norm_num]
         exact γ.extend_extends' u
       rw [hpath]
-    exact ⟨⟨⟨fun t => (⟨γ t, ⟦sp t⟧⟩ : PathCover x), hLcont⟩, hL0, hL1⟩⟩
+    exact ⟨⟨⟨fun t => (⟨γ t, Path.Homotopic.Quotient.mk (sp t)⟩ : PathCover x), hLcont⟩, hL0, hL1⟩⟩
   -- A finite cover of the base by good opens.
   have hgoodAt : ∀ z : M, ∃ V : Set M, IsOpen V ∧ z ∈ V ∧
       (∀ a, a ∈ V → ∀ b, b ∈ V → ∃ η : Path a b, ∀ t, η t ∈ V) ∧
       (∀ (a b : M) (η₁ η₂ : Path a b), (∀ t, η₁ t ∈ V) → (∀ t, η₂ t ∈ V) →
-        (⟦η₁⟧ : Path.Homotopic.Quotient a b) = ⟦η₂⟧) := by
+        Path.Homotopic.Quotient.mk η₁ = Path.Homotopic.Quotient.mk η₂) := by
     intro z
     obtain ⟨V, -, hVo, hzV, hlin, hhomo⟩ := hdisc z Set.univ isOpen_univ (Set.mem_univ z)
     exact ⟨V, hVo, hzV, hlin, hhomo⟩
@@ -578,7 +580,7 @@ theorem secondCountableTopology_pathCover {g : ℕ} [NeZero g] (x₀ : GenusSurf
       ∃ V : Set (GenusSurface g), V ⊆ W ∧ IsOpen V ∧ ycen ∈ V ∧
         (∀ z, z ∈ V → ∀ w, w ∈ V → ∃ η : Path z w, ∀ t, η t ∈ V) ∧
         (∀ (a b : (GenusSurface g)) (η₁ η₂ : Path a b), (∀ t, η₁ t ∈ V) → (∀ t, η₂ t ∈ V) →
-          (⟦η₁⟧ : Path.Homotopic.Quotient a b) = ⟦η₂⟧) := by
+          Path.Homotopic.Quotient.mk η₁ = Path.Homotopic.Quotient.mk η₂) := by
     intro ycen W hW hyW
     set φ := chartAt ℂ ycen
     have hy : ycen ∈ φ.source := mem_chart_source ℂ ycen
@@ -691,8 +693,8 @@ theorem secondCountableTopology_pathCover {g : ℕ} [NeZero g] (x₀ : GenusSurf
     · exact hs ▸ hq s
   -- Concatenation of homotopy classes of paths.
   have hq1 : ∀ {a b c : (GenusSurface g)} (p : Path a b) (q : Path b c),
-      Path.Homotopic.Quotient.trans ⟦p⟧ ⟦q⟧ =
-        (⟦p.trans q⟧ : Path.Homotopic.Quotient a c) := by
+      Path.Homotopic.Quotient.trans (Path.Homotopic.Quotient.mk p) (Path.Homotopic.Quotient.mk q) =
+        Path.Homotopic.Quotient.mk (p.trans q) := by
     intros
     rfl
   -- Reversals of paths inside a set stay inside the set.
@@ -703,10 +705,11 @@ theorem secondCountableTopology_pathCover {g : ℕ} [NeZero g] (x₀ : GenusSurf
     exact hp _
   -- Cancellation of a path class against its reverse.
   have hcancel : ∀ {a b : (GenusSurface g)} (cls : Path.Homotopic.Quotient x₀ a) (η : Path a b),
-      (cls.trans ⟦η⟧).trans ⟦η.symm⟧ = cls := by
+      (cls.trans (Path.Homotopic.Quotient.mk η)).trans (Path.Homotopic.Quotient.mk η.symm) =
+        cls := by
     intro a b cls η
     rw [Path.Homotopic.Quotient.trans_assoc, hq1 η η.symm]
-    have h2 : (⟦η.trans η.symm⟧ : Path.Homotopic.Quotient a a) =
+    have h2 : Path.Homotopic.Quotient.mk (η.trans η.symm) =
         Path.Homotopic.Quotient.refl a :=
       Quotient.sound (Path.Homotopic.trans_symm η)
     rw [h2, Path.Homotopic.Quotient.trans_refl]
@@ -755,7 +758,7 @@ theorem secondCountableTopology_pathCover {g : ℕ} [NeZero g] (x₀ : GenusSurf
       ∀ z ∈ V, ∃ rc, rc ∈ pathCoverSheet x₀ pc V ∧ rc.pt = z := by
     intro pc V hlinV hpV z hzV
     obtain ⟨η, hη⟩ := hlinV pc.pt hpV z hzV
-    exact ⟨⟨z, pc.cls.trans ⟦η⟧⟩, ⟨η, hη, rfl⟩, rfl⟩
+    exact ⟨⟨z, pc.cls.trans (Path.Homotopic.Quotient.mk η)⟩, ⟨η, hη, rfl⟩, rfl⟩
   -- A countable basis of good opens.
   obtain ⟨𝒱, h𝒱cnt, h𝒱good, h𝒱basis⟩ : ∃ 𝒱 : Set (Set (GenusSurface g)), 𝒱.Countable ∧
       (∀ V ∈ 𝒱, IsOpen V ∧ V.Nonempty ∧

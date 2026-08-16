@@ -645,7 +645,7 @@ theorem ball_mass {q : ℂ → ℂ} {z₀ : ℂ} {M : ℕ} {r₀ C₁ C₂ : ℝ
     _ = ENNReal.ofReal (C₂ * ρ ^ M) * volume (Metric.ball z₀ ρ) := by
         rw [setLIntegral_const]
 
-set_option maxHeartbeats 1600000 in
+set_option maxHeartbeats 400000 in
 -- Heavy isDefEq through UpperHalfPlane smul / set-abbreviation unfolding in the track bound.
 /-- **Compact track on the maximal window**: the track of a trajectory on `[0, c)` over a
 cocompact group stays in one compact subset of the upper half plane. -/

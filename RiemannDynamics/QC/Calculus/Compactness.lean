@@ -650,12 +650,13 @@ The two-value normalization is exactly what makes the statement true on the plan
 the sphere `ℂ̂`). The scale bound `dist (fₙ p) (fₙ q) = dist a b > 0` (from `a ≠ b`) — both an upper
 and a lower bound — keeps the family from blowing up or degenerating, while the fixed anchor
 `fₙ p = a` keeps it from escaping to infinity; without such a normalization the family `fₙ = n · id`
-(uniformly `1`-quasiconformal) is not normal. These supply the two-point data of
-`equicontinuousOn_of_uniform_isQCGeometric` and `equicontinuousOn_inv_of_uniform_isQCGeometric`,
-giving equicontinuity of the family and of its inverses on every compact set; with pointwise
-boundedness (anchored by `fₙ p = a` and `gₙ a = p`) the Arzelà–Ascoli extraction
-`exists_subseq_tendsto_continuousMap` produces locally uniformly convergent subsequences of both,
-whose limits are mutual inverses, so the limit is a homeomorphism
+(uniformly `1`-quasiconformal) is not normal. The upper bound supplies the two-point datum of
+`equicontinuousOn_of_uniform_isQCGeometric`, and the lower bound (`a ≠ b`, via
+`exists_uniform_image_bound` for the inverse family) produces the image-side cover required by
+`equicontinuousOn_inv_of_uniform_isQCGeometric`, giving equicontinuity of the family and of its
+inverses on every compact set; with pointwise boundedness (anchored by `fₙ p = a` and `gₙ a = p`)
+the Arzelà–Ascoli extraction `exists_subseq_tendsto_continuousMap` produces locally uniformly
+convergent subsequences of both, whose limits are mutual inverses, so the limit is a homeomorphism
 (`isHomeomorph_of_tendstoLocallyUniformly_inverse`) and hence `K`-quasiconformal by
 closedness. -/
 theorem exists_subseq_tendstoLocallyUniformly_isQCGeometric {fₙ : ℕ → ℂ → ℂ} {K : ℝ}
@@ -671,12 +672,10 @@ theorem exists_subseq_tendstoLocallyUniformly_isQCGeometric {fₙ : ℕ → ℂ 
   have hg_cont : ∀ n, Continuous (gₙ n) := fun n => (hom n).symm.continuous
   have hli : ∀ n, Function.LeftInverse (gₙ n) (fₙ n) := fun n => (hom n).left_inv
   have hri : ∀ n, Function.RightInverse (gₙ n) (fₙ n) := fun n => (hom n).right_inv
-  -- The two-point normalization data: scale bounds `δ = M = dist a b`.
+  -- The two-point normalization datum: the scale `dist (fₙ p) (fₙ q) = dist a b` is bounded above.
   set δ : ℝ := dist a b with hδ
-  have hδ0 : 0 < δ := dist_pos.mpr hab
   have hscale : ∀ n, dist (fₙ n p) (fₙ n q) = δ := by
     intro n; rw [hfp n, hfq n]
-  have hlb : ∀ n, δ ≤ dist (fₙ n p) (fₙ n q) := fun n => le_of_eq (hscale n).symm
   have hub : ∀ n, dist (fₙ n p) (fₙ n q) ≤ δ := fun n => le_of_eq (hscale n)
   -- Forward equicontinuity on every compact set.
   have heqc_f : ∀ K' : Set ℂ, IsCompact K' → EquicontinuousOn fₙ K' := by
@@ -686,7 +685,7 @@ theorem exists_subseq_tendstoLocallyUniformly_isQCGeometric {fₙ : ℕ → ℂ 
     have hqS : q ∈ insert p (insert q K') := Set.mem_insert_of_mem _ (Set.mem_insert _ _)
     have hKsub : K' ⊆ insert p (insert q K') :=
       (Set.subset_insert _ _).trans (Set.subset_insert _ _)
-    exact (equicontinuousOn_of_uniform_isQCGeometric hfK hScpt hpS hqS hpq hδ0 hlb hub).mono hKsub
+    exact (equicontinuousOn_of_uniform_isQCGeometric hfK hScpt hpS hqS hpq hub).mono hKsub
   -- The inverse family is normalized at the image points `a, b`: `gₙ a = p`, `gₙ b = q`.
   have hga' : ∀ n, gₙ n a = p := by intro n; rw [← hfp n]; exact hli n p
   have hgb' : ∀ n, gₙ n b = q := by intro n; rw [← hfq n]; exact hli n q
@@ -708,9 +707,6 @@ theorem exists_subseq_tendstoLocallyUniformly_isQCGeometric {fₙ : ℕ → ℂ 
     rwa [hbridge] at hinvK
   have heqc_g : ∀ K' : Set ℂ, IsCompact K' → EquicontinuousOn gₙ K' := by
     intro K' hK'
-    have hScpt : IsCompact (insert p (insert q K')) := (hK'.insert q).insert p
-    have hpS : p ∈ insert p (insert q K') := Set.mem_insert _ _
-    have hqS : q ∈ insert p (insert q K') := Set.mem_insert_of_mem _ (Set.mem_insert _ _)
     -- Uniform bound `C` on `dist (gₙ x₀)(gₙ x)` over the compact `insert a (insert b K')`.
     have hSacpt : IsCompact (insert a (insert b K')) := (hK'.insert b).insert a
     have haS : a ∈ insert a (insert b K') := Set.mem_insert _ _
@@ -726,8 +722,8 @@ theorem exists_subseq_tendstoLocallyUniformly_isQCGeometric {fₙ : ℕ → ℂ 
       refine ⟨gₙ n z, ?_, hri n z⟩
       rw [hUdef, Metric.mem_closedBall, ← hga' n]
       exact hC n z (Set.subset_insert _ _ (Set.subset_insert _ _ hz)) a haS
-    exact equicontinuousOn_inv_of_uniform_isQCGeometric hfK gₙ
-      (fun n => ⟨hli n, hri n⟩) hScpt hpS hqS hpq hδ0 hlb hub hK' hUcpt hTU
+    exact equicontinuousOn_inv_of_uniform_isQCGeometric hfK gₙ (fun n => ⟨hli n, hri n⟩) hK' hUcpt
+      hTU
   -- Pointwise boundedness of both families.
   have hga : ∀ n, gₙ n a = p := by intro n; rw [← hfp n]; exact hli n p
   have hbd_f : ∀ z : ℂ, ∃ Q : Set ℂ, IsCompact Q ∧ ∀ n, fₙ n z ∈ Q := by

@@ -31,8 +31,7 @@ future modulus-transport step supplies such an inscription, the metric bound fol
   base point by an inscribed annulus of transported modulus `M` satisfies
   `dist (f z) (f w) ≤ rₒ · exp (-2π / M.toReal)`;
 * `equicontinuousOn_of_uniform_isQCGeometric_of_inscription` — the forward equicontinuity of a
-  normalized uniformly `K`-quasiconformal family, with the inscription+transport package `hInsc`
-  as the single remaining hypothesis.
+  family on `S` from the inscription+transport package `hInsc : InscriptionModulusData f S` alone.
 -/
 
 open MeasureTheory Filter Metric
@@ -144,25 +143,19 @@ theorem dist_image_le_omega_of_inscription {ι : Type*} {f : ι → ℂ → ℂ}
   obtain ⟨rᵢ, rₒ, M, hri, hriro, hsep, hmod, hbound⟩ := hω i x₀ hx₀ x hx hne
   exact le_trans (dist_image_le_of_inscribed hri hriro hsep hmod) hbound
 
-set_option linter.unusedVariables false in
-/-- **(E) Forward equicontinuity of a normalized uniformly `K`-quasiconformal family, modulo the
-inscription package.** This is the exact statement of `equicontinuousOn_of_uniform_isQCGeometric`
-with the single added hypothesis `hInsc : InscriptionModulusData f S`, into which the entire
-remaining analytic wall (quasiconformal modulus transport + the two-point normalization pinning the
-outer radius to the family scale) is isolated — the `hstar` pattern.
+/-- **Forward equicontinuity from the inscription package.** A family `f : ι → ℂ → ℂ`
+carrying the inscription+transport package `hInsc : InscriptionModulusData f S` is equicontinuous
+on `S`. This is the metric-extraction half of `equicontinuousOn_of_uniform_isQCGeometric`: the
+entire analytic content (quasiconformal modulus transport + the two-point normalization pinning
+the outer radius to the family scale) is isolated in `hInsc` — the `hstar` pattern — and nothing
+else is assumed of `f` or `S`.
 
 Given `hInsc`'s modulus function `ω` (with `ω t → 0` as `t → 0⁺`), the pointwise bound
 `dist (f i x₀) (f i x) ≤ ω (dist x₀ x)` (`dist_image_le_omega_of_inscription`) is a *uniform*
 continuity modulus: for each `ε > 0` choose `δ` with `ω t < ε` on `(0, δ)`; then on the ball
-`dist x x₀ < δ` within `S` the images stay within `ε`, uniformly in `i`. The two-point
-normalization hypotheses `hlb`, `hub` are what a modulus-transport step uses to *produce* `hInsc`
-(they pin `rₒ` to `[δ, M]`), so they are retained in the signature. -/
+`dist x x₀ < δ` within `S` the images stay within `ε`, uniformly in `i`. -/
 theorem equicontinuousOn_of_uniform_isQCGeometric_of_inscription {ι : Type*} {f : ι → ℂ → ℂ}
-    {K : ℝ} (hfK : ∀ i, IsQCGeometric (f i) K) {S : Set ℂ} (hS : IsCompact S)
-    {p q : ℂ} (hp : p ∈ S) (hq : q ∈ S) (hpq : p ≠ q)
-    {δ M : ℝ} (hδ : 0 < δ)
-    (hlb : ∀ i, δ ≤ dist (f i p) (f i q)) (hub : ∀ i, dist (f i p) (f i q) ≤ M)
-    (hInsc : InscriptionModulusData f S) :
+    {S : Set ℂ} (hInsc : InscriptionModulusData f S) :
     EquicontinuousOn f S := by
   obtain ⟨ω, hωlim, hωnn, hωdata⟩ := hInsc
   -- Reduce to the metric ε-δ form at each base point.
@@ -188,9 +181,9 @@ theorem equicontinuousOn_of_uniform_isQCGeometric_of_inscription {ι : Type*} {f
             dist_image_le_omega_of_inscription hωdata i hx₀ hxS hxeq
         _ < ε := hωlt
 
-set_option linter.unusedVariables false in
 /-- **Free topological inscription.** For a homeomorphism `f : ℂ → ℂ` of the plane, a base point
-`x₀`, an inner point `w ∈ closedBall x₀ a`, and radii `0 < a < b`, set
+`x₀`, an inner point `w ∈ closedBall x₀ a`, and radii `a`, `b` (no positivity or ordering of the
+radii is needed), set
 
 * `a' := sSup {r | ∃ ζ ∈ f '' closedBall x₀ a, r = dist ζ (f x₀)}` — the largest distance from
   `f x₀` attained on the image of the closed inner disk (a maximum: the image is compact, nonempty);
@@ -209,7 +202,7 @@ any `ζ` with `a' < dist ζ (f x₀) < b'` lies outside the image of the first (
 the maximum `a'`) and outside the image of the third (its distance is below the infimum `b'`), hence
 in the image of the middle annulus. -/
 theorem exists_inscribed_shell_of_homeomorph {f : ℂ → ℂ} (hf : IsHomeomorph f) {x₀ w : ℂ}
-    {a b : ℝ} (ha : 0 < a) (hab : a < b) (hw : w ∈ Metric.closedBall x₀ a) :
+    {a b : ℝ} (hw : w ∈ Metric.closedBall x₀ a) :
     (dist (f x₀) (f w)
       ≤ sSup {r : ℝ | ∃ ζ ∈ f '' Metric.closedBall x₀ a, r = dist ζ (f x₀)}) ∧
     (sSup {r : ℝ | ∃ ζ ∈ f '' Metric.closedBall x₀ a, r = dist ζ (f x₀)}
@@ -1632,9 +1625,8 @@ theorem ball_diff_closedBall_eq_roundAnnulus (x₀ : ℂ) (a b : ℝ) :
 likewise for `outerCircle`, both being `{z | dist z x₀ = r}`. -/
 theorem innerCircle_eq_sphere (x₀ : ℂ) (r : ℝ) : innerCircle x₀ r = Metric.sphere x₀ r := rfl
 
-set_option linter.unusedVariables false in
 /-- **The connecting family is unchanged when the inner boundary disk is replaced by its bounding
-sphere.** Let `f : ℂ → ℂ` be a homeomorphism and `0 < a < b`. With ambient ring
+sphere.** Let `f : ℂ → ℂ` be a homeomorphism and `0 < a`. With ambient ring
 `U := f '' RoundAnnulus x₀ a b` and outer boundary `F`, the connecting family whose inner boundary
 is the *closed disk image* `f '' closedBall x₀ a` coincides with the one whose inner boundary is the
 *sphere image* `f '' sphere x₀ a`.
@@ -1646,7 +1638,7 @@ at `γ 0 ∈ f '' closedBall x₀ a` with interior `γ '' (0,1) ⊆ U`, and `U` 
 and `frontier (f '' closedBall x₀ a) = f '' sphere x₀ a` because a homeomorphism commutes with
 `frontier` and `frontier (closedBall x₀ a) = sphere x₀ a` (as `a ≠ 0`). -/
 theorem connectingCurveFamily_closedBall_eq_sphere {f : ℂ → ℂ} (hf : IsHomeomorph f)
-    {x₀ : ℂ} {a b : ℝ} (ha : 0 < a) (hab : a < b) {F : Set ℂ} :
+    {x₀ : ℂ} {a b : ℝ} (ha : 0 < a) {F : Set ℂ} :
     connectingCurveFamily (f '' Metric.closedBall x₀ a) F (f '' RoundAnnulus x₀ a b)
       = connectingCurveFamily (f '' Metric.sphere x₀ a) F (f '' RoundAnnulus x₀ a b) := by
   classical
@@ -1769,7 +1761,7 @@ theorem normalized_sandwich {f : ℂ → ℂ} {K : ℝ} (hf : IsQCGeometric f K)
   have hlow := ofReal_le_curveModulus_lCurve hhomeo ha hab hcenter hspos hs2 hEsub hsE hb
   -- Rewrite the ambient region `ball b \ closedBall a` as `RoundAnnulus x₀ a b`.
   rw [ball_diff_closedBall_eq_roundAnnulus,
-    connectingCurveFamily_closedBall_eq_sphere hhomeo ha hab] at hlow
+    connectingCurveFamily_closedBall_eq_sphere hhomeo ha] at hlow
   -- The transported ring modulus upper bound; `sphere = innerCircle/outerCircle`.
   have htr := geometric_ring_modulus_transport hf (z₀ := x₀) (r := a) (R := b) ha hab
   rw [← innerCircle_eq_sphere, ← innerCircle_eq_sphere] at hlow

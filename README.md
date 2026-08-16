@@ -20,7 +20,7 @@ sorry-free and depends only on the three standard Lean axioms (`propext`,
 Built on Mathlib, plus two vendored projects consumed directly rather than re-derived:
 
 - **RMT4** (Beffara) — the Riemann mapping theorem and the normal-families / Montel / Hurwitz / Schwarz scaffolding the dynamics line builds on.
-- **Carleson** (van Doorn et al., pinned at `v4.29.0`) — two-sided Calderón–Zygmund theory; the Beurling kernel `(z − ζ)⁻²` is registered as a two-sided CZ kernel, which is what gives the transform its `Lᵖ` bounds.
+- **Carleson** (van Doorn et al., pinned at `v4.33.0`) — two-sided Calderón–Zygmund theory; the Beurling kernel `(z − ζ)⁻²` is registered as a two-sided CZ kernel, which is what gives the transform its `Lᵖ` bounds.
 
 No new `axiom`, no `sorry`.
 
