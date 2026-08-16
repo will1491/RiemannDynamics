@@ -35,10 +35,6 @@ Main declarations:
 open Metric Topology Filter TopologicalSpace
 open scoped Manifold ContDiff unitInterval
 
--- `Path.Homotopic.Quotient` is a semireducible alias of `Quotient (Path.Homotopic.setoid _ _)`;
--- rewriting `trans`/`trans_assoc` across `⟦_⟧` terms needs the pre-4.33 unifier behavior.
-set_option backward.isDefEq.respectTransparency false
-
 namespace RiemannDynamics
 
 variable (X : Type*) [TopologicalSpace X] [ChartedSpace ℂ X] [IsManifold 𝓘(ℂ) ω X]
@@ -58,7 +54,8 @@ theorem exists_pathCover_rebase_diffeomorph [ConnectedSpace X] (x₀ x₁ : X) :
   classical
   have : LocallyPathConnectedSpace X := ChartedSpace.locallyPathConnectedSpace ℂ X
   have : PathConnectedSpace X := PathConnectedSpace.of_locallyPathConnectedSpace
-  have c₀ : Path.Homotopic.Quotient x₀ x₁ := ⟦PathConnectedSpace.somePath x₀ x₁⟧
+  have c₀ : Path.Homotopic.Quotient x₀ x₁ :=
+    Path.Homotopic.Quotient.mk (PathConnectedSpace.somePath x₀ x₁)
   -- Translation of path classes along a fixed connecting class is continuous:
   -- preimages of sheets are sheets of the translated point.
   have hcontGen : ∀ (a b : X) (c : Path.Homotopic.Quotient a b),
@@ -76,11 +73,11 @@ theorem exists_pathCover_rebase_diffeomorph [ConnectedSpace X] (x₀ x₁ : X) :
       constructor
       · rintro ⟨η, hη, hcls⟩
         have hcls' : Path.Homotopic.Quotient.trans c qc.cls = Path.Homotopic.Quotient.trans
-            pc.cls (⟦η⟧ : Path.Homotopic.Quotient pc.pt qc.pt) := hcls
+            pc.cls (Path.Homotopic.Quotient.mk η) := hcls
         refine ⟨η, hη, ?_⟩
         have hgoal : qc.cls = Path.Homotopic.Quotient.trans (Path.Homotopic.Quotient.trans
             (Path.Homotopic.Quotient.symm c) pc.cls)
-            (⟦η⟧ : Path.Homotopic.Quotient pc.pt qc.pt) := by
+            (Path.Homotopic.Quotient.mk η) := by
           rw [Path.Homotopic.Quotient.trans_assoc, ← hcls',
             ← Path.Homotopic.Quotient.trans_assoc, Path.Homotopic.Quotient.symm_trans,
             Path.Homotopic.Quotient.refl_trans]
@@ -88,10 +85,10 @@ theorem exists_pathCover_rebase_diffeomorph [ConnectedSpace X] (x₀ x₁ : X) :
       · rintro ⟨η, hη, hcls⟩
         have hcls' : qc.cls = Path.Homotopic.Quotient.trans (Path.Homotopic.Quotient.trans
             (Path.Homotopic.Quotient.symm c) pc.cls)
-            (⟦η⟧ : Path.Homotopic.Quotient pc.pt qc.pt) := hcls
+            (Path.Homotopic.Quotient.mk η) := hcls
         refine ⟨η, hη, ?_⟩
         have hgoal : Path.Homotopic.Quotient.trans c qc.cls = Path.Homotopic.Quotient.trans
-            pc.cls (⟦η⟧ : Path.Homotopic.Quotient pc.pt qc.pt) := by
+            pc.cls (Path.Homotopic.Quotient.mk η) := by
           rw [hcls', ← Path.Homotopic.Quotient.trans_assoc,
             ← Path.Homotopic.Quotient.trans_assoc, Path.Homotopic.Quotient.trans_symm,
             Path.Homotopic.Quotient.refl_trans]
@@ -258,7 +255,7 @@ theorem exists_hyperbolicMetric_of_diffeomorph [T2Space X] [ConnectedSpace X]
   have hEcm : ∀ pc : PathCover x₀, (↑(E pc) : ℂ) ∈ ball (0 : ℂ) 1 := fun pc => (E pc).2
   -- Lifts of base points through the covering projection.
   have hlift : ∀ y : X, ∃ pc : PathCover x₀, pathCoverProj x₀ pc = y := fun y =>
-    ⟨⟨y, ⟦PathConnectedSpace.somePath x₀ y⟧⟩, rfl⟩
+    ⟨⟨y, Path.Homotopic.Quotient.mk (PathConnectedSpace.somePath x₀ y)⟩, rfl⟩
   choose L hL using hlift
   have hFn : ∀ y : X, Nonempty {pc : PathCover x₀ // pathCoverProj x₀ pc = y} := fun y =>
     ⟨⟨L y, hL y⟩⟩

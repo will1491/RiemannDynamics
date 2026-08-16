@@ -960,7 +960,6 @@ theorem exists_isQCAnalytic_inversionTransport {h : ℂ → ℂ} {bh : BeltramiC
 
 /-! ## General case via the Bruhat factorization -/
 
-set_option backward.isDefEq.respectTransparency false in
 /-- Bruhat factorization in `SL(2, ℝ)`: a matrix with nonvanishing lower-left entry is a
 product `A₁ · S · A₂` with `A₁, A₂` upper triangular and `S` the inversion, explicitly
 `!![a, b; c, d] = !![1, a c⁻¹; 0, 1] · !![0, -1; 1, 0] · !![c, d; 0, c⁻¹]`. -/
@@ -976,18 +975,24 @@ theorem bruhat_factorization (γ : Matrix.SpecialLinearGroup (Fin 2) ℝ) (hc : 
   have hdetA₂ : (!![γ 1 0, γ 1 1; 0, (γ 1 0)⁻¹] : Matrix (Fin 2) (Fin 2) ℝ).det = 1 := by
     rw [Matrix.det_fin_two_of, mul_inv_cancel₀ hc]
     ring
-  refine ⟨⟨_, hdetA₁⟩, ⟨_, hdetA₂⟩, ?_, ?_, ?_⟩
-  · simp
-  · simp
+  -- bind the factors at the group type so that `coe_mul` matches the products below
+  obtain ⟨A₁, hA₁⟩ : ∃ A₁ : Matrix.SpecialLinearGroup (Fin 2) ℝ,
+      (A₁ : Matrix (Fin 2) (Fin 2) ℝ) = !![1, γ 0 0 * (γ 1 0)⁻¹; 0, 1] := ⟨⟨_, hdetA₁⟩, rfl⟩
+  obtain ⟨A₂, hA₂⟩ : ∃ A₂ : Matrix.SpecialLinearGroup (Fin 2) ℝ,
+      (A₂ : Matrix (Fin 2) (Fin 2) ℝ) = !![γ 1 0, γ 1 1; 0, (γ 1 0)⁻¹] := ⟨⟨_, hdetA₂⟩, rfl⟩
+  have hS : (inversionSL2 : Matrix (Fin 2) (Fin 2) ℝ) = !![0, -1; 1, 0] := rfl
+  refine ⟨A₁, A₂, ?_, ?_, ?_⟩
+  · simp [hA₁]
+  · simp [hA₂]
   · ext i j
     fin_cases i <;> fin_cases j
-    · simp [inversionSL2, Matrix.mul_apply, Fin.sum_univ_two]
+    · simp [hA₁, hA₂, hS, Matrix.mul_apply, Fin.sum_univ_two]
       field_simp
-    · simp [inversionSL2, Matrix.mul_apply, Fin.sum_univ_two]
+    · simp [hA₁, hA₂, hS, Matrix.mul_apply, Fin.sum_univ_two]
       field_simp
       linear_combination -hdet
-    · simp [inversionSL2, Matrix.mul_apply, Fin.sum_univ_two]
-    · simp [inversionSL2, Matrix.mul_apply, Fin.sum_univ_two]
+    · simp [hA₁, hA₂, hS, Matrix.mul_apply, Fin.sum_univ_two]
+    · simp [hA₁, hA₂, hS, Matrix.mul_apply, Fin.sum_univ_two]
 
 set_option maxHeartbeats 400000 in
 -- Heartbeat budget doubled: the Bruhat assembly elaborates the affine pullback bookkeeping,

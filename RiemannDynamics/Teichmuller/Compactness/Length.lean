@@ -81,7 +81,6 @@ noncomputable def diagSL2 (lam : ℝ) (hlam : lam ≠ 0) :
     Matrix.SpecialLinearGroup (Fin 2) ℝ :=
   ⟨!![lam, 0; 0, lam⁻¹], by rw [Matrix.det_fin_two_of]; simp [mul_inv_cancel₀ hlam]⟩
 
-set_option backward.isDefEq.respectTransparency false in
 /-- Diagonalization of hyperbolic elements of `SL(2, ℝ)`: a matrix with `tr² > 4` has real
 distinct eigenvalues `λ, λ⁻¹` and is conjugate within `SL(2, ℝ)` to `!![λ, 0; 0, λ⁻¹]`. -/
 theorem sl2_hyperbolic_diagonalization (A : Matrix.SpecialLinearGroup (Fin 2) ℝ)
@@ -125,13 +124,14 @@ theorem sl2_hyperbolic_diagonalization (A : Matrix.SpecialLinearGroup (Fin 2) �
         rw [Matrix.det_fin_two_of]
         field_simp
         ring
-      refine ⟨⟨!![b / (b * (mu - lam)), b; (lam - a) / (b * (mu - lam)), mu - a], hRdet⟩,
-        lam, hlam, h1, ?_⟩
+      -- bind the eigenvector matrix at the group type so that `coe_mul` matches the products
+      obtain ⟨R, hR⟩ : ∃ R : Matrix.SpecialLinearGroup (Fin 2) ℝ,
+          (R : Matrix (Fin 2) (Fin 2) ℝ) =
+            !![b / (b * (mu - lam)), b; (lam - a) / (b * (mu - lam)), mu - a] :=
+        ⟨⟨_, hRdet⟩, rfl⟩
+      refine ⟨R, lam, hlam, h1, ?_⟩
       apply Subtype.ext
-      rw [Matrix.SpecialLinearGroup.coe_mul, Matrix.SpecialLinearGroup.coe_mul, hM,
-        show ((⟨!![b / (b * (mu - lam)), b; (lam - a) / (b * (mu - lam)), mu - a], hRdet⟩ :
-            Matrix.SpecialLinearGroup (Fin 2) ℝ) : Matrix (Fin 2) (Fin 2) ℝ)
-          = !![b / (b * (mu - lam)), b; (lam - a) / (b * (mu - lam)), mu - a] from rfl,
+      rw [Matrix.SpecialLinearGroup.coe_mul, Matrix.SpecialLinearGroup.coe_mul, hM, hR,
         show ((diagSL2 lam hlam : Matrix (Fin 2) (Fin 2) ℝ)) = !![lam, 0; 0, lam⁻¹] from rfl,
         hmu]
       ext i j

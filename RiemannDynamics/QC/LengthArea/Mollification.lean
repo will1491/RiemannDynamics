@@ -19,10 +19,6 @@ upper-gradient argument.
 open MeasureTheory
 open scoped ENNReal NNReal
 
--- Several proofs in this file rely on defeq checks through semireducible aliases
--- (`Circle`, `Function.comp`, instance-path diamonds); keep the pre-4.31 defeq behavior.
-set_option backward.isDefEq.respectTransparency false
-
 namespace RiemannDynamics
 
 set_option maxHeartbeats 400000 in
@@ -218,12 +214,15 @@ theorem fderiv_ae_eq_weakDirDeriv {f g : ℂ → ℂ} {v : ℂ}
   · exact core hg hgloc hdiff hfloc
   · -- Reduce `v = I` to `v = 1` via the real/imaginary coordinate swap
     -- `σ z = I · conj z`, exactly as in `exists_aclVertical_of_hasWeakDirDeriv_I`.
-    set σ : ℂ ≃ₗᵢ[ℝ] ℂ :=
-      Complex.conjLIE.trans (rotation ⟨Complex.I, by simp [Submonoid.unitSphere, Metric.sphere]⟩)
-      with hσ_def
+    -- The rotation parameter is introduced as a genuine element of `Circle` (with its value
+    -- recorded in `hcI`) so that `rotation_apply` matches at strict transparency.
+    obtain ⟨cI, hcI⟩ : ∃ c : Circle, (c : ℂ) = Complex.I :=
+      ⟨⟨Complex.I, by simp [Submonoid.unitSphere, Metric.sphere]⟩, rfl⟩
+    set σ : ℂ ≃ₗᵢ[ℝ] ℂ := Complex.conjLIE.trans (rotation cI) with hσ_def
     have hσ_apply : ∀ z : ℂ, σ z = ⟨z.im, z.re⟩ := by
       intro z
-      simp only [hσ_def, LinearIsometryEquiv.trans_apply, Complex.conjLIE_apply, rotation_apply]
+      simp only [hσ_def, LinearIsometryEquiv.trans_apply, Complex.conjLIE_apply, rotation_apply,
+        hcI]
       apply Complex.ext <;> simp [Complex.mul_re, Complex.mul_im]
     have hσ_invol : ∀ z : ℂ, σ (σ z) = z := by
       intro z; rw [hσ_apply, hσ_apply]
