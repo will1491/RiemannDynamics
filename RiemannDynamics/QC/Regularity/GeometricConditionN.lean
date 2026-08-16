@@ -97,7 +97,7 @@ theorem geometric_inverse_conditionN {f : ℂ → ℂ} {K : ℝ} (_hf : IsQCGeom
     rintro _ ⟨w, hwD, rfl⟩
     by_contra hgwE
     -- `g w ∉ E` means `f` is differentiable at `g w` with positive Jacobian.
-    rw [hE, Set.mem_setOf_eq, not_or, not_not, not_not] at hgwE
+    rw [hE, Set.mem_ofPred_eq, not_or, not_not, not_not] at hgwE
     obtain ⟨hdiff, hdetpos⟩ := hgwE
     -- Build the linear equivalence from the nonvanishing determinant of `Df (g w)`.
     set f' : ℂ →L[ℝ] ℂ := fderiv ℝ f (g w) with hf'
@@ -171,7 +171,7 @@ theorem geometric_sliced_noSingular {f : ℂ → ℂ} {K : ℝ} (hf : IsQCGeomet
     simp only [hT'def, Set.mem_preimage, Complex.measurableEquivRealProd_symm_apply]
   rw [ae_iff] at hx
   have hset : {y : ℝ | (Complex.mk x y : ℂ) ∈ T} = {y : ℝ | (x, y) ∈ T'} := by
-    ext y; rw [Set.mem_setOf_eq, Set.mem_setOf_eq, hmem y]
+    ext y; rw [Set.mem_ofPred_eq, Set.mem_ofPred_eq, hmem y]
   rw [hset]; simpa using hx
 
 end RiemannDynamics

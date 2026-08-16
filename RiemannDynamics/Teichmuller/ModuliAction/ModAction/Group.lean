@@ -192,7 +192,7 @@ theorem modGroup_equivariant_offPole {F : ℂ ≃ₜ ℂ} (hF : F ∈ modGroup �
       exact F.injective (hPsub hx hy)
     rw [ae_iff]
     refine measure_mono_null (fun z hz => ?_) (hpre.measure_zero volume)
-    simp only [Set.mem_setOf_eq, ne_eq, not_not] at hz
+    simp only [Set.mem_ofPred_eq, ne_eq, not_not] at hz
     exact hz
   -- the denominator-cleared identity holds a.e., and both sides are continuous off the pole
   have haeC : ∀ᵐ z : ℂ, moebiusDenom γ' (F z) * F (moebiusMap γ z)
@@ -310,7 +310,7 @@ theorem isInvariantBeltrami'_single_of_moebius_conj {h : ℂ → ℂ} {bh : Belt
       exact hinj (hPsub hx hy)
     rw [ae_iff]
     refine measure_mono_null (fun z hz => ?_) (hpre.measure_zero volume)
-    simp only [Set.mem_setOf_eq, ne_eq, not_not] at hz
+    simp only [Set.mem_ofPred_eq, ne_eq, not_not] at hz
     exact hz
   have haeC : ∀ᵐ z : ℂ, moebiusDenom W (h z) * h (moebiusMap γ z)
       = (W 0 0 : ℂ) * h z + (W 0 1 : ℂ) := by
@@ -372,7 +372,7 @@ theorem isInvariantBeltrami'_single_of_moebius_conj {h : ℂ → ℂ} {bh : Belt
         (measurableSet_toMeasurable _ _).inter hopen.measurableSet
       have hSnull : volume
           (toMeasurable volume {w | ¬ P w} ∩ {w : ℂ | moebiusDenom γ⁻¹ w ≠ 0}) = 0 := by
-        refine le_antisymm (le_trans (measure_mono Set.inter_subset_left) ?_) (zero_le _)
+        refine le_antisymm (le_trans (measure_mono Set.inter_subset_left) ?_) (zero_le)
         rw [measure_toMeasurable]
         exact hP.le
       have hfd : ∀ w ∈ toMeasurable volume {w | ¬ P w} ∩ {w : ℂ | moebiusDenom γ⁻¹ w ≠ 0},
@@ -395,7 +395,7 @@ theorem isInvariantBeltrami'_single_of_moebius_conj {h : ℂ → ℂ} {bh : Belt
       exact hcov
     refine measure_mono_null ?_ himg
     intro z hz
-    simp only [Set.mem_setOf_eq, Classical.not_imp] at hz
+    simp only [Set.mem_ofPred_eq, Classical.not_imp] at hz
     obtain ⟨hden, hbad⟩ := hz
     have hd1 : moebiusDenom γ⁻¹ (moebiusMap γ z) * moebiusDenom γ z = 1 := by
       rw [moebiusDenom_mul γ⁻¹ γ z hden, inv_mul_cancel, moebiusDenom_one]
@@ -546,7 +546,7 @@ theorem exists_pull_rep (x : TeichRep Γ₀) (F : ℂ ≃ₜ ℂ) (hF : F ∈ mo
         exact F.injective (hPsub ha hb)
       rw [ae_iff]
       refine measure_mono_null (fun z hz => ?_) (hpre.measure_zero volume)
-      simp only [Set.mem_setOf_eq, ne_eq, not_not] at hz
+      simp only [Set.mem_ofPred_eq, ne_eq, not_not] at hz
       exact hz
     filter_upwards [haeF, hpole'] with z h1 h2
     simp only [Function.comp_apply]
@@ -627,6 +627,7 @@ noncomputable def Teich.modSMul (F : modGroup Γ₀) (ξ : Teich Γ₀) : Teich 
       (SeparationQuotient.mk (x.pull (↑(F⁻¹)) (F⁻¹).2) : Teich Γ₀))
     (pull_mk_congr (↑(F⁻¹)) (F⁻¹).2) ξ
 
+set_option backward.isDefEq.respectTransparency false in
 /-- The identity of the moduli group acts trivially: the renormalization of `x.w` at its
 values `x.w 0 = 0` and `x.w 1 = 1` is `x.w` itself. -/
 theorem Teich.modSMul_one (ξ : Teich Γ₀) : Teich.modSMul 1 ξ = ξ := by
@@ -641,6 +642,7 @@ theorem Teich.modSMul_one (ξ : Teich Γ₀) : Teich.modSMul 1 ξ = ξ := by
     rfl
   simp only [h1, x.w_zero, x.w_one, sub_zero, div_one]
 
+set_option backward.isDefEq.respectTransparency false in
 /-- Pull-by-inverse is a left action: `(F G)⁻¹ = G⁻¹ F⁻¹` composes contravariantly with the
 contravariant pullback. -/
 theorem Teich.modSMul_mul (F G : modGroup Γ₀) (ξ : Teich Γ₀) :
@@ -705,7 +707,7 @@ theorem dilatationSet_pull (F : ℂ ≃ₜ ℂ) (hF : F ∈ modGroup Γ₀) (x y
     field_simp
     ring
   ext K
-  simp only [dilatationSet, Set.mem_setOf_eq]
+  simp only [dilatationSet, Set.mem_ofPred_eq]
   constructor
   · rintro ⟨G, hG, hGb⟩
     refine ⟨affineMap (x.w (F 1) - x.w (F 0)) (x.w (F 0)) ∘ (G ∘ affineMap

@@ -96,7 +96,7 @@ theorem sublevel_arc_measure {F : ℝ → ℝ} (hF : Continuous F) {φ₀ t₀ :
   calc volume {φ ∈ Icc (0 : ℝ) (2 * π) | t₀ < F φ}
       ≤ volume (Icc (0 : ℝ) (2 * π) \ Ioo a b) := measure_mono hcompl
     _ = volume (Icc (0 : ℝ) (2 * π)) - volume (Ioo a b) :=
-        measure_diff hIoosub measurableSet_Ioo.nullMeasurableSet
+        measure_sdiff hIoosub measurableSet_Ioo.nullMeasurableSet
           (ne_top_of_le_ne_top (by rw [Real.volume_Ioo]; exact ofReal_ne_top) le_rfl)
     _ = ENNReal.ofReal (2 * π - c₀) := by
         rw [Real.volume_Icc, Real.volume_Ioo, sub_zero, hc₀def,
@@ -171,7 +171,7 @@ theorem starFunction_apex_saturation {f : ℂ → ℝ} {r : ℝ} (hr : 0 < r)
     have hset : {φ ∈ Icc (0 : ℝ) (2 * π) | ENNReal.ofReal t₀ < g φ}
         = {φ ∈ Icc (0 : ℝ) (2 * π) | t₀ < F φ} := by
       ext φ
-      simp only [mem_setOf_eq, hgF φ,
+      simp only [mem_ofPred_eq, hgF φ,
         ENNReal.ofReal_lt_ofReal_iff_of_nonneg ht₀.le]
     calc D t₀ = volume {φ ∈ Icc (0 : ℝ) (2 * π) | ENNReal.ofReal t₀ < g φ} := rfl
       _ = volume {φ ∈ Icc (0 : ℝ) (2 * π) | t₀ < F φ} := by rw [hset]
@@ -259,7 +259,7 @@ theorem starProfile_incr_le {T M : ℝ} {g : ℝ → ℝ≥0∞} (hT : 0 ≤ T)
     intro t ht
     have : {x ∈ Icc (0 : ℝ) T | ENNReal.ofReal t < g x} = ∅ := by
       ext x
-      simp only [mem_setOf_eq, mem_empty_iff_false, iff_false, not_and]
+      simp only [mem_ofPred_eq, mem_empty_iff_false, iff_false, not_and]
       intro hx
       exact not_lt.mpr (le_trans (hg x hx) (ENNReal.ofReal_le_ofReal ht))
     simp only [hDdef, distribFun, this, measure_empty]
@@ -277,7 +277,7 @@ theorem starProfile_incr_le {T M : ℝ} {g : ℝ → ℝ≥0∞} (hT : 0 ≤ T)
         rw [this, ENNReal.ofReal_sub (2 * θ) (by positivity)]
       rw [hsub]
       exact min_le_min_add_sub (ENNReal.ofReal_le_ofReal (by linarith))
-    · rw [hDzero t htM, min_zero, min_zero]; exact zero_le _
+    · rw [hDzero t htM, min_zero, min_zero]; exact zero_le
   calc ∫⁻ t in Ioi (0 : ℝ), min (ENNReal.ofReal (2 * θ)) (D t)
       ≤ ∫⁻ t in Ioi (0 : ℝ), (min (ENNReal.ofReal (2 * θ')) (D t)
           + (Ioo (0 : ℝ) M).indicator (fun _ => ENNReal.ofReal (2 * (θ - θ'))) t) :=
@@ -322,7 +322,7 @@ theorem starFunction_toReal_le {p : ℂ} {u : ℂ → ℝ} {r M θ : ℝ} (hM : 
     intro t ht
     have hemp : {x ∈ Icc (0 : ℝ) (2 * π) | ENNReal.ofReal t < g x} = ∅ := by
       ext x
-      simp only [mem_setOf_eq, mem_empty_iff_false, iff_false, not_and]
+      simp only [mem_ofPred_eq, mem_empty_iff_false, iff_false, not_and]
       intro _
       exact not_lt.mpr (le_trans (angularProfile_toReal_le hM hbdd x)
         (ENNReal.ofReal_le_ofReal ht))
@@ -663,7 +663,7 @@ theorem exp_mem_roundAnnulus_gen {R₁ R₂ : ℝ} (h1 : 0 < R₁) (h12 : R₁ <
   have h2 : (0 : ℝ) < R₂ := lt_trans h1 h12
   have hdist : dist (Complex.exp w) 0 = Real.exp w.re := by
     rw [dist_zero_right, Complex.norm_exp]
-  simp only [RoundAnnulus, Set.mem_setOf_eq, hdist]
+  simp only [RoundAnnulus, Set.mem_ofPred_eq, hdist]
   refine ⟨?_, ?_⟩
   · calc R₁ = Real.exp (Real.log R₁) := (Real.exp_log h1).symm
       _ < Real.exp w.re := Real.exp_lt_exp.mpr ha
@@ -749,7 +749,7 @@ theorem integral_re_deriv_expGrad_eq_zero_gen {u : ℂ → ℝ} {R₁ R₂ : ℝ
       (expGrad_differentiableAt_gen h1 h12 hu (by rw [re_logPolar]; exact ha)
         (by rw [re_logPolar]; exact hb))
     have hcomp := Complex.imCLM.hasFDerivAt.comp_hasDerivAt θ hD
-    simpa [Function.comp, Complex.mul_im] using hcomp
+    simpa [Function.comp, Complex.mul_im] using! hcomp
   have hint : IntervalIntegrable
       (fun θ : ℝ => (deriv (expGrad u) ((ξ : ℂ) + (θ : ℂ) * Complex.I)).re) volume (-π) π :=
     (continuous_slice_of_continuousOn_logStrip
@@ -777,7 +777,7 @@ theorem integral_expGrad_re_constant_gen {u : ℂ → ℝ} {R₁ R₂ : ℝ} (h1
           (expGrad_differentiableAt_gen h1 h12 hu (by rw [re_logPolar]; exact hy1)
             (by rw [re_logPolar]; exact hy2))
         have hcomp := Complex.reCLM.hasFDerivAt.comp_hasDerivAt y hD
-        simpa [Function.comp] using hcomp)
+        simpa [Function.comp] using! hcomp)
       hx.1 hx.2
     rwa [integral_re_deriv_expGrad_eq_zero_gen h1 h12 hu hx.1 hx.2] at hstep
   exact eqOn_Ioo_of_hasDerivAt_zero hd hξ hη
@@ -802,9 +802,9 @@ theorem logCircleMean_affineOn_gen {u : ℂ → ℝ} {R₁ R₂ : ℝ} (h1 : 0 <
       integral_expGrad_re_constant_gen h1 h12 hu hx hξcmem
     rw [hx'] at hm
     have hsub := hm.sub ((hasDerivAt_id x).const_mul b)
-    simpa using hsub
+    simpa using! hsub
   have hgeq := eqOn_Ioo_of_hasDerivAt_zero hgderiv hξ hξcmem
-  simp only at hgeq
+  try simp only at hgeq
   linarith [hgeq]
 
 /-- The circle mean of the zero-extension `Set.indicator U u` agrees with the circle mean of `u`
@@ -840,7 +840,7 @@ theorem logCircleMean_affine_on_fullCircles {U : Set ℂ} {u : ℂ → ℝ} {R�
     have hhi : Real.exp ξ < R₂ := by
       calc Real.exp ξ < Real.exp (Real.log R₂) := Real.exp_lt_exp.mpr hξ.2
         _ = R₂ := Real.exp_log (lt_trans h1 h12)
-    simp only [RoundAnnulus, Set.mem_setOf_eq, dist_zero_right, hznorm]
+    simp only [RoundAnnulus, Set.mem_ofPred_eq, dist_zero_right, hznorm]
     exact ⟨hlo, hhi⟩
   rw [logCircleMean_indicator_eq hsphereU]
   exact hab ξ hξ
@@ -871,7 +871,7 @@ theorem le_starFunction_toReal {p : ℂ} {u : ℂ → ℝ} {r m M θ : ℝ} (hm 
     intro t ht htm
     have hset : {x ∈ Icc (0 : ℝ) (2 * π) | ENNReal.ofReal t < g x} = Icc (0 : ℝ) (2 * π) := by
       ext x
-      simp only [mem_setOf_eq, and_iff_left_iff_imp]
+      simp only [mem_ofPred_eq, and_iff_left_iff_imp]
       intro _
       exact lt_of_lt_of_le
         (ENNReal.ofReal_lt_ofReal_iff'.mpr ⟨htm, by linarith⟩) (hgm x)
@@ -894,7 +894,7 @@ theorem le_starFunction_toReal {p : ℂ} {u : ℂ → ℝ} {r m M θ : ℝ} (hm 
             exact le_min le_rfl (ENNReal.ofReal_le_ofReal (by linarith))
           · rw [Set.indicator_of_notMem (by
               simp only [mem_Ioo, not_and, not_lt]; exact fun _ => htm)]
-            exact zero_le _
+            exact zero_le
   calc 2 * m * θ = (ENNReal.ofReal (2 * θ * m)).toReal := by
         rw [ENNReal.toReal_ofReal (by positivity)]; ring
     _ ≤ (starFunction p u r θ).toReal := by
@@ -916,7 +916,7 @@ theorem collar_lower_bound {u : ℂ → ℝ} {r₀ : ℝ} (h0 : 0 < r₀) (h1 : 
     have hKeq : {z : ℂ | r₀ ≤ dist z 0 ∧ dist z 0 ≤ 1}
         = Metric.closedBall 0 1 ∩ (Metric.ball 0 r₀)ᶜ := by
       ext z
-      simp only [Set.mem_setOf_eq, Set.mem_inter_iff, Metric.mem_closedBall, Set.mem_compl_iff,
+      simp only [Set.mem_ofPred_eq, Set.mem_inter_iff, Metric.mem_closedBall, Set.mem_compl_iff,
         Metric.mem_ball, not_lt]
       tauto
     rw [hKeq]
@@ -1395,7 +1395,7 @@ theorem baernstein_case_b_reduce {U : Set ℂ} {s T δ : ℝ} {g : ℝ → ℝ} 
       apply Filter.Tendsto.congr' _ tendsto_const_nhds
       filter_upwards [self_mem_nhdsWithin] with ξ hξ
       exact (hconstval ξ hξ).symm
-    haveI hne : (nhdsWithin α (Ioo α β')).NeBot := left_nhdsWithin_Ioo_neBot hαβ'
+    have hne : (nhdsWithin α (Ioo α β')).NeBot := left_nhdsWithin_Ioo_neBot hαβ'
     exact tendsto_nhds_unique htend htendM
   have hαns : ¬ Metric.sphere (0 : ℂ) (Real.exp α) ⊆ U := by
     intro hsub; exact hαnotA ⟨by linarith [hαxh, hxhint.2, hδ0'], hsub⟩

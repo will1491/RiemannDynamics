@@ -203,7 +203,7 @@ theorem ofReal_le_grotzschModulus {s : ℝ} (hs0 : 0 < s) (hs1 : s < 1) :
       intro t; rw [hderiveq, norm_mul, Complex.norm_real, Complex.norm_I, mul_one,
         Real.norm_eq_abs, abs_of_pos hcx]
     -- γ is Lipschitz hence continuous and AC.
-    have hlipγ : LipschitzWith (⟨c x, hcx.le⟩ : ℝ≥0) γ := by
+    have hlipγ : LipschitzWith (NNReal.mk (c x) hcx.le) γ := by
       apply LipschitzWith.of_dist_le_mul
       intro u v
       rw [dist_eq_norm, dist_eq_norm, hγeq, hγeq]
@@ -295,7 +295,7 @@ theorem ofReal_le_grotzschModulus {s : ℝ} (hs0 : 0 < s) (hs1 : s < 1) :
       apply lintegral_congr
       intro t
       rw [show (‖deriv γ t‖₊ : ℝ≥0∞) = ENNReal.ofReal ‖deriv γ t‖ from by
-        rw [ofReal_norm_eq_enorm, enorm_eq_nnnorm], hnormderiv, mul_comm]
+        rw [ofReal_norm, enorm_eq_nnnorm], hnormderiv, mul_comm]
     rw [← harc]; exact hadm
   -- Per-fibre Cauchy–Schwarz: `1 ≤ ∫_{(0,c x)} ρ(x+iy)²`.
   have fibre_sq_lower : ∀ x ∈ Set.Ioo (0 : ℝ) s,
@@ -522,7 +522,7 @@ theorem ofReal_le_curveModulus_of_connected_hole {s : ℝ} (hs0 : 0 < s) (hs2 : 
       intro t; rw [hderiveq, norm_mul, Complex.norm_real, Complex.norm_I, mul_one,
         Real.norm_eq_abs]
     -- `γ` is Lipschitz, hence continuous and AC on `[0, 1]`.
-    have hlipγ : LipschitzWith (⟨|q - p|, abs_nonneg _⟩ : ℝ≥0) γ := by
+    have hlipγ : LipschitzWith (NNReal.mk |q - p| (abs_nonneg _)) γ := by
       apply LipschitzWith.of_dist_le_mul
       intro u v
       rw [dist_eq_norm, dist_eq_norm, hγ, hemb, hL]
@@ -602,7 +602,7 @@ theorem ofReal_le_curveModulus_of_connected_hole {s : ℝ} (hs0 : 0 < s) (hs2 : 
       apply lintegral_congr
       intro t
       rw [show (‖deriv γ t‖₊ : ℝ≥0∞) = ENNReal.ofReal ‖deriv γ t‖ from by
-        rw [ofReal_norm_eq_enorm, enorm_eq_nnnorm], hnormderiv, mul_comm]
+        rw [ofReal_norm, enorm_eq_nnnorm], hnormderiv, mul_comm]
     have hlow : 1 ≤ ∫⁻ y in Set.Ioo (min p q) (max p q), ρ (emb x y) := by
       rw [← harc]; exact hadm
     -- Cauchy–Schwarz on the interval of length `max - min = |q - p| ≤ 1`.

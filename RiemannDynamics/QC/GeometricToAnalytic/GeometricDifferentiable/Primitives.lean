@@ -80,7 +80,7 @@ distance `r` of the centre: `(z.re−x.re)² + (z.im−x.im)² ≤ (r/√2)² + 
 theorem qcInnerSquare_subset_closedBall (x : ℂ) {r : ℝ} (hr : 0 ≤ r) :
     qcInnerSquare x r ⊆ Metric.closedBall x r := by
   intro z hz
-  simp only [qcInnerSquare, axisRect, Set.mem_setOf_eq] at hz
+  simp only [qcInnerSquare, axisRect, Set.mem_ofPred_eq] at hz
   obtain ⟨⟨hre0, hre1⟩, him0, him1⟩ := hz
   have hsqrt2 : (0 : ℝ) < Real.sqrt 2 := Real.sqrt_pos.2 (by norm_num)
   -- Coordinate bounds: `|z.re − x.re| ≤ r/√2` and `|z.im − x.im| ≤ r/√2`.
@@ -106,7 +106,7 @@ theorem closedBall_subset_qcOuterSquare (x : ℂ) (r : ℝ) :
     Metric.closedBall x r ⊆ qcOuterSquare x r := by
   intro z hz
   rw [Metric.mem_closedBall, Complex.dist_eq] at hz
-  simp only [qcOuterSquare, axisRect, Set.mem_setOf_eq]
+  simp only [qcOuterSquare, axisRect, Set.mem_ofPred_eq]
   have hre : |(z - x).re| ≤ ‖z - x‖ := Complex.abs_re_le_norm _
   have him : |(z - x).im| ≤ ‖z - x‖ := Complex.abs_im_le_norm _
   simp only [Complex.sub_re, Complex.sub_im] at hre him
@@ -129,14 +129,14 @@ theorem image_closedBall_subset_qcOuterSquare (f : ℂ → ℂ) (x : ℂ) (r : �
 theorem isCompact_qcOuterSquare (x : ℂ) (r : ℝ) : IsCompact (qcOuterSquare x r) := by
   apply Metric.isCompact_of_isClosed_isBounded
   · -- closed: an intersection of four closed coordinate half-planes.
-    simp only [qcOuterSquare, axisRect, Set.setOf_and]
+    simp only [qcOuterSquare, axisRect, Set.ofPred_and]
     exact ((isClosed_le continuous_const Complex.continuous_re).inter
         (isClosed_le Complex.continuous_re continuous_const)).inter
       ((isClosed_le continuous_const Complex.continuous_im).inter
         (isClosed_le Complex.continuous_im continuous_const))
   · -- bounded: contained in `closedBall x (2r)`.
     refine (Metric.isBounded_closedBall (x := x) (r := 2 * r)).subset (fun z hz => ?_)
-    simp only [qcOuterSquare, axisRect, Set.mem_setOf_eq] at hz
+    simp only [qcOuterSquare, axisRect, Set.mem_ofPred_eq] at hz
     obtain ⟨⟨hre0, hre1⟩, him0, him1⟩ := hz
     rw [Metric.mem_closedBall, Complex.dist_eq]
     refine le_trans (Complex.norm_le_abs_re_add_abs_im _) ?_
@@ -215,7 +215,7 @@ theorem funcIncrement_le_arcLength {δ : ℝ → ℂ}
     have hderiv_g : deriv g t = L (deriv δ t) := by
       have hh : HasDerivAt g (L (deriv δ t)) t := by
         have := L.hasFDerivAt.comp_hasDerivAt t hd.hasDerivAt
-        simpa [hg_def] using this
+        simpa [hg_def] using! this
       exact hh.deriv
     rw [hderiv_g, ENNReal.coe_le_coe, ← NNReal.coe_le_coe, coe_nnnorm, coe_nnnorm]
     calc ‖L (deriv δ t)‖ ≤ ‖L‖ * ‖deriv δ t‖ := L.le_opNorm _
@@ -261,7 +261,7 @@ theorem chord_le_arcLength {δ : ℝ → ℂ} (hδac : AbsolutelyContinuousOnInt
     ENNReal.ofReal ‖δ 1 - δ 0‖
       ≤ ∫⁻ t in Set.Icc (0:ℝ) 1, (‖deriv δ t‖₊ : ℝ≥0∞) := by
   rcases eq_or_ne (δ 1 - δ 0) 0 with hz | hz
-  · rw [hz, norm_zero, ENNReal.ofReal_zero]; exact zero_le _
+  · rw [hz, norm_zero, ENNReal.ofReal_zero]; exact zero_le
   · set w : ℂ := δ 1 - δ 0 with hw
     have hkey := funcIncrement_le_arcLength hδac (normFunctional w) (norm_normFunctional_le w)
     have hval : normFunctional w (δ 1) - normFunctional w (δ 0) = ‖w‖ := by
@@ -1021,7 +1021,7 @@ theorem arcLength_comp_affine_Ioo (ρ : ℂ → ℝ≥0∞) (hρ : Measurable ρ
     have haff : HasDerivAt (fun t : ℝ => c * t + d) c t := by
       simpa using ((hasDerivAt_id t).const_mul c).add_const d
     have hderiv : deriv (fun t => δ (c * t + d)) t = c • deriv δ (c * t + d) := by
-      have := (htd.hasDerivAt.scomp t haff); simpa [Function.comp] using this.deriv
+      have := (htd.hasDerivAt.scomp t haff); simpa [Function.comp] using! this.deriv
     rw [hderiv]
     have hnorm : (‖(c:ℝ) • deriv δ (c*t+d)‖₊ : ℝ≥0∞)
         = ENNReal.ofReal c * (‖deriv δ (c*t+d)‖₊ : ℝ≥0∞) := by
@@ -1118,7 +1118,7 @@ theorem segPath_one (z y : ℂ) : segPath z y 1 = y := by simp [segPath]
 theorem segPath_hasDerivAt (z y : ℂ) (t : ℝ) : HasDerivAt (segPath z y) (y - z) t := by
   have h1 : HasDerivAt (fun t : ℝ => (t : ℂ) * (y - z)) (y - z) t := by
     have : HasDerivAt (fun t : ℝ => (t : ℂ)) (1 : ℂ) t := by
-      simpa using (Complex.ofRealCLM.hasDerivAt (x := t))
+      simpa using! (Complex.ofRealCLM.hasDerivAt (x := t))
     simpa using this.mul_const (y - z)
   have h2 : HasDerivAt (fun t : ℝ => z + (t : ℂ) * (y - z)) (y - z) t := by
     have := (hasDerivAt_const t z).add h1; rwa [zero_add] at this

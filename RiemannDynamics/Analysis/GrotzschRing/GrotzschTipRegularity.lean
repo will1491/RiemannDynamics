@@ -256,13 +256,13 @@ theorem exists_reflected_harmonic_far {s : ℝ} (hs0 : 0 < s) (hs1 : s < 1) {v :
       · have hvz : V z = 0 := hVzero z hz.1 him
         rw [reflectReal_of_im_nonneg (le_of_eq him.symm), hvz]
         have hzfix : (starRingEnd ℂ) z = z := Complex.conj_eq_iff_im.mpr him
-        rw [hzfix, hvz, neg_zero]
+        simp only [hzfix, hvz, neg_zero]
       · rw [reflectReal, if_neg (by linarith)]
     have hcover : Metric.closedBall (0 : ℂ) ρ
         = (Metric.closedBall (0 : ℂ) ρ ∩ {z : ℂ | 0 ≤ z.im})
           ∪ (Metric.closedBall (0 : ℂ) ρ ∩ {z : ℂ | z.im ≤ 0}) := by
       rw [← Set.inter_union_distrib_left]
-      ext z; simp only [Set.mem_inter_iff, Set.mem_union, Set.mem_setOf_eq]
+      ext z; simp only [Set.mem_inter_iff, Set.mem_union, Set.mem_ofPred_eq]
       exact ⟨fun hz => ⟨hz, le_total 0 z.im⟩, fun hz => hz.1⟩
     rw [hcover]
     exact hup.union_of_isClosed hlow
@@ -384,13 +384,13 @@ theorem exists_reflected_harmonic_near {s : ℝ} (hs0 : 0 < s) (hs1 : s < 1) {v 
       · have hvz : V z = 0 := hVzero z hz.1 him
         rw [reflectReal_of_im_nonneg (le_of_eq him.symm), hvz]
         have hzfix : (starRingEnd ℂ) z = z := Complex.conj_eq_iff_im.mpr him
-        rw [hzfix, hvz, neg_zero]
+        simp only [hzfix, hvz, neg_zero]
       · rw [reflectReal, if_neg (by linarith)]
     have hcover : Metric.closedBall (0 : ℂ) ρ
         = (Metric.closedBall (0 : ℂ) ρ ∩ {z : ℂ | 0 ≤ z.im})
           ∪ (Metric.closedBall (0 : ℂ) ρ ∩ {z : ℂ | z.im ≤ 0}) := by
       rw [← Set.inter_union_distrib_left]
-      ext z; simp only [Set.mem_inter_iff, Set.mem_union, Set.mem_setOf_eq]
+      ext z; simp only [Set.mem_inter_iff, Set.mem_union, Set.mem_ofPred_eq]
       exact ⟨fun hz => ⟨hz, le_total 0 z.im⟩, fun hz => hz.1⟩
     rw [hcover]
     exact hup.union_of_isClosed hlow
@@ -600,7 +600,7 @@ theorem grotzschPotential_grad_tip_bound_far {s : ℝ} (hs0 : 0 < s) (hs1 : s < 
       simpa [hg] using ((hasDerivAt_pow 2 η).const_sub (s : ℂ))
     rw [hasFDerivAt_iff_isLittleO]
     refine hd.isLittleO.congr_left fun t => ?_
-    simp only [ContinuousLinearMap.smul_apply, ContinuousLinearMap.id_apply, smul_eq_mul]
+    simp only [smul_apply, ContinuousLinearMap.id_apply, smul_eq_mul]
     ring
   have hvfat : HasFDerivAt v (fderiv ℝ v z) (g η) := by rw [hgη]; exact hvdiff.hasFDerivAt
   have hcompfderiv : HasFDerivAt (fun w => v (g w))
@@ -623,8 +623,8 @@ theorem grotzschPotential_grad_tip_bound_far {s : ℝ} (hs0 : 0 < s) (hs1 : s < 
     have hid : (((-2 * η) : ℂ) • ContinuousLinearMap.id ℝ ℂ).comp
         (((-1 / (2 * η)) : ℂ) • ContinuousLinearMap.id ℝ ℂ) = ContinuousLinearMap.id ℝ ℂ := by
       ext w
-      simp only [ContinuousLinearMap.coe_comp', Function.comp_apply,
-        ContinuousLinearMap.smul_apply, smul_eq_mul, ContinuousLinearMap.id_apply]
+      simp only [ContinuousLinearMap.coe_comp, Function.comp_apply,
+        smul_apply, smul_eq_mul, ContinuousLinearMap.id_apply]
       field_simp
     rw [hid, ContinuousLinearMap.comp_id]
   have hgradbound : ‖gradC v z‖ ≤ C / (2 * ‖η‖) := by
@@ -697,7 +697,7 @@ theorem grotzschPotential_grad_tip_bound_near {s : ℝ} (hs0 : 0 < s) (hs1 : s <
     have hd : HasDerivAt g (2 * η) η := by simpa [hg] using (hasDerivAt_pow 2 η)
     rw [hasFDerivAt_iff_isLittleO]
     refine hd.isLittleO.congr_left fun t => ?_
-    simp only [ContinuousLinearMap.smul_apply, ContinuousLinearMap.id_apply, smul_eq_mul]
+    simp only [smul_apply, ContinuousLinearMap.id_apply, smul_eq_mul]
     ring
   have hvfat : HasFDerivAt v (fderiv ℝ v z) (g η) := by rw [hgη]; exact hvdiff.hasFDerivAt
   have hcompfderiv : HasFDerivAt (fun w => v (g w))
@@ -719,8 +719,8 @@ theorem grotzschPotential_grad_tip_bound_near {s : ℝ} (hs0 : 0 < s) (hs1 : s <
     have hid : (((2 * η) : ℂ) • ContinuousLinearMap.id ℝ ℂ).comp
         (((1 / (2 * η)) : ℂ) • ContinuousLinearMap.id ℝ ℂ) = ContinuousLinearMap.id ℝ ℂ := by
       ext w
-      simp only [ContinuousLinearMap.coe_comp', Function.comp_apply,
-        ContinuousLinearMap.smul_apply, smul_eq_mul, ContinuousLinearMap.id_apply]
+      simp only [ContinuousLinearMap.coe_comp, Function.comp_apply,
+        smul_apply, smul_eq_mul, ContinuousLinearMap.id_apply]
       have hη0 : η ≠ 0 := fun h => by simp [h] at hηnorm_pos
       field_simp
     rw [hid, ContinuousLinearMap.comp_id]

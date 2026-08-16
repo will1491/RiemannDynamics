@@ -333,7 +333,7 @@ theorem MSubharmonicAt.sub_mharmonicAt {v u : M → ℝ} {x : M}
     rw [Real.circleAverage_fun_sub hfci hhci]
     have hhavg : Real.circleAverage (u ∘ (chartAt ℂ x).symm) c ρ =
         (u ∘ (chartAt ℂ x).symm) c := by
-      apply HarmonicOnNhd.circleAverage_eq
+      apply InnerProductSpace.HarmonicOnNhd.circleAverage_eq
       rw [abs_of_pos hρ]
       exact hh.mono hsubB
     have hfavg : (v ∘ (chartAt ℂ x).symm) c ≤

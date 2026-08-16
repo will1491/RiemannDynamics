@@ -116,7 +116,7 @@ theorem exp_mem_roundAnnulus {r₀ : ℝ} (h0 : 0 < r₀) {w : ℂ}
     Complex.exp w ∈ RoundAnnulus 0 r₀ 1 := by
   have hdist : dist (Complex.exp w) 0 = Real.exp w.re := by
     rw [dist_zero_right, Complex.norm_exp]
-  simp only [RoundAnnulus, Set.mem_setOf_eq, hdist]
+  simp only [RoundAnnulus, Set.mem_ofPred_eq, hdist]
   constructor
   · calc r₀ = Real.exp (Real.log r₀) := (Real.exp_log h0).symm
       _ < Real.exp w.re := Real.exp_lt_exp.mpr h1
@@ -170,7 +170,7 @@ theorem hasDerivAt_uexp_radial {u : ℂ → ℝ} {ξ θ : ℝ}
       = (expGrad u ((ξ : ℂ) + (θ : ℂ) * Complex.I)).re := by
     rw [fderiv_eq_re_gradC_mul]; rfl
   rw [heq] at hcomp
-  simpa [Function.comp] using hcomp
+  simpa [Function.comp] using! hcomp
 
 /-- **Angular derivative of the pullback.** For `u` differentiable at `e^{ξ+θi}`, the log-polar
 pullback `t ↦ u(e^{ξ+ti})` has derivative `−Im (expGrad u (ξ+θi))` at `t = θ`. -/
@@ -190,7 +190,7 @@ theorem hasDerivAt_uexp_angular {u : ℂ → ℝ} {ξ θ : ℝ}
       rw [expGrad]; ring
     rw [this, Complex.mul_I_re]
   rw [heq] at hcomp
-  simpa [Function.comp] using hcomp
+  simpa [Function.comp] using! hcomp
 
 /-- **Radial derivative of the holomorphic gradient.** If `expGrad u` is complex-differentiable
 at `ξ + θ·I`, its restriction to the radial line has derivative `deriv (expGrad u) (ξ+θi)`. -/
@@ -199,7 +199,7 @@ theorem hasDerivAt_expGrad_radial {u : ℂ → ℝ} {ξ θ : ℝ}
     HasDerivAt (fun x : ℝ => expGrad u ((x : ℂ) + (θ : ℂ) * Complex.I))
       (deriv (expGrad u) ((ξ : ℂ) + (θ : ℂ) * Complex.I)) ξ := by
   have h := hd.hasDerivAt.comp ξ (hasDerivAt_logPolar_radial ξ θ)
-  simpa [Function.comp] using h
+  simpa [Function.comp] using! h
 
 /-- **Angular derivative of the holomorphic gradient.** If `expGrad u` is complex-differentiable
 at `ξ + θ·I`, its restriction to the angular line has derivative `I · deriv (expGrad u)`. -/
@@ -208,7 +208,7 @@ theorem hasDerivAt_expGrad_angular {u : ℂ → ℝ} {ξ θ : ℝ}
     HasDerivAt (fun t : ℝ => expGrad u ((ξ : ℂ) + (t : ℂ) * Complex.I))
       (Complex.I * deriv (expGrad u) ((ξ : ℂ) + (θ : ℂ) * Complex.I)) θ := by
   have h := hd.hasDerivAt.comp θ (hasDerivAt_logPolar_angular ξ θ)
-  simpa [Function.comp, mul_comm] using h
+  simpa [Function.comp, mul_comm] using! h
 
 /-! ### Regularity of the pullback and of the holomorphic gradient on the strip -/
 
@@ -302,7 +302,7 @@ theorem continuous_slice_of_continuousOn_logStrip {F : ℂ → ℝ} {a b : ℝ}
   intro t
   refine ContinuousAt.comp ?_ (by fun_prop)
   refine hF.continuousAt ((isOpen_logStrip a b).mem_nhds ?_)
-  simp only [Set.mem_setOf_eq, re_logPolar]
+  simp only [Set.mem_ofPred_eq, re_logPolar]
   exact ⟨hx1, hx2⟩
 
 /-- A function continuous on the strip is bounded on every compact slab
@@ -319,7 +319,7 @@ theorem exists_bound_on_slab {F : ℂ → ℝ} {a b : ℝ}
   have hKsub : K ⊆ {w : ℂ | a < w.re ∧ w.re < b} := by
     rintro w ⟨p, hp, rfl⟩
     have hmem := hδsub hp.1
-    simp only [Set.mem_setOf_eq, re_logPolar]
+    simp only [Set.mem_ofPred_eq, re_logPolar]
     exact ⟨hmem.1, hmem.2⟩
   obtain ⟨C, hC⟩ := hKcpt.exists_bound_of_continuousOn (hF.mono hKsub)
   exact ⟨C, fun x hx t ht => hC _ ⟨(x, t), ⟨hx, ht⟩, rfl⟩⟩
@@ -390,7 +390,7 @@ theorem continuousOn_integral_logStrip {G : ℂ → ℝ} {a b : ℝ}
   · refine Eventually.of_forall fun θ => ?_
     refine ContinuousAt.comp ?_ (by fun_prop)
     refine hG.continuousAt ((isOpen_logStrip a b).mem_nhds ?_)
-    simp only [Set.mem_setOf_eq, re_logPolar]
+    simp only [Set.mem_ofPred_eq, re_logPolar]
     exact hξ₀
 
 /-! ### The circle mean of a harmonic ring potential is affine in the log-radius -/
@@ -431,7 +431,7 @@ theorem integral_re_deriv_expGrad_eq_zero {u : ℂ → ℝ} {r₀ : ℝ} (h0 : 0
       (expGrad_differentiableAt h0 hu (by rw [re_logPolar]; exact hξ1)
         (by rw [re_logPolar]; exact hξ2))
     have hcomp := Complex.imCLM.hasFDerivAt.comp_hasDerivAt θ hD
-    simpa [Function.comp, Complex.mul_im] using hcomp
+    simpa [Function.comp, Complex.mul_im] using! hcomp
   have hint : IntervalIntegrable
       (fun θ : ℝ => (deriv (expGrad u) ((ξ : ℂ) + (θ : ℂ) * Complex.I)).re) volume (-π) π :=
     (continuous_slice_of_continuousOn_logStrip
@@ -479,7 +479,7 @@ theorem integral_expGrad_re_constant {u : ℂ → ℝ} {r₀ : ℝ} (h0 : 0 < r�
           (expGrad_differentiableAt h0 hu (by rw [re_logPolar]; exact hy1)
             (by rw [re_logPolar]; exact hy2))
         have hcomp := Complex.reCLM.hasFDerivAt.comp_hasDerivAt y hD
-        simpa [Function.comp] using hcomp)
+        simpa [Function.comp] using! hcomp)
       hx.1 hx.2
     rwa [integral_re_deriv_expGrad_eq_zero h0 hu hx.1 hx.2] at hstep
   exact eqOn_Ioo_of_hasDerivAt_zero hd hξ hη
@@ -504,9 +504,9 @@ theorem logCircleMean_affineOn {u : ℂ → ℝ} {r₀ : ℝ} (h0 : 0 < r₀) (h
       integral_expGrad_re_constant h0 hu hx hξcmem
     rw [hx'] at hm
     have hsub := hm.sub ((hasDerivAt_id x).const_mul b)
-    simpa using hsub
+    simpa using! hsub
   have hgeq := eqOn_Ioo_of_hasDerivAt_zero hgderiv hξ hξcmem
-  simp only at hgeq
+  try simp only at hgeq
   linarith [hgeq]
 
 /-! ### Boundary limit of the circle mean at the unit circle -/
@@ -524,7 +524,7 @@ theorem logCircleMean_tendsto_two_pi {u : ℂ → ℝ} {r₀ : ℝ} (h0 : 0 < r�
     have hKeq : {z : ℂ | r₀ ≤ dist z 0 ∧ dist z 0 ≤ 1}
         = Metric.closedBall 0 1 ∩ (Metric.ball 0 r₀)ᶜ := by
       ext z
-      simp only [Set.mem_setOf_eq, Set.mem_inter_iff, Metric.mem_closedBall, Set.mem_compl_iff,
+      simp only [Set.mem_ofPred_eq, Set.mem_inter_iff, Metric.mem_closedBall, Set.mem_compl_iff,
         Metric.mem_ball, not_lt]
       tauto
     rw [hKeq]
@@ -656,7 +656,7 @@ theorem nnnorm_fderiv_sq_eq_ofReal_normSq_gradC (u : ℂ → ℝ) (z : ℂ) :
     simp only [gradC, Complex.normSq_apply, Complex.sub_re, Complex.sub_im, Complex.ofReal_re,
       Complex.ofReal_im, Complex.mul_re, Complex.mul_im, Complex.I_re, Complex.I_im]
     ring
-  rw [← hnorm, ENNReal.ofReal_pow (norm_nonneg _), ofReal_norm_eq_enorm]
+  rw [← hnorm, ENNReal.ofReal_pow (norm_nonneg _), ofReal_norm]
   rfl
 
 /-- The Wirtinger gradient of any `u : ℂ → ℝ` is a measurable function. -/
@@ -740,13 +740,13 @@ theorem dirichletEnergy_roundAnnulus_eq_lintegral (u : ℂ → ℝ) (ξ₁ ξ₂
         rw [dist_zero_right, Complex.norm_polarCoord_symm, abs_of_pos hp.1]
       by_cases hmem : p.1 ∈ Ioo (Real.exp ξ₁) (Real.exp ξ₂)
       · have hin : Complex.polarCoord.symm p ∈ RoundAnnulus 0 (Real.exp ξ₁) (Real.exp ξ₂) := by
-          simp only [RoundAnnulus, Set.mem_setOf_eq, hnorm]
+          simp only [RoundAnnulus, Set.mem_ofPred_eq, hnorm]
           exact ⟨hmem.1, hmem.2⟩
         rw [Set.indicator_of_mem hin, Set.indicator_of_mem (Set.mem_prod.mpr ⟨hmem, hp.2⟩),
           smul_eq_mul]
       · have hnotin : Complex.polarCoord.symm p
             ∉ RoundAnnulus 0 (Real.exp ξ₁) (Real.exp ξ₂) := by
-          simp only [RoundAnnulus, Set.mem_setOf_eq, hnorm]
+          simp only [RoundAnnulus, Set.mem_ofPred_eq, hnorm]
           intro hc
           exact hmem ⟨hc.1, hc.2⟩
         have hnotin' : p ∉ R := fun hc => hmem hc.1
@@ -871,7 +871,7 @@ theorem integral_uexp_re_deriv_expGrad {u : ℂ → ℝ} {r₀ : ℝ} (h0 : 0 < 
       (expGrad_differentiableAt h0 hu (by rw [re_logPolar]; exact hξ1)
         (by rw [re_logPolar]; exact hξ2))
     have hcomp := Complex.imCLM.hasFDerivAt.comp_hasDerivAt θ hD
-    simpa [Function.comp, Complex.mul_im] using hcomp
+    simpa [Function.comp, Complex.mul_im] using! hcomp
   have hIBP := intervalIntegral.integral_mul_deriv_eq_deriv_mul_of_hasDerivAt
     hcont_f.continuousOn hcont_g.continuousOn hf' hg'
     (hcont_g.neg.intervalIntegrable _ _) (hcont_g'.intervalIntegrable _ _)
@@ -938,7 +938,7 @@ theorem hasDerivAt_ringFlux {u : ℂ → ℝ} {r₀ : ℝ} (h0 : 0 < r₀)
     have hDre : HasDerivAt (fun y : ℝ => (expGrad u ((y : ℂ) + (θ : ℂ) * Complex.I)).re)
         ((deriv (expGrad u) ((x : ℂ) + (θ : ℂ) * Complex.I)).re) x := by
       have hcomp := Complex.reCLM.hasFDerivAt.comp_hasDerivAt x hD
-      simpa [Function.comp] using hcomp
+      simpa [Function.comp] using! hcomp
     have hmul := hu'.mul hDre
     refine hmul.congr_deriv ?_
     ring
@@ -1079,12 +1079,12 @@ theorem lintegral_iUnion_of_monotone {α : Type*} [MeasurableSpace α] {μ : Mea
       by_cases hm : x ∈ S m
       · rw [Set.indicator_of_mem hm]
       · rw [Set.indicator_of_notMem hm]
-        exact zero_le _
+        exact zero_le
     · rw [Set.indicator_of_notMem hx]
       refine (ENNReal.iSup_eq_zero.mpr fun n => ?_).symm
       exact Set.indicator_of_notMem (fun hc => hx (Set.mem_iUnion.mpr ⟨n, hc⟩)) g
   rw [hpt, lintegral_iSup (fun n => hg.indicator (hmeas n))
-    (fun n m hnm x => Set.indicator_le_indicator_of_subset (hmono hnm) (fun _ => zero_le _) x)]
+    (fun n m hnm x => Set.indicator_le_indicator_of_subset (hmono hnm) (fun _ => zero_le) x)]
   exact iSup_congr fun n => lintegral_indicator (hmeas n) g
 
 /-- The outer collar `{e^{ξ₁} < |z| < 1}` is the monotone union of the sub-annuli with outer
@@ -1093,7 +1093,7 @@ theorem roundAnnulus_outer_eq_iUnion {ξ₁ : ℝ} (hξ₁0 : ξ₁ < 0) :
     RoundAnnulus 0 (Real.exp ξ₁) 1
       = ⋃ n : ℕ, RoundAnnulus 0 (Real.exp ξ₁) (Real.exp (ξ₁ / (n + 1))) := by
   ext z
-  simp only [RoundAnnulus, Set.mem_setOf_eq, Set.mem_iUnion]
+  simp only [RoundAnnulus, Set.mem_ofPred_eq, Set.mem_iUnion]
   constructor
   · rintro ⟨h1, h2⟩
     have hzpos : 0 < dist z 0 := lt_trans (Real.exp_pos ξ₁) h1

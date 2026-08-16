@@ -554,8 +554,8 @@ theorem edgeChart_injOn (g : ℕ) [NeZero g] (k : ℤ)
       exact hnormE ρ θ' hρ0.le
     by_cases hA : ‖u‖ ≤ 1
     · refine ⟨ρ, θ', hρ1, by rw [← hun]; exact hA, ?_, Or.inl ⟨hθ1, hθ2, hue⟩⟩
-      unfold edgeChartFun
-      rw [if_pos hA, hue]
+      have hval : edgeChartFun g k u = Quotient.mk (genusSetoid g) (projDisc u) := if_pos hA
+      exact hval.trans (by rw [hue])
     · have hρgt : 1 < ρ := by
         rw [← hun]
         exact not_le.mp hA
@@ -565,8 +565,9 @@ theorem edgeChart_injOn (g : ℕ) [NeZero g] (k : ℤ)
       have hinvhalf : 1 / 2 < ρ⁻¹ := by nlinarith
       refine ⟨ρ⁻¹, 2 * (k : ℝ) + 3 - θ', hinvhalf, hinv1.le, ?_,
         Or.inr ⟨by linarith, by linarith, hinv1, ?_⟩⟩
-      · unfold edgeChartFun
-        rw [if_neg hA, hue, hσE ρ θ' hρ0.ne']
+      · have hval : edgeChartFun g k u
+            = Quotient.mk (genusSetoid g) (projDisc (sidePairing g k u)) := if_neg hA
+        exact hval.trans (by rw [hue, hσE ρ θ' hρ0.ne'])
       · have e1 : (ρ⁻¹)⁻¹ = ρ := inv_inv ρ
         have e2 : 2 * (k : ℝ) + 3 - (2 * (k : ℝ) + 3 - θ') = θ' := by ring
         rw [e1, e2]
@@ -942,13 +943,11 @@ theorem edgeChart_isOpen_image (g : ℕ) [NeZero g] (k : ℤ)
   have hvalA : ∀ u : ℂ, ‖u‖ ≤ 1 →
       edgeChartFun g k u = Quotient.mk (genusSetoid g) (projDisc u) := by
     intro u h
-    unfold edgeChartFun
-    rw [if_pos h]
+    exact if_pos h
   have hvalB : ∀ u : ℂ, ¬ ‖u‖ ≤ 1 →
       edgeChartFun g k u = Quotient.mk (genusSetoid g) (projDisc (sidePairing g k u)) := by
     intro u h
-    unfold edgeChartFun
-    rw [if_neg h]
+    exact if_neg h
   have hσimg : ∀ V : Set ℂ, V ⊆ edgeSector g k →
       sidePairing g k '' V = {z : ℂ | z ≠ 0} ∩ sidePairing g k ⁻¹' V := by
     intro V hVsec

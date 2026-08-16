@@ -47,7 +47,7 @@ theorem volume_smul_gl (g : GL (Fin 2) ℝ) (S : Set ℍ) : volume (g • S) = v
 /-- The hyperbolic area is invariant under `SL(2, ℝ)`: the `GL(2, ℝ)` invariance transported
 through `Matrix.SpecialLinearGroup.mapGL`. -/
 theorem volume_smul_sl2 (γ : SL(2, ℝ)) (S : Set ℍ) : volume (γ • S) = volume S := by
-  haveI : SMulInvariantMeasure SL(2, ℝ) ℍ (volume : Measure ℍ) :=
+  have : SMulInvariantMeasure SL(2, ℝ) ℍ (volume : Measure ℍ) :=
     ⟨fun c s hs => SMulInvariantMeasure.measure_preimage_smul
       (μ := (volume : Measure ℍ)) (Matrix.SpecialLinearGroup.mapGL ℝ c) hs⟩
   exact measure_smul volume γ S
@@ -144,7 +144,7 @@ theorem lintegral_inv_sq_above {t : ℝ} (ht : 0 < t) :
     ∫⁻ y in {y : ℝ | 0 < y ∧ t ≤ y}, ENNReal.ofReal (1 / y ^ 2) = ENNReal.ofReal (1 / t) := by
   have hset : {y : ℝ | 0 < y ∧ t ≤ y} = Ici t := by
     ext y
-    simp only [Set.mem_setOf_eq, Set.mem_Ici, and_iff_right_iff_imp]
+    simp only [Set.mem_ofPred_eq, Set.mem_Ici, and_iff_right_iff_imp]
     exact fun h => ht.trans_le h
   have hEq : EqOn (fun y : ℝ => y ^ (-2 : ℝ)) (fun y : ℝ => 1 / y ^ 2) (Ioi t) := by
     intro y hy
@@ -255,7 +255,7 @@ theorem idealTriangle_eq_norm_form :
     {z : ℍ | z.re ∈ Icc (-1 : ℝ) 1 ∧ √(1 - z.re ^ 2) ≤ z.im}
       = {z : ℍ | z.re ∈ Icc (-1 : ℝ) 1 ∧ 1 ≤ ‖(z : ℂ)‖} := by
   ext z
-  simp only [Set.mem_setOf_eq, and_congr_right_iff]
+  simp only [Set.mem_ofPred_eq, and_congr_right_iff]
   intro hre
   have him : 0 < z.im := z.im_pos
   have hnorm : ‖(z : ℂ)‖ ^ 2 = z.re ^ 2 + z.im ^ 2 := by
@@ -379,7 +379,7 @@ theorem volume_wedge {x₀ r x₁ x₂ : ℝ} (hr : 0 < r) (h₁ : x₀ - r ≤ 
       g • z ∈ {z : ℍ | z.re ∈ Icc ((x₁ - x₀) / r) ((x₂ - x₀) / r) ∧
         √(1 - z.re ^ 2) ≤ z.im} := by
     intro z
-    simp only [Set.mem_setOf_eq, Set.mem_Icc, hres z, hims z]
+    simp only [Set.mem_ofPred_eq, Set.mem_Icc, hres z, hims z]
     constructor
     · rintro ⟨⟨hz1, hz2⟩, hz3⟩
       have hnn : 0 ≤ r ^ 2 - (z.re - x₀) ^ 2 := by
@@ -745,7 +745,6 @@ theorem axis_apex_rel {A P : UpperHalfPlane} (hA : A.re = 0) (hne : A.re ≠ P.r
   have h2 : (P.re - geodCenter A P) ^ 2 + P.im ^ 2 = geodRadius A P ^ 2 := by
     have hn := norm_sub_geodCenter hne
     have hsq := congrArg (· ^ 2) hn
-    simp only at hsq
     rw [Complex.sq_norm, Complex.normSq_apply, Complex.sub_re, Complex.sub_im] at hsq
     simp only [UpperHalfPlane.coe_re, UpperHalfPlane.coe_im, Complex.ofReal_re,
       Complex.ofReal_im, sub_zero] at hsq
@@ -758,7 +757,6 @@ theorem axis_apex_rel {A P : UpperHalfPlane} (hA : A.re = 0) (hne : A.re ≠ P.r
 theorem geodCenter_unique {a b : UpperHalfPlane} (hre : a.re ≠ b.re) {x : ℝ}
     (hx : ‖(a : ℂ) - (x : ℂ)‖ = ‖(b : ℂ) - (x : ℂ)‖) : x = geodCenter a b := by
   have hsq := congrArg (· ^ 2) hx
-  simp only at hsq
   rw [Complex.sq_norm, Complex.sq_norm, Complex.normSq_apply, Complex.normSq_apply] at hsq
   simp only [Complex.sub_re, Complex.sub_im, UpperHalfPlane.coe_re, UpperHalfPlane.coe_im,
     Complex.ofReal_re, Complex.ofReal_im, sub_zero] at hsq
@@ -910,7 +908,7 @@ theorem strip_le_iff (m : ℝ) (τ : UpperHalfPlane) :
   have h := setOf_dist_le_eq_of_im_eq (a := ptAt (m - 1)) (b := ptAt (m + 1))
     rfl (by rw [ptAt_re, ptAt_re]; linarith)
   have h2 := Set.ext_iff.mp h τ
-  simp only [Set.mem_setOf_eq, ptAt_re] at h2
+  simp only [Set.mem_ofPred_eq, ptAt_re] at h2
   rw [h2, show (m - 1 + (m + 1)) / 2 = m by ring]
 
 /-- The right half-plane `m ≤ re` as a distance comparison. -/
@@ -919,7 +917,7 @@ theorem strip_ge_iff (m : ℝ) (τ : UpperHalfPlane) :
   have h := setOf_dist_le_eq_of_im_eq' (a := ptAt (m + 1)) (b := ptAt (m - 1))
     rfl (by rw [ptAt_re, ptAt_re]; linarith)
   have h2 := Set.ext_iff.mp h τ
-  simp only [Set.mem_setOf_eq, ptAt_re] at h2
+  simp only [Set.mem_ofPred_eq, ptAt_re] at h2
   rw [h2, show (m + 1 + (m - 1)) / 2 = m by ring]
 
 /-- A geodesic cone lies in every distance-comparison half-space containing its apex and
@@ -1252,7 +1250,6 @@ theorem region_subset_cone {U L P : UpperHalfPlane} (hU : U.re = 0) (hL : L.re =
           exact hrePz (by linarith [sub_eq_zero.mp (by linarith : P.re - z.re = 0)])
       have hr2 : r ^ 2 = (z.re - c) ^ 2 + z.im ^ 2 := by
         have hsq := congrArg (· ^ 2) hzc
-        simp only at hsq
         rw [Complex.sq_norm, Complex.normSq_apply, Complex.sub_re, Complex.sub_im] at hsq
         simp only [UpperHalfPlane.coe_re, UpperHalfPlane.coe_im, Complex.ofReal_re,
           Complex.ofReal_im, sub_zero] at hsq
@@ -1501,7 +1498,7 @@ theorem wedge_diff_vol {U L P : UpperHalfPlane} (hU : U.re = 0) (hL : L.re = 0)
       (y := (P.re - geodCenter U P) / geodRadius U P)
       (by rw [div_le_div_iff_of_pos_right hru]; linarith)
     linarith
-  rw [measure_diff hsub hWuClosed.measurableSet.nullMeasurableSet hWu_fin, hvl, hvu,
+  rw [measure_sdiff hsub hWuClosed.measurableSet.nullMeasurableSet hWu_fin, hvl, hvu,
     ← ENNReal.ofReal_sub _ hwu_nonneg,
     show (0 - geodCenter L P) / geodRadius L P = -(geodCenter L P / geodRadius L P) by ring,
     show (0 - geodCenter U P) / geodRadius U P = -(geodCenter U P / geodRadius U P) by ring,

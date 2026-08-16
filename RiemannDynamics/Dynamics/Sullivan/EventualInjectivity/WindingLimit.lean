@@ -98,7 +98,7 @@ theorem windingNumber_eq_zero_of_fill_avoids_julia {f : ℂ̂ → ℂ̂}
         (fun p : ℝ × ℝ => ((p.1 : ℂ)) * Complex.exp ((p.2 : ℂ) * Complex.I)) ''
           (Set.Ioi (max R₀ 1) ×ˢ Set.univ) := by
       ext w
-      simp only [Set.mem_setOf_eq, Set.mem_image, Set.mem_prod, Set.mem_Ioi,
+      simp only [Set.mem_ofPred_eq, Set.mem_image, Set.mem_prod, Set.mem_Ioi,
         Set.mem_univ, and_true, Prod.exists]
       constructor
       · intro hw
@@ -144,7 +144,7 @@ theorem windingNumber_eq_zero_of_fill_avoids_julia {f : ℂ̂ → ℂ̂}
         have := hR₀ (Set.mem_range_self t)
         rwa [Metric.mem_closedBall, dist_zero_right] at this
       rw [hwt] at h1
-      simp only [Set.mem_setOf_eq] at hw
+      simp only [Set.mem_ofPred_eq] at hw
       have h2 : R₀ ≤ max R₀ 1 := le_max_left _ _
       linarith
     · rw [Set.mem_singleton_iff] at hx
@@ -409,7 +409,7 @@ theorem windingNumber_eq_zero_of_fill_avoids_julia {f : ℂ̂ → ℂ̂}
   have hnullm : IsChartNullHomotopyIn Γ
       {w : ℂ | ((w : ℂ̂)) ∈ fcOrbit f U (N₀ + m)} := by
     have hΓW : ∀ t : unitInterval, Γ t ∈ W := fun t => hKW (htrK t)
-    haveI : SimplyConnectedSpace ↥W := hWsc
+    have : SimplyConnectedSpace ↥W := hWsc
     let x₀ : ↥W := ⟨Γ 0, hΓW 0⟩
     let pΓ : Path x₀ x₀ :=
       { toFun := fun s => ⟨Γ s, hΓW s⟩
@@ -930,7 +930,7 @@ theorem eventually_constant_limit_of_wandering {f : ℂ̂ → ℂ̂}
           rw [← hθdef, hwn] at h1
           exact h1
         by_cases hθ0 : 0 ≤ θ
-        · refine ⟨⟨θ / (2 * Real.pi), ⟨by positivity, ?_⟩⟩, ?_⟩
+        · refine ⟨⟨θ / (2 * Real.pi), Set.mem_Icc.mpr ⟨by positivity, ?_⟩⟩, ?_⟩
           · rw [div_le_one (by positivity)]
             linarith
           · rw [hcir_apply]
@@ -939,7 +939,7 @@ theorem eventually_constant_limit_of_wandering {f : ℂ̂ → ℂ̂}
             rw [show ((⟨θ / (2 * Real.pi), _⟩ : I) : ℝ) = θ / (2 * Real.pi) from rfl,
               harg]
             linear_combination hval
-        · refine ⟨⟨θ / (2 * Real.pi) + 1, ⟨?_, ?_⟩⟩, ?_⟩
+        · refine ⟨⟨θ / (2 * Real.pi) + 1, Set.mem_Icc.mpr ⟨?_, ?_⟩⟩, ?_⟩
           · have h1 : (-1 : ℝ) ≤ θ / (2 * Real.pi) :=
               (le_div_iff₀ (by positivity)).mpr (by linarith)
             linarith
@@ -1337,7 +1337,7 @@ theorem eventually_constant_limit_of_wandering {f : ℂ̂ → ℂ̂}
             (fun p : ℝ × ℝ => ((p.1 : ℂ)) * Complex.exp ((p.2 : ℂ) * Complex.I)) ''
               (Set.Ioi R ×ˢ Set.univ) := by
           ext z
-          simp only [Set.mem_setOf_eq, Set.mem_image, Set.mem_prod, Set.mem_Ioi,
+          simp only [Set.mem_ofPred_eq, Set.mem_image, Set.mem_prod, Set.mem_Ioi,
             Set.mem_univ, and_true, Prod.exists]
           constructor
           · intro hz

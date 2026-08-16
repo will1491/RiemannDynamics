@@ -227,7 +227,7 @@ theorem reich_strebel_of_principles {Γ : Subgroup (Matrix.SpecialLinearGroup (F
         (UpperHalfPlane.coe '' dirichletDomain Γ UpperHalfPlane.I) :=
       (isCompact_domain hΓ hfree hcc).measurableSet
     rw [l1Norm_eq_zero q hmeas hq0]
-    exact zero_le _
+    exact zero_le
 
 /-- **The Reich–Strebel main inequality from the nonnegative-winding principle.** Let
 `Γ` be a cocompact free Fuchsian group, `q` an automorphic quadratic differential, and
@@ -301,10 +301,10 @@ theorem loop_min_deriv_zero {φ ψ : ℝ → ℝ}
         rw [hasDerivWithinAt_iff_tendsto_slope] at h1'
         have h2 : Set.Ioc (0 : ℝ) 1 \ {0} = Set.Ioc 0 1 := by
           ext x
-          simp only [Set.mem_diff, Set.mem_Ioc, Set.mem_singleton_iff]
+          simp only [Set.mem_sdiff, Set.mem_Ioc, Set.mem_singleton_iff]
           exact ⟨fun h => h.1, fun h => ⟨h, by linarith [h.1]⟩⟩
         rw [h2] at h1'
-        haveI := left_nhdsWithin_Ioc_neBot (by norm_num : (0 : ℝ) < 1)
+        have := left_nhdsWithin_Ioc_neBot (by norm_num : (0 : ℝ) < 1)
         refine ge_of_tendsto h1' ?_
         filter_upwards [self_mem_nhdsWithin] with t ht
         rw [slope_def_field]
@@ -317,10 +317,10 @@ theorem loop_min_deriv_zero {φ ψ : ℝ → ℝ}
         rw [hasDerivWithinAt_iff_tendsto_slope] at h1'
         have h2 : Set.Ico (0 : ℝ) 1 \ {1} = Set.Ico 0 1 := by
           ext x
-          simp only [Set.mem_diff, Set.mem_Ico, Set.mem_singleton_iff]
+          simp only [Set.mem_sdiff, Set.mem_Ico, Set.mem_singleton_iff]
           exact ⟨fun h => h.1, fun h => ⟨h, by linarith [h.2]⟩⟩
         rw [h2] at h1'
-        haveI := right_nhdsWithin_Ico_neBot (by norm_num : (0 : ℝ) < 1)
+        have := right_nhdsWithin_Ico_neBot (by norm_num : (0 : ℝ) < 1)
         refine le_of_tendsto h1' ?_
         filter_upwards [self_mem_nhdsWithin] with t ht
         rw [slope_def_field]
@@ -339,10 +339,10 @@ theorem loop_min_deriv_zero {φ ψ : ℝ → ℝ}
       rw [hasDerivWithinAt_iff_tendsto_slope] at h1'
       have h2 : Set.Ioc (0 : ℝ) 1 \ {0} = Set.Ioc 0 1 := by
         ext x
-        simp only [Set.mem_diff, Set.mem_Ioc, Set.mem_singleton_iff]
+        simp only [Set.mem_sdiff, Set.mem_Ioc, Set.mem_singleton_iff]
         exact ⟨fun h => h.1, fun h => ⟨h, by linarith [h.1]⟩⟩
       rw [h2] at h1'
-      haveI := left_nhdsWithin_Ioc_neBot (by norm_num : (0 : ℝ) < 1)
+      have := left_nhdsWithin_Ioc_neBot (by norm_num : (0 : ℝ) < 1)
       refine ge_of_tendsto h1' ?_
       filter_upwards [self_mem_nhdsWithin] with t ht
       rw [slope_def_field]
@@ -355,10 +355,10 @@ theorem loop_min_deriv_zero {φ ψ : ℝ → ℝ}
       rw [hasDerivWithinAt_iff_tendsto_slope] at h1'
       have h2 : Set.Ico (0 : ℝ) 1 \ {1} = Set.Ico 0 1 := by
         ext x
-        simp only [Set.mem_diff, Set.mem_Ico, Set.mem_singleton_iff]
+        simp only [Set.mem_sdiff, Set.mem_Ico, Set.mem_singleton_iff]
         exact ⟨fun h => h.1, fun h => ⟨h, by linarith [h.2]⟩⟩
       rw [h2] at h1'
-      haveI := right_nhdsWithin_Ico_neBot (by norm_num : (0 : ℝ) < 1)
+      have := right_nhdsWithin_Ico_neBot (by norm_num : (0 : ℝ) < 1)
       refine le_of_tendsto h1' ?_
       filter_upwards [self_mem_nhdsWithin] with t ht
       rw [slope_def_field]
@@ -573,8 +573,9 @@ theorem rebase_gcont {g : ℝ → ℂ} {c : ℝ} (hgc : ContinuousOn g (Set.Icc 
     rw [h1, h0, hgcl]
   refine hcont.continuousOn.congr fun u hu => ?_
   by_cases h : u + c ≤ 1
-  · rw [if_pos h, if_pos h, hGid (u + c) ⟨by linarith [hu.1, hc.1], h⟩]
-  · rw [if_neg h, if_neg h]
+  · simp only [if_pos h]
+    rw [hGid (u + c) ⟨by linarith [hu.1, hc.1], h⟩]
+  · simp only [if_neg h]
     rw [not_le] at h
     rw [hGid (u + c - 1) ⟨by linarith, by linarith [hu.2, hc.2]⟩]
 
@@ -989,7 +990,7 @@ theorem nonnegWindingPrinciple₂_holds : NonnegWindingPrinciple₂ := by
       nlinarith only [lt_of_le_of_ne h hGre]
   obtain ⟨εA, hεA0, hwin⟩ := assertion_ii (g := fun t => ((ς : ℝ) : ℂ) * G t) hPc
     (continuousOn_const.mul hGc)
-    (by change ((ς:ℝ):ℂ) * G 1 = ((ς:ℝ):ℂ) * G 0; rw [hGcl]) hinjP hneg
+    (by rw [hGcl]) hinjP hneg
   obtain ⟨u₁, hu₁, hmaxOn⟩ := isCompact_Icc.exists_isMaxOn
     (Set.nonempty_Icc.mpr zero_le_one) hGc.norm
   set M : ℝ := ‖G u₁‖ with hMdef
@@ -1068,7 +1069,7 @@ theorem preimage_conull {H : ℂ → ℂ} {K : ℝ} (hH : IsQCGeometric H K)
   have hset : {z : ℂ | ¬ H z ∉ N}
       = ⇑(hH.2.1.isHomeomorph.homeomorph H).symm '' N := by
     ext z
-    simp only [Set.mem_setOf_eq, not_not]
+    simp only [Set.mem_ofPred_eq, not_not]
     constructor
     · intro hz
       exact ⟨H z, hz, by rw [← happ z, Homeomorph.symm_apply_apply]⟩
@@ -1429,7 +1430,7 @@ theorem dzbar_zero_unfold {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)
     (hD0 : ∀ᵐ z ∂(volume.restrict
       (UpperHalfPlane.coe '' dirichletDomain Γ UpperHalfPlane.I)), dzbar H z = 0) :
     ∀ᵐ z ∂(volume.restrict {z : ℂ | 0 < z.im}), dzbar H z = 0 := by
-  haveI hcnt : Countable ↥Γ := IsFuchsianGroup.countable hΓ
+  have hcnt : Countable ↥Γ := IsFuchsianGroup.countable hΓ
   set D : Set ℂ := UpperHalfPlane.coe '' dirichletDomain Γ UpperHalfPlane.I with hDdef
   have hDsub : D ⊆ {z : ℂ | 0 < z.im} := by
     rintro w ⟨τ, -, rfl⟩
@@ -1474,7 +1475,7 @@ theorem dzbar_zero_unfold {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)
         simp
       rw [h3]
     refine Set.mem_iUnion.mpr ⟨γ, ⟨UpperHalfPlane.coe (γ • τ), ⟨?_, ⟨γ • τ, hγD, rfl⟩⟩, hback⟩⟩
-    simp only [Set.mem_setOf_eq]
+    simp only [Set.mem_ofPred_eq]
     rw [hback]
     exact hzne
   -- countable union of null translated images

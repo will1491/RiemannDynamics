@@ -278,7 +278,7 @@ theorem isPreconnected_punctured_ball (z : UpperHalfPlane) (r : ℝ) :
   have himg : ((↑) : UpperHalfPlane → ℂ) '' (Metric.ball z r \ {z})
       = Metric.ball ((z.center r : UpperHalfPlane) : ℂ) (z.im * Real.sinh r)
         \ {(z : ℂ)} := by
-    rw [Set.image_diff UpperHalfPlane.coe_injective, Set.image_singleton,
+    rw [Set.image_sdiff UpperHalfPlane.coe_injective, Set.image_singleton,
       UpperHalfPlane.image_coe_ball]
   rw [himg]
   exact isPreconnected_ball_diff_singleton _ _ _
@@ -435,14 +435,14 @@ theorem bisector_normalizer {p q : UpperHalfPlane} (hpq : p ≠ q) :
       have hset := setOf_dist_le_eq_of_im_eq (a := g • p) (b := g • q) him.symm
         (by rw [hre]; linarith)
       have h := Set.ext_iff.mp hset (g • z)
-      simp only [Set.mem_setOf_eq] at h
+      simp only [Set.mem_ofPred_eq] at h
       rw [hkey z, hkey' z, h, hre, one_mul]
       constructor <;> intro <;> linarith
     · intro z
       have hset := setOf_dist_le_eq_of_im_eq' (a := g • q) (b := g • p) him
         (by rw [hre]; linarith)
       have h := Set.ext_iff.mp hset (g • z)
-      simp only [Set.mem_setOf_eq] at h
+      simp only [Set.mem_ofPred_eq] at h
       rw [hkey z, hkey' z, h, hre, one_mul]
       constructor <;> intro <;> linarith
   · refine ⟨g, -1, Or.inr rfl, ?_, ?_⟩
@@ -450,14 +450,14 @@ theorem bisector_normalizer {p q : UpperHalfPlane} (hpq : p ≠ q) :
       have hset := setOf_dist_le_eq_of_im_eq' (a := g • p) (b := g • q) him.symm
         (by rw [hre]; linarith)
       have h := Set.ext_iff.mp hset (g • z)
-      simp only [Set.mem_setOf_eq] at h
+      simp only [Set.mem_ofPred_eq] at h
       rw [hkey z, hkey' z, h, hre]
       constructor <;> intro <;> linarith
     · intro z
       have hset := setOf_dist_le_eq_of_im_eq (a := g • q) (b := g • p) him
         (by rw [hre]; linarith)
       have h := Set.ext_iff.mp hset (g • z)
-      simp only [Set.mem_setOf_eq] at h
+      simp only [Set.mem_ofPred_eq] at h
       rw [hkey z, hkey' z, h, hre]
       constructor <;> intro <;> linarith
 
@@ -495,7 +495,7 @@ orbit point. -/
 theorem smul_dirichletDomain_subset (γ η : ↥Γ) :
     (γ • ·) '' dirichletDomain Γ τ₀ ⊆
       {w : UpperHalfPlane | dist w (γ • τ₀) ≤ dist w (η • τ₀)} := by
-  haveI : IsIsometricSMul (↥Γ) UpperHalfPlane :=
+  have : IsIsometricSMul (↥Γ) UpperHalfPlane :=
     ⟨fun c => isometry_smul UpperHalfPlane (c : Matrix.SpecialLinearGroup (Fin 2) ℝ)⟩
   rintro w ⟨u, hu, rfl⟩
   have e1 : dist (γ • u) (γ • τ₀) = dist u τ₀ := dist_smul γ u τ₀
@@ -503,7 +503,7 @@ theorem smul_dirichletDomain_subset (γ η : ↥Γ) :
     calc dist (γ • u) (η • τ₀) = dist (γ⁻¹ • γ • u) (γ⁻¹ • η • τ₀) :=
         (dist_smul γ⁻¹ _ _).symm
       _ = dist u ((γ⁻¹ * η) • τ₀) := by rw [inv_smul_smul, mul_smul]
-  rw [Set.mem_setOf_eq, e1, e2]
+  rw [Set.mem_ofPred_eq, e1, e2]
   exact hu (γ⁻¹ * η)
 
 /-- A point common to the domain and to the `γ`-tile lies on the side of `γ`. -/
@@ -558,7 +558,7 @@ theorem dist_basepoint_eq_infDist {z : UpperHalfPlane}
 of the domain, `τ₀` itself already realizes the distance to its own orbit. -/
 theorem one_mem_contactSet {z : UpperHalfPlane} (hz : z ∈ dirichletDomain Γ τ₀) :
     (1 : ↥Γ) ∈ contactSet Γ τ₀ z := by
-  simp only [contactSet, Set.mem_setOf_eq, one_smul]
+  simp only [contactSet, Set.mem_ofPred_eq, one_smul]
   exact dist_basepoint_eq_infDist hz
 
 /-- A point on the side of `γ` has `γ` as a contact element: on that side the distances to
@@ -566,7 +566,7 @@ theorem one_mem_contactSet {z : UpperHalfPlane} (hz : z ∈ dirichletDomain Γ �
 theorem mem_contactSet_of_mem_sideSet {γ : ↥Γ} {z : UpperHalfPlane}
     (hz : z ∈ dirichletSideSet Γ τ₀ γ) : γ ∈ contactSet Γ τ₀ z := by
   obtain ⟨hzD, hzeq⟩ := hz
-  simp only [contactSet, Set.mem_setOf_eq]
+  simp only [contactSet, Set.mem_ofPred_eq]
   rw [← hzeq]
   exact dist_basepoint_eq_infDist hzD
 
@@ -607,13 +607,13 @@ theorem exists_frontier_mem_geodSeg {S : Set UpperHalfPlane} {x y : UpperHalfPla
   have hxint : x ∈ interior S := by
     have h1 : x ∈ closure S := subset_closure hx
     have h2 := hcon x (left_mem_geodSeg x y)
-    rw [frontier, Set.mem_diff] at h2
+    rw [frontier, Set.mem_sdiff] at h2
     push Not at h2
     exact h2 h1
   have hyext : y ∈ (closure S)ᶜ := by
     intro h1
     have h2 := hcon y (right_mem_geodSeg x y)
-    rw [frontier, Set.mem_diff] at h2
+    rw [frontier, Set.mem_sdiff] at h2
     push Not at h2
     exact hy (interior_subset (h2 h1))
   have hcover : geodSeg x y ⊆ interior S ∪ (closure S)ᶜ := by
@@ -621,7 +621,7 @@ theorem exists_frontier_mem_geodSeg {S : Set UpperHalfPlane} {x y : UpperHalfPla
     by_cases h1 : w ∈ closure S
     · left
       have h2 := hcon w hw
-      rw [frontier, Set.mem_diff] at h2
+      rw [frontier, Set.mem_sdiff] at h2
       push Not at h2
       exact h2 h1
     · right
@@ -930,7 +930,7 @@ theorem finite_polygonVertices (hΓ : IsFuchsianGroup Γ)
     obtain ⟨c₁, hc₁, c₂, hc₂, c₃, hc₃, h12, h13, h23⟩ := h3
     have hdist : ∀ c ∈ tileCenters Γ τ₀ z, dist z τ₀ = dist z c := by
       rintro c ⟨δ, hδ, rfl⟩
-      simp only [contactSet, Set.mem_setOf_eq] at hδ
+      simp only [contactSet, Set.mem_ofPred_eq] at hδ
       rw [dist_basepoint_eq_infDist hzD]
       exact hδ.symm
     have hCBmem : ∀ c ∈ tileCenters Γ τ₀ z, c ∈ CB := by
@@ -1359,7 +1359,7 @@ theorem isSegEndpoint_of_vertex (hΓ : IsFuchsianGroup Γ)
   obtain ⟨δ, hδcon, rfl⟩ := hqmem
   have hδmove : δ • τ₀ ≠ τ₀ := hqτ
   have hvδ : dist v τ₀ = dist v (δ • τ₀) := by
-    simp only [contactSet, Set.mem_setOf_eq] at hδcon
+    simp only [contactSet, Set.mem_ofPred_eq] at hδcon
     rw [dist_basepoint_eq_infDist hvD]
     exact hδcon.symm
   obtain ⟨g, ε', hε', hle, hge⟩ := bisector_normalizer (Ne.symm hδmove)

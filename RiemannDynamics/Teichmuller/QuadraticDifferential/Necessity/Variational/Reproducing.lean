@@ -61,13 +61,13 @@ theorem exists_reproducing_constant :
       intro k hk ζ hnz
       have hpow : HasDerivAt (fun x : ℂ => (x - w) ^ k) ((k : ℂ) * (ζ - w) ^ (k - 1)) ζ := by
         have h := (hasDerivAt_pow k (ζ - w)).comp ζ ((hasDerivAt_id ζ).sub_const w)
-        simpa using h
+        simpa using! h
       have hbase : (ζ - w) ^ (k + 1) * (ζ - w) ^ (k - 1) = ((ζ - w) ^ k) ^ 2 := by
         rw [← pow_add, ← pow_mul]
         congr 1
         omega
       have h := hpow.fun_inv (pow_ne_zero _ hnz)
-      convert h using 1
+      convert! h using 1
       rw [← div_eq_mul_inv,
         div_eq_div_iff (pow_ne_zero _ hnz) (pow_ne_zero 2 (pow_ne_zero k hnz)), ← hbase]
       ring
@@ -306,7 +306,7 @@ theorem exists_reproducing_constant :
         (hWc.comp hsymm_cont.continuousOn hmapsTo)
     have hIble : Integrable (fun q : ℝ × ℝ => ((q.1 : ℝ) : ℂ) * W (Complex.polarCoord.symm q))
         (volume.restrict T) := by
-      haveI hfinm : IsFiniteMeasure (volume.restrict T) := by
+      have hfinm : IsFiniteMeasure (volume.restrict T) := by
         constructor
         rw [Measure.restrict_apply_univ, hT, Measure.volume_eq_prod, Measure.prod_prod,
           Real.volume_Ioo, Real.volume_Ioo]
@@ -451,7 +451,7 @@ theorem exists_reproducing_constant :
       intro F F' hF σ hσ
       have hi : HasDerivAt (fun w : ℂ => F (w * t)) (F' ((σ : ℂ) * t) * t) (σ : ℂ) := by
         have h := (hF _ (hmemσ σ hσ)).comp (σ : ℂ) ((hasDerivAt_id ((σ : ℂ))).mul_const t)
-        simpa [Function.comp] using h
+        simpa [Function.comp] using! h
       exact hi.comp_ofReal
     have hpowR : ∀ (n : ℕ) (σ : ℝ), HasDerivAt (fun x : ℝ => ((x : ℂ)) ^ n)
         ((n : ℂ) * (σ : ℂ) ^ (n - 1)) σ := fun n σ => (hasDerivAt_pow n ((σ : ℂ))).comp_ofReal
@@ -637,7 +637,7 @@ theorem exists_reproducing_constant :
     have hb : HasDerivAt (fun v : ℂ => (1:ℂ) - v) (-1) v := by
       simpa using (hasDerivAt_id v).const_sub 1
     have h := ha.fun_div hb h1v
-    convert h using 1
+    convert! h using 1
     field_simp
     ring
   -- the imaginary part of the Cayley image

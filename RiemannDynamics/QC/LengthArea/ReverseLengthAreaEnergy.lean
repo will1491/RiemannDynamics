@@ -488,8 +488,8 @@ theorem AxisRectModulusBound.forward_ae_slice_noSingularPart {f : ℂ → ℂ} {
       exact ⟨hre.eVariationOn_le_lintegral_deriv hab, him.eVariationOn_le_lintegral_deriv hab⟩
     · -- Degenerate interval `b < a`: the variation over the subsingleton `Icc` vanishes.
       have hsub : (Set.Icc a b).Subsingleton := Set.subsingleton_Icc_of_ge hba.le
-      exact ⟨le_of_eq_of_le (eVariationOn.subsingleton _ hsub) (zero_le _),
-        le_of_eq_of_le (eVariationOn.subsingleton _ hsub) (zero_le _)⟩
+      exact ⟨le_of_eq_of_le (eVariationOn.subsingleton _ hsub) (zero_le),
+        le_of_eq_of_le (eVariationOn.subsingleton _ hsub) (zero_le)⟩
   · -- Vertical slices (mirror).
     filter_upwards [hf.ae_vertical_slice_absolutelyContinuous] with x hx a b
     rcases le_or_gt a b with hab | hba
@@ -502,8 +502,8 @@ theorem AxisRectModulusBound.forward_ae_slice_noSingularPart {f : ℂ → ℂ} {
         simpa only [Function.comp_def, Complex.imCLM_apply] using h
       exact ⟨hre.eVariationOn_le_lintegral_deriv hab, him.eVariationOn_le_lintegral_deriv hab⟩
     · have hsub : (Set.Icc a b).Subsingleton := Set.subsingleton_Icc_of_ge hba.le
-      exact ⟨le_of_eq_of_le (eVariationOn.subsingleton _ hsub) (zero_le _),
-        le_of_eq_of_le (eVariationOn.subsingleton _ hsub) (zero_le _)⟩
+      exact ⟨le_of_eq_of_le (eVariationOn.subsingleton _ hsub) (zero_le),
+        le_of_eq_of_le (eVariationOn.subsingleton _ hsub) (zero_le)⟩
 
 /-- **Box Tonelli for an `ℝ≥0∞`-valued integrand (`y`-outer form).** For a measurable
 `H : ℂ → ℝ≥0∞`, the integral over the axis rectangle `(a,b)×(s,t)` is the iterated integral with the
@@ -517,7 +517,7 @@ private theorem setLIntegral_axisRect_eq_iterated_yx {H : ℂ → ℝ≥0∞} (h
   have hpre : axisRect a b s t
       = Complex.measurableEquivRealProd ⁻¹' (Set.Icc a b ×ˢ Set.Icc s t) := by
     ext z
-    simp only [axisRect, Set.mem_setOf_eq, Set.mem_preimage, Set.mem_prod, Set.mem_Icc,
+    simp only [axisRect, Set.mem_ofPred_eq, Set.mem_preimage, Set.mem_prod, Set.mem_Icc,
       Complex.measurableEquivRealProd_apply]
   have hmp : MeasurePreserving Complex.measurableEquivRealProd
       (volume : Measure ℂ) (volume : Measure (ℝ × ℝ)) :=
@@ -558,7 +558,7 @@ private theorem setLIntegral_axisRect_eq_iterated_xy {H : ℂ → ℝ≥0∞} (h
   have hpre : axisRect a b s t
       = Complex.measurableEquivRealProd ⁻¹' (Set.Icc a b ×ˢ Set.Icc s t) := by
     ext z
-    simp only [axisRect, Set.mem_setOf_eq, Set.mem_preimage, Set.mem_prod, Set.mem_Icc,
+    simp only [axisRect, Set.mem_ofPred_eq, Set.mem_preimage, Set.mem_prod, Set.mem_Icc,
       Complex.measurableEquivRealProd_apply]
   have hmp : MeasurePreserving Complex.measurableEquivRealProd
       (volume : Measure ℂ) (volume : Measure (ℝ × ℝ)) :=

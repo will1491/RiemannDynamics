@@ -115,7 +115,7 @@ noncomputable def sphereChartInfty : OpenPartialHomeomorph ℂ̂ ℂ :=
 theorem sphereChartFinite_source : sphereChartFinite.source = chartFiniteSource := by
   have hrange : chartFiniteSource = Set.range ((↑) : ℂ → ℂ̂) := by
     ext z
-    simp only [chartFiniteSource, Set.mem_setOf_eq, Set.mem_range]
+    simp only [chartFiniteSource, Set.mem_ofPred_eq, Set.mem_range]
     exact OnePoint.ne_infty_iff_exists
   rw [hrange]
   simp [sphereChartFinite, coeSpherePartialHomeomorph]
@@ -149,7 +149,7 @@ theorem sphereChartInfty_source : sphereChartInfty.source = chartInftySource := 
     Homeomorph.toOpenPartialHomeomorph_source, Set.mem_inter_iff, Set.mem_univ,
     true_and, Set.mem_preimage, Homeomorph.toOpenPartialHomeomorph_apply,
     inversionHomeomorph_apply, sphereChartFinite_source, chartFiniteSource,
-    chartInftySource, Set.mem_setOf_eq]
+    chartInftySource, Set.mem_ofPred_eq]
   exact not_congr (inversionGL_smul_eq_infty_iff z)
 
 /-- The infinity chart is the inversion followed by the finite chart. -/
@@ -224,7 +224,7 @@ instance isManifoldSphere : IsManifold 𝓘(ℂ) ω ℂ̂ := by
       have hmem := hw.2
       rw [Set.mem_preimage, sphereChartInfty_source] at hmem
       rw [sphereChartFinite_symm_apply] at hmem
-      simp only [chartInftySource, Set.mem_setOf_eq] at hmem
+      simp only [chartInftySource, Set.mem_ofPred_eq] at hmem
       simp only [Set.mem_compl_iff, Set.mem_singleton_iff]
       exact fun h0 => hmem (OnePoint.coe_eq_coe.mpr h0)
     refine ((contDiffOn_inv ℂ).mono hsub).congr ?_
@@ -233,7 +233,7 @@ instance isManifoldSphere : IsManifold 𝓘(ℂ) ω ℂ̂ := by
       have := hsub hw
       simpa using this
     have hmem : ((w : ℂ̂)) ∈ chartInftySource := by
-      simp only [chartInftySource, Set.mem_setOf_eq]
+      simp only [chartInftySource, Set.mem_ofPred_eq]
       exact fun h => hw0 (OnePoint.coe_eq_coe.mp h)
     change sphereChartInfty (sphereChartFinite.symm w) = w⁻¹
     rw [sphereChartFinite_symm_apply, sphereChartInfty_eqOn hmem]
@@ -245,7 +245,7 @@ instance isManifoldSphere : IsManifold 𝓘(ℂ) ω ℂ̂ := by
       rw [OpenPartialHomeomorph.trans_source] at hw
       have hmem := hw.2
       rw [Set.mem_preimage, sphereChartFinite_source] at hmem
-      simp only [chartFiniteSource, Set.mem_setOf_eq,
+      simp only [chartFiniteSource, Set.mem_ofPred_eq,
         sphereChartInfty_symm_apply] at hmem
       simp only [Set.mem_compl_iff, Set.mem_singleton_iff]
       intro h0

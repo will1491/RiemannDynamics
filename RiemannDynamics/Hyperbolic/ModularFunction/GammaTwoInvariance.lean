@@ -1184,7 +1184,7 @@ theorem gamma_two_properlyDiscontinuousSMul :
       · intro m hm i _ j _; exact hm i j
     refine (hbox_finite.preimage hT_inj.injOn).subset ?_
     intro γ hγ
-    simp only [Set.mem_preimage, Set.mem_setOf_eq]
+    simp only [Set.mem_preimage, Set.mem_ofPred_eq]
     intro i j
     rw [Set.mem_Icc]
     have h_abs := hγ i j

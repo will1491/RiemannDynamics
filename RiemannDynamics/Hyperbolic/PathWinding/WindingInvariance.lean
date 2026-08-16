@@ -123,7 +123,7 @@ theorem pathWindingNumber_isInt_of_closed
     -- F = (γ - w) * exp(-G). Product rule.
     have hF_at : HasDerivAt F
         (deriv γ t * Complex.exp (-G t) + (γ t - w) * (Complex.exp (-G t) * (-f t))) t := by
-      simpa only [hF_def] using hγw_at.mul hexp_at
+      simpa only [hF_def] using! hγw_at.fun_mul hexp_at
     -- Simplify the derivative to 0.
     have h_simplify : deriv γ t * Complex.exp (-G t) +
         (γ t - w) * (Complex.exp (-G t) * (-f t)) = 0 := by
@@ -269,7 +269,7 @@ theorem pathWindingNumber_continuous_in_param
     have h_at := h_comp.hasDerivAt
     rw [h_at.deriv]
     simp [ContinuousLinearMap.comp_apply, ContinuousLinearMap.prod_apply,
-      ContinuousLinearMap.id_apply, ContinuousLinearMap.zero_apply]
+      ContinuousLinearMap.id_apply, zero_apply]
   -- Step 2: Jointly continuous derivative-factor g.
   set g : ℝ → ℝ → ℂ := fun s t => fderiv ℝ (Function.uncurry H) (s, t) (0, 1) with hg_def
   have hg_uncurry_cont : Continuous (Function.uncurry g) := by

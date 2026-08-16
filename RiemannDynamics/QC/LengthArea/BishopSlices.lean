@@ -446,7 +446,7 @@ theorem qc_slice_deriv_energy_le_horizontal {f : ℂ → ℂ} {K : ℝ} (hf : Ax
       rw [Real.volume_Icc]
       exact ENNReal.ofReal_eq_zero.mpr (by linarith)
     rw [MeasureTheory.setLIntegral_measure_zero _ _ h0]
-    exact zero_le _
+    exact zero_le
   have hαβ : α ≤ β := hαa.trans (hab.le.trans hbβ)
   obtain ⟨h, hh⟩ : ∃ h : ℝ → ℂ, h = fun u : ℝ => f ⟨u, y⟩ := ⟨_, rfl⟩
   have happ : ∀ z : ℝ, h z = f ⟨z, y⟩ := fun z => by rw [hh]
@@ -502,7 +502,7 @@ theorem qc_slice_deriv_energy_le_horizontal {f : ℂ → ℂ} {K : ℝ} (hf : Ax
             ENNReal.ofReal ((‖h (X m (j + 1)) - h (X m j)‖ / δ m) ^ 2)
               * ENNReal.ofReal (δ m) := by
       simp only [hG]
-      rw [MeasureTheory.lintegral_finset_sum _
+      rw [MeasureTheory.lintegral_finsetSum _
         (fun j _ => measurable_const.indicator measurableSet_Ico)]
       refine Finset.sum_congr rfl fun j hj => ?_
       rw [MeasureTheory.lintegral_indicator measurableSet_Ico,
@@ -626,7 +626,7 @@ theorem qc_slice_deriv_energy_le_horizontal {f : ℂ → ℂ} {K : ℝ} (hf : Ax
       ENNReal.tendsto_ofReal
         (((hstr.congr fun m => by rw [hXd]).pow 2))
     have hval : ENNReal.ofReal (‖deriv h x‖ ^ 2) = (‖deriv h x‖₊ : ℝ≥0∞) ^ 2 := by
-      rw [ENNReal.ofReal_pow (norm_nonneg _), ofReal_norm_eq_enorm, enorm_eq_nnnorm]
+      rw [ENNReal.ofReal_pow (norm_nonneg _), ofReal_norm, enorm_eq_nnnorm]
     rw [← hval]
     exact hstr2.congr fun m => (hGx m).symm
   -- almost-everywhere comparison with the liminf, then Fatou
@@ -671,7 +671,7 @@ theorem qc_slice_deriv_energy_le_vertical {f : ℂ → ℂ} {K : ℝ} (hf : Axis
       rw [Real.volume_Icc]
       exact ENNReal.ofReal_eq_zero.mpr (by linarith)
     rw [MeasureTheory.setLIntegral_measure_zero _ _ h0]
-    exact zero_le _
+    exact zero_le
   have hστ : σ ≤ τ := hσs.trans (hst.le.trans htτ)
   obtain ⟨h, hh⟩ : ∃ h : ℝ → ℂ, h = fun u : ℝ => f ⟨x, u⟩ := ⟨_, rfl⟩
   have happ : ∀ z : ℝ, h z = f ⟨x, z⟩ := fun z => by rw [hh]
@@ -727,7 +727,7 @@ theorem qc_slice_deriv_energy_le_vertical {f : ℂ → ℂ} {K : ℝ} (hf : Axis
             ENNReal.ofReal ((‖h (X m (j + 1)) - h (X m j)‖ / δ m) ^ 2)
               * ENNReal.ofReal (δ m) := by
       simp only [hG]
-      rw [MeasureTheory.lintegral_finset_sum _
+      rw [MeasureTheory.lintegral_finsetSum _
         (fun j _ => measurable_const.indicator measurableSet_Ico)]
       refine Finset.sum_congr rfl fun j hj => ?_
       rw [MeasureTheory.lintegral_indicator measurableSet_Ico,
@@ -851,7 +851,7 @@ theorem qc_slice_deriv_energy_le_vertical {f : ℂ → ℂ} {K : ℝ} (hf : Axis
       ENNReal.tendsto_ofReal
         (((hstr.congr fun m => by rw [hXd]).pow 2))
     have hval : ENNReal.ofReal (‖deriv h v‖ ^ 2) = (‖deriv h v‖₊ : ℝ≥0∞) ^ 2 := by
-      rw [ENNReal.ofReal_pow (norm_nonneg _), ofReal_norm_eq_enorm, enorm_eq_nnnorm]
+      rw [ENNReal.ofReal_pow (norm_nonneg _), ofReal_norm, enorm_eq_nnnorm]
     rw [← hval]
     exact hstr2.congr fun m => (hGv m).symm
   -- almost-everywhere comparison with the liminf, then Fatou
@@ -1187,7 +1187,7 @@ theorem AxisRectModulusBound.ae_horizontal_slice_absolutelyContinuous {f : ℂ �
   intro ε hε
   refine ⟨ε ^ 2 / (K * A' + 1), div_pos (pow_pos hε 2) (by linarith), ?_⟩
   rintro ⟨N, I⟩ hE hlen
-  simp only [AbsolutelyContinuousOnInterval.disjWithin, Set.mem_setOf_eq] at hE
+  simp only [AbsolutelyContinuousOnInterval.disjWithin, Set.mem_ofPred_eq] at hE
   dsimp only at hE hlen ⊢
   obtain ⟨hmemE, hdisjE⟩ := hE
   -- normalize the interval endpoints
@@ -1318,7 +1318,7 @@ theorem AxisRectModulusBound.ae_horizontal_slice_absolutelyContinuous {f : ℂ �
         (nhds (∑ i ∈ T, dist (f ⟨u i + 0, y⟩) (f ⟨v i, y⟩))) := by
       refine Filter.Tendsto.mono_left ?_ nhdsWithin_le_nhds
       refine Continuous.tendsto ?_ 0
-      refine continuous_finset_sum _ fun i _ => Continuous.dist ?_ continuous_const
+      refine continuous_finsetSum _ fun i _ => Continuous.dist ?_ continuous_const
       refine hcont.comp ?_
       have hmk : (fun σ' : ℝ => (⟨u i + σ', y⟩ : ℂ))
           = fun σ' : ℝ => (⟨u i, y⟩ : ℂ) + (σ' : ℂ) := by
@@ -1397,7 +1397,7 @@ theorem AxisRectModulusBound.ae_vertical_slice_absolutelyContinuous {f : ℂ →
   intro ε hε
   refine ⟨ε ^ 2 / (K * A' + 1), div_pos (pow_pos hε 2) (by linarith), ?_⟩
   rintro ⟨N, I⟩ hE hlen
-  simp only [AbsolutelyContinuousOnInterval.disjWithin, Set.mem_setOf_eq] at hE
+  simp only [AbsolutelyContinuousOnInterval.disjWithin, Set.mem_ofPred_eq] at hE
   dsimp only at hE hlen ⊢
   obtain ⟨hmemE, hdisjE⟩ := hE
   -- normalize the interval endpoints
@@ -1528,7 +1528,7 @@ theorem AxisRectModulusBound.ae_vertical_slice_absolutelyContinuous {f : ℂ →
         (nhds (∑ i ∈ T, dist (f ⟨x, u i + 0⟩) (f ⟨x, v i⟩))) := by
       refine Filter.Tendsto.mono_left ?_ nhdsWithin_le_nhds
       refine Continuous.tendsto ?_ 0
-      refine continuous_finset_sum _ fun i _ => Continuous.dist ?_ continuous_const
+      refine continuous_finsetSum _ fun i _ => Continuous.dist ?_ continuous_const
       refine hcont.comp ?_
       have hmk : (fun σ' : ℝ => (⟨x, u i + σ'⟩ : ℂ))
           = fun σ' : ℝ => (⟨x, u i⟩ : ℂ) + (σ' : ℂ) * Complex.I := by

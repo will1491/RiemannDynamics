@@ -110,7 +110,7 @@ theorem grotzschInner_eq {s : ℝ} (hs : 0 ≤ s) :
 
 /-- The slit `grotzschInner s` is closed. -/
 theorem isClosed_grotzschInner {s : ℝ} (hs : 0 ≤ s) : IsClosed (grotzschInner s) := by
-  rw [grotzschInner_eq hs, Set.setOf_and, Set.setOf_and]
+  rw [grotzschInner_eq hs, Set.ofPred_and, Set.ofPred_and]
   exact (isClosed_eq Complex.continuous_im continuous_const).inter
     ((isClosed_le continuous_const Complex.continuous_re).inter
       (isClosed_le Complex.continuous_re continuous_const))
@@ -131,14 +131,14 @@ theorem isOpen_grotzschRing {s : ℝ} (hs : 0 ≤ s) : IsOpen (grotzschRing s) :
 
 /-- The Grötzsch ring is bounded. -/
 theorem isBounded_grotzschRing (s : ℝ) : Bornology.IsBounded (grotzschRing s) :=
-  Metric.isBounded_ball.subset Set.diff_subset
+  Metric.isBounded_ball.subset Set.sdiff_subset
 
 /-- The closure of the Grötzsch ring is the closed unit disk: the slit has empty interior, so
 removing it does not shrink the closure of the disk. -/
 theorem closure_grotzschRing {s : ℝ} (hs0 : 0 ≤ s) :
     closure (grotzschRing s) = closedBall (0 : ℂ) 1 := by
   apply Set.Subset.antisymm
-  · calc closure (grotzschRing s) ⊆ closure (ball (0 : ℂ) 1) := closure_mono Set.diff_subset
+  · calc closure (grotzschRing s) ⊆ closure (ball (0 : ℂ) 1) := closure_mono Set.sdiff_subset
       _ = closedBall 0 1 := closure_ball 0 one_ne_zero
   · have hdense : ball (0 : ℂ) 1 ⊆ closure (grotzschRing s) := by
       intro x hx
@@ -186,7 +186,7 @@ the unit circle. -/
 theorem frontier_grotzschRing {s : ℝ} (hs0 : 0 < s) (hs1 : s < 1) :
     frontier (grotzschRing s) = grotzschInner s ∪ grotzschOuter := by
   rw [(isOpen_grotzschRing hs0.le).frontier_eq, closure_grotzschRing hs0.le, grotzschRing,
-    Set.diff_diff_right, closedBall_diff_ball]
+    Set.sdiff_sdiff_right, closedBall_sdiff_ball]
   have h1 : closedBall (0 : ℂ) 1 ∩ segment ℝ (0 : ℂ) (s : ℂ) = grotzschInner s :=
     Set.inter_eq_self_of_subset_right
       ((grotzschInner_subset_ball hs0.le hs1).trans ball_subset_closedBall)
@@ -299,7 +299,7 @@ theorem logBarrierProfile_eq {w : ℂ} (hw : w ∈ Complex.slitPlane) :
 theorem isClosed_segment_ofReal (a b : ℝ) : IsClosed (segment ℝ (a : ℂ) (b : ℂ)) := by
   have h : segment ℝ (a : ℂ) (b : ℂ) = {z : ℂ | z.im = 0 ∧ z.re ∈ Set.uIcc a b} :=
     Set.ext fun _ => mem_segment_ofReal
-  rw [h, Set.setOf_and]
+  rw [h, Set.ofPred_and]
   exact (isClosed_eq Complex.continuous_im continuous_const).inter
     (isClosed_Icc.preimage Complex.continuous_re)
 
@@ -438,7 +438,7 @@ theorem exists_barrier_grotzschRing_slit {s : ℝ} (hs0 : 0 < s) (hs1 : s < 1) {
     with hKdef
   have hnormc : Continuous fun z : ℂ => ‖z - (a : ℂ)‖ := (continuous_id.sub continuous_const).norm
   have hKcl : IsClosed {z : ℂ | ρ / 2 ≤ ‖z - (a : ℂ)‖ ∧ ‖z - (a : ℂ)‖ ≤ ρ} := by
-    rw [Set.setOf_and]
+    rw [Set.ofPred_and]
     exact (isClosed_le continuous_const hnormc).inter (isClosed_le hnormc continuous_const)
   have hKcompact : IsCompact K :=
     (isCompact_of_isClosed_isBounded isClosed_closure
@@ -532,7 +532,8 @@ theorem exists_barrier_grotzschRing_slit {s : ℝ} (hs0 : 0 < s) (hs1 : s < 1) {
       have hharm : InnerProductSpace.HarmonicOnNhd β₁ (closedBall c |r|) := by
         rw [abs_of_pos hr]
         exact fun x hx => hβ₁harm x (hball hx)
-      have hmv : Real.circleAverage β₁ c r = β₁ c := HarmonicOnNhd.circleAverage_eq hharm
+      have hmv : Real.circleAverage β₁ c r = β₁ c :=
+        InnerProductSpace.HarmonicOnNhd.circleAverage_eq hharm
       have h1 : Real.circleAverage β₁ c r ≤ Real.circleAverage β c r := by
         apply Real.circleAverage_mono hβ₁ci hβci
         intro z hz
@@ -1420,7 +1421,7 @@ theorem exists_primitive_reProdIm {A B : Set ℝ} (hA : Set.OrdConnected A)
             (f ((x : ℂ) + (z.im : ℂ) * Complex.I)) ((x : ℂ)) := by
           have h1 : HasDerivAt (fun u : ℂ => u + (z.im : ℂ) * Complex.I) 1 ((x : ℂ)) :=
             (hasDerivAt_id _).add_const _
-          simpa using (hq _ (hlegH x hx)).comp ((x : ℂ)) h1
+          simpa using! (hq _ (hlegH x hx)).comp ((x : ℂ)) h1
         exact houter.comp_ofReal
       · exact hsegH z.re w.re z.im hz'.1 hw'.1 hz'.2
     have hFTC2 : ∫ y in z.im..w.im, (f ((w.re : ℂ) + (y : ℂ) * Complex.I) * Complex.I)
@@ -1434,7 +1435,7 @@ theorem exists_primitive_reProdIm {A B : Set ℝ} (hA : Set.OrdConnected A)
           have h1 : HasDerivAt (fun u : ℂ => (w.re : ℂ) + u * Complex.I)
               Complex.I ((y : ℂ)) := by
             simpa using ((hasDerivAt_id ((y : ℂ))).mul_const Complex.I).const_add ((w.re : ℂ))
-          simpa using (hq _ (hlegV y hy)).comp ((y : ℂ)) h1
+          simpa using! (hq _ (hlegV y hy)).comp ((y : ℂ)) h1
         exact houter.comp_ofReal
       · exact (hsegV w.re z.im w.im hw'.1 hz'.2 hw'.2).mul_const Complex.I
     have hQdiff := hkey z hz w hwU
@@ -1532,10 +1533,10 @@ private theorem exists_holomorphic_re_potential {s : ℝ} (hs : 0 ≤ s) {v : �
         * Complex.exp (w + (π : ℝ) * Complex.I)) • (ContinuousLinearMap.id ℝ ℂ)) w := by
       rw [hasFDerivAt_iff_isLittleO]
       refine (hF₀ w hw).isLittleO.congr_left fun t => ?_
-      simp only [ContinuousLinearMap.smul_apply, ContinuousLinearMap.id_apply, smul_eq_mul]
+      simp only [smul_apply, ContinuousLinearMap.id_apply, smul_eq_mul]
       ring
     have h := Complex.reCLM.hasFDerivAt.comp w hFr
-    simpa [Function.comp] using h
+    simpa [Function.comp] using! h
   -- convexity of the strip
   have hWconv : Convex ℝ (Set.Iio (0 : ℝ) ×ℂ Set.Ioo (-π) π) := by
     intro a ha b hb ta tb hta htb htab
@@ -1630,7 +1631,7 @@ theorem starPlane_harmonicOn_grotzsch {s : ℝ} (hs0 : 0 < s) (hs1 : s < 1) {v :
           have h1 : HasDerivAt (fun u : ℂ => (w.re : ℂ) + u * Complex.I)
               Complex.I ((t : ℂ)) := by
             simpa using ((hasDerivAt_id ((t : ℂ))).mul_const Complex.I).const_add ((w.re : ℂ))
-          simpa using (hQ _ (hseg t ht)).comp ((t : ℂ)) h1
+          simpa using! (hQ _ (hseg t ht)).comp ((t : ℂ)) h1
         exact houter.comp_ofReal
       · exact hint.mul_const Complex.I
     have he1 : ((w.re : ℂ) + (w.im : ℂ) * Complex.I) = w := Complex.re_add_im w

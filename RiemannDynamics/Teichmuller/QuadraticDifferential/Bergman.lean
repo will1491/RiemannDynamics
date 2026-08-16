@@ -52,7 +52,7 @@ theorem enorm_mul_le_lintegral_closedBall {f : ℂ → ℂ} {z₀ : ℂ} {r : �
       rw [habs]; exact hc.mono (Metric.closedBall_subset_closedBall hs.2.le)
     have h₂f : ∀ z ∈ Metric.ball z₀ |s| \ (∅ : Set ℂ), DifferentiableAt ℂ f z := by
       intro z hz
-      rw [Set.diff_empty, habs] at hz
+      rw [Set.sdiff_empty, habs] at hz
       exact hf.differentiableAt
         (Metric.isOpen_ball.mem_nhds (Metric.ball_subset_ball hs.2.le hz))
     have hmean := circleAverage_of_differentiable_on_off_countable Set.countable_empty h₁f h₂f
@@ -118,7 +118,7 @@ theorem enorm_mul_le_lintegral_closedBall {f : ℂ → ℂ} {z₀ : ℂ} {r : �
       have hmemT : ((s, θ) : ℝ × ℝ) ∈ T :=
         Set.mem_prod.mpr ⟨⟨hs0, hsr⟩, hθ⟩
       rw [Set.indicator_of_mem hmem, Set.indicator_of_mem hmemT, hg, smul_eq_mul,
-        ← ofReal_norm_eq_enorm, ← ENNReal.ofReal_mul hs0.le]
+        ← ofReal_norm, ← ENNReal.ofReal_mul hs0.le]
     · have hnmem : Complex.polarCoord.symm (s, θ) ∉ Metric.ball (0 : ℂ) r := by
         rw [Metric.mem_ball, dist_zero_right, hnorm]; exact hsr
       have hnmemT : ((s, θ) : ℝ × ℝ) ∉ T := by
@@ -235,7 +235,7 @@ theorem enorm_mul_le_lintegral_closedBall {f : ℂ → ℂ} {z₀ : ℂ} {r : �
       setLIntegral_mono' measurableSet_Ioo fun s hs => hinner s hs
     have hfin : ENNReal.ofReal (r ^ 2 / 2 * (2 * Real.pi * ‖f z₀‖))
         = ‖f z₀‖ₑ * ENNReal.ofReal (Real.pi * r ^ 2) := by
-      rw [← ofReal_norm_eq_enorm, ← ENNReal.ofReal_mul (norm_nonneg _)]
+      rw [← ofReal_norm, ← ENNReal.ofReal_mul (norm_nonneg _)]
       congr 1
       ring
     rw [← hfin, ← hcalc]
@@ -278,7 +278,7 @@ theorem lintegral_enorm_le_of_isCompact (hΓ : IsFuchsianGroup Γ)
     refine UpperHalfPlane.isEmbedding_coe.isInducing.isCompact_preimage' hS ?_
     intro z hz
     exact ⟨⟨z, hSsub hz⟩, rfl⟩
-  haveI hPD : ProperlyDiscontinuousSMul Γ UpperHalfPlane := hΓ
+  have hPD : ProperlyDiscontinuousSMul Γ UpperHalfPlane := hΓ
   have hfin : {γ : Γ | ((γ • ·) '' dirichletDomain Γ UpperHalfPlane.I
       ∩ UpperHalfPlane.coe ⁻¹' S).Nonempty}.Finite :=
     ProperlyDiscontinuousSMul.finite_disjoint_inter_image hDcpt hS'
@@ -408,7 +408,7 @@ theorem exists_subseq_qd_tendstoLocallyUniformlyOn (hΓ : IsFuchsianGroup Γ)
   have hUopen : IsOpen {z : ℂ | 0 < z.im} := isOpen_lt continuous_const Complex.continuous_im
   -- The restricted continuous maps on the open upper half plane.
   set Gn : ℕ → C({z : ℂ | 0 < z.im}, ℂ) :=
-    fun n => ⟨fun x => F n (x : ℂ), (F n).continuousOn_upper.restrict⟩ with hGn
+    fun n => ⟨fun x => F n (x : ℂ), (F n).continuousOn_upper.domRestrict⟩ with hGn
   -- Equicontinuity of the family, from the Cauchy estimates.
   have heqc : Equicontinuous fun n => fun x : {z : ℂ | 0 < z.im} => F n (x : ℂ) := by
     rintro ⟨z₀, hz₀⟩
@@ -502,7 +502,7 @@ theorem exists_subseq_qd_tendstoLocallyUniformlyOn (hΓ : IsFuchsianGroup Γ)
     rw [Metric.mem_closedBall, dist_zero_right]
     exact h2
   -- Arzelà–Ascoli in the compact-open topology of `C(upper, ℂ)`.
-  haveI : LocallyCompactSpace {z : ℂ | 0 < z.im} := hUopen.locallyCompactSpace
+  have : LocallyCompactSpace {z : ℂ | 0 < z.im} := hUopen.locallyCompactSpace
   set 𝔖 : Set (Set {z : ℂ | 0 < z.im}) := {K | IsCompact K} with h𝔖
   have hce : IsClosedEmbedding
       (⇑(UniformOnFun.ofFun 𝔖) ∘
@@ -512,7 +512,7 @@ theorem exists_subseq_qd_tendstoLocallyUniformlyOn (hΓ : IsFuchsianGroup Γ)
           (DFunLike.coe : C({z : ℂ | 0 < z.im}, ℂ) → ({z : ℂ | 0 < z.im} → ℂ)))
           = ContinuousMap.toUniformOnFunIsCompact from rfl,
         ContinuousMap.range_toUniformOnFunIsCompact]
-    exact UniformOnFun.isClosed_setOf_continuous
+    exact UniformOnFun.isClosed_setOfPred_continuous
       (CompactlyCoherentSpace.isCoherentWith (X := {z : ℂ | 0 < z.im}))
   set s : Set C({z : ℂ | 0 < z.im}, ℂ) := Set.range Gn with hs
   have hKcpt : IsCompact (closure s) := by
@@ -642,11 +642,11 @@ theorem norm_qdPairing_le {μ : ℂ → ℂ} {m : ℝ} (hm0 : 0 ≤ m)
     filter_upwards [hμD] with z hz
     rw [enorm_mul]
     exact mul_le_mul_left
-      (by rw [← ofReal_norm_eq_enorm]; exact ENNReal.ofReal_le_ofReal hz) _
+      (by rw [← ofReal_norm]; exact ENNReal.ofReal_le_ofReal hz) _
   have h1 : ‖qdPairing μ q‖
       ≤ (∫⁻ z in UpperHalfPlane.coe '' dirichletDomain Γ UpperHalfPlane.I,
           ‖μ z * q z‖ₑ).toReal := by
-    simpa only [ofReal_norm_eq_enorm] using
+    simpa only [ofReal_norm] using!
       norm_integral_le_lintegral_norm
         (μ := volume.restrict (UpperHalfPlane.coe '' dirichletDomain Γ UpperHalfPlane.I))
         (fun z => μ z * q z)
@@ -757,7 +757,7 @@ theorem exists_qdPairing_maximizer (hΓ : IsFuchsianGroup Γ)
       _ ≤ max m 0 * 1 := mul_le_mul_of_nonneg_left h3 hm'0
       _ = max m 0 := mul_one _
   obtain ⟨u, -, hu_tendsto, hu_mem⟩ := exists_seq_tendsto_sSup ⟨0, h0V⟩ hbdd
-  simp only [hV, Set.mem_setOf_eq] at hu_mem
+  simp only [hV, Set.mem_ofPred_eq] at hu_mem
   choose Q hQ1 hQre using hu_mem
   obtain ⟨φ, q₀, hφ, hq₀1, hq₀conv⟩ :=
     exists_subseq_qd_tendstoLocallyUniformlyOn hΓ hfree hcc ENNReal.one_ne_top Q hQ1

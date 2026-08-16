@@ -103,7 +103,7 @@ theorem exists_annulus {q : ℂ → ℂ}
     · rw [Metric.mem_closedBall, dist_eq_norm, add_sub_cancel_left, Complex.norm_real,
         Real.norm_eq_abs, abs_of_pos (by linarith)]
       linarith
-    · rw [Set.mem_setOf_eq, add_sub_cancel_left, Complex.norm_real, Real.norm_eq_abs,
+    · rw [Set.mem_ofPred_eq, add_sub_cancel_left, Complex.norm_real, Real.norm_eq_abs,
         abs_of_pos (by linarith)]
   have hcont : ContinuousOn (fun w => Real.sqrt ‖q w‖) A :=
     ((hq.continuousOn.mono hAH).norm).sqrt
@@ -382,7 +382,6 @@ theorem traj_deck {q : ℂ → ℂ} {σ : ℝ → ℂ} {s : Set ℝ}
       have huim : 0 < (σ u).im := hUH hu.1
       have htim : 0 < (σ t).im := hUH hpU
       refine ⟨⟨σ u, hu.1, rfl⟩, ?_⟩
-      beta_reduce
       rw [moebius_cancel γ huim, moebius_cancel γ htim]
       exact hu.2
 
@@ -470,7 +469,7 @@ theorem zero_order_bounds {q : ℂ → ℂ}
     intro hev
     have hacc := zeros_isolated hq hq0 hz₀
     have hcomb := hacc.and (hev.filter_mono nhdsWithin_le_nhds)
-    haveI : (nhdsWithin z₀ ({z₀}ᶜ : Set ℂ)).NeBot :=
+    have : (nhdsWithin z₀ ({z₀}ᶜ : Set ℂ)).NeBot :=
       Module.punctured_nhds_neBot ℝ ℂ z₀
     obtain ⟨w, hw1, hw2⟩ := hcomb.exists
     exact hw1 hw2
@@ -625,7 +624,7 @@ theorem ball_mass {q : ℂ → ℂ} {z₀ : ℂ} {M : ℕ} {r₀ C₁ C₂ : ℝ
       linarith
     have hup := (hbounds w hwball).2
     have hpow : ‖w - z₀‖ ^ M ≤ ρ ^ M := pow_le_pow_left₀ (norm_nonneg _) hwr.le M
-    rw [← ofReal_norm_eq_enorm]
+    rw [← ofReal_norm]
     refine ENNReal.ofReal_le_ofReal ?_
     have hC₂pos : 0 ≤ C₂ := by
       set w' : ℂ := z₀ + ((ρ / 2 : ℝ) : ℂ) with hw'def
@@ -646,6 +645,8 @@ theorem ball_mass {q : ℂ → ℂ} {z₀ : ℂ} {M : ℕ} {r₀ C₁ C₂ : ℝ
     _ = ENNReal.ofReal (C₂ * ρ ^ M) * volume (Metric.ball z₀ ρ) := by
         rw [setLIntegral_const]
 
+set_option maxHeartbeats 1600000 in
+-- Heavy isDefEq through UpperHalfPlane smul / set-abbreviation unfolding in the track bound.
 /-- **Compact track on the maximal window**: the track of a trajectory on `[0, c)` over a
 cocompact group stays in one compact subset of the upper half plane. -/
 theorem traj_track_compact_Ico {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
@@ -751,9 +752,9 @@ theorem dying_near_zero {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
   have hZfin : Set.Finite Z := zeros_finite q.holo hq0 hLc hLH
   set L' : Set ℂ := L \ ⋃ z₀ ∈ Z, Metric.ball z₀ ρ with hL'def
   have hL'c : IsCompact L' := by
-    refine hLc.of_isClosed_subset (hLc.isClosed.sdiff ?_) Set.diff_subset
+    refine hLc.of_isClosed_subset (hLc.isClosed.sdiff ?_) Set.sdiff_subset
     exact isOpen_biUnion fun z₀ _ => Metric.isOpen_ball
-  have hL'H : L' ⊆ {z : ℂ | 0 < z.im} := Set.diff_subset.trans hLH
+  have hL'H : L' ⊆ {z : ℂ | 0 < z.im} := Set.sdiff_subset.trans hLH
   have htrack' : ∀ u ∈ Set.Ico 0 c, σ u ∈ L' := by
     intro u hu
     refine ⟨hLtrack u hu, ?_⟩
@@ -775,7 +776,7 @@ theorem dying_near_zero {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
   have hbound : ∀ u ∈ Set.Ico 0 c, ‖q w₀‖ ≤ ‖q (σ u)‖ := fun u hu =>
     hw₀min (htrack' u hu)
   obtain ⟨w, hlim⟩ := traj_limit hc hσ hm hbound
-  haveI hne : (nhdsWithin c (Set.Ico 0 c)).NeBot := by
+  have hne : (nhdsWithin c (Set.Ico 0 c)).NeBot := by
     refine mem_closure_iff_nhdsWithin_neBot.mp ?_
     rw [closure_Ico hc.ne]
     exact ⟨hc.le, le_refl c⟩
@@ -1039,7 +1040,7 @@ theorem tsum_indicator_pair {ι : Type*} [Countable ι] {A : ι → Set ℂ} {x 
       · rw [Set.indicator_of_mem hx, if_pos h]
         exact le_add_left (le_refl 1)
     · rw [Set.indicator_of_notMem hx]
-      exact zero_le _
+      exact zero_le
   calc (∑' i, (A i).indicator (fun _ => (1 : ℝ≥0∞)) x)
       ≤ ∑' i, ((if i = i₁ then (1 : ℝ≥0∞) else 0)
           + (if i = i₂ then (1 : ℝ≥0∞) else 0)) := ENNReal.tsum_le_tsum hle
@@ -1116,7 +1117,7 @@ theorem piece_measurable {q : ℂ → ℂ} (A : Atlas q) (h : ℝ) (N : ℕ)
       ((pos A h (k : ℕ)) ⁻¹' (A.sel ⁻¹' {(c k).1})
         ∩ (sgn A h (k : ℕ)) ⁻¹' {(if (c k).2 then (1 : ℝ) else -1)}) := by
     ext z
-    simp only [itinPiece, Set.mem_setOf_eq, Set.mem_inter_iff, Set.mem_iInter,
+    simp only [itinPiece, Set.mem_ofPred_eq, Set.mem_inter_iff, Set.mem_iInter,
       Set.mem_preimage, Set.mem_singleton_iff]
   rw [hset]
   refine hE.inter (MeasurableSet.iInter fun k => ?_)
@@ -1320,7 +1321,7 @@ theorem seg_cond_measurable {O : Set ℂ} (hO : IsOpen O) {g : ℂ → ℂ} {s :
       = {z : ℂ | 0 < ⨅ u : ratGrid h,
           Metric.infEDist (g z + ((s z * ((u : ℚ) : ℝ) : ℝ) : ℂ)) Oᶜ} := by
     ext z
-    simp only [Set.mem_setOf_eq]
+    simp only [Set.mem_ofPred_eq]
     constructor
     · intro hz
       have hcont : Continuous fun u : ℝ => g z + ((s z * u : ℝ) : ℂ) :=
@@ -1362,7 +1363,7 @@ theorem slegal_measurable {q : ℂ → ℂ} (A : Atlas q) {h : ℝ} (hh : 0 < h)
             A.mchart j (pos A h k z) + ((sgn A h k z * u : ℝ) : ℂ)
               ∈ A.Φ j '' Metric.ball (A.c j) (2 * A.r j)})))) := by
     ext z
-    simp only [Set.mem_setOf_eq, Set.mem_iInter, Set.mem_iUnion, Set.mem_inter_iff,
+    simp only [Set.mem_ofPred_eq, Set.mem_iInter, Set.mem_iUnion, Set.mem_inter_iff,
       Set.mem_preimage, Set.mem_singleton_iff, Set.mem_union, Set.mem_Iic]
     constructor
     · intro hz k hk

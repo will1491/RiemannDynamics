@@ -359,7 +359,7 @@ theorem oddSide_equiv_pairs (hΓ : IsFuchsianGroup Γ)
     (hdense : ∀ σ : UpperHalfPlane, Metric.infDist σ (MulAction.orbit Γ τ₀) ≤ R) :
     Nonempty ((oddSideFunctions Γ τ₀) ≃ₗ[ℝ] (↥(polygonSidePairs Γ τ₀) → ℝ)) := by
   classical
-  haveI := (finite_polygonSidePairs hΓ hfree hε hgap hdense).fintype
+  have := (finite_polygonSidePairs hΓ hfree hε hgap hdense).fintype
   have hrep : ∀ P : ↥(polygonSidePairs Γ τ₀), ∃ gP : ↥Γ, IsSideElement Γ τ₀ gP ∧
       (P : Set (Set UpperHalfPlane))
         = {dirichletSideSet Γ τ₀ gP, dirichletSideSet Γ τ₀ gP⁻¹} := fun P => P.2
@@ -446,7 +446,7 @@ theorem oddSide_equiv_pairs (hΓ : IsFuchsianGroup Γ)
         · exact (isSideElement_congr h).mpr (hg1 P)
         · exact (isSideElement_congr h).mpr (hg1 P).inv
       rw [Pi.smul_apply, hzero, smul_zero]
-  exact ⟨LinearEquiv.ofLinear E G hEG hGE⟩
+  exact ⟨LinearEquiv.ofLinearMap E G hEG hGE⟩
 
 /-- The odd side functions form a finite-dimensional space: they embed into the functions
 on the finite side set. -/
@@ -458,7 +458,7 @@ theorem finiteDimensional_oddSideFunctions (hΓ : IsFuchsianGroup Γ)
     (hdense : ∀ σ : UpperHalfPlane, Metric.infDist σ (MulAction.orbit Γ τ₀) ≤ R) :
     FiniteDimensional ℝ (oddSideFunctions Γ τ₀) := by
   obtain ⟨e⟩ := oddSide_equiv_pairs hΓ hfree hε hgap hdense
-  haveI : Finite ↥(polygonSidePairs Γ τ₀) :=
+  have : Finite ↥(polygonSidePairs Γ τ₀) :=
     (finite_polygonSidePairs hΓ hfree hε hgap hdense).to_subtype
   exact FiniteDimensional.of_injective e.toLinearMap e.injective
 
@@ -472,7 +472,7 @@ theorem finrank_oddSideFunctions (hΓ : IsFuchsianGroup Γ)
     (hdense : ∀ σ : UpperHalfPlane, Metric.infDist σ (MulAction.orbit Γ τ₀) ≤ R) :
     Module.finrank ℝ (oddSideFunctions Γ τ₀) = polygonSideCount Γ τ₀ := by
   obtain ⟨e⟩ := oddSide_equiv_pairs hΓ hfree hε hgap hdense
-  haveI := (finite_polygonSidePairs hΓ hfree hε hgap hdense).fintype
+  have := (finite_polygonSidePairs hΓ hfree hε hgap hdense).fintype
   rw [e.finrank_eq, Module.finrank_pi, polygonSideCount, ← Nat.card_coe_set_eq,
     Nat.card_eq_fintype_card]
 
@@ -934,8 +934,8 @@ theorem isTilePath_congr_last
       intro hp
       simp only [List.cons_append] at hp ⊢
       obtain ⟨hR, hchain⟩ := List.isChain_cons_cons.mp hp
-      have hrec := ih (by simpa using hchain)
-      refine List.isChain_cons_cons.mpr ⟨hR, by simpa using hrec⟩
+      have hrec := ih (by simpa using! hchain)
+      refine List.isChain_cons_cons.mpr ⟨hR, by simpa using! hrec⟩
 
 /-- Discrete fundamental theorem: a crossing sum telescopes along a potential adapted to
 the transitions of the path. -/

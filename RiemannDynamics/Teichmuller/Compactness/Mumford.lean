@@ -53,7 +53,7 @@ def HasAreaBound (Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)) (A : �
 only finitely many of its translates. -/
 theorem IsFuchsianGroup.countable {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
     (hΓ : IsFuchsianGroup Γ) : Countable Γ := by
-  haveI hPD : ProperlyDiscontinuousSMul Γ UpperHalfPlane := hΓ
+  have hPD : ProperlyDiscontinuousSMul Γ UpperHalfPlane := hΓ
   have hfin : ∀ m : ℕ, {γ : Γ |
       ((fun x => γ • x) '' Metric.closedBall UpperHalfPlane.I (m : ℝ) ∩
         Metric.closedBall UpperHalfPlane.I (m : ℝ)).Nonempty}.Finite := fun m =>
@@ -118,13 +118,13 @@ theorem orbit_infDist_le_of_hasAreaBound
     {A : ℝ≥0∞} (hA : A ≠ ⊤) (harea : HasAreaBound Γ A) (σ τ : UpperHalfPlane) :
     Metric.infDist σ (MulAction.orbit Γ τ) ≤ mumfordDensityBound A ε := by
   classical
-  haveI : IsIsometricSMul (↥Γ) UpperHalfPlane :=
+  have : IsIsometricSMul (↥Γ) UpperHalfPlane :=
     ⟨fun c => isometry_smul UpperHalfPlane (c : Matrix.SpecialLinearGroup (Fin 2) ℝ)⟩
-  haveI : SMulInvariantMeasure (↥Γ) UpperHalfPlane volume :=
+  have : SMulInvariantMeasure (↥Γ) UpperHalfPlane volume :=
     ⟨fun c s hs => SMulInvariantMeasure.measure_preimage_smul
       (μ := (volume : Measure UpperHalfPlane))
       (Matrix.SpecialLinearGroup.mapGL ℝ (c : Matrix.SpecialLinearGroup (Fin 2) ℝ)) hs⟩
-  haveI : Countable Γ := IsFuchsianGroup.countable hΓ
+  have : Countable Γ := IsFuchsianGroup.countable hΓ
   by_contra hcon
   have hD : mumfordDensityBound A ε < Metric.infDist σ (MulAction.orbit Γ τ) := not_le.mp hcon
   obtain ⟨F, hFmeas, hFcov, hFvol⟩ := harea
@@ -396,7 +396,7 @@ theorem orbit_infDist_le_of_hasAreaBound
       calc (∑' η : ↥Γ, (η • t).indicator (1 : UpperHalfPlane → ℝ≥0∞) x)
           = ∑' _η : ↥Γ, (0 : ℝ≥0∞) := tsum_congr hzero
         _ = 0 := tsum_zero
-        _ ≤ (2 : ℝ≥0∞) := zero_le _
+        _ ≤ (2 : ℝ≥0∞) := zero_le
   -- mass count: the region packs into two copies of the covering set
   have hcount : volume t ≤ 2 * volume F := by
     have hae : ∀ᵐ τ : UpperHalfPlane, τ ∈ ⋃ η : ↥Γ, η • F := by
@@ -410,7 +410,7 @@ theorem orbit_infDist_le_of_hasAreaBound
       measure_mono_null (fun x hx => hx.2) hUc
     have hle1 : volume t ≤ ∑' η : ↥Γ, volume (t ∩ η • F) := by
       have h1 : volume t ≤ volume (t ∩ ⋃ η : ↥Γ, η • F) + volume (t \ ⋃ η : ↥Γ, η • F) :=
-        measure_le_inter_add_diff volume t _
+        measure_le_inter_add_sdiff volume t _
       rw [hdiff, add_zero] at h1
       refine h1.trans ?_
       rw [Set.inter_iUnion]
@@ -622,7 +622,7 @@ theorem exists_subseq_tendsto_sl2_of_bounded {ι : Type} [Finite ι]
     ∃ (φ : ℕ → ℕ) (ρ : ι → Matrix.SpecialLinearGroup (Fin 2) ℝ), StrictMono φ ∧
       ∀ i, Filter.Tendsto (fun k => g (φ k) i) Filter.atTop (nhds (ρ i)) := by
   classical
-  haveI := Fintype.ofFinite ι
+  have := Fintype.ofFinite ι
   obtain ⟨R, hRdef⟩ : ∃ R : ℝ, R = Real.sqrt (2 * Real.cosh C) := ⟨_, rfl⟩
   have hR0 : 0 ≤ R := by
     rw [hRdef]
@@ -778,7 +778,7 @@ theorem isFuchsianGroup_of_trace_gap {Γ : Subgroup (Matrix.SpecialLinearGroup (
       2 * Real.cosh (ε / 2) ≤ |Matrix.trace (γ : Matrix (Fin 2) (Fin 2) ℝ)|) :
     IsFuchsianGroup Γ := by
   classical
-  haveI : IsIsometricSMul (↥Γ) UpperHalfPlane :=
+  have : IsIsometricSMul (↥Γ) UpperHalfPlane :=
     ⟨fun c => isometry_smul UpperHalfPlane (c : Matrix.SpecialLinearGroup (Fin 2) ℝ)⟩
   change ProperlyDiscontinuousSMul (↥Γ) UpperHalfPlane
   constructor

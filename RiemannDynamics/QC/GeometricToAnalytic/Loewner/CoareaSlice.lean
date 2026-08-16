@@ -95,7 +95,7 @@ theorem exists_lsc_sq_approx {ρ : ℂ → ℝ≥0∞} (hρm : Measurable ρ) {�
   have _ := hctop
   -- `volume.restrict Ω` is a finite Borel measure on the metric space `ℂ`,
   -- hence weakly regular, so Mathlib's Vitali–Carathéodory envelope applies.
-  haveI : IsFiniteMeasure (volume.restrict Ω) := isFiniteMeasure_restrict.2 hvol
+  have : IsFiniteMeasure (volume.restrict Ω) := isFiniteMeasure_restrict.2 hvol
   have hfm : Measurable fun z => (max (ρ z) c) ^ 2 :=
     (hρm.max measurable_const).pow_const 2
   obtain ⟨g, hg_le, hg_lsc, hg_int⟩ :=

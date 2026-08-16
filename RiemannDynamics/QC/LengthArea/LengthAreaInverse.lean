@@ -237,14 +237,14 @@ theorem lengthArea_modulus_lower_bound {a b s t : ℝ} (hab : a < b) (hst : s < 
           rw [h]
           have hr : HasDerivAt (fun x : ℝ => (a + (b - a) * x : ℝ)) (b - a) x := by
             have h1 : HasDerivAt (fun x : ℝ => (b - a) * x) (b - a) x := by
-              simpa only [mul_one] using (hasDerivAt_id x).const_mul (b - a)
-            simpa only [zero_add] using (hasDerivAt_const x a).add h1
+              simpa only [mul_one] using! (hasDerivAt_id x).const_mul (b - a)
+            simpa only [zero_add] using! (hasDerivAt_const x a).add h1
           exact (hr.ofReal_comp).add_const ((y : ℝ) * Complex.I)
         exact hd.deriv
       -- norm of deriv = ofReal (b - a)
       have hnorm : ∀ x, (‖deriv γ x‖₊ : ℝ≥0∞) = ENNReal.ofReal (b - a) := by
         intro x
-        rw [hderiv x, ← enorm_eq_nnnorm, ← ofReal_norm_eq_enorm, Complex.norm_real,
+        rw [hderiv x, ← enorm_eq_nnnorm, ← ofReal_norm, Complex.norm_real,
           Real.norm_eq_abs, abs_of_pos hbma]
       -- arc-length integral
       have harc : arcLengthLineIntegral ρ γ
@@ -276,8 +276,8 @@ theorem lengthArea_modulus_lower_bound {a b s t : ℝ} (hab : a < b) (hst : s < 
           intro x hx
           have : HasDerivAt f (b - a) x := by
             have h1 : HasDerivAt (fun x : ℝ => (b - a) * x) (b - a) x := by
-              simpa only [mul_one] using (hasDerivAt_id x).const_mul (b - a)
-            simpa only [zero_add] using (hasDerivAt_const x a).add h1
+              simpa only [mul_one] using! (hasDerivAt_id x).const_mul (b - a)
+            simpa only [zero_add] using! (hasDerivAt_const x a).add h1
           exact this.hasDerivWithinAt
         have hinj : Set.InjOn f (Set.Icc 0 1) := by
           intro x1 _ x2 _ h
@@ -404,7 +404,7 @@ theorem IsQCAnalytic.inverse_conditionNPlus {f : ℂ → ℂ} {b : BeltramiCoeff
     rintro _ ⟨w, hwD, rfl⟩
     by_contra hgwE
     -- `g w ∉ E` means `f` is differentiable at `g w` with positive Jacobian.
-    rw [hE, Set.mem_setOf_eq, not_or, not_not, not_not] at hgwE
+    rw [hE, Set.mem_ofPred_eq, not_or, not_not, not_not] at hgwE
     obtain ⟨hdiff, hdetpos⟩ := hgwE
     -- Build the linear equivalence from the nonvanishing determinant of `Df (g w)`.
     set f' : ℂ →L[ℝ] ℂ := fderiv ℝ f (g w) with hf'
@@ -649,12 +649,12 @@ theorem memLpLocOn_inverse_partial_of_dilatation {g : ℂ → ℂ} {K : ℝ} (hK
   have hCdiff_null : volume (C \ s) = 0 := by
     have hsub : C \ s ⊆ Dᶜ := by
       intro w hw
-      simp only [hs, Set.mem_diff, Set.mem_inter_iff, not_and] at hw
+      simp only [hs, Set.mem_sdiff, Set.mem_inter_iff, not_and] at hw
       exact hw.2 hw.1
     have hDc_null : volume (Dᶜ) = 0 := by
       have := hgdiff
       rw [MeasureTheory.ae_iff] at this
-      simpa only [hD, Set.compl_setOf, not_not] using this
+      simpa only [hD, Set.compl_ofPred, not_not] using this
     exact measure_mono_null hsub hDc_null
   -- The pointwise energy bound `‖F w‖² ≤ ‖v‖² · K · det (Dg w)` for a.e. `w` in `K`.
   -- We bound the lintegral of `‖F w‖ₑ²` over `K`.
@@ -669,7 +669,7 @@ theorem memLpLocOn_inverse_partial_of_dilatation {g : ℂ → ℂ} {K : ℝ} (hK
     intro w
     have hle : ‖F w‖ ≤ ‖fderiv ℝ g w‖ * ‖v‖ := (fderiv ℝ g w).le_opNorm v
     have hle' : (‖F w‖ₑ : ℝ≥0∞) ≤ ‖fderiv ℝ g w‖ₑ * ‖v‖ₑ := by
-      rw [← ofReal_norm_eq_enorm, ← ofReal_norm_eq_enorm, ← ofReal_norm_eq_enorm,
+      rw [← ofReal_norm, ← ofReal_norm, ← ofReal_norm,
         ← ENNReal.ofReal_mul (norm_nonneg _)]
       exact ENNReal.ofReal_le_ofReal hle
     calc (‖F w‖ₑ : ℝ≥0∞) ^ (2 : ℝ)
@@ -699,7 +699,7 @@ theorem memLpLocOn_inverse_partial_of_dilatation {g : ℂ → ℂ} {K : ℝ} (hK
             refine MeasureTheory.ae_eq_set.mpr ⟨?_, ?_⟩
             · -- `volume (s \ C) = 0` (in fact `s \ C = ∅`).
               have : s \ C = ∅ := by
-                rw [Set.diff_eq_empty]; exact Set.inter_subset_left
+                rw [Set.sdiff_eq_empty]; exact Set.inter_subset_left
               rw [this]; simp
             · exact hCdiff_null
           rw [hCs]
@@ -712,7 +712,7 @@ theorem memLpLocOn_inverse_partial_of_dilatation {g : ℂ → ℂ} {K : ℝ} (hK
             have hnn : (0:ℝ) ≤ ‖fderiv ℝ g w‖ := norm_nonneg _
             rw [show (‖fderiv ℝ g w‖ₑ) ^ (2 : ℝ)
                   = ENNReal.ofReal (‖fderiv ℝ g w‖ ^ 2) by
-                rw [← ofReal_norm_eq_enorm,
+                rw [← ofReal_norm,
                   ENNReal.ofReal_rpow_of_nonneg hnn (by norm_num : (0:ℝ) ≤ 2)]
                 norm_num]
             rw [abs_of_pos hwdet, ← ENNReal.ofReal_mul hK.le]

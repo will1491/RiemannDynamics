@@ -205,7 +205,7 @@ theorem flow_deck_swap {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
       moebius_injOn γ (traj_regular hσtraj hu).1 (traj_regular hσ'traj hu).1
         (hEq hu)
     have hσ'S2 := slope_congr hEqσ.symm h0mem hσ'S
-    haveI := nebot_left hs
+    have := nebot_left hs
     have hclash := slope_eq hσS hσ'S2
     norm_num at hclash
   have hne : ε' = -ε := by
@@ -307,7 +307,7 @@ theorem pos_preimage_null {q : ℂ → ℂ} (hqm : Measurable q) (B : Atlas q)
   have hzero' : ∫⁻ z in itinPiece B h Nn S c, ‖q z‖ₑ = 0 := by
     have hzero : ∫⁻ z in itinPiece B h Nn S c, (1 : ℝ≥0∞) * ‖q z‖ₑ = 0 := by
       rw [← heq]
-      refine le_antisymm (le_trans (lintegral_mono_set hsub) ?_) (zero_le _)
+      refine le_antisymm (le_trans (lintegral_mono_set hsub) ?_) (zero_le)
       exact le_of_eq (setLIntegral_measure_zero _ _ hN0)
     rw [← hzero]
     exact lintegral_congr fun z => (one_mul _).symm
@@ -644,7 +644,7 @@ theorem traj_hasDerivAt_interior {q : ℂ → ℂ} {σ : ℝ → ℂ} {a b : ℝ
   have hinner : HasDerivAt (fun u : ℝ => Φ (σ v) + ((u - v : ℝ) : ℂ)) 1 v := by
     have h1 : HasDerivAt (fun u : ℝ => ((u - v : ℝ) : ℂ)) 1 v := by
       have h2 : HasDerivAt (fun u : ℝ => (u : ℂ)) 1 v := by
-        simpa using Complex.ofRealCLM.hasDerivAt (x := v)
+        simpa using! Complex.ofRealCLM.hasDerivAt (x := v)
       have h3 : HasDerivAt (fun u : ℝ => (u : ℂ) - (v : ℂ)) 1 v := h2.sub_const _
       refine h3.congr_of_eventuallyEq ?_
       filter_upwards with u
@@ -660,7 +660,7 @@ theorem traj_hasDerivAt_interior {q : ℂ → ℂ} {σ : ℝ → ℂ} {a b : ℝ
   have hmodel : HasDerivAt (fun u : ℝ => ψ (Φ (σ v) + ((u - v : ℝ) : ℂ)))
       ((deriv Φ (σ v))⁻¹) v := by
     have := hψat.comp v hinner
-    simpa using this
+    simpa using! this
   refine ⟨(deriv Φ (σ v))⁻¹, hmodel.congr_of_eventuallyEq hgerm, ?_⟩
   rw [inv_pow, hΦsq (σ v) hmem, ← inv_neg]
 
@@ -884,7 +884,7 @@ theorem ae_mem_Ioo01 :
   refine measure_mono_null (t := {(0 : ℝ)} ∪ {(1 : ℝ)}) (fun s hs => ?_)
     (measure_union_null Real.volume_singleton Real.volume_singleton)
   obtain ⟨hs1, hs2⟩ := hs
-  rw [Set.mem_setOf_eq, Set.mem_Ioo] at hs1
+  rw [Set.mem_ofPred_eq, Set.mem_Ioo] at hs1
   push Not at hs1
   by_cases hs0 : s = 0
   · exact Or.inl hs0
@@ -1128,14 +1128,14 @@ theorem chartline_heights_null {q : ℂ → ℂ} (hqm : Measurable q) (A : Atlas
         ring
       have hdet2 : ‖deriv (A.Φ j) z‖ ^ 2 = ‖q z‖ := by
         rw [← norm_pow, A.hsq j hj z hzball, norm_neg]
-      rw [hdet1, hdet2, abs_of_nonneg (norm_nonneg _), ofReal_norm_eq_enorm]
+      rw [hdet1, hdet2, abs_of_nonneg (norm_nonneg _), ofReal_norm]
     have hzero : ∫⁻ z in X, ‖q z‖ₑ = 0 := by
       have h1 : ∫⁻ z in X, ENNReal.ofReal |(fderiv ℝ (A.Φ j) z).det| = 0 := by
         have h2 : ∫⁻ z in X, ENNReal.ofReal |(fderiv ℝ (A.Φ j) z).det|
             = ∫⁻ z in X, ENNReal.ofReal |(fderiv ℝ (A.Φ j) z).det| * 1 := by
           refine lintegral_congr fun z => (mul_one _).symm
         rw [h2, ← hcov]
-        refine le_antisymm ?_ (zero_le _)
+        refine le_antisymm ?_ (zero_le)
         refine le_trans (lintegral_mono_set himgB) ?_
         exact le_of_eq (setLIntegral_measure_zero _ _ hB0)
       rw [← h1]
@@ -1164,7 +1164,7 @@ theorem acOn_reflect {X : Type*} [PseudoMetricSpace X] {η : ℝ → X} {c d : �
     rw [show -(E.2 i).1 - -(E.2 i).2 = -((E.2 i).1 - (E.2 i).2) from by ring,
       abs_neg]
   simp only [AbsolutelyContinuousOnInterval.disjWithin, Finset.mem_range,
-    Set.mem_setOf_eq] at hE
+    Set.mem_ofPred_eq] at hE
   obtain ⟨hEicc, hEdisj⟩ := hE
   have hmemF : (E.1, F) ∈ AbsolutelyContinuousOnInterval.disjWithin c d := by
     refine ⟨fun i hi => ?_, ?_⟩

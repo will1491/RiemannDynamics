@@ -457,7 +457,7 @@ theorem isOrientationPreserving_of_isOrientationPreservingAt_point {S : Type*}
         (chart_mem_atlas ℂ p) (chart_mem_atlas ℂ p') (chart_mem_atlas ℂ (f p))
         (chart_mem_atlas ℂ (f p')) p' h2' (mem_chart_source ℂ p') h3'
         (mem_chart_source ℂ (f p')) h1'
-    rwa [Filter.eventually_iff, Set.setOf_mem_eq] at hfinal
+    rwa [Filter.eventually_iff, Set.ofPred_mem_eq] at hfinal
   -- the complement is open
   have hAcopen : IsOpen {a : S |
       IsOrientationPreservingAt (homeoChartRep f a) (chartAt ℂ a a)}ᶜ := by
@@ -500,7 +500,7 @@ theorem isOrientationPreserving_of_isOrientationPreservingAt_point {S : Type*}
       obtain ⟨r', hr', hb', hdeg1⟩ := hAtP
       have hneg := h1' r' hb' hr'
       omega
-    rwa [Filter.eventually_iff, Set.setOf_mem_eq] at hfinal
+    rwa [Filter.eventually_iff, Set.ofPred_mem_eq] at hfinal
   -- clopen plus nonempty gives everything
   have hclopen : IsClopen {a : S |
       IsOrientationPreservingAt (homeoChartRep f a) (chartAt ℂ a a)} :=

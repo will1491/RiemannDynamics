@@ -257,7 +257,7 @@ theorem mapsTo_upper_of_fixes_real {G : ℂ → ℂ}
     intro p
     unfold homeoChartRep
     rw [chartAt_self_eq]
-    simp [Homeomorph.toOpenPartialHomeomorph_source]
+    simp [Homeomorph.toOpenPartialHomeomorph_source, chartAt_self_eq]
   -- a point of differentiability with positive Jacobian
   obtain ⟨z₀, hdet⟩ := hOP.2.exists
   have hdiff : DifferentiableAt ℝ G z₀ := by
@@ -855,7 +855,7 @@ theorem dense_compl_finite {B : Set ℝ} (hB : B.Finite) : Dense Bᶜ := by
   have hIoo : Set.Ioo (x - ε) (x + ε) ⊆ U := fun y hy => hball (by
     rw [Real.ball_eq_Ioo]; exact hy)
   have hinf : (Set.Ioo (x - ε) (x + ε)).Infinite := Set.Ioo_infinite (by linarith)
-  obtain ⟨y, hy1, hy2⟩ := (hinf.diff hB).nonempty
+  obtain ⟨y, hy1, hy2⟩ := (hinf.sdiff hB).nonempty
   exact ⟨y, hIoo hy1, hy2⟩
 
 /-- Boundary limit: a continuous plane map that factors on the upper half plane as a real
@@ -1023,11 +1023,8 @@ theorem group_transport (x : TeichRep Γ₀) (P : ModGroupUpper Γ₀)
       moebiusMap Rx (moebiusMap V' w) = moebiusMap W' (moebiusMap Rx w) := by
   refine conj_push (u := fun z => x.w (P.g z)) (γ := γ₄) Rx (wg_surj x P)
     (fun z hz => ?_) (fun z hz => ?_)
-  · change x.w (P.g (moebiusMap γ₄ z)) = moebiusMap V' (x.w (P.g z))
-    rw [hPc z hz, hxc (P.g z) (P.qc.mapsTo z hz)]
-  · change moebiusMap Rx (x.w (P.g (moebiusMap γ₄ z)))
-      = moebiusMap W' (moebiusMap Rx (x.w (P.g z)))
-    rw [← hRx (moebiusMap γ₄ z) (moebiusMap_im_pos γ₄ hz), ← hRx z hz]
+  · rw [hPc z hz, hxc (P.g z) (P.qc.mapsTo z hz)]
+  · rw [← hRx (moebiusMap γ₄ z) (moebiusMap_im_pos γ₄ hz), ← hRx z hz]
     exact hxU z hz
 
 /-- A special linear matrix with vanishing lower-left entry acts as an affine map. -/
@@ -1231,7 +1228,7 @@ theorem mem_gDilatationSet_smulUpper (hΓ₀ : IsFuchsianGroup Γ₀)
   set Q : Matrix.SpecialLinearGroup (Fin 2) ℝ := S * Rx⁻¹ with hQdef
   have hgood : ∀ s : ℝ, s ∉ Bt → Y.w (s : ℂ) = moebiusMap Q (Λf (s : ℂ)) := by
     intro s hs
-    simp only [hBtdef, Set.mem_union, Set.mem_setOf_eq, not_or] at hs
+    simp only [hBtdef, Set.mem_union, Set.mem_ofPred_eq, not_or] at hs
     obtain ⟨h1, h2, h3⟩ := hs
     have hd1 : moebiusDenom Ry⁻¹ (s : ℂ) ≠ 0 := h1
     have hd2 : moebiusDenom S (F (moebiusMap Ry⁻¹ (s : ℂ))) ≠ 0 := fun h => h2 ⟨h1, h⟩

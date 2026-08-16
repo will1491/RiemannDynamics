@@ -56,7 +56,7 @@ structure SimpleClosedCurve (S : Type*) [TopologicalSpace S] where
 noncomputable instance instFunLikeSCC {S : Type*} [TopologicalSpace S] :
     FunLike (SimpleClosedCurve S) Circle S where
   coe c := c.toFun
-  coe_injective' c₁ c₂ h := by
+  coe_injective c₁ c₂ h := by
     obtain ⟨t₁, i₁⟩ := c₁
     obtain ⟨t₂, i₂⟩ := c₂
     obtain rfl : t₁ = t₂ := DFunLike.coe_injective h
@@ -106,7 +106,7 @@ theorem isEssential_congr_const {S : Type*} [TopologicalSpace S]
   exact h.false (H.trans hK)
 
 /-- The image of a simple closed curve under a self-homeomorphism. -/
-def _root_.Homeomorph.mapSCC {S : Type*} [TopologicalSpace S] (f : S ≃ₜ S)
+noncomputable def _root_.Homeomorph.mapSCC {S : Type*} [TopologicalSpace S] (f : S ≃ₜ S)
     (c : SimpleClosedCurve S) : SimpleClosedCurve S :=
   ⟨⟨f ∘ c.toFun, f.continuous.comp c.toFun.continuous⟩, f.injective.comp c.inj⟩
 
@@ -229,7 +229,7 @@ theorem mapMulticurve_nonisotopic {S : Type*} [TopologicalSpace S]
   exact M.nonisotopic i j hij h2
 
 /-- The image of a multicurve under a self-homeomorphism. -/
-def _root_.Homeomorph.mapMulticurve {S : Type*} [TopologicalSpace S]
+noncomputable def _root_.Homeomorph.mapMulticurve {S : Type*} [TopologicalSpace S]
     [CompactSpace S] [T2Space S] (f : S ≃ₜ S) (M : Multicurve S) :
     Multicurve S where
   n := M.n
@@ -495,8 +495,8 @@ theorem continuous_dehnTwistFun {S : Type*} [TopologicalSpace S]
     (A : AnnulusNbhd c) : Continuous (dehnTwistFun A) := by
   have hcl1 : IsClosed (Set.range A.e) := (isCompact_range A.e.continuous).isClosed
   have hcont1 : ContinuousOn (dehnTwistFun A) (Set.range A.e) := by
-    rw [continuousOn_iff_continuous_restrict]
-    have heq : (Set.range A.e).restrict (dehnTwistFun A) = fun q : ↥(Set.range A.e) =>
+    rw [continuousOn_iff_continuous_domRestrict]
+    have heq : (Set.range A.e).domRestrict (dehnTwistFun A) = fun q : ↥(Set.range A.e) =>
         (A.embHomeomorph (twistCore (A.embHomeomorph.symm q)) : S) := by
       funext q
       exact dif_pos q.2

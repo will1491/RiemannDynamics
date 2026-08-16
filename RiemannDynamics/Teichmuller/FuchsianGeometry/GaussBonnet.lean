@@ -298,7 +298,7 @@ theorem exists_displacement_gap (hΓ : IsFuchsianGroup Γ)
     ∃ ε : ℝ, 0 < ε ∧ ∀ γ ∈ Γ, actsNontrivially γ →
       ∀ τ : UpperHalfPlane, ε ≤ dist τ (γ • τ) := by
   classical
-  haveI hPD : ProperlyDiscontinuousSMul (↥Γ) UpperHalfPlane := hΓ
+  have hPD : ProperlyDiscontinuousSMul (↥Γ) UpperHalfPlane := hΓ
   obtain ⟨K, hK, hcov⟩ := exists_compact_covering Γ hcc
   obtain ⟨R, hKR⟩ := hK.isBounded.subset_closedBall UpperHalfPlane.I
   have hK₁c : IsCompact (Metric.closedBall UpperHalfPlane.I (R + 1)) :=
@@ -762,7 +762,7 @@ theorem ae_conj_mul (x : TeichRep Γ₀)
         (measurableSet_toMeasurable _ _).inter hopen.measurableSet
       have hSnull : volume
           (toMeasurable volume {w | ¬ P w} ∩ {w : ℂ | moebiusDenom δ⁻¹ w ≠ 0}) = 0 := by
-        refine le_antisymm (le_trans (measure_mono Set.inter_subset_left) ?_) (zero_le _)
+        refine le_antisymm (le_trans (measure_mono Set.inter_subset_left) ?_) (zero_le)
         rw [measure_toMeasurable]
         exact hP.le
       have hfd : ∀ w ∈ toMeasurable volume {w | ¬ P w} ∩ {w : ℂ | moebiusDenom δ⁻¹ w ≠ 0},
@@ -785,7 +785,7 @@ theorem ae_conj_mul (x : TeichRep Γ₀)
       exact hcov
     refine measure_mono_null ?_ himg
     intro z hz
-    simp only [Set.mem_setOf_eq, Classical.not_imp] at hz
+    simp only [Set.mem_ofPred_eq, Classical.not_imp] at hz
     obtain ⟨hden, hbad⟩ := hz
     have hd1 : moebiusDenom δ⁻¹ (moebiusMap δ z) * moebiusDenom δ z = 1 := by
       rw [moebiusDenom_mul δ⁻¹ δ z hden, inv_mul_cancel, moebiusDenom_one]
@@ -825,7 +825,7 @@ theorem ae_conj_mul (x : TeichRep Γ₀)
     rw [ae_iff]
     refine measure_mono_null ?_ (hpre.measure_zero volume)
     intro z hz
-    simp only [Set.mem_setOf_eq, ne_eq, not_not] at hz
+    simp only [Set.mem_ofPred_eq, ne_eq, not_not] at hz
     exact hz
   have hpull := haeMoeb γ₂ (fun w => x.w (moebiusMap γ₁ w) = moebiusMap W₁ (x.w w)) hae₁
   filter_upwards [haePole, hae₂, hpull, hfPole] with z hd2 h2 h1 hdW2
@@ -973,7 +973,7 @@ normalized solution; the conjugator is unique up to sign since two conjugators a
 three points, and characters do not see the sign. -/
 theorem TeichRep.exists_homSubmodule_linearEquiv (x : TeichRep Γ₀) :
     Nonempty (homSubmodule (↥x.group) ≃ₗ[ℝ] homSubmodule (↥Γ₀)) := by
-  refine ⟨LinearEquiv.ofLinear (transportFwd x) (transportBwd x) ?_ ?_⟩
+  refine ⟨LinearEquiv.ofLinearMap (transportFwd x) (transportBwd x) ?_ ?_⟩
   · apply LinearMap.ext
     intro g
     apply Subtype.ext

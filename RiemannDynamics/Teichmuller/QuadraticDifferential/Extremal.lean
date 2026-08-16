@@ -123,7 +123,7 @@ theorem dilatationSet_sInf_mem (x y : TeichRep Γ₀) :
   classical
   obtain ⟨u, hua, hut, humem⟩ :=
     exists_seq_tendsto_sInf (dilatationSet_nonempty x y) (bddBelow_dilatationSet x y)
-  simp only [dilatationSet, Set.mem_setOf_eq] at humem
+  simp only [dilatationSet, Set.mem_ofPred_eq] at humem
   choose F hFK hFb using humem
   have hfp : ∀ n, F n 0 = 0 := by
     intro n
@@ -252,7 +252,7 @@ theorem exists_frequently_const_witness
     (hiden : ∀ n, moebiusMap (V n) (pn n) = qn n) :
     ∃ V₀, V₀ ∈ Γ ∧ ∃ᶠ n in atTop, V n = V₀ := by
   classical
-  haveI hPD : ProperlyDiscontinuousSMul Γ UpperHalfPlane := hΓ
+  have hPD : ProperlyDiscontinuousSMul Γ UpperHalfPlane := hΓ
   set P : ℕ → UpperHalfPlane := fun n => ⟨pn n, hpn n⟩ with hP
   set Q : ℕ → UpperHalfPlane := fun n => ⟨qn n, hqn n⟩ with hQ
   set Pl : UpperHalfPlane := ⟨p, hpim⟩ with hPl
@@ -337,8 +337,8 @@ theorem exists_three_good_reals {P₁ P₂ P₃ P₄ : ℝ → Prop}
   have hBfin : ({b₁, b₂, b₃, b₄} : Set ℝ).Finite := Set.toFinite _
   have hinf : ({b₁, b₂, b₃, b₄} : Set ℝ)ᶜ.Infinite := hBfin.infinite_compl
   obtain ⟨t₁, ht₁⟩ := hinf.nonempty
-  obtain ⟨t₂, ht₂⟩ := (hinf.diff (Set.finite_singleton t₁)).nonempty
-  obtain ⟨t₃, ht₃⟩ := (hinf.diff (Set.toFinite {t₁, t₂})).nonempty
+  obtain ⟨t₂, ht₂⟩ := (hinf.sdiff (Set.finite_singleton t₁)).nonempty
+  obtain ⟨t₃, ht₃⟩ := (hinf.sdiff (Set.toFinite {t₁, t₂})).nonempty
   have hgood : ∀ t : ℝ, t ∈ ({b₁, b₂, b₃, b₄} : Set ℝ)ᶜ →
       ¬P₁ t ∧ ¬P₂ t ∧ ¬P₃ t ∧ ¬P₄ t := by
     intro t htc
@@ -347,16 +347,16 @@ theorem exists_three_good_reals {P₁ P₂ P₃ P₄ : ℝ → Prop}
       fun h => htc.2.2.1 (hb₃ t h), fun h => htc.2.2.2 (hb₄ t h)⟩
   refine ⟨t₁, t₂, t₃, ?_, ?_, ?_, ?_⟩
   · intro h
-    exact (Set.mem_diff _ |>.mp ht₂).2 (by simp [h.symm])
+    exact (Set.mem_sdiff _ |>.mp ht₂).2 (by simp [h.symm])
   · intro h
-    exact (Set.mem_diff _ |>.mp ht₃).2 (by simp [h.symm])
+    exact (Set.mem_sdiff _ |>.mp ht₃).2 (by simp [h.symm])
   · intro h
-    exact (Set.mem_diff _ |>.mp ht₃).2 (by simp [h.symm])
+    exact (Set.mem_sdiff _ |>.mp ht₃).2 (by simp [h.symm])
   · intro t ht
     rcases ht with rfl | rfl | rfl
     · exact hgood _ ht₁
-    · exact hgood _ (Set.mem_diff _ |>.mp ht₂).1
-    · exact hgood _ (Set.mem_diff _ |>.mp ht₃).1
+    · exact hgood _ (Set.mem_sdiff _ |>.mp ht₂).1
+    · exact hgood _ (Set.mem_sdiff _ |>.mp ht₃).1
 
 /-- **Candidacy passes to locally uniform quasiconformal limits.** The boundary clause is
 pointwise-closed; for each deck element the conjugating witnesses of the approximants carry
@@ -431,10 +431,7 @@ theorem isMarkedCandidate_of_tendstoLocallyUniformly (hΓ₀ : IsFuchsianGroup �
             linarith [(hN (k + N) (Nat.le_add_left N k)).2])
           (by rw [Complex.conj_im]; linarith)
           (by rw [Complex.conj_im]; linarith)
-          (fun k => by
-            change moebiusMap (V (k + N)) (starRingEnd ℂ (Fn (k + N) Complex.I))
-              = starRingEnd ℂ (Fn (k + N) z₁)
-            rw [moebiusMap_conj, hiden (k + N)])
+          (fun k => by rw [moebiusMap_conj, hiden (k + N)])
         refine ⟨V₀, hV₀, ?_⟩
         rw [Filter.frequently_atTop] at hfr ⊢
         intro M
@@ -582,7 +579,7 @@ theorem exists_extremal_marked (hΓ₀ : IsFuchsianGroup Γ₀)
   obtain ⟨u, hua, hut, humem⟩ :=
     exists_seq_tendsto_sInf (gDilatationSet_nonempty x y)
       (bddBelow_gDilatationSet x y)
-  simp only [gDilatationSet, Set.mem_setOf_eq] at humem
+  simp only [gDilatationSet, Set.mem_ofPred_eq] at humem
   choose F hFK hFc using humem
   have hfp : ∀ n, F n 0 = 0 := by
     intro n
@@ -698,13 +695,13 @@ theorem ae_slice_hasDerivAt {G : ℂ → ℂ} (hdiff : ∀ᵐ z : ℂ, Different
   have hprod : ∀ᵐ p : ℝ × ℝ, DifferentiableAt ℝ G (Complex.mk p.2 p.1) := by
     have := (Measure.measurePreserving_swap (μ := (volume : Measure ℝ))
       (ν := (volume : Measure ℝ))).quasiMeasurePreserving.ae hpb
-    simpa [Prod.swap] using this
+    simpa [Prod.swap] using! this
   have hline : ∀ᵐ y : ℝ, ∀ᵐ x : ℝ, DifferentiableAt ℝ G (Complex.mk x y) :=
     MeasureTheory.Measure.ae_ae_of_ae_prod hprod
   filter_upwards [hline] with y hy
   filter_upwards [hy] with x hx
   have := hx.hasFDerivAt.comp_hasDerivAt x (hasDerivAt_horizontalSegment y x)
-  simpa using this
+  simpa using! this
 
 /-! ## The per-slice fundamental theorem of calculus -/
 
@@ -719,7 +716,7 @@ theorem slice_re_integral {ψ D : ℝ → ℂ}
   have hφder : ∀ᵐ t : ℝ, HasDerivAt φ ((D t).re) t := by
     filter_upwards [hder] with t ht
     have := Complex.reCLM.hasFDerivAt.comp_hasDerivAt t ht
-    simpa [hφ] using this
+    simpa [hφ] using! this
   have hcongr : ∫ x in (0 : ℝ)..1, deriv φ x = ∫ x in (0 : ℝ)..1, (D x).re := by
     refine intervalIntegral.integral_congr_ae ?_
     filter_upwards [hφder] with x hx _
@@ -754,7 +751,7 @@ theorem slice_lower {ψ D : ℝ → ℂ}
         refine ofReal_integral_eq_lintegral_ofReal hInt ?_
         filter_upwards with t using norm_nonneg _
     _ = ∫⁻ t in Set.Icc (0 : ℝ) 1, ‖D t‖ₑ :=
-        lintegral_congr fun t => ofReal_norm_eq_enorm _
+        lintegral_congr fun t => ofReal_norm _
 
 /-! ## Fubini over a rectangle and the a.e. length–area kernel -/
 
@@ -766,7 +763,7 @@ theorem lintegral_slice_eq_rect {D : ℂ → ℝ≥0∞} (hD : Measurable D) (a 
   have hpre : {z : ℂ | z.re ∈ Set.Icc a b ∧ z.im ∈ Set.Icc c d}
       = Complex.measurableEquivRealProd ⁻¹' (Set.Icc a b ×ˢ Set.Icc c d) := by
     ext z
-    simp only [Set.mem_setOf_eq, Set.mem_preimage, Complex.measurableEquivRealProd_apply,
+    simp only [Set.mem_ofPred_eq, Set.mem_preimage, Complex.measurableEquivRealProd_apply,
       Set.mem_prod]
   have hstep : ∫⁻ z in {z : ℂ | z.re ∈ Set.Icc a b ∧ z.im ∈ Set.Icc c d}, D z
       = ∫⁻ p in Set.Icc a b ×ˢ Set.Icc c d,
@@ -824,7 +821,7 @@ theorem rectCompl_preconnected (Λ : ℝ) (_hΛ : 0 < Λ) :
       = {c : ℂ | c.re < 0} ∪ ({c : ℂ | (1 : ℝ) < c.im}
         ∪ ({c : ℂ | Λ < c.re} ∪ {c : ℂ | c.im < 0})) := by
     ext z
-    simp only [Set.mem_compl_iff, Set.mem_setOf_eq, Set.mem_Icc, Set.mem_union, not_and_or,
+    simp only [Set.mem_compl_iff, Set.mem_ofPred_eq, Set.mem_Icc, Set.mem_union, not_and_or,
       not_le]
     tauto
   rw [hchar]
@@ -835,20 +832,20 @@ theorem rectCompl_preconnected (Λ : ℝ) (_hΛ : 0 < Λ) :
   have hD : IsPreconnected {c : ℂ | c.im < 0} := (convex_halfSpace_im_lt 0).isPreconnected
   have hCD : IsPreconnected ({c : ℂ | Λ < c.re} ∪ {c : ℂ | c.im < 0}) := by
     refine hC.union (Complex.mk (Λ + 1) (-1)) ?_ ?_ hD
-    · simp only [Set.mem_setOf_eq]
+    · simp only [Set.mem_ofPred_eq]
       exact lt_add_one Λ
-    · simp only [Set.mem_setOf_eq]
+    · simp only [Set.mem_ofPred_eq]
       norm_num
   have hBCD : IsPreconnected ({c : ℂ | (1 : ℝ) < c.im}
       ∪ ({c : ℂ | Λ < c.re} ∪ {c : ℂ | c.im < 0})) := by
     refine hB.union (Complex.mk (Λ + 1) 2) ?_ ?_ hCD
-    · simp only [Set.mem_setOf_eq]
+    · simp only [Set.mem_ofPred_eq]
       norm_num
-    · exact Or.inl (by simp only [Set.mem_setOf_eq]; exact lt_add_one Λ)
+    · exact Or.inl (by simp only [Set.mem_ofPred_eq]; exact lt_add_one Λ)
   refine hA.union (Complex.mk (-1) 2) ?_ ?_ hBCD
-  · simp only [Set.mem_setOf_eq]
+  · simp only [Set.mem_ofPred_eq]
     norm_num
-  · exact Or.inl (by simp only [Set.mem_setOf_eq]; norm_num)
+  · exact Or.inl (by simp only [Set.mem_ofPred_eq]; norm_num)
 
 /-- **The image of the unit square lies in the stretched rectangle**: a plane homeomorphism
 agreeing with the horizontal stretch on the boundary of the unit square maps the square
@@ -885,7 +882,7 @@ theorem image_square_subset_rect {Λ : ℝ} {G : ℂ → ℂ} (hΛ : 1 ≤ Λ)
     · calc G '' Sq = G '' closure (interior Sq) := by rw [hSqClos]
         _ ⊆ closure (G '' interior Sq) := image_closure_subset_closure_image hGc
   have hfront : G '' Sq \ U ⊆ Rect := by
-    rw [hUd, ← Set.image_diff hGinj]
+    rw [hUd, ← Set.image_sdiff hGinj]
     rintro _ ⟨z, hz, rfl⟩
     have hzSq : z ∈ Sq := hz.1
     have hre : z.re ∈ Set.Icc (0 : ℝ) 1 := hzSq.1
@@ -970,7 +967,7 @@ theorem area_bound {G : ℂ → ℂ} (hinj : Function.Injective G)
   have hae : S =ᵐ[volume] s := by
     rw [MeasureTheory.ae_eq_set]
     refine ⟨hnull, ?_⟩
-    rw [Set.diff_eq_empty.mpr Set.inter_subset_left]
+    rw [Set.sdiff_eq_empty.mpr Set.inter_subset_left]
     exact measure_empty
   calc ∫⁻ z in S, ENNReal.ofReal ((fderiv ℝ G z).det)
       = ∫⁻ z in s, ENNReal.ofReal ((fderiv ℝ G z).det) := by
@@ -989,7 +986,7 @@ theorem rect_volume (Λ : ℝ) :
   have hpre : {z : ℂ | z.re ∈ Set.Icc (0 : ℝ) Λ ∧ z.im ∈ Set.Icc (0 : ℝ) 1}
       = Complex.measurableEquivRealProd ⁻¹' (Set.Icc (0 : ℝ) Λ ×ˢ Set.Icc (0 : ℝ) 1) := by
     ext z
-    simp only [Set.mem_setOf_eq, Set.mem_preimage, Complex.measurableEquivRealProd_apply,
+    simp only [Set.mem_ofPred_eq, Set.mem_preimage, Complex.measurableEquivRealProd_apply,
       Set.mem_prod]
   rw [hpre, Complex.volume_preserving_equiv_real_prod.measure_preimage
     ((measurableSet_Icc.prod measurableSet_Icc).nullMeasurableSet)]
@@ -1053,7 +1050,7 @@ theorem area_chain {Λ K : ℝ} {G : ℂ → ℂ} (hΛ : 1 ≤ Λ) (hG : IsQCGeo
       nlinarith [norm_nonneg ((fderiv ℝ G z) 1), norm_nonneg (fderiv ℝ G z)]
     calc D z = ENNReal.ofReal (‖(fderiv ℝ G z) 1‖ ^ 2) := by
           simp only [hD]
-          rw [← ofReal_norm_eq_enorm, ← ENNReal.ofReal_pow (norm_nonneg _)]
+          rw [← ofReal_norm, ← ENNReal.ofReal_pow (norm_nonneg _)]
       _ ≤ ENNReal.ofReal (K * (fderiv ℝ G z).det) := ENNReal.ofReal_le_ofReal h2
   calc (∫⁻ y in Set.Icc (0 : ℝ) 1, ∫⁻ t in Set.Icc (0 : ℝ) 1,
         ‖(fderiv ℝ G (Complex.mk t y)) 1‖ₑ ^ 2)
@@ -1124,7 +1121,7 @@ theorem slice_eq {Λ : ℝ} {ψ D : ℝ → ℂ} (hΛ : 1 ≤ Λ)
       (by filter_upwards with t using norm_nonneg _)
     have h2 : ∫⁻ t in Set.Icc (0 : ℝ) 1, ENNReal.ofReal ‖D t‖ = ENNReal.ofReal Λ := by
       rw [← hI1]
-      exact lintegral_congr fun t => ofReal_norm_eq_enorm _
+      exact lintegral_congr fun t => ofReal_norm _
     rw [h2] at h
     exact (ENNReal.ofReal_eq_ofReal_iff (integral_nonneg fun t => norm_nonneg _) hΛ0.le).mp h
   have hIsq : ∫ t in Set.Icc (0 : ℝ) 1, ‖D t‖ ^ 2 = Λ ^ 2 := by
@@ -1134,7 +1131,7 @@ theorem slice_eq {Λ : ℝ} {ψ D : ℝ → ℂ} (hΛ : 1 ≤ Λ)
         = ENNReal.ofReal Λ ^ 2 := by
       rw [← hI2]
       refine lintegral_congr fun t => ?_
-      rw [← ofReal_norm_eq_enorm, ← ENNReal.ofReal_pow (norm_nonneg _)]
+      rw [← ofReal_norm, ← ENNReal.ofReal_pow (norm_nonneg _)]
     rw [h2, ← ENNReal.ofReal_pow hΛ0.le] at h
     exact (ENNReal.ofReal_eq_ofReal_iff (integral_nonneg fun t => sq_nonneg _)
       (pow_nonneg hΛ0.le 2)).mp h
@@ -1154,7 +1151,7 @@ theorem slice_eq {Λ : ℝ} {ψ D : ℝ → ℂ} (hΛ : 1 ≤ Λ)
     · rw [integral_sub hInt hReInt, hIh, hRe, sub_self]
   have hfun : (fun t => (‖D t‖ - Λ) ^ 2)
       = fun t => ‖D t‖ ^ 2 - 2 * Λ * ‖D t‖ + Λ ^ 2 := funext fun t => by ring
-  haveI hfinm : IsFiniteMeasure (volume.restrict (Set.Icc (0 : ℝ) 1)) := by
+  have hfinm : IsFiniteMeasure (volume.restrict (Set.Icc (0 : ℝ) 1)) := by
     constructor
     rw [Measure.restrict_apply_univ, Real.volume_Icc]
     exact ENNReal.ofReal_lt_top
@@ -1205,7 +1202,7 @@ theorem slice_eq {Λ : ℝ} {ψ D : ℝ → ℂ} (hΛ : 1 ≤ Λ)
     have hmem : s ∈ Set.Icc (0 : ℝ) 1 := by rwa [Set.uIcc_of_le zero_le_one] at hsIcc
     have hd := hs1.sub (affine_hasDerivAt Λ s)
     rw [hs2 hmem] at hd
-    simpa [hχ] using hd
+    simpa [hχ] using! hd
   obtain ⟨C, hC⟩ := hχac.const_of_ae_hasDerivAt_zero hχ0
   have ht' : t ∈ Set.uIcc (0 : ℝ) 1 := by rwa [Set.uIcc_of_le zero_le_one]
   have h0' : (0 : ℝ) ∈ Set.uIcc (0 : ℝ) 1 := by

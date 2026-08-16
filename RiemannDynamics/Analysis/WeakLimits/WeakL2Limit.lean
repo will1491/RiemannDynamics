@@ -150,17 +150,16 @@ theorem exists_subseq_tendstoWeaklyL2Loc {hₙ : ℕ → ℂ → ℂ}
   have hwe_meas : Measurable fun z => (w z : ℝ≥0∞) := hw_meas.coe_nnreal_ennreal
   -- § 2. The weighted measure and the Hilbert space `L²(w · volume)`.
   set μw : Measure ℂ := volume.withDensity (fun z => (w z : ℝ≥0∞)) with hμw_def
-  haveI : Fact ((2 : ℝ≥0∞) ≠ ⊤) := ⟨by norm_num⟩
-  haveI : SFinite μw := by rw [hμw_def]; infer_instance
-  haveI : MeasureTheory.IsSeparable μw := inferInstance
-  haveI : SecondCountableTopology (Lp ℂ 2 μw) := inferInstance
-  haveI : TopologicalSpace.SeparableSpace (Lp ℂ 2 μw) := inferInstance
+  have : Fact ((2 : ℝ≥0∞) ≠ ⊤) := ⟨by norm_num⟩
+  have : SFinite μw := by rw [hμw_def]; infer_instance
+  have : MeasureTheory.IsSeparable μw := inferInstance
+  have : SecondCountableTopology (Lp ℂ 2 μw) := inferInstance
+  have : TopologicalSpace.SeparableSpace (Lp ℂ 2 μw) := inferInstance
   -- Lower bound for the weight on centred balls of natural radius.
   have hwlow : ∀ M : ℕ, ∃ dm : ℝ≥0, 0 < dm ∧ ∀ z : ℂ, ‖z‖ ≤ (M : ℝ) → dm ≤ w z := by
     intro M
     refine ⟨(Finset.range (M + 1)).inf' ⟨0, Finset.mem_range.mpr M.succ_pos⟩ d, ?_, ?_⟩
-    · rw [Finset.lt_inf'_iff]
-      exact fun i _ => hd_pos i
+    · exact (Finset.lt_inf'_iff _).2 fun i _ => hd_pos i
     · intro z hz
       have hfl : ⌊‖z‖⌋₊ ≤ M := by
         calc ⌊‖z‖⌋₊ ≤ ⌊(M : ℝ)⌋₊ := Nat.floor_mono hz
@@ -521,7 +520,7 @@ theorem memW12loc_of_continuous_weakGradient {g u v : ℂ → ℂ}
     MemW12loc g := by
   have hgL2 : MemLpLocOn g (2 : ℝ≥0∞) Set.univ := by
     intro K _ hK
-    haveI : IsFiniteMeasure (volume.restrict K) := by
+    have : IsFiniteMeasure (volume.restrict K) := by
       constructor; rw [Measure.restrict_apply_univ]; exact hK.measure_lt_top
     obtain ⟨C, hC⟩ := hK.exists_bound_of_continuousOn hg.continuousOn
     have hbound : ∀ᵐ x ∂(volume.restrict K), ‖g x‖ ≤ C := by
@@ -540,11 +539,11 @@ theorem integral_normSq_le_of_lintegral_enormSq_le {f : ℂ → ℂ} {s : Set �
   have hnn : 0 ≤ᵐ[volume.restrict s] fun z => ‖f z‖ ^ 2 :=
     Filter.Eventually.of_forall fun z => sq_nonneg _
   have hmeas : AEStronglyMeasurable (fun z => ‖f z‖ ^ 2) (volume.restrict s) := by
-    simpa [sq] using hm.norm.mul hm.norm
+    simpa [sq] using! hm.norm.mul hm.norm
   rw [integral_eq_lintegral_of_nonneg_ae hnn hmeas]
   have hkey : (∫⁻ z in s, ENNReal.ofReal (‖f z‖ ^ 2)) = ∫⁻ z in s, ‖f z‖ₑ ^ 2 :=
     lintegral_congr fun z => by
-      rw [ENNReal.ofReal_pow (norm_nonneg _), ofReal_norm_eq_enorm]
+      rw [ENNReal.ofReal_pow (norm_nonneg _), ofReal_norm]
   rw [hkey]
   exact ENNReal.toReal_mono hC h
 

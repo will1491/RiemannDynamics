@@ -41,22 +41,22 @@ theorem halfdisc_radial (z₀ : ℂ) (hz₀ : 0 < z₀.im) (R : ℝ) (hR : ‖z�
           0 < (z₀ + (t : ℂ) * Complex.exp (ϑ * Complex.I)).im) →
         rad ϑ = t) := by
   classical
-  haveI : NormSMulClass ℝ ℂ := NormedSpace.toNormSMulClass
-  haveI : IsBoundedSMul ℝ ℂ := NormSMulClass.toIsBoundedSMul
-  haveI : ContinuousSMul ℝ ℂ := IsBoundedSMul.continuousSMul
+  have : NormSMulClass ℝ ℂ := NormedSpace.toNormSMulClass
+  have : IsBoundedSMul ℝ ℂ := NormSMulClass.toIsBoundedSMul
+  have : ContinuousSMul ℝ ℂ := IsBoundedSMul.continuousSMul
   have hRpos : 0 < R := lt_of_le_of_lt (by positivity) hR
   -- The half-disc body, shifted to put `z₀` at the origin.
   set B₀ : Set ℂ := {w : ℂ | ‖z₀ + w‖ ≤ R ∧ 0 ≤ (z₀ + w).im} with hB₀def
   have hpre : B₀ = (fun w => z₀ + w) ⁻¹'
       (Metric.closedBall 0 R ∩ {c : ℂ | 0 ≤ c.im}) := by
     ext w
-    simp only [hB₀def, Set.mem_setOf_eq, Set.mem_preimage, Set.mem_inter_iff,
+    simp only [hB₀def, Set.mem_ofPred_eq, Set.mem_preimage, Set.mem_inter_iff,
       Metric.mem_closedBall, dist_zero_right]
   have hconv : Convex ℝ B₀ := by
     have him : B₀ = (fun w => -z₀ + w) ''
         (Metric.closedBall 0 R ∩ {c : ℂ | 0 ≤ c.im}) := by
       ext w
-      simp only [hB₀def, Set.mem_setOf_eq, Set.mem_image, Set.mem_inter_iff,
+      simp only [hB₀def, Set.mem_ofPred_eq, Set.mem_image, Set.mem_inter_iff,
         Metric.mem_closedBall, dist_zero_right]
       constructor
       · intro hw
@@ -806,7 +806,7 @@ theorem teichRep_w_im_pos {Γ₀ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) �
         · exact Or.inr hzN
         · exact Or.inl ⟨hz, hzN⟩
       rw [h0, h2, add_zero] at h4
-      exact absurd (le_antisymm h4 (zero_le _)) (ne_of_gt hΩpos)
+      exact absurd (le_antisymm h4 (zero_le)) (ne_of_gt hΩpos)
     obtain ⟨z₀, hz₀Ω, hz₀N⟩ := h3
     exact ⟨z₀, hz₀Ω, not_not.mp hz₀N⟩
   have hz₀im : 0 < z₀.im := hz₀Ω

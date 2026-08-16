@@ -143,7 +143,7 @@ theorem arcLengthLineIntegral_segment_le {ρ : ℂ → ℝ≥0∞} {M : ℝ≥0}
     have h2 : HasDerivAt (fun θ : ℝ => (θ : ℂ) * w) w t := by
       simpa using ((hasDerivAt_id t).ofReal_comp).mul_const w
     have : HasDerivAt (fun t : ℝ => (1 - t) • z + t • w) (w - z) t := by
-      rw [hfun]; simpa [sub_eq_neg_add] using h1.add h2
+      rw [hfun]; simpa [sub_eq_neg_add] using! h1.add h2
     exact this.deriv
   unfold arcLengthLineIntegral
   simp_rw [hderiv]
@@ -398,12 +398,14 @@ theorem rhoDistance_upperGradient_of_bounded {ρ : ℂ → ℝ≥0∞} {E U : Se
             rw [ENNReal.toReal_add hf2 hmt, ENNReal.toReal_mul] at this
             simp only [ENNReal.coe_toReal] at this
             convert this using 2
+            exact rfl
           have hr21 : v w2 ≤ v w1 + (M:ℝ) * ‖w2 - w1‖ := by
             rw [hvdef]; simp only
             have := ENNReal.toReal_mono (ENNReal.add_ne_top.mpr ⟨hf1, hmt'⟩) hle21
             rw [ENNReal.toReal_add hf1 hmt', ENNReal.toReal_mul] at this
             simp only [ENNReal.coe_toReal] at this
             convert this using 2
+            exact rfl
           rw [Real.dist_eq, abs_sub_le_iff, dist_eq_norm]
           refine ⟨?_, ?_⟩
           · rw [hvdef] at hr12 ⊢; simp only at hr12 ⊢; nlinarith [hr12]
@@ -418,7 +420,7 @@ theorem rhoDistance_upperGradient_of_bounded {ρ : ℂ → ℝ≥0∞} {E U : Se
       have hset : {w | (w ∈ Ufin → DifferentiableAt ℝ v w)}ᶜ
           = Ufin ∩ {w | ¬ DifferentiableAt ℝ v w} := by
         ext w
-        simp only [Set.mem_compl_iff, Set.mem_setOf_eq, Set.mem_inter_iff, Classical.not_imp]
+        simp only [Set.mem_compl_iff, Set.mem_ofPred_eq, Set.mem_inter_iff, Classical.not_imp]
       rw [hset]
       have hbad : ∀ c ∈ Tc,
           volume ((Metric.ball c (rad c)) ∩ {w | ¬ DifferentiableAt ℝ v w}) = 0 := by
@@ -428,7 +430,7 @@ theorem rhoDistance_upperGradient_of_bounded {ρ : ℂ → ℝ≥0∞} {E U : Se
         have hc' : {w | (w ∈ Metric.ball c (rad c) → DifferentiableAt ℝ v w)}ᶜ
             = (Metric.ball c (rad c)) ∩ {w | ¬ DifferentiableAt ℝ v w} := by
           ext w
-          simp only [Set.mem_compl_iff, Set.mem_setOf_eq, Set.mem_inter_iff, Classical.not_imp]
+          simp only [Set.mem_compl_iff, Set.mem_ofPred_eq, Set.mem_inter_iff, Classical.not_imp]
         rwa [hc'] at hz'
       refine measure_mono_null ?_ ((measure_biUnion_null_iff hTc_count).mpr hbad)
       rintro w ⟨hwU, hwP⟩
@@ -484,7 +486,7 @@ theorem rhoDistance_upperGradient_of_bounded {ρ : ℂ → ℝ≥0∞} {E U : Se
       have hfd0 : HasFDerivAt v (fderiv ℝ v z) ((fun t : ℝ => z + t • u) 0) := by
         simpa using hdiff.hasFDerivAt
       have hcomp : HasDerivAt (fun t : ℝ => v (z + t • u)) (fderiv ℝ v z u) 0 := by
-        simpa using hfd0.comp_hasDerivAt 0 hline
+        simpa [Function.comp_def] using! hfd0.comp_hasDerivAt 0 hline
       have hslope : Tendsto (fun h : ℝ => h⁻¹ * (v (z + h • u) - v z))
           (𝓝[>] 0) (𝓝 (fderiv ℝ v z u)) := by
         refine hcomp.tendsto_slope_zero_right.congr' ?_
@@ -765,7 +767,7 @@ theorem rhoDistance_upperGradient {ρ : ℂ → ℝ≥0∞} {E U : Set ℂ} (hUo
       have hfd0 : HasFDerivAt v (fderiv ℝ v z) ((fun t : ℝ => z + t • u) 0) := by
         simpa using hdiff.hasFDerivAt
       have hcomp : HasDerivAt (fun t : ℝ => v (z + t • u)) (fderiv ℝ v z u) 0 := by
-        simpa using hfd0.comp_hasDerivAt 0 hline
+        simpa [Function.comp_def] using! hfd0.comp_hasDerivAt 0 hline
       have hslope : Tendsto (fun h : ℝ => h⁻¹ * (v (z + h • u) - v z))
           (𝓝[>] 0) (𝓝 (fderiv ℝ v z u)) := by
         refine hcomp.tendsto_slope_zero_right.congr' ?_
@@ -859,7 +861,7 @@ theorem rhoDistance_upperGradient {ρ : ℂ → ℝ≥0∞} {E U : Set ℂ} (hUo
             (by simp only [Real.enorm_eq_ofReal_abs]; exact ENNReal.ofReal_ne_top)
           rw [zero_div, div_self hhpos.ne'] at hcm
           have hrefl := hcm.comp_sub_left (1 : ℝ)
-          simp only at hrefl
+          try simp only at hrefl
           have hcompint : IntervalIntegrable
               (fun t : ℝ => g (z + ((1 - t) * h) • u) * h) volume 1 0 := by
             simpa using hrefl.mul_const h

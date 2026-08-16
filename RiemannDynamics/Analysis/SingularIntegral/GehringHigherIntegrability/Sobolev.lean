@@ -321,7 +321,7 @@ theorem exists_contDiff_approx_W11 {u gx gy : ℂ → ℂ}
           ((fderiv ℝ ρ (z - u)).comp (-ContinuousLinearMap.id ℝ ℂ)) u :=
         (hρ_diff (z - u)).hasFDerivAt.comp u hsub
       rw [hcomp.fderiv]
-      simp only [ContinuousLinearMap.comp_apply, ContinuousLinearMap.neg_apply,
+      simp only [ContinuousLinearMap.comp_apply, neg_apply,
         ContinuousLinearMap.id_apply, map_neg]
     have hint_eq :
         (∫ u, ((fderiv ℝ ρ (z - u)) v) • f u ∂volume)
@@ -343,7 +343,6 @@ theorem exists_contDiff_approx_W11 {u gx gy : ℂ → ℂ}
         (fun t => (L (ρ t)) (gv (z - t))) volume z]
     refine MeasureTheory.integral_congr_ae (Filter.Eventually.of_forall (fun u => ?_))
     simp only [hφz, sub_sub_cancel, hL, ContinuousLinearMap.lsmul_apply]
-    rfl
   -- ====================================================================
   -- (C) `L²` mollification convergence `‖ρ_n ⋆ g - g‖₂ → 0` for `g ∈ L²`.
   -- ====================================================================
@@ -416,7 +415,7 @@ theorem exists_contDiff_approx_W11 {u gx gy : ℂ → ℂ}
         intro z hz
         have h1 : z ∈ tsupport ((φ n).normed volume) := subset_tsupport _ hz
         rwa [(φ n).tsupport_normed_eq] at h1
-      haveI : MeasureTheory.IsFiniteMeasure (volume.restrict Kset) := by
+      have : MeasureTheory.IsFiniteMeasure (volume.restrict Kset) := by
         constructor; rw [MeasureTheory.Measure.restrict_apply_univ]; exact hKfin
       set D : ℕ → ℂ → ℂ := fun n => Cn n - h with hD
       have hrestrict : ∀ᶠ n in Filter.atTop,
@@ -439,7 +438,7 @@ theorem exists_contDiff_approx_W11 {u gx gy : ℂ → ℂ}
           refine ⟨(M.toNNReal + 1), fun n => ?_⟩
           have hempty : {x | (M.toNNReal + 1 : ℝ≥0) ≤ ‖Cn n x‖₊} = (∅ : Set ℂ) := by
             ext x
-            simp only [Set.mem_setOf_eq, Set.mem_empty_iff_false, iff_false, not_le]
+            simp only [Set.mem_ofPred_eq, Set.mem_empty_iff_false, iff_false, not_le]
             have hb' : ‖Cn n x‖₊ ≤ M.toNNReal := by
               rw [← NNReal.coe_le_coe, Real.coe_toNNReal M hM0]; exact hCnbd n x
             exact lt_of_le_of_lt hb' (by simp)

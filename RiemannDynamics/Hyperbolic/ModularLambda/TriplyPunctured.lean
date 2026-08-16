@@ -556,13 +556,13 @@ theorem modularLambda_exists_holomorphic_lift {f : ℂ → ℂ}
       ∀ z ∈ ball (0 : ℂ) 1, modularLambda (F z) = f (modularLambda z) := by
   classical
   -- Instances making the disk simply connected and locally path-connected.
-  haveI : LocPathConnectedSpace (ball (0 : ℂ) 1) :=
-    Metric.isOpen_ball.locPathConnectedSpace
-  haveI : ContractibleSpace (ball (0 : ℂ) 1) :=
+  have : LocallyPathConnectedSpace (ball (0 : ℂ) 1) :=
+    Metric.isOpen_ball.locallyPathConnectedSpace
+  have : ContractibleSpace (ball (0 : ℂ) 1) :=
     (convex_ball (0 : ℂ) 1).contractibleSpace ⟨0, Metric.mem_ball_self one_pos⟩
   -- The base set of the covering.
   have hs_open : IsOpen {w : ℂ | w ≠ 0 ∧ w ≠ 1} := by
-    rw [Set.setOf_and]
+    rw [Set.ofPred_and]
     exact isOpen_ne.inter isOpen_ne
   -- The map to lift, as a continuous map on the disk subtype.
   have hΦ_cont : Continuous fun a : ball (0 : ℂ) 1 => f (modularLambda ↑a) := by
@@ -612,8 +612,8 @@ theorem modularLambda_exists_holomorphic_lift {f : ℂ → ℂ}
     rw [hF_comm z hz] at h0
     exact (hf _ (modularLambda_omits hz)).1 h0
   have hF_contOn : ContinuousOn F (ball (0 : ℂ) 1) := by
-    rw [continuousOn_iff_continuous_restrict]
-    have hrestr : (ball (0 : ℂ) 1).restrict F = ⇑Fhat := by
+    rw [continuousOn_iff_continuous_domRestrict]
+    have hrestr : (ball (0 : ℂ) 1).domRestrict F = ⇑Fhat := by
       funext a
       exact hF_eq a.1 a.2
     rw [hrestr]

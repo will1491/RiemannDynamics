@@ -248,7 +248,7 @@ theorem exists_id_separation :
     have h2 : 2 ≤ Polynomial.rootMultiplicity a r.numReduced := by omega
     have hd_ne : Polynomial.derivative r.numReduced ≠ 0 := by
       intro h0
-      have hd0 := Polynomial.natDegree_eq_zero_of_derivative_eq_zero h0
+      have hd0 := Polynomial.derivative_eq_zero.mp h0
       omega
     have hdmult := Polynomial.derivative_rootMultiplicity_of_root
       (p := r.numReduced) (t := a) haR

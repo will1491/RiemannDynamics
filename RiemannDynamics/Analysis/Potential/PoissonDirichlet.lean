@@ -197,7 +197,7 @@ theorem poissonIntegral_harmonicOn (g : ℂ → ℝ) (c : ℂ) {R : ℝ} (hR : 0
       intro w hw
       have := (hcont hw).comp_continuous (continuous_circleMap c R)
         (fun θ => circleMap_mem_sphere c hR.le θ)
-      simpa [hG] using this
+      simpa [hG, Function.comp_def] using this
     have hgc : Continuous (fun θ : ℝ => (g (circleMap c R θ) : ℂ)) := by
       apply Complex.continuous_ofReal.comp
       exact hg.comp_continuous (continuous_circleMap c R)
@@ -431,8 +431,9 @@ theorem poissonIntegral_tendsto_boundary (g : ℂ → ℝ) (c : ℂ) {R : ℝ} (
   have hdom_ci : CircleIntegrable
       (fun z => ε₀ / 2 * poissonKernel c w z + B) c R := by
     have h1 : CircleIntegrable (fun z => ε₀ / 2 * poissonKernel c w z) c R := by
-      have := (hker_ci hw).smul (ε₀ / 2 : ℝ)
-      simpa [smul_eq_mul] using this
+      have h := hker_ci hw
+      rw [circleIntegrable_def] at h ⊢
+      exact h.const_mul _
     exact h1.add (circleIntegrable_const B c R)
   -- The integrand `kernel * |g - gζ|` is `CircleIntegrable`.
   have hint_ci : CircleIntegrable

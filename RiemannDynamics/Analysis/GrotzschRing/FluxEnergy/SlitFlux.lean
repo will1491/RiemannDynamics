@@ -117,7 +117,7 @@ theorem isOpen_openSlitBox (ξ₁ ξ₂ : ℝ) : IsOpen (openSlitBox ξ₁ ξ₂
   have h4 : IsOpen {w : ℂ | w.im < 2 * π} := isOpen_lt Complex.continuous_im continuous_const
   have : openSlitBox ξ₁ ξ₂ = {w : ℂ | ξ₁ < w.re} ∩ {w : ℂ | w.re < ξ₂}
       ∩ {w : ℂ | 0 < w.im} ∩ {w : ℂ | w.im < 2 * π} := by
-    ext w; simp only [openSlitBox, Set.mem_setOf_eq, Set.mem_inter_iff]; tauto
+    ext w; simp only [openSlitBox, Set.mem_ofPred_eq, Set.mem_inter_iff]; tauto
   rw [this]
   exact ((h1.inter h2).inter h3).inter h4
 
@@ -216,7 +216,7 @@ theorem continuous_slice_uexp_of_continuousOn_closedBall {v : ℂ → ℝ}
 theorem logPolar_mem_openSlitBox {ξ₁ ξ₂ ξ θ : ℝ} (h1 : ξ₁ < ξ) (h2 : ξ < ξ₂)
     (hθ1 : 0 < θ) (hθ2 : θ < 2 * π) :
     ((ξ : ℂ) + (θ : ℂ) * Complex.I) ∈ openSlitBox ξ₁ ξ₂ := by
-  simp only [openSlitBox, Set.mem_setOf_eq, re_logPolar, im_logPolar]
+  simp only [openSlitBox, Set.mem_ofPred_eq, re_logPolar, im_logPolar]
   exact ⟨h1, h2, hθ1, hθ2⟩
 
 /-- A horizontal slice `θ ↦ F(ξ+θi)` over `(0, 2π)` of a function continuous on the open slit
@@ -316,7 +316,7 @@ theorem hasDerivAt_im_expGrad_angular_slit {s ξ θ : ℝ} (hs0 : 0 < s) (hs1 : 
     (expGrad_differentiableAt_slitBox hs0 hs1 hvh (by rw [re_logPolar]; exact hξ)
       (by rw [im_logPolar]; exact hθ1) (by rw [im_logPolar]; exact hθ2))
   have hcomp := Complex.imCLM.hasFDerivAt.comp_hasDerivAt θ hD
-  simpa [Function.comp, Complex.mul_im] using hcomp
+  simpa [Function.comp, Complex.mul_im] using! hcomp
 
 /-- **Angular integration by parts on a closed subinterval of the slit chart.** For the Grötzsch
 potential `v` and a log-radius `ξ` with `e^ξ < s`, on a closed subinterval `[a, b] ⊆ (0, 2π)` the
@@ -429,7 +429,7 @@ theorem gradC_conj_eq {s : ℝ} (hs0 : 0 < s) (hs1 : s < 1) {v : ℂ → ℝ}
     have := Complex.conjLIE.toContinuousLinearEquiv.hasFDerivAt (x := z)
     refine this.congr_fderiv ?_
     ext w
-    simp [Complex.conjLIE_apply, Complex.conjCLE_apply]
+    simp [Complex.conjLIE_apply]
   have hcomp : HasFDerivAt v
       ((fderiv ℝ v ((starRingEnd ℂ) z)).comp
         (Complex.conjLIE.toLinearIsometry.toContinuousLinearMap)) z :=
@@ -609,7 +609,7 @@ theorem hasDerivAt_truncFlux {s a b ξ : ℝ} (hs0 : 0 < s) (hs1 : s < 1)
     have hDre : HasDerivAt (fun y : ℝ => (expGrad v ((y : ℂ) + (θ : ℂ) * Complex.I)).re)
         ((deriv (expGrad v) ((x : ℂ) + (θ : ℂ) * Complex.I)).re) x := by
       have hcomp := Complex.reCLM.hasFDerivAt.comp_hasDerivAt x hD
-      simpa [Function.comp] using hcomp
+      simpa [Function.comp] using! hcomp
     refine (hu'.mul hDre).congr_deriv ?_
     ring
   have hDUI := hasDerivAt_integral_stripBox hab hGcont hG'cont hd

@@ -79,7 +79,7 @@ theorem IsQCGeometric.lintegral_partialSq_closedBall_le {f : ℂ → ℂ} {K : �
   have hBSae : S =ᵐ[volume] B := by
     rw [MeasureTheory.ae_eq_set]
     constructor
-    · rw [Set.diff_eq_empty.mpr Set.inter_subset_left]
+    · rw [Set.sdiff_eq_empty.mpr Set.inter_subset_left]
       exact measure_empty
     · refine measure_mono_null ?_ (MeasureTheory.ae_iff.mp hdiff)
       rintro z ⟨hzB, hzS⟩
@@ -115,7 +115,7 @@ theorem IsQCGeometric.lintegral_partialSq_closedBall_le {f : ℂ → ℂ} {K : �
         = ENNReal.ofReal (‖partialX f z‖ ^ 2 + ‖partialY f z‖ ^ 2) := by
           rw [ENNReal.ofReal_add (by positivity) (by positivity),
             ENNReal.ofReal_pow (norm_nonneg _), ENNReal.ofReal_pow (norm_nonneg _),
-            ofReal_norm_eq_enorm, ofReal_norm_eq_enorm]
+            ofReal_norm, ofReal_norm]
       _ ≤ ENNReal.ofReal ((2 * K) * |(fderiv ℝ f z).det|) :=
           ENNReal.ofReal_le_ofReal hreal
       _ = ENNReal.ofReal (2 * K) * ENNReal.ofReal |(fderiv ℝ f z).det| :=
@@ -467,7 +467,7 @@ theorem ae_norm_dzbar_le_of_tendsto_weakGradient {fₙ : ℕ → ℂ → ℂ} {g
         hre1.integrable_mul him1
       have h2 : Integrable (fun z => (gy z).re * (gx z).im) (volume.restrict T) :=
         hre2.integrable_mul him2
-      simpa [jacobianWeak_def] using h1.sub h2
+      simpa [jacobianWeak_def] using! h1.sub h2
     -- Integrability of the squared directional combination of the limit on compacta.
     have hWsqOn : ∀ T : Set ℂ, IsCompact T →
         Integrable (fun z => ‖Real.cos α • u z + Real.sin α • v z‖ ^ 2)
@@ -568,7 +568,7 @@ theorem ae_norm_dzbar_le_of_tendsto_weakGradient {fₙ : ℕ → ℂ → ℂ} {g
             (Metric.closedBall 0 R) volume := by
           have := ((hgnx n) (Metric.closedBall 0 R) (Set.subset_univ _)
             (isCompact_closedBall 0 R)).norm.integrable_sq
-          simpa using this
+          simpa using! this
         refine le_trans (setIntegral_mono_set hIB ?_ hR.eventuallyLE) (hMR n).1
         exact Filter.Eventually.of_forall fun z => by positivity
       have hMy : ∀ n, (∫ z in tsupport φ, ‖partialY (fₙ n) z‖ ^ 2) ≤ M := by
@@ -577,7 +577,7 @@ theorem ae_norm_dzbar_le_of_tendsto_weakGradient {fₙ : ℕ → ℂ → ℂ} {g
             (Metric.closedBall 0 R) volume := by
           have := ((hgny n) (Metric.closedBall 0 R) (Set.subset_univ _)
             (isCompact_closedBall 0 R)).norm.integrable_sq
-          simpa using this
+          simpa using! this
         refine le_trans (setIntegral_mono_set hIB ?_ hR.eventuallyLE) (hMR n).2
         exact Filter.Eventually.of_forall fun z => by positivity
       have hjconv := tendsto_integral_jacobianWeak_smul hconv hfc hgcont hfdiff hfW12
@@ -627,8 +627,8 @@ theorem ae_norm_dzbar_le_of_tendsto_weakGradient {fₙ : ℕ → ℂ → ℂ} {g
     ae_all_iff.mpr fun q => step1 (q : ℝ)
   filter_upwards [hae_all] with z hz
   refine norm_dzbar_le_of_forall_dir hK fun α => ?_
-  haveI : IsBoundedSMul ℝ ℂ := NormSMulClass.toIsBoundedSMul
-  haveI : ContinuousSMul ℝ ℂ := IsBoundedSMul.continuousSMul
+  have : IsBoundedSMul ℝ ℂ := NormSMulClass.toIsBoundedSMul
+  have : ContinuousSMul ℝ ℂ := IsBoundedSMul.continuousSMul
   have hcont : Continuous fun β : ℝ => ‖Real.cos β • u z + Real.sin β • v z‖ ^ 2 :=
     (((Real.continuous_cos.smul continuous_const).add
       (Real.continuous_sin.smul continuous_const)).norm).pow 2
@@ -669,7 +669,7 @@ theorem ae_wirtinger_distortion_of_weakGradient {g u v : ℂ → ℂ} {k : ℝ}
     intro w hw
     rw [locallyIntegrableOn_univ, locallyIntegrable_iff]
     intro K hK
-    haveI : IsFiniteMeasure (volume.restrict K) :=
+    have : IsFiniteMeasure (volume.restrict K) :=
       ⟨by rw [Measure.restrict_apply_univ]; exact hK.measure_lt_top⟩
     exact memLp_one_iff_integrable.mp
       ((hw K (Set.subset_univ _) hK).mono_exponent (by norm_num))
@@ -775,7 +775,7 @@ theorem lusinN_of_weakGradient_distortion {h u v : ℂ → ℂ} {k : ℝ}
   -- `h ∈ L²_loc` from continuity on compacts.
   have hfLp : MemLpLocOn h (2 : ℝ≥0∞) Set.univ := by
     intro Kc _ hKc
-    haveI : IsFiniteMeasure (volume.restrict Kc) :=
+    have : IsFiniteMeasure (volume.restrict Kc) :=
       ⟨by rw [Measure.restrict_apply_univ]; exact hKc.measure_lt_top⟩
     obtain ⟨C, hC⟩ := hKc.exists_bound_of_continuousOn hcont.continuousOn
     have hbound : ∀ᵐ x ∂(volume.restrict Kc), ‖h x‖ ≤ C := by

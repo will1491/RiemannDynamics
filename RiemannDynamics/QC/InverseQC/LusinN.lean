@@ -122,7 +122,7 @@ theorem IsQCAnalytic.dz_aeeq_weakDz {f : ℂ → ℂ} {b : BeltramiCoeff} (hf : 
     intro g hg
     rw [locallyIntegrableOn_univ, locallyIntegrable_iff]
     intro k hk
-    haveI : IsFiniteMeasure (volume.restrict k) :=
+    have : IsFiniteMeasure (volume.restrict k) :=
       ⟨by rw [Measure.restrict_apply_univ]; exact hk.measure_lt_top⟩
     have hmem1 : MemLp g 1 (volume.restrict k) :=
       (hg k (Set.subset_univ _) hk).mono_exponent (by norm_num)
@@ -166,7 +166,7 @@ theorem IsQCAnalytic.dz_higher_integrability {f : ℂ → ℂ} {b : BeltramiCoef
       fderiv_ae_eq_weakDirDeriv hgx (by
         rw [locallyIntegrableOn_univ, locallyIntegrable_iff]
         intro k hk
-        haveI : IsFiniteMeasure (volume.restrict k) :=
+        have : IsFiniteMeasure (volume.restrict k) :=
           ⟨by rw [Measure.restrict_apply_univ]; exact hk.measure_lt_top⟩
         exact memLp_one_iff_integrable.mp ((hgxLp k (Set.subset_univ _) hk).mono_exponent
           (by norm_num)))
@@ -176,7 +176,7 @@ theorem IsQCAnalytic.dz_higher_integrability {f : ℂ → ℂ} {b : BeltramiCoef
       fderiv_ae_eq_weakDirDeriv hgy (by
         rw [locallyIntegrableOn_univ, locallyIntegrable_iff]
         intro k hk
-        haveI : IsFiniteMeasure (volume.restrict k) :=
+        have : IsFiniteMeasure (volume.restrict k) :=
           ⟨by rw [Measure.restrict_apply_univ]; exact hk.measure_lt_top⟩
         exact memLp_one_iff_integrable.mp ((hgyLp k (Set.subset_univ _) hk).mono_exponent
           (by norm_num)))
@@ -229,7 +229,7 @@ theorem IsQCAnalytic.exists_weakGradient_memLpLocOn_gt_two {f : ℂ → ℂ} {b 
       fderiv_ae_eq_weakDirDeriv hgx (by
         rw [locallyIntegrableOn_univ, locallyIntegrable_iff]
         intro k hk
-        haveI : IsFiniteMeasure (volume.restrict k) :=
+        have : IsFiniteMeasure (volume.restrict k) :=
           ⟨by rw [Measure.restrict_apply_univ]; exact hk.measure_lt_top⟩
         exact memLp_one_iff_integrable.mp ((hgxLp k (Set.subset_univ _) hk).mono_exponent
           (by norm_num)))
@@ -239,7 +239,7 @@ theorem IsQCAnalytic.exists_weakGradient_memLpLocOn_gt_two {f : ℂ → ℂ} {b 
       fderiv_ae_eq_weakDirDeriv hgy (by
         rw [locallyIntegrableOn_univ, locallyIntegrable_iff]
         intro k hk
-        haveI : IsFiniteMeasure (volume.restrict k) :=
+        have : IsFiniteMeasure (volume.restrict k) :=
           ⟨by rw [Measure.restrict_apply_univ]; exact hk.measure_lt_top⟩
         exact memLp_one_iff_integrable.mp ((hgyLp k (Set.subset_univ _) hk).mono_exponent
           (by norm_num)))
@@ -252,7 +252,7 @@ theorem IsQCAnalytic.exists_weakGradient_memLpLocOn_gt_two {f : ℂ → ℂ} {b 
   have hμle : ∀ᵐ z, ‖b.μ z‖ ≤ 1 := by
     filter_upwards [ae_le_eLpNormEssSup (f := b.μ) (μ := volume)] with z hz
     have h1 : ENNReal.ofReal ‖b.μ z‖ ≤ 1 := by
-      rw [ofReal_norm_eq_enorm]; exact le_trans hz b.bound.le
+      rw [ofReal_norm]; exact le_trans hz b.bound.le
     exact ENNReal.ofReal_le_one.mp h1
   have hdzbarp : MemLpLocOn (fun z => dzbar f z) (ENNReal.ofReal p) Set.univ := by
     intro K hKuniv hKcompact
@@ -397,7 +397,7 @@ theorem IsQCAnalytic.inverse_differentiableAt_ae {f : ℂ → ℂ} {b : Beltrami
     · intro hw
       exact ⟨g w, hw, hfg w⟩
     · rintro ⟨z, hzD, rfl⟩
-      simp only [Set.mem_setOf_eq, hgf z]
+      simp only [Set.mem_ofPred_eq, hgf z]
       exact hzD
   -- Hence the complement is null (by `image_lusinN` / Target 1).
   have hnull : volume {w : ℂ | g w ∈ D} = 0 := by rw [hcompl]; exact hf.image_lusinN
@@ -407,12 +407,12 @@ theorem IsQCAnalytic.inverse_differentiableAt_ae {f : ℂ → ℂ} {b : Beltrami
     rw [ae_iff]
     convert hnull using 2
     ext w
-    simp only [Set.mem_setOf_eq, not_not]
+    simp only [Set.mem_ofPred_eq, not_not]
   -- At each good `w`, apply the easy inverse function theorem.
   filter_upwards [hgood] with w hw
   -- `g w ∉ D` unpacks to differentiability and positive Jacobian.
   rw [hD] at hw
-  simp only [Set.mem_setOf_eq, not_or, not_not] at hw
+  simp only [Set.mem_ofPred_eq, not_or, not_not] at hw
   obtain ⟨hdiff, hdetpos⟩ := hw
   -- The differential of `f` at `g w` and its determinant nonvanishing.
   set f' : ℂ →L[ℝ] ℂ := fderiv ℝ f (g w) with hf'
@@ -491,7 +491,7 @@ theorem IsQCAnalytic.inverse_beltrami {f : ℂ → ℂ} {b : BeltramiCoeff}
     -- `‖b.μ z‖₊ ≤ eLpNormEssSup b.μ`, and `eLpNormEssSup b.μ = b.normInf` (it is `< 1 < ⊤`).
     have hfin : eLpNormEssSup b.μ volume ≠ ⊤ := ne_top_of_lt b.bound
     have : ENNReal.ofReal ‖b.μ z‖ ≤ eLpNormEssSup b.μ volume := by
-      rw [ofReal_norm_eq_enorm]; exact hz
+      rw [ofReal_norm]; exact hz
     have h2 : ‖b.μ z‖ ≤ (eLpNormEssSup b.μ volume).toReal := by
       rw [← ENNReal.toReal_ofReal (norm_nonneg _)]
       exact ENNReal.toReal_mono hfin this
@@ -509,12 +509,12 @@ theorem IsQCAnalytic.inverse_beltrami {f : ℂ → ℂ} {b : BeltramiCoeff}
     have h1 : Measurable (fun w : ℂ => (fderiv ℝ g w) 1) := measurable_fderiv_apply_const ℝ g 1
     have h2 : Measurable (fun w : ℂ => (fderiv ℝ g w) Complex.I) :=
       measurable_fderiv_apply_const ℝ g Complex.I
-    simpa only [dz] using (measurable_const.mul (h1.sub (measurable_const.mul h2)))
+    simpa only [dz] using! (measurable_const.mul (h1.sub (measurable_const.mul h2)))
   have hdzbarg_meas : Measurable (fun w : ℂ => dzbar g w) := by
     have h1 : Measurable (fun w : ℂ => (fderiv ℝ g w) 1) := measurable_fderiv_apply_const ℝ g 1
     have h2 : Measurable (fun w : ℂ => (fderiv ℝ g w) Complex.I) :=
       measurable_fderiv_apply_const ℝ g Complex.I
-    simpa only [dzbar] using (measurable_const.mul (h1.add (measurable_const.mul h2)))
+    simpa only [dzbar] using! (measurable_const.mul (h1.add (measurable_const.mul h2)))
   have hraw_meas : Measurable raw := hdzbarg_meas.div hdzg_meas
   have hμ'_meas : Measurable μ' :=
     Measurable.ite (measurableSet_le hraw_meas.norm measurable_const) hraw_meas measurable_const
@@ -547,8 +547,8 @@ theorem IsQCAnalytic.inverse_beltrami {f : ℂ → ℂ} {b : BeltramiCoeff}
   -- `g` is differentiable at `f z = w`.
   have hwg' : DifferentiableAt ℝ g (f z) := by rw [hfz]; exact hwg
   -- Wirtinger derivatives of the identity.
-  have hdzid : dz (fun y : ℂ => y) z = 1 := by simp only [dz, fderiv_id']; simp; ring
-  have hdzbarid : dzbar (fun y : ℂ => y) z = 0 := by simp only [dzbar, fderiv_id']; simp
+  have hdzid : dz (fun y : ℂ => y) z = 1 := by simp only [dz, fderiv_fun_id]; simp; ring
+  have hdzbarid : dzbar (fun y : ℂ => y) z = 0 := by simp only [dzbar, fderiv_fun_id]; simp
   -- Abbreviations for the four Wirtinger values.
   set P : ℂ := dz g w with hP
   set Q : ℂ := dzbar g w with hQ
@@ -649,7 +649,7 @@ theorem IsQCAnalytic.inverse_orientationPreservingHomeo {f : ℂ → ℂ} {b : B
       · intro hw
         exact ⟨g w, hw, hfg w⟩
       · rintro ⟨z, hzD, rfl⟩
-        simp only [Set.mem_setOf_eq, hgf z]
+        simp only [Set.mem_ofPred_eq, hgf z]
         exact hzD
     -- Hence the complement is null (by `image_lusinN`).
     have hnull : volume {w : ℂ | g w ∈ D} = 0 := by rw [hcompl]; exact hf.image_lusinN
@@ -659,13 +659,13 @@ theorem IsQCAnalytic.inverse_orientationPreservingHomeo {f : ℂ → ℂ} {b : B
       rw [ae_iff]
       convert hnull using 2
       ext w
-      simp only [Set.mem_setOf_eq, not_not]
+      simp only [Set.mem_ofPred_eq, not_not]
     -- At each good `w`, the easy inverse function theorem gives `Dg w = (Df (g w))⁻¹`,
     -- whose determinant is the reciprocal of the (positive) Jacobian of `f`.
     filter_upwards [hgood] with w hw
     -- `g w ∉ D` unpacks to differentiability and positive Jacobian.
     rw [hD] at hw
-    simp only [Set.mem_setOf_eq, not_or, not_not] at hw
+    simp only [Set.mem_ofPred_eq, not_or, not_not] at hw
     obtain ⟨hdiff, hdetpos⟩ := hw
     -- The differential of `f` at `g w` and its determinant nonvanishing.
     set f' : ℂ →L[ℝ] ℂ := fderiv ℝ f (g w) with hf'
@@ -724,7 +724,7 @@ theorem IsQCAnalytic.inverse_partial_memLpLocOn {f : ℂ → ℂ} {b : BeltramiC
     filter_upwards [ae_le_eLpNormEssSup (f := b.μ) (μ := volume)] with z hz
     have hfin : eLpNormEssSup b.μ volume ≠ ⊤ := ne_top_of_lt b.bound
     have : ENNReal.ofReal ‖b.μ z‖ ≤ eLpNormEssSup b.μ volume := by
-      rw [ofReal_norm_eq_enorm]; exact hz
+      rw [ofReal_norm]; exact hz
     have h2 : ‖b.μ z‖ ≤ (eLpNormEssSup b.μ volume).toReal := by
       rw [← ENNReal.toReal_ofReal (norm_nonneg _)]
       exact ENNReal.toReal_mono hfin this
@@ -832,7 +832,7 @@ theorem locallyIntegrableOn_of_memLpLocOn {h : ℂ → ℂ} {p : ℝ} (hp : 1 �
     (hmem : MemLpLocOn h (ENNReal.ofReal p) Set.univ) : LocallyIntegrableOn h Set.univ := by
   rw [locallyIntegrableOn_univ, locallyIntegrable_iff]
   intro k hk
-  haveI : IsFiniteMeasure (volume.restrict k) :=
+  have : IsFiniteMeasure (volume.restrict k) :=
     ⟨by rw [Measure.restrict_apply_univ]; exact hk.measure_lt_top⟩
   have h1le : (1 : ℝ≥0∞) ≤ ENNReal.ofReal p := by
     rw [show (1 : ℝ≥0∞) = ENNReal.ofReal 1 by simp]; exact ENNReal.ofReal_le_ofReal hp
@@ -918,7 +918,7 @@ theorem IsQCAnalytic.inverse_fiber_lusinN {f : ℂ → ℂ} {b : BeltramiCoeff}
       MemLpLocOn gpart (ENNReal.ofReal p) Set.univ →
       MemLpLocOn (fun w => cpart + LQI (gpart w)) (ENNReal.ofReal p) Set.univ := by
     intro cpart gpart hgmem K hKuniv hKcomp
-    haveI : IsFiniteMeasure (volume.restrict K) :=
+    have : IsFiniteMeasure (volume.restrict K) :=
       ⟨by rw [Measure.restrict_apply_univ]; exact hKcomp.measure_lt_top⟩
     have hcMemLp : MemLp (fun _ : ℂ => cpart) (ENNReal.ofReal p) (volume.restrict K) :=
       (memLp_top_const cpart).mono_exponent le_top
@@ -1011,7 +1011,7 @@ theorem ae_slice_re_null_of_null {T : Set ℂ} (hT : volume T = 0) :
       Complex.measurableEquivRealProd_symm_apply]
   rw [ae_iff] at hy
   have hset : {x : ℝ | (Complex.mk x y) ∈ T} = {x : ℝ | (y, x) ∈ T''} := by
-    ext x; rw [Set.mem_setOf_eq, Set.mem_setOf_eq, hmem x]
+    ext x; rw [Set.mem_ofPred_eq, Set.mem_ofPred_eq, hmem x]
   rw [hset]; simpa using hy
 
 

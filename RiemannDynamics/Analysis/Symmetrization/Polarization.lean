@@ -172,12 +172,12 @@ theorem lower_ae : ({z : ℂ | z.im ≤ 0} : Set ℂ) =ᵐ[volume] {z : ℂ | z.
   refine (MeasureTheory.ae_eq_set.mpr ⟨?_, ?_⟩)
   · have hdiff : {z : ℂ | z.im ≤ 0} \ {z : ℂ | z.im < 0} ⊆ {z : ℂ | z.im = 0} := by
       intro z hz
-      simp only [Set.mem_diff, Set.mem_setOf_eq, not_lt] at hz
+      simp only [Set.mem_sdiff, Set.mem_ofPred_eq, not_lt] at hz
       exact le_antisymm hz.1 hz.2
     exact measure_mono_null hdiff axis_null
   · have : {z : ℂ | z.im < 0} \ {z : ℂ | z.im ≤ 0} = ∅ := by
       ext z
-      simp only [Set.mem_diff, Set.mem_setOf_eq, not_le, Set.mem_empty_iff_false, iff_false,
+      simp only [Set.mem_sdiff, Set.mem_ofPred_eq, not_le, Set.mem_empty_iff_false, iff_false,
         not_and, not_lt]
       intro h; linarith
     rw [this]; simp
@@ -219,7 +219,7 @@ theorem lower_sub_upper (f : ℂ → ℝ≥0∞) :
     ∫⁻ a in {z : ℂ | 0 < z.im}, f ((starRingEnd ℂ) a)
       = ∫⁻ b in {z : ℂ | z.im < 0}, f b := by
   have hpre : (starRingEnd ℂ) ⁻¹' {z : ℂ | z.im < 0} = {z : ℂ | 0 < z.im} := by
-    ext z; simp only [Set.mem_preimage, Set.mem_setOf_eq, Complex.conj_im]
+    ext z; simp only [Set.mem_preimage, Set.mem_ofPred_eq, Complex.conj_im]
     constructor <;> intro h <;> linarith
   rw [← hpre]
   exact conj_mp.setLIntegral_comp_preimage_emb conj_emb f {z : ℂ | z.im < 0}
@@ -233,7 +233,7 @@ theorem norm_fderiv_comp_conj (u : ℂ → ℝ) (z : ℂ) :
       Complex.conjLIE_apply]
   rw [hfun, ContinuousLinearEquiv.comp_right_fderiv]
   have h : (Complex.conjLIE.toContinuousLinearEquiv : ℂ →L[ℝ] ℂ)
-      = Complex.conjLIE.toLinearIsometry.toContinuousLinearMap := rfl
+      = (Complex.conjLIE : ℂ →L[ℝ] ℂ) := rfl
   rw [h, ContinuousLinearMap.opNorm_comp_linearIsometryEquiv]
   simp only [LinearIsometryEquiv.coe_toContinuousLinearEquiv, Complex.conjLIE_apply]
 
@@ -291,7 +291,7 @@ theorem norm_fderiv_min_conj (u : ℂ → ℝ) (a : ℂ) :
         Complex.conjLIE_apply]
     rw [hfun, ContinuousLinearEquiv.comp_right_fderiv]
     have h : (Complex.conjLIE.toContinuousLinearEquiv : ℂ →L[ℝ] ℂ)
-        = Complex.conjLIE.toLinearIsometry.toContinuousLinearMap := rfl
+        = (Complex.conjLIE : ℂ →L[ℝ] ℂ) := rfl
     rw [h, ContinuousLinearMap.opNorm_comp_linearIsometryEquiv]
     simp only [LinearIsometryEquiv.coe_toContinuousLinearEquiv, Complex.conjLIE_apply]
   rw [← hchain, hsym]
@@ -338,7 +338,7 @@ theorem dirichletEnergy_polarize_le (u : ℂ → ℝ) (hu : Differentiable ℝ u
     rw [hRg, ← lintegral_add_left]
     · -- pointwise inequality on U
       apply setLIntegral_mono
-      · apply Measurable.add
+      · apply Measurable.fun_add
         · exact ((measurable_coe_nnreal_ennreal.comp (measurable_nnnorm.comp
             (measurable_fderiv ℝ u))).pow_const 2)
         · exact ((measurable_coe_nnreal_ennreal.comp (measurable_nnnorm.comp
@@ -395,14 +395,14 @@ theorem volume_polarize_superlevel_eq (u : ℂ → ℝ) (hu : Measurable u) (c :
           (if c < max (u z) (u ((starRingEnd ℂ) z)) then (1 : ℝ≥0∞) else 0) := by
     apply setLIntegral_congr_fun (measurableSet_lt measurable_const Complex.measurable_im)
     intro z hz
-    rw [Set.mem_setOf_eq] at hz
+    rw [Set.mem_ofPred_eq] at hz
     simp only [polarize, if_pos (le_of_lt hz)]
   have hLpol : ∫⁻ z in {z : ℂ | z.im < 0}, (if c < polarize u z then (1 : ℝ≥0∞) else 0)
       = ∫⁻ z in {z : ℂ | z.im < 0},
           (if c < min (u z) (u ((starRingEnd ℂ) z)) then (1 : ℝ≥0∞) else 0) := by
     apply setLIntegral_congr_fun (measurableSet_lt Complex.measurable_im measurable_const)
     intro z hz
-    rw [Set.mem_setOf_eq] at hz
+    rw [Set.mem_ofPred_eq] at hz
     simp only [polarize, if_neg (not_le.mpr hz)]
   rw [hUpol, hLpol]
   -- fold the lower `min`-integral onto the upper half via conjugation (`min_comm` under `conj`)
@@ -465,7 +465,7 @@ theorem lintegral_mul_weight_polarize_ge (u w : ℂ → ℝ)
           ENNReal.ofReal (max (u z) (u ((starRingEnd ℂ) z)) * w z) := by
     apply setLIntegral_congr_fun (measurableSet_lt measurable_const Complex.measurable_im)
     intro z hz
-    rw [Set.mem_setOf_eq] at hz
+    rw [Set.mem_ofPred_eq] at hz
     simp only [polarize, if_pos (le_of_lt hz)]
   -- fold the lower `u`-integral onto the upper half via conjugation
   have hLu : ∫⁻ z in {z : ℂ | z.im < 0}, ENNReal.ofReal (u z * w z)
@@ -481,7 +481,7 @@ theorem lintegral_mul_weight_polarize_ge (u w : ℂ → ℝ)
             ENNReal.ofReal (min (u z) (u ((starRingEnd ℂ) z)) * w z) := by
       apply setLIntegral_congr_fun (measurableSet_lt Complex.measurable_im measurable_const)
       intro z hz
-      rw [Set.mem_setOf_eq] at hz
+      rw [Set.mem_ofPred_eq] at hz
       simp only [polarize, if_neg (not_le.mpr hz)]
     rw [hLmin, ← lower_sub_upper
       (fun z => ENNReal.ofReal (min (u z) (u ((starRingEnd ℂ) z)) * w z))]
@@ -493,11 +493,11 @@ theorem lintegral_mul_weight_polarize_ge (u w : ℂ → ℝ)
   rw [← lintegral_add_left, ← lintegral_add_left]
   · -- pointwise two-point inequality on the upper half
     apply setLIntegral_mono
-    · refine Measurable.add ?_ ?_
+    · refine Measurable.fun_add ?_ ?_
       · exact ENNReal.measurable_ofReal.comp ((hu.max hg).mul hw)
       · exact ENNReal.measurable_ofReal.comp ((hg.min hu).mul hwg)
     · intro z hz
-      rw [Set.mem_setOf_eq] at hz
+      rw [Set.mem_ofPred_eq] at hz
       have hpq : w ((starRingEnd ℂ) z) ≤ w z := hwsym z hz.le
       rw [← ENNReal.ofReal_add (mul_nonneg (hunn _) (hwnn _))
           (mul_nonneg (hunn _) (hwnn _)),
@@ -545,9 +545,9 @@ theorem lintegral_rpow_polarize_eq (u : ℂ → ℝ) (hu : Measurable u) (hunn :
   intro t
   congr 1
   have h1 : {a : ℂ | t < polarize u a} = (polarize u) ⁻¹' Set.Ioi t := by
-    ext z; simp only [Set.mem_setOf_eq, Set.mem_preimage, Set.mem_Ioi]
+    ext z; simp only [Set.mem_ofPred_eq, Set.mem_preimage, Set.mem_Ioi]
   have h2 : {a : ℂ | t < u a} = u ⁻¹' Set.Ioi t := by
-    ext z; simp only [Set.mem_setOf_eq, Set.mem_preimage, Set.mem_Ioi]
+    ext z; simp only [Set.mem_ofPred_eq, Set.mem_preimage, Set.mem_Ioi]
   rw [h1, h2]
   exact volume_polarize_superlevel_eq u hu t
 

@@ -279,7 +279,7 @@ theorem opNorm_inverse_eq_wirtinger (f : ℂ → ℂ) (z : ℂ)
       (ContinuousLinearMap.mul ℝ ℂ q').comp (Complex.conjCLE : ℂ →L[ℝ] ℂ) with hLpqdef
   have hLpqapp : ∀ (p' q' w : ℂ), Lpq p' q' w = p' * w + q' * (starRingEnd ℂ) w := by
     intro p' q' w
-    simp [hLpqdef, ContinuousLinearMap.mul_apply', Complex.conjCLE_apply]
+    simp [hLpqdef, ContinuousLinearMap.mul_apply']
   have opNormLpq : ∀ p' q' : ℂ, ‖Lpq p' q'‖ = ‖p'‖ + ‖q'‖ := by
     intro p' q'
     -- Upper bound.
@@ -368,7 +368,7 @@ theorem opNorm_inverse_eq_wirtinger (f : ℂ → ℂ) (z : ℂ)
   -- Two-sided inverse: `B ∘ A = id`.
   have hBA : B.comp A = ContinuousLinearMap.id ℝ ℂ := by
     ext w
-    simp only [ContinuousLinearMap.coe_comp', Function.comp_apply,
+    simp only [ContinuousLinearMap.coe_comp, Function.comp_apply,
       ContinuousLinearMap.coe_id', id_eq]
     rw [hBdef, hLpqapp p' q' (A w), hAval w, hp'def, hq'def]
     have hconjdist : (starRingEnd ℂ) (p * w + q * (starRingEnd ℂ) w)
@@ -380,7 +380,7 @@ theorem opNorm_inverse_eq_wirtinger (f : ℂ → ℂ) (z : ℂ)
   -- Two-sided inverse: `A ∘ B = id`.
   have hAB : A.comp B = ContinuousLinearMap.id ℝ ℂ := by
     ext v
-    simp only [ContinuousLinearMap.coe_comp', Function.comp_apply,
+    simp only [ContinuousLinearMap.coe_comp, Function.comp_apply,
       ContinuousLinearMap.coe_id', id_eq]
     rw [hAval (B v), hBdef, hLpqapp p' q' v, hp'def, hq'def]
     have hconjdist : (starRingEnd ℂ) ((starRingEnd ℂ) p / (d : ℂ) * v
@@ -423,7 +423,7 @@ theorem curveModulus_sdiff_modulus_zero {Γ Γ' : Set (ℝ → ℂ)} (h : Γ' �
     (hΓ' : curveModulus Γ' = 0) :
     curveModulus (Γ \ Γ') = curveModulus Γ := by
   -- `Γ \ Γ' ⊆ Γ`, so one inequality is monotonicity.
-  refine le_antisymm (curveModulus_mono Set.diff_subset) ?_
+  refine le_antisymm (curveModulus_mono Set.sdiff_subset) ?_
   -- For the substantive direction, bound `curveModulus Γ` by the energy of every
   -- density admissible for `Γ \ Γ'`, then take the infimum.
   refine le_iInf₂ ?_
@@ -452,7 +452,7 @@ theorem curveModulus_sdiff_modulus_zero {Γ Γ' : Set (ℝ → ℂ)} (h : Γ' �
     have hsum_adm : IsAdmissibleDensity (fun z => ρ z + σ z) Γ := by
       refine ⟨hsum_meas, fun γ hγ => ?_⟩
       -- `Γ = (Γ \ Γ') ∪ Γ'`, since `Γ' ⊆ Γ`; case on which piece `γ` lies in.
-      rw [← Set.diff_union_of_subset h] at hγ
+      rw [← Set.sdiff_union_of_subset h] at hγ
       rcases hγ with hγΓdiff | hγΓ'
       · -- `γ ∈ Γ \ Γ'`; use `ρ`-admissibility.
         refine le_trans (hρadm γ hγΓdiff) ?_
@@ -510,7 +510,7 @@ theorem curveModulus_union_zero {Γ₁ Γ₂ : Set (ℝ → ℂ)}
     have := hsqrt_sq (curveModulus (Γ₁ ∪ Γ₂))
     rw [hroot0] at this; simpa using this.symm
   -- Show `M^(1/2) ≤ ε` for every positive real `ε`, hence `= 0`.
-  refine le_antisymm ?_ (zero_le _)
+  refine le_antisymm ?_ (zero_le)
   refine ENNReal.le_of_forall_pos_le_add (fun ε hεpos _ => ?_)
   rw [zero_add]
   -- Extract, from `curveModulus Γᵢ = 0 < (ε/2)²`, densities `ρᵢ` admissible for `Γᵢ`
@@ -594,7 +594,7 @@ theorem curveModulus_meetsNullSet_zero {N : Set ℂ} (hNmeas : MeasurableSet N)
         norm_num
     rw [hpt, lintegral_indicator hNmeas, setLIntegral_measure_zero _ _ hNnull]
   -- The modulus is bounded by this zero energy.
-  refine le_antisymm ?_ (zero_le _)
+  refine le_antisymm ?_ (zero_le)
   calc curveModulus {γ ∈ Γ | 1 ≤ arcLengthLineIntegral ρN γ}
       ≤ ∫⁻ z, (ρN z) ^ 2 := iInf₂_le ρN hadm
     _ = 0 := henergy
@@ -647,7 +647,7 @@ theorem curveModulus_zero_of_lintegralSq_finite {ρ₀ : ℂ → ℝ≥0∞}
         ≤ ∫⁻ z, (ρk z) ^ 2 := iInf₂_le ρk hadm
       _ = C * ((k : ℝ≥0∞))⁻¹ ^ 2 := henergy
   -- The bound `C·(k⁻¹)² → C·0 = 0` as `k → ∞`, so `curveModulus Δ ≤ 0`.
-  refine le_antisymm ?_ (zero_le _)
+  refine le_antisymm ?_ (zero_le)
   have htend : Filter.Tendsto (fun k : ℕ => C * ((k : ℝ≥0∞))⁻¹ ^ 2) Filter.atTop
       (nhds (C * 0)) :=
     ENNReal.Tendsto.const_mul
@@ -795,7 +795,7 @@ theorem curveModulus_lineIntegral_not_tendsto_zero {G : ℕ → ℂ → ℝ≥0�
   -- Step 1 & 2 instantiated: `ρ₀ := ∑' n, G n` has finite energy.
   -- ===================================================================
   set ρ₀ : ℂ → ℝ≥0∞ := fun z => ∑' n, G n z with hρ₀
-  have hρ₀meas : Measurable ρ₀ := Measurable.ennreal_tsum hGmeas
+  have hρ₀meas : Measurable ρ₀ := Measurable.tsum hGmeas
   -- `rootE (G n) = (∫⁻ (G n)²)^{1/2}`, so `hsum` says `∑' n, rootE (G n) ≠ ∞`.
   have hsum' : ∑' n, rootE (G n) ≠ ∞ := hsum
   -- Countable Minkowski: `rootE ρ₀ ≤ ∑' n, rootE (G n) < ∞`.
@@ -946,7 +946,7 @@ theorem curveModulus_iUnion_zero {Γ : ℕ → Set (ℝ → ℂ)}
   suffices hroot0 : (curveModulus (⋃ n, Γ n)) ^ ((1 : ℝ) / 2) = 0 by
     have := hsqrt_sq (curveModulus (⋃ n, Γ n))
     rw [hroot0] at this; simpa using this.symm
-  refine le_antisymm ?_ (zero_le _)
+  refine le_antisymm ?_ (zero_le)
   refine ENNReal.le_of_forall_pos_le_add (fun ε hεpos _ => ?_)
   rw [zero_add]
   -- For each `n`, extract `ρₙ` admissible for `Γ n` with `rootE ρₙ ≤ ε/2^{n+1}`.
@@ -989,7 +989,7 @@ theorem curveModulus_iUnion_zero {Γ : ℕ → Set (ℝ → ℂ)}
   have hρmeas : ∀ n, Measurable (ρ n) := fun n => (hρadm n).1
   -- The summed density `rhoSum := ∑' n, ρₙ`.
   set rhoSum : ℂ → ℝ≥0∞ := fun z => ∑' n, ρ n z with hrhoSum
-  have hrhoSum_meas : Measurable rhoSum := Measurable.ennreal_tsum hρmeas
+  have hrhoSum_meas : Measurable rhoSum := Measurable.tsum hρmeas
   -- `rhoSum` is admissible for `⋃ Γ n` (it dominates each `ρₙ`).
   have hrhoSum_adm : IsAdmissibleDensity rhoSum (⋃ n, Γ n) := by
     refine ⟨hrhoSum_meas, fun γ hγ => ?_⟩
@@ -1077,7 +1077,7 @@ theorem curveModulus_iUnion_le_tsum {Γ : ℕ → Set (ℝ → ℂ)} :
   set rho : ℂ → ℝ≥0∞ := fun z => (∑' n, (ρ n z) ^ 2) ^ ((1 : ℝ) / 2) with hrho
   -- Measurability of `rho`.
   have htsum_meas : Measurable (fun z => ∑' n, (ρ n z) ^ 2) :=
-    Measurable.ennreal_tsum (fun n => (hρmeas n).pow_const 2)
+    Measurable.tsum (fun n => (hρmeas n).pow_const 2)
   have hrho_meas : Measurable rho := htsum_meas.pow_const ((1 : ℝ) / 2)
   -- Key pointwise fact: `(rho z)² = ∑' n, (ρₙ z)²`.
   have hrho_sq : ∀ z, (rho z) ^ 2 = ∑' n, (ρ n z) ^ 2 := by

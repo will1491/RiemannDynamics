@@ -644,12 +644,12 @@ theorem theta4_iy_strictMono_aux_large :
   have h_A1 : HasSum (A y1) (-(jacobiTheta (Complex.I * (y1 : ℂ) + 1) - 1).re / 2) := by
     have h := h_neg_A1.neg
     simp only [neg_neg] at h
-    convert h using 1
+    convert! h using 1
     ring
   have h_A2 : HasSum (A y2) (-(jacobiTheta (Complex.I * (y2 : ℂ) + 1) - 1).re / 2) := by
     have h := h_neg_A2.neg
     simp only [neg_neg] at h
-    convert h using 1
+    convert! h using 1
     ring
   -- Strict comparison of A's: A_k(y2) < A_k(y1).
   have h_A_lt : ∀ k : ℕ, A y2 k < A y1 k := by

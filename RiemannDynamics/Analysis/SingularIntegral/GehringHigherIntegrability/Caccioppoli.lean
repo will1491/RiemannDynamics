@@ -42,7 +42,7 @@ theorem weakIBP_against_W12 {v : ℂ} {F G φ φ' : ℂ → ℂ}
   classical
   -- `2` and `2` are Hölder conjugates (`1/2 + 1/2 = 1`), so the product of two
   -- `L²` functions is `L¹` and the pairing is bounded by the product of the `L²` norms.
-  haveI hHolder : ENNReal.HolderTriple 2 2 1 := ⟨by
+  have hHolder : ENNReal.HolderTriple 2 2 1 := ⟨by
     rw [ENNReal.inv_two_add_inv_two, inv_one]⟩
   -- ====================================================================
   -- (L) `L²`-`L²` Hölder pairing continuity: `‖∫ a·H‖ ≤ ‖a‖₂·‖H‖₂` for `a, H ∈ L²`.
@@ -58,7 +58,7 @@ theorem weakIBP_against_W12 {v : ℂ} {F G φ φ' : ℂ → ℂ}
     have h3 : eLpNorm (fun z => a z * H z) 1 volume
         ≤ eLpNorm a 2 volume * eLpNorm H 2 volume := by
       have := eLpNorm_smul_le_mul_eLpNorm (p := 2) (q := 2) (r := 1) hH.1 ha.1
-      simpa only [smul_eq_mul] using this
+      simpa only [smul_eq_mul] using! this
     have h4 : ‖∫ z, a z * H z‖ₑ ≤ eLpNorm a 2 volume * eLpNorm H 2 volume :=
       le_trans h1 (le_trans (le_of_eq h2) h3)
     -- Pass from `‖·‖ₑ` to `‖·‖` (real).
@@ -226,7 +226,7 @@ theorem weakIBP_against_W12 {v : ℂ} {F G φ φ' : ℂ → ℂ}
           ((fderiv ℝ ρ (z - u)).comp (-ContinuousLinearMap.id ℝ ℂ)) u :=
         (hρ_diff (z - u)).hasFDerivAt.comp u hsub
       rw [hcomp.fderiv]
-      simp only [ContinuousLinearMap.comp_apply, ContinuousLinearMap.neg_apply,
+      simp only [ContinuousLinearMap.comp_apply, neg_apply,
         ContinuousLinearMap.id_apply, map_neg]
     have hint_eq :
         (∫ u, ((fderiv ℝ ρ (z - u)) v) • f u ∂volume)
@@ -248,7 +248,6 @@ theorem weakIBP_against_W12 {v : ℂ} {F G φ φ' : ℂ → ℂ}
         (fun t => (L (ρ t)) (gv (z - t))) volume z]
     refine MeasureTheory.integral_congr_ae (Filter.Eventually.of_forall (fun u => ?_))
     simp only [hφz, sub_sub_cancel, hL, ContinuousLinearMap.lsmul_apply]
-    rfl
   -- ====================================================================
   -- (C) `L²` mollification convergence `‖ρ_n ⋆ g - g‖₂ → 0` for `g ∈ L²`.
   -- ====================================================================
@@ -321,7 +320,7 @@ theorem weakIBP_against_W12 {v : ℂ} {F G φ φ' : ℂ → ℂ}
         intro w hw
         have h1 : w ∈ tsupport ((φb n).normed volume) := subset_tsupport _ hw
         rwa [(φb n).tsupport_normed_eq] at h1
-      haveI : MeasureTheory.IsFiniteMeasure (volume.restrict Kset) := by
+      have : MeasureTheory.IsFiniteMeasure (volume.restrict Kset) := by
         constructor; rw [MeasureTheory.Measure.restrict_apply_univ]; exact hKfin
       set D : ℕ → ℂ → ℂ := fun n => Cn n - h with hD
       have hrestrict : ∀ᶠ n in Filter.atTop,
@@ -344,7 +343,7 @@ theorem weakIBP_against_W12 {v : ℂ} {F G φ φ' : ℂ → ℂ}
           refine ⟨(M.toNNReal + 1), fun n => ?_⟩
           have hempty : {x | (M.toNNReal + 1 : ℝ≥0) ≤ ‖Cn n x‖₊} = (∅ : Set ℂ) := by
             ext x
-            simp only [Set.mem_setOf_eq, Set.mem_empty_iff_false, iff_false, not_le]
+            simp only [Set.mem_ofPred_eq, Set.mem_empty_iff_false, iff_false, not_le]
             have hb' : ‖Cn n x‖₊ ≤ M.toNNReal := by
               rw [← NNReal.coe_le_coe, Real.coe_toNNReal M hM0]; exact hCnbd n x
             exact lt_of_le_of_lt hb' (by simp)
@@ -596,7 +595,7 @@ theorem weakIBP_against_W12 {v : ℂ} {F G φ φ' : ℂ → ℂ}
         ENNReal.Tendsto.mul_const hconv (Or.inr hH.eLpNorm_lt_top.ne)
       rw [zero_mul] at h1
       have h2 := (ENNReal.continuousAt_toReal (by simp)).tendsto.comp h1
-      simpa only [Function.comp, ENNReal.toReal_zero] using h2
+      simpa only [Function.comp_def, ENNReal.toReal_zero] using h2
     rw [Metric.tendsto_atTop] at htend0
     obtain ⟨N, hN⟩ := htend0 ε hε
     refine ⟨N, fun n hn => ?_⟩
@@ -711,7 +710,7 @@ theorem caccioppoli_of_beltrami {μ : ℂ → ℂ}
   obtain ⟨hxweak, hyweak⟩ :=
     cutoff_weak_partials (c := c) hFmem hGxmem hGymem hGxweak hGyweak hχcd
   -- `MemLp` of `u`, `gxu`, `gyu` at `L²`, with compact support.
-  haveI hHT221 : ENNReal.HolderTriple 2 2 1 := ⟨by
+  have hHT221 : ENNReal.HolderTriple 2 2 1 := ⟨by
     rw [show (1 : ℝ≥0∞)⁻¹ = 1 from inv_one, ENNReal.inv_two_add_inv_two]⟩
   have hdχcont : Continuous (fun z => (fderiv ℝ χ z) 1) :=
     (hχcd.continuous_fderiv (by norm_num)).clm_apply continuous_const
@@ -835,7 +834,7 @@ theorem caccioppoli_of_beltrami {μ : ℂ → ℂ}
             ((fderiv ℝ ρ (z - u)).comp (-ContinuousLinearMap.id ℝ ℂ)) u :=
           (hρ_diff (z - u)).hasFDerivAt.comp u hsub
         rw [hcomp.fderiv]
-        simp only [ContinuousLinearMap.comp_apply, ContinuousLinearMap.neg_apply,
+        simp only [ContinuousLinearMap.comp_apply, neg_apply,
           ContinuousLinearMap.id_apply, map_neg]
       have hint_eq :
           (∫ u, ((fderiv ℝ ρ (z - u)) v) • f u ∂volume)
@@ -857,7 +856,6 @@ theorem caccioppoli_of_beltrami {μ : ℂ → ℂ}
           (fun t => (L (ρ t)) (gv (z - t))) volume z]
       refine MeasureTheory.integral_congr_ae (Filter.Eventually.of_forall (fun u => ?_))
       simp only [hφz, sub_sub_cancel, hL, ContinuousLinearMap.lsmul_apply]
-      rfl
     -- ================================================================
     -- (C) `L²` mollification convergence `‖ρ_n ⋆ g - g‖₂ → 0` for `g ∈ L²`.
     -- ================================================================
@@ -931,7 +929,7 @@ theorem caccioppoli_of_beltrami {μ : ℂ → ℂ}
           intro z hz
           have h1 : z ∈ tsupport ((φ n).normed volume) := subset_tsupport _ hz
           rwa [(φ n).tsupport_normed_eq] at h1
-        haveI : MeasureTheory.IsFiniteMeasure (volume.restrict Kset) := by
+        have : MeasureTheory.IsFiniteMeasure (volume.restrict Kset) := by
           constructor; rw [MeasureTheory.Measure.restrict_apply_univ]; exact hKfin
         set Dn : ℕ → ℂ → ℂ := fun n => Cn n - h with hDn
         have hrestrict : ∀ᶠ n in Filter.atTop,
@@ -954,7 +952,7 @@ theorem caccioppoli_of_beltrami {μ : ℂ → ℂ}
             refine ⟨(Mbd.toNNReal + 1), fun n => ?_⟩
             have hempty : {x | (Mbd.toNNReal + 1 : ℝ≥0) ≤ ‖Cn n x‖₊} = (∅ : Set ℂ) := by
               ext x
-              simp only [Set.mem_setOf_eq, Set.mem_empty_iff_false, iff_false, not_le]
+              simp only [Set.mem_ofPred_eq, Set.mem_empty_iff_false, iff_false, not_le]
               have hb' : ‖Cn n x‖₊ ≤ Mbd.toNNReal := by
                 rw [← NNReal.coe_le_coe, Real.coe_toNNReal Mbd hMbd0]; exact hCnbd n x
               exact lt_of_le_of_lt hb' (by simp)
@@ -1209,14 +1207,14 @@ theorem caccioppoli_of_beltrami {μ : ℂ → ℂ}
       exact hc.aestronglyMeasurable
     -- Half-norm and `I`-norm as `ENNReal` constants.
     have hhalf_e : ‖(1 / 2 : ℂ)‖ₑ = ENNReal.ofReal (1 / 2) := by
-      rw [← ofReal_norm_eq_enorm]; norm_num
+      rw [← ofReal_norm]; norm_num
     have hI_e : ‖(Complex.I : ℂ)‖ₑ = 1 := by
-      rw [← ofReal_norm_eq_enorm, Complex.norm_I, ENNReal.ofReal_one]
+      rw [← ofReal_norm, Complex.norm_I, ENNReal.ofReal_one]
     -- A generic const-smul `eLpNorm` bound for the relevant lambdas.
     have hcsmul : ∀ (c : ℂ) (f : ℂ → ℂ),
         eLpNorm (fun z => c • f z) 2 volume = ‖c‖ₑ * eLpNorm f 2 volume := fun c f => by
       have := eLpNorm_const_smul (μ := volume) (p := 2) c f
-      simpa using this
+      simpa using! this
     -- `eLpNorm (dz un - Du) ≤ (1/2)(eLpNorm (Pn-gxu) + eLpNorm (Qn-gyu))`, and similarly for ∂̄.
     have htri_dz : ∀ n, eLpNorm (fun z => dz (un n) z - Du z) 2 volume ≤
         ENNReal.ofReal (1 / 2) *
@@ -1268,12 +1266,12 @@ theorem caccioppoli_of_beltrami {μ : ℂ → ℂ}
     have hdzdist : Filter.Tendsto (fun n => eLpNorm (fun z => dz (un n) z - Du z) 2 volume)
         Filter.atTop (nhds 0) :=
       tendsto_of_tendsto_of_tendsto_of_le_of_le tendsto_const_nhds hRHStendsto
-        (fun n => zero_le _) htri_dz
+        (fun n => zero_le) htri_dz
     have hdzbardist : Filter.Tendsto
         (fun n => eLpNorm (fun z => dzbar (un n) z - Dbaru z) 2 volume)
         Filter.atTop (nhds 0) :=
       tendsto_of_tendsto_of_tendsto_of_le_of_le tendsto_const_nhds hRHStendsto
-        (fun n => zero_le _) htri_dzbar
+        (fun n => zero_le) htri_dzbar
     -- eLpNorm continuity: `eLpNorm (a_n) → eLpNorm a` when `eLpNorm (a_n - a) → 0`.
     have eLpNorm_tendsto : ∀ {a : ℂ → ℂ} {an : ℕ → ℂ → ℂ},
         (∀ n, AEStronglyMeasurable (an n) volume) → AEStronglyMeasurable a volume →
@@ -1398,14 +1396,14 @@ theorem caccioppoli_of_beltrami {μ : ℂ → ℂ}
       have hae : ‖((a : ℝ) : ℂ) * w‖ₑ ≤ ENNReal.ofReal (Cχ / r) * ‖w‖ₑ := by
         rw [enorm_mul]
         gcongr
-        rw [← ofReal_norm_eq_enorm, Complex.norm_real, Real.norm_eq_abs]
+        rw [← ofReal_norm, Complex.norm_real, Real.norm_eq_abs]
         exact ENNReal.ofReal_le_ofReal ha
       have hI_e : ‖(Complex.I : ℂ)‖ₑ = 1 := by
-        rw [← ofReal_norm_eq_enorm, Complex.norm_I, ENNReal.ofReal_one]
+        rw [← ofReal_norm, Complex.norm_I, ENNReal.ofReal_one]
       have hbe : ‖Complex.I * (((b : ℝ) : ℂ) * w)‖ₑ ≤ ENNReal.ofReal (Cχ / r) * ‖w‖ₑ := by
         rw [enorm_mul, hI_e, one_mul, enorm_mul]
         gcongr
-        rw [← ofReal_norm_eq_enorm, Complex.norm_real, Real.norm_eq_abs]
+        rw [← ofReal_norm, Complex.norm_real, Real.norm_eq_abs]
         exact ENNReal.ofReal_le_ofReal hb
       have hsbd : ‖s‖ₑ ≤ ENNReal.ofReal (2 * (Cχ / r)) * ‖w‖ₑ := by
         have htwo : ENNReal.ofReal (2 * (Cχ / r)) * ‖w‖ₑ
@@ -1418,7 +1416,7 @@ theorem caccioppoli_of_beltrami {μ : ℂ → ℂ}
       calc ‖(1 / 2 : ℂ) * s‖ₑ = ‖(1 / 2 : ℂ)‖ₑ * ‖s‖ₑ := by rw [enorm_mul]
         _ ≤ ENNReal.ofReal (1 / 2) * (ENNReal.ofReal (2 * (Cχ / r)) * ‖w‖ₑ) := by
             refine mul_le_mul' ?_ hsbd
-            rw [← ofReal_norm_eq_enorm]; norm_num
+            rw [← ofReal_norm]; norm_num
         _ = ENNReal.ofReal (Cχ / r) * ‖w‖ₑ := by
             rw [← mul_assoc, ← ENNReal.ofReal_mul (by norm_num)]; congr 2; ring
     constructor
@@ -1476,7 +1474,7 @@ theorem caccioppoli_of_beltrami {μ : ℂ → ℂ}
     · rw [Set.indicator_of_mem hz, Complex.real_smul, enorm_mul]
       calc ‖((χ z : ℝ) : ℂ)‖ₑ * ‖R z‖ₑ ≤ 1 * ‖R z‖ₑ := by
             gcongr
-            rw [← ofReal_norm_eq_enorm, Complex.norm_real, Real.norm_eq_abs,
+            rw [← ofReal_norm, Complex.norm_real, Real.norm_eq_abs,
               abs_of_nonneg (hχ0 z)]
             exact ENNReal.ofReal_le_one.2 (hχ1 z)
         _ = ‖R z‖ₑ := one_mul _

@@ -75,13 +75,13 @@ theorem dzbar_eq_zero_iff_fderiv :
 /-- `∂` is additive on real-differentiable functions. -/
 theorem dz_add (hf : DifferentiableAt ℝ f z) (hg : DifferentiableAt ℝ g z) :
     dz (fun w => f w + g w) z = dz f z + dz g z := by
-  simp only [dz, fderiv_fun_add hf hg, ContinuousLinearMap.add_apply]
+  simp only [dz, fderiv_fun_add hf hg, add_apply]
   ring
 
 /-- `∂̄` is additive on real-differentiable functions. -/
 theorem dzbar_add (hf : DifferentiableAt ℝ f z) (hg : DifferentiableAt ℝ g z) :
     dzbar (fun w => f w + g w) z = dzbar f z + dzbar g z := by
-  simp only [dzbar, fderiv_fun_add hf hg, ContinuousLinearMap.add_apply]
+  simp only [dzbar, fderiv_fun_add hf hg, add_apply]
   ring
 
 /-- **Holomorphic characterization, pointwise.** A real-differentiable function
@@ -126,7 +126,7 @@ theorem dz_conj (f : ℂ → ℂ) (z : ℂ) :
     intro v
     have heq : (fun w => conj (f w)) = ⇑Complex.conjCLE ∘ f := by
       funext w
-      simp [Function.comp, Complex.conjCLE_apply]
+      simp [Function.comp]
     rw [heq, ContinuousLinearEquiv.comp_fderiv, ContinuousLinearMap.comp_apply,
       ContinuousLinearEquiv.coe_coe, Complex.conjCLE_apply]
   have hhalf : (starRingEnd ℂ) (1/2 : ℂ) = 1/2 := by rw [map_div₀, map_one, map_ofNat]
@@ -140,7 +140,7 @@ theorem dzbar_conj (f : ℂ → ℂ) (z : ℂ) :
     intro v
     have heq : (fun w => conj (f w)) = ⇑Complex.conjCLE ∘ f := by
       funext w
-      simp [Function.comp, Complex.conjCLE_apply]
+      simp [Function.comp]
     rw [heq, ContinuousLinearEquiv.comp_fderiv, ContinuousLinearMap.comp_apply,
       ContinuousLinearEquiv.coe_coe, Complex.conjCLE_apply]
   have hhalf : (starRingEnd ℂ) (1/2 : ℂ) = 1/2 := by rw [map_div₀, map_one, map_ofNat]
@@ -152,7 +152,7 @@ theorem dz_mul (hf : DifferentiableAt ℝ f z) (hg : DifferentiableAt ℝ g z) :
     dz (fun w => f w * g w) z = f z * dz g z + g z * dz f z := by
   have key : fderiv ℝ (fun w => f w * g w) z = f z • fderiv ℝ g z + g z • fderiv ℝ f z :=
     fderiv_mul hf hg
-  simp only [dz, key, ContinuousLinearMap.add_apply, ContinuousLinearMap.smul_apply, smul_eq_mul]
+  simp only [dz, key, add_apply, smul_apply, smul_eq_mul]
   ring
 
 /-- Leibniz product rule for `∂̄`. -/
@@ -160,7 +160,7 @@ theorem dzbar_mul (hf : DifferentiableAt ℝ f z) (hg : DifferentiableAt ℝ g z
     dzbar (fun w => f w * g w) z = f z * dzbar g z + g z * dzbar f z := by
   have key : fderiv ℝ (fun w => f w * g w) z = f z • fderiv ℝ g z + g z • fderiv ℝ f z :=
     fderiv_mul hf hg
-  simp only [dzbar, key, ContinuousLinearMap.add_apply, ContinuousLinearMap.smul_apply, smul_eq_mul]
+  simp only [dzbar, key, add_apply, smul_apply, smul_eq_mul]
   ring
 
 /-- **Wirtinger chain rule for `∂`.** With `f̄ = conj ∘ f` (so `∂̄(f̄) = conj (∂̄f)`),

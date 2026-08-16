@@ -55,7 +55,7 @@ theorem map_curveFamily (Q : Quadrilateral) {g : ℂ → ℂ} (hg : IsHomeomorph
     (Q.map hg).curveFamily = Q.imageCurveFamily g := by
   ext δ
   simp only [curveFamily, imageCurveFamily, Q.map_leftSide hg, Q.map_rightSide hg,
-    Q.map_image hg, Set.mem_setOf_eq]
+    Q.map_image hg, Set.mem_ofPred_eq]
 
 /-- The image connecting family of `Q` under `f ∘ g` equals that of the image quadrilateral
 `g ∘ Q` under `f`. -/
@@ -63,7 +63,7 @@ theorem imageCurveFamily_comp (Q : Quadrilateral) {f g : ℂ → ℂ} (hg : IsHo
     Q.imageCurveFamily (f ∘ g) = (Q.map hg).imageCurveFamily f := by
   ext δ
   simp only [imageCurveFamily, Q.map_leftSide hg, Q.map_rightSide hg, Q.map_image hg,
-    Set.image_comp, Set.mem_setOf_eq]
+    Set.image_comp, Set.mem_ofPred_eq]
 
 end Quadrilateral
 
@@ -112,9 +112,9 @@ theorem SensePreserving.comp {f g : ℂ → ℂ} (hf : SensePreserving f) (hg : 
         rw [hwf_spec t ht, mul_div_assoc, div_self h2pi_ne, mul_one]
       exact ContinuousOn.congr (hdcont.continuousOn.div_const _) heq
     have hwf_int_cont : ContinuousOn wfun (Set.Icc (0 : ℝ) (2 * Real.pi)) := by
-      rw [continuousOn_iff_continuous_restrict] at hwf_cont ⊢
+      rw [continuousOn_iff_continuous_domRestrict] at hwf_cont ⊢
       have hemb : Topology.IsClosedEmbedding (fun n : ℤ => (n : ℂ)) :=
-        Complex.closedEmbedding_intCast
+        Complex.isClosedEmbedding_intCast
       exact hemb.isEmbedding.continuous_iff.mpr hwf_cont
     have hconst : wfun 0 = wfun (2 * Real.pi) :=
       isPreconnected_Icc.constant hwf_int_cont ⟨le_refl _, hpi⟩ ⟨hpi, le_refl _⟩
@@ -165,9 +165,9 @@ theorem SensePreserving.comp {f g : ℂ → ℂ} (hf : SensePreserving f) (hg : 
         rw [hKf_spec s hs, mul_div_assoc, div_self h2pi_ne, mul_one]
       exact ContinuousOn.congr (hinc_cont.continuousOn.div_const _) heq
     have hKf_int_cont : ContinuousOn Kf (Set.Icc (0:ℝ) 1) := by
-      rw [continuousOn_iff_continuous_restrict] at hKf_cont ⊢
+      rw [continuousOn_iff_continuous_domRestrict] at hKf_cont ⊢
       have hemb : Topology.IsClosedEmbedding (fun n : ℤ => (n : ℂ)) :=
-        Complex.closedEmbedding_intCast
+        Complex.isClosedEmbedding_intCast
       exact hemb.isEmbedding.continuous_iff.mpr hKf_cont
     have hKconst : Kf 0 = Kf 1 :=
       isPreconnected_Icc.constant hKf_int_cont ⟨le_refl _, zero_le_one⟩ ⟨zero_le_one, le_refl _⟩
@@ -277,7 +277,7 @@ theorem SensePreserving.comp {f g : ℂ → ℂ} (hf : SensePreserving f) (hg : 
     intro γ hγc hγper Lb hLbc hLbe
     have h2pi : (0:ℝ) < 2 * Real.pi := by positivity
     have h2pic : ((2 * Real.pi : ℝ) : ℂ) ≠ 0 := by exact_mod_cast (ne_of_gt h2pi)
-    haveI : Fact ((0:ℝ) < 2 * Real.pi) := ⟨h2pi⟩
+    have : Fact ((0:ℝ) < 2 * Real.pi) := ⟨h2pi⟩
     have hγne : ∀ θ, γ θ ≠ 0 := by
       intro θ
       -- γ θ = exp(...) somewhere via periodicity; but simpler: from hLbe on [0,2π] we get nonzero
@@ -344,7 +344,7 @@ theorem SensePreserving.comp {f g : ℂ → ℂ} (hf : SensePreserving f) (hg : 
       rw [hθeq]
       have h1 := (hexpLper.zsmul (-n)) b
       have h2 := (hγper.zsmul (-n)) b
-      simp only at h1
+      try simp only at h1
       rw [h1, h2]
       exact hLexp_Ico b ⟨hb_mem.1, hb_mem.2⟩
     refine ⟨L, hLc, hLexp, ?_⟩

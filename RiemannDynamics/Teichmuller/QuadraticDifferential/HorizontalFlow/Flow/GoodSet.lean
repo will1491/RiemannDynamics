@@ -69,7 +69,7 @@ theorem window_bound {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
       {z : ℂ | ∃ σ : ℝ → ℂ, σ 0 = z ∧ IsTrajOn q σ (Set.Icc 0 (a + ε)) ∧
         SlopeAt (A.Φ (A.sel z)) σ (Set.Icc 0 (a + ε)) 0 1}ᶜ)) := by
     ext z
-    simp only [hWdef, Set.mem_setOf_eq, Set.mem_inter_iff, Set.mem_compl_iff]
+    simp only [hWdef, Set.mem_ofPred_eq, Set.mem_inter_iff, Set.mem_compl_iff]
   have hWm : MeasurableSet W := by
     rw [hset]
     exact hKm.inter (((hqm (measurableSet_singleton 0)).compl).inter
@@ -344,7 +344,7 @@ theorem dying_mass_bound {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
     simp
   refine le_trans (add_le_add h0 (le_trans hsub hksum)) ?_
   have hle2 : ENNReal.ofReal (Cp * ε ^ 2) ≤ 2 * ENNReal.ofReal (Cp * ε ^ 2) :=
-    le_mul_of_one_le_left (zero_le _) one_le_two
+    le_mul_of_one_le_left (zero_le) one_le_two
   have hcast : ((n - 1 : ℕ) : ℝ≥0∞) + 1 = (n : ℝ≥0∞) := by
     exact_mod_cast congrArg (Nat.cast : ℕ → ℝ≥0∞) (Nat.sub_add_cancel hn1)
   calc ENNReal.ofReal (Cp * ε ^ 2)
@@ -404,7 +404,7 @@ theorem dying_null {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
         ← ENNReal.ofReal_mul (Nat.cast_nonneg n)]
       congr 1
       field_simp
-    refine le_antisymm ?_ (zero_le _)
+    refine le_antisymm ?_ (zero_le)
     refine ge_of_tendsto htend' ?_
     filter_upwards [Filter.eventually_ge_atTop n₀, Filter.eventually_ge_atTop 1]
       with n h1 h2
@@ -416,7 +416,7 @@ theorem dying_null {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
   have hnull : volume.restrict D {w : ℂ | ‖(q : ℂ → ℂ) w‖ₑ ≠ 0} = 0 := by
     have := ae_iff.mp hae
     simpa using this
-  refine le_antisymm ?_ (zero_le _)
+  refine le_antisymm ?_ (zero_le)
   calc volume D = volume.restrict D D := by rw [Measure.restrict_apply_self]
     _ ≤ volume.restrict D {w : ℂ | ‖(q : ℂ → ℂ) w‖ₑ ≠ 0} := measure_mono hDsub
     _ = 0 := hnull
@@ -465,7 +465,7 @@ theorem forward_good_ae {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
       dying_null hΓ hcc q hq0 hqm A hη htrack hdata (hKc m) (hKne m)
         (hKH m) (by positivity : (0 : ℝ) < (j : ℝ) + 1))
   intro z hz
-  simp only [Set.mem_setOf_eq] at hz
+  simp only [Set.mem_ofPred_eq] at hz
   push Not at hz
   obtain ⟨hzS, hq0z, T, hT, hno⟩ := hz
   have him : 0 < z.im := hzS
@@ -1173,7 +1173,6 @@ theorem piece_cov {q : ℂ → ℂ} (hqm : Measurable q) (A : Atlas q) {h : ℝ}
     have hk' : k < N + 1 := by omega
     obtain ⟨hsel, hsgn⟩ := hPc z (hXP hz) ⟨k, hk'⟩
     obtain ⟨hact, hball, hpm, hmove⟩ := hEL (hXP hz) k hk
-    beta_reduce
     rw [dif_pos hk', dif_pos hk']
     refine ⟨hsel, hsgn, ?_, ?_, ?_⟩
     · rw [← hsel]
@@ -1251,7 +1250,7 @@ theorem lintegral_mul_moebius (γ : Matrix.SpecialLinearGroup (Fin 2) ℝ)
     hq z hzim]
   have hscal : ENNReal.ofReal ((‖moebiusDenom γ z‖ ^ 4)⁻¹)
       * ‖moebiusDenom γ z ^ 4 * q z‖ₑ = ‖q z‖ₑ := by
-    rw [← ofReal_norm_eq_enorm, ← ofReal_norm_eq_enorm,
+    rw [← ofReal_norm, ← ofReal_norm,
       ← ENNReal.ofReal_mul (by positivity)]
     congr 1
     rw [norm_mul, norm_pow]
@@ -1404,7 +1403,7 @@ theorem symBad_facts {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
     (hdense : ∀ σ : UpperHalfPlane,
       Metric.infDist σ (MulAction.orbit Γ UpperHalfPlane.I) ≤ R) :
     MeasurableSet (symBad Γ) ∧ volume (symBad Γ) = 0 := by
-  haveI : Countable ↥Γ := IsFuchsianGroup.countable hΓ
+  have : Countable ↥Γ := IsFuchsianGroup.countable hΓ
   set F : Set ℂ :=
     UpperHalfPlane.coe '' frontier (dirichletDomain Γ UpperHalfPlane.I) with hFdef
   have hFU : F ⊆ {z : ℂ | 0 < z.im} := by
@@ -1457,8 +1456,8 @@ theorem symArr_retile {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
     ∫⁻ w in symArr Γ B t j, G w * ‖q w‖ₑ
       = ∑' cq : ↥Γ ⧸ MulAction.stabilizer ↥Γ UpperHalfPlane.I,
           ∫⁻ w in symRet Γ B t (j, cq), G w * ‖q w‖ₑ := by
-  haveI : Countable ↥Γ := IsFuchsianGroup.countable hΓ
-  haveI : Countable (↥Γ ⧸ MulAction.stabilizer ↥Γ UpperHalfPlane.I) :=
+  have : Countable ↥Γ := IsFuchsianGroup.countable hΓ
+  have : Countable (↥Γ ⧸ MulAction.stabilizer ↥Γ UpperHalfPlane.I) :=
     QuotientGroup.mk_surjective.countable
   obtain ⟨hBadm, hBadnull⟩ := symBad_facts hΓ hdense
   set Arr : Set ℂ := symArr Γ B t j with hArrdef

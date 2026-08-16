@@ -87,7 +87,7 @@ theorem modularLambdaH_deriv_ne_zero_when_im_lambda_zero
     have h_re := congrArg Complex.re h_eq_12
     simp at h_re
   -- Setup τ_h and proper-discontinuity instance.
-  haveI := gamma_two_properlyDiscontinuousSMul
+  have := gamma_two_properlyDiscontinuousSMul
   set τ_h : UpperHalfPlane := ⟨τ, hτ⟩ with hτ_h_def
   -- For each k, helper produces distinct preimages with Im λ > 0.
   have h_seq : ∀ k : ℕ, ∃ z₁ z₂ : ℂ, 0 < z₁.im ∧ 0 < z₂.im ∧
@@ -206,7 +206,7 @@ theorem modularLambdaH_deriv_ne_zero_when_im_lambda_zero
         ⋃ γ_lim ∈ S, {n : ℕ | N ≤ n ∧
           (⟨γ n, hγ_in n⟩ : ↥(CongruenceSubgroup.Gamma 2)) = γ_lim} := by
       ext n
-      simp only [Set.mem_Ici, Set.mem_iUnion, exists_prop, Set.mem_setOf_eq]
+      simp only [Set.mem_Ici, Set.mem_iUnion, exists_prop, Set.mem_ofPred_eq]
       constructor
       · intro hn
         refine ⟨⟨γ n, hγ_in n⟩, h_γ_in_S n hn, hn, rfl⟩
@@ -579,7 +579,7 @@ theorem modularLambdaH_deriv_ne_zero_when_im_lambda_neg
     have h_o := h_lam_hasDeriv.isLittleO
     refine h_o.congr_left ?_
     intro y
-    simp only [ContinuousLinearMap.smul_apply, ContinuousLinearMap.id_apply, smul_eq_mul]
+    simp only [smul_apply, ContinuousLinearMap.id_apply, smul_eq_mul]
     ring
   -- Inner composition: λ ∘ negConj.
   have h_inner := h_lam_fderiv.comp τ h_negconj_fderiv
@@ -595,8 +595,8 @@ theorem modularLambdaH_deriv_ne_zero_when_im_lambda_neg
     ext h
     have h_cle : ∀ z : ℂ, (Complex.conjCLE.toContinuousLinearMap : ℂ →L[ℝ] ℂ) z = starRingEnd ℂ z :=
       fun _ => rfl
-    simp only [ContinuousLinearMap.comp_apply, ContinuousLinearMap.smul_apply,
-      ContinuousLinearMap.id_apply, ContinuousLinearMap.neg_apply, h_cle, smul_eq_mul]
+    simp only [ContinuousLinearMap.comp_apply, smul_apply,
+      ContinuousLinearMap.id_apply, neg_apply, h_cle, smul_eq_mul]
     rw [map_mul, map_neg, Complex.conj_conj]
     ring
   rw [h_comp_eq] at h_outer
@@ -608,7 +608,7 @@ theorem modularLambdaH_deriv_ne_zero_when_im_lambda_neg
     have h_outer_o := h_outer.isLittleO
     refine h_outer_o.congr_left ?_
     intro y
-    simp only [Function.comp_apply, ContinuousLinearMap.smul_apply,
+    simp only [Function.comp_apply, smul_apply,
       ContinuousLinearMap.id_apply, smul_eq_mul]
     ring
   -- deriv G τ = -conj d via chain rule.
@@ -767,7 +767,7 @@ theorem gamma2_orbitRel_isClosed :
       ∃ γ ∈ CongruenceSubgroup.Gamma 2, γ • p.1 = p.2 } := by
   rw [← isSeqClosed_iff_isClosed]
   intro xn x h_in_n h_tendsto
-  haveI := gamma_two_properlyDiscontinuousSMul
+  have := gamma_two_properlyDiscontinuousSMul
   -- Extract γₙ for each xₙ.
   choose γn hγn_in hγn_eq using h_in_n
   -- Compact closed balls around x.1, x.2.
@@ -808,7 +808,7 @@ theorem gamma2_orbitRel_isClosed :
     have h_eq : Set.Ici N =
         ⋃ γ ∈ S, {n : ℕ | N ≤ n ∧ (⟨γn n, hγn_in n⟩ : ↥(CongruenceSubgroup.Gamma 2)) = γ} := by
       ext n
-      simp only [Set.mem_Ici, Set.mem_iUnion, exists_prop, Set.mem_setOf_eq]
+      simp only [Set.mem_Ici, Set.mem_iUnion, exists_prop, Set.mem_ofPred_eq]
       constructor
       · intro hn
         refine ⟨⟨γn n, hγn_in n⟩, h_γn_in_S n hn, hn, rfl⟩
@@ -1399,12 +1399,12 @@ theorem modularLambdaH_isEvenlyCovered {w : ℂ}
     IsEvenlyCovered modularLambdaH w (modularLambdaH ⁻¹' {w}) := by
   -- The base set is open.
   have hS_open : IsOpen {w : ℂ | w ≠ 0 ∧ w ≠ 1} := by
-    rw [Set.setOf_and]
+    rw [Set.ofPred_and]
     exact isOpen_ne.inter isOpen_ne
   -- By the junk-value lemma, the ℂ-level preimage of the base set is exactly ℍ.
   have hpre : modularLambdaH ⁻¹' {w : ℂ | w ≠ 0 ∧ w ≠ 1} = {z : ℂ | 0 < z.im} := by
     ext z
-    simp only [Set.mem_preimage, Set.mem_setOf_eq]
+    simp only [Set.mem_preimage, Set.mem_ofPred_eq]
     constructor
     · rintro ⟨h0, -⟩
       by_contra hz
@@ -1499,12 +1499,12 @@ theorem modularLambda_isCoveringMapOn :
     IsCoveringMapOn modularLambda { w : ℂ | w ≠ 0 ∧ w ≠ 1 } := by
   -- The base set is open.
   have hS_open : IsOpen {w : ℂ | w ≠ 0 ∧ w ≠ 1} := by
-    rw [Set.setOf_and]
+    rw [Set.ofPred_and]
     exact isOpen_ne.inter isOpen_ne
   -- By the junk-value lemma, the ℂ-level preimage of the base set is exactly 𝔻.
   have hpre : modularLambda ⁻¹' {w : ℂ | w ≠ 0 ∧ w ≠ 1} = Metric.ball (0 : ℂ) 1 := by
     ext z
-    simp only [Set.mem_preimage, Set.mem_setOf_eq]
+    simp only [Set.mem_preimage, Set.mem_ofPred_eq]
     constructor
     · rintro ⟨h0, -⟩
       by_contra hz
@@ -1518,7 +1518,7 @@ theorem modularLambda_isCoveringMapOn :
   -- The analogous ℍ-level preimage identity.
   have hpreH : modularLambdaH ⁻¹' {w : ℂ | w ≠ 0 ∧ w ≠ 1} = {τ : ℂ | 0 < τ.im} := by
     ext τ
-    simp only [Set.mem_preimage, Set.mem_setOf_eq]
+    simp only [Set.mem_preimage, Set.mem_ofPred_eq]
     constructor
     · rintro ⟨h0, -⟩
       by_contra hτ

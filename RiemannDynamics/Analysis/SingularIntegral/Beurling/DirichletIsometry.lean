@@ -211,7 +211,7 @@ lemma dirichlet_energy_isometry {B N : ℂ → ℂ}
       rw [SchwartzMap.smulLeftCLM_apply_apply htg]
     have hRHS : (Lp.toTemperedDistribution Fdg) φ = ∫ ζ, φ ζ • Fdg ζ :=
       Lp.toTemperedDistribution_apply Fdg φ
-    simp only at hev
+    try simp only at hev
     rw [hLHS, hRHS] at hev
     have hLconv : (∫ x, χ x • (2 * Real.pi * Complex.I * ((inner ℝ x m : ℝ) : ℂ) * Fg x))
         = 2 * Real.pi * Complex.I
@@ -267,7 +267,7 @@ lemma dirichlet_energy_isometry {B N : ℂ → ℂ}
       = 𝓕 (hN1L2.toLp (fun z => (fderiv ℝ N z) 1))
         - Complex.I • 𝓕 (hNIL2.toLp (fun z => (fderiv ℝ N z) Complex.I)) := by
     have hap := congrArg (fun (x : Lp ℂ 2 volume) => 𝓕 x) hLpfn
-    simp only at hap
+    try simp only at hap
     rw [FourierAdd.fourier_add, FourierSMul.fourier_smul,
       sub_eq_add_neg, ← neg_smul, FourierAdd.fourier_add, FourierSMul.fourier_smul,
       neg_smul, ← sub_eq_add_neg] at hap
@@ -287,7 +287,7 @@ lemma dirichlet_energy_isometry {B N : ℂ → ℂ}
       Lp.coeFn_smul Complex.I (𝓕 (hNIL2.toLp (fun z => (fderiv ℝ N z) Complex.I)))]
       with ζ ha hsmB hs hsmN
     have := congrFun hc ζ
-    simp only at this
+    try simp only at this
     rw [ha, hs] at this
     simp only [Pi.add_apply, Pi.sub_apply, Pi.smul_apply, hsmB, hsmN, smul_eq_mul] at this
     exact this
@@ -379,7 +379,7 @@ lemma beurling_l2_isometry_smooth {ν : ℂ → ℂ} (hν : ContDiff ℝ (⊤ : 
               rw [← norm_ne_zero_iff, hnorm]; exact ne_of_gt hp1
             rw [enorm_inv hsymm_ne]
             have henorm : ‖Complex.polarCoord.symm p‖ₑ = ENNReal.ofReal p.1 := by
-              rw [← ofReal_norm_eq_enorm, hnorm]
+              rw [← ofReal_norm, hnorm]
             rw [henorm, smul_eq_mul,
               ENNReal.mul_inv_cancel
                 (by simp only [ne_eq, ENNReal.ofReal_eq_zero, not_le]; exact hp1)
@@ -445,7 +445,7 @@ lemma beurling_l2_isometry_smooth {ν : ℂ → ℂ} (hν : ContDiff ℝ (⊤ : 
               - Complex.I • (ContinuousLinearMap.apply ℝ ℂ Complex.I).comp S)) z :=
           (hd1.sub (hdI.const_smul Complex.I)).const_smul (1/2 : ℂ)
         rw [hcomb.fderiv]
-        simp only [ContinuousLinearMap.smul_apply, ContinuousLinearMap.sub_apply,
+        simp only [smul_apply, sub_apply,
           ContinuousLinearMap.comp_apply, ContinuousLinearMap.apply_apply, smul_eq_mul]
       have hdzbarF : ∀ m' : ℂ, (fderiv ℝ (fun w => dzbar F w) z) m'
           = (1/2 : ℂ) * ((S m') 1 + Complex.I * (S m') Complex.I) := by
@@ -463,7 +463,7 @@ lemma beurling_l2_isometry_smooth {ν : ℂ → ℂ} (hν : ContDiff ℝ (⊤ : 
               + Complex.I • (ContinuousLinearMap.apply ℝ ℂ Complex.I).comp S)) z :=
           (hd1.add (hdI.const_smul Complex.I)).const_smul (1/2 : ℂ)
         rw [hcomb.fderiv]
-        simp only [ContinuousLinearMap.smul_apply, ContinuousLinearMap.add_apply,
+        simp only [smul_apply, add_apply,
           ContinuousLinearMap.comp_apply, ContinuousLinearMap.apply_apply, smul_eq_mul]
       rw [dzbar, dz, hdzF 1, hdzF Complex.I, hdzbarF 1, hdzbarF Complex.I]
       rw [hsymm Complex.I 1, hsymm 1 Complex.I]
@@ -510,7 +510,7 @@ lemma beurling_l2_isometry_smooth {ν : ℂ → ℂ} (hν : ContDiff ℝ (⊤ : 
               rw [← norm_ne_zero_iff, hnorm]; exact ne_of_gt hp1
             rw [enorm_inv hsymm_ne]
             have henorm : ‖Complex.polarCoord.symm p‖ₑ = ENNReal.ofReal p.1 := by
-              rw [← ofReal_norm_eq_enorm, hnorm]
+              rw [← ofReal_norm, hnorm]
             rw [henorm, smul_eq_mul,
               ENNReal.mul_inv_cancel
                 (by simp only [ne_eq, ENNReal.ofReal_eq_zero, not_le]; exact hp1)
@@ -712,7 +712,7 @@ lemma beurling_l2_isometry_smooth {ν : ℂ → ℂ} (hν : ContDiff ℝ (⊤ : 
           ‖(‖beurling ν z‖^2 : ℝ)‖ₑ ≤ ENNReal.ofReal ((Cb / ‖z‖^2)^2) := by
         intro z hz
         rw [Set.mem_compl_iff, Metric.mem_closedBall, dist_zero_right, not_le] at hz
-        rw [← ofReal_norm_eq_enorm, Real.norm_eq_abs, abs_of_nonneg (by positivity)]
+        rw [← ofReal_norm, Real.norm_eq_abs, abs_of_nonneg (by positivity)]
         apply ENNReal.ofReal_le_ofReal
         have hb := hdecay z hz
         have hnn : 0 ≤ ‖beurling ν z‖ := norm_nonneg _
@@ -741,7 +741,7 @@ lemma beurling_l2_isometry_smooth {ν : ℂ → ℂ} (hν : ContDiff ℝ (⊤ : 
           rw [Set.indicator_of_mem (Set.mem_prod.mpr ⟨Set.mem_Ioi.mpr hpR, hp2⟩)]
           rw [hnorm, smul_eq_mul, ← ENNReal.ofReal_mul hp1.le]
         · rw [Set.indicator_of_notMem hmem, smul_zero]
-          exact zero_le _
+          exact zero_le
       have hboxmeas : Measurable box :=
         hmeas_polar.indicator (measurableSet_Ioi.prod measurableSet_Ioo)
       calc
@@ -781,7 +781,7 @@ lemma beurling_l2_isometry_smooth {ν : ℂ → ℂ} (hν : ContDiff ℝ (⊤ : 
                 exact measurable_const.div (measurable_id.pow_const 2)
               · simp only [Set.mem_Ioi] at hx
                 have hxpos : 0 < x := lt_trans hR''pos hx
-                rw [← ofReal_norm_eq_enorm, Real.norm_eq_abs, abs_of_nonneg (by positivity)]
+                rw [← ofReal_norm, Real.norm_eq_abs, abs_of_nonneg (by positivity)]
     have := hball.union hcompl
     rw [Set.union_compl_self, integrableOn_univ] at this
     exact this
@@ -885,7 +885,7 @@ lemma beurling_l2_isometry_smooth {ν : ℂ → ℂ} (hν : ContDiff ℝ (⊤ : 
         intro y hy; left; rw [sub_ne_zero]; exact hne w hw y hy
       have hFp'_cont : ContinuousOn (fun y => Fp' z y) (Metric.closedBall (0:ℂ) R') := by
         rw [hFp']
-        apply ContinuousOn.smul _ continuousOn_const
+        apply ContinuousOn.fun_smul _ continuousOn_const
         apply ContinuousOn.mul _ hν1.continuous.continuousOn
         apply ContinuousOn.mul continuousOn_const
         apply ContinuousOn.zpow₀ (by fun_prop)
@@ -928,7 +928,7 @@ lemma beurling_l2_isometry_smooth {ν : ℂ → ℂ} (hν : ContDiff ℝ (⊤ : 
         intro y hy w hw
         change HasFDerivAt (fun u => (u - y) ^ (-2:ℤ) * ν y) (Fp' w y) w
         have hsub : HasFDerivAt (fun u : ℂ => u - y) (1 : ℂ →L[ℝ] ℂ) w := by
-          simpa using (hasFDerivAt_id w).sub_const y
+          exact hasFDerivAt_sub_const y
         have hzpw : HasFDerivAt (fun u : ℂ => (u - y) ^ (-2:ℤ))
             ((((-2 : ℤ):ℂ) * (w - y) ^ ((-2:ℤ) - 1)) • (1 : ℂ →L[ℝ] ℂ)) w := by
           have hc := (hasDerivAt_zpow (-2 : ℤ) (w - y)
@@ -976,14 +976,14 @@ lemma beurling_l2_isometry_smooth {ν : ℂ → ℂ} (hν : ContDiff ℝ (⊤ : 
         (((-2 : ℤ):ℂ) * (z - y) ^ ((-2:ℤ) - 1) * ν y) • (1 : ℂ →L[ℝ] ℂ) with hFp'
       have hFp'_cont : ContinuousOn Fp' (Metric.closedBall (0:ℂ) R') := by
         rw [hFp']
-        apply ContinuousOn.smul _ continuousOn_const
+        apply ContinuousOn.fun_smul _ continuousOn_const
         apply ContinuousOn.mul _ hν1.continuous.continuousOn
         apply ContinuousOn.mul continuousOn_const
         apply ContinuousOn.zpow₀ (by fun_prop)
         intro y hy; left; rw [sub_ne_zero]; exact hne y hy
       have hFp'_int : IntegrableOn Fp' (Metric.closedBall (0:ℂ) R') volume :=
         hFp'_cont.integrableOn_compact (isCompact_closedBall 0 R')
-      rw [ContinuousLinearMap.smul_apply, ContinuousLinearMap.integral_apply hFp'_int]
+      rw [smul_apply, ContinuousLinearMap.integral_apply hFp'_int]
       rw [norm_smul]
       have hnormconst : ‖-(1/(π:ℂ))‖ = 1/π := by
         rw [norm_neg, norm_div, norm_one, Complex.norm_real, Real.norm_eq_abs,
@@ -993,7 +993,7 @@ lemma beurling_l2_isometry_smooth {ν : ℂ → ℂ} (hν : ContDiff ℝ (⊤ : 
       set Cval : ℝ := 2 * (‖z‖ - R')⁻¹^3 * M * ‖m‖ with hCval
       have hbd : ∀ y ∈ Metric.closedBall (0:ℂ) R', ‖(Fp' y) m‖ ≤ Cval := by
         intro y hy
-        rw [hFp', ContinuousLinearMap.smul_apply, ContinuousLinearMap.one_apply, smul_eq_mul]
+        rw [hFp', smul_apply, one_apply_eq_self, smul_eq_mul]
         rw [Metric.mem_closedBall, dist_zero_right] at hy
         have hzy : ‖z‖ - R' ≤ ‖z - y‖ := by
           have : ‖z‖ - ‖y‖ ≤ ‖z - y‖ := norm_sub_norm_le z y
@@ -1069,7 +1069,7 @@ lemma beurling_l2_isometry_smooth {ν : ℂ → ℂ} (hν : ContDiff ℝ (⊤ : 
           ‖(‖(fderiv ℝ (beurling ν) z) m‖^2 : ℝ)‖ₑ ≤ ENNReal.ofReal ((Cd / ‖z‖^2)^2) := by
         intro z hz
         rw [Set.mem_compl_iff, Metric.mem_closedBall, dist_zero_right, not_le] at hz
-        rw [← ofReal_norm_eq_enorm, Real.norm_eq_abs, abs_of_nonneg (by positivity)]
+        rw [← ofReal_norm, Real.norm_eq_abs, abs_of_nonneg (by positivity)]
         apply ENNReal.ofReal_le_ofReal
         have hb := hdecay z hz
         have hnn : 0 ≤ ‖(fderiv ℝ (beurling ν) z) m‖ := norm_nonneg _
@@ -1098,7 +1098,7 @@ lemma beurling_l2_isometry_smooth {ν : ℂ → ℂ} (hν : ContDiff ℝ (⊤ : 
           rw [Set.indicator_of_mem (Set.mem_prod.mpr ⟨Set.mem_Ioi.mpr hpR, hp2⟩)]
           rw [hnorm, smul_eq_mul, ← ENNReal.ofReal_mul hp1.le]
         · rw [Set.indicator_of_notMem hmem, smul_zero]
-          exact zero_le _
+          exact zero_le
       have hboxmeas : Measurable box :=
         hmeas_polar.indicator (measurableSet_Ioi.prod measurableSet_Ioo)
       calc
@@ -1138,7 +1138,7 @@ lemma beurling_l2_isometry_smooth {ν : ℂ → ℂ} (hν : ContDiff ℝ (⊤ : 
                 exact measurable_const.div (measurable_id.pow_const 2)
               · simp only [Set.mem_Ioi] at hx
                 have hxpos : 0 < x := lt_trans hR''pos hx
-                rw [← ofReal_norm_eq_enorm, Real.norm_eq_abs, abs_of_nonneg (by positivity)]
+                rw [← ofReal_norm, Real.norm_eq_abs, abs_of_nonneg (by positivity)]
     have := hball.union hcompl
     rw [Set.union_compl_self, integrableOn_univ] at this
     exact this
@@ -1242,7 +1242,7 @@ lemma beurling_l2_isometry_smooth {ν : ℂ → ℂ} (hν : ContDiff ℝ (⊤ : 
         intro y hy; left; rw [sub_ne_zero]; exact hne w hw y hy
       have hFp'_cont : ContinuousOn (fun y => Fp' z y) (Metric.closedBall (0:ℂ) R') := by
         rw [hFp']
-        apply ContinuousOn.smul _ continuousOn_const
+        apply ContinuousOn.fun_smul _ continuousOn_const
         apply ContinuousOn.mul _ hν1.continuous.continuousOn
         apply ContinuousOn.mul continuousOn_const
         apply ContinuousOn.zpow₀ (by fun_prop)
@@ -1285,7 +1285,7 @@ lemma beurling_l2_isometry_smooth {ν : ℂ → ℂ} (hν : ContDiff ℝ (⊤ : 
         intro y hy w hw
         change HasFDerivAt (fun u => (u - y) ^ (-2:ℤ) * ν y) (Fp' w y) w
         have hsub : HasFDerivAt (fun u : ℂ => u - y) (1 : ℂ →L[ℝ] ℂ) w := by
-          simpa using (hasFDerivAt_id w).sub_const y
+          exact hasFDerivAt_sub_const y
         have hzpw : HasFDerivAt (fun u : ℂ => (u - y) ^ (-2:ℤ))
             ((((-2 : ℤ):ℂ) * (w - y) ^ ((-2:ℤ) - 1)) • (1 : ℂ →L[ℝ] ℂ)) w := by
           have hc := (hasDerivAt_zpow (-2 : ℤ) (w - y)
@@ -1333,14 +1333,14 @@ lemma beurling_l2_isometry_smooth {ν : ℂ → ℂ} (hν : ContDiff ℝ (⊤ : 
         (((-2 : ℤ):ℂ) * (z - y) ^ ((-2:ℤ) - 1) * ν y) • (1 : ℂ →L[ℝ] ℂ) with hFp'
       have hFp'_cont : ContinuousOn Fp' (Metric.closedBall (0:ℂ) R') := by
         rw [hFp']
-        apply ContinuousOn.smul _ continuousOn_const
+        apply ContinuousOn.fun_smul _ continuousOn_const
         apply ContinuousOn.mul _ hν1.continuous.continuousOn
         apply ContinuousOn.mul continuousOn_const
         apply ContinuousOn.zpow₀ (by fun_prop)
         intro y hy; left; rw [sub_ne_zero]; exact hne y hy
       have hFp'_int : IntegrableOn Fp' (Metric.closedBall (0:ℂ) R') volume :=
         hFp'_cont.integrableOn_compact (isCompact_closedBall 0 R')
-      rw [ContinuousLinearMap.smul_apply, ContinuousLinearMap.integral_apply hFp'_int]
+      rw [smul_apply, ContinuousLinearMap.integral_apply hFp'_int]
       rw [norm_smul]
       have hnormconst : ‖-(1/(π:ℂ))‖ = 1/π := by
         rw [norm_neg, norm_div, norm_one, Complex.norm_real, Real.norm_eq_abs,
@@ -1350,7 +1350,7 @@ lemma beurling_l2_isometry_smooth {ν : ℂ → ℂ} (hν : ContDiff ℝ (⊤ : 
       set Cval : ℝ := 2 * (‖z‖ - R')⁻¹^3 * M * ‖m‖ with hCval
       have hbd : ∀ y ∈ Metric.closedBall (0:ℂ) R', ‖(Fp' y) m‖ ≤ Cval := by
         intro y hy
-        rw [hFp', ContinuousLinearMap.smul_apply, ContinuousLinearMap.one_apply, smul_eq_mul]
+        rw [hFp', smul_apply, one_apply_eq_self, smul_eq_mul]
         rw [Metric.mem_closedBall, dist_zero_right] at hy
         have hzy : ‖z‖ - R' ≤ ‖z - y‖ := by
           have : ‖z‖ - ‖y‖ ≤ ‖z - y‖ := norm_sub_norm_le z y
@@ -1426,7 +1426,7 @@ lemma beurling_l2_isometry_smooth {ν : ℂ → ℂ} (hν : ContDiff ℝ (⊤ : 
           ‖(‖(fderiv ℝ (beurling ν) z) m‖^2 : ℝ)‖ₑ ≤ ENNReal.ofReal ((Cd / ‖z‖^2)^2) := by
         intro z hz
         rw [Set.mem_compl_iff, Metric.mem_closedBall, dist_zero_right, not_le] at hz
-        rw [← ofReal_norm_eq_enorm, Real.norm_eq_abs, abs_of_nonneg (by positivity)]
+        rw [← ofReal_norm, Real.norm_eq_abs, abs_of_nonneg (by positivity)]
         apply ENNReal.ofReal_le_ofReal
         have hb := hdecay z hz
         have hnn : 0 ≤ ‖(fderiv ℝ (beurling ν) z) m‖ := norm_nonneg _
@@ -1455,7 +1455,7 @@ lemma beurling_l2_isometry_smooth {ν : ℂ → ℂ} (hν : ContDiff ℝ (⊤ : 
           rw [Set.indicator_of_mem (Set.mem_prod.mpr ⟨Set.mem_Ioi.mpr hpR, hp2⟩)]
           rw [hnorm, smul_eq_mul, ← ENNReal.ofReal_mul hp1.le]
         · rw [Set.indicator_of_notMem hmem, smul_zero]
-          exact zero_le _
+          exact zero_le
       have hboxmeas : Measurable box :=
         hmeas_polar.indicator (measurableSet_Ioi.prod measurableSet_Ioo)
       calc
@@ -1495,7 +1495,7 @@ lemma beurling_l2_isometry_smooth {ν : ℂ → ℂ} (hν : ContDiff ℝ (⊤ : 
                 exact measurable_const.div (measurable_id.pow_const 2)
               · simp only [Set.mem_Ioi] at hx
                 have hxpos : 0 < x := lt_trans hR''pos hx
-                rw [← ofReal_norm_eq_enorm, Real.norm_eq_abs, abs_of_nonneg (by positivity)]
+                rw [← ofReal_norm, Real.norm_eq_abs, abs_of_nonneg (by positivity)]
     have := hball.union hcompl
     rw [Set.union_compl_self, integrableOn_univ] at this
     exact this

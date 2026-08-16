@@ -33,21 +33,21 @@ theorem hasGreenFunction_of_hasGreenFunction [T2Space M] [ConnectedSpace M]
   · rwa [hqp]
   have hpq : p ≠ q := fun h => hqp h.symm
   -- ## Downstairs path connectivity and the two distinguished lifts.
-  haveI : LocPathConnectedSpace M := ChartedSpace.locPathConnectedSpace ℂ M
-  haveI : PathConnectedSpace M := pathConnectedSpace_iff_connectedSpace.mpr inferInstance
+  have : LocallyPathConnectedSpace M := ChartedSpace.locallyPathConnectedSpace ℂ M
+  have : PathConnectedSpace M := pathConnectedSpace_iff_connectedSpace.mpr inferInstance
   obtain ⟨sp⟩ := PathConnectedSpace.joined p q
   obtain ⟨pb, hpb_proj⟩ : ∃ pc : PathCover p, pathCoverProj p pc = p :=
     ⟨pathCoverBase p, rfl⟩
   obtain ⟨qb, hqb_proj⟩ : ∃ pc : PathCover p, pathCoverProj p pc = q :=
     ⟨⟨q, ⟦sp⟧⟩, rfl⟩
   -- ## Topology of the universal path cover.
-  haveI : PathConnectedSpace (PathCover p) := pathConnectedSpace_pathCover p
-  haveI : ConnectedSpace (PathCover p) := PathConnectedSpace.connectedSpace
-  haveI : SimplyConnectedSpace (PathCover p) := simplyConnectedSpace_pathCover p
-  haveI : T2Space (PathCover p) := t2space_pathCover p
-  haveI : NoncompactSpace (PathCover p) := noncompactSpace_pathCover p
-  haveI : Nonempty (PathCover p) := ⟨pb⟩
-  haveI : Nonempty (Finset {qc : PathCover p // pathCoverProj p qc = q}) := ⟨∅⟩
+  have : PathConnectedSpace (PathCover p) := pathConnectedSpace_pathCover p
+  have : ConnectedSpace (PathCover p) := PathConnectedSpace.connectedSpace
+  have : SimplyConnectedSpace (PathCover p) := simplyConnectedSpace_pathCover p
+  have : T2Space (PathCover p) := t2space_pathCover p
+  have : NoncompactSpace (PathCover p) := noncompactSpace_pathCover p
+  have : Nonempty (PathCover p) := ⟨pb⟩
+  have : Nonempty (Finset {qc : PathCover p // pathCoverProj p qc = q}) := ⟨∅⟩
   -- ## Green's functions upstairs: at the base lift, hence everywhere.
   have hGpb : HasGreenFunction pb := hasGreenFunction_pathCover p hG hpb_proj
   have hGup : ∀ rc : PathCover p, HasGreenFunction rc := fun rc =>
@@ -1260,18 +1260,18 @@ theorem greenEnvelope_symm [T2Space M] [ConnectedSpace M] [NoncompactSpace M]
     greenEnvelope p q = greenEnvelope q p := by
   classical
   -- ## A path from `p` to `q` downstairs, and the two distinguished lifts.
-  haveI : LocPathConnectedSpace M := ChartedSpace.locPathConnectedSpace ℂ M
-  haveI : PathConnectedSpace M := pathConnectedSpace_iff_connectedSpace.mpr inferInstance
+  have : LocallyPathConnectedSpace M := ChartedSpace.locallyPathConnectedSpace ℂ M
+  have : PathConnectedSpace M := pathConnectedSpace_iff_connectedSpace.mpr inferInstance
   obtain ⟨sp⟩ := PathConnectedSpace.joined p q
   obtain ⟨pb, hpb_proj⟩ : ∃ pc : PathCover p, pathCoverProj p pc = p :=
     ⟨pathCoverBase p, rfl⟩
   obtain ⟨qb, hqb_proj⟩ : ∃ pc : PathCover p, pathCoverProj p pc = q :=
     ⟨⟨q, ⟦sp⟧⟩, rfl⟩
   -- ## Topology of the universal path cover.
-  haveI : PathConnectedSpace (PathCover p) := pathConnectedSpace_pathCover p
-  haveI : SimplyConnectedSpace (PathCover p) := simplyConnectedSpace_pathCover p
-  haveI : T2Space (PathCover p) := t2space_pathCover p
-  haveI : NoncompactSpace (PathCover p) := noncompactSpace_pathCover p
+  have : PathConnectedSpace (PathCover p) := pathConnectedSpace_pathCover p
+  have : SimplyConnectedSpace (PathCover p) := simplyConnectedSpace_pathCover p
+  have : T2Space (PathCover p) := t2space_pathCover p
+  have : NoncompactSpace (PathCover p) := noncompactSpace_pathCover p
   -- ## Green's functions upstairs: at the base lift, hence everywhere.
   have hGpb : HasGreenFunction pb := hasGreenFunction_pathCover p hG hpb_proj
   have hGall : ∀ rc : PathCover p, HasGreenFunction rc := fun rc =>

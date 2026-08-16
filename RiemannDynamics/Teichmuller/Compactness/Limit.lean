@@ -197,7 +197,7 @@ theorem equivariant_on_group_of_equivariant_on_gens {ι : Type} [Finite ι]
         (measurableSet_toMeasurable _ _).inter hopen.measurableSet
       have hSnull : volume
           (toMeasurable volume {w | ¬ P w} ∩ {w : ℂ | moebiusDenom δ⁻¹ w ≠ 0}) = 0 := by
-        refine le_antisymm (le_trans (measure_mono Set.inter_subset_left) ?_) (zero_le _)
+        refine le_antisymm (le_trans (measure_mono Set.inter_subset_left) ?_) (zero_le)
         rw [measure_toMeasurable]
         exact hP.le
       have hfd : ∀ w ∈ toMeasurable volume {w | ¬ P w} ∩ {w : ℂ | moebiusDenom δ⁻¹ w ≠ 0},
@@ -220,7 +220,7 @@ theorem equivariant_on_group_of_equivariant_on_gens {ι : Type} [Finite ι]
       exact hcov
     refine measure_mono_null ?_ himg
     intro z hz
-    simp only [Set.mem_setOf_eq, Classical.not_imp] at hz
+    simp only [Set.mem_ofPred_eq, Classical.not_imp] at hz
     obtain ⟨hden, hbad⟩ := hz
     have hd1 : moebiusDenom δ⁻¹ (moebiusMap δ z) * moebiusDenom δ z = 1 := by
       rw [moebiusDenom_mul δ⁻¹ δ z hden, inv_mul_cancel, moebiusDenom_one]
@@ -264,7 +264,7 @@ theorem equivariant_on_group_of_equivariant_on_gens {ι : Type} [Finite ι]
       exact hHinj (hPsub ha hb)
     rw [ae_iff]
     refine measure_mono_null (fun z hz => ?_) (hpre.measure_zero volume)
-    simp only [Set.mem_setOf_eq, ne_eq, not_not] at hz
+    simp only [Set.mem_ofPred_eq, ne_eq, not_not] at hz
     exact hz
   intro W hW
   induction hW using Subgroup.closure_induction with
@@ -402,7 +402,7 @@ theorem ae_moebius_transport (γ : Matrix.SpecialLinearGroup (Fin 2) ℝ) (Q : �
       (measurableSet_toMeasurable _ _).inter hopen.measurableSet
     have hSnull : volume
         (toMeasurable volume {w | ¬ Q w} ∩ {w : ℂ | moebiusDenom γ⁻¹ w ≠ 0}) = 0 := by
-      refine le_antisymm (le_trans (measure_mono Set.inter_subset_left) ?_) (zero_le _)
+      refine le_antisymm (le_trans (measure_mono Set.inter_subset_left) ?_) (zero_le)
       rw [measure_toMeasurable]
       exact hQ.le
     have hfd : ∀ w ∈ toMeasurable volume {w | ¬ Q w} ∩ {w : ℂ | moebiusDenom γ⁻¹ w ≠ 0},
@@ -425,7 +425,7 @@ theorem ae_moebius_transport (γ : Matrix.SpecialLinearGroup (Fin 2) ℝ) (Q : �
     exact hcov
   refine measure_mono_null ?_ himg
   intro z hz
-  simp only [Set.mem_setOf_eq, Classical.not_imp] at hz
+  simp only [Set.mem_ofPred_eq, Classical.not_imp] at hz
   obtain ⟨hden, hbad⟩ := hz
   have hd1 : moebiusDenom γ⁻¹ (moebiusMap γ z) * moebiusDenom γ z = 1 := by
     rw [moebiusDenom_mul γ⁻¹ γ z hden, inv_mul_cancel, moebiusDenom_one]
@@ -456,7 +456,7 @@ theorem wirtingerQuotient_bound_upper {v vinv : ℂ → ℂ} {κ : ℝ} (hκ : �
     calc ‖dzbar v z‖ ≤ κ * ‖dz v z‖ := hbelt
       _ ≤ max κ 0 * ‖dz v z‖ :=
         mul_le_mul_of_nonneg_right (le_max_left _ _) (norm_nonneg _)
-  rw [← ofReal_norm_eq_enorm]
+  rw [← ofReal_norm]
   exact ENNReal.ofReal_le_ofReal hquot
 
 /-- The Wirtinger quotient of an upper-half-plane quasiconformal map conjugating the
@@ -709,7 +709,7 @@ theorem ae_moebius_pullback (δ : Matrix.SpecialLinearGroup (Fin 2) ℝ) (P : �
       (measurableSet_toMeasurable _ _).inter hopen.measurableSet
     have hSnull : volume
         (toMeasurable volume {w | ¬ P w} ∩ {w : ℂ | moebiusDenom δ⁻¹ w ≠ 0}) = 0 := by
-      refine le_antisymm (le_trans (measure_mono Set.inter_subset_left) ?_) (zero_le _)
+      refine le_antisymm (le_trans (measure_mono Set.inter_subset_left) ?_) (zero_le)
       rw [measure_toMeasurable]
       exact hP.le
     have hfd : ∀ w ∈ toMeasurable volume {w | ¬ P w} ∩ {w : ℂ | moebiusDenom δ⁻¹ w ≠ 0},
@@ -732,7 +732,7 @@ theorem ae_moebius_pullback (δ : Matrix.SpecialLinearGroup (Fin 2) ℝ) (P : �
     exact hcov
   refine measure_mono_null ?_ himg
   intro z hz
-  simp only [Set.mem_setOf_eq, Classical.not_imp] at hz
+  simp only [Set.mem_ofPred_eq, Classical.not_imp] at hz
   obtain ⟨hden, hbad⟩ := hz
   have hd1 : moebiusDenom δ⁻¹ (moebiusMap δ z) * moebiusDenom δ z = 1 := by
     rw [moebiusDenom_mul δ⁻¹ δ z hden, inv_mul_cancel, moebiusDenom_one]
@@ -1050,7 +1050,7 @@ theorem memLpLocOn_of_continuousOn {f : ℂ → ℂ} {p : ℝ≥0∞} {Ω : Set 
   have hKm : MeasurableSet K := hKc.isClosed.measurableSet
   have hfK : ContinuousOn f K := hf.mono hK
   obtain ⟨C, hC⟩ := hKc.exists_bound_of_continuousOn hfK
-  haveI : IsFiniteMeasure (volume.restrict K) := by
+  have : IsFiniteMeasure (volume.restrict K) := by
     constructor
     rw [Measure.restrict_apply_univ]
     exact hKc.measure_lt_top
@@ -1072,7 +1072,7 @@ theorem contDiffOn_moebiusMap (M : Matrix.SpecialLinearGroup (Fin 2) ℝ) :
   have hq := hnum.mul (hdenc.inv hden0)
   refine hq.congr ?_
   intro z hz
-  rw [moebiusMap, moebiusDenom, div_eq_mul_inv]
+  rw [moebiusMap, moebiusDenom, div_eq_mul_inv, Pi.inv_apply]
 
 /-- The Möbius map of a real special linear matrix restricts to an upper-half-plane
 quasiconformal map with vanishing coefficient bound; its two-sided inverse on the upper

@@ -201,7 +201,7 @@ theorem integral_uexp_re_deriv_expGrad_window_Icc {u : ℂ → ℝ} {U : Set ℂ
     rw [min_eq_left hab, max_eq_right hab] at hθ
     have hD := hasDerivAt_expGrad_angular (hdiffC θ (Ioo_subset_Icc_self hθ))
     have hcomp := Complex.imCLM.hasFDerivAt.comp_hasDerivAt θ hD
-    simpa [Function.comp, Complex.mul_im] using hcomp
+    simpa [Function.comp, Complex.mul_im] using! hcomp
   have hIBP := intervalIntegral.integral_mul_deriv_eq_deriv_mul_of_hasDerivAt
     hcont_f hcont_g hf' hg' hcont_g.neg.intervalIntegrable hcont_g'.intervalIntegrable
   have halg : ∫ θ in a..b, (-(expGrad u ((ξ : ℂ) + (θ : ℂ) * Complex.I)).im)
@@ -257,7 +257,7 @@ theorem hasDerivAt_truncFlux_of_mapsTo {u : ℂ → ℝ} {U : Set ℂ} {ξ₁ ξ
     have hDre : HasDerivAt (fun y : ℝ => (expGrad u ((y : ℂ) + (θ : ℂ) * Complex.I)).re)
         ((deriv (expGrad u) ((x : ℂ) + (θ : ℂ) * Complex.I)).re) x := by
       have hcomp := Complex.reCLM.hasFDerivAt.comp_hasDerivAt x hD
-      simpa [Function.comp] using hcomp
+      simpa [Function.comp] using! hcomp
     exact (hu'.mul hDre).congr_deriv (by ring)
   have hDUI := hasDerivAt_integral_stripBox hab hGcont hG'cont hd hξ1 hξ2
   -- integrability of the three interior integrands on `(a, b)` via real-valued slice continuity
@@ -412,9 +412,10 @@ theorem roughFlux_eq_truncFlux_full {u : ℂ → ℝ} {U : Set ℂ} {ξ : ℝ} (
   rw [roughFlux_eq_setIntegral_slice hU, truncFlux]
   refine setIntegral_congr_set ?_
   have hsub : angularSlice U ξ = Ioo (-π) π := by
-    ext θ; simp only [angularSlice, mem_setOf_eq]
+    ext θ; simp only [angularSlice, mem_ofPred_eq]
     exact ⟨fun h => h.1, fun h => ⟨h, hfull θ⟩⟩
   rw [hsub]
+  exact Filter.EventuallyEq.rfl
 
 /-- On a full-circle collar, the fixed-window derivative value `truncFluxDerivU u (−π) π ξ` equals
 the whole-circle slice energy: the `±π` boundary terms cancel by `2π`-periodicity of the log-polar
@@ -555,7 +556,7 @@ theorem dirichletEnergy_inter_ball_eq_lintegral_slice (u : ℂ → ℝ) {U : Set
     ENNReal.measurable_ofReal.comp (Complex.continuous_normSq.measurable.comp (measurable_gradC u))
   have hAMeas : MeasurableSet A := by
     have : A = U ∩ {z : ℂ | 0 < dist z 0 ∧ dist z 0 < Real.exp ξ₀} := by
-      ext z; simp only [hA, mem_setOf_eq, mem_inter_iff]
+      ext z; simp only [hA, mem_ofPred_eq, mem_inter_iff]
     rw [this]
     refine hU.measurableSet.inter ?_
     exact (isOpen_lt continuous_const (continuous_id.dist continuous_const)).inter
@@ -744,7 +745,7 @@ theorem measurable_sliceEnergyU {u : ℂ → ℝ} {U : Set ℂ} (hU : IsOpen U) 
   have hWopen : IsOpen W := by
     have : W = (Prod.snd ⁻¹' Ioo (-π) π) ∩
         ((fun p : ℝ × ℝ => Complex.exp ((p.1 : ℂ) + (p.2 : ℂ) * Complex.I)) ⁻¹' U) := by
-      ext p; simp only [hW, mem_setOf_eq, mem_inter_iff, mem_preimage]
+      ext p; simp only [hW, mem_ofPred_eq, mem_inter_iff, mem_preimage]
     rw [this]
     exact (isOpen_Ioo.preimage continuous_snd).inter (hU.preimage hcontmap)
   -- the jointly measurable integrand, folded through the slice indicator
@@ -829,7 +830,7 @@ theorem isOpen_superLevelU {U : Set ℂ} {u : ℂ → ℝ} (hU : IsOpen U)
     (hu : InnerProductSpace.HarmonicOnNhd u U) (δ : ℝ) : IsOpen (superLevelU U u δ) := by
   have hcont : ContinuousOn u U := hu.continuousOn
   have hrw : superLevelU U u δ = U ∩ (u ⁻¹' Ioi δ) := by
-    ext z; simp only [superLevelU, mem_setOf_eq, mem_inter_iff, mem_preimage, mem_Ioi]
+    ext z; simp only [superLevelU, mem_ofPred_eq, mem_inter_iff, mem_preimage, mem_Ioi]
   rw [hrw]
   exact hcont.isOpen_inter_preimage hU isOpen_Ioi
 
@@ -873,7 +874,7 @@ theorem roughFluxδ_eq_setIntegral_slice {u : ℂ → ℝ} {U : Set ℂ} (hU : I
   rw [angularSliceδ, superLevelU]
   refine (ae_eq_set.mpr ⟨?_, ?_⟩) <;>
     · refine measure_mono_null (fun θ hθ => ?_) measure_empty
-      simp only [mem_diff, mem_inter_iff, mem_setOf_eq] at hθ
+      simp only [Set.mem_sdiff, mem_inter_iff, mem_ofPred_eq] at hθ
       tauto
 
 /-- **The δ-rough flux is the rough flux of the superlevel set.** The δ-rough flux restricts the
@@ -917,7 +918,7 @@ theorem closure_superLevel_window_subset {u : ℂ → ℝ} {U : Set ℂ} {δ ζ�
   have hwclU : w ∈ closure U := closure_mono hVWU hw
   have hwnorm : ‖w‖ < 1 := by
     have hle := hKdisc hw
-    rw [mem_setOf_eq, dist_zero_right] at hle
+    rw [mem_ofPred_eq, dist_zero_right] at hle
     exact lt_of_le_of_lt hle hexp1
   have huwge : δ ≤ u w := by
     have hmap : MapsTo u (V ∩ W) (Ici δ) := fun z hz => le_of_lt hz.1.2

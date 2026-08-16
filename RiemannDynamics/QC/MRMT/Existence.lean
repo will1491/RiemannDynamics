@@ -125,7 +125,7 @@ theorem IsPrincipalSolution.injective {b : BeltramiCoeff} {f : ℂ → ℂ}
     have hcont : ContinuousAt (fun x : ℝ => x ^ α) 0 :=
       Real.continuousAt_rpow_const 0 α (Or.inr hα.le)
     have hcomp := hcont.tendsto.comp h1
-    simpa [Real.zero_rpow hα.ne'] using hcomp
+    simpa [Real.zero_rpow hα.ne'] using! hcomp
   have h3 : Tendsto (fun n => ‖fs n z₁ - fs n z₂‖ + c * ‖fs n z₁ - fs n z₂‖ ^ α)
       atTop (𝓝 0) := by
     have := h1.add (h2.const_mul c)
@@ -371,7 +371,7 @@ theorem IsPrincipalSolution.ae_det_pos {b : BeltramiCoeff} {f : ℂ → ℂ}
           LocallyIntegrableOn g Set.univ := by
         intro g hg
         refine (MeasureTheory.locallyIntegrable_iff.mpr fun K hK => ?_).locallyIntegrableOn _
-        haveI : IsFiniteMeasure (volume.restrict K) :=
+        have : IsFiniteMeasure (volume.restrict K) :=
           ⟨by rw [Measure.restrict_apply_univ]; exact hK.measure_lt_top⟩
         exact ((hg K (Set.subset_univ _) hK).mono_exponent (by norm_num)).integrable le_rfl
       -- The classical partials of the C¹ map are weak partials.
@@ -482,7 +482,7 @@ theorem IsPrincipalSolution.isQCAnalytic {b : BeltramiCoeff} {f : ℂ → ℂ}
     intro w hw
     rw [locallyIntegrableOn_univ, locallyIntegrable_iff]
     intro K hK
-    haveI : IsFiniteMeasure (volume.restrict K) :=
+    have : IsFiniteMeasure (volume.restrict K) :=
       ⟨by rw [Measure.restrict_apply_univ]; exact hK.measure_lt_top⟩
     exact memLp_one_iff_integrable.mp
       ((hw K (Set.subset_univ _) hK).mono_exponent (by norm_num))
@@ -558,7 +558,7 @@ theorem mrmt_exists (b : BeltramiCoeff) :
     intro w hw
     rw [locallyIntegrableOn_univ, locallyIntegrable_iff]
     intro Kc hKc
-    haveI : IsFiniteMeasure (volume.restrict Kc) :=
+    have : IsFiniteMeasure (volume.restrict Kc) :=
       ⟨by rw [Measure.restrict_apply_univ]; exact hKc.measure_lt_top⟩
     exact memLp_one_iff_integrable.mp
       ((hw Kc (Set.subset_univ _) hKc).mono_exponent (by norm_num))
@@ -628,9 +628,9 @@ theorem mrmt_exists (b : BeltramiCoeff) :
         ∧ dzbar (fun w => a * (F w - c)) z = a * dzbar F z := by
       filter_upwards [hkey] with z hk
       constructor
-      · simp only [dz, hk, ContinuousLinearMap.smul_apply, smul_eq_mul]
+      · simp only [dz, hk, smul_apply, smul_eq_mul]
         ring
-      · simp only [dzbar, hk, ContinuousLinearMap.smul_apply, smul_eq_mul]
+      · simp only [dzbar, hk, smul_apply, smul_eq_mul]
         ring
     -- (1) orientation-preserving homeomorphism.
     have hAhomeo : IsHomeomorph (fun z => a * (F z - c)) := by
@@ -687,7 +687,7 @@ theorem mrmt_exists (b : BeltramiCoeff) :
       -- the composite is locally `L²` (continuous, bounded on compacts).
       have hAloc : MemLpLocOn (fun z => a * (F z - c)) 2 Set.univ := by
         intro Kc _ hKc
-        haveI : IsFiniteMeasure (volume.restrict Kc) :=
+        have : IsFiniteMeasure (volume.restrict Kc) :=
           ⟨by rw [Measure.restrict_apply_univ]; exact hKc.measure_lt_top⟩
         obtain ⟨C, hC⟩ := hKc.exists_bound_of_continuousOn hAcont.continuousOn
         refine MemLp.of_bound hAcont.aestronglyMeasurable.restrict C ?_
@@ -725,7 +725,7 @@ theorem mrmt_exists (b : BeltramiCoeff) :
   have hbμ_ae : ∀ᵐ z : ℂ, ‖b.μ z‖ ≤ 1 := by
     filter_upwards [enorm_ae_le_eLpNormEssSup b.μ volume] with z hz
     have h1 : ‖b.μ z‖ₑ ≤ 1 := hz.trans b.bound.le
-    rwa [← ofReal_norm_eq_enorm, ← ENNReal.ofReal_one,
+    rwa [← ofReal_norm, ← ENNReal.ofReal_one,
       ENNReal.ofReal_le_ofReal_iff zero_le_one] at h1
   -- products of `L²_loc` fields with compactly supported `L²` tests are integrable.
   have hmul_int : ∀ (X ψt : ℂ → ℂ), AEStronglyMeasurable X volume →
@@ -756,7 +756,7 @@ theorem mrmt_exists (b : BeltramiCoeff) :
   have hWloc : LocallyIntegrableOn W Set.univ := by
     rw [locallyIntegrableOn_univ, locallyIntegrable_iff]
     intro Kc hKc
-    haveI : IsFiniteMeasure (volume.restrict Kc) :=
+    have : IsFiniteMeasure (volume.restrict Kc) :=
       ⟨by rw [Measure.restrict_apply_univ]; exact hKc.measure_lt_top⟩
     have hu1 : Integrable u (volume.restrict Kc) := memLp_one_iff_integrable.mp
       ((hu2 Kc (Set.subset_univ _) hKc).mono_exponent (by norm_num))
@@ -821,7 +821,7 @@ theorem mrmt_exists (b : BeltramiCoeff) :
     have hψ₂_cs : HasCompactSupport ψ₂ := by
       have h := (hφcoe_cs.mul_left
         (f := fun z : ℂ => (1 : ℂ) + b.μ z)).mul_left (f := fun _ : ℂ => Complex.I)
-      simpa [mul_assoc] using h
+      simpa [mul_assoc] using! h
     -- convergence of the paired integrals along the subsequence.
     have hlim : Tendsto (fun k => (∫ z, partialX (gs (ψ (φ k))) z * ψ₁ z)
         + ∫ z, partialY (gs (ψ (φ k))) z * ψ₂ z) atTop

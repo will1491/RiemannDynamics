@@ -127,7 +127,7 @@ theorem modularLambdaH_F_Y_AP_integral_eq_nat_form
   -- unfold e, unfold g, replace deriv g with deriv modularLambdaH.
   rw [he_re, he_im] at hn
   simp_rw [h_deriv, hg_def, he_def] at hn
-  convert hn using 2
+  convert! hn using 2
 
 /-- **F_Y argument principle, divisor-sum form.** The `(2πi)⁻¹`-normalized
 six-term boundary integral of `λ'/(λ − w)` over `∂F_Y` equals the total
@@ -221,7 +221,7 @@ theorem modularLambdaH_F_Y_AP_integral_eq_divisor_sum
     rw [hg_def]; exact deriv_sub_const w
   rw [he_re, he_im] at hn
   simp_rw [h_deriv, hg_def, he_def] at hn
-  convert hn using 2
+  convert! hn using 2
 
 
 /-! ## The deep-cusp reference value -/
@@ -902,7 +902,7 @@ theorem modularLambdaH_F_Y_image_curve_LHS_eq_pathContourIntegral
       refine MeasureTheory.measure_mono_null (t := {b}) ?_
         (MeasureTheory.measure_singleton b)
       intro x hx
-      simp only [Set.mem_setOf_eq] at hx
+      simp only [Set.mem_ofPred_eq] at hx
       push Not at hx
       obtain ⟨hx_ioc, hx_ne⟩ := hx
       rw [Set.uIoc_of_le hab] at hx_ioc
@@ -1135,10 +1135,10 @@ theorem modularLambdaH_F_Y_image_curve_LHS_eq_pathContourIntegral
     have h_outer := hasDerivAt_circleMap ((1 / 2 : ℂ) + (δ : ℂ) * Complex.I) R₀
       (Real.pi * (2 - t))
     have h_comp := h_outer.scomp t h_inner
-    simpa [Function.comp] using h_comp
+    simpa [Function.comp_def] using! h_comp
   have h1_cont : Continuous (fun t : ℝ => (Real.pi * -1 : ℝ) •
       (_root_.circleMap 0 R₀ (Real.pi * (2 - t)) * Complex.I)) := by
-    refine Continuous.const_smul ?_ _
+    refine Continuous.fun_const_smul ?_ _
     refine Continuous.mul ?_ continuous_const
     exact (continuous_circleMap 0 R₀).comp (by fun_prop)
   have h1_im : ∀ t ∈ Set.Icc (1 : ℝ) 2,

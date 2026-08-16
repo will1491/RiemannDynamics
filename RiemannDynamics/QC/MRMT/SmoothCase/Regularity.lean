@@ -88,7 +88,7 @@ theorem contDiff_cauchyTransform {u : ℂ → ℂ}
           rw [← norm_ne_zero_iff, hnorm]; exact ne_of_gt hq1
         rw [enorm_inv hsymm_ne]
         have henorm : ‖Complex.polarCoord.symm q‖ₑ = ENNReal.ofReal q.1 := by
-          rw [← ofReal_norm_eq_enorm, hnorm]
+          rw [← ofReal_norm, hnorm]
         rw [henorm, smul_eq_mul,
           ENNReal.mul_inv_cancel
             (by simp only [ne_eq, ENNReal.ofReal_eq_zero, not_le]; exact hq1)
@@ -309,7 +309,7 @@ theorem contDiffOne_of_continuous_hasWeakGradient {f gx gy : ℂ → ℂ}
         = Complex.reCLM.smulRight (gx z - cx n z)
           + Complex.imCLM.smulRight (gy z - cy n z) := by
       ext w
-      simp only [ContinuousLinearMap.sub_apply, ContinuousLinearMap.add_apply,
+      simp only [sub_apply, add_apply,
         ContinuousLinearMap.smulRight_apply, smul_sub]
       abel
     rw [hdiff]
@@ -317,7 +317,7 @@ theorem contDiffOne_of_continuous_hasWeakGradient {f gx gy : ℂ → ℂ}
           + Complex.imCLM.smulRight (gy z - cy n z)‖
         ≤ ‖gx z - cx n z‖ + ‖gy z - cy n z‖ := by
       refine ContinuousLinearMap.opNorm_le_bound _ (by positivity) (fun w => ?_)
-      simp only [ContinuousLinearMap.add_apply, ContinuousLinearMap.smulRight_apply,
+      simp only [add_apply, ContinuousLinearMap.smulRight_apply,
         Complex.reCLM_apply, Complex.imCLM_apply]
       calc ‖w.re • (gx z - cx n z) + w.im • (gy z - cy n z)‖
           ≤ ‖w.re • (gx z - cx n z)‖ + ‖w.im • (gy z - cy n z)‖ := norm_add_le _ _
@@ -407,7 +407,7 @@ theorem norm_cauchyTransform_le_of_memLp_support {p : ℝ≥0∞} {R : ℝ}
   -- ===== Radial kernel integrals =====
   -- pointwise: `‖w⁻¹‖ₑ ^ qr = ofReal (‖w‖ ^ (-qr))`
   have hpt : ∀ w : ℂ, ‖w⁻¹‖ₑ ^ qr = ENNReal.ofReal (‖w‖ ^ (-qr)) := fun w => by
-    rw [← ofReal_norm_eq_enorm, ENNReal.ofReal_rpow_of_nonneg (norm_nonneg _) hqr0.le,
+    rw [← ofReal_norm, ENNReal.ofReal_rpow_of_nonneg (norm_nonneg _) hqr0.le,
       norm_inv, Real.inv_rpow (norm_nonneg w), ← Real.rpow_neg (norm_nonneg w)]
   -- `‖·‖^(-qr)` is integrable on balls (dimension 2, `qr < 2`)
   have hnegpow_int : ∀ r : ℝ, 0 < r →
@@ -473,12 +473,12 @@ theorem norm_cauchyTransform_le_of_memLp_support {p : ℝ≥0∞} {R : ℝ}
     have hinner : ∫ y in Set.Ioi (0:ℝ), y ^ (2 - 1) • f y = r ^ (2 - qr) / (2 - qr) := by
       have hsub' : ∫ y in Set.Ioi (0:ℝ), y ^ (2 - 1) • f y
           = ∫ y in Set.Ioo (0:ℝ) r, y ^ (2 - 1) • f y := by
-        apply setIntegral_eq_of_subset_of_forall_diff_eq_zero measurableSet_Ioi
+        apply setIntegral_eq_of_subset_of_forall_sdiff_eq_zero measurableSet_Ioi
         · intro x hx
           simp only [Set.mem_Ioo, Set.mem_Ioi] at *
           exact hx.1
         · intro x hx
-          simp only [Set.mem_Ioi, Set.mem_Ioo, Set.mem_diff, not_and, not_lt] at hx
+          simp only [Set.mem_Ioi, Set.mem_Ioo, Set.mem_sdiff, not_and, not_lt] at hx
           obtain ⟨hx0, hxR⟩ := hx
           have hnlt : ¬ (x < r) := not_lt.mpr (hxR hx0)
           rw [hf]; simp only [if_neg hnlt, smul_zero]
@@ -563,7 +563,7 @@ theorem norm_cauchyTransform_le_of_memLp_support {p : ℝ≥0∞} {R : ℝ}
         rw [Metric.mem_ball, dist_eq_norm, not_lt] at hζ
         exact hζ
       have hle : ‖(ζ - z)⁻¹‖ₑ ≤ 1 := by
-        rw [← ofReal_norm_eq_enorm, norm_inv]
+        rw [← ofReal_norm, norm_inv]
         exact ENNReal.ofReal_le_one.mpr (inv_le_one_of_one_le₀ h1)
       calc ‖(ζ - z)⁻¹‖ₑ ^ qr ≤ 1 ^ qr := ENNReal.rpow_le_rpow hle hqr0.le
         _ = 1 := ENNReal.one_rpow _
@@ -638,7 +638,7 @@ theorem norm_cauchyTransform_le_of_memLp_support {p : ℝ≥0∞} {R : ℝ}
     rw [show N * Kc = ENNReal.ofReal (N.toReal * Kc.toReal) by
         rw [ENNReal.ofReal_mul ENNReal.toReal_nonneg, ENNReal.ofReal_toReal hN_ne,
           ENNReal.ofReal_toReal hKctop],
-      ← ofReal_norm_eq_enorm] at h2
+      ← ofReal_norm] at h2
     exact (ENNReal.ofReal_le_ofReal_iff hnn).mp h2
   -- unfold the Cauchy transform and conclude
   have hCT : ‖cauchyTransform h z‖ = 1/Real.pi * ‖∫ ζ, h ζ / (ζ - z)‖ := by

@@ -72,7 +72,7 @@ theorem SubharmonicOn.le_of_harmonic_majorant {u h : ℂ → ℝ} {U D : Set ℂ
       (hh.continuousOn.mono hsphere).circleIntegrable hr.le
     rw [Real.circleAverage_fun_sub huci hhci]
     have hhavg : Real.circleAverage h c r = h c := by
-      apply HarmonicOnNhd.circleAverage_eq
+      apply InnerProductSpace.HarmonicOnNhd.circleAverage_eq
       rw [abs_of_pos hr]
       exact hh.mono hsub
     have huavg : u c ≤ Real.circleAverage u c r := huD.2 c hc r hr hsub
@@ -213,7 +213,7 @@ theorem subharmonicOn_comp_biholo {u : ℂ → ℝ} {V : Set ℂ}
   have hPcl : ContinuousOn P (closure (Metric.ball c r)) := by
     rw [closure_ball c hrne]; exact hPcb
   have hPmean : Real.circleAverage P c r = P c := by
-    apply HarmonicContOnCl.circleAverage_eq
+    apply InnerProductSpace.HarmonicContOnCl.circleAverage_eq
     refine ⟨?_, ?_⟩
     · rw [abs_of_pos hr]; exact hPharm
     · rw [abs_of_pos hr]; exact hPcl
@@ -353,11 +353,11 @@ theorem exists_harmonicOnNhd_of_bounded_punctured {u : ℂ → ℝ} {c : ℂ} {r
       rw [hεdef]; exact div_mul_cancel₀ _ hlogpos.ne'
     have hAopen : IsOpen (ball c ρ \ closedBall c δ) := isOpen_ball.sdiff isClosed_closedBall
     have hAbdd : Bornology.IsBounded (ball c ρ \ closedBall c δ) :=
-      isBounded_ball.subset Set.diff_subset
+      isBounded_ball.subset Set.sdiff_subset
     -- Closure of the annulus and nonvanishing of `‖z - c‖` there.
     have hclA : closure (ball c ρ \ closedBall c δ) ⊆ closedBall c ρ \ ball c δ := by
       intro z hz
-      rw [Set.diff_eq] at hz
+      rw [Set.sdiff_eq] at hz
       have h2 := closure_inter_subset_inter_closure (ball c ρ) ((closedBall c δ)ᶜ) hz
       rw [closure_ball c hρ.ne', closure_compl, interior_closedBall c hδ.ne'] at h2
       exact ⟨h2.1, h2.2⟩
@@ -369,7 +369,7 @@ theorem exists_harmonicOnNhd_of_bounded_punctured {u : ℂ → ℝ} {c : ℂ} {r
     -- The frontier of the annulus lies on the two circles.
     have hfrontier : frontier (ball c ρ \ closedBall c δ) ⊆ sphere c ρ ∪ sphere c δ := by
       intro z hz
-      rw [Set.diff_eq] at hz
+      rw [Set.sdiff_eq] at hz
       rcases frontier_inter_subset (ball c ρ) ((closedBall c δ)ᶜ) hz with h2 | h2
       · have h3 := h2.1
         rw [frontier_ball c hρ.ne'] at h3
@@ -396,7 +396,7 @@ theorem exists_harmonicOnNhd_of_bounded_punctured {u : ℂ → ℝ} {c : ℂ} {r
         apply hz.2
         rw [hcon]
         exact mem_ball_self hδ
-    have hKcb : closedBall c ρ \ ball c δ ⊆ closedBall c ρ := Set.diff_subset
+    have hKcb : closedBall c ρ \ ball c δ ⊆ closedBall c ρ := Set.sdiff_subset
     -- One-sided comparison for a harmonic `w` vanishing on the outer circle.
     have main : ∀ w : ℂ → ℝ, HarmonicOnNhd w (ball c ρ \ closedBall c δ) →
         ContinuousOn w (closedBall c ρ \ ball c δ) →
@@ -610,7 +610,8 @@ theorem harnack_inequality_ball {h : ℂ → ℝ} {c : ℂ} {r : ℝ} (hr : 0 < 
   have hrepr : Real.circleAverage (poissonKernel c z • h) c ρ = h z :=
     InnerProductSpace.HarmonicOnNhd.circleAverage_poissonKernel_smul hhρ hzball
   have hmean : Real.circleAverage h c ρ = h c :=
-    HarmonicOnNhd.circleAverage_eq (R := ρ) (c := c) (f := h) (by rwa [abs_of_pos hρpos])
+    InnerProductSpace.HarmonicOnNhd.circleAverage_eq (R := ρ) (c := c) (f := h)
+      (by rwa [abs_of_pos hρpos])
   -- Two-sided Poisson-kernel bound on `sphere c ρ` from `ρ ≥ 2 * dist z c`.
   have hkerbd : ∀ w ∈ sphere c ρ,
       (1 : ℝ) / 3 ≤ poissonKernel c z w ∧ poissonKernel c z w ≤ 3 := by

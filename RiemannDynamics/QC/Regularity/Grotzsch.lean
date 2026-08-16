@@ -138,7 +138,7 @@ theorem grotzschModulus_tendsto_zero_zero :
         simp only [hrho0, smul_eq_mul]
         by_cases hmem : Complex.polarCoord.symm p ∈ RoundAnnulus 0 s 1
         · have hmemIoo : p.1 ∈ Set.Ioo s 1 := by
-            simp only [RoundAnnulus, Set.mem_setOf_eq, dist_zero_right, hnorm] at hmem
+            simp only [RoundAnnulus, Set.mem_ofPred_eq, dist_zero_right, hnorm] at hmem
             exact ⟨hmem.1, hmem.2⟩
           rw [Set.indicator_of_mem hmem, Set.indicator_of_mem hmemIoo, hnorm]
           rw [← ENNReal.ofReal_pow (by positivity), ← ENNReal.ofReal_mul (le_of_lt hp1)]
@@ -147,7 +147,7 @@ theorem grotzschModulus_tendsto_zero_zero :
           rw [hL] at *
           field_simp
         · have hmemIoo : p.1 ∉ Set.Ioo s 1 := by
-            simp only [RoundAnnulus, Set.mem_setOf_eq, dist_zero_right, hnorm] at hmem
+            simp only [RoundAnnulus, Set.mem_ofPred_eq, dist_zero_right, hnorm] at hmem
             simpa only [Set.mem_Ioo] using hmem
           rw [Set.indicator_of_notMem hmem, Set.indicator_of_notMem hmemIoo]
           simp
@@ -231,7 +231,7 @@ theorem grotzschModulus_tendsto_zero_zero :
       have huInt : ∀ t ∈ Set.Ioo (0 : ℝ) 1, u t < 1 := by
         intro t ht
         have := hsub t ht
-        rw [grotzschRing, Set.mem_diff, Metric.mem_ball, dist_zero_right] at this
+        rw [grotzschRing, Set.mem_sdiff, Metric.mem_ball, dist_zero_right] at this
         exact this.1
       have huNonneg : ∀ t, 0 ≤ u t := fun t => norm_nonneg _
       have huAC : AbsolutelyContinuousOnInterval u 0 1 := by
@@ -270,9 +270,9 @@ theorem grotzschModulus_tendsto_zero_zero :
           rw [Set.mem_Icc] at hx
           have hx0 : 0 < x := lt_of_lt_of_le hs0 hx.1
           rw [Real.deriv_log]
-          rw [← NNReal.coe_le_coe]
-          simp only [coe_nnnorm, Real.norm_eq_abs, NNReal.coe_mk]
-          rw [abs_of_pos (by positivity), one_div]
+          refine NNReal.coe_le_coe.mp ?_
+          change ‖x⁻¹‖ ≤ 1 / s
+          rw [Real.norm_eq_abs, abs_of_pos (by positivity), one_div]
           exact inv_anti₀ hs0 hx.1
       set v : ℝ → ℝ := fun t => Real.log (M t) with hv
       have hvAC : AbsolutelyContinuousOnInterval v 0 1 := lipOnComp_ac hlogLip hMAC hMmaps
@@ -318,7 +318,7 @@ theorem grotzschModulus_tendsto_zero_zero :
         by_cases hcase : s < u t
         · -- In the annulus: `s < u t < 1`.
           have hann : γ t ∈ RoundAnnulus 0 s 1 := by
-            simp only [RoundAnnulus, Set.mem_setOf_eq, dist_zero_right]
+            simp only [RoundAnnulus, Set.mem_ofPred_eq, dist_zero_right]
             exact ⟨hcase, hut_lt1⟩
           have hut_pos : 0 < u t := lt_trans hs0 hcase
           have hrhoval : rho0 (γ t) = ENNReal.ofReal (1 / (u t * L)) := by
@@ -350,7 +350,7 @@ theorem grotzschModulus_tendsto_zero_zero :
           rw [key1]
           gcongr
           rw [show (‖deriv γ t‖₊ : ℝ≥0∞) = ENNReal.ofReal ‖deriv γ t‖ from by
-            rw [ofReal_norm_eq_enorm, enorm_eq_nnnorm]]
+            rw [ofReal_norm, enorm_eq_nnnorm]]
           exact ENNReal.ofReal_le_ofReal hdu_le
         · -- Below the annulus: `u t ≤ s`, so `t` is a global min of `v` and `deriv v t = 0`.
           have hcase' : u t ≤ s := not_lt.mp hcase
@@ -372,6 +372,7 @@ theorem grotzschModulus_tendsto_zero_zero :
               ENNReal.ofReal_one]
         _ ≤ ENNReal.ofReal (1 / L) * ∫⁻ t in Set.Ioo (0 : ℝ) 1, ENNReal.ofReal |deriv v t| := by
             gcongr ?_ * ?_
+            · exact le_rfl
             rw [← hFTC]
             calc ENNReal.ofReal (∫ t in (0 : ℝ)..1, deriv v t)
                 ≤ ENNReal.ofReal (∫ t in Set.Ioo (0 : ℝ) 1, |deriv v t|) := by
@@ -413,7 +414,7 @@ theorem grotzschModulus_tendsto_zero_zero :
     rw [ENNReal.ofReal_zero] at hcont
     exact hcont.comp hreal
   refine tendsto_of_tendsto_of_tendsto_of_le_of_le' tendsto_const_nhds hUpperTendsto
-    (Filter.Eventually.of_forall (fun s => zero_le _)) ?_
+    (Filter.Eventually.of_forall (fun s => zero_le)) ?_
   have hmem : ∀ᶠ s in 𝓝[>] (0 : ℝ), s < 1 :=
     eventually_nhdsWithin_of_eventually_nhds (eventually_lt_nhds one_pos)
   filter_upwards [self_mem_nhdsWithin, hmem] with s hs0 hs1

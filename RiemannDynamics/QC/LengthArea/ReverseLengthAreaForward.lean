@@ -87,7 +87,7 @@ theorem axisRectQuadrilateral_image {a b s t : ℝ} (hab : a < b) (hst : s < t) 
   have htms : (0:ℝ) < t - s := by linarith
   ext z
   simp only [Quadrilateral.image, axisRectQuadrilateral_toFun, unitSquare, axisRectMap,
-    Set.mem_image, Set.mem_prod, Set.mem_Icc, Set.mem_setOf_eq]
+    Set.mem_image, Set.mem_prod, Set.mem_Icc, Set.mem_ofPred_eq]
   constructor
   · rintro ⟨⟨x, y⟩, ⟨⟨hx0, hx1⟩, hy0, hy1⟩, rfl⟩
     refine ⟨⟨?_, ?_⟩, ?_, ?_⟩ <;> dsimp only [Complex.re, Complex.im] <;> nlinarith
@@ -107,7 +107,7 @@ theorem axisRectQuadrilateral_leftSide {a b s t : ℝ} (hab : a < b) (hst : s < 
   have htms : (0:ℝ) < t - s := by linarith
   ext z
   simp only [Quadrilateral.leftSide, axisRectQuadrilateral_toFun, axisRectMap,
-    Set.mem_image, Set.mem_prod, Set.mem_singleton_iff, Set.mem_Icc, Set.mem_setOf_eq]
+    Set.mem_image, Set.mem_prod, Set.mem_singleton_iff, Set.mem_Icc, Set.mem_ofPred_eq]
   constructor
   · rintro ⟨⟨x, y⟩, ⟨rfl, hy0, hy1⟩, rfl⟩
     refine ⟨by dsimp only [Complex.re]; ring, ?_, ?_⟩ <;>
@@ -127,7 +127,7 @@ theorem axisRectQuadrilateral_rightSide {a b s t : ℝ} (hab : a < b) (hst : s <
   have htms : (0:ℝ) < t - s := by linarith
   ext z
   simp only [Quadrilateral.rightSide, axisRectQuadrilateral_toFun, axisRectMap,
-    Set.mem_image, Set.mem_prod, Set.mem_singleton_iff, Set.mem_Icc, Set.mem_setOf_eq]
+    Set.mem_image, Set.mem_prod, Set.mem_singleton_iff, Set.mem_Icc, Set.mem_ofPred_eq]
   constructor
   · rintro ⟨⟨x, y⟩, ⟨rfl, hy0, hy1⟩, rfl⟩
     refine ⟨by dsimp only [Complex.re]; ring, ?_, ?_⟩ <;>
@@ -159,8 +159,8 @@ theorem axisRect_segmentFamily_subset {a b s t : ℝ} (hab : a < b) (hst : s < t
     rw [heq]
     have hr : HasDerivAt (fun x : ℝ => (a + (b - a) * x : ℝ)) (b - a) x := by
       have h1 : HasDerivAt (fun x : ℝ => (b - a) * x) (b - a) x := by
-        simpa only [mul_one] using (hasDerivAt_id x).const_mul (b - a)
-      simpa only [zero_add] using (hasDerivAt_const x a).add h1
+        simpa only [mul_one] using! (hasDerivAt_id x).const_mul (b - a)
+      simpa only [zero_add] using! (hasDerivAt_const x a).add h1
     exact (hr.ofReal_comp).add_const ((y : ℝ) * Complex.I)
   have hcont : Continuous (fun x : ℝ => Complex.mk (a + (b - a) * x) y) := by
     rw [heq]
@@ -277,7 +277,7 @@ theorem reIncrement_le_arcLength {γ : ℝ → ℂ} (hγac : AbsolutelyContinuou
     have hderiv_g : deriv g t = (deriv γ t).re := by
       have hh : HasDerivAt g (deriv γ t).re t := by
         have := Complex.reCLM.hasFDerivAt.comp_hasDerivAt t hd.hasDerivAt
-        simpa [hg_def] using this
+        simpa [hg_def] using! this
       exact hh.deriv
     rw [hderiv_g, ENNReal.coe_le_coe, ← NNReal.coe_le_coe, coe_nnnorm, coe_nnnorm,
       Real.norm_eq_abs]
@@ -305,7 +305,7 @@ theorem volume_axisRect (a b s t : ℝ) :
   have hpre : axisRect a b s t
       = Complex.measurableEquivRealProd ⁻¹' (Set.Icc a b ×ˢ Set.Icc s t) := by
     ext z
-    simp only [axisRect, Set.mem_setOf_eq, Set.mem_preimage, Set.mem_prod, Set.mem_Icc,
+    simp only [axisRect, Set.mem_ofPred_eq, Set.mem_preimage, Set.mem_prod, Set.mem_Icc,
       Complex.measurableEquivRealProd_apply]
   rw [hpre,
     Complex.volume_preserving_equiv_real_prod.measure_preimage
@@ -502,7 +502,7 @@ theorem axisRectQuadrilateralSwap_leftSide {a b s t : ℝ} (hab : a < b) (hst : 
   have hbma : (0:ℝ) < b - a := by linarith
   ext z
   simp only [Quadrilateral.leftSide, axisRectQuadrilateralSwap_toFun, Function.comp_apply,
-    axisRectMap, Set.mem_image, Set.mem_prod, Set.mem_singleton_iff, Set.mem_Icc, Set.mem_setOf_eq,
+    axisRectMap, Set.mem_image, Set.mem_prod, Set.mem_singleton_iff, Set.mem_Icc, Set.mem_ofPred_eq,
     Prod.fst_swap, Prod.snd_swap, Prod.exists]
   constructor
   · rintro ⟨x, y, ⟨rfl, hx0, hx1⟩, rfl⟩
@@ -523,7 +523,7 @@ theorem axisRectQuadrilateralSwap_rightSide {a b s t : ℝ} (hab : a < b) (hst :
   have hbma : (0:ℝ) < b - a := by linarith
   ext z
   simp only [Quadrilateral.rightSide, axisRectQuadrilateralSwap_toFun, Function.comp_apply,
-    axisRectMap, Set.mem_image, Set.mem_prod, Set.mem_singleton_iff, Set.mem_Icc, Set.mem_setOf_eq,
+    axisRectMap, Set.mem_image, Set.mem_prod, Set.mem_singleton_iff, Set.mem_Icc, Set.mem_ofPred_eq,
     Prod.fst_swap, Prod.snd_swap, Prod.exists]
   constructor
   · rintro ⟨x, y, ⟨rfl, hx0, hx1⟩, rfl⟩

@@ -310,9 +310,9 @@ theorem exists_nonzero_seed_with_deltaField_eq_zero
   let Θₗ : (Fin K → ℂ) →ₗ[ℂ] SectionSpaceCarrier r :=
     { toFun := Θ, map_add' := hadd, map_smul' := hsmul }
   -- ===== Dimension count: the kernel is nontrivial. =====
-  haveI hfin1 : Module.Finite ℂ (Polynomial.degreeLT ℂ (2 * r.degree + 1)) :=
+  have hfin1 : Module.Finite ℂ (Polynomial.degreeLT ℂ (2 * r.degree + 1)) :=
     Module.Finite.equiv (Polynomial.degreeLTEquiv ℂ (2 * r.degree + 1)).symm
-  haveI hfin2 : Module.Finite ℂ (SectionSpaceCarrier r) :=
+  have hfin2 : Module.Finite ℂ (SectionSpaceCarrier r) :=
     Module.Finite.map (Polynomial.degreeLT ℂ (2 * r.degree + 1)) (polyOverDenSq r)
   obtain ⟨c, hc0, hcker⟩ : ∃ c : Fin K → ℂ, c ≠ 0 ∧ Θ c = 0 := by
     by_contra hcon

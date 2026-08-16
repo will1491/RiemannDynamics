@@ -95,7 +95,7 @@ theorem not_isConnected_compl_of_multiple_step {f : ℂ̂ → ℂ̂}
       · exact connectedComponentIn_mono z Set.inter_subset_left
       · exact isPreconnected_connectedComponentIn.subset_connectedComponentIn
           hzC hCsubK
-    haveI hKcs : CompactSpace ↥K := isCompact_iff_compactSpace.mp hKcomp
+    have hKcs : CompactSpace ↥K := isCompact_iff_compactSpace.mp hKcomp
     set z' : ↥K := ⟨z, hzK⟩ with hz'def
     have hcc : Subtype.val '' connectedComponent z' =
         connectedComponentIn Tᶜ z := by
@@ -154,7 +154,7 @@ theorem not_isConnected_compl_of_multiple_step {f : ℂ̂ → ℂ̂}
           exact haO₁
         exact ⟨⟨a, haK⟩, haA', rfl⟩
     -- transfer the clopen trace to the sphere complement `Wᶜ`
-    haveI hpc : PreconnectedSpace ↥(Wᶜ : Set ℂ̂) :=
+    have hpc : PreconnectedSpace ↥(Wᶜ : Set ℂ̂) :=
       Subtype.preconnectedSpace hcon.isPreconnected
     have hAscomp : IsCompact ((fun w : ℂ => (w : ℂ̂)) '' (Subtype.val '' A')) :=
       hAcomp.image OnePoint.continuous_coe
@@ -222,7 +222,7 @@ theorem not_isConnected_compl_of_multiple_step {f : ℂ̂ → ℂ̂}
 /-- The Riemann sphere is locally path-connected: finite points have chart
 balls, and a neighborhood basis at `∞` is given by complements of closed
 balls, which are path-connected through radial rays. -/
-instance instLocPathConnectedSphere : LocPathConnectedSpace ℂ̂ := by
+instance instLocPathConnectedSphere : LocallyPathConnectedSpace ℂ̂ := by
   constructor
   intro x
   rw [Filter.hasBasis_self]
@@ -392,7 +392,7 @@ theorem exists_simplyConnectedSpace_between {K T : Set ℂ} (hK : IsCompact K)
     rw [hzfdef, Complex.norm_real, Real.norm_eq_abs, abs_of_nonneg (by linarith : (0:ℝ) ≤ R)]
   have hAconn : IsConnected {z : ℂ | R - 1 < ‖z‖} := isConnected_setOf_lt_norm (R - 1)
   have hzfA : zf ∈ {z : ℂ | R - 1 < ‖z‖} := by
-    rw [Set.mem_setOf_eq, hzfnorm]; linarith
+    rw [Set.mem_ofPred_eq, hzfnorm]; linarith
   have hAunb : ¬Bornology.IsBounded {z : ℂ | R - 1 < ‖z‖} := by
     intro hb
     obtain ⟨r, hr⟩ := hb.subset_closedBall (0 : ℂ)
@@ -402,7 +402,7 @@ theorem exists_simplyConnectedSpace_between {K T : Set ℂ} (hK : IsCompact K)
       rw [hwdef, Complex.norm_real, Real.norm_eq_abs,
         abs_of_nonneg (by linarith : (0:ℝ) ≤ max r (R - 1) + 1)]
     have hwA : w ∈ {z : ℂ | R - 1 < ‖z‖} := by
-      rw [Set.mem_setOf_eq, hwnorm]; linarith
+      rw [Set.mem_ofPred_eq, hwnorm]; linarith
     have h2 := hr hwA
     rw [Metric.mem_closedBall, dist_zero_right, hwnorm] at h2
     have h3 : r ≤ max r (R - 1) := le_max_left r (R - 1)
@@ -434,7 +434,7 @@ theorem exists_simplyConnectedSpace_between {K T : Set ℂ} (hK : IsCompact K)
     intro r hr z hz hzN
     have h1 := hNball r hr hzN
     rw [Metric.mem_ball, dist_zero_right] at h1
-    rw [Set.mem_setOf_eq] at hz
+    rw [Set.mem_ofPred_eq] at hz
     linarith
   have hUopen : ∀ r : ℝ, IsOpen (U r) := by
     intro r
@@ -755,7 +755,7 @@ theorem exists_essential_loop_of_multiple_step {f : ℂ̂ → ℂ̂}
     have hCcpt : IsCompact C := Metric.isCompact_of_isClosed_isBounded hCclosed hbdd
     refine ⟨z₀, hz₀C, hCcpt, ?_⟩
     -- the frontier of the bounded component is nonempty
-    haveI : PreconnectedSpace ℂ := ⟨(convex_univ (𝕜 := ℝ) (E := ℂ)).isPreconnected⟩
+    have : PreconnectedSpace ℂ := ⟨(convex_univ (𝕜 := ℝ) (E := ℂ)).isPreconnected⟩
     have hCne : C.Nonempty := ⟨z₀, hz₀C⟩
     have hfrne : (frontier C).Nonempty := by
       by_contra hemp
@@ -763,7 +763,7 @@ theorem exists_essential_loop_of_multiple_step {f : ℂ̂ → ℂ̂}
       have hopen : IsOpen C := by
         have h1 : C \ interior C = ∅ := by rw [← hCclosed.frontier_eq]; exact hemp
         have h2 : interior C = C :=
-          Set.Subset.antisymm interior_subset (Set.diff_eq_empty.mp h1)
+          Set.Subset.antisymm interior_subset (Set.sdiff_eq_empty.mp h1)
         rw [← h2]; exact isOpen_interior
       rcases isClopen_iff.mp ⟨hCclosed, hopen⟩ with h | h
       · exact hCne.ne_empty h
@@ -857,7 +857,7 @@ theorem exists_essential_loop_of_multiple_step {f : ℂ̂ → ℂ̂}
       rw [Metric.mem_ball]
       linarith
     -- pass to the compact subspace K
-    haveI : CompactSpace K := isCompact_iff_compactSpace.mp hKcpt
+    have : CompactSpace K := isCompact_iff_compactSpace.mp hKcpt
     set z₀' : K := ⟨z₀, hz₀K⟩ with hz₀'def
     have hccinter := connectedComponent_eq_iInter_isClopen z₀'
     have hWclosed : IsClosed W := hKcpt.isClosed.sdiff Metric.isOpen_ball
@@ -922,7 +922,7 @@ theorem exists_essential_loop_of_multiple_step {f : ℂ̂ → ℂ̂}
         rw [← hVeq]
         exact hxV
     have hFAclosed : IsClosed (F \ A) := by
-      rw [hAeq, Set.diff_self_inter]
+      rw [hAeq, Set.sdiff_self_inter]
       exact hFclosed.sdiff (hVopen.inter Metric.isOpen_ball)
     -- metric separation of the compact clopen piece from the rest
     have hdisjAB : Disjoint A (F \ A) := disjoint_sdiff_self_right
@@ -1128,9 +1128,9 @@ theorem isChartNullHomotopyIn_of_step {f : ℂ̂ → ℂ̂}
       rw [hr, hread x, if_pos h0]
       rfl
     have hZfin : {t : ℂ | r.denReduced.IsRoot t}.Finite :=
-      Polynomial.finite_setOf_isRoot hdenR
+      Polynomial.finite_setOfPred_isRoot hdenR
     have hclosed : IsClosed ({t : ℂ | r.denReduced.IsRoot t} \ {x}) :=
-      (hZfin.subset Set.diff_subset).isClosed
+      (hZfin.subset Set.sdiff_subset).isClosed
     have hxmem : x ∈ ({t : ℂ | r.denReduced.IsRoot t} \ {x})ᶜ := fun h => h.2 rfl
     have hev_ne : ∀ᶠ t in 𝓝[≠] x, r.denReduced.eval t ≠ 0 := by
       filter_upwards [nhdsWithin_le_nhds (hclosed.isOpen_compl.mem_nhds hxmem),
@@ -1194,7 +1194,7 @@ theorem isChartNullHomotopyIn_of_step {f : ℂ̂ → ℂ̂}
       refine ⟨x, ?_, rfl⟩
       change (r.numReduced - Polynomial.C y * r.denReduced).eval x = 0
       rw [Polynomial.eval_sub, Polynomial.eval_mul, Polynomial.eval_C, hdiv, sub_self]
-    exact ((Polynomial.finite_setOf_isRoot hq).image _).subset hsub
+    exact ((Polynomial.finite_setOfPred_isRoot hq).image _).subset hsub
   -- local injectivity near each finite non-critical point
   have hloc : ∀ x : ℂ, ((x : ℂ̂) ∈ S) → ∃ Wc : Set ℂ, IsOpen Wc ∧ x ∈ Wc ∧
       ∀ t₁ ∈ Wc, ∀ t₂ ∈ Wc, f ((t₁ : ℂ̂)) = f ((t₂ : ℂ̂)) → t₁ = t₂ := by
@@ -1313,7 +1313,7 @@ theorem isChartNullHomotopyIn_of_step {f : ℂ̂ → ℂ̂}
     rw [hpre]
     exact Set.Finite.preimage Subtype.coe_injective.injOn (hfib_fin y)
   -- local homeomorphism records for the packaged map
-  haveI hSne : Nonempty ↥S := hSfc.nonempty.to_subtype
+  have hSne : Nonempty ↥S := hSfc.nonempty.to_subtype
   have hFloc : ∀ e : ↥S, ∃ φ : OpenPartialHomeomorph ↥S ↥T,
       e ∈ φ.source ∧ ⇑φ = F := by
     intro e
@@ -1351,8 +1351,8 @@ theorem isChartNullHomotopyIn_of_step {f : ℂ̂ → ℂ̂}
     · rfl
   -- ## Stage 3: the packaged map is a covering map.
   have hcovOn : IsCoveringMapOn F Set.univ :=
-    hFclosed.isCoveringMapOn_of_openPartialHomeomorph
-      (fun w _ => hFfib w) (fun e _ => hFloc e)
+    hFclosed.isCoveringMapOn_of_isLocalHomeomorphOn
+      (fun w _ => hFfib w) (fun e _ => (hFloc e).imp fun φ h => ⟨h.1, h.2.symm⟩)
   have hcov : IsCoveringMap F := isCoveringMap_iff_isCoveringMapOn_univ.mpr hcovOn
   -- ## Stage 4: homotopy data and the base loop, packaged on the subtypes.
   obtain ⟨H, hHs0, hHs1, hHtr, hHmem⟩ :

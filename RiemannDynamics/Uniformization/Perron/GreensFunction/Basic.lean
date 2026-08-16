@@ -50,7 +50,7 @@ omit [IsManifold 𝓘(ℂ) ω M] in
 /-- A connected surface with a point removed stays connected. -/
 theorem isConnected_compl_singleton_of_connected [ConnectedSpace M]
     (hnt : ∃ x y : M, x ≠ y) (p₀ : M) : IsConnected ({p₀}ᶜ : Set M) := by
-  haveI : T1Space M := ChartedSpace.t1Space ℂ M
+  have : T1Space M := ChartedSpace.t1Space ℂ M
   have hopen : IsOpen ({p₀}ᶜ : Set M) := isOpen_compl_singleton
   -- Nonemptiness of the punctured surface.
   obtain ⟨x, y, hxy⟩ := hnt
@@ -180,15 +180,15 @@ theorem msubharmonic_le_zero_of_puncture [ConnectedSpace M]
     (hpole : ∃ C, ∀ᶠ x in 𝓝[≠] p₀, v x ≤ C) :
     ∀ x ≠ p₀, v x ≤ 0 := by
   classical
-  haveI : LocallyConnectedSpace M := ChartedSpace.locallyConnectedSpace ℂ M
+  have : LocallyConnectedSpace M := ChartedSpace.locallyConnectedSpace ℂ M
   obtain ⟨K, hK, hKv⟩ := hsupp
   obtain ⟨C, hC⟩ := hpole
   -- The surface has at least two points, else it would be compact.
   have hnt : ∃ x y : M, x ≠ y := by
     by_contra hcon
     push Not at hcon
-    haveI : Subsingleton M := ⟨fun a b => hcon a b⟩
-    haveI : CompactSpace M := Finite.compactSpace
+    have : Subsingleton M := ⟨fun a b => hcon a b⟩
+    have : CompactSpace M := Finite.compactSpace
     exact NoncompactSpace.noncompact_univ (X := M) isCompact_univ
   have hconn : IsConnected ({p₀}ᶜ : Set M) :=
     isConnected_compl_singleton_of_connected hnt p₀
@@ -276,7 +276,7 @@ theorem msubharmonic_le_zero_of_puncture [ConnectedSpace M]
     -- The component has a boundary point (else it would be all of `M`).
     have hfrne : (closure (connectedComponentIn Ω xm) \ connectedComponentIn Ω xm).Nonempty := by
       by_contra hem
-      rw [Set.not_nonempty_iff_eq_empty, Set.diff_eq_empty] at hem
+      rw [Set.not_nonempty_iff_eq_empty, Set.sdiff_eq_empty] at hem
       have hclopen : IsClopen (connectedComponentIn Ω xm) :=
         ⟨closure_eq_iff_isClosed.1 (Set.Subset.antisymm hem subset_closure), hCco⟩
       have huniv : connectedComponentIn Ω xm = Set.univ := hclopen.eq_univ ⟨xm, hCcx⟩
@@ -299,7 +299,7 @@ theorem msubharmonic_le_zero_of_puncture [ConnectedSpace M]
     have hyfr : y ∈ closure Ω \ Ω := ⟨closure_mono hCcΩ hycl, hyΩ⟩
     obtain ⟨hyct, hyle⟩ := hfr y hyfr
     -- Continuity forces the maximal value at the boundary point: contradiction.
-    haveI hne : (𝓝[connectedComponentIn Ω xm] y).NeBot :=
+    have hne : (𝓝[connectedComponentIn Ω xm] y).NeBot :=
       mem_closure_iff_nhdsWithin_neBot.1 hycl
     have h1 : Tendsto w (𝓝[connectedComponentIn Ω xm] y) (𝓝 (w y)) :=
       hyct.continuousWithinAt
@@ -504,7 +504,7 @@ theorem msubharmonic_le_zero_of_puncture [ConnectedSpace M]
     have hAD : A ⊆ D := by
       rw [hAdef, hDdef, himg _ hOsub, himg _ hrt]
       exact Set.inter_subset_inter (subset_refl _)
-        (Set.preimage_mono (Set.diff_subset.trans ball_subset_closedBall))
+        (Set.preimage_mono (Set.sdiff_subset.trans ball_subset_closedBall))
     have hp₀clA : p₀ ∉ closure A := by
       intro hcon
       have hU : IsOpen (e.source ∩ e ⁻¹' ball z₀ σ) :=

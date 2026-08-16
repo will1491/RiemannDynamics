@@ -244,7 +244,7 @@ theorem reich_strebel_of_hsep
     rw [wirtingerQuotient_hMod hzU]
   · push Not at hq0
     rw [l1Norm_eq_zero q hmeas hq0]
-    exact zero_le _
+    exact zero_le
 
 /-- **Uniqueness of continuous logarithm lifts on an interval**: two continuous lifts of
 the same nonvanishing function agreeing at the left endpoint agree throughout. -/
@@ -494,7 +494,7 @@ theorem traj_double_cover {q : ℂ → ℂ} {z₀ : ℂ} {σ w : ℝ → ℂ} {b
       have h3 : |(w t).im| ≤ ‖w t‖ := Complex.abs_im_le_norm _
       have h4 : (v - Complex.I - w t).im = v.im - 1 - (w t).im := by simp
       have h5 := hwsmall t ht
-      simp only [Set.mem_setOf_eq]
+      simp only [Set.mem_ofPred_eq]
       have h6 : |v.im - 1 - (w t).im| < ‖w t‖ / 2 := h4 ▸ lt_of_le_of_lt h2 h1
       have h7 := abs_lt.mp h6
       have h8 := abs_le.mp h3
@@ -539,7 +539,7 @@ theorem traj_double_cover {q : ℂ → ℂ} {z₀ : ℂ} {σ w : ℝ → ℂ} {b
           have h0 : HasDerivAt (fun x : ℂ => x - Complex.I) 1 v :=
             (hasDerivAt_id v).sub_const Complex.I
           have := h0.pow 2
-          simpa using this
+          simpa using! this
         rw [hpdef]
         simpa using h1.const_add z₀
       have hΦ' : HasDerivAt Φ (deriv Φ (p v)) (p v) :=
@@ -620,7 +620,7 @@ theorem no_alltime_traj_to_zero {q : ℂ → ℂ}
       simpa using hn0.norm
     have hn2 : Filter.Tendsto (fun t => Real.sqrt ‖σ t - z₀‖) Filter.atTop (𝓝 0) := by
       have := (Real.continuous_sqrt.tendsto (0 : ℝ)).comp hn1
-      simpa using this
+      simpa using! this
     refine hn2.congr' ?_
     filter_upwards [eventually_ge_atTop b] with t ht
     rw [← hwnorm t ht, Real.sqrt_sq (norm_nonneg _)]
@@ -713,7 +713,7 @@ theorem tail_regular_accum {q : ℂ → ℂ}
   have hmapK : Filter.map σ Filter.atTop ≤ Filter.principal K := by
     rw [Filter.le_principal_iff, Filter.mem_map]
     exact Filter.mem_of_superset (Filter.Ici_mem_atTop b) (fun t ht => hbK t ht)
-  haveI : (Filter.map σ Filter.atTop).NeBot := Filter.map_neBot
+  have : (Filter.map σ Filter.atTop).NeBot := Filter.map_neBot
   obtain ⟨z₀, hz₀K, hz₀cl⟩ := hK hmapK
   have hz₀im : 0 < z₀.im := hKH hz₀K
   have hz₀MCP : MapClusterPt z₀ Filter.atTop σ := hz₀cl
@@ -730,7 +730,7 @@ theorem tail_regular_accum {q : ℂ → ℂ}
     push Not at hnt
     obtain ⟨ε, hε, hdiv⟩ := hnt
     have hDfin : Set.Finite ((fun v => dist v z₀) '' ({z ∈ K | q z = 0} \ {z₀})) :=
-      (hZfin.subset Set.diff_subset).image _
+      (hZfin.subset Set.sdiff_subset).image _
     have hrex : ∃ r : ℝ, 0 < r ∧ r < ε ∧
         ∀ v ∈ K, q v = 0 → v ≠ z₀ → r < dist v z₀ := by
       by_cases hne : ({z ∈ K | q z = 0} \ {z₀}).Nonempty
@@ -779,7 +779,7 @@ theorem tail_regular_accum {q : ℂ → ℂ}
       refine Filter.frequently_atTop.mpr fun T => ?_
       obtain ⟨t, h1, h2, h3⟩ := hcross T
       exact ⟨t, h1, h2, h3⟩
-    haveI hSne : (Filter.atTop ⊓ Filter.principal S).NeBot :=
+    have hSne : (Filter.atTop ⊓ Filter.principal S).NeBot :=
       frequently_iff_neBot.mp hSfreq
     have hK'c : IsCompact (K ∩ {v | dist v z₀ = r}) :=
       hK.inter_right (isClosed_eq (continuous_id.dist continuous_const)
@@ -791,7 +791,7 @@ theorem tail_regular_accum {q : ℂ → ℂ}
         (Filter.mem_inf_of_right (Filter.mem_principal_self S)) ?_
       rintro t ⟨htb, htd⟩
       exact ⟨hbK t htb, htd⟩
-    haveI : (Filter.map σ (Filter.atTop ⊓ Filter.principal S)).NeBot :=
+    have : (Filter.map σ (Filter.atTop ⊓ Filter.principal S)).NeBot :=
       Filter.map_neBot
     obtain ⟨v, hvK', hvcl⟩ := hK'c hle2
     have hvMCP : MapClusterPt v Filter.atTop σ :=
@@ -803,7 +803,7 @@ theorem tail_regular_accum {q : ℂ → ℂ}
       intro h
       have h2 := hvK'.2
       rw [h] at h2
-      simp only [Set.mem_setOf_eq, dist_self] at h2
+      simp only [Set.mem_ofPred_eq, dist_self] at h2
       exact hr0.ne h2
     exact lt_irrefl r (hvK'.2 ▸ hravoid v hvK'.1 hvq hvne)
   exact no_alltime_traj_to_zero hq hσ hz₀im hz₀0 htend
@@ -862,7 +862,7 @@ theorem leaf_follow {q Φ : ℂ → ℂ} {S : Set ℂ} (hS : IsOpen S)
         have h0m : (0 : ℝ) ∈ Set.Icc (0 : ℝ) h := Set.left_mem_Icc.mpr hh.le
         have hc := hτ.cont 0 h0m
         have := hc (hS.mem_nhds (by simpa using htS))
-        simpa using this
+        simpa using! this
       filter_upwards [hdevε, hcS, eventually_mem_nhdsWithin] with u hd hcSu hum
       refine hΦinj hcSu (localFlow_mem (hsegm u hum)) ?_
       rw [hd, localFlow_dev (hsegm u hum)]
@@ -1260,20 +1260,16 @@ theorem confined_tail_false {q : ℂ → ℂ}
       exact ⟨by linarith, by linarith⟩
     refine hbigon (fun u => σ (u + s₁)) τ₀ T 0 μ hT le_rfl hμ
       (hσv μ hμ hμle) hτh ?_ ?_
-    · change τ₀ 0 = σ (T + s₁)
-      rw [hτ₀0, hTdef, sub_add_cancel, hpt]
-    · change τ₀ 0 = σ (0 + s₁)
-      rw [hτ₀0, zero_add]
+    · rw [hτ₀0, hTdef, sub_add_cancel, hpt]
+    · rw [hτ₀0, zero_add]
   · -- distinct heights: vertical chart connection, genuine bigon
     obtain ⟨τ, hτtraj, hτ0, hτℓ⟩ := vertical_connect hSopen hΦd hΦinj hSH
       hSne hΦsq hρ₀ himg hs₁S hs₂S hΦs₁ hΦs₂ hs₁im hs₂im hcase
     have hμ : (0 : ℝ) < ρ₀ / 4 := by positivity
     refine hbigon (fun u => σ (u + s₁)) τ T |h₁ - h₂| (ρ₀ / 4) hT (abs_nonneg _)
       hμ (hσv _ hμ le_rfl) hτtraj ?_ ?_
-    · change τ 0 = σ (T + s₁)
-      rw [hτ0, hTdef, sub_add_cancel]
-    · change τ |h₁ - h₂| = σ (0 + s₁)
-      rw [hτℓ, zero_add]
+    · rw [hτ0, hTdef, sub_add_cancel]
+    · rw [hτℓ, zero_add]
 
 /-- **Confined-end exclusion, backward**: under the same no-bigon principle, an all-time
 vertical trajectory cannot keep its backward tail in a compact subset of the upper half
@@ -1411,19 +1407,15 @@ theorem leaf_cross_once {q : ℂ → ℂ}
     rcases le_total ur ul with hu | hu
     · refine hbigon _ (fun v => τ (v + ur)) T' (ul - ur) μ hT'
         (by linarith) hμ hσv (traj_mono (hτshift ur) (Set.subset_univ _)) ?_ ?_
-      · change τ (0 + ur) = σ (T' + tl)
-        rw [zero_add]
+      · rw [zero_add]
         exact hσvT.symm
-      · change τ (ul - ur + ur) = σ (0 + tl)
-        rw [sub_add_cancel]
+      · rw [sub_add_cancel]
         exact hσv0.symm
     · refine hbigon _ (fun v => τ (ur - v)) T' (ur - ul) μ hT'
         (by linarith) hμ hσv (traj_mono (hτrevs ur) (Set.subset_univ _)) ?_ ?_
-      · change τ (ur - 0) = σ (T' + tl)
-        rw [sub_zero]
+      · rw [sub_zero]
         exact hσvT.symm
-      · change τ (ur - (ur - ul)) = σ (0 + tl)
-        rw [show ur - (ur - ul) = ul from by ring]
+      · rw [show ur - (ur - ul) = ul from by ring]
         exact hσv0.symm
   have key2 : ∀ t ul ur : ℝ, a < t → ul < ur →
       σ t = τ ul → σ t = τ ur → False := by

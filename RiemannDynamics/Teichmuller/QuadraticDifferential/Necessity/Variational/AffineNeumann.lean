@@ -35,7 +35,7 @@ theorem memLp_mono_exponent_of_ball_support (u : ℂ → ℂ) (p q : ℝ≥0∞)
   classical
   have hBmeas : MeasurableSet (Metric.closedBall (0 : ℂ) (max R 0)) :=
     measurableSet_closedBall
-  haveI : IsFiniteMeasure (volume.restrict (Metric.closedBall (0 : ℂ) (max R 0))) :=
+  have : IsFiniteMeasure (volume.restrict (Metric.closedBall (0 : ℂ) (max R 0))) :=
     ⟨by
       rw [Measure.restrict_apply_univ]
       exact (isCompact_closedBall _ _).measure_lt_top⟩
@@ -151,7 +151,7 @@ theorem hasDerivAt_tsum_pow_mul_of_le_geometric (c : ℕ → ℂ) (M ρ : ℝ) (
   have hDer : HasDerivAt (fun t : ℂ => c 0 + t * ∑' n : ℕ, t ^ n * c (n + 1)) (c 1) 0 := by
     have h1 := (hasDerivAt_id (0 : ℂ)).mul hG.differentiableAt.hasDerivAt
     have h1' : HasDerivAt (fun t : ℂ => t * ∑' n : ℕ, t ^ n * c (n + 1)) (c 1) 0 := by
-      convert h1 using 1
+      convert! h1 using 1
       rw [hG0]
       simp
     exact h1'.const_add (c 0)
@@ -312,12 +312,10 @@ theorem hasDerivAt_integral_div_sub_pow (u : ℂ → ℂ) (p : ℝ≥0∞) (R : 
     rw [h3] at h2
     exact h2
   · refine Filter.Eventually.of_forall fun ζ => fun x hx => ?_
-    beta_reduce
     rw [norm_mul, Complex.norm_natCast]
     exact mul_le_mul_of_nonneg_left (hbnd_gen (k + 1) x hx ζ) (Nat.cast_nonneg k)
   · exact (huI.norm.const_mul _).const_mul _
   · refine Filter.Eventually.of_forall fun ζ => fun x hx => ?_
-    beta_reduce
     by_cases hζ : u ζ = 0
     · simp only [hζ, zero_div, mul_zero]
       exact hasDerivAt_const x 0
@@ -597,7 +595,7 @@ theorem exists_principal_solution_power_series (κ' ν' : ℂ → ℂ) (R M' : �
       have h0 : eLpNorm (fun _ : ℂ => (0 : ℂ)) p volume = 0 :=
         eLpNorm_zero (p := p) (μ := volume) (α := ℂ) (ε := ℂ)
       rw [h0]
-      exact zero_le (eLpNorm ν' p volume)
+      exact zero_le
   -- the recursion data and the sequence itself
   set datum : (ℂ → ℂ) → ℕ → ℂ → ℂ :=
     fun am m z => ν' z * beurling am z + eterm m z with hdatumdef
@@ -784,7 +782,7 @@ theorem exists_principal_solution_power_series (κ' ν' : ℂ → ℂ) (R M' : �
             rw [hκessOfReal, h2]
         _ ≤ ENNReal.ofReal k' + ENNReal.ofReal ‖s‖ * ENNReal.ofReal M' :=
             add_le_add le_rfl
-              (mul_le_mul' (le_of_eq (ofReal_norm_eq_enorm s).symm) hνb')
+              (mul_le_mul' (le_of_eq (ofReal_norm s).symm) hνb')
         _ = ENNReal.ofReal (k' + ‖s‖ * M') := by
             rw [← ENNReal.ofReal_mul (norm_nonneg s),
               ← ENNReal.ofReal_add hk'0 (mul_nonneg (norm_nonneg s) hM0.le)]
@@ -838,7 +836,7 @@ theorem exists_principal_solution_power_series (κ' ν' : ℂ → ℂ) (R M' : �
       refine Finset.sum_eq_zero fun n _ => ?_
       rw [hasupp n z hz, mul_zero]
     have hsPLp : ∀ N : ℕ, MemLp (sP N) p volume := fun N =>
-      memLp_finset_sum _ fun n _ => (haLp n).const_mul (s ^ n)
+      memLp_finsetSum _ fun n _ => (haLp n).const_mul (s ^ n)
     have hsPL2 : ∀ N : ℕ, MemLp (sP N) 2 volume := fun N => hL2 _ (hsPLp N) (hsPsupp N)
     -- incremental linearity of the Beurling transform over the partial sums
     have hSstep : ∀ N : ℕ, beurling (sP (N + 1))
@@ -1018,7 +1016,7 @@ theorem exists_principal_solution_power_series (κ' ν' : ℂ → ℂ) (R M' : �
           rw [Pi.smul_apply, smul_eq_mul]
         rw [hsm, eLpNorm_const_smul]
         have h4 : ‖s ^ (N + 2)‖ₑ = ENNReal.ofReal (‖s‖ ^ (N + 2)) := by
-          rw [← ofReal_norm_eq_enorm, norm_pow]
+          rw [← ofReal_norm, norm_pow]
         rw [h4]
         calc ENNReal.ofReal (‖s‖ ^ (N + 2))
               * eLpNorm (fun z => ν' z * beurling (a (N + 1)) z) p volume
@@ -1097,7 +1095,7 @@ theorem exists_principal_solution_power_series (κ' ν' : ℂ → ℂ) (R M' : �
           exact Finset.sum_congr rfl fun n _ => mul_div_assoc _ _ _
         change -(1 / (Real.pi : ℂ)) * ∫ ζ, sP N ζ / (ζ - z)
             = ∑ n ∈ Finset.range N, s ^ n * c n z
-        rw [hsdiv, integral_finset_sum _ (fun n _ => (hint n).const_mul (s ^ n)),
+        rw [hsdiv, integral_finsetSum _ (fun n _ => (hint n).const_mul (s ^ n)),
           Finset.mul_sum]
         refine Finset.sum_congr rfl fun n _ => ?_
         have hcm : ∫ ζ, s ^ n * (a n ζ / (ζ - z)) = s ^ n * ∫ ζ, a n ζ / (ζ - z) :=
@@ -1229,7 +1227,7 @@ theorem isQCAnalytic_affine_postcomp (F : ℂ → ℂ) (bF : BeltramiCoeff) (a c
     intro w hw
     rw [locallyIntegrableOn_univ, locallyIntegrable_iff]
     intro Kc hKc
-    haveI : IsFiniteMeasure (volume.restrict Kc) :=
+    have : IsFiniteMeasure (volume.restrict Kc) :=
       ⟨by rw [Measure.restrict_apply_univ]; exact hKc.measure_lt_top⟩
     exact memLp_one_iff_integrable.mp
       ((hw Kc (Set.subset_univ _) hKc).mono_exponent (by norm_num))
@@ -1251,9 +1249,9 @@ theorem isQCAnalytic_affine_postcomp (F : ℂ → ℂ) (bF : BeltramiCoeff) (a c
       ∧ dzbar (fun w => a * (F w - c)) z = a * dzbar F z := by
     filter_upwards [hkey] with z hk
     constructor
-    · simp only [dz, hk, ContinuousLinearMap.smul_apply, smul_eq_mul]
+    · simp only [dz, hk, smul_apply, smul_eq_mul]
       ring
-    · simp only [dzbar, hk, ContinuousLinearMap.smul_apply, smul_eq_mul]
+    · simp only [dzbar, hk, smul_apply, smul_eq_mul]
       ring
   have hAhomeo : IsHomeomorph (fun z => a * (F z - c)) := by
     have h1 := ((Homeomorph.subRight c).trans (Homeomorph.mulLeft₀ a ha)).isHomeomorph
@@ -1304,7 +1302,7 @@ theorem isQCAnalytic_affine_postcomp (F : ℂ → ℂ) (bF : BeltramiCoeff) (a c
       simpa [smul_eq_mul] using HasWeakDirDeriv.const_smul a hsub'
     have hAloc : MemLpLocOn (fun z => a * (F z - c)) 2 Set.univ := by
       intro Kc _ hKc
-      haveI : IsFiniteMeasure (volume.restrict Kc) :=
+      have : IsFiniteMeasure (volume.restrict Kc) :=
         ⟨by rw [Measure.restrict_apply_univ]; exact hKc.measure_lt_top⟩
       obtain ⟨Cb, hCb⟩ := hKc.exists_bound_of_continuousOn hAcont.continuousOn
       refine MemLp.of_bound hAcont.aestronglyMeasurable.restrict Cb ?_
@@ -1337,7 +1335,6 @@ theorem exists_uniform_bound_isQCGeometric (Kq ℓ : ℝ) :
     (ι := {f : ℂ → ℂ // IsQCGeometric f Kq ∧ f 0 = 0 ∧ f 1 = 1})
     (f := fun i => i.1) (fun i => i.2.1) hScpt h0S h1S zero_ne_one (M := 1)
     (fun i => by
-      change dist (i.1 0) (i.1 1) ≤ 1
       rw [i.2.2.1, i.2.2.2]
       simp)
   refine ⟨B, fun f hf h0 h1 z hz => ?_⟩

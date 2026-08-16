@@ -319,9 +319,12 @@ theorem hasDerivAt_starPrimitive
         (deriv f (p + (t : ℂ) * (z - p)) * (z - p)) t := hf_comp_C.comp_ofReal
     -- Product rule: HasDerivAt (g) (1 · f(p+t(z-p)) + (t:ℂ) · (deriv f · (z-p))) t.
     have h_prod := h_t_id.mul hf_comp_real
-    convert h_prod using 1
-    simp only [hF'_def]
-    ring
+    have h_eq : (1 : ℂ) * f (p + (t : ℂ) * (z - p))
+          + (t : ℂ) * (deriv f (p + (t : ℂ) * (z - p)) * (z - p))
+        = f (p + (t : ℂ) * (z - p))
+          + (z - p) * (t : ℂ) * deriv f (p + (t : ℂ) * (z - p)) := by ring
+    rw [h_eq] at h_prod
+    exact h_prod
   -- IntervalIntegrable F' z (from the diff-under-integral conclusion or FTC compatibility).
   have h_F'_int : IntervalIntegrable (F' z) MeasureTheory.volume 0 1 := h_diff.1
   -- FTC: ∫_0^1 F' z t dt = g(1) - g(0) = f(z) - 0 = f(z).
@@ -484,6 +487,7 @@ theorem topRightBoxMinusBall_starConvex_of_subradius
     simp [hP_def, Complex.add_re, Complex.mul_re,
           Complex.I_re, Complex.I_im, Complex.ofReal_re, Complex.ofReal_im,
           Complex.real_smul]
+    ring
   have hP_im : P.im = s * (e.im + R₀) + t * Q.im := by
     simp [hP_def, Complex.add_im, Complex.mul_im,
           Complex.I_re, Complex.I_im, Complex.ofReal_re, Complex.ofReal_im,
@@ -1226,6 +1230,7 @@ theorem topRightLune_arc_integral_eq_starPrimitive_sub
     have hP_re : P.re = s * (e.re + R₀) + t * Q.re := by
       simp [hP_def, hV_R_def, Complex.add_re, Complex.mul_re, Complex.I_re,
             Complex.I_im, Complex.ofReal_re, Complex.ofReal_im, Complex.real_smul]
+      ring
     have hP_im : P.im = s * (e.im + R₀) + t * Q.im := by
       simp [hP_def, hV_R_def, Complex.add_im, Complex.mul_im, Complex.I_re,
             Complex.I_im, Complex.ofReal_re, Complex.ofReal_im, Complex.real_smul]

@@ -124,7 +124,7 @@ lemma zz_fin {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
     (hΓ : IsFuchsianGroup Γ) (τ τ₀ : UpperHalfPlane) (r : ℝ) :
     {γ : ↥Γ | dist τ (γ • τ₀) ≤ r}.Finite := by
   classical
-  haveI hPD : ProperlyDiscontinuousSMul Γ UpperHalfPlane := hΓ
+  have hPD : ProperlyDiscontinuousSMul Γ UpperHalfPlane := hΓ
   have hfin1 : {γ : ↥Γ | ((fun x => γ • x) '' {τ₀} ∩
       Metric.closedBall τ r).Nonempty}.Finite :=
     ProperlyDiscontinuousSMul.finite_disjoint_inter_image isCompact_singleton
@@ -515,7 +515,7 @@ private lemma zz_anychain {G : Type} [Group G]
     refine Nat.div_eq_of_lt_le (by nlinarith) (by nlinarith)
   rw [hdivg] at hval_g
   rw [hdivh] at hval_h
-  simp only [] at hcmp
+  try simp only [] at hcmp
   simp only [Nat.zero_div] at hcmp
   rw [hdivg, hdivh] at hcmp
   simp only [Nat.add_sub_cancel]
@@ -776,7 +776,7 @@ private lemma zz_homotopy {G : Type} [Group G]
       have hcmp := zz_compare V f hVtrans htrip P hPpos
         (fun s => H (s, ((j : ℝ) + 1) / P)) γt
         (fun i => w (i, j)) (fun i => w (i, j + 1)) hsubj hsubj1 hpath0 hpath1
-      simp only [] at hcmp
+      try simp only [] at hcmp
       rw [hcmp]
       exact ihj hj
   -- compare the given chains with the extreme rows
@@ -817,10 +817,10 @@ private lemma zz_homotopy {G : Type} [Group G]
     (fun i => w (i, 0)) hsg hrow0α hb ht
   have hβP := zz_anychain V f hVtrans htrip hf1 N' P hN' hPpos β γt h
     (fun i => w (i, P - 1)) hsh hrowPβ hbβ htβ
-  simp only [] at hα0 hβP
+  try simp only [] at hα0 hβP
   rw [← hα0, ← hβP]
   have hfin := hind (P - 1) (by omega)
-  simp only [] at hfin
+  try simp only [] at hfin
   rw [hfin]
 
 -- The proof below is a single large compound estimate/assembly; elaboration exceeds the

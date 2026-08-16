@@ -167,7 +167,7 @@ private theorem imageStationary_fugledeNode_modulus_zero {f : ℂ → ℂ} {b : 
   have hQzero : curveModulus Q = 0 :=
     curveModulus_lineIntegral_top_zero hgQC Δ _hΔcont
   -- The node family embeds in `P ∪ Q`; finish by subadditivity and monotonicity.
-  refine le_antisymm ?_ (zero_le _)
+  refine le_antisymm ?_ (zero_le)
   rw [← curveModulus_union_zero hPzero hQzero]
   refine curveModulus_mono ?_
   rintro δ ⟨hδΔ, hδpos⟩
@@ -220,7 +220,7 @@ private theorem imageStationary_fugledeNode_modulus_zero {f : ℂ → ℂ} {b : 
       obtain ⟨_, _, hδ0, hgd⟩ := htS
       have hρ0 : ρ t = 0 := by rw [hρ]; simp [hδ0]
       refine ⟨?_, htIoo⟩
-      rw [hbad, Set.mem_setOf_eq, hρ0]
+      rw [hbad, Set.mem_ofPred_eq, hρ0]
       intro hle
       exact hgd (norm_le_zero_iff.mp hle)
     -- `S \ Ioo 0 1 ⊆ {0,1}` (since `S ⊆ Icc 0 1`), a null set.
@@ -244,7 +244,7 @@ private theorem imageStationary_fugledeNode_modulus_zero {f : ℂ → ℂ} {b : 
       _ ≤ volume (S ∩ Set.Ioo (0:ℝ) 1) + volume (S \ Set.Ioo (0:ℝ) 1) := measure_union_le _ _
       _ = 0 := by rw [hSIoo_null, hSdiff_null, add_zero]
   rw [hSnull] at hδpos
-  exact absurd hδpos (not_lt.mpr (zero_le _))
+  exact absurd hδpos (not_lt.mpr (zero_le))
 
 /-- **The image-stationary family is modulus-null.**  For an `IsQCAnalytic` map `f` with
 inverse homeomorphism `g = f⁻¹` and the `f`-degeneracy set
@@ -313,7 +313,7 @@ theorem isQCGeometric_imageStationary_residual_modulus_zero {f : ℂ → ℂ} {b
   have hBzero : curveModulus B = 0 :=
     imageStationary_fugledeNode_modulus_zero hf Δ _hΔcont _hΔac
   -- The residual family embeds in `A ∪ B`.
-  refine le_antisymm ?_ (zero_le _)
+  refine le_antisymm ?_ (zero_le)
   rw [← curveModulus_union_zero hAzero hBzero]
   refine curveModulus_mono ?_
   -- Take a member `δ` of the residual family; show `δ ∈ A ∪ B`.
@@ -330,7 +330,7 @@ theorem isQCGeometric_imageStationary_residual_modulus_zero {f : ℂ → ℂ} {b
     have hderiv : MeasurableSet {t : ℝ | deriv γ t ≠ 0} :=
       ((measurableSet_singleton (0 : ℂ)).preimage (measurable_deriv γ)).compl
     have hrw : C = Set.Icc (0 : ℝ) 1 ∩ {t : ℝ | γ t ∈ Nf} ∩ {t : ℝ | deriv γ t ≠ 0} := by
-      ext t; simp only [hC, Set.mem_setOf_eq, Set.mem_inter_iff]; tauto
+      ext t; simp only [hC, Set.mem_ofPred_eq, Set.mem_inter_iff]; tauto
     rw [hrw]; exact (h01.inter hpreNf).inter hderiv
   have hCpos : 0 < volume C := by
     -- The line integral equals `∞ * volume C`; if `volume C = 0` it would be `0 < 1`.
@@ -365,7 +365,7 @@ theorem isQCGeometric_imageStationary_residual_modulus_zero {f : ℂ → ℂ} {b
       rw [lintegral_indicator hBmeas2, setLIntegral_const,
         Measure.restrict_apply hBmeas2]
       have hseteq : {t : ℝ | γ t ∈ Nf ∧ deriv γ t ≠ 0} ∩ Set.Icc (0 : ℝ) 1 = C := by
-        rw [hC]; ext t; simp only [Set.mem_inter_iff, Set.mem_setOf_eq]; tauto
+        rw [hC]; ext t; simp only [Set.mem_inter_iff, Set.mem_ofPred_eq]; tauto
       rw [hseteq]
     by_contra hle
     rw [not_lt, nonpos_iff_eq_zero] at hle
@@ -578,13 +578,13 @@ theorem pushforwardGood_modulus_le {f : ℂ → ℂ} {K : ℝ} (hK : 1 ≤ K)
         measurable_fderiv_apply_const ℝ f 1
       have h2 : Measurable (fun z : ℂ => (fderiv ℝ f z) Complex.I) :=
         measurable_fderiv_apply_const ℝ f Complex.I
-      simpa only [dz] using (measurable_const.mul ((h1.sub (measurable_const.mul h2))))
+      simpa only [dz] using! (measurable_const.mul ((h1.sub (measurable_const.mul h2))))
     have hdzbarmeas : Measurable (fun z : ℂ => dzbar f z) := by
       have h1 : Measurable (fun z : ℂ => (fderiv ℝ f z) 1) :=
         measurable_fderiv_apply_const ℝ f 1
       have h2 : Measurable (fun z : ℂ => (fderiv ℝ f z) Complex.I) :=
         measurable_fderiv_apply_const ℝ f Complex.I
-      simpa only [dzbar] using (measurable_const.mul ((h1.add (measurable_const.mul h2))))
+      simpa only [dzbar] using! (measurable_const.mul ((h1.add (measurable_const.mul h2))))
     have hdetmeas : Measurable (fun z : ℂ => (fderiv ℝ f z).det) :=
       ContinuousLinearMap.continuous_det.measurable.comp hfderivmeas
     have hwtmeas : Measurable wt := by
@@ -672,7 +672,7 @@ theorem pushforwardGood_modulus_le {f : ℂ → ℂ} {K : ℝ} (hK : 1 ≤ K)
               A.inverse.le_opNNNorm _
             rwa [hself] at hle
           have hcoe : ENNReal.ofReal ‖A.inverse‖ = (‖A.inverse‖₊ : ℝ≥0∞) := by
-            rw [ofReal_norm_eq_enorm, enorm_eq_nnnorm]
+            rw [ofReal_norm, enorm_eq_nnnorm]
           rw [hcoe, ← ENNReal.coe_mul]
           exact_mod_cast hop
         calc ρ (γ t) * (‖deriv γ t‖₊ : ℝ≥0∞)
@@ -877,10 +877,10 @@ theorem isQCGeometric_of_isQCAnalytic {f : ℂ → ℂ} {K : ℝ} (hK : 1 ≤ K)
         rw [ae_restrict_iff' measurableSet_Icc, ae_iff]
         apply measure_mono_null _ hBnull
         intro t ht
-        simp only [Set.mem_setOf_eq, Classical.not_imp] at ht
+        simp only [Set.mem_ofPred_eq, Classical.not_imp] at ht
         obtain ⟨hmem, hd, hnotgood⟩ := ht
         refine ⟨⟨hd, ?_⟩, hmem⟩
-        simp only [hNf, Set.mem_setOf_eq]; exact hnotgood
+        simp only [hNf, Set.mem_ofPred_eq]; exact hnotgood
       -- `γ` is differentiable a.e. on `[0,1]` (it is absolutely continuous).
       have hdiffγ : ∀ᵐ t : ℝ ∂(volume.restrict (Set.Icc (0 : ℝ) 1)),
           DifferentiableAt ℝ γ t := by

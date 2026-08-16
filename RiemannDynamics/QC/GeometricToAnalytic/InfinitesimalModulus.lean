@@ -137,7 +137,7 @@ theorem Quadrilateral.postcompose_curveFamily (φ : ℂ → ℂ) (hφ : IsHomeom
   ext δ
   simp only [Quadrilateral.curveFamily, Quadrilateral.imageCurveFamily,
     Quadrilateral.postcompose_leftSide φ hφ Q, Quadrilateral.postcompose_rightSide φ hφ Q,
-    Quadrilateral.postcompose_image φ hφ Q, Set.mem_setOf_eq]
+    Quadrilateral.postcompose_image φ hφ Q, Set.mem_ofPred_eq]
 
 /-- **The modulus of a conformally post-composed quadrilateral is unchanged.** For an entire
 homeomorphism `φ`, `(Q.postcompose φ).modulus = Q.modulus`. Combines the curve-family identity with
@@ -159,7 +159,7 @@ theorem Quadrilateral.postcompose_imageCurveFamily (φ : ℂ → ℂ) (hφ : IsH
   ext δ
   simp only [Quadrilateral.imageCurveFamily, Quadrilateral.postcompose_leftSide φ hφ Q,
     Quadrilateral.postcompose_rightSide φ hφ Q, Quadrilateral.postcompose_image φ hφ Q,
-    Set.image_comp, Set.mem_setOf_eq]
+    Set.image_comp, Set.mem_ofPred_eq]
 
 /-- **The rotated/scaled/translated unit square** `squareQuad x r θ`: the unit square
 `[-1, 1] × [-1, 1]` post-composed by the affine conformal map `w ↦ x + (r·exp(iθ))·w`. For `r ≠ 0`
@@ -245,7 +245,7 @@ theorem imageCurveFamily_eq_of_images_eq (Q : Quadrilateral) (φ : ℂ → ℂ) 
     (hL : φ '' Q.leftSide = R.leftSide) (hRt : φ '' Q.rightSide = R.rightSide)
     (hI : φ '' Q.image = R.image) : Q.imageCurveFamily φ = R.curveFamily := by
   ext δ
-  simp only [Quadrilateral.imageCurveFamily, Quadrilateral.curveFamily, Set.mem_setOf_eq,
+  simp only [Quadrilateral.imageCurveFamily, Quadrilateral.curveFamily, Set.mem_ofPred_eq,
     hL, hRt, hI]
 
 theorem realDiagMap_unitAxisRect_leftSide {σ₁ σ₂ : ℝ} (h1 : 0 < σ₁) (h2 : 0 < σ₂) :
@@ -254,7 +254,7 @@ theorem realDiagMap_unitAxisRect_leftSide {σ₁ σ₂ : ℝ} (h1 : 0 < σ₁) (
   rw [show unitAxisRect.leftSide = _ from
       axisRectQuadrilateral_leftSide (by norm_num) (by norm_num), axisRectQuadrilateral_leftSide]
   ext z
-  simp only [Set.mem_image, Set.mem_setOf_eq, realDiagMap]
+  simp only [Set.mem_image, Set.mem_ofPred_eq, realDiagMap]
   constructor
   · rintro ⟨w, ⟨hwr, hwi1, hwi2⟩, rfl⟩; dsimp only
     refine ⟨by rw [hwr]; ring, ?_, ?_⟩ <;> nlinarith
@@ -272,7 +272,7 @@ theorem realDiagMap_unitAxisRect_rightSide {σ₁ σ₂ : ℝ} (h1 : 0 < σ₁) 
   rw [show unitAxisRect.rightSide = _ from
       axisRectQuadrilateral_rightSide (by norm_num) (by norm_num), axisRectQuadrilateral_rightSide]
   ext z
-  simp only [Set.mem_image, Set.mem_setOf_eq, realDiagMap]
+  simp only [Set.mem_image, Set.mem_ofPred_eq, realDiagMap]
   constructor
   · rintro ⟨w, ⟨hwr, hwi1, hwi2⟩, rfl⟩; dsimp only
     refine ⟨by rw [hwr]; ring, ?_, ?_⟩ <;> nlinarith
@@ -290,7 +290,7 @@ theorem realDiagMap_unitAxisRect_image {σ₁ σ₂ : ℝ} (h1 : 0 < σ₁) (h2 
   rw [show unitAxisRect.image = _ from axisRectQuadrilateral_image (by norm_num) (by norm_num),
     axisRectQuadrilateral_image]
   ext z
-  simp only [Set.mem_image, Set.mem_setOf_eq, realDiagMap]
+  simp only [Set.mem_image, Set.mem_ofPred_eq, realDiagMap]
   constructor
   · rintro ⟨w, ⟨⟨hwr1, hwr2⟩, hwi1, hwi2⟩, rfl⟩; dsimp only
     refine ⟨⟨?_, ?_⟩, ?_, ?_⟩ <;> nlinarith
@@ -453,7 +453,7 @@ theorem curveModulus_eq_zero_of_null {Γ : Set (ℝ → ℂ)} {S : Set ℂ} {ℓ
     (hΓ : ∀ δ ∈ Γ, AbsolutelyContinuousOnInterval δ 0 1 ∧ ℓ ≤ ‖δ 1 - δ 0‖ ∧
       ∀ t ∈ Set.Icc (0 : ℝ) 1, δ t ∈ S) :
     curveModulus Γ = 0 := by
-  apply le_antisymm _ (zero_le _)
+  apply le_antisymm _ (zero_le)
   set n : ℝ≥0∞ := ENNReal.ofReal (1 / ℓ) with hn
   set ρ : ℂ → ℝ≥0∞ := S.indicator (fun _ => n) with hρ
   have hρmeas : Measurable ρ := Measurable.indicator measurable_const hSmeas
@@ -515,7 +515,7 @@ theorem squareQuad_imageModulus_zero_realDiag (L : ℂ → ℂ) (σ₁ : ℝ) (c
     rw [show unitAxisRect.leftSide = _ from axisRectQuadrilateral_leftSide (by norm_num)
       (by norm_num)]
     ext z
-    simp only [Set.mem_image, Set.mem_setOf_eq, hφ, Set.mem_singleton_iff]
+    simp only [Set.mem_image, Set.mem_ofPred_eq, hφ, Set.mem_singleton_iff]
     constructor
     · rintro ⟨w, ⟨hwr, _, _⟩, rfl⟩; rw [hwr]; push_cast; ring_nf
     · rintro rfl
@@ -524,7 +524,7 @@ theorem squareQuad_imageModulus_zero_realDiag (L : ℂ → ℂ) (σ₁ : ℝ) (c
     rw [show unitAxisRect.rightSide = _ from axisRectQuadrilateral_rightSide (by norm_num)
       (by norm_num)]
     ext z
-    simp only [Set.mem_image, Set.mem_setOf_eq, hφ, Set.mem_singleton_iff]
+    simp only [Set.mem_image, Set.mem_ofPred_eq, hφ, Set.mem_singleton_iff]
     constructor
     · rintro ⟨w, ⟨hwr, _, _⟩, rfl⟩; rw [hwr]; push_cast; ring_nf
     · rintro rfl
@@ -613,7 +613,7 @@ theorem deriv_entire_homeomorph_ne_zero {η : ℂ → ℂ} (hη : IsHomeomorph �
     have hdη_an : AnalyticAt ℂ (deriv η) z := (hη_an z).deriv
     have key := (hη_an z).analyticOrderAt_deriv_add_one
     have hge1 : 1 ≤ analyticOrderAt (deriv η) z := by
-      rw [ENat.one_le_iff_ne_zero, Ne, analyticOrderAt_eq_zero, not_or, not_not, not_ne_iff]
+      rw [Order.one_le_iff_ne_zero, Ne, analyticOrderAt_eq_zero, not_or, not_not, not_ne_iff]
       exact ⟨hdη_an, hderiv0⟩
     calc (2 : ℕ∞) = 1 + 1 := by rfl
       _ ≤ analyticOrderAt (deriv η) z + 1 := by gcongr
@@ -651,7 +651,7 @@ theorem deriv_entire_homeomorph_ne_zero {η : ℂ → ℂ} (hη : IsHomeomorph �
       have hlog : AnalyticAt ℂ (fun z => Complex.log (c * G z)) z₀ := hcG_an.clog hval_slit
       have hdiv : AnalyticAt ℂ (fun z => Complex.log (c * G z) / n) z₀ :=
         hlog.div analyticAt_const (by exact_mod_cast (Nat.one_le_iff_ne_zero.mp hn))
-      simpa [Function.comp] using hdiv.cexp
+      simpa [Function.comp] using! hdiv.cexp
     · exact div_ne_zero (Complex.exp_ne_zero _) hcr_ne
     · have hcont : ContinuousAt (fun z => c * G z) z₀ := hcG_an.continuousAt
       have hGne_ev : ∀ᶠ z in 𝓝 z₀, c * G z ≠ 0 := hcont.eventually_ne (mul_ne_zero hc_ne hGz)
@@ -778,7 +778,7 @@ theorem curveModulus_imageCurveFamily_outer_conformal {φ : ℂ → ℂ} (hφ : 
     obtain ⟨Kl, hKl⟩ : ∃ Kl : NNReal, LipschitzOnWith Kl ψ (Metric.closedBall (0 : ℂ) R) := by
       refine ⟨⟨C, hCnn⟩, Convex.lipschitzOnWith_of_nnnorm_fderiv_le
         (fun x _ => hψ.differentiableAt) (fun x hx => ?_) (convex_closedBall _ _)⟩
-      rw [← NNReal.coe_le_coe]; exact hC x hx
+      exact NNReal.coe_le_coe.mp (hC x hx)
     have hηac' := hηac
     rw [absolutelyContinuousOnInterval_iff] at hηac' ⊢
     intro ε hε
@@ -999,7 +999,7 @@ theorem sensePreserving_comp_affine {f : ℂ → ℂ} (hf : SensePreserving f) {
         rw [hwf_spec θ, mul_div_assoc, div_self h2pi_ne, mul_one]
       rw [heq]; exact hgc.div_const _
     have hwf_int_cont : Continuous wfun := by
-      have hemb : Topology.IsClosedEmbedding (fun n : ℤ => (n : ℂ)) := closedEmbedding_intCast
+      have hemb : Topology.IsClosedEmbedding (fun n : ℤ => (n : ℂ)) := isClosedEmbedding_intCast
       exact hemb.isEmbedding.continuous_iff.mpr hwf_cont
     have hconst : wfun ψ = wfun 0 :=
       isPreconnected_univ.constant hwf_int_cont.continuousOn (Set.mem_univ ψ) (Set.mem_univ 0)
@@ -1024,7 +1024,7 @@ theorem sensePreserving_comp_affine {f : ℂ → ℂ} (hf : SensePreserving f) {
       have hpreimg : (A) ⁻¹' {w₀ : ℂ | ¬ P f w₀}
           = (fun w => c⁻¹ * w - c⁻¹ * x₀) '' {w₀ : ℂ | ¬ P f w₀} := by
         ext w
-        simp only [hA, affineMap, Set.mem_preimage, Set.mem_image, Set.mem_setOf_eq]
+        simp only [hA, affineMap, Set.mem_preimage, Set.mem_image, Set.mem_ofPred_eq]
         constructor
         · intro hw
           refine ⟨c * w + x₀, hw, ?_⟩

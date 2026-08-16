@@ -252,7 +252,7 @@ theorem qdDist_moebiusMap {q : ℂ → ℂ} (γd : Matrix.SpecialLinearGroup (Fi
       inv_mul_cancel, moebiusMap_one]
   rwa [hzfix, hwfix] at h2
 
-set_option maxHeartbeats 400000 in
+set_option maxHeartbeats 1600000 in
 -- Heartbeats: the invariance transport plus the compact-track lintegral calc is whnf-heavy.
 /-- **The uniform displacement bound**: an upper-half-plane quasiconformal map commuting
 elementwise with a cocompact free Fuchsian group moves every point of the upper half plane
@@ -317,7 +317,7 @@ theorem exists_qdDist_displacement_bound
         ≤ ENNReal.ofReal (Real.sqrt M) :=
       ENNReal.ofReal_le_ofReal (Real.sqrt_le_sqrt (hM _ hmem))
     have h2 : (‖h w - w‖₊ : ℝ≥0∞) ≤ ENNReal.ofReal R := by
-      rw [← enorm_eq_nnnorm, ← ofReal_norm_eq_enorm]
+      rw [← enorm_eq_nnnorm, ← ofReal_norm]
       exact ENNReal.ofReal_le_ofReal (hR w hwK')
     exact mul_le_mul' h1 h2
   have hlen : qdLength q (segPath w (h w))
@@ -373,7 +373,7 @@ theorem lintegral_horizontalVariation_eq_rect {q : ℂ → ℂ} (hq : Measurable
   have hpre : {z : ℂ | z.re ∈ Set.Icc (0 : ℝ) 1 ∧ z.im ∈ Set.Icc c d}
       = Complex.measurableEquivRealProd ⁻¹' (Set.Icc (0 : ℝ) 1 ×ˢ Set.Icc c d) := by
     ext z
-    simp only [Set.mem_setOf_eq, Set.mem_preimage, Complex.measurableEquivRealProd_apply,
+    simp only [Set.mem_ofPred_eq, Set.mem_preimage, Complex.measurableEquivRealProd_apply,
       Set.mem_prod]
   have hstep : ∫⁻ z in {z : ℂ | z.re ∈ Set.Icc (0 : ℝ) 1 ∧ z.im ∈ Set.Icc c d}, D z
       = ∫⁻ p in Set.Icc (0 : ℝ) 1 ×ˢ Set.Icc c d,

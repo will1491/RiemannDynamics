@@ -86,7 +86,7 @@ def chartInftySource : Set ℂ̂ := {z | z ≠ ((0 : ℂ) : ℂ̂)}
 theorem chartSource_union_eq_univ :
     chartFiniteSource ∪ chartInftySource = Set.univ := by
   ext z
-  simp only [chartFiniteSource, chartInftySource, Set.mem_union, Set.mem_setOf_eq,
+  simp only [chartFiniteSource, chartInftySource, Set.mem_union, Set.mem_ofPred_eq,
     Set.mem_univ, iff_true]
   by_cases h : z = ∞
   · subst h
@@ -100,7 +100,7 @@ theorem chartSource_inter_eq :
     chartFiniteSource ∩ chartInftySource =
       {z : ℂ̂ | z ≠ ((0 : ℂ) : ℂ̂) ∧ z ≠ ∞} := by
   ext z
-  simp only [chartFiniteSource, chartInftySource, Set.mem_inter_iff, Set.mem_setOf_eq]
+  simp only [chartFiniteSource, chartInftySource, Set.mem_inter_iff, Set.mem_ofPred_eq]
   tauto
 
 /-- The transition map between the two charts on the overlap is `z ↦ z⁻¹` on
@@ -113,7 +113,7 @@ theorem chart_transition_holomorphic :
 theorem isOpen_chartFiniteSource : IsOpen chartFiniteSource := by
   have h : chartFiniteSource = Set.range ((↑) : ℂ → ℂ̂) := by
     ext z
-    simp only [chartFiniteSource, Set.mem_setOf_eq, Set.mem_range]
+    simp only [chartFiniteSource, Set.mem_ofPred_eq, Set.mem_range]
     exact OnePoint.ne_infty_iff_exists
   rw [h]
   exact OnePoint.isOpen_range_coe
@@ -122,7 +122,7 @@ theorem isOpen_chartFiniteSource : IsOpen chartFiniteSource := by
 theorem isOpen_chartInftySource : IsOpen chartInftySource := by
   have h : chartInftySource = ({((0 : ℂ) : ℂ̂)} : Set ℂ̂)ᶜ := by
     ext z
-    simp only [chartInftySource, Set.mem_setOf_eq, Set.mem_compl_iff, Set.mem_singleton_iff]
+    simp only [chartInftySource, Set.mem_ofPred_eq, Set.mem_compl_iff, Set.mem_singleton_iff]
   rw [h]
   exact isClosed_singleton.isOpen_compl
 

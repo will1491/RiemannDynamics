@@ -19,6 +19,10 @@ upper-gradient argument.
 open MeasureTheory
 open scoped ENNReal NNReal
 
+-- Several proofs in this file rely on defeq checks through semireducible aliases
+-- (`Circle`, `Function.comp`, instance-path diamonds); keep the pre-4.31 defeq behavior.
+set_option backward.isDefEq.respectTransparency false
+
 namespace RiemannDynamics
 
 set_option maxHeartbeats 400000 in
@@ -62,7 +66,7 @@ theorem fderiv_ae_eq_weakDirDeriv {f g : ℂ → ℂ} {v : ℂ}
     -- The co-null set where `D` vanishes is dense; deleting `x` keeps it dense.
     have hSdense : Dense {b : ℝ | D b = 0} :=
       MeasureTheory.Measure.dense_of_ae (by filter_upwards [hD0] with b hb using hb)
-    have hSx : Dense ({b : ℝ | D b = 0} \ {x}) := hSdense.diff_singleton x
+    have hSx : Dense ({b : ℝ | D b = 0} \ {x}) := hSdense.sdiff_singleton x
     have hxmem : x ∈ closure ({b : ℝ | D b = 0} \ {x}) := hSx.closure_eq ▸ Set.mem_univ x
     have hNeBot : (nhdsWithin x ({b : ℝ | D b = 0} \ {x})).NeBot :=
       mem_closure_iff_nhdsWithin_neBot.mp hxmem
@@ -70,7 +74,7 @@ theorem fderiv_ae_eq_weakDirDeriv {f g : ℂ → ℂ} {v : ℂ}
     have htend : Filter.Tendsto (slope D x) (nhdsWithin x {x}ᶜ) (nhds c) :=
       hasDerivAt_iff_tendsto_slope.mp hderiv
     have hsub : ({b : ℝ | D b = 0} \ {x}) ⊆ ({x}ᶜ : Set ℝ) := fun b hb => by
-      simp only [Set.mem_diff, Set.mem_singleton_iff] at hb
+      simp only [Set.mem_sdiff, Set.mem_singleton_iff] at hb
       simp [Set.mem_compl_iff, Set.mem_singleton_iff, hb.2]
     have htend' : Filter.Tendsto (slope D x)
         (nhdsWithin x ({b : ℝ | D b = 0} \ {x})) (nhds c) :=
@@ -80,7 +84,7 @@ theorem fderiv_ae_eq_weakDirDeriv {f g : ℂ → ℂ} {v : ℂ}
         (nhdsWithin x ({b : ℝ | D b = 0} \ {x})) (nhds (0 : ℂ)) := by
       refine Filter.Tendsto.congr' ?_ tendsto_const_nhds
       filter_upwards [self_mem_nhdsWithin] with b hb
-      simp only [Set.mem_diff, Set.mem_setOf_eq, Set.mem_singleton_iff] at hb
+      simp only [Set.mem_sdiff, Set.mem_ofPred_eq, Set.mem_singleton_iff] at hb
       rw [slope_def_module, hb.1, hDx, sub_zero, smul_zero]
     exact tendsto_nhds_unique htend' hslope0
   -- ============================================================
@@ -126,7 +130,7 @@ theorem fderiv_ae_eq_weakDirDeriv {f g : ℂ → ℂ} {v : ℂ}
       have hswap : ∀ᵐ p : ℝ × ℝ, DifferentiableAt ℝ f ⟨p.2, p.1⟩ := by
         have h := (Measure.measurePreserving_swap (μ := (volume : Measure ℝ))
           (ν := (volume : Measure ℝ))).quasiMeasurePreserving.ae hdiff2
-        simpa [Prod.swap] using h
+        simpa [Prod.swap] using! h
       exact MeasureTheory.Measure.ae_ae_of_ae_prod hswap
     -- The conclusion, assembled at the `ℝ × ℝ` level via the curried per-line facts.
     -- We first prove the per-line statement `∀ᵐ y, ∀ᵐ x, GOAL⟨x,y⟩`, then transfer
@@ -146,7 +150,7 @@ theorem fderiv_ae_eq_weakDirDeriv {f g : ℂ → ℂ} {v : ℂ}
           rw [he]
           simpa using (Complex.ofRealCLM.hasDerivAt (x := x)).add_const ((y : ℂ) * Complex.I)
         have hfd : HasFDerivAt f (fderiv ℝ f ⟨x, y⟩) ⟨x, y⟩ := hx_diff.hasFDerivAt
-        simpa using hfd.comp_hasDerivAt x haff
+        simpa using! hfd.comp_hasDerivAt x haff
       -- (ii) the `f'`-slice has `HasDerivAt … (g⟨x,y⟩)`.
       -- (iii) the slices agree a.e. (in the line variable) and at `x`.
       -- The difference `D` is a.e. zero, vanishes at `x`, and has derivative
@@ -253,7 +257,7 @@ theorem fderiv_ae_eq_weakDirDeriv {f g : ℂ → ℂ} {v : ℂ}
       have hψσ_smooth := hψ_smooth.comp σ.toContinuousLinearEquiv.contDiff
       have hψσ_cpt : HasCompactSupport (fun z => ψ (σ z)) := by
         have := hψ_cpt.comp_homeomorph σ.toHomeomorph
-        simpa using this
+        simpa using! this
       have hH := hg (fun z => ψ (σ z)) hψσ_smooth hψσ_cpt (by simp)
       rw [show (fun z => ((fderiv ℝ (fun z => ψ (σ z)) z) Complex.I) • f z)
             = (fun z => ((fderiv ℝ ψ (σ z)) 1) • f z) from
@@ -347,7 +351,7 @@ theorem lintegralSq_fderiv_ball_ne_top_of_memW12loc {f : ℂ → ℂ}
     intro g hg
     rw [locallyIntegrableOn_univ, locallyIntegrable_iff]
     intro k hk
-    haveI : IsFiniteMeasure (volume.restrict k) :=
+    have : IsFiniteMeasure (volume.restrict k) :=
       ⟨by rw [Measure.restrict_apply_univ]; exact hk.measure_lt_top⟩
     have hmem1 : MemLp g 1 (volume.restrict k) :=
       (hg k (Set.subset_univ _) hk).mono_exponent (by norm_num)
@@ -492,7 +496,7 @@ theorem curveModulus_lineIntegral_top_unbounded_zero {f : ℂ → ℂ}
       _ < n := hn
   rw [hempty]
   -- `curveModulus ∅ = 0`: the zero density is (vacuously) admissible for `∅`.
-  refine le_antisymm ?_ (zero_le _)
+  refine le_antisymm ?_ (zero_le)
   have hadm0 : IsAdmissibleDensity (fun _ => (0 : ℝ≥0∞)) (∅ : Set (ℝ → ℂ)) :=
     ⟨measurable_const, fun γ hγ => absurd hγ (Set.notMem_empty γ)⟩
   refine le_trans (iInf₂_le (fun _ => (0 : ℝ≥0∞)) hadm0) ?_
@@ -593,7 +597,7 @@ theorem curveModulus_lineIntegral_top_zero_of_memW12loc {f : ℂ → ℂ}
       by_contra hnotin
       exact hn ⟨t, ht, hnotin⟩
   -- Conclude by monotonicity and binary subadditivity.
-  refine le_antisymm ?_ (zero_le _)
+  refine le_antisymm ?_ (zero_le)
   calc curveModulus E
       ≤ curveModulus ((⋃ n, Δ n) ∪ U) := curveModulus_mono hsub
     _ = 0 := curveModulus_union_zero hUnionZero hUzero
@@ -655,12 +659,12 @@ private theorem complex_ac_ftc {h h' : ℝ → ℂ} {a c : ℝ}
       HasDerivAt (fun s => (h s).re) (h' t).re t := by
     filter_upwards [hderiv] with t ht
     have := Complex.reCLM.hasFDerivAt.comp_hasDerivAt t ht
-    simpa using this
+    simpa using! this
   have him_deriv : ∀ᵐ t : ℝ ∂(MeasureTheory.volume.restrict (Set.uIoc a c)),
       HasDerivAt (fun s => (h s).im) (h' t).im t := by
     filter_upwards [hderiv] with t ht
     have := Complex.imCLM.hasFDerivAt.comp_hasDerivAt t ht
-    simpa using this
+    simpa using! this
   -- Identify the a.e. `deriv` of each part with the corresponding component of `h'`.
   have hre_deriv_eq : ∀ᵐ t : ℝ ∂(MeasureTheory.volume.restrict (Set.uIoc a c)),
       deriv (fun s => (h s).re) t = (h' t).re := by
@@ -753,14 +757,14 @@ private theorem intervalIntegrable_deriv_of_complex_ac {γ : ℝ → ℂ}
     filter_upwards [hγ_diff] with t ht ht'
     have hd : HasDerivAt γ (deriv γ t) t := (ht (Set.uIoc_subset_uIcc ht')).hasDerivAt
     have := Complex.reCLM.hasFDerivAt.comp_hasDerivAt t hd
-    simpa using this.deriv
+    simpa using! this.deriv
   have him_eq : (deriv (fun t => (γ t).im)) =ᵐ[MeasureTheory.volume.restrict (Set.uIoc a b)]
       (fun t => (deriv γ t).im) := by
     rw [Filter.EventuallyEq, MeasureTheory.ae_restrict_iff' measurableSet_uIoc]
     filter_upwards [hγ_diff] with t ht ht'
     have hd : HasDerivAt γ (deriv γ t) t := (ht (Set.uIoc_subset_uIcc ht')).hasDerivAt
     have := Complex.imCLM.hasFDerivAt.comp_hasDerivAt t hd
-    simpa using this.deriv
+    simpa using! this.deriv
   -- Transport interval-integrability to the components of `deriv γ`.
   have hre_int' : IntervalIntegrable (fun t => (deriv γ t).re) MeasureTheory.volume a b := by
     rw [intervalIntegrable_iff]
@@ -991,7 +995,7 @@ theorem eLpNorm_convolution_normed_sub_tendsto_zero {g : ℂ → ℂ}
       have h1 : z ∈ tsupport ((φ n).normed MeasureTheory.volume) := subset_tsupport _ hz
       rwa [(φ n).tsupport_normed_eq] at h1
     -- finite-measure machinery on `volume.restrict Kset`.
-    haveI : MeasureTheory.IsFiniteMeasure (MeasureTheory.volume.restrict Kset) := by
+    have : MeasureTheory.IsFiniteMeasure (MeasureTheory.volume.restrict Kset) := by
       constructor; rw [MeasureTheory.Measure.restrict_apply_univ]; exact hKfin
     set D : ℕ → ℂ → ℂ := fun n => Cn n - h with hD
     -- on the eventual support set, the `L²` norm over `volume` and over `restrict Kset` agree.
@@ -1017,7 +1021,7 @@ theorem eLpNorm_convolution_normed_sub_tendsto_zero {g : ℂ → ℂ}
         refine ⟨(M.toNNReal + 1), fun n => ?_⟩
         have hempty : {x | (M.toNNReal + 1 : ℝ≥0) ≤ ‖Cn n x‖₊} = (∅ : Set ℂ) := by
           ext x
-          simp only [Set.mem_setOf_eq, Set.mem_empty_iff_false, iff_false, not_le]
+          simp only [Set.mem_ofPred_eq, Set.mem_empty_iff_false, iff_false, not_le]
           have hb' : ‖Cn n x‖₊ ≤ M.toNNReal := by
             rw [← NNReal.coe_le_coe, Real.coe_toNNReal M hM0]; exact hCnbd n x
           exact lt_of_le_of_lt hb' (by simp)
@@ -1239,7 +1243,7 @@ theorem fderiv_convolution_normed_apply_eq {f gv : ℂ → ℂ} {v : ℂ}
         ((fderiv ℝ ρ (z - u)).comp (-ContinuousLinearMap.id ℝ ℂ)) u :=
       (hρ_diff (z - u)).hasFDerivAt.comp u hsub
     rw [hcomp.fderiv]
-    simp only [ContinuousLinearMap.comp_apply, ContinuousLinearMap.neg_apply,
+    simp only [ContinuousLinearMap.comp_apply, neg_apply,
       ContinuousLinearMap.id_apply, map_neg]
   have hint_eq :
       (∫ u, ((fderiv ℝ ρ (z - u)) v) • f u ∂MeasureTheory.volume)
@@ -1263,7 +1267,6 @@ theorem fderiv_convolution_normed_apply_eq {f gv : ℂ → ℂ} {v : ℂ}
       (fun t => (L (ρ t)) (gv (z - t))) MeasureTheory.volume z]
   refine MeasureTheory.integral_congr_ae (Filter.Eventually.of_forall (fun u => ?_))
   simp only [hφz, sub_sub_cancel, hL, ContinuousLinearMap.lsmul_apply]
-  rfl
 
 /-- **(A: mollified-gradient `L²` energy decay on a ball.)** For a quasiconformal
 `f` and a sequence of normed `ContDiffBump` mollifiers with outer radius tending to
@@ -1311,7 +1314,7 @@ theorem mollified_fderiv_ball_energy_tendsto_zero_of_memW12loc {f : ℂ → ℂ}
     intro g hg
     rw [← locallyIntegrableOn_univ, locallyIntegrableOn_univ, locallyIntegrable_iff]
     intro k hk
-    haveI : MeasureTheory.IsFiniteMeasure (MeasureTheory.volume.restrict k) :=
+    have : MeasureTheory.IsFiniteMeasure (MeasureTheory.volume.restrict k) :=
       ⟨by rw [MeasureTheory.Measure.restrict_apply_univ]; exact hk.measure_lt_top⟩
     have hmem1 : MeasureTheory.MemLp g 1 (MeasureTheory.volume.restrict k) :=
       (hg k (Set.subset_univ _) hk).mono_exponent (by norm_num)
@@ -1374,10 +1377,10 @@ theorem mollified_fderiv_ball_energy_tendsto_zero_of_memW12loc {f : ℂ → ℂ}
     have hsq : Filter.Tendsto (fun n => Ex n ^ 2 + Ey n ^ 2) Filter.atTop (nhds 0) := by
       have h1 : Filter.Tendsto (fun n => Ex n ^ 2) Filter.atTop (nhds 0) := by
         have := (ENNReal.continuous_pow 2).continuousAt.tendsto.comp hExto
-        simpa using this
+        simpa using! this
       have h2 : Filter.Tendsto (fun n => Ey n ^ 2) Filter.atTop (nhds 0) := by
         have := (ENNReal.continuous_pow 2).continuousAt.tendsto.comp hEyto
-        simpa using this
+        simpa using! this
       simpa using h1.add h2
     have hconst : Filter.Tendsto (fun n => (2 : ℝ≥0∞) * (Ex n ^ 2 + Ey n ^ 2))
         Filter.atTop (nhds ((2 : ℝ≥0∞) * 0)) :=
@@ -1404,7 +1407,7 @@ theorem mollified_fderiv_ball_energy_tendsto_zero_of_memW12loc {f : ℂ → ℂ}
       refine MeasureTheory.integral_congr_ae (Filter.Eventually.of_forall (fun t => ?_))
       simp only
       by_cases ht : ρ n t = 0
-      · simp only [ht, map_zero, ContinuousLinearMap.zero_apply]
+      · simp only [ht, map_zero, zero_apply]
       · -- `ρ n t ≠ 0 ⟹ t ∈ support (ρ n) = ball 0 rOut`, so `‖t‖ < rOut ≤ 1`.
         have htsupp : t ∈ Function.support (ρ n) := ht
         rw [hρ, (φ n).support_normed_eq] at htsupp
@@ -1432,11 +1435,11 @@ theorem mollified_fderiv_ball_energy_tendsto_zero_of_memW12loc {f : ℂ → ℂ}
       -- Identify the two basis components of `T`.
       have hTx : T (1 : ℂ) = MeasureTheory.convolution (ρ n) gxR
           (ContinuousLinearMap.lsmul ℝ ℝ) MeasureTheory.volume z - gxR z := by
-        rw [hT, ContinuousLinearMap.sub_apply, hA1x n z, hzx, hconv_eq z hzball,
+        rw [hT, sub_apply, hA1x n z, hzx, hconv_eq z hzball,
           hgxR, Set.indicator_of_mem (hball_sub hzball)]
       have hTy : T Complex.I = MeasureTheory.convolution (ρ n) gyR
           (ContinuousLinearMap.lsmul ℝ ℝ) MeasureTheory.volume z - gyR z := by
-        rw [hT, ContinuousLinearMap.sub_apply, hA1y n z, hzy, hconv_eq z hzball,
+        rw [hT, sub_apply, hA1y n z, hzy, hconv_eq z hzball,
           hgyR, Set.indicator_of_mem (hball_sub hzball)]
       -- `‖T‖ ≤ ‖T 1‖ + ‖T I‖`.
       have hopn : ‖T‖ ≤ ‖T (1 : ℂ)‖ + ‖T Complex.I‖ := by
@@ -1541,7 +1544,7 @@ theorem mollified_fderiv_ball_energy_tendsto_zero_of_memW12loc {f : ℂ → ℂ}
             simp only [heLpSq, Pi.sub_apply]
   -- ===== Squeeze: `0 ≤ (·) ≤ D n` eventually, both bounds `→ 0`. =====
   refine tendsto_of_tendsto_of_tendsto_of_le_of_le' tendsto_const_nhds hDto
-    (Filter.Eventually.of_forall (fun n => zero_le _)) hdom
+    (Filter.Eventually.of_forall (fun n => zero_le)) hdom
 
 /-- **(A: mollified-gradient `L²` energy decay on a ball.)** `IsQCAnalytic` wrapper of
 `mollified_fderiv_ball_energy_tendsto_zero_of_memW12loc`. -/

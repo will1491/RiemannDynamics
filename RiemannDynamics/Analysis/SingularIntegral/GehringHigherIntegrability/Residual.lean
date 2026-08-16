@@ -50,7 +50,7 @@ supplied by the `δ = 1` datum `MemLp h 3` (`s = 3`). -/
 private theorem lintegral_enorm_rpow_lt_top_of_memLp {F : ℂ → ℂ} {s t : ℝ}
     (ht0 : 0 < t) (hts : t ≤ s) (hF : MemLp F (ENNReal.ofReal s) volume)
     (K : Set ℂ) (hK : IsCompact K) : ∫⁻ z in K, (‖F z‖₊ : ℝ≥0∞) ^ t < ⊤ := by
-  haveI : IsFiniteMeasure (volume.restrict K) :=
+  have : IsFiniteMeasure (volume.restrict K) :=
     isFiniteMeasure_restrict.2 hK.measure_lt_top.ne
   have hFKs : MemLp F (ENNReal.ofReal s) (volume.restrict K) := hF.restrict K
   have hFKt : MemLp F (ENNReal.ofReal t) (volume.restrict K) :=
@@ -160,7 +160,7 @@ theorem beltrami_fixedPoint_memLpLocOn {μ : ℂ → ℂ}
       refine (hhae.enorm).congr ?_; filter_upwards with z; simp [enorm_eq_nnnorm]
     have hR' : AEMeasurable (fun z => (‖R z‖₊ : ℝ≥0∞)) volume := by
       refine (hRae.enorm).congr ?_; filter_upwards with z; simp [enorm_eq_nnnorm]
-    simpa only [hb_def] using hh'.add hR'
+    simpa only [hb_def] using! hh'.add hR'
   -- Loc-`L²` of `w = ‖G‖` (the weight at the base exponent `q = 2`).
   have hwloc : ∀ K : Set ℂ, IsCompact K → ∫⁻ z in K, w z ^ (2 : ℝ) < ⊤ :=
     fun K _ => by simpa only [hw_def] using lintegral_enorm_sq_lt_top_of_memLp hGmem K

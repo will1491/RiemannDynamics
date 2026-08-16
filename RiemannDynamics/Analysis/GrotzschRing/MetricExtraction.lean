@@ -225,7 +225,7 @@ theorem exists_inscribed_shell_of_homeomorph {f : ℂ → ℂ} (hf : IsHomeomorp
   -- `S` is the continuous image of the compact set `f '' closedBall x₀ a`, hence bounded above.
   have hSimg : S = (fun ζ => dist ζ (f x₀)) '' (f '' Metric.closedBall x₀ a) := by
     ext r
-    simp only [hS, Set.mem_setOf_eq, Set.mem_image]
+    simp only [hS, Set.mem_ofPred_eq, Set.mem_image]
     constructor
     · rintro ⟨ζ, hζ, rfl⟩; exact ⟨ζ, hζ, rfl⟩
     · rintro ⟨ζ, hζ, rfl⟩; exact ⟨ζ, hζ, rfl⟩
@@ -241,7 +241,7 @@ theorem exists_inscribed_shell_of_homeomorph {f : ℂ → ℂ} (hf : IsHomeomorp
     exact le_csSup hbdd hmem
   refine ⟨hi, fun hab' ζ hζ => ?_⟩
   -- (ii) unpack `ζ ∈ RoundAnnulus (f x₀) a' b'`: `a' < dist ζ (f x₀) < b'`.
-  simp only [RoundAnnulus, Set.mem_setOf_eq] at hζ
+  simp only [RoundAnnulus, Set.mem_ofPred_eq] at hζ
   obtain ⟨hζlo, hζhi⟩ := hζ
   -- `f` is surjective: write `ζ = f y`.
   obtain ⟨y, rfl⟩ := hf.surjective ζ
@@ -260,7 +260,7 @@ theorem exists_inscribed_shell_of_homeomorph {f : ℂ → ℂ} (hf : IsHomeomorp
   -- Hence `y ∈ RoundAnnulus x₀ a b`, so `f y ∈ f '' A`.
   have hyann : y ∈ RoundAnnulus x₀ a b := by
     simp only [Metric.mem_closedBall, not_le] at hy_not_inner
-    simp only [Set.mem_setOf_eq, not_le] at hy_not_outer
+    simp only [Set.mem_ofPred_eq, not_le] at hy_not_outer
     exact ⟨hy_not_inner, hy_not_outer⟩
   exact ⟨y, hyann, rfl⟩
 
@@ -278,7 +278,7 @@ theorem inscribed_shell_nonempty_of_far {c : ℂ} {a' b' : ℝ} (ha' : 0 ≤ a')
   have hhi : t < b' := by rw [ht]; linarith
   have ht0 : 0 ≤ t := le_trans ha' hlo.le
   refine ⟨c + (t : ℂ), ?_⟩
-  simp only [RoundAnnulus, Set.mem_setOf_eq]
+  simp only [RoundAnnulus, Set.mem_ofPred_eq]
   have hdist : dist (c + (t : ℂ)) c = t := by
     rw [dist_eq_norm, add_sub_cancel_left, Complex.norm_real, Real.norm_eq_abs, abs_of_nonneg ht0]
   rw [hdist]
@@ -317,7 +317,7 @@ theorem exists_first_hit_frontier {K F : Set ℂ} (hFclosed : IsClosed F)
       by_cases hcl : γ t ∈ closure K
       · left
         by_contra hni
-        have hfr : γ t ∈ frontier K := by rw [frontier, Set.mem_diff]; exact ⟨hcl, hni⟩
+        have hfr : γ t ∈ frontier K := by rw [frontier, Set.mem_sdiff]; exact ⟨hcl, hni⟩
         exact hnoF t ht (hfront hfr)
       · right; exact hcl
     -- The two opens `interior K` and `(closure K)ᶜ` disconnect `γ '' [0,1]`.
@@ -382,7 +382,7 @@ theorem exists_first_hit_frontier {K F : Set ℂ} (hFclosed : IsClosed F)
         absurd (csInf_le hTbdd ⟨hsIcc, hmem⟩) (not_le.mpr hsBefore)
       by_cases hscl : γ s ∈ closure K
       · left; by_contra hni
-        exact hsnotF (hfront (by rw [frontier, Set.mem_diff]; exact ⟨hscl, hni⟩))
+        exact hsnotF (hfront (by rw [frontier, Set.mem_sdiff]; exact ⟨hscl, hni⟩))
       · right; exact hscl
     have hUopen : IsOpen (interior K) := isOpen_interior
     have hVopen : IsOpen ((closure K)ᶜ) := isClosed_closure.isOpen_compl
@@ -417,7 +417,7 @@ theorem stays_in_interior {K F : Set ℂ} (hfront : frontier K ⊆ F) {γ : ℝ 
     intro u hu
     by_cases hucl : γ u ∈ closure K
     · left; by_contra hni
-      exact hno u hu (hfront (by rw [frontier, Set.mem_diff]; exact ⟨hucl, hni⟩))
+      exact hno u hu (hfront (by rw [frontier, Set.mem_sdiff]; exact ⟨hucl, hni⟩))
     · right; exact hucl
   have hUopen : IsOpen (interior K) := isOpen_interior
   have hVopen : IsOpen ((closure K)ᶜ) := isClosed_closure.isOpen_compl
@@ -512,7 +512,7 @@ private theorem arcLength_vertical_seg (ρ : ℂ → ℝ≥0∞) (x p d : ℝ) (
   rw [Measure.restrict_congr_set (Ioo_ae_eq_Icc).symm]
   apply lintegral_congr; intro t
   rw [show (‖deriv V t‖₊ : ℝ≥0∞) = ENNReal.ofReal ‖deriv V t‖ from by
-    rw [ofReal_norm_eq_enorm, enorm_eq_nnnorm], hVnorm, mul_comm]
+    rw [ofReal_norm, enorm_eq_nnnorm], hVnorm, mul_comm]
 
 /-- **Arc-length of a circular arc as a `θ`-integral.** For the arc `t ↦ r · exp(i (φ + t Δ))`
 (`0 ≤ r`, `Δ ≠ 0`) the `ρ`-arc-length line integral equals
@@ -571,7 +571,7 @@ private theorem arcLength_arc_seg (ρ : ℂ → ℝ≥0∞) (r φ Δ : ℝ) (hr 
   rw [Measure.restrict_congr_set (Ioo_ae_eq_Icc).symm]
   apply lintegral_congr; intro t
   rw [show (‖deriv A t‖₊ : ℝ≥0∞) = ENNReal.ofReal ‖deriv A t‖ from by
-    rw [ofReal_norm_eq_enorm, enorm_eq_nnnorm], hAnorm, ENNReal.ofReal_mul hr]
+    rw [ofReal_norm, enorm_eq_nnnorm], hAnorm, ENNReal.ofReal_mul hr]
   change ρ ((r : ℂ) * Complex.exp (((φ + t * Δ : ℝ)) * Complex.I))
         * (ENNReal.ofReal r * ENNReal.ofReal |Δ|)
     = ENNReal.ofReal |Δ| * (ENNReal.ofReal r * ρ ((r : ℂ) * Complex.exp (((L t : ℝ)) * Complex.I)))
@@ -673,7 +673,7 @@ theorem ofReal_le_curveModulus_lCurve {f : ℂ → ℂ} (hf : IsHomeomorph f) {x
   -- the sphere.
   have hfrontier : frontier K ⊆ F' := by
     intro w hw
-    rw [frontier, Set.mem_diff, hKcpt.isClosed.closure_eq] at hw
+    rw [frontier, Set.mem_sdiff, hKcpt.isClosed.closure_eq] at hw
     obtain ⟨hwK, hwnotint⟩ := hw
     -- `w = f y` with `y ∈ closedBall x₀ b`.
     obtain ⟨y, hyK, rfl⟩ := hwK
@@ -829,7 +829,7 @@ theorem ofReal_le_curveModulus_lCurve {f : ℂ → ℂ} (hf : IsHomeomorph f) {x
     have hnormderiv : ∀ t, ‖deriv γ t‖ = q - p := by
       intro t; rw [hderiveq, norm_mul, Complex.norm_real, Complex.norm_I, mul_one,
         Real.norm_eq_abs, abs_of_pos hqppos]
-    have hlipγ : LipschitzWith (⟨q - p, hqppos.le⟩ : ℝ≥0) γ := by
+    have hlipγ : LipschitzWith (NNReal.mk (q - p) hqppos.le) γ := by
       apply LipschitzWith.of_dist_le_mul
       intro u v
       rw [dist_eq_norm, dist_eq_norm, hγ, hemb, hL]
@@ -879,7 +879,7 @@ theorem ofReal_le_curveModulus_lCurve {f : ℂ → ℂ} (hf : IsHomeomorph f) {x
       rw [Measure.restrict_congr_set (Ioo_ae_eq_Icc).symm]
       apply lintegral_congr; intro t
       rw [show (‖deriv γ t‖₊ : ℝ≥0∞) = ENNReal.ofReal ‖deriv γ t‖ from by
-        rw [ofReal_norm_eq_enorm, enorm_eq_nnnorm], hnormderiv, mul_comm]
+        rw [ofReal_norm, enorm_eq_nnnorm], hnormderiv, mul_comm]
     rw [← harc]; exact hadm
   -- Squared Cauchy–Schwarz on a window `(α, β)` for an `emb`-slice: `(∫ρ)² ≤ (β-α)·∫ρ²`.
   have cs_sq : ∀ (x α β : ℝ), α ≤ β →
@@ -1135,7 +1135,7 @@ theorem ofReal_le_curveModulus_lCurve {f : ℂ → ℂ} (hf : IsHomeomorph f) {x
         Complex.I_im, mul_zero, mul_one, sub_zero, Real.exp_zero, one_mul]
     -- The arc curve is Lipschitz (hence AC) on `[0,1]`.
     have harclip : ∀ (r α Δ : ℝ), (hr : 0 ≤ r) →
-        LipschitzWith (⟨r * |Δ|, mul_nonneg hr (abs_nonneg _)⟩ : ℝ≥0)
+        LipschitzWith (NNReal.mk (r * |Δ|) (mul_nonneg hr (abs_nonneg _)))
           (fun t : ℝ => arcpt r (α + t * Δ)) := by
       intro r α Δ hr
       apply lipschitzWith_of_nnnorm_deriv_le (fun t => (harcderiv r α Δ t).differentiableAt)
@@ -1175,7 +1175,7 @@ theorem ofReal_le_curveModulus_lCurve {f : ℂ → ℂ} (hf : IsHomeomorph f) {x
       apply lintegral_congr; intro t
       rw [show (‖deriv (fun t => arcpt r (α + t * Δ)) t‖₊ : ℝ≥0∞)
           = ENNReal.ofReal ‖deriv (fun t => arcpt r (α + t * Δ)) t‖ from by
-        rw [ofReal_norm_eq_enorm, enorm_eq_nnnorm], harcnormderiv r α Δ hr,
+        rw [ofReal_norm, enorm_eq_nnnorm], harcnormderiv r α Δ hr,
         ENNReal.ofReal_mul hr, abs_of_pos hΔ]
       change ρ (arcpt r (α + t * Δ)) * (ENNReal.ofReal r * ENNReal.ofReal Δ)
         = ENNReal.ofReal Δ * (ENNReal.ofReal r * ρ (arcpt r (Lθ t)))
@@ -1241,7 +1241,7 @@ theorem ofReal_le_curveModulus_lCurve {f : ℂ → ℂ} (hf : IsHomeomorph f) {x
         _ ≤ ∫⁻ p in (Set.Ioi (0:ℝ) ×ˢ Set.Ioo (-π) π),
               ENNReal.ofReal p.1 • (ρ (Complex.polarCoord.symm p)) ^ 2 := by
             apply lintegral_mono_set'
-            apply HasSubset.Subset.eventuallyLE
+            apply LE.le.eventuallyLE
             intro p hp
             exact ⟨lt_trans (by norm_num) hp.1.1, hp.2⟩
         _ = ∫⁻ z, (ρ z) ^ 2 := hpolar
@@ -1296,7 +1296,7 @@ theorem ofReal_le_curveModulus_lCurve {f : ℂ → ℂ} (hf : IsHomeomorph f) {x
         have hpU : emb x Tx ∈ U := hHU Tx ⟨hTxgtyTop, hcase⟩
         have hpnotF : emb x Tx ∉ F' := Set.disjoint_left.mp hUF'disj hpU
         have hpint : emb x Tx ∈ interior K := by
-          rw [← self_diff_frontier K]
+          rw [← self_sdiff_frontier K]
           exact ⟨hUsubK hpU, fun hfr => hpnotF (hfrontier hfr)⟩
         -- Polar identity: `emb x Tx = arcpt r φ` for `φ = arg (emb x Tx)`.
         set φ : ℝ := Complex.arg (emb x Tx) with hφ
@@ -1394,7 +1394,7 @@ theorem ofReal_le_curveModulus_lCurve {f : ℂ → ℂ} (hf : IsHomeomorph f) {x
             simpa using this
           simpa [hVγ, hemb] using h1.const_add (x : ℂ)
         have hVγac : AbsolutelyContinuousOnInterval Vγ 0 1 := by
-          have hlip : LipschitzWith (⟨d, hdpos.le⟩ : ℝ≥0) Vγ := by
+          have hlip : LipschitzWith (NNReal.mk d hdpos.le) Vγ := by
             apply lipschitzWith_of_nnnorm_deriv_le (fun t => (hVγderiv t).differentiableAt)
             intro t
             rw [← NNReal.coe_le_coe, coe_nnnorm, NNReal.coe_mk, (hVγderiv t).deriv,
@@ -1504,7 +1504,7 @@ theorem ofReal_le_curveModulus_lCurve {f : ℂ → ℂ} (hf : IsHomeomorph f) {x
               * ∫⁻ y in Set.Ioo (yTop x) Tx, (ρ (emb x y)) ^ 2 := by
               rw [hA]; exact cs_sq x (yTop x) Tx hTxge
           _ ≤ ENNReal.ofReal 3 * ∫⁻ y in Set.Ioo (-1 : ℝ) 3, (ρ (emb x y)) ^ 2 :=
-              mul_le_mul (ENNReal.ofReal_le_ofReal hlen) hsetle (zero_le _) (zero_le _)
+              mul_le_mul (ENNReal.ofReal_le_ofReal hlen) hsetle (zero_le) (zero_le)
       -- CS on the full circle `(-π, π)`: `B² ≤ (8π) · circleE`.
       have hBcs : B ^ 2 ≤ ENNReal.ofReal (8 * π) * ∫⁻ θ in Set.Ioo (-π) π,
           (ρ (arcpt (1 + x) θ)) ^ 2 := by
@@ -1624,8 +1624,8 @@ annulus `RoundAnnulus x₀ a b = {a < dist · x₀ < b}`. -/
 theorem ball_diff_closedBall_eq_roundAnnulus (x₀ : ℂ) (a b : ℝ) :
     Metric.ball x₀ b \ Metric.closedBall x₀ a = RoundAnnulus x₀ a b := by
   ext z
-  simp only [Set.mem_diff, Metric.mem_ball, Metric.mem_closedBall, RoundAnnulus,
-    Set.mem_setOf_eq, not_le]
+  simp only [Set.mem_sdiff, Metric.mem_ball, Metric.mem_closedBall, RoundAnnulus,
+    Set.mem_ofPred_eq, not_le]
   exact ⟨fun h => ⟨h.2, h.1⟩, fun h => ⟨h.2, h.1⟩⟩
 
 /-- **The inner/outer circle is a metric sphere.** `innerCircle x₀ r = Metric.sphere x₀ r` and
@@ -1666,7 +1666,7 @@ theorem connectingCurveFamily_closedBall_eq_sphere {f : ℂ → ℂ} (hf : IsHom
     rintro w ⟨y, hyA, rfl⟩ ⟨z, hzB, hzeq⟩
     have : z = y := hinj hzeq
     subst this
-    simp only [RoundAnnulus, Set.mem_setOf_eq] at hyA
+    simp only [RoundAnnulus, Set.mem_ofPred_eq] at hyA
     rw [Metric.mem_closedBall] at hzB
     linarith [hyA.1]
   apply Set.eq_of_subset_of_subset
@@ -1818,7 +1818,7 @@ theorem geometric_shellRatio_star {f : ℂ → ℂ} {K : ℝ} (hf : IsQCGeometri
   have hKcpt : IsCompact (f '' Metric.closedBall x₀ a) :=
     (isCompact_closedBall x₀ a).image hhomeo.continuous
   have hSimg : S = (fun ζ => dist ζ (f x₀)) '' (f '' Metric.closedBall x₀ a) := by
-    ext r; simp only [hSdef, Set.mem_setOf_eq, Set.mem_image]
+    ext r; simp only [hSdef, Set.mem_ofPred_eq, Set.mem_image]
     exact ⟨fun ⟨ζ, hζ, h⟩ => ⟨ζ, hζ, h.symm⟩, fun ⟨ζ, hζ, h⟩ => ⟨ζ, hζ, h.symm⟩⟩
   have hSne : (f '' Metric.closedBall x₀ a).Nonempty :=
     ⟨f x₀, x₀, Metric.mem_closedBall_self ha.le, rfl⟩

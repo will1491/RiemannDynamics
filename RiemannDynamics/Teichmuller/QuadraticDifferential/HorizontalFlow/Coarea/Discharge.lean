@@ -81,7 +81,7 @@ theorem ordered_sum {Λ : Set ℝ} {H : ℕ → Set ℝ}
         exact le_csInf (hne ns hnsF) fun y hy => (hmaxside m hm x hx y hy).le
       by_cases hq : ∀ y ∈ H ns, qc < y
       · -- the maximal member avoids the cut point
-        have hsplit := measure_inter_add_diff (μ := volume) Λ'
+        have hsplit := measure_inter_add_sdiff (μ := volume) Λ'
           (measurableSet_Iic (a := qc))
         have hrest : ∑ n ∈ F.erase ns, volume (H n)
             ≤ volume (Λ' ∩ Set.Iic qc) := by
@@ -109,7 +109,7 @@ theorem ordered_sum {Λ : Set ℝ} {H : ℕ → Set ℝ}
           intro m hm x hx
           have h2 := hmaxside m hm x hx y₀ hy₀
           rwa [hy₀eq] at h2
-        have hsplit := measure_inter_add_diff (μ := volume) Λ'
+        have hsplit := measure_inter_add_sdiff (μ := volume) Λ'
           (measurableSet_Iio (a := qc))
         have hrest : ∑ n ∈ F.erase ns, volume (H n)
             ≤ volume (Λ' ∩ Set.Iio qc) := by
@@ -260,7 +260,7 @@ theorem assertion_ii {γ g : ℝ → ℂ}
   by_cases hKne : (Set.Icc (δ/2) (1 - δ/2)).Nonempty
   · obtain ⟨u₂, hu₂, hminOn⟩ := (isCompact_Icc (a := δ/2) (b := 1 - δ/2)).exists_isMinOn
       hKne ((hγc.mono (fun u hu => ⟨by linarith only [hu.1, hδ],
-        by linarith only [hu.2, hδ]⟩)).sub continuousOn_const).norm
+        by linarith only [hu.2, hδ]⟩)).sub (continuousOn_const (c := γ 0))).norm
     set d₀ := ‖γ u₂ - γ 0‖ with hd₀def
     have hd₀ : 0 < d₀ := by
       rw [hd₀def, norm_pos_iff, sub_ne_zero]
@@ -275,7 +275,7 @@ theorem assertion_ii {γ g : ℝ → ℂ}
     have htK : t ∉ Set.Icc (δ/2) (1 - δ/2) := by
       intro htK
       have h6 := isMinOn_iff.mp hminOn t htK
-      simp only at h6
+      simp only [Pi.sub_apply] at h6
       linarith only [h6, hball, hd₀]
     rw [Set.mem_Icc, not_and_or] at htK
     rcases htK with h | h
@@ -578,7 +578,7 @@ theorem piece_count {E : Set ℝ} {F : ℝ → ℝ} {Λ : Set ℝ} {ρ : ℝ →
   -- split the level set along the carriers
   have hsplit : volume E ≤ ∑' n, volume (E ∩ A n) := by
     have h1 : E = (E \ ⋃ n, A n) ∪ (E ∩ ⋃ n, A n) := by
-      rw [Set.diff_union_inter]
+      rw [Set.sdiff_union_inter]
     calc volume E = volume ((E \ ⋃ n, A n) ∪ (E ∩ ⋃ n, A n)) := by rw [← h1]
       _ ≤ volume (E \ ⋃ n, A n) + volume (E ∩ ⋃ n, A n) := measure_union_le _ _
       _ = volume (E ∩ ⋃ n, A n) := by rw [hAnull, zero_add]

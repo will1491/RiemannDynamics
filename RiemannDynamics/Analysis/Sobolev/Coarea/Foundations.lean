@@ -368,7 +368,7 @@ theorem measurable_slice_hausdorff_one {u : ℂ → ℝ} (hu : Continuous u)
               (⨆ _ : (elem (grp n)).Nonempty, Metric.ediam (elem (grp n)) ^ (1:ℝ)) :=
             Finset.single_le_sum
               (f := fun n => ⨆ _ : (elem (grp n)).Nonempty, Metric.ediam (elem (grp n)) ^ (1:ℝ))
-              (fun _ _ => zero_le _) hmem
+              (fun _ _ => zero_le) hmem
     have hstep2 :
         ∑ n ∈ P.image ν, (⨆ _ : (elem (grp n)).Nonempty, Metric.ediam (elem (grp n)) ^ (1:ℝ))
           ≤ ∑ n ∈ P.image ν, ((⨆ _ : (t n).Nonempty, Metric.ediam (t n) ^ (1:ℝ))
@@ -764,7 +764,7 @@ theorem eilenberg_coarea_planar_metric {u : ℂ → ℝ} {K : ℝ≥0} {A : Set 
                 (⨆ _ : (elem (grp n)).Nonempty, Metric.ediam (elem (grp n)) ^ (1:ℝ)) :=
               Finset.single_le_sum
                 (f := fun n => ⨆ _ : (elem (grp n)).Nonempty, Metric.ediam (elem (grp n)) ^ (1:ℝ))
-                (fun _ _ => zero_le _) hmem
+                (fun _ _ => zero_le) hmem
       have hstep2 :
           ∑ n ∈ P.image ν, (⨆ _ : (elem (grp n)).Nonempty, Metric.ediam (elem (grp n)) ^ (1:ℝ))
             ≤ ∑ n ∈ P.image ν, ((⨆ _ : (t n).Nonempty, Metric.ediam (t n) ^ (1:ℝ))
@@ -924,7 +924,7 @@ theorem eilenberg_coarea_planar_metric {u : ℂ → ℝ} {K : ℝ≥0} {A : Set 
             · rw [not_nonempty_iff_eq_empty] at hne
               rw [hne]
               simp only [closure_empty, inter_empty, image_empty, measure_empty, mul_zero]
-              exact zero_le _
+              exact zero_le
         _ = (K : ℝ≥0∞) * ∑' n, ⨆ _ : (t n).Nonempty, Metric.ediam (t n) ^ (2:ℝ) :=
             ENNReal.tsum_mul_left
     · rw [if_neg hcov, ENNReal.mul_top hKzero]; exact le_top
@@ -1017,10 +1017,10 @@ theorem coarea_linear_eq (L : ℂ →L[ℝ] ℝ) {B : Set ℂ} (hB : MeasurableS
         congr 1
         rw [Set.inter_eq_right]
         intro z _
-        simp [ContinuousLinearMap.zero_apply]
+        simp
       · rw [indicator_of_notMem (by simp [hc])]
         have hempty : (0 : ℂ →L[ℝ] ℝ) ⁻¹' {c} = ∅ := by
-          ext z; simp [ContinuousLinearMap.zero_apply, eq_comm, hc]
+          ext z; simp [eq_comm, hc]
         rw [hempty, Set.empty_inter, measure_empty]
     rw [hint, lintegral_indicator (measurableSet_singleton 0), setLIntegral_const,
       Real.volume_singleton, mul_zero]
@@ -1078,7 +1078,7 @@ theorem coarea_linear_eq (L : ℂ →L[ℝ] ℝ) {B : Set ℂ} (hB : MeasurableS
       congr 1
       ext w
       have hcoe : (rotation a).toIsometryEquiv w = rotation a w := rfl
-      simp only [mem_preimage, mem_inter_iff, mem_singleton_iff, mem_setOf_eq, hcoe, hB'_def]
+      simp only [mem_preimage, mem_inter_iff, mem_singleton_iff, mem_ofPred_eq, hcoe, hB'_def]
       rw [hrot w]
     -- Each vertical slice's `μH[1]` is the fiber `volume`.
     have stepB : ∀ c : ℝ,
@@ -1086,7 +1086,7 @@ theorem coarea_linear_eq (L : ℂ →L[ℝ] ℝ) {B : Set ℂ} (hB : MeasurableS
           = volume {y : ℝ | Complex.mk (c / ‖L‖) y ∈ B'} := by
       intro c
       have hset : {w : ℂ | ‖L‖ * w.re = c} = {w : ℂ | w.re = c / ‖L‖} := by
-        ext w; simp only [mem_setOf_eq]; rw [eq_div_iff hLne, mul_comm]
+        ext w; simp only [mem_ofPred_eq]; rw [eq_div_iff hLne, mul_comm]
       rw [hset]
       have hiso : Isometry (fun y : ℝ => Complex.mk (c / ‖L‖) y) := by
         intro y1 y2
@@ -1099,7 +1099,7 @@ theorem coarea_linear_eq (L : ℂ →L[ℝ] ℝ) {B : Set ℂ} (hB : MeasurableS
           = (fun y : ℝ => Complex.mk (c / ‖L‖) y) ''
             {y | Complex.mk (c / ‖L‖) y ∈ B'} := by
         ext w
-        simp only [mem_inter_iff, mem_setOf_eq, mem_image]
+        simp only [mem_inter_iff, mem_ofPred_eq, mem_image]
         constructor
         · rintro ⟨hre, hBmem⟩
           refine ⟨w.im, ?_, ?_⟩
@@ -1243,7 +1243,7 @@ theorem hausdorffMeasure_one_image_le {γ γ' : ℝ → ℂ} {I : Set ℝ}
         _ = ‖γ y - γ x - A (y - x) - (γ y - γ x - (f' x) (y - x))‖ := by
             congr 1
             simp only [ya, add_sub_cancel_left, sub_sub_sub_cancel_left,
-              ContinuousLinearMap.coe_sub', Pi.sub_apply, map_smul]
+              FunLike.coe_sub, Pi.sub_apply, map_smul]
             module
         _ ≤ ‖γ y - γ x - A (y - x)‖ + ‖γ y - γ x - (f' x) (y - x)‖ := norm_sub_le _ _
         _ ≤ δ * ‖y - x‖ + ε * ‖y - x‖ := (add_le_add (hf _ ys _ xs) (hρ ⟨rρ hy, ys⟩))
@@ -1253,7 +1253,7 @@ theorem hausdorffMeasure_one_image_le {γ γ' : ℝ → ℂ} {I : Set ℝ}
         _ ≤ r * (δ + ε) * (‖z‖ + ε) := by gcongr
     calc ‖(f' x - A) z‖ = ‖(f' x - A) a + (f' x - A) (z - a)‖ := by
           congr 1
-          simp only [ContinuousLinearMap.coe_sub', map_sub, Pi.sub_apply]
+          simp only [FunLike.coe_sub, map_sub, Pi.sub_apply]
           abel
       _ ≤ ‖(f' x - A) a‖ + ‖(f' x - A) (z - a)‖ := norm_add_le _ _
       _ ≤ (δ + ε) * (‖z‖ + ε) + ‖f' x - A‖ * ‖z - a‖ := by

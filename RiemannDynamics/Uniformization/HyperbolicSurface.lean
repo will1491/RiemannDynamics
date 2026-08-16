@@ -35,6 +35,10 @@ Main declarations:
 open Metric Topology Filter TopologicalSpace
 open scoped Manifold ContDiff unitInterval
 
+-- `Path.Homotopic.Quotient` is a semireducible alias of `Quotient (Path.Homotopic.setoid _ _)`;
+-- rewriting `trans`/`trans_assoc` across `⟦_⟧` terms needs the pre-4.33 unifier behavior.
+set_option backward.isDefEq.respectTransparency false
+
 namespace RiemannDynamics
 
 variable (X : Type*) [TopologicalSpace X] [ChartedSpace ℂ X] [IsManifold 𝓘(ℂ) ω X]
@@ -52,8 +56,8 @@ between the basepoints. -/
 theorem exists_pathCover_rebase_diffeomorph [ConnectedSpace X] (x₀ x₁ : X) :
     Nonempty (PathCover x₁ ≃ₘ^ω⟮𝓘(ℂ), 𝓘(ℂ)⟯ PathCover x₀) := by
   classical
-  haveI : LocPathConnectedSpace X := ChartedSpace.locPathConnectedSpace ℂ X
-  haveI : PathConnectedSpace X := PathConnectedSpace.of_locPathConnectedSpace
+  have : LocallyPathConnectedSpace X := ChartedSpace.locallyPathConnectedSpace ℂ X
+  have : PathConnectedSpace X := PathConnectedSpace.of_locallyPathConnectedSpace
   have c₀ : Path.Homotopic.Quotient x₀ x₁ := ⟦PathConnectedSpace.somePath x₀ x₁⟧
   -- Translation of path classes along a fixed connecting class is continuous:
   -- preimages of sheets are sheets of the translated point.
@@ -187,15 +191,15 @@ theorem isHyperbolic_of_hasGreenFunction [T2Space X] [ConnectedSpace X]
     IsHyperbolic X := by
   classical
   -- ## Instances on the universal path cover at the pole.
-  haveI : T2Space (PathCover p₀) := t2space_pathCover p₀
-  haveI : PathConnectedSpace (PathCover p₀) := pathConnectedSpace_pathCover p₀
-  haveI : ConnectedSpace (PathCover p₀) := PathConnectedSpace.connectedSpace
-  haveI : SimplyConnectedSpace (PathCover p₀) := simplyConnectedSpace_pathCover p₀
-  haveI : NoncompactSpace (PathCover p₀) := noncompactSpace_pathCover p₀
-  haveI : Nontrivial (PathCover p₀) := by
+  have : T2Space (PathCover p₀) := t2space_pathCover p₀
+  have : PathConnectedSpace (PathCover p₀) := pathConnectedSpace_pathCover p₀
+  have : ConnectedSpace (PathCover p₀) := PathConnectedSpace.connectedSpace
+  have : SimplyConnectedSpace (PathCover p₀) := simplyConnectedSpace_pathCover p₀
+  have : NoncompactSpace (PathCover p₀) := noncompactSpace_pathCover p₀
+  have : Nontrivial (PathCover p₀) := by
     rcases subsingleton_or_nontrivial (PathCover p₀) with hs | hn
-    · haveI := hs
-      haveI : Finite (PathCover p₀) := Finite.of_subsingleton
+    · have := hs
+      have : Finite (PathCover p₀) := Finite.of_subsingleton
       exact absurd isCompact_univ (noncompact_univ (PathCover p₀))
     · exact hn
   -- ## The Green's function upstairs, at the canonical lift of the pole.
@@ -248,8 +252,8 @@ theorem exists_hyperbolicMetric_of_diffeomorph [T2Space X] [ConnectedSpace X]
         ∀ y ∈ U, ∀ z ∈ U, m.dist y z = hyperbolicDistDisk (f y) (f z) := by
   classical
   have hcov := pathCoverProj_isCoveringMap x₀
-  haveI : LocPathConnectedSpace X := ChartedSpace.locPathConnectedSpace ℂ X
-  haveI : PathConnectedSpace X := PathConnectedSpace.of_locPathConnectedSpace
+  have : LocallyPathConnectedSpace X := ChartedSpace.locallyPathConnectedSpace ℂ X
+  have : PathConnectedSpace X := PathConnectedSpace.of_locallyPathConnectedSpace
   -- The disc readings of cover points lie in the unit ball.
   have hEcm : ∀ pc : PathCover x₀, (↑(E pc) : ℂ) ∈ ball (0 : ℂ) 1 := fun pc => (E pc).2
   -- Lifts of base points through the covering projection.
@@ -284,7 +288,7 @@ theorem exists_hyperbolicMetric_of_diffeomorph [T2Space X] [ConnectedSpace X]
     have hγ : γ = Path.Homotopic.Quotient.refl x₀ := by
       have h3 := congrArg
         (fun c : Path.Homotopic.Quotient x₀ pt => Path.Homotopic.Quotient.trans c cls.symm) hcl
-      dsimp only [] at h3
+      try dsimp only [] at h3
       rw [Path.Homotopic.Quotient.trans_assoc, Path.Homotopic.Quotient.trans_symm,
         Path.Homotopic.Quotient.trans_refl] at h3
       exact h3
@@ -303,7 +307,7 @@ theorem exists_hyperbolicMetric_of_diffeomorph [T2Space X] [ConnectedSpace X]
         (s := unitDiscOpens) hne (x := (⟨z, hz⟩ : ↥unitDiscOpens))
         (mem_chart_source ℂ ((⟨z, hz⟩ : ↥unitDiscOpens) : ℂ))
       have h2 : (chartAt ℂ ((⟨z, hz⟩ : ↥unitDiscOpens) : ℂ)) ((⟨z, hz⟩ : ↥unitDiscOpens) : ℂ)
-          = z := by simp
+          = z := rfl
       rw [h2] at h1
       rw [Opens.chartAt_eq]
       exact h1
@@ -330,7 +334,7 @@ theorem exists_hyperbolicMetric_of_diffeomorph [T2Space X] [ConnectedSpace X]
         exact hw
       have h5 := (chartAt ℂ ((⟨z, hz⟩ : ↥unitDiscOpens) : ℂ)).subtypeRestr_symm_apply
         (U := unitDiscOpens) hne hwt
-      have h6 : (↑(chartAt ℂ ((⟨z, hz⟩ : ↥unitDiscOpens) : ℂ)).symm : ℂ → ℂ) w = w := by simp
+      have h6 : (↑(chartAt ℂ ((⟨z, hz⟩ : ↥unitDiscOpens) : ℂ)).symm : ℂ → ℂ) w = w := rfl
       rw [Opens.chartAt_eq]
       exact h5.trans h6
     have hwball : w ∈ ball (0 : ℂ) 1 := by
@@ -533,7 +537,7 @@ theorem exists_hyperbolicMetric_of_diffeomorph [T2Space X] [ConnectedSpace X]
       exact (isCompact_closedBall (0 : ℂ) _).of_isClosed_subset hclosed Set.inter_subset_left
     · have hempty : {z : ℂ | z ∈ ball (0 : ℂ) 1 ∧ hyperbolicDistDisk c z ≤ R} = ∅ := by
         ext z
-        simp only [Set.mem_setOf_eq, Set.mem_empty_iff_false, iff_false, not_and]
+        simp only [Set.mem_ofPred_eq, Set.mem_empty_iff_false, iff_false, not_and]
         intro _
         have := hyperbolicDistDisk_nonneg c z
         intro hle
@@ -570,7 +574,7 @@ theorem exists_hyperbolicMetric_of_diffeomorph [T2Space X] [ConnectedSpace X]
   have haux : ∀ (p p' : PathCover x₀) (γ : Path.Homotopic.Quotient x₀ x₀),
       pathCoverDeck x₀ γ p = p' → ∀ y : X, dd p' y ≤ dd p y := by
     intro p p' γ hγ y
-    haveI := hFn y
+    have := hFn y
     refine le_ciInf fun r => ?_
     have hmem : pathCoverProj x₀ (pathCoverDeck x₀ γ r.1) = y := r.2
     have h1 : dd p' y ≤ hyperbolicDistDisk (↑(E p')) (↑(E (pathCoverDeck x₀ γ r.1))) :=
@@ -608,7 +612,7 @@ theorem exists_hyperbolicMetric_of_diffeomorph [T2Space X] [ConnectedSpace X]
   have hattain : ∀ (p : PathCover x₀) (y : X), ∃ q : PathCover x₀,
       pathCoverProj x₀ q = y ∧ dd p y = hyperbolicDistDisk (↑(E p)) (↑(E q)) := by
     intro p y
-    haveI := hFn y
+    have := hFn y
     have hfin := hfinlevel p y (hyperbolicDistDisk (↑(E p)) (↑(E (L y))))
     have hne : {q : PathCover x₀ | pathCoverProj x₀ q = y ∧
         hyperbolicDistDisk (↑(E p)) (↑(E q)) ≤
@@ -681,7 +685,7 @@ theorem exists_hyperbolicMetric_of_diffeomorph [T2Space X] [ConnectedSpace X]
         rw [Real.arsinh_zero] at h1
         linarith
       · intro y hy
-        haveI := hFn y
+        have := hFn y
         obtain ⟨q, hq⟩ := exists_lt_of_ciInf_lt hy
         have hin : (↑(E q.1) : ℂ) ∈ ball (↑(E (L x)) : ℂ) εE :=
           hclose _ _ (hEcm (L x)) (hEcm q.1) εE hq
@@ -730,8 +734,8 @@ theorem exists_hyperbolicMetric_of_diffeomorph [T2Space X] [ConnectedSpace X]
     hd_triangle Hchar hd_eq0 with hmX
   refine ⟨mX, rfl, ?_, ?_⟩
   · -- Completeness via properness: closed balls are continuous images of compacts.
-    letI := mX
-    haveI : ProperSpace X := by
+    let := mX
+    have : ProperSpace X := by
       constructor
       intro xc r
       have hcb : closedBall xc r = pathCoverProj x₀ ''
@@ -770,7 +774,7 @@ theorem exists_hyperbolicMetric_of_diffeomorph [T2Space X] [ConnectedSpace X]
         4 * sep ≤ hyperbolicDistDisk (↑(E (L x))) (↑(E q)) := by
       have hfin : ({q : PathCover x₀ | pathCoverProj x₀ q = x ∧
           hyperbolicDistDisk (↑(E (L x))) (↑(E q)) ≤ 1} \ {L x}).Finite :=
-        (hfinlevel (L x) x 1).diff
+        (hfinlevel (L x) x 1).sdiff
       rcases Set.eq_empty_or_nonempty ({q : PathCover x₀ | pathCoverProj x₀ q = x ∧
           hyperbolicDistDisk (↑(E (L x))) (↑(E q)) ≤ 1} \ {L x}) with hemp | hne
       · refine ⟨1 / 8, by norm_num, ?_⟩
@@ -833,7 +837,7 @@ theorem exists_hyperbolicMetric_of_diffeomorph [T2Space X] [ConnectedSpace X]
     have hbase_y : dd (L y) z = dd (Q y) z := hbase (L y) (Q y) (by rw [hL y, hQp y]) z
     rw [hbase_y]
     refine le_antisymm (hd_le (Q y) z (Q z) (hQp z)) ?_
-    haveI := hFn z
+    have := hFn z
     refine le_ciInf fun r => ?_
     obtain ⟨γ, hγ⟩ := pathCoverDeck_transitive x₀ (Q z) r.1 (by rw [hQp z, r.2])
     by_cases hfix : pathCoverDeck x₀ γ (L x) = L x
@@ -881,7 +885,7 @@ theorem exists_hyperbolicMetric [T2Space X] [ConnectedSpace X]
       ∀ x : X, ∃ U ∈ 𝓝 x, ∃ f : X → ℂ,
         (∀ y ∈ U, f y ∈ ball (0 : ℂ) 1) ∧
         ∀ y ∈ U, ∀ z ∈ U, m.dist y z = hyperbolicDistDisk (f y) (f z) := by
-  haveI : Nonempty X := ConnectedSpace.toNonempty
+  have : Nonempty X := ConnectedSpace.toNonempty
   obtain ⟨E⟩ := hX (Classical.arbitrary X)
   exact exists_hyperbolicMetric_of_diffeomorph (Classical.arbitrary X) E
 

@@ -143,7 +143,7 @@ theorem roundAnnulus_inner_eq_iUnion {s : ℝ} (hs0 : 0 < s) :
       = ⋃ n : ℕ, RoundAnnulus 0 (Real.exp (Real.log s - (n + 1)))
           (Real.exp (Real.log s - 1 / (n + 2))) := by
   ext z
-  simp only [RoundAnnulus, Set.mem_setOf_eq, Set.mem_iUnion]
+  simp only [RoundAnnulus, Set.mem_ofPred_eq, Set.mem_iUnion]
   constructor
   · rintro ⟨h1, h2⟩
     have hzpos : 0 < dist z 0 := h1
@@ -616,7 +616,7 @@ theorem dirichletEnergy_grotzschRing_eq_slope {s : ℝ} (hs0 : 0 < s) (hs1 : s <
     · -- `ball s \ RoundAnnulus 0 0 s ⊆ {0}`
       have hzs : dist z 0 < s := Metric.mem_ball.mp hz.1
       have hznotin : z ∉ RoundAnnulus 0 0 s := hz.2
-      simp only [RoundAnnulus, Set.mem_setOf_eq, not_and, not_lt] at hznotin
+      simp only [RoundAnnulus, Set.mem_ofPred_eq, not_and, not_lt] at hznotin
       have hle : dist z 0 ≤ 0 := by
         by_contra hpos
         exact absurd (hznotin (lt_of_not_ge hpos)) (not_le.mpr hzs)

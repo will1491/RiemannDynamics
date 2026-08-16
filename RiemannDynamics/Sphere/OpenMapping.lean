@@ -125,7 +125,7 @@ theorem RationalData.reflect_eval_ne_zero_or (r : RationalData) (w : ℂ) :
     have reflect_eval : ∀ (N : ℕ) (p : ℂ[X]), p.natDegree ≤ N → ∀ x : ℂ, x ≠ 0 →
         (Polynomial.reflect N p).eval x = x ^ N * p.eval x⁻¹ := by
       intro N p hp x hx
-      haveI : Invertible (x⁻¹ : ℂ) := invertibleOfNonzero (inv_ne_zero hx)
+      have : Invertible (x⁻¹ : ℂ) := invertibleOfNonzero (inv_ne_zero hx)
       have h := Polynomial.eval₂_reflect_mul_pow (RingHom.id ℂ) x⁻¹ N p hp
       rw [Polynomial.eval₂_id, Polynomial.eval₂_id, invOf_eq_inv, inv_inv, inv_pow,
         ← div_eq_mul_inv, div_eq_iff (pow_ne_zero N hx)] at h
@@ -204,7 +204,7 @@ theorem RationalData.toSphereMap_inversionGL_smul_coe (r : RationalData)
     have reflect_eval : ∀ (N : ℕ) (p : ℂ[X]), p.natDegree ≤ N → ∀ x : ℂ, x ≠ 0 →
         (Polynomial.reflect N p).eval x = x ^ N * p.eval x⁻¹ := by
       intro N p hp x hx
-      haveI : Invertible (x⁻¹ : ℂ) := invertibleOfNonzero (inv_ne_zero hx)
+      have : Invertible (x⁻¹ : ℂ) := invertibleOfNonzero (inv_ne_zero hx)
       have h := Polynomial.eval₂_reflect_mul_pow (RingHom.id ℂ) x⁻¹ N p hp
       rw [Polynomial.eval₂_id, Polynomial.eval₂_id, invOf_eq_inv, inv_inv, inv_pow,
         ← div_eq_mul_inv, div_eq_iff (pow_ne_zero N hx)] at h
@@ -235,7 +235,7 @@ theorem RationalData.toSphereMap_eq_const_of_eventuallyEq {r : RationalData}
   obtain ⟨V, hV, hVall⟩ := h.exists_mem
   have hS : {w : ℂ | r.toSphereMap ↑w = c}.Infinite := by
     have hV_inf : V.Infinite := infinite_of_mem_nhds z₀ hV
-    have hdiff : (V \ {∞}).Infinite := hV_inf.diff (Set.finite_singleton ∞)
+    have hdiff : (V \ {∞}).Infinite := hV_inf.sdiff (Set.finite_singleton ∞)
     have himg : (((↑) : ℂ → ℂ̂) '' (((↑) : ℂ → ℂ̂) ⁻¹' V)).Infinite := by
       refine Set.Infinite.mono ?_ hdiff
       intro z hz
@@ -253,7 +253,7 @@ theorem RationalData.toSphereMap_eq_const_of_eventuallyEq {r : RationalData}
     apply Polynomial.eq_zero_of_infinite_isRoot
     refine Set.Infinite.mono ?_ hS
     intro w hw
-    simp only [Set.mem_setOf_eq] at hw ⊢
+    simp only [Set.mem_ofPred_eq] at hw ⊢
     change r.denReduced.eval w = 0
     by_contra hne
     simp only [RationalData.toSphereMap, hne, if_false] at hw
@@ -264,7 +264,7 @@ theorem RationalData.toSphereMap_eq_const_of_eventuallyEq {r : RationalData}
       apply Polynomial.eq_zero_of_infinite_isRoot
       refine Set.Infinite.mono ?_ hS
       intro w hw
-      simp only [Set.mem_setOf_eq] at hw ⊢
+      simp only [Set.mem_ofPred_eq] at hw ⊢
       change (r.numReduced - Polynomial.C c' * r.denReduced).eval w = 0
       by_cases hdw : r.denReduced.eval w = 0
       · simp only [RationalData.toSphereMap, hdw, if_true] at hw
@@ -677,13 +677,13 @@ theorem RationalData.wronskian_ne_zero (r : RationalData) (hdeg : 2 ≤ r.degree
     · exact Polynomial.eq_zero_of_dvd_of_natDegree_lt hdvd'
         (Polynomial.natDegree_derivative_lt hd0)
   have hdD : r.denReduced.natDegree = 0 :=
-    Polynomial.natDegree_eq_zero_of_derivative_eq_zero hderD
+    Polynomial.derivative_eq_zero.mp hderD
   have hderN : Polynomial.derivative r.numReduced = 0 := by
     have h2 : Polynomial.derivative r.numReduced * r.denReduced = 0 := by
       rw [hid, hderD, mul_zero]
     exact (mul_eq_zero.mp h2).resolve_right hdenR_ne_zero
   have hdN : r.numReduced.natDegree = 0 :=
-    Polynomial.natDegree_eq_zero_of_derivative_eq_zero hderN
+    Polynomial.derivative_eq_zero.mp hderN
   have hmax : r.degree = max r.numReduced.natDegree r.denReduced.natDegree := rfl
   omega
 

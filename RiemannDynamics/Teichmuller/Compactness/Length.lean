@@ -81,6 +81,7 @@ noncomputable def diagSL2 (lam : ℝ) (hlam : lam ≠ 0) :
     Matrix.SpecialLinearGroup (Fin 2) ℝ :=
   ⟨!![lam, 0; 0, lam⁻¹], by rw [Matrix.det_fin_two_of]; simp [mul_inv_cancel₀ hlam]⟩
 
+set_option backward.isDefEq.respectTransparency false in
 /-- Diagonalization of hyperbolic elements of `SL(2, ℝ)`: a matrix with `tr² > 4` has real
 distinct eigenvalues `λ, λ⁻¹` and is conjugate within `SL(2, ℝ)` to `!![λ, 0; 0, λ⁻¹]`. -/
 theorem sl2_hyperbolic_diagonalization (A : Matrix.SpecialLinearGroup (Fin 2) ℝ)
@@ -525,7 +526,7 @@ theorem le_systoleRep (x : TeichRep Γ₀) {ε : ℝ}
     (h : ∀ γ ∈ x.group, actsNontrivially γ → ε ≤ translationLength γ) :
     ε ≤ systoleRep x := by
   obtain ⟨γ₀, hγ₀, hnt₀⟩ := hne
-  haveI : Nonempty {γ : Matrix.SpecialLinearGroup (Fin 2) ℝ //
+  have : Nonempty {γ : Matrix.SpecialLinearGroup (Fin 2) ℝ //
       γ ∈ x.group ∧ actsNontrivially γ} := ⟨⟨γ₀, hγ₀, hnt₀⟩⟩
   unfold systoleRep
   exact le_ciInf fun γ => h γ.1 γ.2.1 γ.2.2
@@ -583,7 +584,7 @@ theorem volume_ball_pos (τ : UpperHalfPlane) {r : ℝ} (hr : 0 < r) :
   have hτS : ((τ : ℂ)) ∈ S := ⟨τ, Metric.mem_ball_self hr, rfl⟩
   have hτT : ((τ : ℂ)) ∈ T := by
     refine ⟨hτS, ?_⟩
-    simp only [Set.mem_setOf_eq, UpperHalfPlane.coe_im]
+    simp only [Set.mem_ofPred_eq, UpperHalfPlane.coe_im]
     linarith
   have hSim : ∀ z ∈ S, 0 < z.im := by
     rintro z ⟨σ, -, rfl⟩
@@ -603,7 +604,7 @@ theorem volume_ball_pos (τ : UpperHalfPlane) {r : ℝ} (hr : 0 < r) :
       simp only [hc, coe_nnnorm, Real.norm_eq_abs]
       rw [abs_of_pos h0, abs_of_pos (by positivity : (0:ℝ) < τ.im + 1)]
       exact hzc'.le
-    exact pow_le_pow_left₀ (zero_le _)
+    exact pow_le_pow_left₀ (zero_le)
       (one_div_le_one_div_of_le (nnnorm_pos.mpr h0.ne') h1) 2
   have hmeasN : Measurable fun z : ℂ => ((1 / ‖z.im‖₊) ^ 2 : NNReal) := by
     simp only [one_div]

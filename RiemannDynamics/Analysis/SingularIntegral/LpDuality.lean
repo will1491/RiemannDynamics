@@ -136,12 +136,12 @@ theorem eLpNorm_le_iSup_integral_mul {α : Type*} [MeasurableSpace α] {μ : Mea
     have hg₀_eLp : eLpNorm g₀ p' μ ≤ 1 := by
       have hpoint : ∀ x, ‖g₀ x‖ₑ ^ q' = ‖h x‖ₑ ^ q / ENNReal.ofReal (M ^ q) := by
         intro x
-        rw [← ofReal_norm_eq_enorm (g₀ x), hg₀_norm x,
+        rw [← ofReal_norm (g₀ x), hg₀_norm x,
           ENNReal.ofReal_rpow_of_nonneg (by positivity) hq'0.le,
           Real.div_rpow (Real.rpow_nonneg (norm_nonneg _) _) (Real.rpow_nonneg hMpos.le _),
           ← Real.rpow_mul (norm_nonneg _), ← Real.rpow_mul hMpos.le, hkey,
           ENNReal.ofReal_div_of_pos (Real.rpow_pos_of_pos hMpos _),
-          ← ofReal_norm_eq_enorm (h x),
+          ← ofReal_norm (h x),
           ENNReal.ofReal_rpow_of_nonneg (norm_nonneg _) hq0.le]
       have hlint_g₀ : (∫⁻ x, ‖g₀ x‖ₑ ^ q' ∂μ) = 1 := by
         simp_rw [hpoint]
@@ -172,12 +172,12 @@ theorem eLpNorm_le_iSup_integral_mul {α : Type*} [MeasurableSpace α] {μ : Mea
         rw [integral_eq_lintegral_of_nonneg_ae hnn hint.aestronglyMeasurable]
         have hofR : (fun x => ENNReal.ofReal (‖h x‖ ^ q)) = (fun x => ‖h x‖ₑ ^ q) := by
           ext x
-          rw [← ofReal_norm_eq_enorm, ← ENNReal.ofReal_rpow_of_nonneg (norm_nonneg _) hq0.le]
+          rw [← ofReal_norm, ← ENNReal.ofReal_rpow_of_nonneg (norm_nonneg _) hq0.le]
         rw [hofR, hlint_eq, ENNReal.toReal_ofReal (by positivity)]
       rw [hint_rpow, ← Real.rpow_sub hMpos, show q - (q - 1) = 1 from by ring, Real.rpow_one]
     -- Conclude: `eLpNorm h p μ = ‖∫ h·g₀‖ₑ ≤ ⨆ …`.
     have hfinal : eLpNorm h p μ = ‖∫ x, h x * g₀ x ∂μ‖ₑ := by
-      rw [hint_eq, heLp_M, ← ofReal_norm_eq_enorm, Complex.norm_real, Real.norm_of_nonneg hM_nonneg]
+      rw [hint_eq, heLp_M, ← ofReal_norm, Complex.norm_real, Real.norm_of_nonneg hM_nonneg]
     rw [hfinal]
     exact le_iSup₂_of_le g₀ hg₀_memLp (le_iSup_of_le hg₀_eLp (le_refl _))
 

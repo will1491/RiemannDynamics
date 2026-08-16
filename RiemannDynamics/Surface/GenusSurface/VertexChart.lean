@@ -50,7 +50,7 @@ predecessor arc, `c (m+1) = π̂ (c m - 1)`. -/
 theorem vertexSlot_succ (g : ℕ) [NeZero g] (m : ZMod (4 * g)) :
     vertexSlot g (m + 1) = pairInv g (vertexSlot g m - 1) := by
   have hg1 : 1 ≤ g := Nat.one_le_iff_ne_zero.mpr (NeZero.ne g)
-  haveI : NeZero (4 * g) := ⟨by omega⟩
+  have : NeZero (4 * g) := ⟨by omega⟩
   have hval : ∀ a : ℕ, a < 4 * g → ((a : ZMod (4 * g))).val = a := fun a ha =>
     ZMod.val_cast_of_lt ha
   have hslot : ∀ v : ℕ, 1 ≤ v → v < 4 * g →
@@ -142,7 +142,7 @@ theorem vertexSlot_succ (g : ℕ) [NeZero g] (m : ZMod (4 * g)) :
 theorem vertexSlot_bijective (g : ℕ) [NeZero g] :
     Function.Bijective (vertexSlot g) := by
   have hg1 : 1 ≤ g := Nat.one_le_iff_ne_zero.mpr (NeZero.ne g)
-  haveI : NeZero (4 * g) := ⟨by omega⟩
+  have : NeZero (4 * g) := ⟨by omega⟩
   rw [← Finite.injective_iff_bijective]
   intro a b hab
   have hval : ∀ c : ℕ, c < 4 * g → ((c : ZMod (4 * g))).val = c := fun c hc =>
@@ -247,7 +247,7 @@ theorem vertexRay_glue (g : ℕ) [NeZero g] (m : ℕ) {r : ℝ} (hr : 0 ≤ r)
       (projDisc (polyVertex g ((vertexSlot g ((m : ZMod (4 * g)) + 1)).val : ℤ) *
         Complex.exp (Complex.I * (r : ℂ) ^ (2 * g)))) := by
   have hg1 : 1 ≤ g := Nat.one_le_iff_ne_zero.mpr (NeZero.ne g)
-  haveI : NeZero (4 * g) := ⟨by omega⟩
+  have : NeZero (4 * g) := ⟨by omega⟩
   have hgR : (0 : ℝ) < g := by exact_mod_cast hg1
   have hgC : (g : ℂ) ≠ 0 := Nat.cast_ne_zero.mpr (NeZero.ne g)
   have hπ : (0 : ℝ) < Real.pi := Real.pi_pos
@@ -433,7 +433,7 @@ theorem vertexChart_continuousOn (g : ℕ) [NeZero g] :
     ContinuousOn (vertexChartFun g) (Metric.ball (0 : ℂ) (vertexRadius g)) := by
   classical
   have hg1 : 1 ≤ g := Nat.one_le_iff_ne_zero.mpr (NeZero.ne g)
-  haveI : NeZero (4 * g) := ⟨by omega⟩
+  have : NeZero (4 * g) := ⟨by omega⟩
   have hgR : (0 : ℝ) < g := by exact_mod_cast hg1
   have hπ : (0 : ℝ) < Real.pi := Real.pi_pos
   set δ : ℝ := vertexRadius g with hδdef
@@ -478,7 +478,7 @@ theorem vertexChart_continuousOn (g : ℕ) [NeZero g] :
     have hrw : S n = {u : ℂ | 0 ≤ (u * E (-((n : ℝ) * h₀))).im} ∩
         {u : ℂ | (u * E (-(((n : ℝ) + 1) * h₀))).im ≤ 0} := by
       simp only [hS]
-      exact Set.setOf_and
+      exact Set.ofPred_and
     rw [hrw]
     exact (isClosed_le continuous_const h1).inter (isClosed_le h2 continuous_const)
   -- Sector index basics.
@@ -898,7 +898,7 @@ theorem vertexChart_injOn (g : ℕ) [NeZero g] :
     Set.InjOn (vertexChartFun g) (Metric.ball (0 : ℂ) (vertexRadius g)) := by
   classical
   have hg1 : 1 ≤ g := Nat.one_le_iff_ne_zero.mpr (NeZero.ne g)
-  haveI : NeZero (4 * g) := ⟨by omega⟩
+  have : NeZero (4 * g) := ⟨by omega⟩
   have hgR : (0 : ℝ) < g := by exact_mod_cast hg1
   have hg1R : (1 : ℝ) ≤ g := by exact_mod_cast hg1
   have hπ : (0 : ℝ) < Real.pi := Real.pi_pos

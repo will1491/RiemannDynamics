@@ -43,7 +43,7 @@ theorem weyl_lemma {f : ℂ → ℂ} {b : BeltramiCoeff} (hf : IsQCAnalytic f b)
     intro g hg
     rw [← locallyIntegrableOn_univ, locallyIntegrableOn_univ, locallyIntegrable_iff]
     intro k hk
-    haveI : MeasureTheory.IsFiniteMeasure (MeasureTheory.volume.restrict k) :=
+    have : MeasureTheory.IsFiniteMeasure (MeasureTheory.volume.restrict k) :=
       ⟨by rw [MeasureTheory.Measure.restrict_apply_univ]; exact hk.measure_lt_top⟩
     have hmem1 : MeasureTheory.MemLp g 1 (MeasureTheory.volume.restrict k) :=
       (hg k (Set.subset_univ _) hk).mono_exponent (by norm_num)

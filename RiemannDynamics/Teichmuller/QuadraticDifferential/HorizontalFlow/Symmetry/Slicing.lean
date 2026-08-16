@@ -621,7 +621,7 @@ theorem hasWeakDirDeriv_univ_of_compactSupport {v : ℂ} {g f : ℂ → ℂ} {Ω
     have hdφ : DifferentiableAt ℝ φ z :=
       (hφ.differentiable (by norm_num)).differentiableAt
     rw [fderiv_fun_mul hdχ hdφ]
-    simp only [ContinuousLinearMap.add_apply, ContinuousLinearMap.smul_apply,
+    simp only [add_apply, smul_apply,
       smul_eq_mul]
   have hL : ∀ z, ((fderiv ℝ (fun y => χ y * φ y) z) v) • f z
       = ((fderiv ℝ φ z) v) • f z := by
@@ -732,9 +732,9 @@ theorem w11loc_localization {q h hinv : ℂ → ℂ} {κ : ℝ} (A : Atlas q)
       ∃ U : Set ℂ, IsOpen U ∧ K ⊆ U ∧ ∀ w ∈ U,
         G w = h (Function.invFunOn (A.Φ j)
           (Metric.ball (A.c j) (2 * A.r j)) w) := by
-  haveI : NormSMulClass ℝ ℂ := NormedSpace.toNormSMulClass
-  haveI : IsBoundedSMul ℝ ℂ := NormSMulClass.toIsBoundedSMul
-  haveI : ContinuousSMul ℝ ℂ := IsBoundedSMul.continuousSMul
+  have : NormSMulClass ℝ ℂ := NormedSpace.toNormSMulClass
+  have : IsBoundedSMul ℝ ℂ := NormSMulClass.toIsBoundedSMul
+  have : ContinuousSMul ℝ ℂ := IsBoundedSMul.continuousSMul
   obtain ⟨D, hwd, hDL2⟩ := chartInv_comp_hasWeakDirDeriv A hqc hj
   have hWopen : IsOpen (A.Φ j '' Metric.ball (A.c j) (2 * A.r j)) :=
     chart_image_open Metric.isOpen_ball (A.hd j hj) (A.hne j hj) (A.hsq j hj)
@@ -757,7 +757,7 @@ theorem w11loc_localization {q h hinv : ℂ → ℂ} {κ : ℝ} (A : Atlas q)
       (A.Φ j '' Metric.ball (A.c j) (2 * A.r j)) := by
     rw [MeasureTheory.locallyIntegrableOn_iff hWopen.isLocallyClosed]
     intro k hk hkc
-    haveI : IsFiniteMeasure (volume.restrict k) :=
+    have : IsFiniteMeasure (volume.restrict k) :=
       ⟨by rw [Measure.restrict_apply_univ]; exact hkc.measure_lt_top⟩
     exact memLp_one_iff_integrable.mp ((hDL2 k hk hkc).mono_exponent (by norm_num))
   obtain ⟨T1, hT1c, hKT1, hT1W⟩ := exists_compact_between hK hWopen hKW
@@ -1219,7 +1219,7 @@ theorem winding_product_exp {A d : C(I, ℂ)} (hclA : A 0 = A 1) (hcld : d 0 = d
 /-- The open upper half plane is convex. -/
 theorem convex_upperHalf : Convex ℝ {z : ℂ | 0 < z.im} := by
   intro x hx y hy a b ha hb hab
-  simp only [Set.mem_setOf_eq] at hx hy ⊢
+  simp only [Set.mem_ofPred_eq] at hx hy ⊢
   have him : (a • x + b • y).im = a * x.im + b * y.im := by
     simp [Complex.add_im]
   rw [him]
@@ -1426,7 +1426,7 @@ theorem factor_zeros {U : Set ℂ} (hUH : U ⊆ {z : ℂ | 0 < z.im}) :
       peel_zero hq hq0 (hUH hwU) hqw
     have hset : {z ∈ U | q₁ z = 0} = {z ∈ U | q z = 0} \ {w} := by
       ext z
-      simp only [Set.mem_sep_iff, Set.mem_diff, Set.mem_singleton_iff]
+      simp only [Set.mem_sep_iff, Set.mem_sdiff, Set.mem_singleton_iff]
       constructor
       · rintro ⟨hzU, hz0⟩
         refine ⟨⟨hzU, by rw [hglob z, hz0, mul_zero]⟩, ?_⟩
@@ -1442,12 +1442,12 @@ theorem factor_zeros {U : Set ℂ} (hUH : U ⊆ {z : ℂ | 0 < z.im}) :
         · exact h
     have hfin₁ : {z ∈ U | q₁ z = 0}.Finite := by
       rw [hset]
-      exact hfin.diff
+      exact hfin.sdiff
     have hcard₁ : hfin₁.toFinset.card = N := by
       have h1 : hfin₁.toFinset = hfin.toFinset.erase w := by
         ext z
         rw [Set.Finite.mem_toFinset, Finset.mem_erase, Set.Finite.mem_toFinset, hset]
-        simp only [Set.mem_diff, Set.mem_singleton_iff]
+        simp only [Set.mem_sdiff, Set.mem_singleton_iff]
         tauto
       have hwmem' : w ∈ hfin.toFinset := by
         rw [Set.Finite.mem_toFinset]

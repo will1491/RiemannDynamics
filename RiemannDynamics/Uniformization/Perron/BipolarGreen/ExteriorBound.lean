@@ -52,7 +52,7 @@ theorem exists_pieceGreen_dipole_exterior_bound (D₀ : CoordDisk M) {p₁ p₂ 
         |pieceGreen (D₀.shrink t ht ht1).compl p₁ x -
           pieceGreen (D₀.shrink t ht ht1).compl p₂ x| ≤ C₀ := by
   classical
-  haveI : LocallyConnectedSpace M := ChartedSpace.locallyConnectedSpace ℂ M
+  have : LocallyConnectedSpace M := ChartedSpace.locallyConnectedSpace ℂ M
   /- ## Plane-side helper: transfer of subharmonicity along a pointwise equality. -/
   have transfer : ∀ (F G : ℂ → ℝ) (U W : Set ℂ), SubharmonicOn F U → W ⊆ U →
       Set.EqOn F G W → SubharmonicOn G W := by
@@ -136,7 +136,7 @@ theorem exists_pieceGreen_dipole_exterior_bound (D₀ : CoordDisk M) {p₁ p₂ 
     have hfrne :
         (closure (connectedComponentIn Ω xm) \ connectedComponentIn Ω xm).Nonempty := by
       by_contra hem
-      rw [Set.not_nonempty_iff_eq_empty, Set.diff_eq_empty] at hem
+      rw [Set.not_nonempty_iff_eq_empty, Set.sdiff_eq_empty] at hem
       have hclopen : IsClopen (connectedComponentIn Ω xm) :=
         ⟨closure_eq_iff_isClosed.1 (Set.Subset.antisymm hem subset_closure), hCco⟩
       have huniv : connectedComponentIn Ω xm = Set.univ := hclopen.eq_univ ⟨xm, hCcx⟩
@@ -157,7 +157,7 @@ theorem exists_pieceGreen_dipole_exterior_bound (D₀ : CoordDisk M) {p₁ p₂ 
       exact hyC (he2.trans he1.symm ▸ hyC')
     have hyfr : y ∈ closure Ω \ Ω := ⟨closure_mono hCcΩ hycl, hyΩ⟩
     obtain ⟨hyct, hyle⟩ := hfr y hyfr
-    haveI hne2 : (𝓝[connectedComponentIn Ω xm] y).NeBot :=
+    have hne2 : (𝓝[connectedComponentIn Ω xm] y).NeBot :=
       mem_closure_iff_nhdsWithin_neBot.1 hycl
     have h1 : Tendsto w (𝓝[connectedComponentIn Ω xm] y) (𝓝 (w y)) :=
       hyct.continuousWithinAt
@@ -429,7 +429,7 @@ theorem exists_pieceGreen_dipole_exterior_bound (D₀ : CoordDisk M) {p₁ p₂ 
   have zeroFam : ∀ (P : Opens M) (p : M) (hp : p ∈ P),
       (fun _ : ↥P ↦ (0 : ℝ)) ∈ greenFamily (⟨p, hp⟩ : ↥P) := by
     intro P p hp
-    haveI : Nonempty ↥P := ⟨⟨p, hp⟩⟩
+    have : Nonempty ↥P := ⟨⟨p, hp⟩⟩
     refine ⟨fun z _ ↦ (mharmonicAt_const (a := (0 : ℝ))).msubharmonicAt,
       continuousOn_const, ⟨∅, isCompact_empty, Set.empty_ne_univ, fun z _ ↦ rfl⟩,
       ⟨0, ?_⟩⟩
@@ -525,8 +525,8 @@ theorem exists_pieceGreen_dipole_exterior_bound (D₀ : CoordDisk M) {p₁ p₂ 
       NoncompactSpace ↥P → HasGreenFunction (⟨p, hp⟩ : ↥P) →
       ∀ y, y ∈ P → y ≠ p → MHarmonicAt (pieceGreen P p) y := by
     intro P p hp hcs hnc hGF y hy hyp
-    haveI := hcs
-    haveI := hnc
+    have := hcs
+    have := hnc
     have h1 := (mharmonicOn_greenEnvelope hGF).1
     have h2 : MHarmonicAt (greenEnvelope (⟨p, hp⟩ : ↥P)) ⟨y, hy⟩ :=
       h1 _ (Set.mem_compl_singleton_iff.mpr
@@ -537,8 +537,8 @@ theorem exists_pieceGreen_dipole_exterior_bound (D₀ : CoordDisk M) {p₁ p₂ 
       NoncompactSpace ↥P → HasGreenFunction (⟨p, hp⟩ : ↥P) →
       ∀ y, y ≠ p → 0 ≤ pieceGreen P p y := by
     intro P p hp hcs hnc hGF y hyp
-    haveI := hcs
-    haveI := hnc
+    have := hcs
+    have := hnc
     by_cases hy : y ∈ P
     · rw [pgval P p hp y hy]
       exact (greenEnvelope_pos hGF _
@@ -613,7 +613,7 @@ theorem exists_pieceGreen_dipole_exterior_bound (D₀ : CoordDisk M) {p₁ p₂ 
     -- the excised annulus region
     set Ωσ : Set M := ep.symm '' (ball cp rr \ closedBall cp σ) with hΩσ
     have hΩσsub : ball cp rr \ closedBall cp σ ⊆ ep.target :=
-      (Set.diff_subset.trans ball_subset_closedBall).trans htgt
+      (Set.sdiff_subset.trans ball_subset_closedBall).trans htgt
     have hΩσopen : IsOpen Ωσ := by
       rw [hΩσ, himg ep _ hΩσsub]
       exact ep.continuousOn.isOpen_inter_preimage ep.open_source
@@ -623,14 +623,14 @@ theorem exists_pieceGreen_dipole_exterior_bound (D₀ : CoordDisk M) {p₁ p₂ 
       intro z hz
       rw [hΩσ, himg ep _ hΩσsub] at hz
       obtain ⟨hz1, hz2⟩ := hz
-      rw [Set.mem_preimage, Set.mem_diff, mem_ball, mem_closedBall] at hz2
+      rw [Set.mem_preimage, Set.mem_sdiff, mem_ball, mem_closedBall] at hz2
       exact ⟨hz1, not_le.1 hz2.2, hz2.1⟩
     have hΩσmem' : ∀ z : M, z ∈ ep.source → σ < dist (ep z) cp →
         dist (ep z) cp < rr → z ∈ Ωσ := by
       intro z hz1 hz2 hz3
       rw [hΩσ, himg ep _ hΩσsub]
       refine ⟨hz1, ?_⟩
-      rw [Set.mem_preimage, Set.mem_diff, mem_ball, mem_closedBall]
+      rw [Set.mem_preimage, Set.mem_sdiff, mem_ball, mem_closedBall]
       exact ⟨hz3, not_le.2 hz2⟩
     have hpΩσ : p ∉ Ωσ := by
       intro hcon
@@ -645,7 +645,7 @@ theorem exists_pieceGreen_dipole_exterior_bound (D₀ : CoordDisk M) {p₁ p₂ 
     set Kσ : Set M := ep.symm '' (closedBall cp rr \ ball cp σ) with hKσ
     have hKσcomp : IsCompact Kσ :=
       ((isCompact_closedBall cp rr).diff isOpen_ball).image_of_continuousOn
-        (ep.continuousOn_symm.mono (Set.diff_subset.trans htgt))
+        (ep.continuousOn_symm.mono (Set.sdiff_subset.trans htgt))
     have hΩσKσ : Ωσ ⊆ Kσ :=
       Set.image_mono (fun w hw ↦ ⟨ball_subset_closedBall hw.1,
         fun h ↦ hw.2 (ball_subset_closedBall h)⟩)
@@ -791,8 +791,8 @@ theorem exists_pieceGreen_dipole_exterior_bound (D₀ : CoordDisk M) {p₁ p₂ 
             ((chartAt ℂ p).symm '' closedBall (chartAt ℂ p p) (rr / 2))ᶜ,
           pieceGreen P p y ≤ Nt + Real.log 2 := by
     intro P hcs hnc p hp hGF rr hrr htgt hcarP
-    haveI := hcs
-    haveI := hnc
+    have := hcs
+    have := hnc
     have hIB := interiorBd p rr hrr htgt (P : Set M) P.2
     have hGR := growth p rr hrr htgt
     have hBdd := (mharmonicOn_greenEnvelope hGF).2
@@ -927,8 +927,8 @@ theorem exists_pieceGreen_dipole_exterior_bound (D₀ : CoordDisk M) {p₁ p₂ 
         pieceGreen P pa x ≤ pieceGreen P pb x + Cc := by
     intro P hcs hnc pa hpa pb hpb hGa hGb ra rb Cc hra hrb hCc0 htga htgb hcarPa
       hcarPb hdisjab hcirc x hxP hxVa hxVb
-    haveI := hcs
-    haveI := hnc
+    have := hcs
+    have := hnc
     have hBdda := (mharmonicOn_greenEnvelope hGa).2
     set ea : OpenPartialHomeomorph M ℂ := chartAt ℂ pa with hea
     set ca : ℂ := ea pa with hca
@@ -968,7 +968,7 @@ theorem exists_pieceGreen_dipole_exterior_bound (D₀ : CoordDisk M) {p₁ p₂ 
       obtain ⟨ρv, hρv, hρvsub⟩ := nhds_basis_closedBall.mem_iff.1 hprevb
       -- the harmonic extension across the pole `pb`
       obtain ⟨rP, hrP, hrPsub, h, hharm, hval⟩ := exists_harmonic_pole_extension hGb
-      haveI hnety : Nonempty ↥P := ⟨⟨pb, hpb⟩⟩
+      have hnety : Nonempty ↥P := ⟨⟨pb, hpb⟩⟩
       have hctb : chartAt ℂ (⟨pb, hpb⟩ : ↥P) = eb.subtypeRestr hnety :=
         Opens.chartAt_eq
       have hcenterb : chartAt ℂ (⟨pb, hpb⟩ : ↥P) (⟨pb, hpb⟩ : ↥P) = cb := by
@@ -1558,9 +1558,9 @@ theorem exists_pieceGreen_dipole_exterior_bound (D₀ : CoordDisk M) {p₁ p₂ 
       (mul_le_mul_of_nonneg_right htt4 hr₀.le))
   have hp₁t : p₁ ∈ Pt := fun hmem ↦ hp₁ (hcarsubt hmem)
   have hp₂t : p₂ ∈ Pt := fun hmem ↦ hp₂ (hcarsubt hmem)
-  haveI hconnT : ConnectedSpace ↥Pt :=
+  have hconnT : ConnectedSpace ↥Pt :=
     isConnected_iff_connectedSpace.mp (isConnected_coordDisk_compl _)
-  haveI hncT : NoncompactSpace ↥Pt := noncompactSpace_coordDisk_compl _
+  have hncT : NoncompactSpace ↥Pt := noncompactSpace_coordDisk_compl _
   have hGF1t : HasGreenFunction (⟨p₁, hp₁t⟩ : ↥Pt) :=
     hasGreenFunction_coordDisk_compl _ p₁ hp₁t
   have hGF2t : HasGreenFunction (⟨p₂, hp₂t⟩ : ↥Pt) :=

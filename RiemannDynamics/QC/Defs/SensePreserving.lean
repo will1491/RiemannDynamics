@@ -126,8 +126,8 @@ theorem windingOne_iff_det_pos {f : ℂ → ℂ} {z : ℂ} (hfc : Continuous f)
         rw [hwf_spec t ht, mul_div_assoc, div_self h2pi_ne, mul_one]
       exact ContinuousOn.congr (hdcont.continuousOn.div_const _) heq
     have hwf_int_cont : ContinuousOn wfun (Set.Icc (0 : ℝ) (2 * Real.pi)) := by
-      rw [continuousOn_iff_continuous_restrict] at hwf_cont ⊢
-      have hemb : Topology.IsClosedEmbedding (fun n : ℤ => (n : ℂ)) := closedEmbedding_intCast
+      rw [continuousOn_iff_continuous_domRestrict] at hwf_cont ⊢
+      have hemb : Topology.IsClosedEmbedding (fun n : ℤ => (n : ℂ)) := isClosedEmbedding_intCast
       exact hemb.isEmbedding.continuous_iff.mpr hwf_cont
     have hconst : wfun 0 = wfun (2 * Real.pi) :=
       isPreconnected_Icc.constant hwf_int_cont ⟨le_refl _, hpi⟩ ⟨hpi, le_refl _⟩

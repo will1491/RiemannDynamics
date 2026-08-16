@@ -267,13 +267,13 @@ theorem tangent_winding_free {γ g : ℝ → ℂ}
         HasDerivAt (fun u => γ (u + c)) (g (t + c)) t := by
       intro t ht
       have h1 := HasDerivAt.scomp t (hd (t + c) ht) ((hasDerivAt_id t).add_const c)
-      simpa using h1
+      simpa using! h1
     have hshift2 : ∀ t : ℝ, t + c - 1 ∈ Set.Icc (0:ℝ) 1 →
         HasDerivAt (fun u => γ (u + c - 1)) (g (t + c - 1)) t := by
       intro t ht
       have h1 := HasDerivAt.scomp t (hd (t + c - 1) ht)
         (((hasDerivAt_id t).add_const c).sub_const 1)
-      simpa using h1
+      simpa using! h1
     have hdc : ∀ t ∈ Set.Icc (0:ℝ) 1, HasDerivAt γc (gc t) t := by
       intro t ht
       rcases lt_trichotomy (t + c) 1 with hlt | heq | hgt
@@ -310,7 +310,7 @@ theorem tangent_winding_free {γ g : ℝ → ℂ}
           (isOpen_lt continuous_const (continuous_id.add continuous_const)) hgt
           (hshift2 t (hmem2 t ht.2 hgt)) ?_
         intro u hu
-        exact if_neg (by simp only [Set.mem_setOf_eq] at hu; linarith)
+        exact if_neg (by simp only [Set.mem_ofPred_eq] at hu; linarith)
     have hgcc : ContinuousOn gc (Set.Icc 0 1) := by
       intro t ht
       rcases lt_trichotomy (t + c) 1 with hlt | heq | hgt
@@ -374,10 +374,10 @@ theorem tangent_winding_free {γ g : ℝ → ℂ}
             (((continuous_id.add continuous_const).sub
               continuous_const).continuousWithinAt) ?_
           rintro u ⟨hu1, hu2⟩
-          simp only [Set.mem_setOf_eq] at hu2
+          simp only [Set.mem_ofPred_eq] at hu2
           exact hmem2 u hu1.2 hu2
         · rintro u ⟨hu1, hu2⟩
-          simp only [Set.mem_setOf_eq] at hu2
+          simp only [Set.mem_ofPred_eq] at hu2
           exact if_neg (by linarith)
     have hclc : γc 0 = γc 1 := by
       change (if (0:ℝ) + c ≤ 1 then γ ((0:ℝ) + c) else γ ((0:ℝ) + c - 1))
@@ -889,7 +889,7 @@ theorem affine_chain_at {f g : ℝ → ℂ} {c t : ℝ}
   have hin : HasDerivAt (fun u : ℝ => 4*u - c) 4 t := by
     simpa using ((hasDerivAt_id t).const_mul (4:ℝ)).sub_const c
   have hcomp := HasDerivAt.scomp t hd hin
-  convert hcomp using 1
+  convert! hcomp using 1
 
 /-- **Quarter-schedule differentiability from unit-interval data**: pieces
 differentiable on the closed unit interval with matching junction values and
@@ -1100,7 +1100,7 @@ theorem arc_piece {q : ℂ → ℂ} {f df : ℝ → ℂ} {a L v : ℝ} {E : ℂ}
     by rw [cubicRampSpeed_one, cubicRamp_one], ?_, ?_, ?_⟩
   · intro u hu
     have h1 := HasDerivAt.scomp u (hd _ (hmaps u hu)) (cubicRamp_hasDerivAt a v L u)
-    convert h1 using 1
+    convert! h1 using 1
   · intro u hu
     have hcl : max 0 (min 1 u) = u := by
       rw [min_eq_right hu.2, max_eq_right hu.1]

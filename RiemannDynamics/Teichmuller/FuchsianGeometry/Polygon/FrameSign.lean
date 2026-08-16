@@ -688,14 +688,14 @@ theorem adj_closed_eq (hΓ : IsFuchsianGroup Γ)
   classical
   by_contra hne
   have hTne : (tileCenters Γ τ₀ v \ S).Nonempty :=
-    Set.diff_nonempty.mpr (fun h => hne (hSsub.antisymm h))
+    Set.sdiff_nonempty.mpr (fun h => hne (hSsub.antisymm h))
   obtain ⟨r, hr, hmeets, hcover⟩ := exists_ball_inter_tiles_subset_contact hΓ τ₀ v
   have hPfin : (tileCenters Γ τ₀ v).Finite := (finite_contactSet hΓ τ₀ v).image _
   have hAcl : IsClosed (⋃ p ∈ S, (rep p • ·) '' dirichletDomain Γ τ₀) :=
     Set.Finite.isClosed_biUnion (hPfin.subset hSsub) (fun p _ => isClosed_tile _)
   have hBcl : IsClosed (⋃ p ∈ tileCenters Γ τ₀ v \ S,
       (rep p • ·) '' dirichletDomain Γ τ₀) :=
-    Set.Finite.isClosed_biUnion hPfin.diff (fun p _ => isClosed_tile _)
+    Set.Finite.isClosed_biUnion hPfin.sdiff (fun p _ => isClosed_tile _)
   have hcov : Metric.ball v r \ {v} ⊆ (⋃ p ∈ S, (rep p • ·) '' dirichletDomain Γ τ₀) ∪
       ⋃ p ∈ tileCenters Γ τ₀ v \ S, (rep p • ·) '' dirichletDomain Γ τ₀ := by
     rintro w ⟨hwB, -⟩
@@ -781,7 +781,7 @@ theorem cycle_of_two_regular {α : Type*} {P : Set α} {A : α → α → Prop}
       (∀ q ∈ P, ∃! k, k < n ∧ e k = q) ∧ ∀ k, A (e k) (e (k + 1)) := by
   classical
   obtain ⟨p₀, hp₀⟩ := hne
-  haveI : Nonempty α := ⟨p₀⟩
+  have : Nonempty α := ⟨p₀⟩
   choose! nb₁ hnb₁ nb₂ hnb₂ hnb hiff using htwo
   obtain ⟨F, hF⟩ : ∃ F : α → α → α,
       ∀ p q, F p q = if nb₁ q = p then nb₂ q else nb₁ q := ⟨_, fun _ _ => rfl⟩

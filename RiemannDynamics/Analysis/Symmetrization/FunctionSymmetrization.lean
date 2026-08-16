@@ -91,6 +91,7 @@ theorem distribFun_nat_tendsto_zero (hf : Measurable f) (hlt : ∀ φ, f φ < �
   have htend := tendsto_measure_iInter_atTop hmeas hanti hfin
   rw [hInter, measure_empty] at htend
   convert htend using 1
+  exact rfl
 
 /-- **Finiteness of the rearrangement.** For finite measurable `f` and a positive parameter `x`,
 the decreasing rearrangement is finite: some integer level `n` has `distribFun T f n ≤ ofReal x`

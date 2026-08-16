@@ -144,14 +144,14 @@ theorem annulus_lintegral (a b : ℝ) (ha : 0 < a) (hab : a < b) :
     -- the set membership of `symm p` is equivalent to `p.1 ∈ Ico a b`, and `p.2 ∈ univ`.
     have hmem_iff : (Complex.polarCoord.symm p ∈ {u : ℂ | a ≤ ‖u‖ ∧ ‖u‖ < b}) ↔
         (p ∈ Set.Ico a b ×ˢ (Set.univ : Set ℝ)) := by
-      simp only [Set.mem_setOf_eq, hnorm, Set.mem_prod, Set.mem_Ico, Set.mem_univ, and_true]
+      simp only [Set.mem_ofPred_eq, hnorm, Set.mem_prod, Set.mem_Ico, Set.mem_univ, and_true]
     by_cases hmem : p ∈ Set.Ico a b ×ˢ (Set.univ : Set ℝ)
     · -- inside the annulus: compute the integrand value
       rw [Set.indicator_of_mem hmem, Set.indicator_of_mem (hmem_iff.mpr hmem)]
       -- ‖(symm p)^(-2)‖ₑ = ofReal (p.1^(-2 : ℤ))
       have hnz : ‖(Complex.polarCoord.symm p ^ (-2 : ℤ) : ℂ)‖ₑ
           = ENNReal.ofReal (p.1 ^ (-2 : ℤ)) := by
-        rw [← ofReal_norm_eq_enorm (Complex.polarCoord.symm p ^ (-2 : ℤ)),
+        rw [← ofReal_norm (Complex.polarCoord.symm p ^ (-2 : ℤ)),
           Complex.norm_zpow, hnorm]
       rw [hnz, smul_eq_mul, ← ENNReal.ofReal_mul hp1.le]
       congr 1

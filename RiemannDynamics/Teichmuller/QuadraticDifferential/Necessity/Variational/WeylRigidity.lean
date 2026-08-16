@@ -44,7 +44,7 @@ theorem differentiableOn_of_beltrami_ae_zero {w : ℂ → ℂ} {b : BeltramiCoef
     intro g hg
     rw [← locallyIntegrableOn_univ, locallyIntegrableOn_univ, locallyIntegrable_iff]
     intro k hk
-    haveI : IsFiniteMeasure (volume.restrict k) :=
+    have : IsFiniteMeasure (volume.restrict k) :=
       ⟨by rw [Measure.restrict_apply_univ]; exact hk.measure_lt_top⟩
     have hmem1 : MemLp g 1 (volume.restrict k) :=
       (hg k (Set.subset_univ _) hk).mono_exponent (by norm_num)
@@ -100,7 +100,7 @@ theorem eq_id_on_lower_of_schwarzian_eq_zero {w : ℂ → ℂ} {b : BeltramiCoef
     have him : (-((n : ℂ) + 1) * Complex.I).im = -((n : ℝ) + 1) := by
       simp [Complex.mul_im]
     have hpos : (0 : ℝ) < (n : ℝ) + 1 := by positivity
-    simp only [Set.mem_setOf_eq, him]
+    simp only [Set.mem_ofPred_eq, him]
     linarith
   have hnorm_u : ∀ n : ℕ, ‖-((n : ℂ) + 1) * Complex.I‖ = (n : ℝ) + 1 := by
     intro n
@@ -140,7 +140,7 @@ theorem eq_id_on_lower_of_schwarzian_eq_zero {w : ℂ → ℂ} {b : BeltramiCoef
     -- hence the inverses tend to zero and the ratio values converge
     have hinvzero : Filter.Tendsto (fun n : ℕ => (c * u n + d)⁻¹) Filter.atTop (nhds 0) := by
       rw [tendsto_zero_iff_norm_tendsto_zero]
-      simpa [norm_inv] using hnormden.inv_tendsto_atTop
+      simpa [norm_inv] using! hnormden.inv_tendsto_atTop
     have hlim : Filter.Tendsto (fun n : ℕ => w (u n)) Filter.atTop (nhds (a / c)) := by
       have h1 : Filter.Tendsto (fun n : ℕ => a / c + (p - a * d / c) * (c * u n + d)⁻¹)
           Filter.atTop (nhds (a / c + (p - a * d / c) * 0)) :=
@@ -175,7 +175,7 @@ theorem eq_id_on_lower_of_schwarzian_eq_zero {w : ℂ → ℂ} {b : BeltramiCoef
     ((continuous_const.mul continuous_id).add continuous_const).div_const d
   have hclose : Set.EqOn w (fun z => (a * z + p) / d) {z : ℂ | z.im ≤ 0} := by
     have h := hEq.closure hw.1.1.continuous hcontg
-    rwa [Complex.closure_setOf_im_lt] at h
+    rwa [Complex.closure_setOfPred_im_lt] at h
   -- normalization pins the affine map to the identity
   have hp0 : p = 0 := by
     have h := hclose (show (0 : ℂ) ∈ {z : ℂ | z.im ≤ 0} by simp)

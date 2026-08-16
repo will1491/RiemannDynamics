@@ -143,7 +143,7 @@ theorem volume_moebiusDenom_zero (γ : Matrix.SpecialLinearGroup (Fin 2) ℝ) :
       simp at hdet
     have hempty : {z : ℂ | moebiusDenom γ z = 0} = ∅ := by
       ext z
-      simp only [Set.mem_setOf_eq, Set.mem_empty_iff_false, iff_false, moebiusDenom, hc]
+      simp only [Set.mem_ofPred_eq, Set.mem_empty_iff_false, iff_false, moebiusDenom, hc]
       push_cast
       simp [hd]
     rw [hempty]
@@ -151,7 +151,7 @@ theorem volume_moebiusDenom_zero (γ : Matrix.SpecialLinearGroup (Fin 2) ℝ) :
   · have hcC : (γ 1 0 : ℂ) ≠ 0 := Complex.ofReal_ne_zero.mpr hc
     have hsingle : {z : ℂ | moebiusDenom γ z = 0} = {(-(γ 1 1 : ℂ)) / (γ 1 0 : ℂ)} := by
       ext z
-      simp only [Set.mem_setOf_eq, Set.mem_singleton_iff, moebiusDenom]
+      simp only [Set.mem_ofPred_eq, Set.mem_singleton_iff, moebiusDenom]
       constructor
       · intro h0
         rw [eq_div_iff hcC]
@@ -555,7 +555,7 @@ theorem dz_comp_affine (f : ℂ → ℂ) {c : ℂ} (hc : c ≠ 0) (x₀ z : ℂ)
         rw [mul_div_cancel₀ _ hc, sub_add_cancel]
       rwa [hid] at hcompinv
     simp only [dz, fderiv_zero_of_not_differentiableAt hf,
-      fderiv_zero_of_not_differentiableAt hnd, ContinuousLinearMap.zero_apply, mul_zero,
+      fderiv_zero_of_not_differentiableAt hnd, zero_apply, mul_zero,
       sub_zero, zero_mul]
 
 /-- Wirtinger `∂̄` chain rule for precomposition with the affine map `z ↦ c z + x₀`. -/
@@ -587,7 +587,7 @@ theorem dzbar_comp_affine (f : ℂ → ℂ) {c : ℂ} (hc : c ≠ 0) (x₀ z : �
         rw [mul_div_cancel₀ _ hc, sub_add_cancel]
       rwa [hid] at hcompinv
     simp only [dzbar, fderiv_zero_of_not_differentiableAt hf,
-      fderiv_zero_of_not_differentiableAt hnd, ContinuousLinearMap.zero_apply, mul_zero,
+      fderiv_zero_of_not_differentiableAt hnd, zero_apply, mul_zero,
       add_zero, zero_mul]
 
 /-- Wirtinger `∂` rule for conjugation by `conj`: for `G z = conj (f (conj z))` one has
@@ -601,9 +601,9 @@ theorem dz_conj_conj (f : ℂ → ℂ) (z : ℂ) :
   have h2 : dzbar (fun w => f (starRingEnd ℂ w)) z = dz f (starRingEnd ℂ z) := by
     have hE : (fun w : ℂ => f (starRingEnd ℂ w)) = f ∘ ⇑Complex.conjCLE := by
       funext w
-      simp [Complex.conjCLE_apply]
+      simp
     rw [hE]
-    simp only [dzbar, dz, ContinuousLinearEquiv.comp_right_fderiv, ContinuousLinearMap.coe_comp',
+    simp only [dzbar, dz, ContinuousLinearEquiv.comp_right_fderiv, ContinuousLinearMap.coe_comp,
       Function.comp_apply, ContinuousLinearEquiv.coe_coe, Complex.conjCLE_apply, map_one,
       Complex.conj_I, map_neg]
     ring
@@ -620,9 +620,9 @@ theorem dzbar_conj_conj (f : ℂ → ℂ) (z : ℂ) :
   have h2 : dz (fun w => f (starRingEnd ℂ w)) z = dzbar f (starRingEnd ℂ z) := by
     have hE : (fun w : ℂ => f (starRingEnd ℂ w)) = f ∘ ⇑Complex.conjCLE := by
       funext w
-      simp [Complex.conjCLE_apply]
+      simp
     rw [hE]
-    simp only [dz, dzbar, ContinuousLinearEquiv.comp_right_fderiv, ContinuousLinearMap.coe_comp',
+    simp only [dz, dzbar, ContinuousLinearEquiv.comp_right_fderiv, ContinuousLinearMap.coe_comp,
       Function.comp_apply, ContinuousLinearEquiv.coe_coe, Complex.conjCLE_apply, map_one,
       Complex.conj_I, map_neg]
     ring
@@ -652,9 +652,9 @@ theorem IsQCAnalytic.affine_postcomp {f : ℂ → ℂ} {b : BeltramiCoeff}
       ∧ dzbar (fun w => a * f w + β) z = a * dzbar f z := by
     filter_upwards [hkey] with z hk
     constructor
-    · simp only [dz, hk, ContinuousLinearMap.smul_apply, smul_eq_mul]
+    · simp only [dz, hk, smul_apply, smul_eq_mul]
       ring
-    · simp only [dzbar, hk, ContinuousLinearMap.smul_apply, smul_eq_mul]
+    · simp only [dzbar, hk, smul_apply, smul_eq_mul]
       ring
   have hAhomeo : IsHomeomorph (fun z => a * f z + β) := by
     have h1 := ((Homeomorph.mulLeft₀ a ha).trans (Homeomorph.addRight β)).isHomeomorph
@@ -676,7 +676,7 @@ theorem IsQCAnalytic.affine_postcomp {f : ℂ → ℂ} {b : BeltramiCoeff}
     intro w hw
     rw [locallyIntegrableOn_univ, locallyIntegrable_iff]
     intro Kc hKc
-    haveI : IsFiniteMeasure (volume.restrict Kc) :=
+    have : IsFiniteMeasure (volume.restrict Kc) :=
       ⟨by rw [Measure.restrict_apply_univ]; exact hKc.measure_lt_top⟩
     exact memLp_one_iff_integrable.mp
       ((hw Kc (Set.subset_univ _) hKc).mono_exponent (by norm_num))
@@ -713,7 +713,7 @@ theorem IsQCAnalytic.affine_postcomp {f : ℂ → ℂ} {b : BeltramiCoeff}
     simpa using hsum
   have hAloc : MemLpLocOn (fun z => a * f z + β) 2 Set.univ := by
     intro Kc _ hKc
-    haveI : IsFiniteMeasure (volume.restrict Kc) :=
+    have : IsFiniteMeasure (volume.restrict Kc) :=
       ⟨by rw [Measure.restrict_apply_univ]; exact hKc.measure_lt_top⟩
     obtain ⟨C, hC⟩ := hKc.exists_bound_of_continuousOn hAcont.continuousOn
     refine MemLp.of_bound hAcont.aestronglyMeasurable.restrict C ?_
@@ -744,7 +744,7 @@ theorem BeltramiCoeff.pullbackAffine_bound (b : BeltramiCoeff) {c : ℂ} (hc : c
     rw [det_fderiv_eq_wirtinger, dzbar_eq_zero_of_differentiableAt hdiff,
       dz_eq_deriv_of_differentiableAt hdiff]
     have hd : deriv (fun w : ℂ => c * w) 0 = c := by
-      simpa using ((hasDerivAt_id (0 : ℂ)).const_mul c).deriv
+      simp
     rw [hd]
     simp [Complex.normSq_eq_norm_sq]
   have hdetL : LinearMap.det
@@ -766,7 +766,7 @@ theorem BeltramiCoeff.pullbackAffine_bound (b : BeltramiCoeff) {c : ℂ} (hc : c
     rw [hcomp, ← Measure.map_map (measurable_add_const x₀) hcm, hmapmul, Measure.map_smul,
       (measurePreserving_add_right volume x₀).map_eq]
   have hu1 : ‖starRingEnd ℂ c / c‖ₑ = 1 := by
-    rw [← ofReal_norm_eq_enorm, norm_div, RCLike.norm_conj,
+    rw [← ofReal_norm, norm_div, RCLike.norm_conj,
       div_self (norm_ne_zero_iff.mpr hc), ENNReal.ofReal_one]
   have key : eLpNormEssSup (fun z : ℂ => b.μ (c * z + x₀) * (starRingEnd ℂ c / c)) volume
       = eLpNormEssSup b.μ volume := by
@@ -803,7 +803,7 @@ theorem BeltramiCoeff.normInf_pullbackAffine (b : BeltramiCoeff) {c : ℂ} (hc :
     rw [det_fderiv_eq_wirtinger, dzbar_eq_zero_of_differentiableAt hdiff,
       dz_eq_deriv_of_differentiableAt hdiff]
     have hd : deriv (fun w : ℂ => c * w) 0 = c := by
-      simpa using ((hasDerivAt_id (0 : ℂ)).const_mul c).deriv
+      simp
     rw [hd]
     simp [Complex.normSq_eq_norm_sq]
   have hdetL : LinearMap.det
@@ -825,7 +825,7 @@ theorem BeltramiCoeff.normInf_pullbackAffine (b : BeltramiCoeff) {c : ℂ} (hc :
     rw [hcomp, ← Measure.map_map (measurable_add_const x₀) hcm, hmapmul, Measure.map_smul,
       (measurePreserving_add_right volume x₀).map_eq]
   have hu1 : ‖starRingEnd ℂ c / c‖ₑ = 1 := by
-    rw [← ofReal_norm_eq_enorm, norm_div, RCLike.norm_conj,
+    rw [← ofReal_norm, norm_div, RCLike.norm_conj,
       div_self (norm_ne_zero_iff.mpr hc), ENNReal.ofReal_one]
   have key : eLpNormEssSup (fun z : ℂ => b.μ (c * z + x₀) * (starRingEnd ℂ c / c)) volume
       = eLpNormEssSup b.μ volume := by
@@ -875,7 +875,7 @@ theorem isQCAnalytic_comp_affine {f : ℂ → ℂ} {b : BeltramiCoeff} (hf : IsQ
     rw [det_fderiv_eq_wirtinger, dzbar_eq_zero_of_differentiableAt hdiff,
       dz_eq_deriv_of_differentiableAt hdiff]
     have hd : deriv (fun w : ℂ => c * w) 0 = c := by
-      simpa using ((hasDerivAt_id (0 : ℂ)).const_mul c).deriv
+      simp
     rw [hd]
     simp [Complex.normSq_eq_norm_sq]
   have hdetL : LinearMap.det
@@ -1018,7 +1018,7 @@ theorem isQCAnalytic_conj_conj {f : ℂ → ℂ} {b : BeltramiCoeff} (hf : IsQCA
     have h := Complex.conjCLE.toHomeomorph.isHomeomorph
     have he : ⇑Complex.conjCLE.toHomeomorph = fun z : ℂ => starRingEnd ℂ z := by
       funext z
-      simp [ContinuousLinearEquiv.coe_toHomeomorph, Complex.conjCLE_apply]
+      simp [ContinuousLinearEquiv.coe_toHomeomorph]
     rwa [he] at h
   have hGhomeo : IsHomeomorph (fun z : ℂ => starRingEnd ℂ (f (starRingEnd ℂ z))) := by
     have h := (hconjHomeo.comp hFhomeo).comp hconjHomeo
@@ -1048,7 +1048,7 @@ theorem isQCAnalytic_conj_conj {f : ℂ → ℂ} {b : BeltramiCoeff} (hf : IsQCA
     Complex.continuous_conj.comp (hFcont.comp Complex.continuous_conj)
   have hGloc : MemLpLocOn (fun z : ℂ => starRingEnd ℂ (f (starRingEnd ℂ z))) 2 Set.univ := by
     intro Kc _ hKc
-    haveI : IsFiniteMeasure (volume.restrict Kc) :=
+    have : IsFiniteMeasure (volume.restrict Kc) :=
       ⟨by rw [Measure.restrict_apply_univ]; exact hKc.measure_lt_top⟩
     obtain ⟨C, hC⟩ := hKc.exists_bound_of_continuousOn hGcont.continuousOn
     refine MemLp.of_bound hGcont.aestronglyMeasurable.restrict C ?_
@@ -1096,23 +1096,23 @@ theorem isQCAnalytic_conj_conj {f : ℂ → ℂ} {b : BeltramiCoeff} (hf : IsQCA
       have h := hφ.comp (ContinuousLinearMap.contDiff (Complex.conjCLE : ℂ →L[ℝ] ℂ))
       have he : φ ∘ ⇑(Complex.conjCLE : ℂ →L[ℝ] ℂ) = fun w : ℂ => φ (starRingEnd ℂ w) := by
         funext w
-        simp [Complex.conjCLE_apply]
+        simp
       rwa [he] at h
     have hψc : HasCompactSupport ψ := by
       rw [hψdef]
       have h := hφc.comp_homeomorph Complex.conjCLE.toHomeomorph
       have he : φ ∘ ⇑Complex.conjCLE.toHomeomorph = fun w : ℂ => φ (starRingEnd ℂ w) := by
         funext w
-        simp [ContinuousLinearEquiv.coe_toHomeomorph, Complex.conjCLE_apply]
+        simp [ContinuousLinearEquiv.coe_toHomeomorph]
       rwa [he] at h
     have hφψ : φ = ψ ∘ ⇑Complex.conjCLE := by
       funext w
-      simp [hψdef, Complex.conjCLE_apply]
+      simp [hψdef]
     have hfd1 : ∀ w : ℂ, (fderiv ℝ φ w) 1 = (fderiv ℝ ψ (starRingEnd ℂ w)) 1 := by
       intro w
       conv_lhs => rw [hφψ]
       rw [ContinuousLinearEquiv.comp_right_fderiv]
-      simp [ContinuousLinearMap.coe_comp', Complex.conjCLE_apply]
+      simp
     have hIBP := hFgrad.1 ψ hψs hψc (Set.subset_univ _)
     change ∫ z : ℂ, (fderiv ℝ φ z) 1 • starRingEnd ℂ (f (starRingEnd ℂ z))
         = - ∫ z : ℂ, φ z • starRingEnd ℂ (gx (starRingEnd ℂ z))
@@ -1156,24 +1156,24 @@ theorem isQCAnalytic_conj_conj {f : ℂ → ℂ} {b : BeltramiCoeff} (hf : IsQCA
       have h := hφ.comp (ContinuousLinearMap.contDiff (Complex.conjCLE : ℂ →L[ℝ] ℂ))
       have he : φ ∘ ⇑(Complex.conjCLE : ℂ →L[ℝ] ℂ) = fun w : ℂ => φ (starRingEnd ℂ w) := by
         funext w
-        simp [Complex.conjCLE_apply]
+        simp
       rwa [he] at h
     have hψc : HasCompactSupport ψ := by
       rw [hψdef]
       have h := hφc.comp_homeomorph Complex.conjCLE.toHomeomorph
       have he : φ ∘ ⇑Complex.conjCLE.toHomeomorph = fun w : ℂ => φ (starRingEnd ℂ w) := by
         funext w
-        simp [ContinuousLinearEquiv.coe_toHomeomorph, Complex.conjCLE_apply]
+        simp [ContinuousLinearEquiv.coe_toHomeomorph]
       rwa [he] at h
     have hφψ : φ = ψ ∘ ⇑Complex.conjCLE := by
       funext w
-      simp [hψdef, Complex.conjCLE_apply]
+      simp [hψdef]
     have hfdI : ∀ w : ℂ, (fderiv ℝ φ w) Complex.I
         = -((fderiv ℝ ψ (starRingEnd ℂ w)) Complex.I) := by
       intro w
       conv_lhs => rw [hφψ]
       rw [ContinuousLinearEquiv.comp_right_fderiv]
-      simp [ContinuousLinearMap.coe_comp', Complex.conjCLE_apply, Complex.conj_I]
+      simp [Complex.conj_I]
     have hIBP := hFgrad.2 ψ hψs hψc (Set.subset_univ _)
     change ∫ z : ℂ, (fderiv ℝ φ z) Complex.I • starRingEnd ℂ (f (starRingEnd ℂ z))
         = - ∫ z : ℂ, φ z • -starRingEnd ℂ (gy (starRingEnd ℂ z))
@@ -1252,7 +1252,7 @@ noncomputable def BeltramiCoeff.zero : BeltramiCoeff where
 theorem isQCAnalytic_id : IsQCAnalytic id BeltramiCoeff.zero := by
   have hcont2 : ∀ g : ℂ → ℂ, Continuous g → MemLpLocOn g 2 Set.univ := by
     intro g hg K _ hK
-    haveI : IsFiniteMeasure (volume.restrict K) :=
+    have : IsFiniteMeasure (volume.restrict K) :=
       ⟨by rw [Measure.restrict_apply_univ]; exact hK.measure_lt_top⟩
     obtain ⟨C, hC⟩ := hK.exists_bound_of_continuousOn hg.continuousOn
     have hbound : ∀ᵐ x ∂(volume.restrict K), ‖g x‖ ≤ C := by

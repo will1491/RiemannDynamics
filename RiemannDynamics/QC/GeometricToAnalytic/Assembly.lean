@@ -237,12 +237,12 @@ theorem IsQCGeometric.exists_beltrami {f : ℂ → ℂ} {K : ℝ} (hK : 1 ≤ K)
     have h1 : Measurable (fun w : ℂ => (fderiv ℝ f w) 1) := measurable_fderiv_apply_const ℝ f 1
     have h2 : Measurable (fun w : ℂ => (fderiv ℝ f w) Complex.I) :=
       measurable_fderiv_apply_const ℝ f Complex.I
-    simpa only [dz] using (measurable_const.mul (h1.sub (measurable_const.mul h2)))
+    simpa only [dz] using! (measurable_const.mul (h1.sub (measurable_const.mul h2)))
   have hdzbarf_meas : Measurable (fun w : ℂ => dzbar f w) := by
     have h1 : Measurable (fun w : ℂ => (fderiv ℝ f w) 1) := measurable_fderiv_apply_const ℝ f 1
     have h2 : Measurable (fun w : ℂ => (fderiv ℝ f w) Complex.I) :=
       measurable_fderiv_apply_const ℝ f Complex.I
-    simpa only [dzbar] using (measurable_const.mul (h1.add (measurable_const.mul h2)))
+    simpa only [dzbar] using! (measurable_const.mul (h1.add (measurable_const.mul h2)))
   have hraw_meas : Measurable raw := hdzbarf_meas.div hdzf_meas
   have hμ'_meas : Measurable μ' :=
     Measurable.ite (measurableSet_le hraw_meas.norm measurable_const) hraw_meas measurable_const

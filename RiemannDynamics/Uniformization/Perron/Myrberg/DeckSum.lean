@@ -215,10 +215,10 @@ theorem hasGreenFunction_pathCover [T2Space M] [ConnectedSpace M]
     HasGreenFunction pc := by
   classical
   -- ### Instances on the cover.
-  haveI : T2Space (PathCover x₀) := t2space_pathCover x₀
-  haveI : PathConnectedSpace (PathCover x₀) := pathConnectedSpace_pathCover x₀
-  haveI : ConnectedSpace (PathCover x₀) := PathConnectedSpace.connectedSpace
-  haveI : NoncompactSpace (PathCover x₀) := noncompactSpace_pathCover x₀
+  have : T2Space (PathCover x₀) := t2space_pathCover x₀
+  have : PathConnectedSpace (PathCover x₀) := pathConnectedSpace_pathCover x₀
+  have : ConnectedSpace (PathCover x₀) := PathConnectedSpace.connectedSpace
+  have : NoncompactSpace (PathCover x₀) := noncompactSpace_pathCover x₀
   -- ### Plane-side transfer of subharmonicity along a pointwise equality.
   have transfer : ∀ (F G : ℂ → ℝ) (U W : Set ℂ), SubharmonicOn F U → W ⊆ U →
       Set.EqOn F G W → SubharmonicOn G W := by
@@ -646,13 +646,13 @@ theorem greenEnvelope_deckSum [T2Space M] [ConnectedSpace M]
           ∑ qc ∈ F, greenEnvelope qc.1 pc := by
   classical
   -- ## Instances on the cover.
-  haveI := pathConnectedSpace_pathCover x₀
-  haveI : ConnectedSpace (PathCover x₀) := PathConnectedSpace.connectedSpace
-  haveI := t2space_pathCover x₀
-  haveI := noncompactSpace_pathCover x₀
-  haveI := simplyConnectedSpace_pathCover x₀
-  haveI : Nonempty (PathCover x₀) := ⟨pc⟩
-  haveI : Nonempty (Finset {qc : PathCover x₀ // pathCoverProj x₀ qc = p₀}) := ⟨∅⟩
+  have := pathConnectedSpace_pathCover x₀
+  have : ConnectedSpace (PathCover x₀) := PathConnectedSpace.connectedSpace
+  have := t2space_pathCover x₀
+  have := noncompactSpace_pathCover x₀
+  have := simplyConnectedSpace_pathCover x₀
+  have : Nonempty (PathCover x₀) := ⟨pc⟩
+  have : Nonempty (Finset {qc : PathCover x₀ // pathCoverProj x₀ qc = p₀}) := ⟨∅⟩
   obtain ⟨qc₀, hqc₀, hGqc₀⟩ := hfib
   -- ## Generic toolkit.
   have hproj_cont : Continuous (pathCoverProj x₀) :=

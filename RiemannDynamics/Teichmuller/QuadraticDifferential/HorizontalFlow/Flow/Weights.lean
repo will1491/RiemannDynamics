@@ -249,7 +249,7 @@ theorem le_of_forall_ofReal_mul_le {N S K : ℝ≥0∞} (hK : K ≠ ⊤)
 theorem le_of_le_sqrt_mul {N I : ℝ≥0∞} (hN : N ≠ ⊤)
     (h : N ≤ (N * I) ^ (1 / 2 : ℝ)) : N ≤ I := by
   rcases eq_or_ne N 0 with hN0 | hN0
-  · exact hN0 ▸ zero_le I
+  · exact hN0 ▸ zero_le
   have hsq := ENNReal.rpow_le_rpow h (by norm_num : (0 : ℝ) ≤ 2)
   rw [← ENNReal.rpow_mul] at hsq
   norm_num at hsq
@@ -262,7 +262,7 @@ theorem rsDensity_sq_le (q h : ℂ → ℂ) (z : ℂ) :
   have h1 := norm_sub_re_div_two_nonneg (rsQ q h z)
   have habs := abs_le.mp (Complex.abs_re_le_norm (rsQ q h z))
   unfold rsDensity
-  rw [← ENNReal.ofReal_pow (Real.sqrt_nonneg _), Real.sq_sqrt h1, ← ofReal_norm_eq_enorm]
+  rw [← ENNReal.ofReal_pow (Real.sqrt_nonneg _), Real.sq_sqrt h1, ← ofReal_norm]
   exact ENNReal.ofReal_le_ofReal (by linarith [habs.1])
 
 /-- Norm factorization of the pullback modulus. -/
@@ -319,7 +319,7 @@ theorem rsU_mul_le {q h : ℂ → ℂ} {κ : ℝ} {z : ℂ} (hκ : κ < 1)
     rsU q h κ z * ‖q z‖ₑ
       ≤ ‖q (h z)‖ₑ * ENNReal.ofReal ((fderiv ℝ h z).det) := by
   rcases eq_or_ne (q z) 0 with h0 | h0
-  · rw [h0, enorm_zero, mul_zero]; exact zero_le _
+  · rw [h0, enorm_zero, mul_zero]; exact zero_le
   set m : ℝ := ‖1 - wirtingerQuotient h z * (q z / (‖q z‖ : ℂ))‖ with hmdef
   set u : ℝ := ‖wirtingerQuotient h z‖ with hudef
   set d : ℝ := ‖dz h z‖ with hddef
@@ -340,14 +340,14 @@ theorem rsU_mul_le {q h : ℂ → ℂ} {κ : ℝ} {z : ℂ} (hκ : κ < 1)
     rw [rsWeightM_eq hκ hμ, rsWeight, ← hmdef, ← hudef,
       ← ENNReal.ofReal_inv_of_pos (by positivity), inv_div]
   have hQf : ‖rsQ q h z‖ₑ = ENNReal.ofReal (a * d ^ 2 * m ^ 2 / Q) := by
-    rw [← ofReal_norm_eq_enorm, norm_rsQ, ← hmdef, ← hddef, ← hadef, ← hQdef]
+    rw [← ofReal_norm, norm_rsQ, ← hmdef, ← hddef, ← hadef, ← hQdef]
   calc rsU q h κ z * ‖q z‖ₑ
       = rsDensity q h z ^ 2 * (rsWeightM q h κ z)⁻¹ * ‖q z‖ₑ := rfl
     _ ≤ ‖rsQ q h z‖ₑ * (rsWeightM q h κ z)⁻¹ * ‖q z‖ₑ := by
         gcongr
         exact rsDensity_sq_le q h z
     _ = ENNReal.ofReal (a * d ^ 2 * m ^ 2 / Q * ((1 - u ^ 2) / m ^ 2) * Q) := by
-        rw [hQf, hWinv, ← ofReal_norm_eq_enorm, ← hQdef,
+        rw [hQf, hWinv, ← ofReal_norm, ← hQdef,
           ← ENNReal.ofReal_mul (by positivity), ← ENNReal.ofReal_mul (by positivity)]
     _ = ENNReal.ofReal a * ENNReal.ofReal (d ^ 2 * (1 - u ^ 2)) := by
         rw [← ENNReal.ofReal_mul (norm_nonneg _)]
@@ -355,7 +355,7 @@ theorem rsU_mul_le {q h : ℂ → ℂ} {κ : ℝ} {z : ℂ} (hκ : κ < 1)
         field_simp
         ring
     _ = ‖q (h z)‖ₑ * ENNReal.ofReal ((fderiv ℝ h z).det) := by
-        rw [hdet, ofReal_norm_eq_enorm]
+        rw [hdet, ofReal_norm]
 
 /-- Almost everywhere on the upper half plane a quasiconformal map has nonvanishing
 `∂h` and Wirtinger quotient bounded by `κ`. -/
@@ -544,7 +544,7 @@ theorem ae_differentiableAt {h hinv : ℂ → ℂ} {κ : ℝ} (hqc : IsQCUpper h
   by_contra hnd
   have h0 : fderiv ℝ h z = 0 := fderiv_zero_of_not_differentiableAt hnd
   rw [det_fderiv_eq_wirtinger] at hj
-  simp only [dz, dzbar, h0, ContinuousLinearMap.zero_apply, mul_zero, sub_zero, add_zero,
+  simp only [dz, dzbar, h0, zero_apply, mul_zero, sub_zero, add_zero,
     norm_zero] at hj
   norm_num at hj
 
@@ -584,7 +584,7 @@ theorem lintegral_cov_le {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
       (ae_restrict_iff' hKmeas).mp hae
     filter_upwards [hae'] with z hz
     change (z ∈ s) = (z ∈ ω)
-    simp only [hsdef, Set.mem_inter_iff, Set.mem_setOf_eq, eq_iff_iff, and_iff_left_iff_imp]
+    simp only [hsdef, Set.mem_inter_iff, Set.mem_ofPred_eq, eq_iff_iff, and_iff_left_iff_imp]
     exact hz
   calc ∫⁻ z in ω, ‖q (h z)‖ₑ * ENNReal.ofReal ((fderiv ℝ h z).det)
       = ∫⁻ z in s, ‖q (h z)‖ₑ * ENNReal.ofReal ((fderiv ℝ h z).det) :=
@@ -616,7 +616,7 @@ theorem horizontalDensity_eq_re_developed {q : ℂ → ℂ} {Φ : ℂ → ℂ} {
     horizontalDensity q σ t = ENNReal.ofReal |(deriv (Φ ∘ σ) t).re| := by
   have hQ : q (σ t) * deriv σ t ^ 2 = -(deriv Φ (σ t) * deriv σ t) ^ 2 := by
     have h := congrArg (fun x => x * deriv σ t ^ 2) hsq
-    simp only at h
+    try simp only at h
     calc q (σ t) * deriv σ t ^ 2 = -(deriv Φ (σ t) ^ 2) * deriv σ t ^ 2 := by
           rw [← neg_neg (q (σ t)), ← hsq]
       _ = -(deriv Φ (σ t) * deriv σ t) ^ 2 := by ring
@@ -851,8 +851,8 @@ theorem reich_strebel_tiling_bound
     ∫⁻ z in UpperHalfPlane.coe '' dirichletDomain Γ UpperHalfPlane.I,
       ‖q (h z)‖ₑ * ENNReal.ofReal ((fderiv ℝ h z).det) ≤ q.l1Norm := by
   classical
-  haveI : Countable ↥Γ := IsFuchsianGroup.countable hΓ
-  haveI : Countable (↥Γ ⧸ MulAction.stabilizer ↥Γ UpperHalfPlane.I) :=
+  have : Countable ↥Γ := IsFuchsianGroup.countable hΓ
+  have : Countable (↥Γ ⧸ MulAction.stabilizer ↥Γ UpperHalfPlane.I) :=
     QuotientGroup.mk_surjective.countable
   obtain ⟨ε, hε, hgap⟩ := exists_trace_gap hΓ hfree hcc
   obtain ⟨R, hR, hdense⟩ := exists_orbit_density_bound hΓ hε hgap hcc UpperHalfPlane.I
@@ -1376,7 +1376,7 @@ theorem piece_data {q Φ : ℂ → ℂ} {σ : ℝ → ℂ} {a b : ℝ} {z₀ : �
     have hre : HasDerivAt (fun s' => (Φ (σ s')).re)
         ((deriv Φ (σ s) * deriv σ s).re) s := by
       have := Complex.reCLM.hasFDerivAt.comp_hasDerivAt s hcomp
-      simpa using this
+      simpa using! this
     rw [hre.deriv, hcomp.deriv]
 
 /-- **The symmetrized vertical-flow interface**: an almost-everywhere defined unit-speed
@@ -1504,7 +1504,7 @@ theorem leaf_pointwise_sym {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ
     (fun t => (rsWeightM_pos_ne_top q h hκ _).1)
     (fun t => (rsWeightM_pos_ne_top q h hκ _).2)
   simp only [rsU]
-  rw [lintegral_add_left ((hfp.pow_const 2).mul hwp.inv), lintegral_add_left hwp]
+  rw [lintegral_add_left ((hfp.pow_const 2).fun_mul hwp.fun_inv), lintegral_add_left hwp]
   have hbp : ENNReal.ofReal T
       ≤ (∫⁻ t in Set.Icc (0 : ℝ) T, rsDensity q h (fd.flow t z) ^ 2
             * (rsWeightM q h κ (fd.flow t z))⁻¹) ^ (1 / 2 : ℝ)

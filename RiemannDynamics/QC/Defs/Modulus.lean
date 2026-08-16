@@ -124,7 +124,7 @@ theorem curveModulus_conformal_invariant {φ : ℂ → ℂ} (hφ : IsHomeomorph 
       have hlog : AnalyticAt ℂ (fun z => Complex.log (c * G z)) z₀ := hcG_an.clog hval_slit
       have hdiv : AnalyticAt ℂ (fun z => Complex.log (c * G z) / n) z₀ :=
         hlog.div analyticAt_const (by exact_mod_cast (Nat.one_le_iff_ne_zero.mp hn))
-      simpa [Function.comp] using hdiv.cexp
+      exact hdiv.cexp'
     · exact div_ne_zero (Complex.exp_ne_zero _) hcr_ne
     · have hcont : ContinuousAt (fun z => c * G z) z₀ := hcG_an.continuousAt
       have hGne_ev : ∀ᶠ z in 𝓝 z₀, c * G z ≠ 0 := hcont.eventually_ne (mul_ne_zero hc_ne hGz)
@@ -145,7 +145,7 @@ theorem curveModulus_conformal_invariant {φ : ℂ → ℂ} (hφ : IsHomeomorph 
       have hdη_an : AnalyticAt ℂ (deriv η) z := (hη_an z).deriv
       have key := (hη_an z).analyticOrderAt_deriv_add_one
       have hge1 : 1 ≤ analyticOrderAt (deriv η) z := by
-        rw [ENat.one_le_iff_ne_zero, Ne, analyticOrderAt_eq_zero, not_or, not_not, not_ne_iff]
+        rw [Order.one_le_iff_ne_zero, Ne, analyticOrderAt_eq_zero, not_or, not_not, not_ne_iff]
         exact ⟨hdη_an, hderiv0⟩
       calc (2 : ℕ∞) = 1 + 1 := by rfl
         _ ≤ analyticOrderAt (deriv η) z + 1 := by gcongr
@@ -247,27 +247,27 @@ theorem curveModulus_conformal_invariant {φ : ℂ → ℂ} (hφ : IsHomeomorph 
           (↑(c • (1 : ℂ →L[ℝ] ℂ)) : ℂ →ₗ[ℝ] ℂ)) 0 0 = c.re := by
         rw [LinearMap.toMatrix_apply, hb0, Complex.coe_basisOneI_repr]
         change ((↑(c • (1 : ℂ →L[ℝ] ℂ)) : ℂ →ₗ[ℝ] ℂ) 1).re = c.re
-        rw [ContinuousLinearMap.coe_coe, ContinuousLinearMap.smul_apply,
-          ContinuousLinearMap.one_apply, smul_eq_mul, mul_one]
+        rw [ContinuousLinearMap.coe_coe, smul_apply,
+          one_apply_eq_self, smul_eq_mul, mul_one]
       have c10 : (LinearMap.toMatrix Complex.basisOneI Complex.basisOneI
           (↑(c • (1 : ℂ →L[ℝ] ℂ)) : ℂ →ₗ[ℝ] ℂ)) 1 0 = c.im := by
         rw [LinearMap.toMatrix_apply, hb0, Complex.coe_basisOneI_repr]
         change ((↑(c • (1 : ℂ →L[ℝ] ℂ)) : ℂ →ₗ[ℝ] ℂ) 1).im = c.im
-        rw [ContinuousLinearMap.coe_coe, ContinuousLinearMap.smul_apply,
-          ContinuousLinearMap.one_apply, smul_eq_mul, mul_one]
+        rw [ContinuousLinearMap.coe_coe, smul_apply,
+          one_apply_eq_self, smul_eq_mul, mul_one]
       have c01 : (LinearMap.toMatrix Complex.basisOneI Complex.basisOneI
           (↑(c • (1 : ℂ →L[ℝ] ℂ)) : ℂ →ₗ[ℝ] ℂ)) 0 1 = -c.im := by
         rw [LinearMap.toMatrix_apply, hb1, Complex.coe_basisOneI_repr]
         change ((↑(c • (1 : ℂ →L[ℝ] ℂ)) : ℂ →ₗ[ℝ] ℂ) Complex.I).re = -c.im
-        rw [ContinuousLinearMap.coe_coe, ContinuousLinearMap.smul_apply,
-          ContinuousLinearMap.one_apply, smul_eq_mul, Complex.mul_re, Complex.I_re,
+        rw [ContinuousLinearMap.coe_coe, smul_apply,
+          one_apply_eq_self, smul_eq_mul, Complex.mul_re, Complex.I_re,
           Complex.I_im]; ring
       have c11 : (LinearMap.toMatrix Complex.basisOneI Complex.basisOneI
           (↑(c • (1 : ℂ →L[ℝ] ℂ)) : ℂ →ₗ[ℝ] ℂ)) 1 1 = c.re := by
         rw [LinearMap.toMatrix_apply, hb1, Complex.coe_basisOneI_repr]
         change ((↑(c • (1 : ℂ →L[ℝ] ℂ)) : ℂ →ₗ[ℝ] ℂ) Complex.I).im = c.re
-        rw [ContinuousLinearMap.coe_coe, ContinuousLinearMap.smul_apply,
-          ContinuousLinearMap.one_apply, smul_eq_mul, Complex.mul_im, Complex.I_re,
+        rw [ContinuousLinearMap.coe_coe, smul_apply,
+          one_apply_eq_self, smul_eq_mul, Complex.mul_im, Complex.I_re,
           Complex.I_im]; ring
       have h0 : (LinearMap.toMatrix Complex.basisOneI Complex.basisOneI
           (↑(c • (1 : ℂ →L[ℝ] ℂ)) : ℂ →ₗ[ℝ] ℂ)) = !![c.re, -c.im; c.im, c.re] := by
@@ -357,7 +357,7 @@ theorem curveModulus_conformal_invariant {φ : ℂ → ℂ} (hφ : IsHomeomorph 
           rw [hχψ, absdet z (deriv ψ z)]
           rw [ENNReal.ofReal_pow (norm_nonneg _)]
           rw [show ENNReal.ofReal (‖deriv ψ z‖) = (‖deriv ψ z‖₊ : ℝ≥0∞) from by
-            rw [ofReal_norm_eq_enorm, enorm_eq_nnnorm]]
+            rw [ofReal_norm, enorm_eq_nnnorm]]
           rw [show (‖deriv ψ z‖₊ : ℝ≥0∞) ^ 2 * ((ρ z) ^ 2 * (‖deriv ψ z‖₊ : ℝ≥0∞)⁻¹ ^ 2)
               = ((‖deriv ψ z‖₊ : ℝ≥0∞) ^ 2 * ((‖deriv ψ z‖₊ : ℝ≥0∞)⁻¹) ^ 2) * (ρ z) ^ 2 from by
             ring]

@@ -66,7 +66,11 @@ theorem frame_continuous (u : ℂ) (hu : ‖u‖ = 1) : Continuous (frame u hu) 
 /-- The frame turns a translation along `u` into a shift of the first coordinate. -/
 theorem frame_shift (u : ℂ) (hu : ‖u‖ = 1) (a b s : ℝ) :
     frame u hu (a, b) + s • u = frame u hu (a + s, b) := by
-  simp only [frame_apply, rotation_apply, measurableEquivRealProd_symm_apply, Complex.real_smul]
+  -- `rotation_apply` no longer fires under Mathlib 4.33's stricter transparency check
+  -- (the `Circle` membership proof is not type-correct at implicit transparency),
+  -- so we record the rotation formula as a definitional fact instead.
+  have key : ∀ z : ℂ, (rotation ⟨u, mem_sphere_zero_iff_norm.2 hu⟩) z = u * z := fun _ => rfl
+  simp only [frame_apply, key, measurableEquivRealProd_symm_apply, Complex.real_smul]
   have : (Complex.mk (a + s) b) = Complex.mk a b + (s : ℂ) := by apply Complex.ext <;> simp
   rw [this]; ring
 
@@ -230,7 +234,7 @@ private theorem measurableSet_tendsto_inter {g : ℝ × ℝ → ℝ} (hg_meas : 
     have hset : { p : ℝ × ℝ | |lineDQ g p (q:ℝ) - g p| ≤ 1/(k+1) }
         = { p | lineDQ g p (q:ℝ) - g p ≤ 1/(k+1) } ∩
           { p | -(1/(k+1)) ≤ lineDQ g p (q:ℝ) - g p } := by
-      ext p; simp only [Set.mem_setOf_eq, Set.mem_inter_iff, abs_le]; tauto
+      ext p; simp only [Set.mem_ofPred_eq, Set.mem_inter_iff, abs_le]; tauto
     rw [hset]
     exact (measurableSet_le hX measurable_const).inter
       (measurableSet_le measurable_const hX)
@@ -247,7 +251,7 @@ private theorem measurableSet_tendsto_inter {g : ℝ × ℝ → ℝ} (hg_meas : 
       = (⋂ k : ℕ, ⋃ n : ℕ, ⋂ q : ℚ, ⋂ (_ : 0 < q), ⋂ (_ : (q:ℝ) < 1/(n+1)),
           { p : ℝ × ℝ | |lineDQ g p (q:ℝ) - g p| ≤ 1/(k+1) }) ∩ G := by
     ext p
-    simp only [Set.mem_inter_iff, Set.mem_setOf_eq, Set.mem_iInter, Set.mem_iUnion]
+    simp only [Set.mem_inter_iff, Set.mem_ofPred_eq, Set.mem_iInter, Set.mem_iUnion]
     constructor
     · rintro ⟨htend, hpG⟩
       refine ⟨?_, hpG⟩

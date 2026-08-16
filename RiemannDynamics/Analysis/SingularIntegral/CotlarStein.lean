@@ -361,9 +361,9 @@ theorem cotlarStein {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℂ H]
   have hRexp : star S * S = ∑ p : Fin N × Fin N, (adjoint (T p.1)) ∘L (T p.2) := by
     rw [ContinuousLinearMap.star_eq_adjoint, hadjS]
     change (∑ i, adjoint (T i)) ∘L (∑ j, T j) = _
-    rw [Fintype.sum_prod_type, ContinuousLinearMap.finset_sum_comp]
+    rw [Fintype.sum_prod_type, ContinuousLinearMap.finsetSum_comp]
     refine Finset.sum_congr rfl (fun i _ => ?_)
-    rw [ContinuousLinearMap.comp_finset_sum]
+    rw [ContinuousLinearMap.comp_finsetSum]
   -- KEY BOUND: ‖(star S * S) ^ (m'+1)‖ ≤ Mb * (N * A ^ (2 m' + 1))
   have keyBound : ∀ m' : ℕ, ‖(star S * S) ^ (m'+1)‖ ≤ Mb * ((N : ℝ) * A ^ (2 * m' + 1)) := by
     intro m'

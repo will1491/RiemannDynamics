@@ -72,7 +72,7 @@ theorem harmonic_eq_zero_of_nonneg_eq_zero {U : Set ℂ} (hUopen : IsOpen U)
           (Metric.sphere_subset_closedBall hw))
       -- Mean value: `circleAverage f z r = f z = 0`.
       have hmv : Real.circleAverage f z r = 0 := by
-        rw [HarmonicOnNhd.circleAverage_eq hharm, hfz]
+        rw [InnerProductSpace.HarmonicOnNhd.circleAverage_eq hharm, hfz]
       -- The angular integrand `g θ := f (circleMap z r θ)`.
       set g : ℝ → ℝ := fun θ => f (circleMap z r θ) with hg
       -- Each `circleMap z r θ` lies on `sphere z r ⊆ U`.
@@ -204,7 +204,7 @@ theorem harmonicOnNhd_of_monotone_tendsto {z₀ : ℂ} {ρ : ℝ}
     have hrepr : Real.circleAverage (poissonKernel w y • g) w (2 * r) = g y :=
       InnerProductSpace.HarmonicOnNhd.circleAverage_poissonKernel_smul hgharm hyball
     have hmean : Real.circleAverage g w (2 * r) = g w :=
-      HarmonicOnNhd.circleAverage_eq (R := 2 * r) (c := w) (f := g)
+      InnerProductSpace.HarmonicOnNhd.circleAverage_eq (R := 2 * r) (c := w) (f := g)
         (by rwa [abs_of_pos h2rpos])
     -- Circle integrability of the relevant integrands.
     have hgcont_sph : ContinuousOn g (Metric.sphere w (2 * r)) :=

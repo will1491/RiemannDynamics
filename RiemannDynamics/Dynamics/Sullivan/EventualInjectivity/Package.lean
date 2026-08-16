@@ -158,14 +158,14 @@ theorem false_of_fill_meets_julia_cofinally {f : ℂ̂ → ℂ̂}
       rcases lt_trichotomy ρ 0 with hρ | hρ | hρ
       · have huniv : {z : ℂ | ρ < ‖z - mid‖^2} = Set.univ := by
           ext z
-          simp only [Set.mem_setOf_eq, Set.mem_univ, iff_true]
+          simp only [Set.mem_ofPred_eq, Set.mem_univ, iff_true]
           nlinarith [sq_nonneg ‖z - mid‖]
         rw [huniv]
         exact isPreconnected_univ
       · subst hρ
         have hpunct : {z : ℂ | (0:ℝ) < ‖z - mid‖^2} = {mid}ᶜ := by
           ext z
-          simp only [Set.mem_setOf_eq, Set.mem_compl_iff, Set.mem_singleton_iff]
+          simp only [Set.mem_ofPred_eq, Set.mem_compl_iff, Set.mem_singleton_iff]
           constructor
           · intro h he
             rw [he] at h
@@ -184,7 +184,7 @@ theorem false_of_fill_meets_julia_cofinally {f : ℂ̂ → ℂ̂}
             (fun p : ℝ × ℂ => mid + (p.1 : ℂ) * p.2) ''
               ((Set.Ioi (Real.sqrt ρ)) ×ˢ (Metric.sphere (0:ℂ) 1)) := by
           ext z
-          simp only [Set.mem_setOf_eq, Set.mem_image, Set.mem_prod, Set.mem_Ioi,
+          simp only [Set.mem_ofPred_eq, Set.mem_image, Set.mem_prod, Set.mem_Ioi,
             Metric.mem_sphere, dist_zero_right, hsq z]
           constructor
           · intro hz
@@ -212,7 +212,7 @@ theorem false_of_fill_meets_julia_cofinally {f : ℂ̂ → ℂ̂}
     -- describe the complement of the ball via the spherical distance
     have hset : ((Metric.closedBall y r)ᶜ : Set ℂ̂) = {w : ℂ̂ | r < sphericalDist y w} := by
       ext w
-      simp only [Set.mem_compl_iff, Metric.mem_closedBall, Set.mem_setOf_eq, not_le]
+      simp only [Set.mem_compl_iff, Metric.mem_closedBall, Set.mem_ofPred_eq, not_le]
       rw [show dist w y = sphericalDist w y from rfl, sphericalDist_comm]
     rw [hset]
     induction y using OnePoint.rec with
@@ -223,7 +223,7 @@ theorem false_of_fill_meets_julia_cofinally {f : ℂ̂ → ℂ̂}
           ext w
           induction w using OnePoint.rec with
           | infty =>
-              simp only [Set.mem_setOf_eq]
+              simp only [Set.mem_ofPred_eq]
               constructor
               · intro h
                 rw [show sphericalDist ∞ ∞ = (0:ℝ) from rfl] at h
@@ -231,7 +231,7 @@ theorem false_of_fill_meets_julia_cofinally {f : ℂ̂ → ℂ̂}
               · rintro ⟨z, _, hcontra⟩
                 exact absurd hcontra (OnePoint.coe_ne_infty z)
           | coe z =>
-              simp only [Set.mem_setOf_eq]
+              simp only [Set.mem_ofPred_eq]
               rw [show sphericalDist ∞ ((z:ℂ̂)) = chordalDistInfty z from rfl]
               constructor
               · intro h
@@ -243,7 +243,7 @@ theorem false_of_fill_meets_julia_cofinally {f : ℂ̂ → ℂ̂}
           have hEeq : {z : ℂ | r < chordalDistInfty z} =
               {z : ℂ | r^2 * (1+‖z‖^2) < 4} := by
             ext z
-            simp only [Set.mem_setOf_eq]
+            simp only [Set.mem_ofPred_eq]
             unfold chordalDistInfty
             have hX : (0:ℝ) < 1 + ‖z‖^2 := by positivity
             have hsX : (0:ℝ) < Real.sqrt (1+‖z‖^2) := Real.sqrt_pos.mpr hX
@@ -263,14 +263,14 @@ theorem false_of_fill_meets_julia_cofinally {f : ℂ̂ → ℂ̂}
           rcases eq_or_lt_of_le hr with h0 | hrpos
           · have huniv : {z : ℂ | r^2 * (1+‖z‖^2) < 4} = Set.univ := by
               ext z
-              simp only [Set.mem_setOf_eq, Set.mem_univ, iff_true, ← h0]
+              simp only [Set.mem_ofPred_eq, Set.mem_univ, iff_true, ← h0]
               norm_num
             rw [huniv]
             exact convex_univ
           · by_cases hbig : (4:ℝ) ≤ r^2
             · have hempty : {z : ℂ | r^2 * (1+‖z‖^2) < 4} = ∅ := by
                 ext z
-                simp only [Set.mem_setOf_eq, Set.mem_empty_iff_false, iff_false, not_lt]
+                simp only [Set.mem_ofPred_eq, Set.mem_empty_iff_false, iff_false, not_lt]
                 nlinarith [sq_nonneg ‖z‖]
               rw [hempty]
               exact convex_empty
@@ -279,7 +279,7 @@ theorem false_of_fill_meets_julia_cofinally {f : ℂ̂ → ℂ̂}
               have hball : {z : ℂ | r^2 * (1+‖z‖^2) < 4} =
                   Metric.ball (0:ℂ) (Real.sqrt (4/r^2 - 1)) := by
                 ext z
-                simp only [Set.mem_setOf_eq, Metric.mem_ball, dist_zero_right]
+                simp only [Set.mem_ofPred_eq, Metric.mem_ball, dist_zero_right]
                 rw [show (‖z‖ < Real.sqrt (4/r^2-1)) ↔ (‖z‖^2 < 4/r^2 - 1) from
                   Real.lt_sqrt (norm_nonneg z)]
                 constructor
@@ -393,14 +393,14 @@ theorem false_of_fill_meets_julia_cofinally {f : ℂ̂ → ℂ̂}
             ext w
             induction w using OnePoint.rec with
             | infty =>
-                simp only [Set.mem_setOf_eq, Set.mem_union, Set.mem_singleton_iff]
+                simp only [Set.mem_ofPred_eq, Set.mem_union, Set.mem_singleton_iff]
                 constructor
                 · intro _
                   exact Or.inr trivial
                 · intro _
                   exact hinfc.mpr (by linarith)
             | coe z =>
-                simp only [Set.mem_setOf_eq, Set.mem_union, Set.mem_singleton_iff]
+                simp only [Set.mem_ofPred_eq, Set.mem_union, Set.mem_singleton_iff]
                 rw [hfin z, hEeq z]
                 constructor
                 · intro h
@@ -427,7 +427,7 @@ theorem false_of_fill_meets_julia_cofinally {f : ℂ̂ → ℂ̂}
               lt_of_lt_of_le (by positivity) hRb1
             refine ⟨(((mid + ((Rb + ‖mid‖ : ℝ) : ℂ)) : ℂ) : ℂ̂), ?_, ?_⟩
             · refine ⟨mid + ((Rb + ‖mid‖ : ℝ) : ℂ), ?_, rfl⟩
-              simp only [Set.mem_setOf_eq, add_sub_cancel_left]
+              simp only [Set.mem_ofPred_eq, add_sub_cancel_left]
               rw [Complex.norm_real, Real.norm_eq_abs,
                 abs_of_pos (by positivity : (0:ℝ) < Rb + ‖mid‖)]
               have h1 : Real.sqrt (max ρ 0) < Rb + ‖mid‖ := by
@@ -486,14 +486,14 @@ theorem false_of_fill_meets_julia_cofinally {f : ℂ̂ → ℂ̂}
               ext w
               induction w using OnePoint.rec with
               | infty =>
-                  simp only [Set.mem_setOf_eq]
+                  simp only [Set.mem_ofPred_eq]
                   constructor
                   · intro h
                     exact absurd h hnoinf
                   · rintro ⟨z', _, heq⟩
                     exact absurd heq (OnePoint.coe_ne_infty z')
               | coe z =>
-                  simp only [Set.mem_setOf_eq]
+                  simp only [Set.mem_ofPred_eq]
                   rw [hfin z, hEeq0 z]
                   constructor
                   · intro h
@@ -512,7 +512,7 @@ theorem false_of_fill_meets_julia_cofinally {f : ℂ̂ → ℂ̂}
                 {z : ℂ | (((8*a.re) • Complex.reLm + (8*a.im) • Complex.imLm : ℂ →ₗ[ℝ] ℝ)) z <
                   4*‖a‖^2 - 4} := by
               ext z
-              simp only [Set.mem_setOf_eq, LinearMap.add_apply, LinearMap.smul_apply,
+              simp only [Set.mem_ofPred_eq, LinearMap.add_apply, LinearMap.smul_apply,
                 Complex.reLm_coe, Complex.imLm_coe, smul_eq_mul, Complex.mul_re,
                 Complex.conj_re, Complex.conj_im]
               constructor <;> intro h <;> nlinarith [h]
@@ -560,14 +560,14 @@ theorem false_of_fill_meets_julia_cofinally {f : ℂ̂ → ℂ̂}
               ext w
               induction w using OnePoint.rec with
               | infty =>
-                  simp only [Set.mem_setOf_eq]
+                  simp only [Set.mem_ofPred_eq]
                   constructor
                   · intro h
                     exact absurd h hnoinf
                   · rintro ⟨z', _, heq⟩
                     exact absurd heq (OnePoint.coe_ne_infty z')
               | coe z =>
-                  simp only [Set.mem_setOf_eq]
+                  simp only [Set.mem_ofPred_eq]
                   rw [hfin z, hEeq z]
                   constructor
                   · intro h
@@ -580,13 +580,13 @@ theorem false_of_fill_meets_julia_cofinally {f : ℂ̂ → ℂ̂}
               · have hball : {z : ℂ | ‖z - mid‖^2 < ρ} =
                     Metric.ball mid (Real.sqrt ρ) := by
                   ext z
-                  simp only [Set.mem_setOf_eq, Metric.mem_ball, dist_eq_norm]
+                  simp only [Set.mem_ofPred_eq, Metric.mem_ball, dist_eq_norm]
                   exact (Real.lt_sqrt (norm_nonneg _)).symm
                 rw [hball]
                 exact convex_ball mid _
               · have hempty : {z : ℂ | ‖z - mid‖^2 < ρ} = ∅ := by
                   ext z
-                  simp only [Set.mem_setOf_eq, Set.mem_empty_iff_false, iff_false, not_lt]
+                  simp only [Set.mem_ofPred_eq, Set.mem_empty_iff_false, iff_false, not_lt]
                   push Not at hρpos
                   nlinarith [sq_nonneg ‖z - mid‖]
                 rw [hempty]

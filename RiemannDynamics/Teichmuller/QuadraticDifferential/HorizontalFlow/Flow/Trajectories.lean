@@ -532,7 +532,7 @@ theorem chart_lintegral {q Φ : ℂ → ℂ} {S A : Set ℂ} (hS : IsOpen S)
           ring
         have hq : ‖deriv Φ x‖ ^ 2 = ‖q x‖ := by
           rw [← norm_pow, hsq x (hAS hx), norm_neg]
-        rw [mul_one, hdet, hq, abs_of_nonneg (norm_nonneg _), ofReal_norm_eq_enorm]
+        rw [mul_one, hdet, hq, abs_of_nonneg (norm_nonneg _), ofReal_norm]
 
 /-- The development of the local-flow image is the translated development. -/
 theorem localFlow_image {Φ : ℂ → ℂ} {S A : Set ℂ} {t : ℝ}
@@ -731,7 +731,7 @@ theorem traj_unique {q : ℂ → ℂ} {σ₁ σ₂ : ℝ → ℂ} {a b : ℝ} (h
     rcases eq_or_lt_of_le hcA with heq | hac
     · rw [← heq]
       exact haa
-    · haveI hne : (nhdsWithin c (Set.Ico a c)).NeBot := by
+    · have hne : (nhdsWithin c (Set.Ico a c)).NeBot := by
         refine mem_closure_iff_nhdsWithin_neBot.mp ?_
         rw [closure_Ico hac.ne]
         exact ⟨hac.le, le_refl c⟩
@@ -1102,7 +1102,7 @@ theorem traj_limit {q : ℂ → ℂ} {σ : ℝ → ℂ} {c : ℝ} (hc : 0 < c)
     (hσ : IsTrajOn q σ (Set.Ico 0 c)) {m : ℝ} (hm : 0 < m)
     (hbound : ∀ t ∈ Set.Ico 0 c, m ≤ ‖q (σ t)‖) :
     ∃ w : ℂ, Filter.Tendsto σ (nhdsWithin c (Set.Ico 0 c)) (nhds w) := by
-  haveI hne : (nhdsWithin c (Set.Ico 0 c)).NeBot := by
+  have hne : (nhdsWithin c (Set.Ico 0 c)).NeBot := by
     refine mem_closure_iff_nhdsWithin_neBot.mp ?_
     rw [closure_Ico hc.ne]
     exact ⟨hc.le, le_refl c⟩
@@ -1238,7 +1238,7 @@ theorem traj_ambient_affine {q Φ : ℂ → ℂ} {S : Set ℂ} (hS : IsOpen S)
     · rw [← heq]
       push_cast
       ring
-    · haveI hne : (nhdsWithin c (Set.Ico a c)).NeBot := by
+    · have hne : (nhdsWithin c (Set.Ico a c)).NeBot := by
         refine mem_closure_iff_nhdsWithin_neBot.mp ?_
         rw [closure_Ico hac.ne]
         exact ⟨hac.le, le_refl c⟩
@@ -1268,7 +1268,7 @@ theorem traj_ambient_affine {q Φ : ℂ → ℂ} {S : Set ℂ} (hS : IsOpen S)
             Φ (σ u) = Φ (σ a) + εc * ((u - a : ℝ) : ℂ) := by
           rw [← heq] at hevc
           exact hevc
-        haveI hne : (nhdsWithin a (Set.Ioc a b)).NeBot := by
+        have hne : (nhdsWithin a (Set.Ioc a b)).NeBot := by
           refine mem_closure_iff_nhdsWithin_neBot.mp ?_
           rw [closure_Ioc hab'.ne]
           exact ⟨le_refl a, hab'.le⟩
@@ -1283,7 +1283,7 @@ theorem traj_ambient_affine {q Φ : ℂ → ℂ} {S : Set ℂ} (hS : IsOpen S)
           linear_combination this
         have : (ε : ℂ) = (εc : ℂ) := mul_right_cancel₀ hune hmul
         exact_mod_cast this.symm
-      · haveI hne : (nhdsWithin c (Set.Ico a c)).NeBot := by
+      · have hne : (nhdsWithin c (Set.Ico a c)).NeBot := by
           refine mem_closure_iff_nhdsWithin_neBot.mp ?_
           rw [closure_Ico hac.ne]
           exact ⟨hac.le, le_refl c⟩
@@ -1377,7 +1377,7 @@ theorem traj_tail_affine {q Φ : ℂ → ℂ} {S : Set ℂ} (hS : IsOpen S)
         exact_mod_cast mul_right_cancel₀ hne hmul
       rw [← hpin]
       exact haff' u (Set.right_mem_Icc.mpr (le_trans ha₀m.le hum))
-  haveI hne : (nhdsWithin c (Set.Ico 0 c)).NeBot := by
+  have hne : (nhdsWithin c (Set.Ico 0 c)).NeBot := by
     refine mem_closure_iff_nhdsWithin_neBot.mp ?_
     rw [closure_Ico hc.ne]
     exact ⟨hc.le, le_refl c⟩

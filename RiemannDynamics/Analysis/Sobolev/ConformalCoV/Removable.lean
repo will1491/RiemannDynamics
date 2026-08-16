@@ -28,12 +28,12 @@ theorem HasWeakDirDeriv.removable_singleton {f g : ℂ → ℂ} {v p : ℂ} {Ω 
     (hf : ContinuousOn f Ω) (hg : MemLpLocOn g 2 Ω) :
     HasWeakDirDeriv v g f Ω := by
   classical
-  haveI : NormSMulClass ℝ ℂ := NormedSpace.toNormSMulClass
-  haveI : IsBoundedSMul ℝ ℂ := NormSMulClass.toIsBoundedSMul
-  haveI : ContinuousSMul ℝ ℂ := IsBoundedSMul.continuousSMul
+  have : NormSMulClass ℝ ℂ := NormedSpace.toNormSMulClass
+  have : IsBoundedSMul ℝ ℂ := NormSMulClass.toIsBoundedSMul
+  have : ContinuousSMul ℝ ℂ := IsBoundedSMul.continuousSMul
   by_cases hp : p ∈ Ω
   swap
-  · rwa [Set.diff_singleton_eq_self hp] at h
+  · rwa [Set.sdiff_singleton_eq_self hp] at h
   intro φ hφ hcs htsupp
   change ∫ z, ((fderiv ℝ φ z) v) • f z = - ∫ z, φ z • g z
   set K : Set ℂ := tsupport φ with hKdef
@@ -148,7 +148,7 @@ theorem HasWeakDirDeriv.removable_singleton {f g : ℂ → ℂ} {v p : ℂ} {Ω 
         ((fderiv ℝ χ₁ (A k z)).comp (c k • ContinuousLinearMap.id ℝ ℂ)) z :=
       hχ₁d.hasFDerivAt.comp z (hA_fd k z)
     rw [hcomp.fderiv]
-    simp only [ContinuousLinearMap.comp_apply, ContinuousLinearMap.smul_apply,
+    simp only [ContinuousLinearMap.comp_apply, smul_apply,
       ContinuousLinearMap.id_apply]
     calc ‖(fderiv ℝ χ₁ (A k z)) (c k • v)‖
         ≤ ‖fderiv ℝ χ₁ (A k z)‖ * ‖c k • v‖ := (fderiv ℝ χ₁ (A k z)).le_opNorm _
@@ -171,7 +171,7 @@ theorem HasWeakDirDeriv.removable_singleton {f g : ℂ → ℂ} {v p : ℂ} {Ω 
   have hgli : LocallyIntegrableOn g Ω := by
     rw [MeasureTheory.locallyIntegrableOn_iff hΩ.isLocallyClosed]
     intro k hk hkc
-    haveI : IsFiniteMeasure (volume.restrict k) :=
+    have : IsFiniteMeasure (volume.restrict k) :=
       ⟨by rw [Measure.restrict_apply_univ]; exact hkc.measure_lt_top⟩
     have h1le : (1 : ℝ≥0∞) ≤ 2 := by norm_num
     exact memLp_one_iff_integrable.mp ((hg k hk hkc).mono_exponent h1le)
@@ -239,8 +239,8 @@ theorem HasWeakDirDeriv.removable_singleton {f g : ℂ → ℂ} {v p : ℂ} {Ω 
     rw [hφsdef]
     simp only
     rw [hmul, hsub]
-    simp only [ContinuousLinearMap.add_apply, ContinuousLinearMap.smul_apply,
-      ContinuousLinearMap.neg_apply, smul_eq_mul]
+    simp only [add_apply, smul_apply,
+      neg_apply, smul_eq_mul]
     ring
   -- The three integral pieces.
   set Ak : ℕ → ℂ := fun k => ∫ z, ((1 - χs k z) * ((fderiv ℝ φ z) v)) • f z with hAkdef
@@ -405,7 +405,7 @@ theorem HasWeakDirDeriv.removable_singleton {f g : ℂ → ℂ} {v p : ℂ} {Ω 
       _ = Mφ * ((C₀ / δ₀) * ‖v‖) * Mf * (9 / 4 * δ₀ * vb) * δs k := by ring
   -- ==================== Limit (C): `Ck → ∫ φ • g`. ====================
   have hgK : IntegrableOn g K volume := by
-    haveI : IsFiniteMeasure (volume.restrict K) :=
+    have : IsFiniteMeasure (volume.restrict K) :=
       ⟨by rw [Measure.restrict_apply_univ]; exact hKc.measure_lt_top⟩
     exact memLp_one_iff_integrable.mp ((hg K hKΩ hKc).mono_exponent (by norm_num))
   have hgasm : AEStronglyMeasurable g (volume.restrict K) := (hg K hKΩ hKc).1

@@ -96,7 +96,7 @@ theorem cauchyTransform_sub_le_holder_uniform {p : ℝ≥0∞} {R : ℝ}
   -- ===== Radial kernel integrals =====
   -- pointwise: `‖w⁻¹‖ₑ ^ qr = ofReal (‖w‖ ^ (-qr))`
   have hpt : ∀ w : ℂ, ‖w⁻¹‖ₑ ^ qr = ENNReal.ofReal (‖w‖ ^ (-qr)) := fun w => by
-    rw [← ofReal_norm_eq_enorm, ENNReal.ofReal_rpow_of_nonneg (norm_nonneg _) hqr0.le,
+    rw [← ofReal_norm, ENNReal.ofReal_rpow_of_nonneg (norm_nonneg _) hqr0.le,
       norm_inv, Real.inv_rpow (norm_nonneg w), ← Real.rpow_neg (norm_nonneg w)]
   -- `‖·‖^(-qr)` is integrable on balls (dimension 2, `qr < 2`)
   have hnegpow_int : ∀ r : ℝ, 0 < r →
@@ -162,12 +162,12 @@ theorem cauchyTransform_sub_le_holder_uniform {p : ℝ≥0∞} {R : ℝ}
     have hinner : ∫ y in Set.Ioi (0:ℝ), y ^ (2 - 1) • f y = r ^ (2 - qr) / (2 - qr) := by
       have hsub' : ∫ y in Set.Ioi (0:ℝ), y ^ (2 - 1) • f y
           = ∫ y in Set.Ioo (0:ℝ) r, y ^ (2 - 1) • f y := by
-        apply setIntegral_eq_of_subset_of_forall_diff_eq_zero measurableSet_Ioi
+        apply setIntegral_eq_of_subset_of_forall_sdiff_eq_zero measurableSet_Ioi
         · intro x hx
           simp only [Set.mem_Ioo, Set.mem_Ioi] at *
           exact hx.1
         · intro x hx
-          simp only [Set.mem_Ioi, Set.mem_Ioo, Set.mem_diff, not_and, not_lt] at hx
+          simp only [Set.mem_Ioi, Set.mem_Ioo, Set.mem_sdiff, not_and, not_lt] at hx
           obtain ⟨hx0, hxR⟩ := hx
           have hnlt : ¬ (x < r) := not_lt.mpr (hxR hx0)
           rw [hf]; simp only [if_neg hnlt, smul_zero]
@@ -292,11 +292,11 @@ theorem cauchyTransform_sub_le_holder_uniform {p : ℝ≥0∞} {R : ℝ}
     have hinner : ∫ y in Set.Ioi (0:ℝ), y ^ (2 - 1) • F y = r ^ (2 - 2*qr) / (2*qr - 2) := by
       have hsub' : ∫ y in Set.Ioi (0:ℝ), y ^ (2 - 1) • F y
           = ∫ y in Set.Ici r, y ^ (2 - 1) • F y := by
-        apply setIntegral_eq_of_subset_of_forall_diff_eq_zero measurableSet_Ioi
+        apply setIntegral_eq_of_subset_of_forall_sdiff_eq_zero measurableSet_Ioi
         · intro y hy
           exact lt_of_lt_of_le hr hy
         · intro y hy
-          simp only [Set.mem_diff, Set.mem_Ioi, Set.mem_Ici, not_le] at hy
+          simp only [Set.mem_sdiff, Set.mem_Ioi, Set.mem_Ici, not_le] at hy
           rw [hF]
           simp only [if_neg (not_le.mpr hy.2), smul_zero]
       rw [hsub']
@@ -340,7 +340,7 @@ theorem cauchyTransform_sub_le_holder_uniform {p : ℝ≥0∞} {R : ℝ}
           ENNReal.ofReal_le_ofReal (hann_val r hr)
   -- ===== Hölder machinery (field-free parts) =====
   have htri : ∀ a b : ℂ, ‖a - b‖ₑ ≤ ‖a‖ₑ + ‖b‖ₑ := fun a b => by
-    rw [← ofReal_norm_eq_enorm, ← ofReal_norm_eq_enorm, ← ofReal_norm_eq_enorm,
+    rw [← ofReal_norm, ← ofReal_norm, ← ofReal_norm,
       ← ENNReal.ofReal_add (norm_nonneg _) (norm_nonneg _)]
     exact ENNReal.ofReal_le_ofReal (norm_sub_le a b)
   have hscale : ∀ c r : ℝ, 0 ≤ c → 0 < r →
@@ -433,7 +433,7 @@ theorem cauchyTransform_sub_le_holder_uniform {p : ℝ≥0∞} {R : ℝ}
       calc ‖G ζ‖ₑ ^ qr
           ≤ ENNReal.ofReal (2*d / (‖ζ - z₁‖ * ‖ζ - z₁‖)) ^ qr := by
             refine ENNReal.rpow_le_rpow ?_ hqr0.le
-            rw [← ofReal_norm_eq_enorm]
+            rw [← ofReal_norm]
             exact ENNReal.ofReal_le_ofReal hGle
         _ = ENNReal.ofReal ((2*d / (‖ζ - z₁‖ * ‖ζ - z₁‖)) ^ qr) :=
             ENNReal.ofReal_rpow_of_nonneg (by positivity) hqr0.le
@@ -583,7 +583,7 @@ theorem cauchyTransform_sub_le_holder_uniform {p : ℝ≥0∞} {R : ℝ}
       mul_nonneg ENNReal.toReal_nonneg (mul_nonneg hκ0 (Real.rpow_nonneg hd.le _))
     have hX : ‖(∫ ζ, h ζ / (ζ - z₁)) - ∫ ζ, h ζ / (ζ - z₂)‖ ≤ N.toReal * (κ * d ^ α) := by
       have h2 := hmain
-      rw [← ofReal_norm_eq_enorm] at h2
+      rw [← ofReal_norm] at h2
       exact (ENNReal.ofReal_le_ofReal_iff hnn).mp h2
     have hPdiff : cauchyTransform h z₁ - cauchyTransform h z₂
         = -(1/(Real.pi:ℂ)) * ((∫ ζ, h ζ / (ζ - z₁)) - ∫ ζ, h ζ / (ζ - z₂)) := by
@@ -664,7 +664,7 @@ theorem isPrincipalSolution_uniform_image_bound {k R : ℝ}
   have hae_k : ∀ᵐ z ∂volume, ‖b.μ z‖ ≤ k := by
     filter_upwards [ae_le_eLpNormEssSup (f := b.μ) (μ := volume)] with z hz
     have h1 : ‖b.μ z‖ₑ ≤ ENNReal.ofReal k := le_trans hz hkb
-    rwa [← ofReal_norm_eq_enorm, ENNReal.ofReal_le_ofReal_iff hk0] at h1
+    rwa [← ofReal_norm, ENNReal.ofReal_le_ofReal_iff hk0] at h1
   have hμM : eLpNorm b.μ p₀ volume ≤ M := by
     calc eLpNorm b.μ p₀ volume = eLpNorm (B.indicator b.μ) p₀ volume := by rw [← hind]
       _ = eLpNorm b.μ p₀ (volume.restrict B) :=
@@ -690,7 +690,7 @@ theorem isPrincipalSolution_uniform_image_bound {k R : ℝ}
     rw [hsupp z hz, zero_mul, zero_add]
   -- `L²` memberships (finite-measure embedding on the support ball).
   have hL2h' : MemLp h' 2 volume := by
-    haveI : IsFiniteMeasure (volume.restrict B) :=
+    have : IsFiniteMeasure (volume.restrict B) :=
       ⟨by
         rw [Measure.restrict_apply_univ]
         exact lt_top_iff_ne_top.2 hBfin⟩
@@ -891,7 +891,7 @@ theorem isPrincipalSolution_tendstoUniformly_of_ae_tendsto
   classical
   -- ===== Step 0: contraction data `(p₀, C₀)` at the common dilatation bound `k`. =====
   have hkenorm : ‖(k : ℂ)‖ₑ = ENNReal.ofReal k := by
-    rw [← ofReal_norm_eq_enorm, Complex.norm_real, Real.norm_eq_abs, abs_of_nonneg hk0]
+    rw [← ofReal_norm, Complex.norm_real, Real.norm_eq_abs, abs_of_nonneg hk0]
   have hkonec : eLpNormEssSup (fun _ : ℂ => (k : ℂ)) volume < 1 := by
     rw [eLpNormEssSup_const _ (NeZero.ne volume), hkenorm]
     exact ENNReal.ofReal_lt_one.2 hk
@@ -941,7 +941,7 @@ theorem isPrincipalSolution_tendstoUniformly_of_ae_tendsto
       set m : ℝ := max R 0 with hm_def
       set Bm : Set ℂ := Metric.closedBall (0 : ℂ) m with hBm_def
       have hBmmeas : MeasurableSet Bm := by rw [hBm_def]; exact measurableSet_closedBall
-      haveI : IsFiniteMeasure (volume.restrict Bm) :=
+      have : IsFiniteMeasure (volume.restrict Bm) :=
         ⟨by
           rw [Measure.restrict_apply_univ]
           exact (isCompact_closedBall _ _).measure_lt_top⟩
@@ -983,7 +983,7 @@ theorem isPrincipalSolution_tendstoUniformly_of_ae_tendsto
     aestronglyMeasurable_const.add hSh.1
   set B : Set ℂ := Metric.closedBall (0 : ℂ) R with hB_def
   have hBmeas : MeasurableSet B := by rw [hB_def]; exact measurableSet_closedBall
-  haveI : IsFiniteMeasure (volume.restrict B) :=
+  have : IsFiniteMeasure (volume.restrict B) :=
     ⟨by
       rw [Measure.restrict_apply_univ]
       exact (isCompact_closedBall _ _).measure_lt_top⟩
@@ -1088,7 +1088,7 @@ theorem isPrincipalSolution_tendstoUniformly_of_ae_tendsto
         (Or.inr ENNReal.ofReal_ne_top)
       rwa [mul_zero] at h1
     exact tendsto_of_tendsto_of_tendsto_of_le_of_le tendsto_const_nhds hupper
-      (fun n => zero_le _) (fun n => hstab n)
+      (fun n => zero_le) (fun n => hstab n)
   -- ===== Step 4: the uniform sup bound converts `Lᵖ` convergence to uniform. =====
   obtain ⟨CR, hCR0, hCR⟩ := norm_cauchyTransform_le_of_memLp_support (R := R) hp2 hptop
   have hdmem : ∀ n, MemLp (fun w => hs n w - h w) p0 volume :=
@@ -1249,7 +1249,7 @@ theorem isPrincipalSolution_two_sided_holder {k R : ℝ}
     set m : ℝ := max R' 0 with hm_def
     set B₂ : Set ℂ := Metric.closedBall (0 : ℂ) m with hB₂_def
     have hB₂meas : MeasurableSet B₂ := by rw [hB₂_def]; exact measurableSet_closedBall
-    haveI : IsFiniteMeasure (volume.restrict B₂) :=
+    have : IsFiniteMeasure (volume.restrict B₂) :=
       ⟨by
         rw [Measure.restrict_apply_univ]
         exact (isCompact_closedBall _ _).measure_lt_top⟩
@@ -1280,7 +1280,7 @@ theorem isPrincipalSolution_two_sided_holder {k R : ℝ}
       have hband : ∀ᵐ z ∂(volume : Measure ℂ), ‖ν.μ z‖ ≤ k := by
         filter_upwards [ae_le_eLpNormEssSup (f := ν.μ) (μ := volume)] with z hz
         have h2 : ‖ν.μ z‖ₑ ≤ ENNReal.ofReal k := le_trans hz hνk
-        rw [← ofReal_norm_eq_enorm] at h2
+        rw [← ofReal_norm] at h2
         exact (ENNReal.ofReal_le_ofReal_iff hk0).1 h2
       have hind : ν.μ = B.indicator ν.μ := by
         funext ζ

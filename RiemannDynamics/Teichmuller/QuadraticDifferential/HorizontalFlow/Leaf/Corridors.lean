@@ -105,7 +105,7 @@ theorem competitor_crosses_leaf {q : ℂ → ℂ}
         exact not_lt.mpr le_rfl
     have hCconv : Convex ℝ {w : ℂ | w.im < β} := by
       intro x hx y hy c d hc hd hcd
-      simp only [Set.mem_setOf_eq] at *
+      simp only [Set.mem_ofPred_eq] at *
       have him : (c • x + d • y).im = c * x.im + d * y.im := by
         simp [Complex.add_im]
       rcases eq_or_lt_of_le hc with hc0 | hc0
@@ -118,10 +118,10 @@ theorem competitor_crosses_leaf {q : ℂ → ℂ}
         nlinarith
     have hdisj : ∀ t : unitInterval, L t ∉ {w : ℂ | w.im < β} := by
       intro t hmem
-      simp only [Set.mem_setOf_eq] at hmem
+      simp only [Set.mem_ofPred_eq] at hmem
       exact absurd hmem (not_lt.mpr (hfloor t))
     have hz₁mem : z₁ ∈ {w : ℂ | w.im < β} := by
-      simp only [Set.mem_setOf_eq, hz₁im]
+      simp only [Set.mem_ofPred_eq, hz₁im]
       have : (0 : ℝ) ≤ max R 0 := le_max_right _ _
       linarith
     exact (windingNumber_eq_of_preconnected hcl hCconv.isPreconnected hdisj
@@ -153,7 +153,7 @@ theorem competitor_crosses_leaf {q : ℂ → ℂ}
       rintro ⟨t, ht⟩
       exact hmiss t u hu ht
     refine ⟨hRw ⟨hnr, hw⟩, ?_⟩
-    simp only [Set.mem_setOf_eq]
+    simp only [Set.mem_ofPred_eq]
     by_contra hlt
     push Not at hlt
     exact hw (hlow _ hlt)
@@ -1014,7 +1014,7 @@ theorem arg_limit_neg {δ c : ℝ} (hδ : 0 < δ) (hc : c = 1 ∨ c = -1) :
         simpa using h2
       · refine Filter.tendsto_principal_principal.mpr ?_
         intro η hη
-        simp only [Set.mem_setOf_eq, Complex.add_im, Complex.neg_im,
+        simp only [Set.mem_ofPred_eq, Complex.add_im, Complex.neg_im,
           Complex.ofReal_im, Complex.mul_im, Complex.ofReal_re, Complex.I_im,
           Complex.I_re]
         rw [hc1]
@@ -1025,7 +1025,7 @@ theorem arg_limit_neg {δ c : ℝ} (hδ : 0 < δ) (hc : c = 1 ∨ c = -1) :
       rw [show -(δ : ℂ) = ((-δ : ℝ) : ℂ) from by push_cast; ring]
       exact Complex.arg_ofReal_of_neg (by linarith)
     rw [harg] at this
-    simpa [hc1] using this
+    simpa [hc1, Function.comp_def] using this
   · -- lower approach: the one-sided limit into the lower half plane
     have hlim := Complex.tendsto_arg_nhdsWithin_im_neg_of_re_neg_of_im_zero
       (show (-(δ : ℂ)).re < 0 by simpa using hδ)
@@ -1041,14 +1041,14 @@ theorem arg_limit_neg {δ c : ℝ} (hδ : 0 < δ) (hc : c = 1 ∨ c = -1) :
         simpa using h2
       · refine Filter.tendsto_principal_principal.mpr ?_
         intro η hη
-        simp only [Set.mem_setOf_eq, Complex.add_im, Complex.neg_im,
+        simp only [Set.mem_ofPred_eq, Complex.add_im, Complex.neg_im,
           Complex.ofReal_im, Complex.mul_im, Complex.ofReal_re, Complex.I_im,
           Complex.I_re]
         rw [hc1]
         simp only [Set.mem_Ioi] at hη
         nlinarith
     have := hlim.comp hmap
-    simpa [hc1] using this
+    simpa [hc1, Function.comp_def] using this
 
 /-- **Loop avoidance of the transverse leaf off the crossing instant**: under the
 no-bigon principles the bundled competitor-trajectory loop misses every leaf point

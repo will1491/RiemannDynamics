@@ -62,14 +62,14 @@ theorem tendstoLocallyUniformly_of_beltrami_truncation (b : BeltramiCoeff)
     intro w hw
     rw [locallyIntegrableOn_univ, locallyIntegrable_iff]
     intro Kc hKc
-    haveI : IsFiniteMeasure (volume.restrict Kc) :=
+    have : IsFiniteMeasure (volume.restrict Kc) :=
       ⟨by rw [Measure.restrict_apply_univ]; exact hKc.measure_lt_top⟩
     exact memLp_one_iff_integrable.mp
       ((hw Kc (Set.subset_univ _) hKc).mono_exponent (by norm_num))
   have hbμ_ae : ∀ᵐ z : ℂ, ‖b.μ z‖ ≤ 1 := by
     filter_upwards [enorm_ae_le_eLpNormEssSup b.μ volume] with z hz
     have h1 : ‖b.μ z‖ₑ ≤ 1 := hz.trans b.bound.le
-    rwa [← ofReal_norm_eq_enorm, ← ENNReal.ofReal_one,
+    rwa [← ofReal_norm, ← ENNReal.ofReal_one,
       ENNReal.ofReal_le_ofReal_iff zero_le_one] at h1
   have hmul_int : ∀ (X ψt : ℂ → ℂ), AEStronglyMeasurable X volume →
       MemLpLocOn X 2 Set.univ → MemLp ψt 2 volume → HasCompactSupport ψt →
@@ -112,7 +112,7 @@ theorem tendstoLocallyUniformly_of_beltrami_truncation (b : BeltramiCoeff)
     have hWloc : LocallyIntegrableOn W Set.univ := by
       rw [locallyIntegrableOn_univ, locallyIntegrable_iff]
       intro Kc hKc
-      haveI : IsFiniteMeasure (volume.restrict Kc) :=
+      have : IsFiniteMeasure (volume.restrict Kc) :=
         ⟨by rw [Measure.restrict_apply_univ]; exact hKc.measure_lt_top⟩
       have hu1 : Integrable u (volume.restrict Kc) := memLp_one_iff_integrable.mp
         ((hu2 Kc (Set.subset_univ _) hKc).mono_exponent (by norm_num))
@@ -176,7 +176,7 @@ theorem tendstoLocallyUniformly_of_beltrami_truncation (b : BeltramiCoeff)
       have hψ₂_cs : HasCompactSupport ψ₂ := by
         have h := (hφcoe_cs.mul_left
           (f := fun z : ℂ => (1 : ℂ) + b.μ z)).mul_left (f := fun _ : ℂ => Complex.I)
-        simpa [mul_assoc] using h
+        simpa [mul_assoc] using! h
       have hlim : Filter.Tendsto
           (fun k => (∫ z, partialX (ws (ψ (φ₁ (φ₂ k)))) z * ψ₁ z)
             + ∫ z, partialY (ws (ψ (φ₁ (φ₂ k)))) z * ψ₂ z) Filter.atTop
@@ -345,8 +345,7 @@ theorem analyticAt_of_shift_eq (f : ℂ → ℂ) (t₀ : ℂ) (ε : ℝ) (ψf : 
   have h1 : AnalyticAt ℂ (fun t : ℂ => ψf (t - t₀)) t₀ := by
     have h2 := AnalyticAt.comp (g := ψf) (f := fun t : ℂ => t - t₀) (x := t₀) ?_ h0
     · exact h2
-    · change AnalyticAt ℂ ψf (t₀ - t₀)
-      rw [sub_self]
+    · rw [sub_self]
       exact hψ
   refine h1.congr ?_
   filter_upwards [Metric.ball_mem_nhds t₀ hε] with t ht
@@ -790,11 +789,9 @@ theorem exists_affine_solution_family :
       exists_principal_solution_power_series (fun z => κt j z + t₀ * νt j z) (νt j) ((j : ℝ) + 1) M
         ((hκtm j).add (measurable_const.mul (hνtm j))) (hνtm j)
         (fun z hz => by
-          change κt j z + t₀ * νt j z = 0
           rw [hκts j z hz, hνts j z hz, mul_zero, add_zero])
         (hνts j)
         (fun z hz => by
-          change κt j z + t₀ * νt j z = 0
           rw [hκtu j z hz, hνtu j z hz, mul_zero, add_zero])
         (hνtu j)
         (lt_of_le_of_lt (eLpNormEssSup_le_of_ae_bound
@@ -1002,14 +999,12 @@ theorem exists_affine_solution_family :
             (analyticAt_tsum_pow_mul_of_le_geometric (fun n => cs n z) Mc ρc hρc0
               (fun n => hcb1 n z) 0 (by simp))) ?_
         intro s hs
-        change Fj j (t₁ + s) z = z + ∑' n : ℕ, s ^ n * cs n z
         rw [hser s hs]
       · refine analyticAt_of_shift_eq _ t₁ ε (fun s => 1 + ∑' n : ℕ, s ^ n * deriv (cs n) z₀) hε0
           (analyticAt_const.add
             (analyticAt_tsum_pow_mul_of_le_geometric (fun n => deriv (cs n) z₀) _ ρc hρc0
               hb1 0 (by simp))) ?_
         intro s hs
-        change deriv (Fj j (t₁ + s)) z₀ = 1 + ∑' n : ℕ, s ^ n * deriv (cs n) z₀
         rw [hser s hs]
         exact (hzwei s hs).1
       · refine analyticAt_of_shift_eq _ t₁ ε
@@ -1017,8 +1012,6 @@ theorem exists_affine_solution_family :
           (analyticAt_tsum_pow_mul_of_le_geometric (fun n => deriv (deriv (cs n)) z₀) _ ρc
             hρc0 hb2 0 (by simp)) ?_
         intro s hs
-        change deriv (deriv (Fj j (t₁ + s))) z₀
-            = ∑' n : ℕ, s ^ n * deriv (deriv (cs n)) z₀
         rw [hser s hs]
         exact (hzwei s hs).2.1
       · refine analyticAt_of_shift_eq _ t₁ ε
@@ -1026,8 +1019,6 @@ theorem exists_affine_solution_family :
           (analyticAt_tsum_pow_mul_of_le_geometric (fun n => deriv (deriv (deriv (cs n))) z₀)
             _ ρc hρc0 hb3 0 (by simp)) ?_
         intro s hs
-        change deriv (deriv (deriv (Fj j (t₁ + s)))) z₀
-            = ∑' n : ℕ, s ^ n * deriv (deriv (deriv (cs n))) z₀
         rw [hser s hs]
         exact (hzwei s hs).2.2
     -- ===== B: parameter-analyticity of the Wⱼ towers =====
@@ -1361,8 +1352,7 @@ theorem exists_affine_solution_family :
         have hprod' : HasDerivAt
             (fun t => (Fj j t 1 - Fj j t 0)⁻¹ * deriv (deriv (deriv (Fj j t))) z₀)
             (deriv (deriv (deriv (cs 1))) z₀) 0 := by
-          convert hprod using 1
-          beta_reduce
+          convert! hprod using 1
           rw [hN30, hden0, mul_zero, zero_add, inv_one, one_mul]
         have hXev : (fun t => deriv (deriv (deriv (Wj j t))) z₀) =ᶠ[nhds 0]
             fun t => (Fj j t 1 - Fj j t 0)⁻¹ * deriv (deriv (deriv (Fj j t))) z₀ := by
@@ -1411,7 +1401,7 @@ theorem exists_affine_solution_family :
         exact tendsto_nhds_unique h1 tendsto_const_nhds
       have hq0 : schwarzian (W 0) z₀ = 0 := by
         have h1 := congrFun hSchw 0
-        simp only at h1
+        try simp only at h1
         rw [h1, hψ30, hψ20, hψ10]
         norm_num
       -- Weierstrass in the parameter: the limit tower derivative at the origin
@@ -1494,7 +1484,7 @@ theorem exists_affine_solution_family :
               - 3 / 2 * (deriv (deriv (W t)) z₀) ^ 2 := by
         intro t ht
         have h1 := congrFun hSchw t
-        simp only at h1
+        try simp only at h1
         rw [h1]
         have hne := hψ1ne t ht
         have e1 : deriv (deriv (deriv (W t))) z₀ / deriv (W t) z₀ * deriv (W t) z₀
@@ -1514,13 +1504,13 @@ theorem exists_affine_solution_family :
       have hψ1sq : HasDerivAt (fun t => (deriv (W t) z₀) ^ 2)
           (2 * deriv (W 0) z₀ * deriv (fun t => deriv (W t) z₀) 0) 0 := by
         have h1 := hψ1der.pow 2
-        convert h1 using 1
+        convert! h1 using 1
         push_cast
         ring
       have hψ2sq : HasDerivAt (fun t => (deriv (deriv (W t)) z₀) ^ 2)
           (2 * deriv (deriv (W 0)) z₀ * deriv (fun t => deriv (deriv (W t)) z₀) 0) 0 := by
         have h1 := hψ2der.pow 2
-        convert h1 using 1
+        convert! h1 using 1
         push_cast
         ring
       have hL : HasDerivAt (fun t => schwarzian (W t) z₀ * (deriv (W t) z₀) ^ 2)
@@ -1535,7 +1525,7 @@ theorem exists_affine_solution_family :
             - 3 / 2 * (2 * deriv (deriv (W 0)) z₀
                 * deriv (fun t => deriv (deriv (W t)) z₀) 0)) 0 := by
         have h1 := (hψ3der.mul hψ1der).sub (hψ2sq.const_mul (3 / 2 : ℂ))
-        convert h1 using 1
+        convert! h1 using 1
       have hEv : (fun t => deriv (deriv (deriv (W t))) z₀ * deriv (W t) z₀
             - 3 / 2 * (deriv (deriv (W t)) z₀) ^ 2) =ᶠ[nhds 0]
           fun t => schwarzian (W t) z₀ * (deriv (W t) z₀) ^ 2 := by

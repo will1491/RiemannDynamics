@@ -163,12 +163,12 @@ theorem exists_diffeomorph_opens_sphere_of_simplyConnected (M : Type*)
     [TopologicalSpace M] [ChartedSpace ℂ M] [IsManifold 𝓘(ℂ) ω M]
     [T2Space M] [SimplyConnectedSpace M] [SecondCountableTopology M] :
     ∃ U : Opens ℂ̂, Nonempty (M ≃ₘ^ω⟮𝓘(ℂ), 𝓘(ℂ)⟯ ↥U) := by
-  haveI : ConnectedSpace M := PathConnectedSpace.connectedSpace
+  have : ConnectedSpace M := PathConnectedSpace.connectedSpace
   by_cases hcomp : CompactSpace M
   · refine exists_diffeomorph_opens_of_forall_not_hasGreenFunction fun p₀ hp₀ => ?_
     obtain ⟨x, hx, hbdd⟩ := hp₀
     exact not_bddAbove_image_greenFamily_of_compactSpace p₀ x hx hbdd
-  · haveI : NoncompactSpace M := not_compactSpace_iff.mp hcomp
+  · have : NoncompactSpace M := not_compactSpace_iff.mp hcomp
     by_cases hG : ∃ p₀ : M, HasGreenFunction p₀
     · obtain ⟨p₀, hp₀⟩ := hG
       exact exists_diffeomorph_opens_of_hasGreenFunction hp₀

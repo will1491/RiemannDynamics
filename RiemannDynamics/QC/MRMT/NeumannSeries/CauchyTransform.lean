@@ -69,7 +69,7 @@ theorem memLp_of_eLpNormEssSup_ne_top_of_support {μ : ℂ → ℂ} {p : ℝ≥0
       refine hsupp z ?_
       simpa [Metric.mem_closedBall, dist_zero_right, not_le] using hz
   -- The restriction of `volume` to the closed ball is a finite measure.
-  haveI : IsFiniteMeasure (volume.restrict (Metric.closedBall (0 : ℂ) R)) :=
+  have : IsFiniteMeasure (volume.restrict (Metric.closedBall (0 : ℂ) R)) :=
     ⟨by
       rw [Measure.restrict_apply_univ]
       exact (isCompact_closedBall _ _).measure_lt_top⟩
@@ -96,7 +96,7 @@ theorem integrable_div_sub_of_memLp_of_support {h : ℂ → ℂ} {p : ℝ≥0∞
   -- The Hölder-conjugate exponent `q = (1 - p⁻¹)⁻¹` of `p`.
   have hp1 : (1 : ℝ≥0∞) ≤ p := le_of_lt (lt_trans ENNReal.one_lt_two hp)
   set q : ℝ≥0∞ := (1 - p⁻¹)⁻¹ with hq_def
-  haveI hpq : ENNReal.HolderConjugate p q := by
+  have hpq : ENNReal.HolderConjugate p q := by
     rw [hq_def, ENNReal.holderConjugate_iff, inv_inv, add_comm,
       tsub_add_cancel_of_le (ENNReal.inv_le_one.mpr hp1)]
   have hq0 : q ≠ 0 := by
@@ -146,7 +146,7 @@ theorem integrable_div_sub_of_memLp_of_support {h : ℂ → ℂ} {p : ℝ≥0∞
       _ < r' := by rw [hr'_def]; linarith
   -- Pointwise identification of the kernel's enorm power with a real negative power.
   have hpt : ∀ w : ℂ, ‖w⁻¹‖ₑ ^ q.toReal = ‖‖w‖ ^ (-q.toReal)‖ₑ := fun w => by
-    rw [← ofReal_norm_eq_enorm, ← ofReal_norm_eq_enorm,
+    rw [← ofReal_norm, ← ofReal_norm,
       ENNReal.ofReal_rpow_of_nonneg (norm_nonneg _) hs0.le,
       norm_inv, Real.inv_rpow (norm_nonneg w), ← Real.rpow_neg (norm_nonneg w),
       Real.norm_of_nonneg (Real.rpow_nonneg (norm_nonneg w) _)]
@@ -314,7 +314,7 @@ theorem cauchyTransform_sub_le_holder {h : ℂ → ℂ} {p : ℝ≥0∞} {R : �
   -- ===== Radial kernel integrals =====
   -- pointwise: `‖w⁻¹‖ₑ ^ qr = ofReal (‖w‖ ^ (-qr))`
   have hpt : ∀ w : ℂ, ‖w⁻¹‖ₑ ^ qr = ENNReal.ofReal (‖w‖ ^ (-qr)) := fun w => by
-    rw [← ofReal_norm_eq_enorm, ENNReal.ofReal_rpow_of_nonneg (norm_nonneg _) hqr0.le,
+    rw [← ofReal_norm, ENNReal.ofReal_rpow_of_nonneg (norm_nonneg _) hqr0.le,
       norm_inv, Real.inv_rpow (norm_nonneg w), ← Real.rpow_neg (norm_nonneg w)]
   -- `‖·‖^(-qr)` is integrable on balls (dimension 2, `qr < 2`)
   have hnegpow_int : ∀ r : ℝ, 0 < r →
@@ -380,12 +380,12 @@ theorem cauchyTransform_sub_le_holder {h : ℂ → ℂ} {p : ℝ≥0∞} {R : �
     have hinner : ∫ y in Set.Ioi (0:ℝ), y ^ (2 - 1) • f y = r ^ (2 - qr) / (2 - qr) := by
       have hsub' : ∫ y in Set.Ioi (0:ℝ), y ^ (2 - 1) • f y
           = ∫ y in Set.Ioo (0:ℝ) r, y ^ (2 - 1) • f y := by
-        apply setIntegral_eq_of_subset_of_forall_diff_eq_zero measurableSet_Ioi
+        apply setIntegral_eq_of_subset_of_forall_sdiff_eq_zero measurableSet_Ioi
         · intro x hx
           simp only [Set.mem_Ioo, Set.mem_Ioi] at *
           exact hx.1
         · intro x hx
-          simp only [Set.mem_Ioi, Set.mem_Ioo, Set.mem_diff, not_and, not_lt] at hx
+          simp only [Set.mem_Ioi, Set.mem_Ioo, Set.mem_sdiff, not_and, not_lt] at hx
           obtain ⟨hx0, hxR⟩ := hx
           have hnlt : ¬ (x < r) := not_lt.mpr (hxR hx0)
           rw [hf]; simp only [if_neg hnlt, smul_zero]
@@ -510,11 +510,11 @@ theorem cauchyTransform_sub_le_holder {h : ℂ → ℂ} {p : ℝ≥0∞} {R : �
     have hinner : ∫ y in Set.Ioi (0:ℝ), y ^ (2 - 1) • F y = r ^ (2 - 2*qr) / (2*qr - 2) := by
       have hsub' : ∫ y in Set.Ioi (0:ℝ), y ^ (2 - 1) • F y
           = ∫ y in Set.Ici r, y ^ (2 - 1) • F y := by
-        apply setIntegral_eq_of_subset_of_forall_diff_eq_zero measurableSet_Ioi
+        apply setIntegral_eq_of_subset_of_forall_sdiff_eq_zero measurableSet_Ioi
         · intro y hy
           exact lt_of_lt_of_le hr hy
         · intro y hy
-          simp only [Set.mem_diff, Set.mem_Ioi, Set.mem_Ici, not_le] at hy
+          simp only [Set.mem_sdiff, Set.mem_Ioi, Set.mem_Ici, not_le] at hy
           rw [hF]
           simp only [if_neg (not_le.mpr hy.2), smul_zero]
       rw [hsub']
@@ -558,7 +558,7 @@ theorem cauchyTransform_sub_le_holder {h : ℂ → ℂ} {p : ℝ≥0∞} {R : �
           ENNReal.ofReal_le_ofReal (hann_val r hr)
   -- ===== Hölder machinery =====
   have htri : ∀ a b : ℂ, ‖a - b‖ₑ ≤ ‖a‖ₑ + ‖b‖ₑ := fun a b => by
-    rw [← ofReal_norm_eq_enorm, ← ofReal_norm_eq_enorm, ← ofReal_norm_eq_enorm,
+    rw [← ofReal_norm, ← ofReal_norm, ← ofReal_norm,
       ← ENNReal.ofReal_add (norm_nonneg _) (norm_nonneg _)]
     exact ENNReal.ofReal_le_ofReal (norm_sub_le a b)
   have hNle : ∀ S : Set ℂ, (∫⁻ ζ in S, ‖h ζ‖ₑ ^ pr) ^ (1/pr) ≤ N := by
@@ -645,7 +645,7 @@ theorem cauchyTransform_sub_le_holder {h : ℂ → ℂ} {p : ℝ≥0∞} {R : �
       calc ‖G ζ‖ₑ ^ qr
           ≤ ENNReal.ofReal (2*d / (‖ζ - z₁‖ * ‖ζ - z₁‖)) ^ qr := by
             refine ENNReal.rpow_le_rpow ?_ hqr0.le
-            rw [← ofReal_norm_eq_enorm]
+            rw [← ofReal_norm]
             exact ENNReal.ofReal_le_ofReal hGle
         _ = ENNReal.ofReal ((2*d / (‖ζ - z₁‖ * ‖ζ - z₁‖)) ^ qr) :=
             ENNReal.ofReal_rpow_of_nonneg (by positivity) hqr0.le
@@ -795,7 +795,7 @@ theorem cauchyTransform_sub_le_holder {h : ℂ → ℂ} {p : ℝ≥0∞} {R : �
       mul_nonneg ENNReal.toReal_nonneg (mul_nonneg hκ0 (Real.rpow_nonneg hd.le _))
     have hX : ‖(∫ ζ, h ζ / (ζ - z₁)) - ∫ ζ, h ζ / (ζ - z₂)‖ ≤ N.toReal * (κ * d ^ α) := by
       have h2 := hmain
-      rw [← ofReal_norm_eq_enorm] at h2
+      rw [← ofReal_norm] at h2
       exact (ENNReal.ofReal_le_ofReal_iff hnn).mp h2
     have hPdiff : cauchyTransform h z₁ - cauchyTransform h z₂
         = -(1/(Real.pi:ℂ)) * ((∫ ζ, h ζ / (ζ - z₁)) - ∫ ζ, h ζ / (ζ - z₂)) := by
@@ -841,7 +841,7 @@ theorem continuous_cauchyTransform_of_memLp_of_support {h : ℂ → ℂ} {p : �
     have h3 : Filter.Tendsto (fun z : ℂ => ‖z - z₀‖ ^ (1 - 2 / p.toReal))
         (𝓝 z₀) (𝓝 0) := by
       have h3' := Filter.Tendsto.comp h2 h1
-      simpa [Function.comp, Real.zero_rpow hα0.ne'] using h3'
+      simpa [Function.comp, Real.zero_rpow hα0.ne'] using! h3'
     have h4 := h3.const_mul C
     simpa using h4
   exact tendsto_iff_dist_tendsto_zero.mpr
@@ -860,7 +860,7 @@ theorem cauchyTransform_tendsto_cocompact {h : ℂ → ℂ} {p : ℝ≥0∞} {R 
   -- support ball and the L¹ mass of `h`
   set m : ℝ := max R 0 with hm_def
   set B : Set ℂ := Metric.closedBall (0:ℂ) m with hB_def
-  haveI : IsFiniteMeasure (volume.restrict B) :=
+  have : IsFiniteMeasure (volume.restrict B) :=
     ⟨by
       rw [Measure.restrict_apply_univ]
       exact (isCompact_closedBall _ _).measure_lt_top⟩

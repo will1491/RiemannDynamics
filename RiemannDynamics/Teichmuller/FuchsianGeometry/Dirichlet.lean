@@ -65,7 +65,7 @@ theorem isClosed_dirichletDomain (Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 
   have h : dirichletDomain Γ τ₀ =
       ⋂ γ : Γ, {τ : UpperHalfPlane | dist τ τ₀ ≤ dist τ (γ • τ₀)} := by
     ext τ
-    simp only [dirichletDomain, Set.mem_setOf_eq, Set.mem_iInter]
+    simp only [dirichletDomain, Set.mem_ofPred_eq, Set.mem_iInter]
   rw [h]
   exact isClosed_iInter fun γ =>
     isClosed_le (continuous_id.dist continuous_const) (continuous_id.dist continuous_const)
@@ -76,8 +76,8 @@ ball of radius `dist τ τ₀` about `τ`. -/
 theorem exists_smul_mem_dirichletDomain (hΓ : IsFuchsianGroup Γ)
     (τ₀ τ : UpperHalfPlane) : ∃ γ : Γ, γ • τ ∈ dirichletDomain Γ τ₀ := by
   classical
-  haveI hPD : ProperlyDiscontinuousSMul Γ UpperHalfPlane := hΓ
-  haveI : IsIsometricSMul (↥Γ) UpperHalfPlane :=
+  have hPD : ProperlyDiscontinuousSMul Γ UpperHalfPlane := hΓ
+  have : IsIsometricSMul (↥Γ) UpperHalfPlane :=
     ⟨fun c => isometry_smul UpperHalfPlane (c : Matrix.SpecialLinearGroup (Fin 2) ℝ)⟩
   have hfin1 : {γ : ↥Γ | ((fun x => γ • x) '' {τ₀} ∩
       Metric.closedBall τ (dist τ τ₀)).Nonempty}.Finite :=
@@ -90,7 +90,7 @@ theorem exists_smul_mem_dirichletDomain (hΓ : IsFuchsianGroup Γ)
     rw [Metric.mem_closedBall, dist_comm]
     exact hγ
   have h1S : (1 : ↥Γ) ∈ {γ : ↥Γ | dist τ (γ • τ₀) ≤ dist τ τ₀} := by
-    simp only [Set.mem_setOf_eq, one_smul, le_refl]
+    simp only [Set.mem_ofPred_eq, one_smul, le_refl]
   obtain ⟨γ₀, hγ₀S, hγ₀min⟩ :=
     Set.exists_min_image _ (fun γ : ↥Γ => dist τ (γ • τ₀)) hS ⟨1, h1S⟩
   have hglobal : ∀ γ : ↥Γ, dist τ (γ₀ • τ₀) ≤ dist τ (γ • τ₀) := by
@@ -149,7 +149,7 @@ def dirichletSides (Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ))
 number of `γ` carrying `τ₀` to within `2R + 1` of itself. -/
 theorem finite_dirichletSides (hΓ : IsFuchsianGroup Γ) (τ₀ : UpperHalfPlane) (R : ℝ) :
     (dirichletSides Γ τ₀ R).Finite := by
-  haveI hPD : ProperlyDiscontinuousSMul Γ UpperHalfPlane := hΓ
+  have hPD : ProperlyDiscontinuousSMul Γ UpperHalfPlane := hΓ
   have hfin1 : {γ : ↥Γ | ((fun x => γ • x) '' {τ₀} ∩
       Metric.closedBall τ₀ (2 * R + 1)).Nonempty}.Finite :=
     ProperlyDiscontinuousSMul.finite_disjoint_inter_image isCompact_singleton
@@ -234,13 +234,13 @@ theorem volume_normSq_levelSet_eq_zero (c : ℂ) (k : ℝ) :
   rcases lt_or_ge k 0 with hk | hk
   · have h : {w : ℂ | Complex.normSq (w - c) = k} = ∅ := by
       ext w
-      simp only [Set.mem_setOf_eq, Set.mem_empty_iff_false, iff_false]
+      simp only [Set.mem_ofPred_eq, Set.mem_empty_iff_false, iff_false]
       intro h
       exact absurd (h ▸ Complex.normSq_nonneg (w - c)) (not_le.mpr hk)
     rw [h, measure_empty]
   · have h : {w : ℂ | Complex.normSq (w - c) = k} = Metric.sphere c (Real.sqrt k) := by
       ext w
-      rw [Set.mem_setOf_eq, Metric.mem_sphere, dist_eq_norm]
+      rw [Set.mem_ofPred_eq, Metric.mem_sphere, dist_eq_norm]
       constructor
       · intro h
         rw [← Real.sqrt_sq (norm_nonneg (w - c)), Complex.sq_norm, h]
@@ -302,7 +302,7 @@ theorem exists_null_carrier_bisector (a b : UpperHalfPlane) (hab : a ≠ b) :
     refine ⟨{w : ℂ | w.re = ((a : ℂ).re + (b : ℂ).re) / 2}, volume_re_line_eq_zero _, ?_⟩
     intro τ hd
     have hkey := key τ hd
-    rw [Set.mem_setOf_eq]
+    rw [Set.mem_ofPred_eq]
     have hB : 0 < b.im := b.im_pos
     have hsq : ((τ : ℂ).re - (a : ℂ).re) ^ 2 = ((τ : ℂ).re - (b : ℂ).re) ^ 2 := by
       have hcancel := mul_left_cancel₀ hB.ne'
@@ -325,7 +325,7 @@ theorem exists_null_carrier_bisector (a b : UpperHalfPlane) (hab : a ≠ b) :
     intro τ hd
     have hkey := key τ hd
     have hBA : b.im - a.im ≠ 0 := sub_ne_zero.mpr fun h => hAB h.symm
-    rw [Set.mem_setOf_eq, Complex.normSq_apply, Complex.sub_re, Complex.sub_im,
+    rw [Set.mem_ofPred_eq, Complex.normSq_apply, Complex.sub_re, Complex.sub_im,
       Complex.ofReal_re, Complex.ofReal_im]
     simp only [UpperHalfPlane.coe_im]
     have hG' : (b.im - a.im) * (τ : ℂ).re ^ 2
@@ -387,7 +387,7 @@ theorem frontier_dirichletDomain_subset (hΓ : IsFuchsianGroup Γ) {R : ℝ}
     constructor
     · have h1 : dist τ τ₀ ≤ R :=
         Metric.mem_closedBall.mp (dirichletDomain_subset_closedBall hdense hτD)
-      simp only [Set.mem_setOf_eq]
+      simp only [Set.mem_ofPred_eq]
       linarith
     · exact Set.mem_iInter₂.mpr hstrict
   have hVD : V ⊆ dirichletDomain Γ τ₀ := by
@@ -737,7 +737,7 @@ theorem interior_dirichletDomain_eq (hΓ : IsFuchsianGroup Γ) {R : ℝ}
       constructor
       · have h1 : dist τ τ₀ ≤ R :=
           Metric.mem_closedBall.mp (dirichletDomain_subset_closedBall hdense hτD)
-        simp only [Set.mem_setOf_eq]
+        simp only [Set.mem_ofPred_eq]
         linarith
       · exact Set.mem_iInter₂.mpr fun γ hγ => hτ γ hγ.2
     have hVD : V ⊆ dirichletDomain Γ τ₀ := by
@@ -762,7 +762,7 @@ theorem disjoint_smul_interior_dirichletDomain (hΓ : IsFuchsianGroup Γ) {R : �
     {γ : ↥Γ} (hmove : γ • τ₀ ≠ τ₀) :
     Disjoint (interior (dirichletDomain Γ τ₀))
       ((γ • ·) '' interior (dirichletDomain Γ τ₀)) := by
-  haveI : IsIsometricSMul (↥Γ) UpperHalfPlane :=
+  have : IsIsometricSMul (↥Γ) UpperHalfPlane :=
     ⟨fun c => isometry_smul UpperHalfPlane (c : Matrix.SpecialLinearGroup (Fin 2) ℝ)⟩
   rw [Set.disjoint_left]
   rintro z hz ⟨w, hw, rfl⟩
@@ -788,11 +788,11 @@ theorem volume_compl_iUnion_smul_interior_eq_zero (hΓ : IsFuchsianGroup Γ) {R 
     (hdense : ∀ σ : UpperHalfPlane, Metric.infDist σ (MulAction.orbit Γ τ₀) ≤ R) :
     volume ((⋃ γ : ↥Γ, (γ • ·) '' interior (dirichletDomain Γ τ₀))ᶜ) = 0 := by
   classical
-  haveI : SMulInvariantMeasure (↥Γ) UpperHalfPlane volume :=
+  have : SMulInvariantMeasure (↥Γ) UpperHalfPlane volume :=
     ⟨fun c s hs => SMulInvariantMeasure.measure_preimage_smul
       (μ := (volume : Measure UpperHalfPlane))
       (Matrix.SpecialLinearGroup.mapGL ℝ (c : Matrix.SpecialLinearGroup (Fin 2) ℝ)) hs⟩
-  haveI : Countable ↥Γ := IsFuchsianGroup.countable hΓ
+  have : Countable ↥Γ := IsFuchsianGroup.countable hΓ
   have hsub : (⋃ γ : ↥Γ, (γ • ·) '' interior (dirichletDomain Γ τ₀))ᶜ ⊆
       ⋃ γ : ↥Γ, (γ • ·) '' frontier (dirichletDomain Γ τ₀) := by
     intro z hz
@@ -829,7 +829,7 @@ def dirichletSideSet (Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ))
 `dist (γ⁻¹ • τ) (δ • τ₀) = dist τ ((γ * δ) • τ₀) ≥ dist τ τ₀ = dist (γ⁻¹ • τ) τ₀`. -/
 theorem smul_mem_dirichletSideSet_inv {γ : ↥Γ} {τ : UpperHalfPlane}
     (hτ : τ ∈ dirichletSideSet Γ τ₀ γ) : γ⁻¹ • τ ∈ dirichletSideSet Γ τ₀ γ⁻¹ := by
-  haveI : IsIsometricSMul (↥Γ) UpperHalfPlane :=
+  have : IsIsometricSMul (↥Γ) UpperHalfPlane :=
     ⟨fun c => isometry_smul UpperHalfPlane (c : Matrix.SpecialLinearGroup (Fin 2) ℝ)⟩
   obtain ⟨hD, heq⟩ := hτ
   have hbase : dist (γ⁻¹ • τ) τ₀ = dist τ τ₀ := by
@@ -858,7 +858,7 @@ def contactSet (Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ))
 theorem nonempty_contactSet (hΓ : IsFuchsianGroup Γ) (τ₀ z : UpperHalfPlane) :
     (contactSet Γ τ₀ z).Nonempty := by
   classical
-  haveI hPD : ProperlyDiscontinuousSMul Γ UpperHalfPlane := hΓ
+  have hPD : ProperlyDiscontinuousSMul Γ UpperHalfPlane := hΓ
   have hfin1 : {γ : ↥Γ | ((fun x => γ • x) '' {τ₀} ∩
       Metric.closedBall z (dist z τ₀)).Nonempty}.Finite :=
     ProperlyDiscontinuousSMul.finite_disjoint_inter_image isCompact_singleton
@@ -870,7 +870,7 @@ theorem nonempty_contactSet (hΓ : IsFuchsianGroup Γ) (τ₀ z : UpperHalfPlane
     rw [Metric.mem_closedBall, dist_comm]
     exact hγ
   have h1S : (1 : ↥Γ) ∈ {γ : ↥Γ | dist z (γ • τ₀) ≤ dist z τ₀} := by
-    simp only [Set.mem_setOf_eq, one_smul, le_refl]
+    simp only [Set.mem_ofPred_eq, one_smul, le_refl]
   obtain ⟨γ₀, hγ₀S, hγ₀min⟩ :=
     Set.exists_min_image _ (fun γ : ↥Γ => dist z (γ • τ₀)) hS ⟨1, h1S⟩
   have hglobal : ∀ γ : ↥Γ, dist z (γ₀ • τ₀) ≤ dist z (γ • τ₀) := by
@@ -880,7 +880,7 @@ theorem nonempty_contactSet (hΓ : IsFuchsianGroup Γ) (τ₀ z : UpperHalfPlane
     · exact le_trans hγ₀S (le_of_lt (not_le.mp hγ))
   have hne : (MulAction.orbit Γ τ₀).Nonempty := ⟨τ₀, MulAction.mem_orbit_self τ₀⟩
   refine ⟨γ₀, ?_⟩
-  simp only [contactSet, Set.mem_setOf_eq]
+  simp only [contactSet, Set.mem_ofPred_eq]
   refine le_antisymm ?_
     (Metric.infDist_le_dist_of_mem (MulAction.mem_orbit_iff.mpr ⟨γ₀, rfl⟩))
   refine (Metric.le_infDist hne).mpr ?_
@@ -892,7 +892,7 @@ theorem nonempty_contactSet (hΓ : IsFuchsianGroup Γ) (τ₀ z : UpperHalfPlane
 theorem finite_contactSet (hΓ : IsFuchsianGroup Γ) (τ₀ z : UpperHalfPlane) :
     (contactSet Γ τ₀ z).Finite := by
   classical
-  haveI hPD : ProperlyDiscontinuousSMul Γ UpperHalfPlane := hΓ
+  have hPD : ProperlyDiscontinuousSMul Γ UpperHalfPlane := hΓ
   have hfin1 : {γ : ↥Γ | ((fun x => γ • x) '' {τ₀} ∩
       Metric.closedBall z (dist z τ₀)).Nonempty}.Finite :=
     ProperlyDiscontinuousSMul.finite_disjoint_inter_image isCompact_singleton
@@ -905,15 +905,15 @@ theorem finite_contactSet (hΓ : IsFuchsianGroup Γ) (τ₀ z : UpperHalfPlane) 
     exact hγ
   refine hS.subset ?_
   intro γ hγ
-  simp only [contactSet, Set.mem_setOf_eq] at hγ
-  simp only [Set.mem_setOf_eq]
+  simp only [contactSet, Set.mem_ofPred_eq] at hγ
+  simp only [Set.mem_ofPred_eq]
   rw [hγ]
   exact Metric.infDist_le_dist_of_mem (MulAction.mem_orbit_self τ₀)
 
 /-- A point lies in the `γ`-tile exactly when `γ` is a contact element of the point. -/
 theorem mem_contactSet_iff_mem_smul_dirichletDomain (γ : ↥Γ) (z : UpperHalfPlane) :
     γ ∈ contactSet Γ τ₀ z ↔ z ∈ (γ • ·) '' dirichletDomain Γ τ₀ := by
-  haveI : IsIsometricSMul (↥Γ) UpperHalfPlane :=
+  have : IsIsometricSMul (↥Γ) UpperHalfPlane :=
     ⟨fun c => isometry_smul UpperHalfPlane (c : Matrix.SpecialLinearGroup (Fin 2) ℝ)⟩
   have hkey : ∀ (β δ : ↥Γ) (w : UpperHalfPlane),
       dist (β⁻¹ • w) (δ • τ₀) = dist w ((β * δ) • τ₀) := by
@@ -924,7 +924,7 @@ theorem mem_contactSet_iff_mem_smul_dirichletDomain (γ : ↥Γ) (z : UpperHalfP
   have h1 : dist (γ⁻¹ • z) τ₀ = dist z (γ • τ₀) := by
     have h := hkey γ 1 z
     rwa [mul_one, one_smul] at h
-  simp only [contactSet, Set.mem_setOf_eq]
+  simp only [contactSet, Set.mem_ofPred_eq]
   constructor
   · intro hγc
     refine ⟨γ⁻¹ • z, ?_, smul_inv_smul γ z⟩
@@ -956,7 +956,7 @@ theorem exists_ball_inter_tiles_subset_contact (hΓ : IsFuchsianGroup Γ)
       (∀ w ∈ Metric.ball z r, ∃ γ ∈ contactSet Γ τ₀ z,
         w ∈ (γ • ·) '' dirichletDomain Γ τ₀) := by
   classical
-  haveI hPD : ProperlyDiscontinuousSMul Γ UpperHalfPlane := hΓ
+  have hPD : ProperlyDiscontinuousSMul Γ UpperHalfPlane := hΓ
   obtain ⟨d, hddef⟩ : ∃ d : ℝ, d = Metric.infDist z (MulAction.orbit Γ τ₀) := ⟨_, rfl⟩
   have hfin1 : {γ : ↥Γ | ((fun x => γ • x) '' {τ₀} ∩
       Metric.closedBall z (d + 2)).Nonempty}.Finite :=
@@ -978,7 +978,7 @@ theorem exists_ball_inter_tiles_subset_contact (hΓ : IsFuchsianGroup Γ)
     by_contra hγc
     have hwcon : γ ∈ contactSet Γ τ₀ w :=
       (mem_contactSet_iff_mem_smul_dirichletDomain γ w).mpr hwT
-    simp only [contactSet, Set.mem_setOf_eq] at hwcon
+    simp only [contactSet, Set.mem_ofPred_eq] at hwcon
     have h2 : Metric.infDist w (MulAction.orbit Γ τ₀) ≤ d + dist w z := by
       rw [hddef]
       exact Metric.infDist_le_infDist_add_dist
@@ -1001,14 +1001,14 @@ theorem exists_ball_inter_tiles_subset_contact (hΓ : IsFuchsianGroup Γ)
     exact ⟨δ⁻¹, ha δ⁻¹ ⟨w, hwT, hw⟩, hwT⟩
   by_cases hNC : ({γ : ↥Γ | dist z (γ • τ₀) ≤ d + 2} \ contactSet Γ τ₀ z).Nonempty
   · obtain ⟨γs, hγsmem, hγsmin⟩ := Set.exists_min_image _
-      (fun γ : ↥Γ => dist z (γ • τ₀)) (hN.subset Set.diff_subset) hNC
+      (fun γ : ↥Γ => dist z (γ • τ₀)) (hN.subset Set.sdiff_subset) hNC
     have hle : d ≤ dist z (γs • τ₀) := by
       rw [hddef]
       exact Metric.infDist_le_dist_of_mem (MulAction.mem_orbit_iff.mpr ⟨γs, rfl⟩)
     have hne' : dist z (γs • τ₀) ≠ d := by
       intro h
       refine hγsmem.2 ?_
-      simp only [contactSet, Set.mem_setOf_eq]
+      simp only [contactSet, Set.mem_ofPred_eq]
       rw [h, hddef]
     have hγsd : d < dist z (γs • τ₀) := lt_of_le_of_ne hle (Ne.symm hne')
     obtain ⟨r, hrdef⟩ : ∃ r : ℝ, r = min ((dist z (γs • τ₀) - d) / 4) 1 := ⟨_, rfl⟩
@@ -1040,9 +1040,9 @@ into the domain along one contact element places it on the side of the quotient 
 theorem smul_mem_dirichletSideSet_of_contact_pair {γ δ : ↥Γ} {z : UpperHalfPlane}
     (hγ : γ ∈ contactSet Γ τ₀ z) (hδ : δ ∈ contactSet Γ τ₀ z) :
     γ⁻¹ • z ∈ dirichletSideSet Γ τ₀ (γ⁻¹ * δ) := by
-  haveI : IsIsometricSMul (↥Γ) UpperHalfPlane :=
+  have : IsIsometricSMul (↥Γ) UpperHalfPlane :=
     ⟨fun c => isometry_smul UpperHalfPlane (c : Matrix.SpecialLinearGroup (Fin 2) ℝ)⟩
-  simp only [contactSet, Set.mem_setOf_eq] at hγ hδ
+  simp only [contactSet, Set.mem_ofPred_eq] at hγ hδ
   have hkey : ∀ β : ↥Γ, dist (γ⁻¹ • z) (β • τ₀) = dist z ((γ * β) • τ₀) := by
     intro β
     calc dist (γ⁻¹ • z) (β • τ₀) = dist (γ • γ⁻¹ • z) (γ • β • τ₀) :=
@@ -1056,7 +1056,7 @@ theorem smul_mem_dirichletSideSet_of_contact_pair {γ δ : ↥Γ} {z : UpperHalf
     intro β
     rw [h1, hkey β, hγ]
     exact Metric.infDist_le_dist_of_mem (MulAction.mem_orbit_iff.mpr ⟨γ * β, rfl⟩)
-  · simp only [Set.mem_setOf_eq]
+  · simp only [Set.mem_ofPred_eq]
     rw [h1, hkey (γ⁻¹ * δ), mul_inv_cancel_left, hγ, hδ]
 
 /-- A point lies in an open tile exactly when its contact elements are the translates of the
@@ -1066,7 +1066,7 @@ theorem mem_smul_interior_iff_contactSet_eq (hΓ : IsFuchsianGroup Γ) {R : ℝ}
     (γ : ↥Γ) (z : UpperHalfPlane) :
     z ∈ (γ • ·) '' interior (dirichletDomain Γ τ₀) ↔
       contactSet Γ τ₀ z = {δ : ↥Γ | δ • τ₀ = γ • τ₀} := by
-  haveI : IsIsometricSMul (↥Γ) UpperHalfPlane :=
+  have : IsIsometricSMul (↥Γ) UpperHalfPlane :=
     ⟨fun c => isometry_smul UpperHalfPlane (c : Matrix.SpecialLinearGroup (Fin 2) ℝ)⟩
   have hIeq := interior_dirichletDomain_eq hΓ hdense
   constructor
@@ -1075,11 +1075,11 @@ theorem mem_smul_interior_iff_contactSet_eq (hΓ : IsFuchsianGroup Γ) {R : ℝ}
     subst huz'
     have huD : u ∈ dirichletDomain Γ τ₀ := interior_subset hu
     rw [hIeq] at hu
-    simp only [Set.mem_setOf_eq] at hu
+    simp only [Set.mem_ofPred_eq] at hu
     have hγcon : γ ∈ contactSet Γ τ₀ (γ • u) :=
       (mem_contactSet_iff_mem_smul_dirichletDomain γ (γ • u)).mpr ⟨u, huD, rfl⟩
     ext δ
-    simp only [Set.mem_setOf_eq]
+    simp only [Set.mem_ofPred_eq]
     constructor
     · intro hδcon
       have hside := smul_mem_dirichletSideSet_of_contact_pair hγcon hδcon
@@ -1093,24 +1093,24 @@ theorem mem_smul_interior_iff_contactSet_eq (hΓ : IsFuchsianGroup Γ) {R : ℝ}
           _ = γ • τ₀ := by rw [h]
       exact absurd heq2 (ne_of_lt (hu _ hmove))
     · intro hδτ
-      simp only [contactSet, Set.mem_setOf_eq]
+      simp only [contactSet, Set.mem_ofPred_eq]
       rw [hδτ]
-      simpa only [contactSet, Set.mem_setOf_eq] using hγcon
+      simpa only [contactSet, Set.mem_ofPred_eq] using hγcon
   · intro hEq
     have hγcon : γ ∈ contactSet Γ τ₀ z := by
       rw [hEq]
-      simp only [Set.mem_setOf_eq]
+      simp only [Set.mem_ofPred_eq]
     obtain ⟨u, huD, huz⟩ := (mem_contactSet_iff_mem_smul_dirichletDomain γ z).mp hγcon
     refine ⟨u, ?_, huz⟩
     have huz' : γ • u = z := huz
     rw [hIeq]
-    simp only [Set.mem_setOf_eq]
+    simp only [Set.mem_ofPred_eq]
     intro β hβ
     rcases lt_or_eq_of_le (huD β) with h | heq
     · exact h
     exfalso
     have hcon2 : (γ * β) ∈ contactSet Γ τ₀ z := by
-      simp only [contactSet, Set.mem_setOf_eq]
+      simp only [contactSet, Set.mem_ofPred_eq]
       have e1 : dist z ((γ * β) • τ₀) = dist u (β • τ₀) := by
         rw [← huz', mul_smul]
         exact dist_smul γ u (β • τ₀)
@@ -1144,8 +1144,8 @@ theorem exists_contact_cycle (hΓ : IsFuchsianGroup Γ) {R : ℝ}
         w ∈ (e k • ·) '' dirichletDomain Γ τ₀ ∧
         w ∈ (e (k + 1) • ·) '' dirichletDomain Γ τ₀) := by
   classical
-  haveI hPD : ProperlyDiscontinuousSMul Γ UpperHalfPlane := hΓ
-  haveI : IsIsometricSMul (↥Γ) UpperHalfPlane :=
+  have hPD : ProperlyDiscontinuousSMul Γ UpperHalfPlane := hΓ
+  have : IsIsometricSMul (↥Γ) UpperHalfPlane :=
     ⟨fun c => isometry_smul UpperHalfPlane (c : Matrix.SpecialLinearGroup (Fin 2) ℝ)⟩
   have hCfin := finite_contactSet hΓ τ₀ z
   obtain ⟨c₀, hc₀⟩ := nonempty_contactSet hΓ τ₀ z
@@ -1427,7 +1427,7 @@ theorem exists_contact_cycle (hΓ : IsFuchsianGroup Γ) {R : ℝ}
     have hrange : {w : UpperHalfPlane | dist w z = s} = Set.range (fun θ : ℝ =>
         UpperHalfPlane.mk (ζ + (ρ : ℂ) * Complex.exp (θ * Complex.I)) (hmemH θ)) := by
       ext w
-      simp only [Set.mem_setOf_eq, Set.mem_range]
+      simp only [Set.mem_ofPred_eq, Set.mem_range]
       rw [hsph_char s hs w, ← hζdef, ← hρdef]
       constructor
       · intro hw
@@ -1493,7 +1493,7 @@ theorem exists_contact_cycle (hΓ : IsFuchsianGroup Γ) {R : ℝ}
       obtain ⟨w, hw1, hw2⟩ := hbetween (γ • τ₀) s hs hsd
       refine ⟨w, by rw [dist_comm]; exact hw1, ?_⟩
       rw [← mem_contactSet_iff_mem_smul_dirichletDomain]
-      simp only [contactSet, Set.mem_setOf_eq]
+      simp only [contactSet, Set.mem_ofPred_eq]
       have hwlb : ∀ y ∈ MulAction.orbit Γ τ₀, dist z (γ • τ₀) - s ≤ dist w y := by
         intro y hy
         have h1 : Metric.infDist z (MulAction.orbit Γ τ₀) ≤ dist z y :=
@@ -1559,7 +1559,7 @@ theorem exists_contact_cycle (hΓ : IsFuchsianGroup Γ) {R : ℝ}
           ↥((hCfin.toFinset ×ˢ hCfin.toFinset).powerset))) ⁻¹' {E} := by
       intro n hn
       simp only [Set.mem_preimage, Set.mem_singleton_iff] at hn
-      simp only [Set.mem_setOf_eq]
+      simp only [Set.mem_ofPred_eq]
       rw [← hn]
     exact (Set.infinite_coe_iff.mp hE).mono h2
   obtain ⟨n₀, hn₀⟩ := hE.nonempty

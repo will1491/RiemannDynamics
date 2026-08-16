@@ -402,7 +402,7 @@ lemma czOperator_beurling_tendsto_smooth (hμ : ContDiff ℝ 1 μ) (hμc : HasCo
           rw [← norm_ne_zero_iff, hnorm]; exact ne_of_gt hp1
         rw [enorm_inv hsymm_ne]
         have henorm : ‖Complex.polarCoord.symm p‖ₑ = ENNReal.ofReal p.1 := by
-          rw [← ofReal_norm_eq_enorm, hnorm]
+          rw [← ofReal_norm, hnorm]
         rw [henorm, smul_eq_mul,
           ENNReal.mul_inv_cancel (by simp only [ne_eq, ENNReal.ofReal_eq_zero, not_le]; exact hp1)
             ENNReal.ofReal_lt_top.ne]
@@ -430,7 +430,7 @@ lemma czOperator_beurling_tendsto_smooth (hμ : ContDiff ℝ 1 μ) (hμc : HasCo
         have h2 : MeasurePreserving (fun ζ : ℂ => -ζ) volume volume :=
           Measure.measurePreserving_neg volume
         have := h1.comp h2
-        simpa [Function.comp, sub_eq_add_neg] using this
+        simpa [Function.comp_def, sub_eq_add_neg] using this
       have hh_eq : (hh : ℂ → ℂ) = fun ζ : ℂ => z - ζ := by
         funext ζ; simp [hh_def, Homeomorph.trans, Homeomorph.neg, Homeomorph.addLeft,
           sub_eq_add_neg]
@@ -495,12 +495,12 @@ lemma czOperator_beurling_tendsto_smooth (hμ : ContDiff ℝ 1 μ) (hμc : HasCo
         have hsin : HasDerivAt (fun t : ℝ => (Real.sin t : ℂ)) ((Real.cos s : ℝ) : ℂ) s :=
           (Real.hasDerivAt_sin s).ofReal_comp
         have hd := hcos.sub (hsin.mul_const I)
-        convert hd using 1
+        refine hd.congr_deriv (Eq.symm ?_)
         rw [he_def]
         simp only [map_add, map_mul, Complex.conj_I, Complex.conj_ofReal, Complex.ofReal_neg]
         linear_combination (Real.sin s : ℂ) * Complex.I_mul_I
       have h2 := (hconj_d.pow 2).const_mul (I/2)
-      convert h2 using 1
+      refine h2.congr_deriv (Eq.symm ?_)
       have hps : (2:ℕ) - 1 = 1 := rfl
       rw [hps, pow_one]
       have hI2 : (I:ℂ)^2 = -1 := by rw [pow_two]; exact Complex.I_mul_I
@@ -612,7 +612,7 @@ lemma czOperator_beurling_tendsto_smooth (hμ : ContDiff ℝ 1 μ) (hμc : HasCo
         exact hplt
       change p.1 • (Metric.ball (0:ℂ) r')ᶜ.indicator ψ (Complex.polarCoord.symm p) = 0
       rw [Set.indicator_of_notMem hnotmem]; simp
-    refine (setIntegral_eq_of_subset_of_ae_diff_eq_zero
+    refine (setIntegral_eq_of_subset_of_ae_sdiff_eq_zero
         (measurableSet_Ioi.prod measurableSet_Ioo).nullMeasurableSet
         (Set.prod_mono (Set.Ioi_subset_Ioi (le_of_lt hr')) (le_refl _)) hae).trans ?_
     apply setIntegral_congr_fun (measurableSet_Ioi.prod measurableSet_Ioo)
@@ -657,7 +657,7 @@ lemma czOperator_beurling_tendsto_smooth (hμ : ContDiff ℝ 1 μ) (hμc : HasCo
         _ = Mμ * r'⁻¹^2 := by ring
     have hint_t : IntegrableOn f t volume :=
       Measure.integrableOn_of_bounded htfin hfmeas hbound
-    refine hint_t.of_forall_diff_eq_zero measurableSet_ball.compl ?_
+    refine hint_t.of_forall_sdiff_eq_zero measurableSet_ball.compl ?_
     intro y hy
     obtain ⟨hy1, hy2⟩ := hy
     rw [ht, Set.mem_inter_iff, not_and] at hy2
@@ -692,7 +692,7 @@ lemma czOperator_beurling_tendsto_smooth (hμ : ContDiff ℝ 1 μ) (hμc : HasCo
           have h1 : HasDerivAt (fun w : ℂ => z - w) (-1) y := by
             simpa using (hasDerivAt_id y).const_sub z
           have h2 := (h1.inv hsub)
-          convert h2 using 1
+          refine h2.congr_deriv (Eq.symm ?_)
           rw [zpow_neg, zpow_two]; field_simp
         exact hderiv.deriv
       rw [hdzker]; ring
@@ -762,7 +762,7 @@ lemma czOperator_beurling_tendsto_smooth (hμ : ContDiff ℝ 1 μ) (hμc : HasCo
             have h1 : HasDerivAt (fun w : ℂ => z - w) (-1) (z + (ρ:ℂ)*e θ) := by
               simpa using (hasDerivAt_id _).const_sub z
             have h2 := (h1.inv hsub)
-            convert h2 using 1
+            refine h2.congr_deriv (Eq.symm ?_)
             rw [zpow_neg, zpow_two]; field_simp
           exact hderiv.deriv
         rw [hdzker]; ring
@@ -822,14 +822,14 @@ lemma czOperator_beurling_tendsto_smooth (hμ : ContDiff ℝ 1 μ) (hμc : HasCo
             have hsin : HasDerivAt (fun s : ℝ => (Real.sin s : ℂ)) ((Real.cos θ : ℝ) : ℂ) θ :=
               (Real.hasDerivAt_sin θ).ofReal_comp
             have hdd := hcos.sub (hsin.mul_const I)
-            convert hdd using 1
+            refine hdd.congr_deriv (Eq.symm ?_)
             rw [he_def]
             simp only [map_add, map_mul, Complex.conj_I, Complex.conj_ofReal, Complex.ofReal_neg]
             linear_combination (Real.sin θ : ℂ) * Complex.I_mul_I
           have hconj2_d : HasDerivAt (fun s : ℝ => ((starRingEnd ℂ) (e s))^2)
               (-2 * I * ((starRingEnd ℂ) (e θ))^2) θ := by
             have h := hconj_d.pow 2
-            convert h using 1
+            refine h.congr_deriv (Eq.symm ?_)
             have hps : (2:ℕ) - 1 = 1 := rfl
             rw [hps, pow_one]; push_cast; ring
           have hμ_d : HasDerivAt (fun t : ℝ => μ (z + (ρ:ℂ) * e t))
@@ -923,7 +923,7 @@ lemma czOperator_beurling_tendsto_smooth (hμ : ContDiff ℝ 1 μ) (hμc : HasCo
       have hintS : IntegrableOn RI S volume :=
         Measure.integrableOn_of_bounded hSfin hRI_cont.aestronglyMeasurable
           (ae_of_all _ (fun p => hRI_bound p))
-      apply hintS.of_forall_diff_eq_zero (measurableSet_Ioi.prod measurableSet_Ioo)
+      apply hintS.of_forall_sdiff_eq_zero (measurableSet_Ioi.prod measurableSet_Ioo)
       intro p hp
       obtain ⟨hpT, hpnS⟩ := hp
       obtain ⟨hr', hθ⟩ := hpT
@@ -1024,14 +1024,14 @@ lemma czOperator_beurling_tendsto_smooth (hμ : ContDiff ℝ 1 μ) (hμc : HasCo
         have hsin : HasDerivAt (fun s : ℝ => (Real.sin s : ℂ)) ((Real.cos p.2 : ℝ) : ℂ) p.2 :=
           (Real.hasDerivAt_sin p.2).ofReal_comp
         have hdd := hcos.sub (hsin.mul_const I)
-        convert hdd using 1
+        refine hdd.congr_deriv (Eq.symm ?_)
         rw [he_def]
         simp only [map_add, map_mul, Complex.conj_I, Complex.conj_ofReal, Complex.ofReal_neg]
         linear_combination (Real.sin p.2 : ℂ) * Complex.I_mul_I
       have hconj2_d : HasDerivAt (fun s : ℝ => ((starRingEnd ℂ) (e s))^2)
           (-2 * I * ((starRingEnd ℂ) (e p.2))^2) p.2 := by
         have h := hconj_d.pow 2
-        convert h using 1
+        refine h.congr_deriv (Eq.symm ?_)
         have hps : (2:ℕ) - 1 = 1 := rfl
         rw [hps, pow_one]; push_cast; ring
       have hμ_d : HasDerivAt (fun t : ℝ => μ (z + (p.1:ℂ) * e t))
@@ -1140,7 +1140,7 @@ lemma czOperator_beurling_tendsto_smooth (hμ : ContDiff ℝ 1 μ) (hμc : HasCo
       have hIFM : IsFiniteMeasure (volume.restrict S) :=
         ⟨by rw [Measure.restrict_apply_univ]; exact hSfin.lt_top⟩
       have hintS : IntegrableOn AI S volume := ⟨haem, HasFiniteIntegral.of_bounded hbnd⟩
-      apply hintS.of_forall_diff_eq_zero (measurableSet_Ioi.prod measurableSet_Ioo)
+      apply hintS.of_forall_sdiff_eq_zero (measurableSet_Ioi.prod measurableSet_Ioo)
       intro p hp
       obtain ⟨hpT, hpnS⟩ := hp
       obtain ⟨hr', hθ⟩ := hpT
@@ -1207,14 +1207,14 @@ lemma czOperator_beurling_tendsto_smooth (hμ : ContDiff ℝ 1 μ) (hμc : HasCo
             have hsin : HasDerivAt (fun s : ℝ => (Real.sin s : ℂ)) ((Real.cos θ : ℝ) : ℂ) θ :=
               (Real.hasDerivAt_sin θ).ofReal_comp
             have hdd := hcos.sub (hsin.mul_const I)
-            convert hdd using 1
+            refine hdd.congr_deriv (Eq.symm ?_)
             rw [he_def]
             simp only [map_add, map_mul, Complex.conj_I, Complex.conj_ofReal, Complex.ofReal_neg]
             linear_combination (Real.sin θ : ℂ) * Complex.I_mul_I
           have hconj2_d : HasDerivAt (fun s : ℝ => ((starRingEnd ℂ) (e s))^2)
               (-2 * I * ((starRingEnd ℂ) (e θ))^2) θ := by
             have h := hconj_d.pow 2
-            convert h using 1
+            refine h.congr_deriv (Eq.symm ?_)
             have hps : (2:ℕ) - 1 = 1 := rfl
             rw [hps, pow_one]; push_cast; ring
           have hμ_d : HasDerivAt (fun t : ℝ => μ (z + (ρ:ℂ) * e t))
@@ -1284,9 +1284,9 @@ lemma czOperator_beurling_tendsto_smooth (hμ : ContDiff ℝ 1 μ) (hμc : HasCo
     filter_upwards [hcongr] with r hr
     exact hr.symm
   -- Express the `czOperator` truncation via the explicit integral (`rfl`).
-  have hcz : ∀ r : ℝ, czOperator (fun a b => (a - b) ^ (-2 : ℤ)) r μ z
+  have hcz : ∀ r : ℝ, czOperator beurlingKernel r μ z
       = ∫ y in (Metric.ball z r)ᶜ, (z - y) ^ (-2 : ℤ) * μ y := fun r => rfl
-  simpa [hcz] using hmain
+  simpa only [hcz] using hmain
 
 /-- **`T = ∂ ∘ P`.** The Beurling transform is the holomorphic Wirtinger
 derivative of the Cauchy transform. -/
@@ -1327,7 +1327,7 @@ theorem beurling_eq_dz_cauchyTransform (hμ : ContDiff ℝ 1 μ) (hμc : HasComp
             rw [← norm_ne_zero_iff, hnorm]; exact ne_of_gt hp1
           rw [enorm_inv hsymm_ne]
           have henorm : ‖Complex.polarCoord.symm p‖ₑ = ENNReal.ofReal p.1 := by
-            rw [← ofReal_norm_eq_enorm, hnorm]
+            rw [← ofReal_norm, hnorm]
           rw [henorm, smul_eq_mul,
             ENNReal.mul_inv_cancel (by simp only [ne_eq, ENNReal.ofReal_eq_zero, not_le]; exact hp1)
               ENNReal.ofReal_lt_top.ne]
@@ -1419,7 +1419,7 @@ theorem beurling_eq_dz_cauchyTransform (hμ : ContDiff ℝ 1 μ) (hμc : HasComp
       rw [h2]; congr 1
       exact MeasureTheory.integral_const_mul Complex.I B
     rw [hRHS, dz, hfderiv]
-    rw [ContinuousLinearMap.smul_apply, ContinuousLinearMap.smul_apply, smul_eq_mul, smul_eq_mul]
+    rw [smul_apply, smul_apply, smul_eq_mul, smul_eq_mul]
     rw [hD₀1, hD₀I]
     ring
   rw [hA]

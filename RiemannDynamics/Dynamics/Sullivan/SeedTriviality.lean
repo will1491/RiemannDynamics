@@ -136,7 +136,7 @@ theorem seedSolution_continuous (a : ℂ) {ρ : ℝ} (hρ : 0 < ρ) (k : ℕ) :
   · intro z hz
     have hz' : z ∈ Metric.sphere a ρ := by
       rw [← frontier_ball a hρ.ne']
-      simpa [Set.setOf_mem_eq] using hz
+      simpa [Set.ofPred_mem_eq] using! hz
     exact hmatch z (mem_sphere_iff_norm.mp hz')
   · exact ((Complex.continuous_conj.comp
       (continuous_id.sub continuous_const)).pow (k + 1)).continuousOn
@@ -187,7 +187,7 @@ theorem hasL2WeakDzbar_seedSolution (a : ℂ) {ρ : ℝ} (hρ : 0 < ρ) (k : ℕ
   have hσmem : ∀ p : ENNReal, MemLp (seedBasis a ρ k) p volume := by
     intro p
     rw [hind, memLp_indicator_iff_restrict measurableSet_ball]
-    haveI : IsFiniteMeasure ((volume : Measure ℂ).restrict (Metric.ball a ρ)) :=
+    have : IsFiniteMeasure ((volume : Measure ℂ).restrict (Metric.ball a ρ)) :=
       ⟨by rw [Measure.restrict_apply_univ]; exact measure_ball_lt_top⟩
     refine MemLp.of_bound (hgcont.aestronglyMeasurable.restrict)
       (((k : ℝ) + 1) * ρ ^ k) ?_
@@ -252,7 +252,7 @@ theorem hasL2WeakDzbar_seedSolution (a : ℂ) {ρ : ℝ} (hρ : 0 < ρ) (k : ℕ
     have hc : ContDiff ℝ 1 fun z : ℂ => starRingEnd ℂ z := by
       have := ContinuousLinearMap.contDiff (n := 1)
         (Complex.conjCLE.toContinuousLinearMap : ℂ →L[ℝ] ℂ)
-      simpa using this
+      simpa using! this
     exact hc.comp hq
   have hU_cont : Continuous fun z : ℂ => starRingEnd ℂ ((z - a) ^ (k + 1)) :=
     hU_cd.continuous
@@ -286,7 +286,7 @@ theorem hasL2WeakDzbar_seedSolution (a : ℂ) {ρ : ℝ} (hρ : 0 < ρ) (k : ℕ
       have hq : HasDerivAt (fun w : ℂ => (w - a) ^ (k + 1))
           ((k + 1 : ℕ) * (z - a) ^ k * 1) z := by
         have := ((hasDerivAt_id z).sub_const a).pow (k + 1)
-        simpa using this
+        simpa using! this
       have hdz : dz (fun w : ℂ => (w - a) ^ (k + 1)) z
           = ((k + 1 : ℕ) : ℂ) * (z - a) ^ k := by
         rw [dz_eq_deriv_of_differentiableAt hq.differentiableAt, hq.deriv]
@@ -785,7 +785,7 @@ theorem eqOn_zero_of_forall_frontier_tendsto_zero {V : Set ℂ} (hV : IsOpen V)
   have hKcl : IsClosed K := by
     refine isClosed_of_closure_subset fun z hz => ?_
     have hzclV : z ∈ closure V := closure_mono hKV hz
-    haveI hzne : (nhdsWithin z K).NeBot := mem_closure_iff_nhdsWithin_neBot.mp hz
+    have hzne : (nhdsWithin z K).NeBot := mem_closure_iff_nhdsWithin_neBot.mp hz
     have hεle : ∀ᶠ w in nhdsWithin z K, ε ≤ ‖F w‖ := by
       filter_upwards [self_mem_nhdsWithin] with w hw
       exact hw.2
@@ -866,7 +866,7 @@ theorem eqOn_zero_of_forall_frontier_tendsto_zero {V : Set ℂ} (hV : IsOpen V)
         rw [hV.frontier_eq]
         exact ⟨closure_mono hWV (frontier_subset_closure hp), hpV⟩
       have hpcl : p ∈ closure W := frontier_subset_closure hp
-      haveI hpne : (nhdsWithin p W).NeBot := mem_closure_iff_nhdsWithin_neBot.mp hpcl
+      have hpne : (nhdsWithin p W).NeBot := mem_closure_iff_nhdsWithin_neBot.mp hpcl
       have ht0 : Tendsto F (nhdsWithin p W) (nhds 0) :=
         (hfront p hpfront).mono_left (nhdsWithin_mono p hWV)
       have ht1 : Tendsto F (nhdsWithin p W) (nhds (F z₁)) := by
@@ -898,7 +898,7 @@ theorem differentiableOn_sub_seedSolutions {U' : Set ℂ} (hU' : IsOpen U')
     intro g hg
     rw [MeasureTheory.locallyIntegrable_iff]
     intro k hk
-    haveI : IsFiniteMeasure ((volume : Measure ℂ).restrict k) :=
+    have : IsFiniteMeasure ((volume : Measure ℂ).restrict k) :=
       ⟨by rw [Measure.restrict_apply_univ]; exact hk.measure_lt_top⟩
     exact (hg k (Set.subset_univ k) hk).integrable (by norm_num)
   -- closure of the weak-`∂̄` predicate under scalar multiples
@@ -968,7 +968,7 @@ theorem differentiableOn_sub_seedSolutions {U' : Set ℂ} (hU' : IsOpen U')
         have hcont1 : Continuous fun z => c k₀ * seedSolution a ρ (k₀ : ℕ) z :=
           continuous_const.mul (seedSolution_continuous a hρ k₀)
         have hconts : Continuous fun z => ∑ k ∈ s, c k * seedSolution a ρ (k : ℕ) z :=
-          continuous_finset_sum _ fun k _ =>
+          continuous_finsetSum _ fun k _ =>
             continuous_const.mul (seedSolution_continuous a hρ k)
         have := hadd _ _ _ _ hcont1 hconts h1 ih
         simpa only [Finset.sum_insert hk] using this
@@ -976,7 +976,7 @@ theorem differentiableOn_sub_seedSolutions {U' : Set ℂ} (hU' : IsOpen U')
   obtain ⟨gxv, gyv, ⟨hgx1, hgy1⟩, hgxL, hgyL, hcombv⟩ := hgrad
   obtain ⟨gxS, gyS, ⟨hgxS1, hgyS1⟩, hgxSL, hgySL, hcombS⟩ := key Finset.univ
   have hSumCont : Continuous fun z => ∑ k : Fin K, c k * seedSolution a ρ k z :=
-    continuous_finset_sum _ fun k _ =>
+    continuous_finsetSum _ fun k _ =>
       continuous_const.mul (seedSolution_continuous a hρ k)
   have hsub_x : HasWeakDirDeriv 1 (fun z => gxv z - gxS z)
       (fun z => v z - ∑ k : Fin K, c k * seedSolution a ρ k z) Set.univ :=
@@ -1087,7 +1087,7 @@ theorem coeffs_eq_zero_of_negPowerCombo_extends {a : ℂ} {ρ : ℝ} (hρ : 0 < 
       (𝓝 (c j * ((ρ ^ (2 * (j.1 + 1)) : ℝ) : ℂ))) := by
     have hc : Continuous (fun z : ℂ => ∑ k : Fin K,
         c k * ((ρ ^ (2 * (k.1 + 1)) : ℝ) : ℂ) * (z - a) ^ (j.1 - k.1)) :=
-      continuous_finset_sum _ fun k _ =>
+      continuous_finsetSum _ fun k _ =>
         continuous_const.mul ((continuous_id.sub continuous_const).pow _)
     have h2 := (hc.tendsto a).mono_left
       (nhdsWithin_le_nhds : 𝓝[≠] a ≤ 𝓝 a)

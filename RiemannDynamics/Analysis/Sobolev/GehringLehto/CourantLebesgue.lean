@@ -659,7 +659,7 @@ theorem courantLebesgue_smooth {g : ℂ → ℂ} (hg : ContDiff ℝ 1 g) (x : �
     rw [ENNReal.ofReal_add (by positivity) (by positivity)]
     have e : ∀ a : ℂ, (‖a‖₊ : ℝ≥0∞) ^ 2 = ENNReal.ofReal (‖a‖ ^ 2) := by
       intro a
-      rw [← enorm_eq_nnnorm, ← ofReal_norm_eq_enorm, ← ENNReal.ofReal_pow (norm_nonneg _)]
+      rw [← enorm_eq_nnnorm, ← ofReal_norm, ← ENNReal.ofReal_pow (norm_nonneg _)]
     rw [e, e]
   -- `Φ` is continuous (since `g` is `C¹`), hence measurable.
   have hΦ_cont : Continuous Φ := by
@@ -929,7 +929,7 @@ theorem courantLebesgue_smooth {g : ℂ → ℂ} (hg : ContDiff ℝ 1 g) (x : �
         rw [← ENNReal.ofReal_mul (by positivity), ← ENNReal.ofReal_mul (by positivity)]
         congr 1; ring
     _ ≤ ENNReal.ofReal (Real.pi / 2) * c :=
-        mul_le_mul_of_nonneg_left hρle (zero_le _)
+        mul_le_mul_of_nonneg_left hρle (zero_le)
     _ = ENNReal.ofReal (Real.pi / (2 * Real.log 2)) * E := by
         rw [hc_def, ← mul_assoc, ← ENNReal.ofReal_mul (by positivity)]
         congr 2

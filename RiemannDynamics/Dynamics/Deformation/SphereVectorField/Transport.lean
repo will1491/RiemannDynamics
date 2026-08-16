@@ -45,7 +45,7 @@ theorem hasL2WeakDzbar_inversion_transport {Ω : Set ℂ} (hΩ : IsOpen Ω)
     HasL2WeakDzbar (fun z => -z ^ 2 * u z⁻¹)
       (fun z => z ^ 2 / (starRingEnd ℂ z) ^ 2 * ν z⁻¹) Ω := by
   classical
-  haveI : IsScalarTower ℝ ℂ ℂ := IsScalarTower.right
+  have : IsScalarTower ℝ ℂ ℂ := IsScalarTower.right
   obtain ⟨Gx, Gy, ⟨hGx, hGy⟩, hGx2, hGy2, haeQ⟩ := hgrad
   set Ω' : Set ℂ := (fun z : ℂ => z⁻¹) '' Ω with hΩ'def
   -- the `dz`- and `dzbar`-parts of the weak gradient of `u`
@@ -124,7 +124,6 @@ theorem hasL2WeakDzbar_inversion_transport {Ω : Set ℂ} (hΩ : IsOpen Ω)
       (hfder S hS0) (inv_injective.injOn) F]
     refine setIntegral_congr_fun hS (fun w hw => ?_)
     rw [hdet w (hS0 w hw), abs_of_nonneg (by positivity)]
-    rfl
   have hcovLint : ∀ S : Set ℂ, MeasurableSet S → (∀ x ∈ S, x ≠ 0) → ∀ F : ℂ → ℝ≥0∞,
       ∫⁻ z in (fun w : ℂ => w⁻¹) '' S, F z
         = ∫⁻ w in S, ENNReal.ofReal ((‖w‖ ^ 4)⁻¹) * F w⁻¹ := by
@@ -146,11 +145,11 @@ theorem hasL2WeakDzbar_inversion_transport {Ω : Set ℂ} (hΩ : IsOpen Ω)
     rw [ae_iff] at hp ⊢
     have hbadnull : volume {w : ℂ | w ∈ S ∧ ¬ p w} = 0 := by
       refine measure_mono_null (fun w hw => ?_) hp
-      simp only [Set.mem_setOf_eq] at hw ⊢
+      simp only [Set.mem_ofPred_eq] at hw ⊢
       exact fun h => hw.2 (h hw.1)
     refine measure_mono_null (fun z hz => ?_)
       (hnullimg {w : ℂ | w ∈ S ∧ ¬ p w} (fun x hx => hS0 x hx.1) hbadnull)
-    simp only [Set.mem_setOf_eq, Classical.not_imp] at hz
+    simp only [Set.mem_ofPred_eq, Classical.not_imp] at hz
     exact ⟨z⁻¹, ⟨(hmemimg S z).mp hz.1, hz.2⟩, inv_inv z⟩
   /- ### Integrability classes -/
   have huloc : LocallyIntegrableOn u Ω' :=
@@ -160,7 +159,7 @@ theorem hasL2WeakDzbar_inversion_transport {Ω : Set ℂ} (hΩ : IsOpen Ω)
     intro S hSopen g hg
     rw [MeasureTheory.locallyIntegrableOn_iff hSopen.isLocallyClosed]
     intro k hkS hk
-    haveI : IsFiniteMeasure ((volume : Measure ℂ).restrict k) :=
+    have : IsFiniteMeasure ((volume : Measure ℂ).restrict k) :=
       ⟨by rw [Measure.restrict_apply_univ]; exact hk.measure_lt_top⟩
     exact (hg k hkS hk).integrable (by norm_num)
   have hP2 : MemLpLocOn P 2 Ω' := by
@@ -245,7 +244,7 @@ theorem hasL2WeakDzbar_inversion_transport {Ω : Set ℂ} (hΩ : IsOpen Ω)
   /- ### `L²_loc` of the transported Wirtinger parts -/
   have hA2 : MemLpLocOn A 2 Ω := by
     intro K hKΩ hKc
-    haveI : IsFiniteMeasure ((volume : Measure ℂ).restrict K) :=
+    have : IsFiniteMeasure ((volume : Measure ℂ).restrict K) :=
       ⟨by rw [Measure.restrict_apply_univ]; exact hKc.measure_lt_top⟩
     have hcont1 : ContinuousOn (fun z : ℂ => -(2 * (z * u z⁻¹))) Ω :=
       (continuousOn_const.mul (continuousOn_id.mul (hu.comp hinvcontΩ hmaps))).neg
@@ -671,9 +670,7 @@ theorem hasL2WeakDzbar_inversion_transport {Ω : Set ℂ} (hΩ : IsOpen Ω)
       have h3 : dz (fun z : ℂ => (z ^ 2)⁻¹) w = -(2 * w ^ 1) * (((w ^ 2) ^ 2)⁻¹) := by
         have hd : HasDerivAt (fun z : ℂ => (z ^ 2)⁻¹)
             (-(2 * w ^ 1) * (((w ^ 2) ^ 2)⁻¹)) w := by
-          have := ((hasDerivAt_id w).pow 2).inv (pow_ne_zero 2 hw)
-          simp only [id_eq, mul_one] at this
-          convert this using 1
+          simpa [div_eq_mul_inv] using! (hasDerivAt_pow 2 w).fun_inv (pow_ne_zero 2 hw)
         rw [dz_eq_deriv_of_differentiableAt hd.differentiableAt, hd.deriv]
       have h4 : dz (fun z : ℂ => ((starRingEnd ℂ z) ^ 2)⁻¹) w = 0 := by
         have hrw : (fun z : ℂ => ((starRingEnd ℂ z) ^ 2)⁻¹)
@@ -950,8 +947,8 @@ theorem hasL2WeakDzbar_dbarSolver {μ : ℂ → ℂ}
     HasL2WeakDzbar (dbarSolver μ) μ Set.univ := by
   classical
   -- `ℝ`-on-`ℂ` tower/continuity instances not found by default synthesis here
-  haveI : IsScalarTower ℝ ℂ ℂ := IsScalarTower.right
-  haveI : ContinuousSMul ℝ ℂ := by
+  have : IsScalarTower ℝ ℂ ℂ := IsScalarTower.right
+  have : ContinuousSMul ℝ ℂ := by
     refine ⟨?_⟩
     have h : (fun p : ℝ × ℂ => p.1 • p.2) = fun p : ℝ × ℂ => (p.1 : ℂ) * p.2 := by
       funext p
@@ -996,7 +993,7 @@ theorem hasL2WeakDzbar_dbarSolver {μ : ℂ → ℂ}
       · exact Or.inl ⟨z, ⟨hz, h0⟩, rfl⟩
     refine measure_mono_null hsub (measure_union_null ?_ (measure_singleton 0))
     refine addHaar_image_eq_zero_of_differentiableOn_of_addHaar_eq_zero volume
-      ?_ (measure_mono_null Set.diff_subset hN)
+      ?_ (measure_mono_null Set.sdiff_subset hN)
     intro z hz
     exact (differentiableAt_inv (𝕜 := ℝ) (by simpa using hz.2)).differentiableWithinAt
   have hqmp : Measure.QuasiMeasurePreserving (fun z : ℂ => z⁻¹)
@@ -1022,7 +1019,7 @@ theorem hasL2WeakDzbar_dbarSolver {μ : ℂ → ℂ}
     · rw [Set.indicator_of_notMem hw]
       simp only [ballTruncation]
       rw [if_neg hw]
-  haveI hfin1 : IsFiniteMeasure (volume.restrict (Metric.closedBall (0:ℂ) 1)) :=
+  have hfin1 : IsFiniteMeasure (volume.restrict (Metric.closedBall (0:ℂ) 1)) :=
     ⟨by rw [Measure.restrict_apply_univ]
         exact (isCompact_closedBall _ _).measure_lt_top⟩
   have hballmemP : ∀ p : ℝ≥0∞, MemLp (ballTruncation μ) p volume := by
@@ -1064,16 +1061,16 @@ theorem hasL2WeakDzbar_dbarSolver {μ : ℂ → ℂ}
           (fun w : ℂ => w ^ 2 / (starRingEnd ℂ w) ^ 2 * μ w⁻¹) := by
     funext w
     by_cases hw : w ∈ Metric.ball (0:ℂ) 1 ∧ w ≠ 0
-    · rw [Set.indicator_of_mem ((Set.mem_diff w).mpr ⟨hw.1, by simpa using hw.2⟩)]
+    · rw [Set.indicator_of_mem ((Set.mem_sdiff w).mpr ⟨hw.1, by simpa using hw.2⟩)]
       simp only [inftyChartCoeff]
       rw [if_pos hw]
     · rw [Set.indicator_of_notMem
         (fun hmem => hw ⟨hmem.1, by simpa using hmem.2⟩)]
       simp only [inftyChartCoeff]
       rw [if_neg hw]
-  haveI hfin2 : IsFiniteMeasure (volume.restrict (Metric.ball (0:ℂ) 1 \ {0})) :=
+  have hfin2 : IsFiniteMeasure (volume.restrict (Metric.ball (0:ℂ) 1 \ {0})) :=
     ⟨by rw [Measure.restrict_apply_univ]
-        exact lt_of_le_of_lt (measure_mono Set.diff_subset) measure_ball_lt_top⟩
+        exact lt_of_le_of_lt (measure_mono Set.sdiff_subset) measure_ball_lt_top⟩
   have hinftymemP : ∀ p : ℝ≥0∞, MemLp (inftyChartCoeff μ) p volume := by
     intro p
     rw [hinfty_eq, memLp_indicator_iff_restrict
@@ -1099,7 +1096,7 @@ theorem hasL2WeakDzbar_dbarSolver {μ : ℂ → ℂ}
           rw [norm_mul]
           exact mul_le_of_le_one_left (norm_nonneg _) hfac
       _ ≤ (eLpNormEssSup μ volume).toReal := by
-          rw [← ofReal_norm_eq_enorm] at hw
+          rw [← ofReal_norm] at hw
           exact (ENNReal.ofReal_le_iff_le_toReal hb.ne).mp hw
   -- ===== the Cauchy-transform calculus for the two pieces =====
   have h24 : (2:ℝ≥0∞) < 4 := by norm_num
@@ -1279,7 +1276,7 @@ theorem hasL2WeakDzbar_dbarSolver {μ : ℂ → ℂ}
     have hgB_int : ∀ K : Set ℂ, K ⊆ {(0:ℂ)}ᶜ → IsCompact K →
         IntegrableOn gB K volume := by
       intro K hK hKc
-      haveI : IsFiniteMeasure (volume.restrict K) :=
+      have : IsFiniteMeasure (volume.restrict K) :=
         ⟨by rw [Measure.restrict_apply_univ]; exact hKc.measure_lt_top⟩
       exact memLp_one_iff_integrable.mp
         ((hgB2 K hK hKc).mono_exponent (by norm_num : (1:ℝ≥0∞) ≤ 2))
@@ -1287,12 +1284,12 @@ theorem hasL2WeakDzbar_dbarSolver {μ : ℂ → ℂ}
     have hae : ∀ᵐ z ∂(volume : Measure ℂ),
         z ∈ Metric.ball (0:ℂ) 1 \ {0} → gB z = cB z := by
       refine HasWeakDirDeriv.ae_eq (isOpen_ball.sdiff isClosed_singleton)
-        (hgB.mono fun z hz => hz.2) (hcB.mono Set.diff_subset) ?_ ?_
+        (hgB.mono fun z hz => hz.2) (hcB.mono Set.sdiff_subset) ?_ ?_
       · rw [MeasureTheory.locallyIntegrableOn_iff
           (isOpen_ball.sdiff isClosed_singleton).isLocallyClosed]
         intro k hk hkc
         exact hgB_int k (fun z hz => (hk hz).2) hkc
-      · exact (hcBc.mono Set.diff_subset).locallyIntegrableOn
+      · exact (hcBc.mono Set.sdiff_subset).locallyIntegrableOn
           (measurableSet_ball.diff (measurableSet_singleton 0))
     -- null sphere for the piecewise seam
     have hnullsphere : ∀ᵐ z ∂(volume : Measure ℂ),
@@ -1327,7 +1324,7 @@ theorem hasL2WeakDzbar_dbarSolver {μ : ℂ → ℂ}
       refine closure_minimal ?_ (isClosed_le continuous_const continuous_norm)
       intro z hz
       by_contra hlt
-      simp only [Set.mem_setOf_eq, not_le] at hlt
+      simp only [Set.mem_ofPred_eq, not_le] at hlt
       have hz14 : z ∈ Metric.closedBall (0:ℂ) (1/4 : ℝ) := by
         simpa [Metric.mem_closedBall, dist_zero_right] using hlt.le
       have hη1 : η z = 1 := η.one_of_mem_closedBall hz14
@@ -1336,7 +1333,7 @@ theorem hasL2WeakDzbar_dbarSolver {μ : ℂ → ℂ}
     have hts₂ : tsupport (fun z => φ z - η z * φ z) ⊆ {(0:ℂ)}ᶜ := by
       refine hts₂q.trans ?_
       intro z hz
-      simp only [Set.mem_setOf_eq] at hz
+      simp only [Set.mem_ofPred_eq] at hz
       simp only [Set.mem_compl_iff, Set.mem_singleton_iff]
       intro h0
       rw [h0, norm_zero] at hz
@@ -1484,7 +1481,7 @@ theorem hasL2WeakDzbar_dbarSolver {μ : ℂ → ℂ}
         (volume.restrict K) := by
       rw [memLp_indicator_iff_restrict measurableSet_ball,
         Measure.restrict_restrict measurableSet_ball]
-      haveI : IsFiniteMeasure (volume.restrict (Metric.ball (0:ℂ) (1/2) ∩ K)) :=
+      have : IsFiniteMeasure (volume.restrict (Metric.ball (0:ℂ) (1/2) ∩ K)) :=
         ⟨by rw [Measure.restrict_apply_univ]
             exact lt_of_le_of_lt (measure_mono Set.inter_subset_right)
               hKc.measure_lt_top⟩
@@ -1521,7 +1518,7 @@ theorem hasL2WeakDzbar_dbarSolver {μ : ℂ → ℂ}
     intro g hg
     rw [locallyIntegrable_iff]
     intro k hk
-    haveI : IsFiniteMeasure (volume.restrict k) :=
+    have : IsFiniteMeasure (volume.restrict k) :=
       ⟨by rw [Measure.restrict_apply_univ]; exact hk.measure_lt_top⟩
     exact memLp_one_iff_integrable.mp
       ((hg k (Set.subset_univ k) hk).mono_exponent (by norm_num : (1:ℝ≥0∞) ≤ 2))

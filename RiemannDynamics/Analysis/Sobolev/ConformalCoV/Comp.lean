@@ -46,9 +46,9 @@ theorem hasWeakDirDeriv_comp_conformal {w gx gy φ φ' ψ ψ' f : ℂ → ℂ} {
         ψ' (w (φ z)) * (((v * φ' z).re : ℂ) * gx (φ z) + ((v * φ' z).im : ℂ) * gy (φ z)))
       2 U := by
   classical
-  haveI : NormSMulClass ℝ ℂ := NormedSpace.toNormSMulClass
-  haveI : IsBoundedSMul ℝ ℂ := NormSMulClass.toIsBoundedSMul
-  haveI : ContinuousSMul ℝ ℂ := IsBoundedSMul.continuousSMul
+  have : NormSMulClass ℝ ℂ := NormedSpace.toNormSMulClass
+  have : IsBoundedSMul ℝ ℂ := NormSMulClass.toIsBoundedSMul
+  have : ContinuousSMul ℝ ℂ := IsBoundedSMul.continuousSMul
   -- ================= (S0) analyticity and continuity of the data =================
   have hφdiff : DifferentiableOn ℂ φ U :=
     fun z hz => ((hφ z hz).differentiableAt).differentiableWithinAt
@@ -129,19 +129,19 @@ theorem hasWeakDirDeriv_comp_conformal {w gx gy φ φ' ψ ψ' f : ℂ → ℂ} {
     dsimp only
     rw [hdet, abs_of_nonneg (Complex.normSq_nonneg _),
       show Complex.normSq (φ' z) = ‖φ' z‖ ^ 2 from Complex.normSq_eq_norm_sq _,
-      ENNReal.ofReal_pow (norm_nonneg _), ofReal_norm_eq_enorm]
+      ENNReal.ofReal_pow (norm_nonneg _), ofReal_norm]
   -- ================= (S5) null sets pull back to null sets =================
   have hnullpre : ∀ (E : Set ℂ), volume E = 0 → ∀ (K : Set ℂ), IsCompact K → K ⊆ U →
       volume {z | z ∈ K ∧ φ z ∈ E} = 0 := by
     intro E hE K hKc hKU
     obtain ⟨E', hEE', hE'meas, hE'null⟩ := exists_measurable_superset_of_null hE
     -- measurability of the preimage within `K`
-    have hres : Continuous (K.restrict φ) := ContinuousOn.restrict (hφcont.mono hKU)
+    have hres : Continuous (K.domRestrict φ) := ContinuousOn.domRestrict (hφcont.mono hKU)
     have hs_meas : MeasurableSet (K ∩ φ ⁻¹' E') := by
-      have h1 : MeasurableSet ((K.restrict φ) ⁻¹' E') := hres.measurable hE'meas
-      have h2 : MeasurableSet (Subtype.val '' ((K.restrict φ) ⁻¹' E')) :=
+      have h1 : MeasurableSet ((K.domRestrict φ) ⁻¹' E') := hres.measurable hE'meas
+      have h2 : MeasurableSet (Subtype.val '' ((K.domRestrict φ) ⁻¹' E')) :=
         MeasurableSet.subtype_image hKc.measurableSet h1
-      have h3 : Subtype.val '' ((K.restrict φ) ⁻¹' E') = K ∩ φ ⁻¹' E' := by
+      have h3 : Subtype.val '' ((K.domRestrict φ) ⁻¹' E') = K ∩ φ ⁻¹' E' := by
         ext z
         constructor
         · rintro ⟨⟨y, hy⟩, hmem, rfl⟩
@@ -160,7 +160,7 @@ theorem hasWeakDirDeriv_comp_conformal {w gx gy φ φ' ψ ψ' f : ℂ → ℂ} {
       exact hz.2
     have hzero : (∫⁻ z in s, ENNReal.ofReal |(ContinuousLinearMap.mul ℝ ℂ (φ' z)).det| ∂volume)
         = 0 := by
-      refine le_antisymm (le_trans hle ?_) (zero_le _)
+      refine le_antisymm (le_trans hle ?_) (zero_le)
       rw [← hE'null]
       exact measure_mono himg
     -- the integrand is a.e.-measurable and pointwise positive on `s`
@@ -213,7 +213,7 @@ theorem hasWeakDirDeriv_comp_conformal {w gx gy φ φ' ψ ψ' f : ℂ → ℂ} {
       rw [MeasureTheory.ae_iff] at h1
       refine measure_mono_null ?_ h1
       intro ζ hζ
-      simp only [Set.mem_setOf_eq, Classical.not_imp]
+      simp only [Set.mem_ofPred_eq, Classical.not_imp]
       exact ⟨hζ.2, hζ.1⟩
     obtain ⟨E, hEsub, hEmeas, hEnull⟩ := exists_measurable_superset_of_null hqnull
     have hpre : volume {z | z ∈ K ∧ φ z ∈ E} = 0 := hnullpre E hEnull K hKc hKU
@@ -222,7 +222,7 @@ theorem hasWeakDirDeriv_comp_conformal {w gx gy φ φ' ψ ψ' f : ℂ → ℂ} {
         (fun z => q (φ z)) := by
       have h2 : ∀ᵐ z ∂(volume.restrict K), ¬(z ∈ K ∧ φ z ∈ E) := by
         rw [MeasureTheory.ae_iff]
-        refine le_antisymm (le_trans (Measure.restrict_le_self _) ?_) (zero_le _)
+        refine le_antisymm (le_trans (Measure.restrict_le_self _) ?_) (zero_le)
         rw [← hpre]
         apply le_of_eq
         congr 1
@@ -480,11 +480,11 @@ theorem hasWeakDirDeriv_comp_conformal {w gx gy φ φ' ψ ψ' f : ℂ → ℂ} {
       _ = ‖(u.re : ℂ)‖ₑ * ‖x‖ₑ + ‖(u.im : ℂ)‖ₑ * ‖y‖ₑ := by rw [enorm_mul, enorm_mul]
       _ ≤ ‖u‖ₑ * ‖x‖ₑ + ‖u‖ₑ * ‖y‖ₑ := by
           gcongr
-          · rw [← ofReal_norm_eq_enorm, ← ofReal_norm_eq_enorm]
+          · rw [← ofReal_norm, ← ofReal_norm]
             apply ENNReal.ofReal_le_ofReal
             rw [Complex.norm_real, Real.norm_eq_abs]
             exact Complex.abs_re_le_norm u
-          · rw [← ofReal_norm_eq_enorm, ← ofReal_norm_eq_enorm]
+          · rw [← ofReal_norm, ← ofReal_norm]
             apply ENNReal.ofReal_le_ofReal
             rw [Complex.norm_real, Real.norm_eq_abs]
             exact Complex.abs_im_le_norm u
@@ -613,7 +613,7 @@ theorem hasWeakDirDeriv_comp_conformal {w gx gy φ φ' ψ ψ' f : ℂ → ℂ} {
       intro g0 hg0
       rw [MeasureTheory.locallyIntegrableOn_iff hU'open.isLocallyClosed]
       intro k hk hkc
-      haveI : IsFiniteMeasure (volume.restrict k) :=
+      have : IsFiniteMeasure (volume.restrict k) :=
         ⟨by rw [Measure.restrict_apply_univ]; exact hkc.measure_lt_top⟩
       exact memLp_one_iff_integrable.mp ((hg0 k hk hkc).mono_exponent (by norm_num))
     have hWxU' : HasWeakDirDeriv 1 Gx W (φ '' U) :=
@@ -653,7 +653,7 @@ theorem hasWeakDirDeriv_comp_conformal {w gx gy φ φ' ψ ψ' f : ℂ → ℂ} {
             rw [hΦdef]
             change (fderiv ℝ (fun y => φtt y * χ₂ y) ζ) vv = _
             rw [fderiv_fun_mul hd1 hd2]
-            simp only [ContinuousLinearMap.add_apply, ContinuousLinearMap.smul_apply,
+            simp only [add_apply, smul_apply,
               smul_eq_mul]
           rw [hprod, hχ₂fdO₂ ζ hζO₂, hχ₂one ζ hζO₂]
           simp
@@ -915,10 +915,10 @@ theorem hasWeakDirDeriv_comp_conformal {w gx gy φ φ' ψ ψ' f : ℂ → ℂ} {
       simpa using h2
     have hXn0 : Filter.Tendsto Xn Filter.atTop (nhds 0) :=
       tendsto_of_tendsto_of_tendsto_of_le_of_le tendsto_const_nhds hofr0
-        (fun n => zero_le _) (fun n => (hXYn_le n).1)
+        (fun n => zero_le) (fun n => (hXYn_le n).1)
     have hYn0 : Filter.Tendsto Yn Filter.atTop (nhds 0) :=
       tendsto_of_tendsto_of_tendsto_of_le_of_le tendsto_const_nhds hofr0
-        (fun n => zero_le _) (fun n => (hXYn_le n).2)
+        (fun n => zero_le) (fun n => (hXYn_le n).2)
     -- ==================== generic reduction and bound engines ====================
     have h0K : ∀ (F : ℂ → ℂ) (z : ℂ), z ∉ K → φt z • F z = 0 := by
       intro F z hz
@@ -951,8 +951,8 @@ theorem hasWeakDirDeriv_comp_conformal {w gx gy φ φ' ψ ψ' f : ℂ → ℂ} {
         exact hfin
     have henorm_smul_le : ∀ (r : ℝ) (x : ℂ), ‖r • x‖ₑ ≤ ‖r‖ₑ * ‖x‖ₑ := by
       intro r x
-      rw [← ofReal_norm_eq_enorm, ← ofReal_norm_eq_enorm (a := x),
-        ← ofReal_norm_eq_enorm (a := r), ← ENNReal.ofReal_mul (norm_nonneg r)]
+      rw [← ofReal_norm, ← ofReal_norm (x := x),
+        ← ofReal_norm (x := r), ← ENNReal.ofReal_mul (norm_nonneg r)]
       exact ENNReal.ofReal_le_ofReal (norm_smul_le r x)
     have hMφt0 : (0 : ℝ) ≤ Mφt := le_trans (norm_nonneg _) (hMφt 0)
     have hkey_pt : ∀ (a x y : ℂ) (z : ℂ),
@@ -961,7 +961,7 @@ theorem hasWeakDirDeriv_comp_conformal {w gx gy φ φ' ψ ψ' f : ℂ → ℂ} {
       intro a x y z
       refine le_trans (henorm_smul_le _ _) ?_
       have h1 : ‖φt z‖ₑ ≤ ENNReal.ofReal Mφt := by
-        rw [← ofReal_norm_eq_enorm]
+        rw [← ofReal_norm]
         exact ENNReal.ofReal_le_ofReal (hMφt z)
       refine mul_le_mul' h1 ?_
       refine le_trans (habs2 a x y (v * φ' z)) ?_
@@ -1034,7 +1034,7 @@ theorem hasWeakDirDeriv_comp_conformal {w gx gy φ φ' ψ ψ' f : ℂ → ℂ} {
             = ENNReal.ofReal Mφt * (ENNReal.ofReal Mψw
               * (‖v‖ₑ * ((‖gx (φ z)‖ₑ + ‖gy (φ z)‖ₑ) * ‖φ' z‖ₑ))) from by ring]
         gcongr
-        rw [← ofReal_norm_eq_enorm]
+        rw [← ofReal_norm]
         exact ENNReal.ofReal_le_ofReal (hMψw z hz)
       calc (∫⁻ z in K, ‖φt z • D z‖ₑ ∂volume)
           ≤ ∫⁻ z in K, (ENNReal.ofReal Mφt * ENNReal.ofReal Mψw * ‖v‖ₑ)
@@ -1101,7 +1101,7 @@ theorem hasWeakDirDeriv_comp_conformal {w gx gy φ φ' ψ ψ' f : ℂ → ℂ} {
                 + ‖(fderiv ℝ (gs n) (φ z)) Complex.I - gy (φ z)‖ₑ) * ‖φ' z‖ₑ)))
             from by ring]
         gcongr
-        rw [← ofReal_norm_eq_enorm]
+        rw [← ofReal_norm]
         exact ENNReal.ofReal_le_ofReal (hMψ' _ (hmemn z hz))
       calc (∫⁻ z in K, ‖φt z • (ψ' (gs n (φ z))
             * (((v * φ' z).re : ℂ) * ((fderiv ℝ (gs n) (φ z)) 1 - gx (φ z))
@@ -1161,7 +1161,7 @@ theorem hasWeakDirDeriv_comp_conformal {w gx gy φ φ' ψ ψ' f : ℂ → ℂ} {
               = ENNReal.ofReal Mφt * (ENNReal.ofReal (Mψ' + Mψw)
                 * (‖v‖ₑ * ((‖gx (φ z)‖ₑ + ‖gy (φ z)‖ₑ) * ‖φ' z‖ₑ))) from by ring]
           gcongr
-          rw [← ofReal_norm_eq_enorm]
+          rw [← ofReal_norm]
           apply ENNReal.ofReal_le_ofReal
           calc ‖ψ' (gs n (φ z)) - ψ' (w (φ z))‖
               ≤ ‖ψ' (gs n (φ z))‖ + ‖ψ' (w (φ z))‖ := norm_sub_le _ _
@@ -1197,12 +1197,12 @@ theorem hasWeakDirDeriv_comp_conformal {w gx gy φ φ' ψ ψ' f : ℂ → ℂ} {
           have hc := (ENNReal.continuous_rpow_const (y := (1 / 2 : ℝ))).tendsto (0 : ℝ≥0∞)
           have h2 := hc.comp hXn0
           rw [hrp0] at h2
-          simpa [Function.comp] using h2
+          simpa [Function.comp_def] using h2
         have hYr : Filter.Tendsto (fun n => (Yn n) ^ (1 / 2 : ℝ)) Filter.atTop (nhds 0) := by
           have hc := (ENNReal.continuous_rpow_const (y := (1 / 2 : ℝ))).tendsto (0 : ℝ≥0∞)
           have h2 := hc.comp hYn0
           rw [hrp0] at h2
-          simpa [Function.comp] using h2
+          simpa [Function.comp_def] using h2
         have h3 : Filter.Tendsto (fun n => (Xn n) ^ (1 / 2 : ℝ) + (Yn n) ^ (1 / 2 : ℝ))
             Filter.atTop (nhds 0) := by
           have h3' := hXr.add hYr
@@ -1223,7 +1223,7 @@ theorem hasWeakDirDeriv_comp_conformal {w gx gy φ φ' ψ ψ' f : ℂ → ℂ} {
         simpa using h5
       have henormA0 : Filter.Tendsto (fun n => ‖An n‖ₑ) Filter.atTop (nhds 0) :=
         tendsto_of_tendsto_of_tendsto_of_le_of_le' tendsto_const_nhds hbndA
-          (Filter.Eventually.of_forall (fun n => zero_le _)) henormA
+          (Filter.Eventually.of_forall (fun n => zero_le)) henormA
       rw [tendsto_iff_norm_sub_tendsto_zero]
       have h1 : Filter.Tendsto (fun n => (‖An n‖ₑ).toReal) Filter.atTop
           (nhds ((0 : ℝ≥0∞)).toReal) := (ENNReal.tendsto_toReal (by simp)).comp henormA0
@@ -1302,9 +1302,9 @@ theorem hasWeakDirDeriv_comp_conformal {w gx gy φ φ' ψ ψ' f : ℂ → ℂ} {
               rw [enorm_mul, enorm_mul, enorm_mul, enorm_mul, enorm_norm, enorm_norm]
               rw [show ‖(‖gx (φ z)‖ + ‖gy (φ z)‖ : ℝ)‖ₑ
                   = ‖gx (φ z)‖ₑ + ‖gy (φ z)‖ₑ from by
-                rw [← ofReal_norm_eq_enorm, Real.norm_of_nonneg (by positivity),
+                rw [← ofReal_norm, Real.norm_of_nonneg (by positivity),
                   ENNReal.ofReal_add (norm_nonneg _) (norm_nonneg _),
-                  ofReal_norm_eq_enorm, ofReal_norm_eq_enorm]]
+                  ofReal_norm, ofReal_norm]]
               ring
             calc (∫⁻ z, ‖Mφt * ((Mψ' + Mψw)
                   * (‖v‖ * ‖φ' z‖ * (‖gx (φ z)‖ + ‖gy (φ z)‖)))‖ₑ
@@ -1485,7 +1485,7 @@ theorem hasWeakDirDeriv_comp_conformal {w gx gy φ φ' ψ ψ' f : ℂ → ℂ} {
         refine le_trans (habs2 _ _ _ _) ?_
         rw [← enorm_mul]
         gcongr
-        rw [← ofReal_norm_eq_enorm]
+        rw [← ofReal_norm]
         exact ENNReal.ofReal_le_ofReal (hMψ z hz)
       calc ‖D z‖ₑ ^ (2 : ℕ)
           ≤ (ENNReal.ofReal Mψ

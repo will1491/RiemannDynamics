@@ -38,7 +38,7 @@ theorem transition_analyticAt (g : ℕ) [NeZero g] :
   have hg1 : 1 ≤ g := Nat.one_le_iff_ne_zero.mpr (NeZero.ne g)
   have hgR : (0 : ℝ) < g := by exact_mod_cast hg1
   have hπ : (0 : ℝ) < Real.pi := Real.pi_pos
-  haveI : NeZero (4 * g) := ⟨by omega⟩
+  have : NeZero (4 * g) := ⟨by omega⟩
   -- ## Norm facts
   have hnorm1 : ∀ s : ℝ, ‖Complex.exp (Real.pi * (s : ℂ) * Complex.I / (2 * g))‖ = 1 := by
     intro s
@@ -109,12 +109,12 @@ theorem transition_analyticAt (g : ℕ) [NeZero g] :
       edgeChartFun g k u = Quotient.mk (genusSetoid g) (projDisc u) := by
     intro k u h
     unfold edgeChartFun
-    rw [if_pos h]
+    exact if_pos h
   have hEFout : ∀ (k : ℤ) (u : ℂ), ¬ ‖u‖ ≤ 1 →
       edgeChartFun g k u = Quotient.mk (genusSetoid g) (projDisc (sidePairing g k u)) := by
     intro k u h
     unfold edgeChartFun
-    rw [if_neg h]
+    exact if_neg h
   -- Identify the preimage of an interior class under an edge-chart inverse.
   have hedgeW : ∀ (k : ℤ) (x w : ℂ), ‖x‖ < 1 →
       edgeChartFun g k w = Quotient.mk (genusSetoid g) (projDisc x) →

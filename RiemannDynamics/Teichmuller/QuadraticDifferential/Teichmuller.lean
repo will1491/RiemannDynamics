@@ -79,7 +79,7 @@ theorem conj_boundary {F : ℂ → ℂ} (hfc : Continuous F)
     rw [Metric.mem_closure_iff]
     intro ε hε
     refine ⟨(t : ℂ) + Complex.I * ((ε / 2 : ℝ) : ℂ), ?_, ?_⟩
-    · simp only [Set.mem_setOf_eq, Complex.add_im, Complex.mul_im, Complex.I_re,
+    · simp only [Set.mem_ofPred_eq, Complex.add_im, Complex.mul_im, Complex.I_re,
         Complex.I_im, Complex.ofReal_re, Complex.ofReal_im, one_mul, zero_add, mul_zero]
       linarith
     · rw [dist_eq_norm]
@@ -90,7 +90,7 @@ theorem conj_boundary {F : ℂ → ℂ} (hfc : Continuous F)
       linarith
   have hNB : (nhdsWithin (t : ℂ) {z : ℂ | 0 < z.im}).NeBot :=
     mem_closure_iff_nhdsWithin_neBot.mp hTcl
-  haveI := hNB
+  have := hNB
   have hLc : ContinuousAt (fun z : ℂ => F (moebiusMap γ z)) (t : ℂ) :=
     hfc.continuousAt.comp (hasDerivAt_moebiusMap γ ht).continuousAt
   have hL : Filter.Tendsto (fun z : ℂ => F (moebiusMap γ z))
@@ -244,8 +244,8 @@ theorem exists_upper_conjugator_of_candidates {x y : TeichRep Γ₀} {F G : ℂ 
       Set.Subsingleton.finite ((pole_subsingleton γ).preimage Complex.ofReal_injective)
     have hBc := hB1.infinite_compl
     obtain ⟨t₁, ht₁⟩ := hBc.nonempty
-    obtain ⟨t₂, ht₂⟩ := (hBc.diff (Set.finite_singleton t₁)).nonempty
-    obtain ⟨t₃, ht₃⟩ := (hBc.diff ((Set.finite_singleton t₂).insert t₁)).nonempty
+    obtain ⟨t₂, ht₂⟩ := (hBc.sdiff (Set.finite_singleton t₁)).nonempty
+    obtain ⟨t₃, ht₃⟩ := (hBc.sdiff ((Set.finite_singleton t₂).insert t₁)).nonempty
     have hd1 : moebiusDenom γ (t₁ : ℂ) ≠ 0 := ht₁
     have hd2 : moebiusDenom γ (t₂ : ℂ) ≠ 0 := ht₂.1
     have hd3 : moebiusDenom γ (t₃ : ℂ) ≠ 0 := ht₃.1
@@ -427,8 +427,8 @@ theorem exists_upper_conjugator_of_candidates₂ {x y : TeichRep Γ₀} {F G : �
       Set.Subsingleton.finite ((pole_subsingleton γ).preimage Complex.ofReal_injective)
     have hBc := hB1.infinite_compl
     obtain ⟨t₁, ht₁⟩ := hBc.nonempty
-    obtain ⟨t₂, ht₂⟩ := (hBc.diff (Set.finite_singleton t₁)).nonempty
-    obtain ⟨t₃, ht₃⟩ := (hBc.diff ((Set.finite_singleton t₂).insert t₁)).nonempty
+    obtain ⟨t₂, ht₂⟩ := (hBc.sdiff (Set.finite_singleton t₁)).nonempty
+    obtain ⟨t₃, ht₃⟩ := (hBc.sdiff ((Set.finite_singleton t₂).insert t₁)).nonempty
     have hd1 : moebiusDenom γ (t₁ : ℂ) ≠ 0 := ht₁
     have hd2 : moebiusDenom γ (t₂ : ℂ) ≠ 0 := ht₂.1
     have hd3 : moebiusDenom γ (t₃ : ℂ) ≠ 0 := ht₃.1
@@ -574,7 +574,7 @@ theorem isTeichmullerCandidate_le_dilatation (hΓ₀ : IsFuchsianGroup Γ₀)
     filter_upwards [q.ae_ne_zero hq0, hFbel, ae_restrict_of_ae hHpull,
       ae_differentiableAt hHqc, hHqc.jac, ae_qc_facts hHqc, ae_restrict_mem hUm]
       with z hqz hzbel hzN hzdiff hzjac hzfacts hzU
-    simp only [hNdef, Set.mem_setOf_eq, not_not] at hzN
+    simp only [hNdef, Set.mem_ofPred_eq, not_not] at hzN
     obtain ⟨hGdiff, hGbel, hGbnd, hGjac⟩ := hzN
     refine mul_le_mul' le_rfl (ENNReal.ofReal_le_ofReal ?_)
     -- the frame at the point
@@ -741,7 +741,7 @@ theorem upper_id_of_dzbar_zero {H Hinv : ℂ → ℂ} {κ K : ℝ} (hκ1 : κ < 
       rw [Metric.mem_closure_iff]
       intro ε hε
       refine ⟨(s : ℂ) + Complex.I * ((ε / 2 : ℝ) : ℂ), ?_, ?_⟩
-      · simp only [Set.mem_setOf_eq, Complex.add_im, Complex.mul_im, Complex.I_re,
+      · simp only [Set.mem_ofPred_eq, Complex.add_im, Complex.mul_im, Complex.I_re,
           Complex.I_im, Complex.ofReal_re, Complex.ofReal_im, one_mul, zero_add,
           mul_zero]
         linarith
@@ -751,7 +751,7 @@ theorem upper_id_of_dzbar_zero {H Hinv : ℂ → ℂ} {κ K : ℝ} (hκ1 : κ < 
         rw [hsub, norm_neg, norm_mul, Complex.norm_I, one_mul, Complex.norm_real,
           Real.norm_eq_abs, abs_of_pos (by linarith)]
         linarith
-    haveI hNB : (nhdsWithin (s : ℂ) {z : ℂ | 0 < z.im}).NeBot :=
+    have hNB : (nhdsWithin (s : ℂ) {z : ℂ | 0 < z.im}).NeBot :=
       mem_closure_iff_nhdsWithin_neBot.mp hTcl
     have hL : Filter.Tendsto (fun ζ : ℂ => ζ)
         (nhdsWithin (s : ℂ) {z : ℂ | 0 < z.im}) (nhds (s : ℂ)) :=
@@ -776,8 +776,8 @@ theorem upper_id_of_dzbar_zero {H Hinv : ℂ → ℂ} {κ K : ℝ} (hκ1 : κ < 
     Set.Subsingleton.finite ((pole_subsingleton R).preimage Complex.ofReal_injective)
   have hBc := hB1.infinite_compl
   obtain ⟨t₁, ht₁⟩ := hBc.nonempty
-  obtain ⟨t₂, ht₂⟩ := (hBc.diff (Set.finite_singleton t₁)).nonempty
-  obtain ⟨t₃, ht₃⟩ := (hBc.diff ((Set.finite_singleton t₂).insert t₁)).nonempty
+  obtain ⟨t₂, ht₂⟩ := (hBc.sdiff (Set.finite_singleton t₁)).nonempty
+  obtain ⟨t₃, ht₃⟩ := (hBc.sdiff ((Set.finite_singleton t₂).insert t₁)).nonempty
   have hd1 : moebiusDenom R (t₁ : ℂ) ≠ 0 := ht₁
   have hd2 : moebiusDenom R (t₂ : ℂ) ≠ 0 := ht₂.1
   have hd3 : moebiusDenom R (t₃ : ℂ) ≠ 0 := ht₃.1
@@ -879,7 +879,7 @@ theorem isTeichmullerCandidate_unique (hΓ₀ : IsFuchsianGroup Γ₀)
     filter_upwards [q.ae_ne_zero hq0, hFbel, ae_restrict_of_ae hHpull,
       ae_differentiableAt hHqc, hHqc.jac, ae_qc_facts hHqc, ae_restrict_mem hUm]
       with z hqz hzbel hzN hzdiff hzjac hzfacts hzU
-    simp only [hNdef, Set.mem_setOf_eq, not_not] at hzN
+    simp only [hNdef, Set.mem_ofPred_eq, not_not] at hzN
     obtain ⟨hGdiff, hGbel, hGbnd, hGjac⟩ := hzN
     set θz : ℂ := q z / (‖q z‖ : ℂ) with hθzdef
     set α : ℂ := dz H z with hαdef
@@ -1567,7 +1567,7 @@ theorem qc_pullback_ae {f : ℂ → ℂ} {K : ℝ} (hf : IsQCGeometric f K)
   rw [ae_iff] at hae ⊢
   have hsub : {z | ¬ P (f z)} = ⇑e.symm '' {ζ | ¬ P ζ} := by
     ext z
-    simp only [Set.mem_setOf_eq, Set.mem_image]
+    simp only [Set.mem_ofPred_eq, Set.mem_image]
     constructor
     · intro h
       refine ⟨f z, h, ?_⟩
@@ -1594,7 +1594,7 @@ theorem qc_pushforward_ae {f : ℂ → ℂ} {K : ℝ} (hf : IsQCGeometric f K)
       rw [← happ]
       exact e.apply_symm_apply ζ
     refine ⟨e.symm ζ, ?_, hval⟩
-    simp only [Set.mem_setOf_eq, hval]
+    simp only [Set.mem_ofPred_eq, hval]
     exact hζ
   exact measure_mono_null hsub (hf.lusinN _ hae)
 

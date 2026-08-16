@@ -246,6 +246,7 @@ theorem exists_mobius_of_diffeomorph_unitDisc
   rw [h1]
   exact mul_comm _ _
 
+set_option backward.isDefEq.respectTransparency false in
 /-- **Disc automorphisms act as `SL(2, ℝ)` on the upper half plane**: the
 Cayley conjugate of a rotation-Möbius automorphism of the disc is a real
 fractional linear map of positive determinant, normalized to determinant
@@ -412,8 +413,8 @@ theorem exists_fuchsian_model {X : Type*} [TopologicalSpace X]
         π z = π w ↔ ∃ γ : Γ, γ • toUpperHalfPlane z = toUpperHalfPlane w) ∧
       Nonempty (X ≃ₜ Quotient (MulAction.orbitRel Γ UpperHalfPlane)) := by
   classical
-  haveI : LocPathConnectedSpace X := ChartedSpace.locPathConnectedSpace ℂ X
-  haveI : PathConnectedSpace X := PathConnectedSpace.of_locPathConnectedSpace
+  have : LocallyPathConnectedSpace X := ChartedSpace.locallyPathConnectedSpace ℂ X
+  have : PathConnectedSpace X := PathConnectedSpace.of_locallyPathConnectedSpace
   set x₀ : X := Classical.arbitrary X
   obtain ⟨E⟩ := hX x₀
   -- The Cayley homeomorphism from the disc to the upper half plane.
@@ -516,7 +517,6 @@ theorem exists_fuchsian_model {X : Type*} [TopologicalSpace X]
       hB.comp pc hA
     refine hF.congr_of_eventuallyEq
       (Filter.eventuallyEq_of_mem (e₁.open_source.mem_nhds hpc₁) fun qc hqc => ?_)
-    change pathCoverProj x₀ qc = f₁.symm (e₁ qc)
     rw [← hcomm₁ qc hqc]
     exact (f₁.left_inv (hall₁ qc hqc)).symm
   -- The covering map from the upper half plane.

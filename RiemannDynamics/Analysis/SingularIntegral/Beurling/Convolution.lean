@@ -59,7 +59,7 @@ lemma czOperator_beurling_eq_convolution (r : ℝ) (f : ℂ → ℂ) :
         (fun y => (Metric.ball x r)ᶜ.indicator (fun y => beurlingKernel x y * f y) y) volume x]
   · funext t
     have hmem : (x - t ∈ (Metric.ball x r)ᶜ) ↔ (t ∈ {u : ℂ | r ≤ ‖u‖}) := by
-      simp only [Set.mem_compl_iff, Metric.mem_ball, Set.mem_setOf_eq, not_lt, dist_eq_norm,
+      simp only [Set.mem_compl_iff, Metric.mem_ball, Set.mem_ofPred_eq, not_lt, dist_eq_norm,
         show x - t - x = -t by ring, norm_neg]
     by_cases h : t ∈ {u : ℂ | r ≤ ‖u‖}
     · have h2 : (x - t) ∈ (Metric.ball x r)ᶜ := hmem.mpr h
@@ -106,7 +106,7 @@ lemma eLpNorm_convolution_le {g f : ℂ → ℂ}
   refine le_trans hmono ?_
   -- Step 3: Minkowski's integral inequality (p = 2)
   have hGmeas : AEMeasurable (Function.uncurry G) (volume.prod volume) := by
-    apply AEMeasurable.mul
+    apply AEMeasurable.fun_mul
     · exact hgm.comp_snd
     · have hsub : AEStronglyMeasurable (fun p : ℂ × ℂ => f (p.1 - p.2)) (volume.prod volume) :=
         hfm.comp_quasiMeasurePreserving
@@ -243,7 +243,7 @@ lemma ae_convolutionExistsAt {g : ℂ → ℂ} (hg : MemLp g 1 volume) {f : ℂ 
   have hgm : AEMeasurable (fun t => ‖g t‖ₑ) volume := hg.1.enorm
   have hfm : AEStronglyMeasurable f volume := hf.1
   have hGmeas : AEMeasurable (Function.uncurry G) (volume.prod volume) := by
-    apply AEMeasurable.mul
+    apply AEMeasurable.fun_mul
     · exact hgm.comp_snd
     · have hsub : AEStronglyMeasurable (fun p : ℂ × ℂ => f (p.1 - p.2)) (volume.prod volume) :=
         hfm.comp_quasiMeasurePreserving
@@ -479,7 +479,7 @@ private theorem qmp_sub21 : Measure.QuasiMeasurePreserving (fun p : ℂ × ℂ =
     (volume.prod volume) volume := by
   have h1 : Measure.QuasiMeasurePreserving (fun p : ℂ × ℂ => p.1 - p.2)
       (volume.prod volume) volume := quasiMeasurePreserving_sub_of_right_invariant volume volume
-  simpa [Function.comp, Prod.swap] using
+  simpa [Function.comp_def, Prod.swap] using
     h1.comp (Measure.measurePreserving_swap).quasiMeasurePreserving
 
 private theorem qmp_sub12 : Measure.QuasiMeasurePreserving (fun p : ℂ × ℂ => p.1 - p.2)
@@ -570,7 +570,7 @@ theorem joint_int2 (g F H : ℂ → ℂ) (hg : MemLp g 1 volume)
           (volume.prod volume) := by
         have := hmeas.norm.comp_measurePreserving
           (Measure.measurePreserving_swap (μ := (volume : Measure ℂ)) (ν := volume))
-        simpa [Function.comp, Prod.swap] using this
+        simpa [Function.comp_def, Prod.swap] using this
       exact hsw.integral_prod_right'
     refine Integrable.mono' hdom hmeasL ?_
     filter_upwards with t
@@ -633,7 +633,7 @@ theorem dL_eq (g F H : ℂ → ℂ) (hg : MemLp g 1 volume)
       (fun x t => starRingEnd ℂ (g t) * (starRingEnd ℂ (F (x - t)) * H x)))
       (volume.prod volume) := by
     have := (joint_int g F H hg hF hH).swap
-    simpa [Function.uncurry, Function.comp, Prod.swap] using this
+    simpa [Function.uncurry_def, Function.comp_def, Prod.swap] using this
   rw [integral_integral_swap hLint]
   apply integral_congr_ae; filter_upwards with t
   rw [← integral_add_right_eq_self
@@ -649,7 +649,7 @@ theorem dR_eq (g F H : ℂ → ℂ) (hg : MemLp g 1 volume)
   have hRint : Integrable (Function.uncurry
       (fun y t => starRingEnd ℂ (F y) * (starRingEnd ℂ (g (-t)) * H (y - t))))
       (volume.prod volume) := by
-    simpa [Function.uncurry] using (joint_int2 g F H hg hF hH)
+    simpa [Function.uncurry_def] using (joint_int2 g F H hg hF hH)
   rw [integral_integral_swap hRint]
   rw [← integral_neg_eq_self
       (fun t => ∫ y, starRingEnd ℂ (F y) * (starRingEnd ℂ (g (-t)) * H (y - t)) ∂volume)]
@@ -836,7 +836,7 @@ lemma eLpNorm_convolution_one_le {g f : ℂ → ℂ}
   refine le_trans hmono ?_
   have hGmeas : AEMeasurable (Function.uncurry fun x t => ‖g t‖ₑ * ‖f (x - t)‖ₑ)
       (volume.prod volume) := by
-    apply AEMeasurable.mul
+    apply AEMeasurable.fun_mul
     · exact hgm.comp_snd
     · have hsub : AEStronglyMeasurable (fun p : ℂ × ℂ => f (p.1 - p.2)) (volume.prod volume) :=
         hfm.comp_quasiMeasurePreserving
@@ -964,7 +964,7 @@ lemma eCirc_conj_hasDerivAt (θ : ℝ) :
   have hsin : HasDerivAt (fun t : ℝ => (Real.sin t : ℂ)) ((Real.cos θ : ℝ) : ℂ) θ :=
     (Real.hasDerivAt_sin θ).ofReal_comp
   have hd := hcos.sub (hsin.mul_const I)
-  convert hd using 1
+  convert! hd using 1
   rw [eCirc]
   simp only [map_add, map_mul, Complex.conj_I, Complex.conj_ofReal, Complex.ofReal_neg]
   linear_combination (Real.sin θ : ℂ) * Complex.I_mul_I
@@ -977,7 +977,7 @@ lemma angular_integral_eq_zero :
       (((starRingEnd ℂ) (eCirc s)) ^ 2) s := by
     intro s
     have h2 := ((eCirc_conj_hasDerivAt s).pow 2).const_mul (I / 2)
-    convert h2 using 1
+    convert! h2 using 1
     have hps : (2:ℕ) - 1 = 1 := rfl
     rw [hps, pow_one]
     have hI2 : (I:ℂ) ^ 2 = -1 := by rw [pow_two]; exact Complex.I_mul_I
@@ -1010,7 +1010,7 @@ lemma angular_integral_pow_eq_zero (n : ℕ) (hn : 1 ≤ n) :
         ((n : ℂ) * (eCirc s) ^ (n - 1) * (I * eCirc s)) s :=
       (eCirc_hasDerivAt s).pow n
     have hd2 := hd.div_const ((n : ℂ) * I)
-    convert hd2 using 1
+    convert! hd2 using 1
     rw [eq_div_iff hni]
     have hns : (eCirc s) ^ (n - 1) * eCirc s = (eCirc s) ^ n := by
       rw [← pow_succ]; congr 1; omega
@@ -1063,7 +1063,7 @@ lemma integral_dyadicBeurling_eq_zero (r : ℝ) (hr : 0 < r) (i : ℕ) :
     by_cases hmem : Complex.polarCoord.symm p ∈
         {u : ℂ | (2:ℝ)^i * r ≤ ‖u‖ ∧ ‖u‖ < (2:ℝ)^(i+1) * r}
     · rw [Set.indicator_of_mem hmem]
-      simp only [Set.mem_setOf_eq, hnorm, ← ha_def, ← hb_def] at hmem
+      simp only [Set.mem_ofPred_eq, hnorm, ← ha_def, ← hb_def] at hmem
       rw [Set.indicator_of_mem (Set.mem_Ico.mpr ⟨hmem.1, hmem.2⟩)]
       rw [polarCoord_symm_eq]
       have hp1ne : (p.1 : ℂ) ≠ 0 := by exact_mod_cast ne_of_gt hp1
@@ -1072,7 +1072,7 @@ lemma integral_dyadicBeurling_eq_zero (r : ℝ) (hr : 0 < r) (i : ℕ) :
       rw [real_smul]
       field_simp
     · rw [Set.indicator_of_notMem hmem]
-      simp only [Set.mem_setOf_eq, hnorm, ← ha_def, ← hb_def] at hmem
+      simp only [Set.mem_ofPred_eq, hnorm, ← ha_def, ← hb_def] at hmem
       rw [Set.indicator_of_notMem (by
         simp only [Set.mem_Ico, not_and, not_lt]
         intro h1; by_contra h2; exact hmem ⟨h1, not_le.mp h2⟩)]
@@ -1191,7 +1191,7 @@ lemma integral_id_mul_dyadicBeurling_eq_zero (r : ℝ) (hr : 0 < r) (j : ℕ) :
         {u : ℂ | (2:ℝ)^j * r ≤ ‖u‖ ∧ ‖u‖ < (2:ℝ)^(j+1) * r} := by
       have hnorm : ‖(ρ : ℂ) * eCirc θ‖ = ρ := by
         rw [norm_mul, eCirc_norm, mul_one, Complex.norm_real, Real.norm_of_nonneg hρ.le]
-      simp only [Set.mem_setOf_eq, hnorm]; exact ⟨hρa, hρb⟩
+      simp only [Set.mem_ofPred_eq, hnorm]; exact ⟨hρa, hρb⟩
     rw [Set.indicator_of_mem hmem]
     exact polar_value_id_mul ρ hρ θ
   · -- angular integral vanishes: ∫ conj(e θ) = conj(∫ e θ) = conj(∫ (e θ)^1) = 0
@@ -1241,7 +1241,7 @@ lemma integral_conj_mul_dyadicBeurling_eq_zero (r : ℝ) (hr : 0 < r) (j : ℕ) 
         {u : ℂ | (2:ℝ)^j * r ≤ ‖u‖ ∧ ‖u‖ < (2:ℝ)^(j+1) * r} := by
       have hnorm : ‖(ρ : ℂ) * eCirc θ‖ = ρ := by
         rw [norm_mul, eCirc_norm, mul_one, Complex.norm_real, Real.norm_of_nonneg hρ.le]
-      simp only [Set.mem_setOf_eq, hnorm]; exact ⟨hρa, hρb⟩
+      simp only [Set.mem_ofPred_eq, hnorm]; exact ⟨hρa, hρb⟩
     rw [Set.indicator_of_mem hmem]
     exact polar_value_conj_mul ρ hρ θ
   · -- angular integral vanishes
@@ -1345,7 +1345,7 @@ lemma eLpNorm_convolution_meanZero_le {g f : ℂ → ℂ}
   -- Fubini swap.
   have hGmeas : AEMeasurable
       (Function.uncurry fun x t => ‖g t‖ₑ * ‖f (x - t) - f x‖ₑ) (volume.prod volume) := by
-    apply AEMeasurable.mul
+    apply AEMeasurable.fun_mul
     · exact hgm.comp_snd
     · have hsub1 : AEStronglyMeasurable (fun p : ℂ × ℂ => f (p.1 - p.2)) (volume.prod volume) :=
         hfm.comp_quasiMeasurePreserving

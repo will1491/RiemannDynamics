@@ -83,9 +83,9 @@ theorem exists_measurableSet_superset_volume {a b : ℝ} (hab : a ≤ b) (A : Se
     exact ENNReal.ofReal_le_ofReal_iff (by linarith) |>.mp this
   set C : Set ℝ := Set.Icc a b \ A with hCdef
   have hCmeas : MeasurableSet C := measurableSet_Icc.diff hA
-  have hCsub : C ⊆ Set.Icc a b := diff_subset
+  have hCsub : C ⊆ Set.Icc a b := sdiff_subset
   have hCvol : volume C = ENNReal.ofReal (b - a) - volume A := by
-    rw [hCdef, measure_diff (by exact hAsub) hA.nullMeasurableSet hAfin, Real.volume_Icc]
+    rw [hCdef, measure_sdiff (by exact hAsub) hA.nullMeasurableSet hAfin, Real.volume_Icc]
   have hdefnn : 0 ≤ m - dA := by linarith
   have hCge : ENNReal.ofReal (m - dA) ≤ volume C := by
     rw [hCvol, hAeq, ← ENNReal.ofReal_sub _ hdAnn]
@@ -277,7 +277,7 @@ theorem arcIntegral_eq_starPlane_extremal {p : ℂ} {u : ℂ → ℝ} {rI rO : �
     fun_prop
   have hint : Integrable (fun φ : ℝ => u (p + Complex.exp (w₀ + φ * Complex.I)))
       ((volume : Measure ℝ).restrict E₀) := by
-    haveI : IsFiniteMeasure ((volume : Measure ℝ).restrict E₀) :=
+    have : IsFiniteMeasure ((volume : Measure ℝ).restrict E₀) :=
       isFiniteMeasure_restrict.2 hE₀fin
     refine Integrable.of_bound hfibmeas.aestronglyMeasurable (max M 0) ?_
     filter_upwards with φ
@@ -380,7 +380,7 @@ theorem volume_translate_inter_le {E : Set ℝ} {x₀ ℓ : ℝ}
   calc volume ((fun x => x + ε) '' E ∩ (fun x => x - ε) '' E)
       ≤ volume ((fun x => x - ε) '' E \ Ico (x₀ - ε) (x₀ + ε)) := measure_mono hsub
     _ = volume ((fun x => x - ε) '' E) - volume (Ico (x₀ - ε) (x₀ + ε)) :=
-        measure_diff hwin measurableSet_Ico.nullMeasurableSet
+        measure_sdiff hwin measurableSet_Ico.nullMeasurableSet
           (by rw [Real.volume_Ico]; exact ofReal_ne_top)
     _ = volume E - ENNReal.ofReal (2 * ε) := by
         rw [hvol₂, Real.volume_Ico]
@@ -527,10 +527,10 @@ theorem arcIntegral_le_starFunction_window {p : ℂ} {u : ℂ → ℝ} {E : Set 
   -- Sum of the two shifted integrals is the integral over the union.
   have hsum : (∫⁻ ψ in D₁, g ψ) + ∫⁻ ψ in D₂, g ψ = ∫⁻ ψ in D₁ ∪ D₂, g ψ := by
     have hd₁ : (∫⁻ ψ in D₁, g ψ) = ∫⁻ ψ in D₁ \ D₂, g ψ := by
-      conv_lhs => rw [← Set.diff_union_inter D₁ D₂]
+      conv_lhs => rw [← Set.sdiff_union_inter D₁ D₂]
       rw [lintegral_union (hD₁meas.inter hD₂meas) Set.disjoint_sdiff_inter,
         setLIntegral_measure_zero _ _ hDinter, add_zero]
-    rw [hd₁, ← lintegral_union hD₂meas disjoint_sdiff_left, Set.diff_union_self]
+    rw [hd₁, ← lintegral_union hD₂meas disjoint_sdiff_left, Set.sdiff_union_self]
   -- The union is an admissible competitor for the star profile.
   set D : Set ℝ := D₁ ∪ D₂ with hDdef
   have hDmeas : MeasurableSet D := hD₁meas.union hD₂meas
@@ -641,7 +641,7 @@ theorem exists_attaining_structured {p : ℂ} {u : ℂ → ℝ} {rI rO : ℝ} {r
     have hAopen : IsOpen A := by
       have h1 : IsOpen {z : ℂ | rI < ‖z - p‖} := isOpen_lt continuous_const (by fun_prop)
       have h2 : IsOpen {z : ℂ | ‖z - p‖ < rO} := isOpen_lt (by fun_prop) continuous_const
-      simpa [hA, Set.setOf_and] using h1.inter h2
+      simpa [hA, Set.ofPred_and] using h1.inter h2
     have hmA : ∀ ψ : ℝ, (p + (r : ℂ) * Complex.exp (((ψ - π : ℝ)) * Complex.I)) ∈ A := by
       intro ψ
       have hn : ‖(p + (r : ℂ) * Complex.exp (((ψ - π : ℝ)) * Complex.I)) - p‖ = r := by
@@ -737,11 +737,11 @@ theorem exists_attaining_structured {p : ℂ} {u : ℂ → ℝ} {rI rO : ℝ} {r
       have hempty : distribFun (2 * π) g (ENNReal.ofReal (max M0 0)) = 0 := by
         have hset : {y ∈ Icc (0 : ℝ) (2 * π) | ENNReal.ofReal (max M0 0) < g y} = ∅ := by
           ext y
-          simp only [mem_setOf_eq, mem_empty_iff_false, iff_false, not_and]
+          simp only [mem_ofPred_eq, mem_empty_iff_false, iff_false, not_and]
           exact fun _ => not_lt.mpr (hgleM y)
         rw [distribFun, hset, measure_empty]
       rw [hempty] at h2
-      exact absurd h2 (not_lt.mpr (zero_le _))
+      exact absurd h2 (not_lt.mpr (zero_le))
     set c' : ℝ := c.toReal with hc'def
     have hc'0 : 0 ≤ c' := ENNReal.toReal_nonneg
     have hcoe : c = ENNReal.ofReal c' := (ENNReal.ofReal_toReal hcne).symm
@@ -757,7 +757,7 @@ theorem exists_attaining_structured {p : ℂ} {u : ℂ → ℝ} {rI rO : ℝ} {r
     have hP2 : ENNReal.ofReal (2 * θ) ≤ volume {x ∈ Icc (0 : ℝ) (2 * π) | c ≤ g x} := by
       rcases eq_or_ne c 0 with hc0 | hc0
       · have hset : {x ∈ Icc (0 : ℝ) (2 * π) | c ≤ g x} = Icc (0 : ℝ) (2 * π) := by
-          ext x; simp only [mem_setOf_eq, hc0, zero_le, and_true]
+          ext x; simp only [mem_ofPred_eq, hc0, zero_le, and_true]
         rw [hset, Real.volume_Icc, sub_zero]
         exact ENNReal.ofReal_le_ofReal (by linarith)
       · obtain ⟨v, hvmono, hvmem, hvtend⟩ :=
@@ -772,7 +772,7 @@ theorem exists_attaining_structured {p : ℂ} {u : ℂ → ℝ} {rI rO : ℝ} {r
           rw [Real.volume_Icc]; exact ofReal_ne_top
         have hInter : ⋂ n, s n = {x ∈ Icc (0 : ℝ) (2 * π) | c ≤ g x} := by
           ext x
-          simp only [mem_iInter, hs, mem_setOf_eq]
+          simp only [mem_iInter, hs, mem_ofPred_eq]
           constructor
           · intro h; exact ⟨(h 0).1, le_of_tendsto' hvtend (fun n => (h n).2.le)⟩
           · rintro ⟨hxI, hxc⟩ n; exact ⟨hxI, lt_of_lt_of_le (hvmem n).2 hxc⟩
@@ -804,7 +804,7 @@ theorem exists_attaining_structured {p : ℂ} {u : ℂ → ℝ} {rI rO : ℝ} {r
       have hset : {x ∈ Icc (0 : ℝ) (2 * π) | g x = c}
           = {x ∈ Icc (0 : ℝ) (2 * π) | G x = c'} := by
         ext x
-        simp only [mem_setOf_eq]
+        simp only [mem_ofPred_eq]
         exact and_congr_right (fun _ => heq_iff x)
       rw [hset]
       exact ((hlevfin c' 0 (2 * π)).countable).measure_zero _
@@ -896,7 +896,7 @@ theorem exists_attaining_structured {p : ℂ} {u : ℂ → ℝ} {rI rO : ℝ} {r
     have hSmeas : MeasurableSet S := measurableSet_lt measurable_const hGcont.measurable
     have hFcore : S ∩ Ioo τ (τ + 2 * π) ⊆ F := by
       rintro ψ ⟨hψgt, hψI⟩
-      rw [hSdef, mem_setOf_eq] at hψgt
+      rw [hSdef, mem_ofPred_eq] at hψgt
       obtain ⟨zb, hzbZ, hzblt⟩ := hlevbelow ψ hψI hψgt
       obtain ⟨za, hzaZ, hzagt⟩ := hlevabove ψ hψI hψgt
       have hbne : (Zs.filter (fun z => z < ψ)).Nonempty :=
@@ -999,7 +999,7 @@ theorem exists_attaining_structured {p : ℂ} {u : ℂ → ℝ} {rI rO : ℝ} {r
             rw [← lintegral_union measurableSet_Ioc hdisj2, Ioc_union_Ioc_eq_Ioc hs₀0 hs₀2π]
     have hSmemper : ∀ (n : ℤ) (x : ℝ), x + 2 * π * n ∈ S ↔ x ∈ S := by
       intro n x
-      simp only [hSdef, mem_setOf_eq, hGperZ]
+      simp only [hSdef, mem_ofPred_eq, hGperZ]
     have hindper : ∀ (h : ℝ → ℝ≥0∞), (∀ (n : ℤ) (x : ℝ), h (x + 2 * π * n) = h x) →
         ∀ (n : ℤ) (x : ℝ), S.indicator h (x + 2 * π * n) = S.indicator h x := by
       intro h hper n x
@@ -1035,7 +1035,7 @@ theorem exists_attaining_structured {p : ℂ} {u : ℂ → ℝ} {rI rO : ℝ} {r
     -- Identify the standard-window core with the super-level set of `g`.
     have hident : {x ∈ Icc (0 : ℝ) (2 * π) | c < g x} = S ∩ Icc (0 : ℝ) (2 * π) := by
       ext x
-      simp only [mem_setOf_eq, mem_inter_iff, hSdef]
+      simp only [mem_ofPred_eq, mem_inter_iff, hSdef]
       constructor
       · rintro ⟨h1, h2⟩; exact ⟨(hsuper_iff x).mp h2, h1⟩
       · rintro ⟨h1, h2⟩; exact ⟨h2, (hsuper_iff x).mpr h1⟩
@@ -1060,7 +1060,7 @@ theorem exists_attaining_structured {p : ℂ} {u : ℂ → ℝ} {rI rO : ℝ} {r
         · have hset : {x ∈ {x ∈ Icc (0 : ℝ) (2 * π) | c < g x} | ENNReal.ofReal t < g x}
               = {x ∈ Icc (0 : ℝ) (2 * π) | ENNReal.ofReal t < g x} := by
             ext x
-            simp only [mem_setOf_eq]
+            simp only [mem_ofPred_eq]
             constructor
             · rintro ⟨⟨hxI, -⟩, hlt2⟩; exact ⟨hxI, hlt2⟩
             · rintro ⟨hxI, hlt2⟩; exact ⟨⟨hxI, lt_of_le_of_lt hct hlt2⟩, hlt2⟩
@@ -1070,7 +1070,7 @@ theorem exists_attaining_structured {p : ℂ} {u : ℂ → ℝ} {rI rO : ℝ} {r
         · have hset : {x ∈ {x ∈ Icc (0 : ℝ) (2 * π) | c < g x} | ENNReal.ofReal t < g x}
               = {x ∈ Icc (0 : ℝ) (2 * π) | c < g x} := by
             ext x
-            simp only [mem_setOf_eq]
+            simp only [mem_ofPred_eq]
             constructor
             · rintro ⟨hx, -⟩; exact hx
             · intro hx; exact ⟨hx, lt_trans hct hx.2⟩

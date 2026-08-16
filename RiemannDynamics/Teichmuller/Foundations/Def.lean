@@ -99,7 +99,7 @@ theorem symmExtension_bound {μ : ℂ → ℂ}
       exact hz1 hzim
     · have hmem : starRingEnd ℂ z ∈ {w : ℂ | 0 < w.im} := by
         have hlt : z.im < 0 := lt_of_le_of_ne (not_lt.mp hzim) hzax
-        simp only [Set.mem_setOf_eq, Complex.conj_im]
+        simp only [Set.mem_ofPred_eq, Complex.conj_im]
         linarith
       have hval : symmExtension μ z = starRingEnd ℂ (μ (starRingEnd ℂ z)) := by
         simp only [symmExtension]
@@ -190,7 +190,7 @@ theorem symmExtension_invariant {μ : ℂ → ℂ}
     have hgznlt : ¬0 < (moebiusMap γ z).im := not_lt.mpr hgzneg.le
     have hznlt : ¬0 < z.im := not_lt.mpr hneg.le
     have hczU : starRingEnd ℂ z ∈ {w : ℂ | 0 < w.im} := by
-      simp only [Set.mem_setOf_eq, Complex.conj_im]
+      simp only [Set.mem_ofPred_eq, Complex.conj_im]
       linarith
     have hL : symmExtension μ (moebiusMap γ z)
         = starRingEnd ℂ (μ (starRingEnd ℂ (moebiusMap γ z))) := by
@@ -468,7 +468,7 @@ theorem TeichRep.w_mapsTo_upper (x : TeichRep Γ₀) :
       intro p
       unfold homeoChartRep
       rw [chartAt_self_eq]
-      simp [Homeomorph.toOpenPartialHomeomorph_source]
+      simp [Homeomorph.toOpenPartialHomeomorph_source, chartAt_self_eq]
     -- a point of differentiability with positive Jacobian
     obtain ⟨z₀, hdet⟩ := hOP.2.exists
     have hdiff : DifferentiableAt ℝ x.w z₀ := by
@@ -855,7 +855,7 @@ theorem TeichRep.mem_group_iff_boundary (x : TeichRep Γ₀)
       rw [Metric.mem_closure_iff]
       intro ε hε
       refine ⟨(t : ℂ) + Complex.I * ((ε / 2 : ℝ) : ℂ), ?_, ?_⟩
-      · simp only [Set.mem_setOf_eq, Complex.add_im, Complex.mul_im, Complex.I_re,
+      · simp only [Set.mem_ofPred_eq, Complex.add_im, Complex.mul_im, Complex.I_re,
           Complex.I_im, Complex.ofReal_re, Complex.ofReal_im, one_mul, zero_add, mul_zero]
         linarith
       · rw [dist_eq_norm]
@@ -866,7 +866,7 @@ theorem TeichRep.mem_group_iff_boundary (x : TeichRep Γ₀)
         linarith
     have hNB : (nhdsWithin (t : ℂ) {z : ℂ | 0 < z.im}).NeBot :=
       mem_closure_iff_nhdsWithin_neBot.mp hTcl
-    haveI := hNB
+    have := hNB
     have hLc : ContinuousAt (fun z : ℂ => x.w (moebiusMap γ z)) (t : ℂ) :=
       hfc.continuousAt.comp (hasDerivAt_moebiusMap γ ht).continuousAt
     have hL : Filter.Tendsto (fun z : ℂ => x.w (moebiusMap γ z))
@@ -980,12 +980,12 @@ theorem TeichRep.mem_group_iff_boundary (x : TeichRep Γ₀)
         moebiusDenom γ (s : ℂ) ≠ 0 ∧ moebiusDenom W (x.w (s : ℂ)) ≠ 0
           ∧ moebiusDenom W' (x.w (s : ℂ)) ≠ 0 := by
       intro s hs
-      simp only [Set.mem_compl_iff, Set.mem_union, Set.mem_setOf_eq, not_or] at hs
+      simp only [Set.mem_compl_iff, Set.mem_union, Set.mem_ofPred_eq, not_or] at hs
       exact ⟨hs.1.1, hs.1.2, hs.2⟩
     have hBc := hBfin.infinite_compl
     obtain ⟨t₁, ht₁⟩ := hBc.nonempty
-    obtain ⟨t₂, ht₂⟩ := (hBc.diff (Set.finite_singleton t₁)).nonempty
-    obtain ⟨t₃, ht₃⟩ := (hBc.diff ((Set.finite_singleton t₂).insert t₁)).nonempty
+    obtain ⟨t₂, ht₂⟩ := (hBc.sdiff (Set.finite_singleton t₁)).nonempty
+    obtain ⟨t₃, ht₃⟩ := (hBc.sdiff ((Set.finite_singleton t₂).insert t₁)).nonempty
     obtain ⟨hd1, hdW1, hdW'1⟩ := hsplit t₁ ht₁
     obtain ⟨hd2, hdW2, hdW'2⟩ := hsplit t₂ ht₂.1
     obtain ⟨hd3, hdW3, hdW'3⟩ := hsplit t₃ ht₃.1

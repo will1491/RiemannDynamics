@@ -58,7 +58,7 @@ theorem exists_harmonicOnNhd_pieceGreen_dipole_add_log (D₀ : CoordDisk M)
       ∀ w ∈ ball (chartAt ℂ pa pa) (2 * ra),
         |h w| ≤ C₀ + (|Real.log ra| + |Real.log (2 * ra)|) := by
   classical
-  haveI : LocallyConnectedSpace M := ChartedSpace.locallyConnectedSpace ℂ M
+  have : LocallyConnectedSpace M := ChartedSpace.locallyConnectedSpace ℂ M
   /- ## Harmonicity at a point respects eventual equality. -/
   have mharm_congr : ∀ (f g : M → ℝ) (y : M), (∀ᶠ z in 𝓝 y, f z = g z) →
       MHarmonicAt f y → MHarmonicAt g y := by
@@ -152,8 +152,8 @@ theorem exists_harmonicOnNhd_pieceGreen_dipole_add_log (D₀ : CoordDisk M)
       NoncompactSpace ↥P → HasGreenFunction (⟨p, hp⟩ : ↥P) →
       ∀ y, y ∈ P → y ≠ p → MHarmonicAt (pieceGreen P p) y := by
     intro P p hp hcs hnc hGF y hy hyp
-    haveI := hcs
-    haveI := hnc
+    have := hcs
+    have := hnc
     have h1 := (mharmonicOn_greenEnvelope hGF).1
     have h2 : MHarmonicAt (greenEnvelope (⟨p, hp⟩ : ↥P)) ⟨y, hy⟩ :=
       h1 _ (Set.mem_compl_singleton_iff.mpr
@@ -187,9 +187,9 @@ theorem exists_harmonicOnNhd_pieceGreen_dipole_add_log (D₀ : CoordDisk M)
     rwa [hpbcb] at h1
   have hpaP : pa ∈ P := fun hmem ↦ hpacar (hcarsub hmem)
   have hpbP : pb ∈ P := fun hmem ↦ hpbcar (hcarsub hmem)
-  haveI hPconn : ConnectedSpace ↥P :=
+  have hPconn : ConnectedSpace ↥P :=
     isConnected_iff_connectedSpace.mp (isConnected_coordDisk_compl _)
-  haveI hPnc : NoncompactSpace ↥P := noncompactSpace_coordDisk_compl _
+  have hPnc : NoncompactSpace ↥P := noncompactSpace_coordDisk_compl _
   have hGFa : HasGreenFunction (⟨pa, hpaP⟩ : ↥P) :=
     hasGreenFunction_coordDisk_compl _ pa hpaP
   have hGFb : HasGreenFunction (⟨pb, hpbP⟩ : ↥P) :=
@@ -203,7 +203,7 @@ theorem exists_harmonicOnNhd_pieceGreen_dipole_add_log (D₀ : CoordDisk M)
           Real.log ‖w - chartAt ℂ pa pa‖| ≤ B := by
     obtain ⟨rE, hrE0, hrEsub, hE, hEharm, hEval⟩ :=
       exists_harmonic_pole_extension hGFa
-    haveI hnety : Nonempty ↥(P) := ⟨⟨pa, hpaP⟩⟩
+    have hnety : Nonempty ↥(P) := ⟨⟨pa, hpaP⟩⟩
     set ea : OpenPartialHomeomorph M ℂ := chartAt ℂ pa with hea
     have hpasrc : pa ∈ ea.source := mem_chart_source ℂ pa
     have hct : chartAt ℂ (⟨pa, hpaP⟩ : ↥P) = ea.subtypeRestr hnety :=
@@ -537,7 +537,7 @@ theorem pieceGreen_dipole_sub_le_log_barrier (D₀ : CoordDisk M) {p₁ p₂ : M
         (Real.log (3 * D₀.radius / 4) -
           Real.log (dist (chartAt ℂ D₀.center x) (chartAt ℂ D₀.center D₀.center))) := by
   classical
-  haveI : LocallyConnectedSpace M := ChartedSpace.locallyConnectedSpace ℂ M
+  have : LocallyConnectedSpace M := ChartedSpace.locallyConnectedSpace ℂ M
   /- ## Plane-side helper: transfer of subharmonicity along a pointwise equality. -/
   have transfer : ∀ (F G : ℂ → ℝ) (U W : Set ℂ), SubharmonicOn F U → W ⊆ U →
       Set.EqOn F G W → SubharmonicOn G W := by
@@ -621,7 +621,7 @@ theorem pieceGreen_dipole_sub_le_log_barrier (D₀ : CoordDisk M) {p₁ p₂ : M
     have hfrne :
         (closure (connectedComponentIn Ω xm) \ connectedComponentIn Ω xm).Nonempty := by
       by_contra hem
-      rw [Set.not_nonempty_iff_eq_empty, Set.diff_eq_empty] at hem
+      rw [Set.not_nonempty_iff_eq_empty, Set.sdiff_eq_empty] at hem
       have hclopen : IsClopen (connectedComponentIn Ω xm) :=
         ⟨closure_eq_iff_isClosed.1 (Set.Subset.antisymm hem subset_closure), hCco⟩
       have huniv : connectedComponentIn Ω xm = Set.univ := hclopen.eq_univ ⟨xm, hCcx⟩
@@ -642,7 +642,7 @@ theorem pieceGreen_dipole_sub_le_log_barrier (D₀ : CoordDisk M) {p₁ p₂ : M
       exact hyC (he2.trans he1.symm ▸ hyC')
     have hyfr : y ∈ closure Ω \ Ω := ⟨closure_mono hCcΩ hycl, hyΩ⟩
     obtain ⟨hyct, hyle⟩ := hfr y hyfr
-    haveI hne2 : (𝓝[connectedComponentIn Ω xm] y).NeBot :=
+    have hne2 : (𝓝[connectedComponentIn Ω xm] y).NeBot :=
       mem_closure_iff_nhdsWithin_neBot.1 hycl
     have h1 : Tendsto w (𝓝[connectedComponentIn Ω xm] y) (𝓝 (w y)) :=
       hyct.continuousWithinAt
@@ -851,7 +851,7 @@ theorem pieceGreen_dipole_sub_le_log_barrier (D₀ : CoordDisk M) {p₁ p₂ : M
   have zeroFam : ∀ (P : Opens M) (p : M) (hp : p ∈ P),
       (fun _ : ↥P ↦ (0 : ℝ)) ∈ greenFamily (⟨p, hp⟩ : ↥P) := by
     intro P p hp
-    haveI : Nonempty ↥P := ⟨⟨p, hp⟩⟩
+    have : Nonempty ↥P := ⟨⟨p, hp⟩⟩
     refine ⟨fun z _ ↦ (mharmonicAt_const (a := (0 : ℝ))).msubharmonicAt,
       continuousOn_const, ⟨∅, isCompact_empty, Set.empty_ne_univ, fun z _ ↦ rfl⟩,
       ⟨0, ?_⟩⟩
@@ -947,8 +947,8 @@ theorem pieceGreen_dipole_sub_le_log_barrier (D₀ : CoordDisk M) {p₁ p₂ : M
       NoncompactSpace ↥P → HasGreenFunction (⟨p, hp⟩ : ↥P) →
       ∀ y, y ∈ P → y ≠ p → MHarmonicAt (pieceGreen P p) y := by
     intro P p hp hcs hnc hGF y hy hyp
-    haveI := hcs
-    haveI := hnc
+    have := hcs
+    have := hnc
     have h1 := (mharmonicOn_greenEnvelope hGF).1
     have h2 : MHarmonicAt (greenEnvelope (⟨p, hp⟩ : ↥P)) ⟨y, hy⟩ :=
       h1 _ (Set.mem_compl_singleton_iff.mpr
@@ -1020,12 +1020,12 @@ theorem pieceGreen_dipole_sub_le_log_barrier (D₀ : CoordDisk M) {p₁ p₂ : M
   have hp₂D : p₂ ∈ PD := fun hmem ↦ (hCar2av p₂ hp₂Car2).1
     ((Set.image_mono (closedBall_subset_closedBall
       (mul_le_of_le_one_left hr₀.le htD1))) hmem)
-  haveI hconnC : ConnectedSpace ↥PC :=
+  have hconnC : ConnectedSpace ↥PC :=
     isConnected_iff_connectedSpace.mp (isConnected_coordDisk_compl _)
-  haveI hncC : NoncompactSpace ↥PC := noncompactSpace_coordDisk_compl _
-  haveI hconnD : ConnectedSpace ↥PD :=
+  have hncC : NoncompactSpace ↥PC := noncompactSpace_coordDisk_compl _
+  have hconnD : ConnectedSpace ↥PD :=
     isConnected_iff_connectedSpace.mp (isConnected_coordDisk_compl _)
-  haveI hncD : NoncompactSpace ↥PD := noncompactSpace_coordDisk_compl _
+  have hncD : NoncompactSpace ↥PD := noncompactSpace_coordDisk_compl _
   have hGF1C : HasGreenFunction (⟨p₁, hp₁C⟩ : ↥PC) :=
     hasGreenFunction_coordDisk_compl _ p₁ hp₁C
   have hGF2C : HasGreenFunction (⟨p₂, hp₂C⟩ : ↥PC) :=
@@ -1071,7 +1071,7 @@ theorem pieceGreen_dipole_sub_le_log_barrier (D₀ : CoordDisk M) {p₁ p₂ : M
     (pieceGreen (PD) p₁ q - pieceGreen (PD) p₂ q) + (ε + η * L q) with hW
   set Ωσ : Set M := e₀.symm '' (ball c₀ ρs \ closedBall c₀ δA) with hΩσ
   have hΩσsub : ball c₀ ρs \ closedBall c₀ δA ⊆ e₀.target :=
-    (Set.diff_subset.trans ball_subset_closedBall).trans
+    (Set.sdiff_subset.trans ball_subset_closedBall).trans
       ((closedBall_subset_closedBall hρsr₀.le).trans hcb₀tgt)
   have hΩσopen : IsOpen Ωσ := by
     rw [hΩσ, himg e₀ _ hΩσsub]
@@ -1081,18 +1081,18 @@ theorem pieceGreen_dipole_sub_le_log_barrier (D₀ : CoordDisk M) {p₁ p₂ : M
     intro z hz
     rw [hΩσ, himg e₀ _ hΩσsub] at hz
     obtain ⟨hz1, hz2⟩ := hz
-    rw [Set.mem_preimage, Set.mem_diff, mem_ball, mem_closedBall] at hz2
+    rw [Set.mem_preimage, Set.mem_sdiff, mem_ball, mem_closedBall] at hz2
     exact ⟨hz1, not_le.1 hz2.2, hz2.1⟩
   have hΩσmem' : ∀ z : M, z ∈ e₀.source → δA < dist (e₀ z) c₀ →
       dist (e₀ z) c₀ < ρs → z ∈ Ωσ := by
     intro z hz1 hz2 hz3
     rw [hΩσ, himg e₀ _ hΩσsub]
     refine ⟨hz1, ?_⟩
-    rw [Set.mem_preimage, Set.mem_diff, mem_ball, mem_closedBall]
+    rw [Set.mem_preimage, Set.mem_sdiff, mem_ball, mem_closedBall]
     exact ⟨hz3, not_le.2 hz2⟩
   set Kσ : Set M := e₀.symm '' (closedBall c₀ ρs \ ball c₀ δA) with hKσ
   have hKσtgt : closedBall c₀ ρs \ ball c₀ δA ⊆ e₀.target :=
-    Set.diff_subset.trans ((closedBall_subset_closedBall hρsr₀.le).trans hcb₀tgt)
+    Set.sdiff_subset.trans ((closedBall_subset_closedBall hρsr₀.le).trans hcb₀tgt)
   have hKσcomp : IsCompact Kσ :=
     ((isCompact_closedBall c₀ ρs).diff isOpen_ball).image_of_continuousOn
       (e₀.continuousOn_symm.mono hKσtgt)

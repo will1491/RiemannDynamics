@@ -80,7 +80,7 @@ theorem fderiv_mollified_lineIntegral_le {f : ℂ → ℂ}
   -- The `.toReal` of these tend to `0`, since they tend to `0` in `ℝ≥0∞`.
   have hA_to_zero : Filter.Tendsto (fun n => (A n).toReal) Filter.atTop (nhds 0) := by
     have : Filter.Tendsto A Filter.atTop (nhds 0) := hgood_φ
-    simpa using (ENNReal.tendsto_toReal (by simp)).comp this
+    simpa using! (ENNReal.tendsto_toReal (by simp)).comp this
   -- Eventually `(A n).toReal ≤ ε`.
   have hAev : ∀ᶠ n in Filter.atTop, (A n).toReal ≤ ε :=
     hA_to_zero.eventually (ge_mem_nhds hε)
@@ -99,7 +99,7 @@ theorem fderiv_mollified_lineIntegral_le {f : ℂ → ℂ}
     have hmeas : Measurable (fdNormMulDeriv f γ) := by
       have h1 : Measurable (fun t => ‖fderiv ℝ f (γ t)‖) :=
         ((measurable_fderiv ℝ f).norm).comp hγcont.measurable
-      simpa only [fdNormMulDeriv] using h1.mul hderiv_meas
+      simpa only [fdNormMulDeriv] using! h1.mul hderiv_meas
     refine IntegrableOn.mono_set ?_ hxy
     refine ⟨hmeas.aestronglyMeasurable, ?_⟩
     rw [hasFiniteIntegral_iff_enorm, lt_top_iff_ne_top]
@@ -195,7 +195,7 @@ theorem fderiv_mollified_lineIntegral_le {f : ℂ → ℂ}
       apply ENNReal.toReal_mono (by
         rw [← lt_top_iff_ne_top]; exact lt_of_le_of_lt hle (lt_top_iff_ne_top.mpr hAnetop))
       refine MeasureTheory.lintegral_mono (fun t => ?_)
-      rw [← ofReal_norm_eq_enorm, Real.norm_of_nonneg (by positivity)]
+      rw [← ofReal_norm, Real.norm_of_nonneg (by positivity)]
     refine hstep.trans ?_
     exact ENNReal.toReal_mono hAnetop hle
   -- Finally: `∫ ‖fderiv (fn n)(γ)‖‖γ'‖ ≤ ∫ fdNormMulDeriv f γ + R ≤ ∫ fdNormMulDeriv f γ + ε`.
@@ -370,7 +370,7 @@ theorem integrableOn_fdNormMulDeriv_uIcc {f : ℂ → ℂ} {γ : ℝ → ℂ} (h
     have h1 : Measurable (fun t => ‖fderiv ℝ f (γ t)‖) :=
       ((measurable_fderiv ℝ f).norm).comp hγcont.measurable
     have h2 : Measurable (fun t => ‖deriv γ t‖) := (measurable_deriv γ).norm
-    simpa only [fdNormMulDeriv] using h1.mul h2
+    simpa only [fdNormMulDeriv] using! h1.mul h2
   -- Reduce `uIcc a c` to `Icc 0 1`.
   refine IntegrableOn.mono_set ?_ huIcc
   -- Build `Integrable` from AEStronglyMeasurable + HasFiniteIntegral.
@@ -579,11 +579,11 @@ theorem chainRule_hasDerivAt_of_finite {f : ℂ → ℂ} {γ : ℝ → ℂ} (hγ
     rw [ae_restrict_iff' measurableSet_Icc, ae_iff]
     apply measure_mono_null _ hBnull
     intro t ht
-    simp only [Set.mem_setOf_eq, Classical.not_imp] at ht
+    simp only [Set.mem_ofPred_eq, Classical.not_imp] at ht
     obtain ⟨hmem, hd, hndf⟩ := ht
     refine ⟨⟨hd, ?_⟩, hmem⟩
     -- `¬ DifferentiableAt ℝ f (γ t)` ⟹ `γ t ∈ N`.
-    simp only [hN, Set.mem_setOf_eq, not_and]
+    simp only [hN, Set.mem_ofPred_eq, not_and]
     exact fun hdf => absurd hdf hndf
   -- A.e.-`t` on `[0,1]`: `γ` is differentiable (hence `HasDerivAt γ (deriv γ t) t`).
   have hdiffγ : ∀ᵐ t : ℝ ∂(volume.restrict (Set.Icc (0 : ℝ) 1)),
@@ -712,11 +712,11 @@ theorem chainRule_good_of_finite {f : ℂ → ℂ}
     -- The exceptional set is contained in `B`, intersected with `[0,1]`.
     apply measure_mono_null _ hBnull
     intro t ht
-    simp only [Set.mem_setOf_eq, Classical.not_imp] at ht
+    simp only [Set.mem_ofPred_eq, Classical.not_imp] at ht
     obtain ⟨hmem, hd, hdet⟩ := ht
     refine ⟨⟨hd, ?_⟩, hmem⟩
     -- `¬ 0 < det` ⟹ `γ t ∈ N` (since `N` includes the `¬ 0 < det` half).
-    simp only [hN, Set.mem_setOf_eq, not_and, not_lt]
+    simp only [hN, Set.mem_ofPred_eq, not_and, not_lt]
     exact fun _ => not_lt.mp hdet
   -- ===================================================================
   -- CLAUSES 1 and 3: the genuine Fuglede / chain-rule content.
@@ -865,7 +865,7 @@ theorem curveModulus_notGoodCurve_zero_of_memW12loc {f : ℂ → ℂ}
   -- ===================================================================
   -- Containment: every curve of `Em m` fails the truncated convergence.
   -- ===================================================================
-  refine le_antisymm ?_ (zero_le _)
+  refine le_antisymm ?_ (zero_le)
   rw [← hBzero]
   refine curveModulus_mono ?_
   rintro γ ⟨hγΓ, hγbad, hγball⟩
@@ -969,7 +969,7 @@ theorem IsQCAnalytic.chainRule_exceptional_modulus_zero {f : ℂ → ℂ} {b : B
   have hUnionZero : curveModulus (F1 ∪ F2 ∪ F3) = 0 :=
     curveModulus_union_zero (curveModulus_union_zero hF1zero hF2zero) hF3zero
   -- The exceptional family is contained in `F1 ∪ F2 ∪ F3`.
-  refine le_antisymm ?_ (zero_le _)
+  refine le_antisymm ?_ (zero_le)
   rw [← hUnionZero]
   refine curveModulus_mono ?_
   rintro γ ⟨hγΓ, hbad⟩

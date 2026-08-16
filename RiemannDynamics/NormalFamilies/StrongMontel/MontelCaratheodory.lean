@@ -366,7 +366,7 @@ theorem montel_caratheodory_ball_seq {f : ℕ → ℂ → ℂ} {c : ℂ} {r : �
           tendsto_zero_iff_norm_tendsto_zero.mp htendF
         have hsqrt : Tendsto (fun n => Real.sqrt ‖F n c‖) atTop (nhds (0 : ℝ)) := by
           have := (Real.continuous_sqrt.tendsto 0).comp hFnorm
-          simpa [Real.sqrt_zero] using this
+          simpa [Real.sqrt_zero] using! this
         exact hsqrt.congr fun n => (hnorm_eq n).symm
       have := (hs_tend.add_const 1).div_const 2
       have h02 : ((0 : ℂ) + 1) / 2 = 1 / 2 := by norm_num

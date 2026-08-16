@@ -38,7 +38,7 @@ lemma norm_zpow_neg_two_sub_le {P Q : ℂ} (hP : P ≠ 0) (hQ : Q ≠ 0) :
 lemma shell_eq_ball_diff (c d : ℝ) :
     {x : ℂ | c ≤ ‖x‖ ∧ ‖x‖ < d} = Metric.ball (0 : ℂ) d \ Metric.ball (0 : ℂ) c := by
   ext x
-  simp only [Set.mem_setOf_eq, Set.mem_diff, Metric.mem_ball, dist_zero_right, not_lt]
+  simp only [Set.mem_ofPred_eq, Set.mem_sdiff, Metric.mem_ball, dist_zero_right, not_lt]
   tauto
 
 /-- **Volume of an annular shell.** For `0 ≤ c ≤ d`, the shell `{c ≤ ‖x‖ < d}` has volume
@@ -48,7 +48,7 @@ lemma volume_shell (c d : ℝ) (hc : 0 ≤ c) (hcd : c ≤ d) :
       = ENNReal.ofReal (d ^ 2 * Real.pi) - ENNReal.ofReal (c ^ 2 * Real.pi) := by
   have hd : 0 ≤ d := hc.trans hcd
   rw [shell_eq_ball_diff]
-  rw [measure_diff (Metric.ball_subset_ball hcd) measurableSet_ball.nullMeasurableSet]
+  rw [measure_sdiff (Metric.ball_subset_ball hcd) measurableSet_ball.nullMeasurableSet]
   · rw [Complex.volume_ball, Complex.volume_ball]
     have hpi : (↑NNReal.pi : ℝ≥0∞) = ENNReal.ofReal Real.pi := by
       rw [← NNReal.coe_real_pi, ENNReal.ofReal_coe_nnreal]
@@ -155,7 +155,7 @@ lemma omega_pointwise_le (r : ℝ) (hr : 0 < r) (m : ℕ) (t : ℂ)
               mul_le_mul_of_nonneg_left hden (by positivity)
       rw [Set.indicator_of_mem (show x ∈ B from hP)]
       calc ‖(x - t) ^ (-2:ℤ) - x ^ (-2:ℤ)‖ₑ
-          = ENNReal.ofReal ‖(x - t) ^ (-2:ℤ) - x ^ (-2:ℤ)‖ := (ofReal_norm_eq_enorm _).symm
+          = ENNReal.ofReal ‖(x - t) ^ (-2:ℤ) - x ^ (-2:ℤ)‖ := (ofReal_norm _).symm
         _ ≤ ENNReal.ofReal (24 * ‖t‖ / R₁ ^ 3) := ENNReal.ofReal_le_ofReal hval
         _ ≤ _ := le_add_of_nonneg_right (by positivity)
     · -- x-t ∈ A, x ∉ A: boundary term active (x ∈ S), value `(x-t)^(-2)`.
@@ -164,7 +164,7 @@ lemma omega_pointwise_le (r : ℝ) (hr : 0 < r) (m : ℕ) (t : ℂ)
       have hnormP2 : ‖x - t‖ < R₂ := hP.2
       -- enorm value bound `‖(x-t)^(-2)‖ₑ ≤ ofReal (4 / R₁²)`.
       have hvalbd : ‖(x - t) ^ (-2:ℤ)‖ₑ ≤ ENNReal.ofReal (4 / R₁ ^ 2) := by
-        rw [← ofReal_norm_eq_enorm, norm_zpow]
+        rw [← ofReal_norm, norm_zpow]
         apply ENNReal.ofReal_le_ofReal
         rw [zpow_neg, zpow_two]
         have hsq : R₁ * R₁ ≤ ‖x - t‖ * ‖x - t‖ := by nlinarith [hR₁pos, hnormP, norm_nonneg (x - t)]
@@ -203,7 +203,7 @@ lemma omega_pointwise_le (r : ℝ) (hr : 0 < r) (m : ℕ) (t : ℂ)
       have hnormQ : R₁ ≤ ‖x‖ := hQ.1
       have hnormQ2 : ‖x‖ < R₂ := hQ.2
       have hvalbd : ‖x ^ (-2:ℤ)‖ₑ ≤ ENNReal.ofReal (4 / R₁ ^ 2) := by
-        rw [← ofReal_norm_eq_enorm, norm_zpow]
+        rw [← ofReal_norm, norm_zpow]
         apply ENNReal.ofReal_le_ofReal
         rw [zpow_neg, zpow_two]
         have hsq : R₁ * R₁ ≤ ‖x‖ * ‖x‖ := by nlinarith [hR₁pos, hnormQ, norm_nonneg x]
@@ -603,7 +603,7 @@ lemma rowsum_half_dist_le (N : ℕ) (i : Fin N) :
     have hinj : Set.InjOn (fun j : Fin N => i.val - j.val)
         (Finset.univ.filter (fun j : Fin N => j.val ≤ i.val)) := by
       intro a ha b hb hab
-      simp only [Finset.coe_filter, Finset.mem_univ, true_and, Set.mem_setOf_eq] at ha hb
+      simp only [Finset.coe_filter, Finset.mem_univ, true_and, Set.mem_ofPred_eq] at ha hb
       apply Fin.ext; simp only at hab; omega
     have hrw : (∑ j ∈ Finset.univ.filter (fun j : Fin N => j.val ≤ i.val),
           q ^ ((i.val - j.val) + (j.val - i.val)))
@@ -625,7 +625,7 @@ lemma rowsum_half_dist_le (N : ℕ) (i : Fin N) :
     have hinj : Set.InjOn (fun j : Fin N => j.val - i.val)
         (Finset.univ.filter (fun j : Fin N => ¬ j.val ≤ i.val)) := by
       intro a ha b hb hab
-      simp only [Finset.coe_filter, Finset.mem_univ, true_and, Set.mem_setOf_eq] at ha hb
+      simp only [Finset.coe_filter, Finset.mem_univ, true_and, Set.mem_ofPred_eq] at ha hb
       apply Fin.ext; simp only at hab; omega
     have hrw : (∑ j ∈ Finset.univ.filter (fun j : Fin N => ¬ j.val ≤ i.val),
           q ^ ((i.val - j.val) + (j.val - i.val)))
@@ -750,7 +750,7 @@ lemma memLp_partialKernel (r : ℝ) (hr : 0 < r) (N : ℕ) :
   have heq : partialKernel r N = ∑ j : Fin N, dyadicBeurling r j.val := by
     funext u; rw [partialKernel, Finset.sum_apply]
   rw [heq]
-  exact memLp_finset_sum' _ (fun j _ => memLp_dyadicBeurling r hr j.val)
+  exact memLp_finsetSum' _ (fun j _ => memLp_dyadicBeurling r hr j.val)
 
 /-- The coercion of a finite `Lp`-sum is a.e. the pointwise finite sum of the coercions. -/
 lemma Lp_coeFn_sum {ι : Type*} (s : Finset ι) (g : ι → Lp ℂ 2 (volume : Measure ℂ)) :
@@ -783,7 +783,7 @@ lemma partial_conv_eq_sum (r : ℝ) (hr : 0 < r) (N : ℕ) {F : ℂ → ℂ} (hF
   have heq : (fun t => partialKernel r N t * F (x - t))
       = fun t => ∑ j : Fin N, dyadicBeurling r j.val t * F (x - t) := by
     funext t; rw [partialKernel, Finset.sum_mul]
-  rw [heq, integral_finset_sum]
+  rw [heq, integral_finsetSum]
   · exact Finset.sum_congr rfl (fun j _ => (MeasureTheory.convolution_mul ..).symm)
   · intro j _
     have hjx := hx j
@@ -798,7 +798,7 @@ lemma sumT_apply_coeFn (r : ℝ) (hr : 0 < r) (N : ℕ) (F : Lp ℂ 2 (volume : 
   have hF : MemLp (F : ℂ → ℂ) 2 volume := Lp.memLp F
   have h1 : ((∑ j : Fin N, dyadicT r hr j.val) F : ℂ → ℂ)
       =ᵐ[volume] fun x => ∑ j : Fin N, ((dyadicT r hr j.val F : ℂ → ℂ) x) := by
-    rw [ContinuousLinearMap.sum_apply]
+    rw [sum_apply]
     exact Lp_coeFn_sum _ _
   have h2 : ∀ᵐ x ∂volume, ∀ j : Fin N, ((dyadicT r hr j.val F : ℂ → ℂ) x)
       = MeasureTheory.convolution (dyadicBeurling r j.val) (F : ℂ → ℂ)
@@ -894,7 +894,7 @@ lemma partialKernel_tendsto (r : ℝ) (hr : 0 < r) (u : ℂ) :
     have hlt : ‖u‖ < (2:ℝ)^(j0+1) * r := (div_lt_iff₀ hr).mp hj0lt
     refine Filter.eventuallyEq_of_mem (s := {N | j0 + 1 ≤ N}) (Filter.mem_atTop _) ?_
     intro N hN
-    simp only [Set.mem_setOf_eq] at hN
+    simp only [Set.mem_ofPred_eq] at hN
     change truncBeurlingKernel r u = partialKernel r N u
     have hj0N : j0 < N := by omega
     rw [truncBeurlingKernel, Set.indicator_of_mem (by simpa using hu)]
@@ -903,7 +903,7 @@ lemma partialKernel_tendsto (r : ℝ) (hr : 0 < r) (u : ℂ) :
     · rw [dyadicBeurling, Set.indicator_of_mem (by exact ⟨hle, hlt⟩)]
     · intro j _ hjne
       rw [dyadicBeurling, Set.indicator_of_notMem]
-      simp only [Set.mem_setOf_eq, not_and, not_lt]
+      simp only [Set.mem_ofPred_eq, not_and, not_lt]
       intro hjge
       have hjval : j.val ≠ j0 := fun h => hjne (Fin.ext (by simpa using h))
       rcases lt_or_gt_of_ne hjval with hlt' | hgt'
@@ -923,7 +923,7 @@ lemma partialKernel_tendsto (r : ℝ) (hr : 0 < r) (u : ℂ) :
     rw [Finset.sum_eq_zero]
     intro j _
     rw [dyadicBeurling, Set.indicator_of_notMem]
-    simp only [Set.mem_setOf_eq, not_and, not_lt]
+    simp only [Set.mem_ofPred_eq, not_and, not_lt]
     intro hge
     exfalso
     have hge' : r ≤ (2:ℝ)^j.val * r := by
@@ -1075,17 +1075,17 @@ lemma lintegral_kernelSection_lt_top (R : ℝ) (hR : 0 < R) :
     have hnorm : ‖Complex.polarCoord.symm p‖ = p.1 := by
       rw [Complex.norm_polarCoord_symm, abs_of_pos hp1]
     by_cases hmem : Complex.polarCoord.symm p ∈ {u : ℂ | R ≤ ‖u‖}
-    · have hpR : R ≤ p.1 := by rw [Set.mem_setOf_eq, hnorm] at hmem; exact hmem
+    · have hpR : R ≤ p.1 := by rw [Set.mem_ofPred_eq, hnorm] at hmem; exact hmem
       rw [Set.indicator_of_mem hmem,
         Set.indicator_of_mem (Set.mem_prod.mpr ⟨Set.mem_Ici.mpr hpR, hp2⟩)]
       have henorm : ‖Complex.polarCoord.symm p‖ₑ = ENNReal.ofReal p.1 := by
-        rw [← ofReal_norm_eq_enorm, hnorm]
+        rw [← ofReal_norm, hnorm]
       rw [henorm, smul_eq_mul,
         show ((ENNReal.ofReal p.1 ^ 2)⁻¹)^2 = ENNReal.ofReal ((p.1^2)⁻¹^2) by
           rw [← ENNReal.ofReal_pow hp1.le, ← ENNReal.ofReal_inv_of_pos (by positivity),
             ← ENNReal.ofReal_pow (by positivity)],
         ← ENNReal.ofReal_mul hp1.le]
-    · rw [Set.indicator_of_notMem hmem, smul_zero]; exact zero_le _
+    · rw [Set.indicator_of_notMem hmem, smul_zero]; exact zero_le
   refine lt_of_le_of_lt (setLIntegral_mono
     (hmeas_polar.indicator (measurableSet_Ici.prod measurableSet_Ioo)) hbound) ?_
   calc ∫⁻ p in polarCoord.target, box p
@@ -1114,7 +1114,7 @@ lemma lintegral_kernelSection_lt_top (R : ℝ) (hR : 0 < R) :
           · exact (measurable_id.mul (((measurable_id.pow_const 2).inv).pow_const 2)).enorm
           · simp only [Set.mem_Ici] at hx
             have hxpos : 0 < x := lt_of_lt_of_le hR hx
-            rw [← ofReal_norm_eq_enorm, Real.norm_eq_abs, abs_of_nonneg (by positivity)]
+            rw [← ofReal_norm, Real.norm_eq_abs, abs_of_nonneg (by positivity)]
 
 
 /-- **Kernel section is `L²`.** For `R > 0` the truncated Beurling kernel
@@ -1156,7 +1156,7 @@ lemma memLp_kernelSection (x : ℂ) (R : ℝ) (hR : 0 < R) :
       = (fun y => {u : ℂ | R ≤ ‖u‖}.indicator (fun u => ((‖u‖ₑ ^ 2)⁻¹) ^ 2) (x - y)) := by
     funext y
     have hiff : (y ∈ (Metric.ball x R)ᶜ) ↔ (x - y ∈ {u : ℂ | R ≤ ‖u‖}) := by
-      rw [Set.mem_compl_iff, Metric.mem_ball, not_lt, Set.mem_setOf_eq, dist_comm, Complex.dist_eq]
+      rw [Set.mem_compl_iff, Metric.mem_ball, not_lt, Set.mem_ofPred_eq, dist_comm, Complex.dist_eq]
     by_cases h : y ∈ (Metric.ball x R)ᶜ
     · rw [Set.indicator_of_mem h, Set.indicator_of_mem (hiff.mp h)]
     · rw [Set.indicator_of_notMem h, Set.indicator_of_notMem (fun hc => h (hiff.mpr hc))]
@@ -1279,7 +1279,7 @@ lemma exists_contDiff_seq_tendsto_L2 {f : ℂ → ℂ} (hf : MemLp f 2 volume) :
     refine ENNReal.tendsto_ofReal (Tendsto.div_atTop tendsto_const_nhds ?_)
     exact tendsto_atTop_add_const_right _ 1 tendsto_natCast_atTop_atTop
   refine tendsto_of_tendsto_of_tendsto_of_le_of_le tendsto_const_nhds hto0
-    (fun n => zero_le _) hgle
+    (fun n => zero_le) hgle
 
 /-- `BoundedFiniteSupport` for a smooth compactly supported function. -/
 lemma boundedFiniteSupport_of_contDiff {g : ℂ → ℂ} (hg : ContDiff ℝ (⊤ : ℕ∞) g)
@@ -1568,7 +1568,7 @@ lemma volume_oscillation_set_eq_zero {f : ℂ → ℂ} (hf : MemLp f 2 volume) {
   have hsubset : ∀ n, B ⊆ {z | b ≤ simpleNontangentialOperator beurlingKernel 0 (f - g n) z} := by
     intro n z hz
     by_contra hlt
-    rw [Set.mem_setOf_eq, not_le] at hlt
+    rw [Set.mem_ofPred_eq, not_le] at hlt
     apply hz
     refine eventually_edist_lt_of_smooth_conv hf (hg n) z ha
       ⟨_, czOperator_beurling_tendsto_neg_pi ((hgsmooth n).of_le (by exact_mod_cast le_top))
@@ -1597,7 +1597,7 @@ lemma volume_oscillation_set_eq_zero {f : ℂ → ℂ} (hf : MemLp f 2 volume) {
     have h3 := ENNReal.Tendsto.const_mul (a := b⁻¹ ^ 2) h2 (Or.inr hbinv)
     rw [mul_zero] at h3
     exact h3
-  exact le_antisymm (ge_of_tendsto hto0 (Eventually.of_forall hmeas)) (zero_le _)
+  exact le_antisymm (ge_of_tendsto hto0 (Eventually.of_forall hmeas)) (zero_le)
 
 /-- **A.e. existence of the principal-value limit.** For every `f ∈ L²` the
 truncated Beurling integrals `czOperator beurlingKernel r f z` converge as
@@ -1619,7 +1619,7 @@ lemma czOperator_beurling_ae_tendsto {f : ℂ → ℂ} (hf : MemLp f 2 volume) :
   rw [ae_iff]
   refine measure_mono_null ?_ hunionnull
   intro z hz
-  rw [Set.mem_setOf_eq] at hz
+  rw [Set.mem_ofPred_eq] at hz
   rw [Set.mem_iUnion]
   by_contra hnot
   push Not at hnot
@@ -1628,7 +1628,7 @@ lemma czOperator_beurling_ae_tendsto {f : ℂ → ℂ} (hf : MemLp f 2 volume) :
   intro ε hε
   obtain ⟨k, hk⟩ := ENNReal.exists_inv_nat_lt (ne_of_gt hε)
   have hmem := hnot k
-  simp only [hBk, Set.mem_setOf_eq, not_not] at hmem
+  simp only [hBk, Set.mem_ofPred_eq, not_not] at hmem
   refine hmem.mono (fun p hp => lt_of_lt_of_le hp ?_)
   rw [one_div]
   calc ((k:ℝ≥0∞)+1)⁻¹ ≤ ((k:ℝ≥0∞))⁻¹ := ENNReal.inv_le_inv.mpr le_self_add
@@ -1685,7 +1685,7 @@ lemma eLpNorm_beurling_le {h : ℂ → ℂ} (hh : MemLp h 2 volume) :
       funext z; simp [Pi.smul_apply, smul_eq_mul]
     rw [he, eLpNorm_const_smul]
     congr 1
-    rw [← ofReal_norm_eq_enorm, norm_neg, Complex.norm_real, Real.norm_eq_abs,
+    rw [← ofReal_norm, norm_neg, Complex.norm_real, Real.norm_eq_abs,
       abs_of_pos Real.pi_pos]
   rw [heq] at hfatou
   -- π · ‖Th‖ ≤ C ‖h‖  ⟹  ‖Th‖ ≤ C π⁻¹ ‖h‖

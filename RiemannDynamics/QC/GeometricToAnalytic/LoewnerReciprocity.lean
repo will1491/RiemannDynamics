@@ -202,7 +202,7 @@ theorem loewner_image_cross_bound_axisRect {f : ℂ → ℂ} (hf : IsHomeomorph 
       filter_upwards [hUlip.ae_differentiableAt] with z hz hzΩ
       have hb := norm_fderiv_le_of_local_bound hO hgcont hh hloc
         (Metric.self_subset_thickening hh Ω hzΩ) hz
-      exact le_trans (ofReal_norm_eq_enorm _).symm.le (ENNReal.ofReal_le_ofReal hb)
+      exact le_trans (ofReal_norm _).symm.le (ENNReal.ofReal_le_ofReal hb)
     have hGm : Measurable fun z => ENNReal.ofReal (g z) :=
       (moreauEnvelope_lipschitz Φ i₀).continuous.measurable.ennreal_ofReal
     -- Step 6: co-area
@@ -222,7 +222,7 @@ theorem loewner_image_cross_bound_axisRect {f : ℂ → ℂ} (hf : IsHomeomorph 
           calc Φ z = (Φ z - max (ρ z) ((n:ℝ≥0∞))⁻¹) + max (ρ z) ((n:ℝ≥0∞))⁻¹ :=
                 (tsub_add_cancel_of_le (hΦge z)).symm
             _ ≤ (Φ z - max (ρ z) ((n:ℝ≥0∞))⁻¹) + (ρ z + ((n:ℝ≥0∞))⁻¹) :=
-                add_le_add_right (max_le_add_of_nonneg (zero_le _) (zero_le _)) _
+                add_le_add_right (max_le_add_of_nonneg (zero_le) (zero_le)) _
         calc σ z * Φ z
             ≤ σ z * ((Φ z - max (ρ z) ((n:ℝ≥0∞))⁻¹) + (ρ z + ((n:ℝ≥0∞))⁻¹)) :=
               mul_le_mul' le_rfl hsplit
@@ -236,14 +236,14 @@ theorem loewner_image_cross_bound_axisRect {f : ℂ → ℂ} (hf : IsHomeomorph 
             lintegral_add_left (hσ.1.mul (hΦmeas.sub hmmeas)) _
         _ = (∫⁻ z in Ω, σ z * (Φ z - max (ρ z) ((n:ℝ≥0∞))⁻¹)) +
               ((∫⁻ z in Ω, σ z * ρ z) + (∫⁻ z in Ω, σ z * ((n:ℝ≥0∞))⁻¹)) := by
-            rw [lintegral_add_left (hσ.1.mul hρ.1)]
+            rw [lintegral_add_left (hσ.1.fun_mul hρ.1)]
     -- Step 9: Cauchy–Schwarz on the error term
     have hsub_sq : ∀ z, (Φ z - max (ρ z) ((n:ℝ≥0∞))⁻¹) ^ 2 ≤
         (Φ z) ^ 2 - (max (ρ z) ((n:ℝ≥0∞))⁻¹) ^ 2 := by
       intro z
       rcases eq_or_ne (max (ρ z) ((n:ℝ≥0∞))⁻¹) ⊤ with hm | hm
       · rw [hm, ENNReal.sub_top, zero_pow (by norm_num)]
-        exact zero_le _
+        exact zero_le
       · refine (ENNReal.cancel_of_ne (ENNReal.pow_ne_top hm)).le_tsub_of_add_le_right ?_
         calc (Φ z - max (ρ z) ((n:ℝ≥0∞))⁻¹) ^ 2 + (max (ρ z) ((n:ℝ≥0∞))⁻¹) ^ 2
             ≤ ((Φ z - max (ρ z) ((n:ℝ≥0∞))⁻¹) ^ 2 +

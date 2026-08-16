@@ -316,7 +316,7 @@ private lemma zz_homeo (p : UpperHalfPlane → UpperHalfPlane)
   have hcov : IsCoveringMap p := by
     intro ξ
     -- discreteness of the fiber
-    haveI hdisc : DiscreteTopology ↥(p ⁻¹' {ξ}) := by
+    have hdisc : DiscreteTopology ↥(p ⁻¹' {ξ}) := by
       rw [discreteTopology_iff_isOpen_singleton]
       rintro ⟨e, he⟩
       have hset : ({(⟨e, he⟩ : ↥(p ⁻¹' {ξ}))} : Set ↥(p ⁻¹' {ξ}))
@@ -523,6 +523,7 @@ private lemma zz_homeo (p : UpperHalfPlane → UpperHalfPlane)
       = ContinuousMap.const _ a := by
     have h := hcov.liftPath_const (e := a) (x := p a) rfl
     convert h using 2
+    rfl
   calc b = γq.toContinuousMap 1 := by simp
     _ = hcov.liftPath σ.toContinuousMap a (by simp) 1 := by rw [hlift]
     _ = hcov.liftPath (Path.refl (p a)).toContinuousMap a (by simp) 1 := hend
@@ -572,7 +573,7 @@ theorem exists_developed_interpolation
     exact isFuchsianGroup_of_trace_gap hε hgapρ
   obtain ⟨τ₀, hτ₀⟩ : ∃ τ : UpperHalfPlane, τ = UpperHalfPlane.I := ⟨_, rfl⟩
   obtain ⟨R, hRpos, hdense⟩ := exists_orbit_density_bound hΓ'fuchs hε hgapρ hccρ τ₀
-  haveI : IsIsometricSMul (↥Γ') UpperHalfPlane :=
+  have : IsIsometricSMul (↥Γ') UpperHalfPlane :=
     ⟨fun c => isometry_smul UpperHalfPlane (c : Matrix.SpecialLinearGroup (Fin 2) ℝ)⟩
   -- ==== §1 the covering family of hyperbolic balls, as euclidean balls ====
   obtain ⟨RV, hRVdef⟩ : ∃ x : ℝ, x = 2 * R + 5 := ⟨_, rfl⟩
@@ -738,7 +739,7 @@ theorem exists_developed_interpolation
     have hsubty' : ∀ᶠ n in Filter.atTop, ∀ p : ↥({p : ↥Γ' × ↥Γ' |
         (VV 1 ∩ VV p.1 ∩ VV (p.1 * p.2)).Nonempty}), tmap n (p : ↥Γ' × ↥Γ').1
           * tmap n (p : ↥Γ' × ↥Γ').2 = tmap n ((p : ↥Γ' × ↥Γ').1 * (p : ↥Γ' × ↥Γ').2) := by
-      haveI : Finite ↥({p : ↥Γ' × ↥Γ' | (VV 1 ∩ VV p.1 ∩ VV (p.1 * p.2)).Nonempty}) :=
+      have : Finite ↥({p : ↥Γ' × ↥Γ' | (VV 1 ∩ VV p.1 ∩ VV (p.1 * p.2)).Nonempty}) :=
         hfin.to_subtype
       rw [Filter.eventually_all]
       intro p
@@ -1288,8 +1289,8 @@ theorem exists_developed_interpolation
       rw [hkey, Equiv.symm_apply_apply]
     · intro z hz
       rw [hminv0eq z hz, ← hpHcoe (eH.symm ⟨z, hz⟩), ← heHap, Equiv.apply_symm_apply]
-    · rw [continuousOn_iff_continuous_restrict]
-      have hfun : ({x : ℂ | 0 < x.im}.restrict hminv0)
+    · rw [continuousOn_iff_continuous_domRestrict]
+      have hfun : ({x : ℂ | 0 < x.im}.domRestrict hminv0)
           = fun τ : ↥{x : ℂ | 0 < x.im} => (↑(eH.symm ⟨↑τ, τ.2⟩) : ℂ) := by
         funext τ
         exact hminv0eq ↑τ τ.2

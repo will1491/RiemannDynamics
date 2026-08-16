@@ -165,7 +165,8 @@ theorem exists_aclHorizontal_of_hasWeakDirDeriv_one
       have hFr_deriv : ∀ᵐ t : ℝ, deriv Fr t = Gr t := by
         filter_upwards [hF_deriv] with t ht
         have : HasDerivAt Fr (proj (G t)) t := by
-          have := proj.hasFDerivAt.comp_hasDerivAt t ht; simpa [hFr] using this
+          have := proj.hasFDerivAt.comp_hasDerivAt t ht
+          simpa [hFr, Function.comp_def] using! this
         exact this.deriv
       have hIBP := (hΦ_ac (-R) R).integral_mul_deriv_eq_deriv_mul (hFr_ac (-R) R)
       rw [hΦa, hΦb] at hIBP
@@ -290,8 +291,8 @@ theorem exists_aclHorizontal_of_hasWeakDirDeriv_one
     rw [← Measure.volume_eq_prod]
     have hmeas : AEStronglyMeasurable (fun p : ℝ × ℝ => W ⟨p.1, p.2⟩) volume := by
       have := hW.aestronglyMeasurable.comp_quasiMeasurePreserving hmpsymm.quasiMeasurePreserving
-      convert this using 1
-    rw [← hmp.integrable_comp hmeas]; convert hW using 1
+      exact this
+    rw [← hmp.integrable_comp hmeas]; exact hW
   -- (cont cpt-supp real) • (loc-int ℂ) integrable on ℂ.
   have integ : ∀ (m : ℂ → ℝ), Continuous m → HasCompactSupport m →
       ∀ {hh : ℂ → ℂ}, LocallyIntegrable hh → Integrable (fun z => m z • hh z) := by
@@ -354,7 +355,7 @@ theorem exists_aclHorizontal_of_hasWeakDirDeriv_one
         have : (fun q : (ℝ × ℝ) × ℝ => (Set.Ioc (0:ℝ) q.1.1).indicator (fun t => gx0 ⟨t,
           q.1.2⟩) q.2)
             = {q : (ℝ × ℝ) × ℝ | 0 < q.2 ∧ q.2 ≤ q.1.1}.indicator (fun q => gx0 ⟨q.2, q.1.2⟩) := by
-          funext q; simp only [Set.indicator_apply, Set.mem_Ioc, Set.mem_setOf_eq]
+          funext q; simp only [Set.indicator_apply, Set.mem_Ioc, Set.mem_ofPred_eq]
         rw [this]; exact (hbase.indicator hS1).aestronglyMeasurable
       have hf2 : AEStronglyMeasurable
           (fun q : (ℝ × ℝ) × ℝ => (Set.Ioc q.1.1 (0:ℝ)).indicator (fun t => gx0 ⟨t, q.1.2⟩) q.2)
@@ -362,7 +363,7 @@ theorem exists_aclHorizontal_of_hasWeakDirDeriv_one
         have : (fun q : (ℝ × ℝ) × ℝ => (Set.Ioc q.1.1 (0:ℝ)).indicator (fun t => gx0 ⟨t,
           q.1.2⟩) q.2)
             = {q : (ℝ × ℝ) × ℝ | q.1.1 < q.2 ∧ q.2 ≤ 0}.indicator (fun q => gx0 ⟨q.2, q.1.2⟩) := by
-          funext q; simp only [Set.indicator_apply, Set.mem_Ioc, Set.mem_setOf_eq]
+          funext q; simp only [Set.indicator_apply, Set.mem_Ioc, Set.mem_ofPred_eq]
         rw [this]; exact (hbase.indicator hS2).aestronglyMeasurable
       have hI1 := hf1.integral_prod_right'
       have hI2 := hf2.integral_prod_right'
@@ -730,7 +731,7 @@ theorem exists_aclHorizontal_of_hasWeakDirDeriv_one
             (hφc_smooth.differentiable (by norm_num)).differentiableAt.hasFDerivAt
           have hslice1 : HasDerivAt (fun t : ℝ => φc ⟨t, z.im⟩) ((fderiv ℝ φc (⟨z.re,
             z.im⟩:ℂ)) 1) z.re := by
-            simpa using hfd.comp_hasDerivAt z.re haff
+            simpa [Function.comp_def] using! hfd.comp_hasDerivAt z.re haff
           have hslice2 : HasDerivAt (fun t : ℝ => φc ⟨t, z.im⟩) (w z.re z.im) z.re :=
             hΨ_hasderiv z.re z.im
           have := hslice1.unique hslice2
@@ -768,13 +769,13 @@ theorem exists_aclHorizontal_of_hasWeakDirDeriv_one
             apply integral_congr_ae; filter_upwards with p
             change (w (⟨p.1,p.2⟩:ℂ).re (⟨p.1,p.2⟩:ℂ).im : ℝ) • f ⟨p.1,p.2⟩
               = (w p.1 p.2 : ℂ) • f ⟨p.1,p.2⟩
-            rw [Complex.coe_smul]; rfl
+            rw [Complex.coe_smul]
           have hRr : (∫ z : ℂ, (φc z : ℝ) • gx z)
               = ∫ p, (Ψ p.1 p.2 : ℂ) • gx ⟨p.1, p.2⟩ ∂(volume.prod volume) := by
             rw [transInt (fun z => (φc z : ℝ) • gx z), ← Measure.volume_eq_prod]
             apply integral_congr_ae; filter_upwards with p
             show (φc ⟨p.1,p.2⟩ : ℝ) • gx ⟨p.1,p.2⟩ = (Ψ p.1 p.2 : ℂ) • gx ⟨p.1,p.2⟩
-            rw [Complex.coe_smul]; rfl
+            rw [Complex.coe_smul]
           rw [← hL, ← hRr]; exact hh
         -- ======= IBP D: per-line lineIBP + Fubini =======
         -- per-line interval integrability of Ψ(·,y)•gx0⟨·,y⟩ and w(·,y)•D(·,y)
@@ -815,8 +816,8 @@ theorem exists_aclHorizontal_of_hasWeakDirDeriv_one
               · rw [show (fun x => (D x y).im) = (fun x => ∫ t in (0:ℝ)..x, (gxy t).im)
                 from funext hDim]
                 exact hACprim _ himII a b
-            · have hre := @LocallyIntegrable.ae_hasDerivAt_integral _ hreLI
-              have him := @LocallyIntegrable.ae_hasDerivAt_integral _ himLI
+            · have hre := LocallyIntegrable.ae_hasDerivAt_integral hreLI
+              have him := LocallyIntegrable.ae_hasDerivAt_integral himLI
               filter_upwards [hre, him] with t htre htim
               have h1 : HasDerivAt (fun x => (D x y).re) ((gxy t).re) t := by
                 rw [show (fun x => (D x y).re) = (fun x => ∫ s in (0:ℝ)..x, (gxy s).re)
@@ -834,8 +835,7 @@ theorem exists_aclHorizontal_of_hasWeakDirDeriv_one
                 HasDerivAt (fun x => (↑(D x y).im : ℂ) * Complex.I) (↑(gxy t).im * Complex.I) t :=
                 h2.ofReal_comp.mul_const Complex.I
               have := h1.ofReal_comp.add hh3
-              convert this using 1
-              exact (Complex.re_add_im (gxy t)).symm
+              simpa [Pi.add_def] using! this
           obtain ⟨hDy_ac_y, hDy_deriv_y⟩ := hDline
           -- apply lineIBP with Φ = Ψ(·,y), F = D(·,y), G = gx0⟨·,y⟩
           have hintL : Integrable (fun t => deriv (fun t => Ψ t y) t • (fun x => D x y) t) := by
@@ -1057,8 +1057,8 @@ theorem exists_aclHorizontal_of_hasWeakDirDeriv_one
       · rw [show (fun x => (Dy x).im) = (fun x => ∫ t in (0:ℝ)..x, (gxy t).im) from funext hDim]
         exact hACprim _ himII a b
     have hDy_deriv : ∀ᵐ t : ℝ, HasDerivAt Dy (gxy t) t := by
-      have hre := @LocallyIntegrable.ae_hasDerivAt_integral _ hreLI
-      have him := @LocallyIntegrable.ae_hasDerivAt_integral _ himLI
+      have hre := LocallyIntegrable.ae_hasDerivAt_integral hreLI
+      have him := LocallyIntegrable.ae_hasDerivAt_integral himLI
       filter_upwards [hre, him] with t htre htim
       have h1 : HasDerivAt (fun x => (Dy x).re) ((gxy t).re) t := by
         rw [show (fun x => (Dy x).re) = (fun x => ∫ s in (0:ℝ)..x, (gxy s).re) from funext hDre]
@@ -1072,8 +1072,7 @@ theorem exists_aclHorizontal_of_hasWeakDirDeriv_one
       have hh3 : HasDerivAt (fun x => (↑(Dy x).im : ℂ) * Complex.I) (↑(gxy t).im * Complex.I) t :=
         h2.ofReal_comp.mul_const Complex.I
       have := h1.ofReal_comp.add hh3
-      convert this using 1
-      exact (Complex.re_add_im (gxy t)).symm
+      simpa [Pi.add_def] using! this
     -- the f'-slice = Dy + k y.
     have hfx : (fun x : ℝ => f' ⟨x, y⟩) = (fun x => Dy x + k y) := by
       funext x; rw [show f' ⟨x,y⟩ = D x y + k y from rfl, hDxy]
@@ -1108,7 +1107,10 @@ theorem exists_aclVertical_of_hasWeakDirDeriv_I
   -- `σ` swaps real and imaginary parts.
   have hσ_apply : ∀ z : ℂ, σ z = ⟨z.im, z.re⟩ := by
     intro z
-    simp only [hσ_def, LinearIsometryEquiv.trans_apply, Complex.conjLIE_apply, rotation_apply]
+    have key : ∀ w : ℂ,
+        (rotation ⟨Complex.I, by simp [Submonoid.unitSphere, Metric.sphere]⟩ : ℂ ≃ₗᵢ[ℝ] ℂ) w
+          = Complex.I * w := fun _ => rfl
+    simp only [hσ_def, LinearIsometryEquiv.trans_apply, Complex.conjLIE_apply, key]
     apply Complex.ext <;> simp [Complex.mul_re, Complex.mul_im]
   -- `σ` is an involution.
   have hσ_invol : ∀ z : ℂ, σ (σ z) = z := by
@@ -1146,7 +1148,7 @@ theorem exists_aclVertical_of_hasWeakDirDeriv_I
       hψ_smooth.comp σ.toContinuousLinearEquiv.contDiff
     have hψσ_cpt : HasCompactSupport (fun z => ψ (σ z)) := by
       have := hψ_cpt.comp_homeomorph σ.toHomeomorph
-      simpa using this
+      simpa [Function.comp_def] using this
     have hH := h (fun z => ψ (σ z)) hψσ_smooth hψσ_cpt (by simp)
     -- rewrite `h`'s identity using the chain rule.
     rw [show (fun z => ((fderiv ℝ (fun z => ψ (σ z)) z) Complex.I) • f z)

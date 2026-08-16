@@ -96,7 +96,7 @@ private lemma zz_locfin {Γ : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
     have hd1 : dist τz (⟨z, hzim'⟩ : UpperHalfPlane) < 1 := by
       rw [dist_comm]
       exact hzd
-    simp only [Set.mem_setOf_eq]
+    simp only [Set.mem_ofPred_eq]
     rw [heq] at htri
     linarith
 
@@ -173,7 +173,7 @@ private lemma zz_moeb_core
               - (((b00 z : ℝ) : ℂ) * z + ((b01 z : ℝ) : ℂ))
                 * (((D10 v : ℝ) : ℂ) * z + ((D11 v : ℝ) : ℂ)))
             / (((b10 z : ℝ) : ℂ) * z + ((b11 z : ℝ) : ℂ)) ^ 2 := by
-  haveI hCSRC : ContinuousSMul ℝ ℂ := ⟨by
+  have hCSRC : ContinuousSMul ℝ ℂ := ⟨by
     have h : (fun p : ℝ × ℂ => p.1 • p.2) = fun p : ℝ × ℂ => (p.1 : ℂ) * p.2 := by
       funext p
       exact Complex.real_smul
@@ -228,7 +228,7 @@ private lemma zz_moeb_core
           / (((b10 z : ℝ) : ℂ) * z + ((b11 z : ℝ) : ℂ)) ^ 2 := by
     intro v
     rw [hfd0, hfd1]
-    simp only [ContinuousLinearMap.add_apply, ContinuousLinearMap.smul_apply,
+    simp only [add_apply, smul_apply,
       ContinuousLinearMap.comp_apply, ContinuousLinearMap.id_apply,
       Complex.ofRealCLM_apply, smul_eq_mul]
     field_simp
@@ -261,7 +261,7 @@ lemma zz_moeb_packA
       ‖fderiv ℝ (fun w => (((b00 w : ℝ) : ℂ) * w + ((b01 w : ℝ) : ℂ))
           / (((b10 w : ℝ) : ℂ) * w + ((b11 w : ℝ) : ℂ))) z
         - ContinuousLinearMap.id ℝ ℂ‖ ≤ 64 * Rz ^ 2 * ε := by
-  haveI hCSRC : ContinuousSMul ℝ ℂ := ⟨by
+  have hCSRC : ContinuousSMul ℝ ℂ := ⟨by
     have h : (fun p : ℝ × ℂ => p.1 • p.2) = fun p : ℝ × ℂ => (p.1 : ℂ) * p.2 := by
       funext p
       exact Complex.real_smul
@@ -512,7 +512,7 @@ lemma zz_moeb_packA
       - ContinuousLinearMap.id ℝ ℂ‖ ≤ 64 * Rz ^ 2 * ε := by
     refine ContinuousLinearMap.opNorm_le_bound _ (by positivity) ?_
     intro v
-    rw [ContinuousLinearMap.sub_apply, ContinuousLinearMap.id_apply, hLv' v]
+    rw [sub_apply, ContinuousLinearMap.id_apply, hLv' v]
     have e1 : Sw * v + ((((D00 v : ℝ) : ℂ) * z + ((D01 v : ℝ) : ℂ)) * den
         - num * (((D10 v : ℝ) : ℂ) * z + ((D11 v : ℝ) : ℂ))) / den ^ 2 - v
         = (Sw - 1) * v + ((((D00 v : ℝ) : ℂ) * z + ((D01 v : ℝ) : ℂ)) * den
@@ -562,7 +562,7 @@ lemma zz_moeb_packB
           / (((b10 w : ℝ) : ℂ) * w + ((b11 w : ℝ) : ℂ))) z‖ ∧
       0 < (fderiv ℝ (fun w => (((b00 w : ℝ) : ℂ) * w + ((b01 w : ℝ) : ℂ))
           / (((b10 w : ℝ) : ℂ) * w + ((b11 w : ℝ) : ℂ))) z).det := by
-  haveI hCSRC : ContinuousSMul ℝ ℂ := ⟨by
+  have hCSRC : ContinuousSMul ℝ ℂ := ⟨by
     have h : (fun p : ℝ × ℂ => p.1 • p.2) = fun p : ℝ × ℂ => (p.1 : ℂ) * p.2 := by
       funext p
       exact Complex.real_smul
@@ -821,7 +821,7 @@ lemma zz_moeb_packB
 private lemma zz_memlp (f : ℂ → ℂ) (p : ℝ≥0∞) (Ω : Set ℂ) (hf : ContinuousOn f Ω) :
     MemLpLocOn f p Ω := by
   intro K hKΩ hK
-  haveI : Fact (volume K < ⊤) := ⟨hK.measure_lt_top⟩
+  have : Fact (volume K < ⊤) := ⟨hK.measure_lt_top⟩
   obtain ⟨C, hC⟩ := hK.exists_bound_of_continuousOn (hf.mono hKΩ)
   refine MemLp.of_bound ((hf.mono hKΩ).aestronglyMeasurable hK.measurableSet) C ?_
   rw [MeasureTheory.ae_restrict_iff' hK.measurableSet]
@@ -874,7 +874,7 @@ lemma zz_surj (F : ℂ → ℂ) (c : ℂ) (r : ℝ) (hr : 0 < r)
   · intro y hy
     rw [Metric.mem_closedBall, dist_comm, dist_eq_norm] at hy
     -- the update map is a contraction of the closed ball
-    haveI : Nonempty (Metric.closedBall c r) := ⟨⟨c, Metric.mem_closedBall_self hr.le⟩⟩
+    have : Nonempty (Metric.closedBall c r) := ⟨⟨c, Metric.mem_closedBall_self hr.le⟩⟩
     have hmaps : ∀ x ∈ Metric.closedBall c r, x - F x + y ∈ Metric.closedBall c r := by
       intro x hx
       rw [Metric.mem_closedBall, dist_eq_norm]
@@ -910,7 +910,7 @@ lemma zz_surj (F : ℂ → ℂ) (c : ℂ) (r : ℝ) (hr : 0 < r)
       rw [h3]
       exact hab
     have hcontract : ContractingWith (1 / 2 : NNReal) T := ⟨by norm_num, hLip⟩
-    haveI : CompleteSpace (Metric.closedBall c r) :=
+    have : CompleteSpace (Metric.closedBall c r) :=
       (Metric.isClosed_closedBall (x := c) (ε := r)).completeSpace_coe
     obtain ⟨x, hxfix⟩ : ∃ x : Metric.closedBall c r, T x = x :=
       ⟨ContractingWith.fixedPoint T hcontract, hcontract.fixedPoint_isFixedPt⟩
@@ -1375,7 +1375,7 @@ lemma zz_weights {Γ' : Subgroup (Matrix.SpecialLinearGroup (Fin 2) ℝ)}
         uψ (β * γ) (moebiusMap (↑β) z) = uψ γ z) ∧
       (∀ z : ℂ, 0 < z.im → ∃ Fz : Finset ↥Γ', ∀ γ : ↥Γ', γ ∉ Fz → uψ γ z = 0) := by
   classical
-  haveI : IsIsometricSMul (↥Γ') UpperHalfPlane :=
+  have : IsIsometricSMul (↥Γ') UpperHalfPlane :=
     ⟨fun c => isometry_smul UpperHalfPlane (c : Matrix.SpecialLinearGroup (Fin 2) ℝ)⟩
   have hτ₀im : 0 < τ₀.im := τ₀.im_pos
   have hSfin : ∀ r : ℝ, {γ : ↥Γ' | dist τ₀ (γ • τ₀) ≤ r}.Finite :=

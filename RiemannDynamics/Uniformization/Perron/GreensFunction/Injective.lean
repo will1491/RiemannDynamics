@@ -247,7 +247,7 @@ theorem injective_green_map [T2Space M] [SimplyConnectedSpace M] [NoncompactSpac
       SubharmonicOn F S → (∀ w ∈ S, F w ≤ 0) → ∀ w₀ ∈ S, F w₀ = 0 → ∀ w ∈ S,
           F w = 0 := by
     intro S F hSopen hSpre hFsub hFle w₀ hw₀ hFw₀
-    have hu : IsOpen {w : ℂ | ∀ᶠ z in 𝓝 w, F z = 0} := isOpen_setOf_eventually_nhds
+    have hu : IsOpen {w : ℂ | ∀ᶠ z in 𝓝 w, F z = 0} := isOpen_setOfPred_eventually_nhds
     have hv : IsOpen (S ∩ F ⁻¹' {(0 : ℝ)}ᶜ) :=
       hFsub.1.isOpen_inter_preimage hSopen isOpen_compl_singleton
     have hdisj : Disjoint {w : ℂ | ∀ᶠ z in 𝓝 w, F z = 0} (S ∩ F ⁻¹' {(0 :
@@ -794,7 +794,7 @@ theorem injective_green_map [T2Space M] [SimplyConnectedSpace M] [NoncompactSpac
       P = {x : M | ∀ᶠ y in 𝓝 x, ψ y ≠ 0 → u y = 0} := ⟨_, rfl⟩
   have hPopen : IsOpen P := by
     rw [hPdef]
-    exact isOpen_setOf_eventually_nhds
+    exact isOpen_setOfPred_eventually_nhds
   -- The chart reading of `u` is subharmonic on plane sets avoiding the zero set.
   have hplane : ∀ (x : M) (S : Set ℂ), S ⊆ (chartAt ℂ x).target →
       (∀ w ∈ S, ψ ((chartAt ℂ x).symm w) ≠ 0) →
@@ -1197,7 +1197,7 @@ a Green's function embeds onto a domain of the Riemann sphere. -/
 theorem exists_diffeomorph_opens_of_hasGreenFunction [T2Space M] [SimplyConnectedSpace M]
     [NoncompactSpace M] {p₀ : M} (hG : HasGreenFunction p₀) :
     ∃ U : Opens ℂ̂, Nonempty (M ≃ₘ^ω⟮𝓘(ℂ), 𝓘(ℂ)⟯ ↥U) := by
-  haveI : ConnectedSpace M := PathConnectedSpace.connectedSpace
+  have : ConnectedSpace M := PathConnectedSpace.connectedSpace
   obtain ⟨φ, hφ, h0, habs⟩ := exists_green_map hG
   have hinj : Function.Injective φ := injective_green_map hG hφ h0 habs
   obtain ⟨U, ⟨e⟩⟩ := exists_diffeomorph_opens_complex_of_injective hφ hinj

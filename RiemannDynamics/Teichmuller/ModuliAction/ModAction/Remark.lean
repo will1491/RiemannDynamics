@@ -176,7 +176,7 @@ theorem wirtingerQuotient_remark_bound (x : TeichRep Γ₀) (P : ModGroupUpper �
     rw [setLIntegral_one] at hcov
     simp only [mul_one] at hcov
     have himgnull : volume (P.g '' S) = 0 := by
-      refine le_antisymm (le_trans (measure_mono ?_) hN'null.le) (zero_le _)
+      refine le_antisymm (le_trans (measure_mono ?_) hN'null.le) (zero_le)
       rintro w ⟨z, hz, rfl⟩
       exact (hSfacts z hz).2.2.2.1
     have hint0 : ∫⁻ z in S, ENNReal.ofReal |(fderiv ℝ P.g z).det| = 0 := by
@@ -193,9 +193,9 @@ theorem wirtingerQuotient_remark_bound (x : TeichRep Γ₀) (P : ModGroupUpper �
       have h3 : ∀ᵐ z : ℂ, z ∈ S → ENNReal.ofReal |(fderiv ℝ P.g z).det| = 0 :=
         (ae_restrict_iff' hSmeas).mp h2'
       rw [ae_iff] at h3
-      refine le_antisymm (le_trans (measure_mono ?_) h3.le) (zero_le _)
+      refine le_antisymm (le_trans (measure_mono ?_) h3.le) (zero_le)
       intro z hz
-      simp only [Set.mem_setOf_eq, Classical.not_imp]
+      simp only [Set.mem_ofPred_eq, Classical.not_imp]
       refine ⟨hz, ?_⟩
       intro h0
       rw [ENNReal.ofReal_eq_zero] at h0
@@ -208,7 +208,7 @@ theorem wirtingerQuotient_remark_bound (x : TeichRep Γ₀) (P : ModGroupUpper �
     refine measure_mono_null ?_ (measure_union_null hTH hSnull)
     intro z hz
     obtain ⟨hzbad, hzU⟩ := hz
-    simp only [Set.mem_setOf_eq, Classical.not_imp, not_not] at hzbad
+    simp only [Set.mem_ofPred_eq, Classical.not_imp, not_not] at hzbad
     obtain ⟨⟨hdiff, hdet⟩, hgN⟩ := hzbad
     by_cases hzT : z ∈ T
     · exact Or.inl ⟨hzT, hzU⟩
@@ -385,7 +385,7 @@ theorem wirtingerQuotient_remark_bound (x : TeichRep Γ₀) (P : ModGroupUpper �
             * ‖dz P.g z + x.b.μ (P.g z) * starRingEnd ℂ (dzbar P.g z)‖) := by ring
       _ = (max P.κ 0 + x.b.normInf) / (1 + max P.κ 0 * x.b.normInf)
           * ‖dz (x.w ∘ P.g) z‖ := by rw [hdzF', norm_mul]
-  rw [← ofReal_norm_eq_enorm]
+  rw [← ofReal_norm]
   exact ENNReal.ofReal_le_ofReal hquot
 
 /-- The Wirtinger quotient of a re-marked solution satisfies the `Γ₀`-invariance law on the
@@ -467,7 +467,7 @@ theorem wirtingerQuotient_remark_invariant (x : TeichRep Γ₀) (P : ModGroupUpp
     rw [setLIntegral_one] at hcov
     simp only [mul_one] at hcov
     have himgnull : volume (P.g '' S) = 0 := by
-      refine le_antisymm (le_trans (measure_mono ?_) hN'null.le) (zero_le _)
+      refine le_antisymm (le_trans (measure_mono ?_) hN'null.le) (zero_le)
       rintro w ⟨z, hz, rfl⟩
       exact (hSfacts z hz).2.2.2.1
     have hint0 : ∫⁻ z in S, ENNReal.ofReal |(fderiv ℝ P.g z).det| = 0 := by
@@ -484,9 +484,9 @@ theorem wirtingerQuotient_remark_invariant (x : TeichRep Γ₀) (P : ModGroupUpp
       have h3 : ∀ᵐ z : ℂ, z ∈ S → ENNReal.ofReal |(fderiv ℝ P.g z).det| = 0 :=
         (ae_restrict_iff' hSmeas).mp h2'
       rw [ae_iff] at h3
-      refine le_antisymm (le_trans (measure_mono ?_) h3.le) (zero_le _)
+      refine le_antisymm (le_trans (measure_mono ?_) h3.le) (zero_le)
       intro z hz
-      simp only [Set.mem_setOf_eq, Classical.not_imp]
+      simp only [Set.mem_ofPred_eq, Classical.not_imp]
       refine ⟨hz, ?_⟩
       intro h0
       rw [ENNReal.ofReal_eq_zero] at h0
@@ -499,7 +499,7 @@ theorem wirtingerQuotient_remark_invariant (x : TeichRep Γ₀) (P : ModGroupUpp
     refine measure_mono_null ?_ (measure_union_null hTH hSnull)
     intro z hz
     obtain ⟨hzbad, hzU⟩ := hz
-    simp only [Set.mem_setOf_eq, Classical.not_imp, not_not] at hzbad
+    simp only [Set.mem_ofPred_eq, Classical.not_imp, not_not] at hzbad
     obtain ⟨⟨hdiff, hdet⟩, hgN⟩ := hzbad
     by_cases hzT : z ∈ T
     · exact Or.inl ⟨hzT, hzU⟩
@@ -561,7 +561,7 @@ theorem wirtingerQuotient_remark_invariant (x : TeichRep Γ₀) (P : ModGroupUpp
         (measurableSet_toMeasurable _ _).inter hopen.measurableSet
       have hSnull : volume
           (toMeasurable volume {w | ¬ Q w} ∩ {w : ℂ | moebiusDenom γ⁻¹ w ≠ 0}) = 0 := by
-        refine le_antisymm (le_trans (measure_mono Set.inter_subset_left) ?_) (zero_le _)
+        refine le_antisymm (le_trans (measure_mono Set.inter_subset_left) ?_) (zero_le)
         rw [measure_toMeasurable]
         exact hQ.le
       have hfd : ∀ w ∈ toMeasurable volume {w | ¬ Q w} ∩ {w : ℂ | moebiusDenom γ⁻¹ w ≠ 0},
@@ -584,7 +584,7 @@ theorem wirtingerQuotient_remark_invariant (x : TeichRep Γ₀) (P : ModGroupUpp
       exact hcov
     refine measure_mono_null ?_ himg
     intro z hz
-    simp only [Set.mem_setOf_eq, Classical.not_imp] at hz
+    simp only [Set.mem_ofPred_eq, Classical.not_imp] at hz
     obtain ⟨hden, hbad⟩ := hz
     have hd1 : moebiusDenom γ⁻¹ (moebiusMap γ z) * moebiusDenom γ z = 1 := by
       rw [moebiusDenom_mul γ⁻¹ γ z hden, inv_mul_cancel, moebiusDenom_one]

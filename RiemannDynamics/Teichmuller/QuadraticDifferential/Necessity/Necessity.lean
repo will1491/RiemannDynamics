@@ -112,7 +112,7 @@ theorem exists_lt_dilatation_of_pairing_gap (hΓ₀ : IsFuchsianGroup Γ₀)
   have hDsub : D ⊆ {z : ℂ | 0 < z.im} := by
     rintro w ⟨τ, -, rfl⟩
     simpa using τ.im_pos
-  haveI hDfin : IsFiniteMeasure (volume.restrict D) :=
+  have hDfin : IsFiniteMeasure (volume.restrict D) :=
     ⟨by rw [Measure.restrict_apply_univ]; exact hDc.measure_lt_top⟩
   -- ===== Stage 2: the Hölder bound with the gap constant =====
   have hpairμ' : ∀ q : QuadraticDifferential y.group, qdPairing μ' q = qdPairing b.μ q := by
@@ -146,7 +146,7 @@ theorem exists_lt_dilatation_of_pairing_gap (hΓ₀ : IsFuchsianGroup Γ₀)
         have hcq : (c • q).l1Norm ≤ 1 := by
           rw [l1Norm_smul]
           have h1 : ‖c‖ₑ = ENNReal.ofReal r⁻¹ := by
-            rw [← ofReal_norm_eq_enorm, hnormc]
+            rw [← ofReal_norm, hnormc]
           have h2 : q.l1Norm = ENNReal.ofReal r := by
             rw [hrdef, ENNReal.ofReal_toReal hqfin]
           rw [h1, h2, ← ENNReal.ofReal_mul (inv_nonneg.mpr hr0.le),
@@ -494,7 +494,7 @@ theorem exists_lt_dilatation_of_pairing_gap (hΓ₀ : IsFuchsianGroup Γ₀)
         toMeasurable volume {w : ℂ | ¬ μ' w = b.μ w} ∩ {z : ℂ | 0 < z.im} with hTdef
       have hTmeas : MeasurableSet T := (measurableSet_toMeasurable _ _).inter hU
       have hTnull : volume T = 0 := by
-        refine le_antisymm (le_trans (measure_mono Set.inter_subset_left) ?_) (zero_le _)
+        refine le_antisymm (le_trans (measure_mono Set.inter_subset_left) ?_) (zero_le)
         rw [measure_toMeasurable]
         exact le_of_eq hN
       have hTsub : T ⊆ {z : ℂ | 0 < z.im} := Set.inter_subset_right
@@ -502,7 +502,7 @@ theorem exists_lt_dilatation_of_pairing_gap (hΓ₀ : IsFuchsianGroup Γ₀)
       rw [ae_restrict_iff' hU, ae_iff]
       refine measure_mono_null ?_ himg
       intro z hz
-      simp only [Set.mem_setOf_eq, Classical.not_imp] at hz
+      simp only [Set.mem_ofPred_eq, Classical.not_imp] at hz
       obtain ⟨hzup, hzbad⟩ := hz
       have hden : moebiusDenom W z ≠ 0 :=
         moebiusDenom_ne_zero_of_im_ne_zero W hzup.ne'
@@ -977,10 +977,10 @@ theorem exists_lt_dilatation_of_pairing_gap (hΓ₀ : IsFuchsianGroup Γ₀)
     rw [ae_iff]
     refine measure_mono_null (fun z hz => ?_)
       (measure_union_null (measure_union_null haxis hNnull) hconj_null)
-    simp only [Set.mem_setOf_eq] at hz
+    simp only [Set.mem_ofPred_eq] at hz
     by_contra hnot
     apply hz
-    simp only [Set.mem_union, Set.mem_setOf_eq] at hnot
+    simp only [Set.mem_union, Set.mem_ofPred_eq] at hnot
     push Not at hnot
     obtain ⟨⟨him, hbz⟩, hcj⟩ := hnot
     rcases lt_or_gt_of_ne him with hlow | hup

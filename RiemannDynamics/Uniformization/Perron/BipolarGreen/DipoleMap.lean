@@ -118,8 +118,8 @@ theorem exists_bipolar_map [SimplyConnectedSpace M]
         have hgc : Filter.Tendsto (fun v ↦ (f / g) z₁ * g v) (𝓝[U] z₀)
             (𝓝 ((f / g) z₁ * g z₀)) :=
           (continuousAt_const.mul (hg z₀ hz₀b).continuousAt).continuousWithinAt
-        haveI : (𝓝[U] z₀).NeBot := by
-          have h2 : U = {z₀}ᶜ ∩ ball z₀ ρ := by rw [hU, Set.diff_eq, Set.inter_comm]
+        have : (𝓝[U] z₀).NeBot := by
+          have h2 : U = {z₀}ᶜ ∩ ball z₀ ρ := by rw [hU, Set.sdiff_eq, Set.inter_comm]
           rw [h2,
             nhdsWithin_inter_of_mem' (nhdsWithin_le_nhds (isOpen_ball.mem_nhds hz₀b))]
           exact Module.punctured_nhds_neBot ℝ ℂ z₀
@@ -426,8 +426,7 @@ theorem exists_bipolar_map [SimplyConnectedSpace M]
         have hgne0 : (e y - c₂) * Complex.exp (F (e y)) ≠ 0 :=
           mul_ne_zero (sub_ne_zero.mpr hyc) (Complex.exp_ne_zero _)
         refine ⟨((e y - c₂) * Complex.exp (F (e y)))⁻¹, ?_, ?_⟩
-        · change sphereChartInfty.symm ((e y - c₂) * Complex.exp (F (e y))) = _
-          rw [sphereChartInfty_symm_apply, inversionGL_smul_coe, if_neg hgne0]
+        · rw [sphereChartInfty_symm_apply, inversionGL_smul_coe, if_neg hgne0]
         · have hval : h (e y) = G y - Real.log ‖e y - c₂‖ := by
             have h5 := hhval (e y) ⟨hyb, hyc⟩
             rw [e.left_inv hys] at h5
@@ -1721,9 +1720,7 @@ theorem exists_bipolar_map [SimplyConnectedSpace M]
       (fun u ↦ if u ≤ 1/2 then ΦF q (2*u) else ΦF q 1) hIC0 hIC1
     rw [hη01] at hfinal
     have hn12 : ¬((1:ℝ) ≤ 1/2) := by norm_num
-    have hval1 : (fun u ↦ if u ≤ (1:ℝ)/2 then ΦF q (2*u) else ΦF q 1) 1 = ΦF q 1 :=
-      if_neg hn12
-    rw [hval1] at hfinal
+    rw [if_neg hn12] at hfinal
     exact hfinal.symm
   -- the global map and its four properties
   refine ⟨fun q ↦ ΦF q 1 q, ?_, ?_, ?_, ?_⟩

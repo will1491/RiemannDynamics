@@ -231,7 +231,7 @@ theorem slope_eq {Φ : ℂ → ℂ} {σ : ℝ → ℂ} {I : Set ℝ} {u s₁ s�
     [hne : (nhdsWithin u (I \ {u})).NeBot]
     (h₁ : SlopeAt Φ σ I u s₁) (h₂ : SlopeAt Φ σ I u s₂) : s₁ = s₂ := by
   have hmono : nhdsWithin u (I \ {u}) ≤ nhdsWithin u I :=
-    nhdsWithin_mono u Set.diff_subset
+    nhdsWithin_mono u Set.sdiff_subset
   obtain ⟨v, hv, e₁, e₂⟩ := (eventually_mem_nhdsWithin.and
     ((h₁.filter_mono hmono).and (h₂.filter_mono hmono))).exists
   have hvne : ((v - u : ℝ) : ℂ) ≠ 0 := by
@@ -312,7 +312,7 @@ theorem slegal_of_traj {q : ℂ → ℂ}
   obtain ⟨ε, hε, hev⟩ := traj_ambient_local Metric.isOpen_ball
     (A.hd _ hact) (A.hsq _ hact) hσ Set.Subset.rfl htmem htS
   have hslε : SlopeAt (A.Φ (A.sel (σ t))) σ (Set.Icc 0 T) t ε := hev
-  haveI hne : (nhdsWithin t (Set.Icc 0 T \ {t})).NeBot := by
+  have hne : (nhdsWithin t (Set.Icc 0 T \ {t})).NeBot := by
     have hsub : Set.Ioc t T ⊆ Set.Icc 0 T \ {t} := fun u hu =>
       ⟨⟨le_trans ht0 hu.1.le, hu.2⟩, hu.1.ne'⟩
     have hbot : (nhdsWithin t (Set.Ioc t T)).NeBot := left_nhdsWithin_Ioc_neBot hklt
@@ -345,7 +345,7 @@ theorem traj_exists_measurable {q : ℂ → ℂ}
       SlopeAt (A.Φ (A.sel z)) σ (Set.Icc 0 T) 0 1}
       = ⋃ N : ℕ, slegal A (T / (N + 1)) N := by
     ext z
-    simp only [Set.mem_setOf_eq, Set.mem_iUnion]
+    simp only [Set.mem_ofPred_eq, Set.mem_iUnion]
     constructor
     · rintro ⟨σ, hσ0, hσtraj, hσslope⟩
       rw [← hσ0] at hσslope
@@ -414,7 +414,7 @@ theorem sgn_last_pm {q : ℂ → ℂ} (A : Atlas q) {h : ℝ} (hh : 0 < h) {N : 
     (A.hd _ hact) (A.hsq _ hact) hσtraj Set.Subset.rfl hTmem hTS
   have hslε : SlopeAt (A.Φ (A.sel (σ (((N + 1 : ℕ) : ℝ) * h)))) σ
       (Set.Icc 0 (((N + 1 : ℕ) : ℝ) * h)) (((N + 1 : ℕ) : ℝ) * h) ε := hev
-  haveI : (nhdsWithin (((N + 1 : ℕ) : ℝ) * h)
+  have : (nhdsWithin (((N + 1 : ℕ) : ℝ) * h)
       (Set.Icc 0 (((N + 1 : ℕ) : ℝ) * h) \ {((N + 1 : ℕ) : ℝ) * h})).NeBot := by
     have hsub : Set.Ico 0 (((N + 1 : ℕ) : ℝ) * h)
         ⊆ Set.Icc 0 (((N + 1 : ℕ) : ℝ) * h) \ {((N + 1 : ℕ) : ℝ) * h} := fun u hu =>
@@ -768,6 +768,9 @@ theorem window_dying {q : ℂ → ℂ}
       traj_glue_overlap ha.le hac hσm hτ' hEq
     exact hmaxm ⟨σ'', hE'', hσ''⟩
 
+set_option maxHeartbeats 1600000 in
+-- Heavy elaboration: long induction over trajectory segments with repeated `UpperHalfPlane`
+-- smul / set-abbreviation unfolding in `isDefEq`; the default budget is not enough.
 /-- **Uniform hyperbolic displacement bound**: a trajectory of flat duration `T` moves
 its seed by at most `⌈T / (η / 2)⌉` in the hyperbolic metric, with `η` independent of
 the trajectory. -/
@@ -1422,7 +1425,6 @@ theorem grid_union_push {q : ℂ → ℂ} (hqm : Measurable q) (A : Atlas q)
     obtain ⟨hzE, hcl⟩ := hz
     obtain ⟨hsel, hsgn⟩ := hcl ⟨k, hk'⟩
     obtain ⟨hact, hball, hpm, hmove⟩ := (hEL N hzE) k hk
-    beta_reduce
     rw [dif_pos hk', dif_pos hk']
     refine ⟨hsel, hsgn, ?_, ?_, ?_⟩
     · rw [← hsel]

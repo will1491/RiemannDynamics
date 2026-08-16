@@ -65,19 +65,19 @@ theorem norm_fderiv_re_eq_norm_deriv {F : ℂ → ℂ} {z : ℂ} (hF : Different
   have hFr : HasFDerivAt F (c • (ContinuousLinearMap.id ℝ ℂ : ℂ →L[ℝ] ℂ)) z := by
     rw [hasFDerivAt_iff_isLittleO]
     refine hF.hasDerivAt.isLittleO.congr_left fun y => ?_
-    simp only [ContinuousLinearMap.smul_apply, ContinuousLinearMap.id_apply, smul_eq_mul]
+    simp only [smul_apply, ContinuousLinearMap.id_apply, smul_eq_mul]
     ring
   -- Chain rule: the real derivative of `Re ∘ F` is `reCLM ∘ (w ↦ c · w)`.
   have hcomp : HasFDerivAt (fun w => (F w).re)
       (Complex.reCLM.comp (c • (ContinuousLinearMap.id ℝ ℂ : ℂ →L[ℝ] ℂ))) z := by
     have := Complex.reCLM.hasFDerivAt.comp z hFr
-    simpa [Function.comp] using this
+    simpa [Function.comp] using! this
   set L := Complex.reCLM.comp (c • (ContinuousLinearMap.id ℝ ℂ : ℂ →L[ℝ] ℂ)) with hL
   rw [hcomp.fderiv]
   -- The map `L` acts by `w ↦ (c · w).re`.
   have hact : ∀ w : ℂ, L w = (c * w).re := by
     intro w
-    simp only [hL, ContinuousLinearMap.comp_apply, ContinuousLinearMap.smul_apply,
+    simp only [hL, ContinuousLinearMap.comp_apply, smul_apply,
       ContinuousLinearMap.id_apply, smul_eq_mul, Complex.reCLM_apply]
   apply le_antisymm
   · -- Upper bound: `|(c · w).re| ≤ ‖c · w‖ = ‖c‖ · ‖w‖`.
@@ -157,24 +157,24 @@ theorem exists_holomorphicGradient {u : ℂ → ℝ} {U : Set ℂ} (hUopen : IsO
       have hFr : HasFDerivAt F (deriv F w • (ContinuousLinearMap.id ℝ ℂ : ℂ →L[ℝ] ℂ)) w := by
         rw [hasFDerivAt_iff_isLittleO]
         refine hFdw.hasDerivAt.isLittleO.congr_left fun y => ?_
-        simp only [ContinuousLinearMap.smul_apply, ContinuousLinearMap.id_apply, smul_eq_mul]
+        simp only [smul_apply, ContinuousLinearMap.id_apply, smul_eq_mul]
         ring
       -- Chain rule: the real derivative of `(F).re` is `reCLM ∘ (w ↦ F′(w) · w)`.
       have hcomp : HasFDerivAt (fun x => (F x).re)
           (Complex.reCLM.comp (deriv F w • (ContinuousLinearMap.id ℝ ℂ : ℂ →L[ℝ] ℂ))) w := by
         have := Complex.reCLM.hasFDerivAt.comp w hFr
-        simpa [Function.comp] using this
+        simpa [Function.comp] using! this
       have hfd2 : fderiv ℝ (fun x => (F x).re) w
           = Complex.reCLM.comp (deriv F w • (ContinuousLinearMap.id ℝ ℂ : ℂ →L[ℝ] ℂ)) :=
         hcomp.fderiv
       -- Evaluate the real derivative at `1` and at `I`.
       have hval1 : (fderiv ℝ u w) 1 = (deriv F w).re := by
         rw [hfdEq, hfd2]
-        simp only [ContinuousLinearMap.comp_apply, ContinuousLinearMap.smul_apply,
+        simp only [ContinuousLinearMap.comp_apply, smul_apply,
           ContinuousLinearMap.id_apply, smul_eq_mul, mul_one, Complex.reCLM_apply]
       have hvalI : (fderiv ℝ u w) Complex.I = -(deriv F w).im := by
         rw [hfdEq, hfd2]
-        simp only [ContinuousLinearMap.comp_apply, ContinuousLinearMap.smul_apply,
+        simp only [ContinuousLinearMap.comp_apply, smul_apply,
           ContinuousLinearMap.id_apply, smul_eq_mul, Complex.reCLM_apply, Complex.mul_I_re]
       -- Hence `f w = ↑(F′ w).re + I·↑(F′ w).im = F′ w`.
       have hfvalw : f w = deriv F w := by

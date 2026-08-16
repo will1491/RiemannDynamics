@@ -55,7 +55,6 @@ theorem ae_norm_le_of_forall_setIntegral_norm_le (μ : Measure α) [IsFiniteMeas
           = ((starRingEnd ℂ) u * ∫ x in s, ν x ∂μ).re := by
         rw [← RCLike.re_eq_complex_re]
         rw [integral_re (hint.const_mul _).integrableOn, integral_const_mul]
-        rfl
       rw [h2]
       calc ((starRingEnd ℂ) u * ∫ x in s, ν x ∂μ).re
           ≤ ‖(starRingEnd ℂ) u * ∫ x in s, ν x ∂μ‖ := Complex.re_le_norm _
@@ -121,8 +120,7 @@ theorem exists_setIntegral_rep (μ : Measure α) [IsFiniteMeasure μ]
     refine ⟨⟨fun E => if h : MeasurableSet E
         then Λ (indicatorConstLp 1 h (measure_ne_top μ E) (1 : ℂ)) else 0, ?_, ?_, ?_⟩,
       fun E hE => dif_pos hE⟩
-    · dsimp only
-      rw [dif_pos MeasurableSet.empty, indicatorConstLp_empty, map_zero]
+    · rw [dif_pos MeasurableSet.empty, indicatorConstLp_empty, map_zero]
     · exact fun i hi => dif_neg hi
     · intro f hf hd
       have hIU : HasSum
@@ -184,7 +182,7 @@ theorem exists_setIntegral_rep (μ : Measure α) [IsFiniteMeasure μ]
             rw [← measure_iUnion hd hf]
             exact measure_ne_top μ _
           exact tendsto_of_tendsto_of_tendsto_of_le_of_le tendsto_const_nhds hzero
-            (fun N => zero_le _) hbound
+            (fun N => zero_le) hbound
         have hps : Filter.Tendsto
             (fun N => ∑ i ∈ Finset.range N,
               indicatorConstLp 1 (hf i) (measure_ne_top μ (f i)) (1 : ℂ))
@@ -204,7 +202,7 @@ theorem exists_setIntegral_rep (μ : Measure α) [IsFiniteMeasure μ]
                 = indicatorConstLp 1 (hAm N) (measure_ne_top μ (A N)) (1 : ℂ)
                   + indicatorConstLp 1 hDm (measure_ne_top μ ((⋃ i, f i) \ A N)) (1 : ℂ) :=
               (hcongr (MeasurableSet.iUnion hf) ((hAm N).union hDm)
-                (Set.union_diff_cancel (hAsub N)).symm).trans
+                (Set.union_sdiff_cancel (hAsub N)).symm).trans
                 (indicatorConstLp_disjoint_union (hAm N) hDm (measure_ne_top _ _)
                   (measure_ne_top _ _) Set.disjoint_sdiff_right (1 : ℂ))
             rw [hpartial N, hsplit, sub_add_cancel_left, norm_neg]

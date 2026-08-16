@@ -133,7 +133,7 @@ theorem TeichRep.isQCUpper_remark (x : TeichRep Γ₀) (P : ModGroupUpper Γ₀)
     rw [setLIntegral_one] at hcov
     simp only [mul_one] at hcov
     have himgnull : volume (P.g '' S) = 0 := by
-      refine le_antisymm (le_trans (measure_mono ?_) hN'null.le) (zero_le _)
+      refine le_antisymm (le_trans (measure_mono ?_) hN'null.le) (zero_le)
       rintro w ⟨z, hz, rfl⟩
       exact (hSfacts z hz).2.2.2.1
     have hint0 : ∫⁻ z in S, ENNReal.ofReal |(fderiv ℝ P.g z).det| = 0 := by
@@ -150,9 +150,9 @@ theorem TeichRep.isQCUpper_remark (x : TeichRep Γ₀) (P : ModGroupUpper Γ₀)
       have h3 : ∀ᵐ z : ℂ, z ∈ S → ENNReal.ofReal |(fderiv ℝ P.g z).det| = 0 :=
         (ae_restrict_iff' hSmeas).mp h2'
       rw [ae_iff] at h3
-      refine le_antisymm (le_trans (measure_mono ?_) h3.le) (zero_le _)
+      refine le_antisymm (le_trans (measure_mono ?_) h3.le) (zero_le)
       intro z hz
-      simp only [Set.mem_setOf_eq, Classical.not_imp]
+      simp only [Set.mem_ofPred_eq, Classical.not_imp]
       refine ⟨hz, ?_⟩
       intro h0
       rw [ENNReal.ofReal_eq_zero] at h0
@@ -165,7 +165,7 @@ theorem TeichRep.isQCUpper_remark (x : TeichRep Γ₀) (P : ModGroupUpper Γ₀)
     refine measure_mono_null ?_ (measure_union_null hTH hSnull)
     intro z hz
     obtain ⟨hzbad, hzU⟩ := hz
-    simp only [Set.mem_setOf_eq, Classical.not_imp, not_not] at hzbad
+    simp only [Set.mem_ofPred_eq, Classical.not_imp, not_not] at hzbad
     obtain ⟨⟨hdiff, hdet⟩, hgN⟩ := hzbad
     by_cases hzT : z ∈ T
     · exact Or.inl ⟨hzT, hzU⟩
@@ -407,9 +407,9 @@ theorem TeichRep.isQCUpper_remark (x : TeichRep Γ₀) (P : ModGroupUpper Γ₀)
   · -- sobolev
     have hle1 : (1 : WithTop ℕ∞) ≤ ((⊤ : ℕ∞) : WithTop ℕ∞) := by norm_num
     have hne0 : ((⊤ : ℕ∞) : WithTop ℕ∞) ≠ 0 := by norm_num
-    haveI : NormSMulClass ℝ ℂ := NormedSpace.toNormSMulClass
-    haveI : IsBoundedSMul ℝ ℂ := NormSMulClass.toIsBoundedSMul
-    haveI : ContinuousSMul ℝ ℂ := IsBoundedSMul.continuousSMul
+    have : NormSMulClass ℝ ℂ := NormedSpace.toNormSMulClass
+    have : IsBoundedSMul ℝ ℂ := NormSMulClass.toIsBoundedSMul
+    have : ContinuousSMul ℝ ℂ := IsBoundedSMul.continuousSMul
     have hxLI : LocallyIntegrable x.w volume := hxc.locallyIntegrable
     have hxdiff : ∀ᵐ w : ℂ, DifferentiableAt ℝ x.w w :=
       IsQCAnalytic.ae_differentiableAt x.w_isQCAnalytic
@@ -506,7 +506,7 @@ theorem TeichRep.isQCUpper_remark (x : TeichRep Γ₀) (P : ModGroupUpper Γ₀)
         exact hzn ⟨hzS, hgood.1, hgood.2⟩
       have hSeq : Sg =ᵐ[volume] S := by
         refine ae_eq_set.mpr ⟨?_, hnull⟩
-        rw [Set.diff_eq_empty.mpr hSgsub]
+        rw [Set.sdiff_eq_empty.mpr hSgsub]
         exact measure_empty
       have hstep1 : ∫⁻ z in S, ENNReal.ofReal ((fderiv ℝ P.g z).det) * h (P.g z)
           = ∫⁻ z in Sg, ENNReal.ofReal ((fderiv ℝ P.g z).det) * h (P.g z) := by
@@ -536,7 +536,7 @@ theorem TeichRep.isQCUpper_remark (x : TeichRep Γ₀) (P : ModGroupUpper Γ₀)
     have hgradL2 : ∀ v : ℂ, ‖v‖ = 1 →
         MemLpLocOn (fun z => (fderiv ℝ (x.w ∘ P.g) z) v) 2 {z : ℂ | 0 < z.im} := by
       intro v hv Kc hKcU hKcc
-      haveI : IsFiniteMeasure (volume.restrict Kc) :=
+      have : IsFiniteMeasure (volume.restrict Kc) :=
         ⟨by rw [Measure.restrict_apply_univ]; exact hKcc.measure_lt_top⟩
       refine ⟨((measurable_fderiv ℝ (x.w ∘ P.g)).apply_continuousLinearMap
         v).aestronglyMeasurable, ?_⟩
@@ -575,14 +575,14 @@ theorem TeichRep.isQCUpper_remark (x : TeichRep Γ₀) (P : ModGroupUpper Γ₀)
           nlinarith [mul_le_mul_of_nonneg_left h2 h7]
         calc ‖(fderiv ℝ (x.w ∘ P.g) z) v‖ₑ ^ 2
             = ENNReal.ofReal (‖(fderiv ℝ (x.w ∘ P.g) z) v‖ ^ 2) := by
-              rw [← ofReal_norm_eq_enorm, ← ENNReal.ofReal_pow (norm_nonneg _)]
+              rw [← ofReal_norm, ← ENNReal.ofReal_pow (norm_nonneg _)]
           _ ≤ ENNReal.ofReal ((fderiv ℝ P.g z).det
                 * ((1 + max P.κ 0) / (1 - max P.κ 0) * ‖fderiv ℝ x.w (P.g z)‖ ^ 2)) :=
               ENNReal.ofReal_le_ofReal h3
           _ = ENNReal.ofReal ((fderiv ℝ P.g z).det)
                 * (ENNReal.ofReal ((1 + max P.κ 0) / (1 - max P.κ 0))
                   * ‖fderiv ℝ x.w (P.g z)‖ₑ ^ 2) := by
-              rw [← ofReal_norm_eq_enorm, ← ENNReal.ofReal_pow (norm_nonneg _),
+              rw [← ofReal_norm, ← ENNReal.ofReal_pow (norm_nonneg _),
                 ENNReal.ofReal_mul hdet0, ENNReal.ofReal_mul hC0]
       have hmain : ∫⁻ z in Kc, ‖(fderiv ℝ (x.w ∘ P.g) z) v‖ₑ ^ 2
           ≤ ENNReal.ofReal ((1 + max P.κ 0) / (1 - max P.κ 0))
@@ -631,7 +631,7 @@ theorem TeichRep.isQCUpper_remark (x : TeichRep Γ₀) (P : ModGroupUpper Γ₀)
       have hK3meas : MeasurableSet (Metric.cthickening d (tsupport φ)) :=
         Metric.isClosed_cthickening.measurableSet
       have hK3c : IsCompact (Metric.cthickening d (tsupport φ)) := hKc.cthickening
-      haveI hK3fin : IsFiniteMeasure (volume.restrict (Metric.cthickening d (tsupport φ))) :=
+      have hK3fin : IsFiniteMeasure (volume.restrict (Metric.cthickening d (tsupport φ))) :=
         ⟨by rw [Measure.restrict_apply_univ]; exact hK3c.measure_lt_top⟩
       -- ===== the smooth cutoff, by mollifying an indicator =====
       set β : ContDiffBump (0:ℂ) :=
@@ -908,7 +908,7 @@ theorem TeichRep.isQCUpper_remark (x : TeichRep Γ₀) (P : ModGroupUpper Γ₀)
               (ψ z • fderiv ℝ χ z + χ z • fderiv ℝ ψ z) z :=
             (hψd z).hasFDerivAt.mul (hχd z).hasFDerivAt
           rw [h13.fderiv]
-          simp [ContinuousLinearMap.add_apply, ContinuousLinearMap.smul_apply, smul_eq_mul]
+          simp [add_apply, smul_apply, smul_eq_mul]
         have hdψχ0 : ∀ z : ℂ, z ∉ Metric.cthickening d (tsupport φ) →
             (fderiv ℝ (fun w => ψ w * χ w) z) v = 0 := by
           intro z hz
@@ -1131,6 +1131,7 @@ theorem TeichRep.isQCUpper_remark (x : TeichRep Γ₀) (P : ModGroupUpper Γ₀)
         intro c H hc hc0 hH
         refine (hc.smul hH).integrable_of_hasCompactSupport ?_
         refine HasCompactSupport.intro hKc fun z hz => ?_
+        change c z • H z = 0
         rw [hc0 z hz]
         exact zero_smul ℝ _
       have hIntCLM : ∀ (T : ℂ → (ℂ →L[ℝ] ℂ)), Continuous T → ∀ (MT : ℝ),
@@ -1213,7 +1214,7 @@ theorem TeichRep.isQCUpper_remark (x : TeichRep Γ₀) (P : ModGroupUpper Γ₀)
           have hptb : ∀ z ∈ tsupport φ, ‖c z • H m z - c z • Hl z‖ₑ
               ≤ ENNReal.ofReal ((Mc + 1) * ε') := by
             intro z hz
-            rw [heq0 z, ← ofReal_norm_eq_enorm]
+            rw [heq0 z, ← ofReal_norm]
             refine ENNReal.ofReal_le_ofReal ?_
             rw [norm_smul]
             have hMc0 : 0 ≤ Mc := le_trans (norm_nonneg _) (hMc 0)
@@ -1315,7 +1316,7 @@ theorem TeichRep.isQCUpper_remark (x : TeichRep Γ₀) (P : ModGroupUpper Γ₀)
         have hLlim : Filter.Tendsto (fun m => ∫ z, ((fderiv ℝ φ z) v) • (A n (gm m z)))
             Filter.atTop (nhds (∫ z, ((fderiv ℝ φ z) v) • (A n (G z)))) := by
           refine tendsto_integral_of_L1 _ (hIntCont _ _ hdφcont hdφzero
-            ((hAsm n).continuous.comp hGcont)) ?_ ?_
+            ((hAsm n).continuous.comp hGcont)).aestronglyMeasurable ?_ ?_
           · exact Filter.Eventually.of_forall fun m =>
               hIntCont _ _ hdφcont hdφzero ((hAsm n).continuous.comp (hgmsm m).continuous)
           · exact hsupL1 _ _ hMdφ hdφzero _ _ hLconv
@@ -1327,7 +1328,7 @@ theorem TeichRep.isQCUpper_remark (x : TeichRep Γ₀) (P : ModGroupUpper Γ₀)
           have hTbd : ∀ z ∈ tsupport φ, ‖fderiv ℝ (A n) (G z)‖ ≤ MD0 :=
             fun z hz => hMD0 _ (hKgsub (hGKg z hz))
           refine tendsto_integral_of_L1 _
-            (hIntCLM _ hTcont MD0 hTbd Gv hGvsm hGvInt) ?_ ?_
+            (hIntCLM _ hTcont MD0 hTbd Gv hGvsm hGvInt).aestronglyMeasurable ?_ ?_
           · filter_upwards with m
             exact hIntCont _ _ hφs.continuous hφzero
               ((hDncont.comp (hgmsm m).continuous).clm_apply (hCVcont m))
@@ -1373,7 +1374,7 @@ theorem TeichRep.isQCUpper_remark (x : TeichRep Γ₀) (P : ModGroupUpper Γ₀)
                   = φ z • ((fderiv ℝ (A n) (gm m z)) (Ym z))
                     + φ z • (((fderiv ℝ (A n) (gm m z)) - (fderiv ℝ (A n) (G z))) (Gv z)) := by
                 rw [hYmdef]
-                simp only [map_sub, ContinuousLinearMap.sub_apply, Complex.real_smul]
+                simp only [map_sub, sub_apply, Complex.real_smul]
                 ring
               rw [halg]
               exact enorm_add_le _ _
@@ -1412,11 +1413,11 @@ theorem TeichRep.isQCUpper_remark (x : TeichRep Γ₀) (P : ModGroupUpper Γ₀)
                     _ = (max Mφ0 0 * (max MD0 0 + 1)) * ‖Ym z‖ := by ring
                 calc ‖φ z • ((fderiv ℝ (A n) (gm m z)) (Ym z))‖ₑ
                     = ENNReal.ofReal ‖φ z • ((fderiv ℝ (A n) (gm m z)) (Ym z))‖ :=
-                      (ofReal_norm_eq_enorm _).symm
+                      (ofReal_norm _).symm
                   _ ≤ ENNReal.ofReal ((max Mφ0 0 * (max MD0 0 + 1)) * ‖Ym z‖) :=
                       ENNReal.ofReal_le_ofReal hb1
                   _ = ENNReal.ofReal (max Mφ0 0 * (max MD0 0 + 1)) * ‖Ym z‖ₑ := by
-                      rw [ENNReal.ofReal_mul (by positivity), ofReal_norm_eq_enorm]
+                      rw [ENNReal.ofReal_mul (by positivity), ofReal_norm]
               calc ∫⁻ z in tsupport φ, ‖φ z • ((fderiv ℝ (A n) (gm m z)) (Ym z))‖ₑ
                   ≤ ∫⁻ z in tsupport φ,
                       ENNReal.ofReal (max Mφ0 0 * (max MD0 0 + 1)) * ‖Ym z‖ₑ :=
@@ -1464,12 +1465,12 @@ theorem TeichRep.isQCUpper_remark (x : TeichRep Γ₀) (P : ModGroupUpper Γ₀)
                 calc ‖φ z • (((fderiv ℝ (A n) (gm m z))
                       - (fderiv ℝ (A n) (G z))) (Gv z))‖ₑ
                     = ENNReal.ofReal ‖φ z • (((fderiv ℝ (A n) (gm m z))
-                        - (fderiv ℝ (A n) (G z))) (Gv z))‖ := (ofReal_norm_eq_enorm _).symm
+                        - (fderiv ℝ (A n) (G z))) (Gv z))‖ := (ofReal_norm _).symm
                   _ ≤ ENNReal.ofReal ((max Mφ0 0) * (ε2 * ‖Gv z‖)) :=
                       ENNReal.ofReal_le_ofReal hb1
                   _ = ENNReal.ofReal (max Mφ0 0) * ENNReal.ofReal ε2 * ‖Gv z‖ₑ := by
                       rw [ENNReal.ofReal_mul (le_max_right _ _),
-                        ENNReal.ofReal_mul hε20.le, ofReal_norm_eq_enorm, mul_assoc]
+                        ENNReal.ofReal_mul hε20.le, ofReal_norm, mul_assoc]
               calc ∫⁻ z in tsupport φ, ‖φ z • (((fderiv ℝ (A n) (gm m z))
                     - (fderiv ℝ (A n) (G z))) (Gv z))‖ₑ
                   ≤ ∫⁻ z in tsupport φ,
@@ -1514,7 +1515,7 @@ theorem TeichRep.isQCUpper_remark (x : TeichRep Γ₀) (P : ModGroupUpper Γ₀)
         · have h2 := hd v hv1
           calc ‖(fderiv ℝ P.g z) v‖ₑ ^ (2:ℕ)
               = ENNReal.ofReal (‖(fderiv ℝ P.g z) v‖ ^ 2) := by
-                rw [← ofReal_norm_eq_enorm, ← ENNReal.ofReal_pow (norm_nonneg _)]
+                rw [← ofReal_norm, ← ENNReal.ofReal_pow (norm_nonneg _)]
             _ ≤ ENNReal.ofReal ((1 + max P.κ 0) / (1 - max P.κ 0) * (fderiv ℝ P.g z).det) :=
                 ENNReal.ofReal_le_ofReal h2
             _ = ENNReal.ofReal ((1 + max P.κ 0) / (1 - max P.κ 0))
@@ -1653,7 +1654,7 @@ theorem TeichRep.isQCUpper_remark (x : TeichRep Γ₀) (P : ModGroupUpper Γ₀)
       have hLlimN : Filter.Tendsto (fun n => ∫ z, ((fderiv ℝ φ z) v) • (A n (G z)))
           Filter.atTop (nhds (∫ z, ((fderiv ℝ φ z) v) • (x.w (G z)))) := by
         refine tendsto_integral_of_L1 _
-          (hIntCont _ _ hdφcont hdφzero (hxc.comp hGcont)) ?_ ?_
+          (hIntCont _ _ hdφcont hdφzero (hxc.comp hGcont)).aestronglyMeasurable ?_ ?_
         · exact Filter.Eventually.of_forall fun n =>
             hIntCont _ _ hdφcont hdφzero ((hAsm n).continuous.comp hGcont)
         · exact hsupL1 _ _ hMdφ hdφzero _ _ hLconvN
@@ -1687,7 +1688,7 @@ theorem TeichRep.isQCUpper_remark (x : TeichRep Γ₀) (P : ModGroupUpper Γ₀)
             rw [hGz, h1]
             calc ‖φ z • ((fderiv ℝ x.w (P.g z)) ((fderiv ℝ P.g z) v))‖ₑ
                 = ENNReal.ofReal ‖φ z • ((fderiv ℝ x.w (P.g z)) ((fderiv ℝ P.g z) v))‖ :=
-                  (ofReal_norm_eq_enorm _).symm
+                  (ofReal_norm _).symm
               _ ≤ ENNReal.ofReal ((max Mφ0 0)
                     * (‖fderiv ℝ x.w (P.g z)‖ * ‖(fderiv ℝ P.g z) v‖)) := by
                   refine ENNReal.ofReal_le_ofReal ?_
@@ -1699,8 +1700,8 @@ theorem TeichRep.isQCUpper_remark (x : TeichRep Γ₀) (P : ModGroupUpper Γ₀)
                     * ((fun u : ℂ => ‖fderiv ℝ x.w u‖ₑ) (P.g z)
                       * ‖(fderiv ℝ P.g z) v‖ₑ) := by
                   rw [ENNReal.ofReal_mul (le_max_right _ _),
-                    ENNReal.ofReal_mul (norm_nonneg _), ofReal_norm_eq_enorm,
-                    ofReal_norm_eq_enorm]
+                    ENNReal.ofReal_mul (norm_nonneg _), ofReal_norm,
+                    ofReal_norm]
           calc ∫⁻ z in tsupport φ, ‖φ z • ((fderiv ℝ x.w (G z)) (Gv z))‖ₑ
               ≤ ∫⁻ z in tsupport φ, ENNReal.ofReal (max Mφ0 0)
                   * ((fun u : ℂ => ‖fderiv ℝ x.w u‖ₑ) (P.g z)
@@ -1719,7 +1720,7 @@ theorem TeichRep.isQCUpper_remark (x : TeichRep Γ₀) (P : ModGroupUpper Γ₀)
       have hRlimN : Filter.Tendsto
           (fun n => ∫ z, φ z • ((fderiv ℝ (A n) (G z)) (Gv z)))
           Filter.atTop (nhds (∫ z, φ z • ((fderiv ℝ x.w (G z)) (Gv z)))) := by
-        refine tendsto_integral_of_L1 _ hIntlim ?_ ?_
+        refine tendsto_integral_of_L1 _ hIntlim.aestronglyMeasurable ?_ ?_
         · refine Filter.Eventually.of_forall fun n => ?_
           have hDncont : Continuous fun u : ℂ => fderiv ℝ (A n) u :=
             (hAsm n).continuous_fderiv hne0
@@ -1756,7 +1757,7 @@ theorem TeichRep.isQCUpper_remark (x : TeichRep Γ₀) (P : ModGroupUpper Γ₀)
                   - φ z • ((fderiv ℝ x.w (G z)) (Gv z))
                   = φ z • (((fderiv ℝ (A n) (P.g z) - fderiv ℝ x.w (P.g z)))
                       ((fderiv ℝ P.g z) v)) := by
-                rw [hGz, h1, ContinuousLinearMap.sub_apply]
+                rw [hGz, h1, sub_apply]
                 simp only [Complex.real_smul]
                 ring
               rw [halg2]
@@ -1764,7 +1765,7 @@ theorem TeichRep.isQCUpper_remark (x : TeichRep Γ₀) (P : ModGroupUpper Γ₀)
                     ((fderiv ℝ P.g z) v))‖ₑ
                   = ENNReal.ofReal ‖φ z • (((fderiv ℝ (A n) (P.g z)
                       - fderiv ℝ x.w (P.g z))) ((fderiv ℝ P.g z) v))‖ :=
-                    (ofReal_norm_eq_enorm _).symm
+                    (ofReal_norm _).symm
                 _ ≤ ENNReal.ofReal ((max Mφ0 0)
                       * (‖fderiv ℝ (A n) (P.g z) - fderiv ℝ x.w (P.g z)‖
                         * ‖(fderiv ℝ P.g z) v‖)) := by
@@ -1777,8 +1778,8 @@ theorem TeichRep.isQCUpper_remark (x : TeichRep Γ₀) (P : ModGroupUpper Γ₀)
                       * ((fun u : ℂ => ‖fderiv ℝ (A n) u - fderiv ℝ x.w u‖ₑ) (P.g z)
                         * ‖(fderiv ℝ P.g z) v‖ₑ) := by
                     rw [ENNReal.ofReal_mul (le_max_right _ _),
-                      ENNReal.ofReal_mul (norm_nonneg _), ofReal_norm_eq_enorm,
-                      ofReal_norm_eq_enorm]
+                      ENNReal.ofReal_mul (norm_nonneg _), ofReal_norm,
+                      ofReal_norm]
             have hQnm : Measurable fun u : ℂ => ‖fderiv ℝ (A n) u - fderiv ℝ x.w u‖ₑ := by
               have hDncont : Continuous fun u : ℂ => fderiv ℝ (A n) u :=
                 (hAsm n).continuous_fderiv hne0
@@ -1819,7 +1820,7 @@ theorem TeichRep.isQCUpper_remark (x : TeichRep Γ₀) (P : ModGroupUpper Γ₀)
               have h3 := (ENNReal.continuous_rpow_const (y := (1:ℝ)/2)).continuousAt
                 (x := 0)
               have h4 := h3.tendsto.comp hEnergyN
-              simpa [ENNReal.zero_rpow_of_pos] using h4
+              simpa [ENNReal.zero_rpow_of_pos, Function.comp_def] using h4
             have h5 := ENNReal.Tendsto.mul_const h2
               (b := (ENNReal.ofReal ((1 + max P.κ 0) / (1 - max P.κ 0))
                 * volume (tsupport φ)) ^ ((1:ℝ)/2))
@@ -1829,7 +1830,7 @@ theorem TeichRep.isQCUpper_remark (x : TeichRep Γ₀) (P : ModGroupUpper Γ₀)
               (Or.inr ENNReal.ofReal_ne_top)
             simpa using h6
           refine tendsto_of_tendsto_of_tendsto_of_le_of_le tendsto_const_nhds hbtend
-            (fun n => zero_le _) (fun n => hboundall n)
+            (fun n => zero_le) (fun n => hboundall n)
       -- ===== final assembly =====
       have hgoal1 : ∫ z, ((fderiv ℝ φ z) v) • ((x.w ∘ P.g) z)
           = ∫ z, ((fderiv ℝ φ z) v) • (x.w (G z)) := by
@@ -1870,7 +1871,7 @@ theorem TeichRep.isQCUpper_remark (x : TeichRep Γ₀) (P : ModGroupUpper Γ₀)
         hKEY Complex.I gy0 (Or.inr rfl) hgy0 hmy0⟩,
       hgradL2 1 (by simp), hgradL2 Complex.I (by simp)⟩
     intro Kc hKcU hKcc
-    haveI : IsFiniteMeasure (volume.restrict Kc) :=
+    have : IsFiniteMeasure (volume.restrict Kc) :=
       ⟨by rw [Measure.restrict_apply_univ]; exact hKcc.measure_lt_top⟩
     have hFcont : ContinuousOn (x.w ∘ P.g) {z : ℂ | 0 < z.im} :=
       hxc.comp_continuousOn P.qc.cont

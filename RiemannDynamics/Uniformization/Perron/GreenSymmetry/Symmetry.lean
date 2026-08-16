@@ -272,11 +272,11 @@ theorem msubharmonic_le_zero_of_finite_punctures [ConnectedSpace M]
     (hpole : ∀ p ∈ F, ∃ C, ∀ᶠ x in 𝓝[≠] p, v x ≤ C) :
     ∀ x ∉ F, v x ≤ 0 := by
   classical
-  haveI : LocallyConnectedSpace M := ChartedSpace.locallyConnectedSpace ℂ M
-  haveI : Infinite M := by
+  have : LocallyConnectedSpace M := ChartedSpace.locallyConnectedSpace ℂ M
+  have : Infinite M := by
     by_contra hcon
     rw [not_infinite_iff_finite] at hcon
-    haveI : CompactSpace M := Finite.compactSpace
+    have : CompactSpace M := Finite.compactSpace
     exact NoncompactSpace.noncompact_univ (X := M) isCompact_univ
   obtain ⟨K, hK, hKv⟩ := hsupp
   -- Continuity of `v` off the punctures.
@@ -292,7 +292,7 @@ theorem msubharmonic_le_zero_of_finite_punctures [ConnectedSpace M]
     | insert p G' hpG' IH =>
       have hG'cl : IsClosed (↑G' : Set M) := G'.finite_toSet.isClosed
       set S : Opens M := ⟨(↑G' : Set M)ᶜ, hG'cl.isOpen_compl⟩ with hSdef
-      haveI : ConnectedSpace ↥S := Subtype.connectedSpace IH
+      have : ConnectedSpace ↥S := Subtype.connectedSpace IH
       have hpS : p ∈ S := by
         change p ∉ (↑G' : Set M)
         exact fun hcon => hpG' (Finset.mem_coe.mp hcon)
@@ -537,7 +537,7 @@ theorem msubharmonic_le_zero_of_finite_punctures [ConnectedSpace M]
       (fun x hx => hwsub x (hCcΩ hx)) (fun x hx => hall x (hCcΩ hx))
     have hfrne : (closure (connectedComponentIn Ω xm) \ connectedComponentIn Ω xm).Nonempty := by
       by_contra hem
-      rw [Set.not_nonempty_iff_eq_empty, Set.diff_eq_empty] at hem
+      rw [Set.not_nonempty_iff_eq_empty, Set.sdiff_eq_empty] at hem
       have hclopen : IsClopen (connectedComponentIn Ω xm) :=
         ⟨closure_eq_iff_isClosed.1 (Set.Subset.antisymm hem subset_closure), hCco⟩
       have huniv : connectedComponentIn Ω xm = Set.univ := hclopen.eq_univ ⟨xm, hCcx⟩
@@ -558,7 +558,7 @@ theorem msubharmonic_le_zero_of_finite_punctures [ConnectedSpace M]
       exact hyC (he2.trans he1.symm ▸ hyC')
     have hyfr : y ∈ closure Ω \ Ω := ⟨closure_mono hCcΩ hycl, hyΩ⟩
     obtain ⟨hyct, hyle⟩ := hfr y hyfr
-    haveI hne : (𝓝[connectedComponentIn Ω xm] y).NeBot :=
+    have hne : (𝓝[connectedComponentIn Ω xm] y).NeBot :=
       mem_closure_iff_nhdsWithin_neBot.1 hycl
     have h1 : Tendsto w (𝓝[connectedComponentIn Ω xm] y) (𝓝 (w y)) :=
       hyct.continuousWithinAt
@@ -715,7 +715,7 @@ theorem msubharmonic_le_zero_of_finite_punctures [ConnectedSpace M]
     have hAD : A ⊆ D p := by
       rw [hAdef, hDp, himgE _ hOsub, himgE _ hrtp]
       exact Set.inter_subset_inter (subset_refl _)
-        (Set.preimage_mono (Set.diff_subset.trans ball_subset_closedBall))
+        (Set.preimage_mono (Set.sdiff_subset.trans ball_subset_closedBall))
     have hpclA : p ∉ closure A := by
       intro hcon
       have hU : IsOpen (e.source ∩ e ⁻¹' ball z₀ σ) :=

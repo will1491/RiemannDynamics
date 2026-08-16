@@ -201,7 +201,7 @@ theorem dirichletEnergy_le_curveModulus_connecting_bounded {u : ℂ → ℝ} {E 
     intro z hz
     obtain ⟨K, t, ht, hlip⟩ := hf_loc hz
     exact ⟨K, t, ht, by
-      simpa [hgdef] using (LipschitzWith.id.min_const (1 : ℝ)).comp_lipschitzOnWith hlip⟩
+      simpa [hgdef] using! (LipschitzWith.id.min_const (1 : ℝ)).comp_lipschitzOnWith hlip⟩
   -- `u` is `C¹` on `U`, hence locally Lipschitz on `U`.
   have hu_contDiff : ∀ z ∈ U, ContDiffAt ℝ 1 u z := fun z hz => (hu z hz).1.of_le (by norm_num)
   have hu_loc : LocallyLipschitzOn U u := by

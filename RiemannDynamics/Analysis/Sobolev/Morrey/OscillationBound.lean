@@ -97,14 +97,14 @@ theorem exists_morrey_oscillation_bound {p : ℝ} (hp : 2 < p) {f gx gy : ℂ �
     rw [locallyIntegrable_iff]
     intro K hK
     have hmemlp : MemLp gx (ENNReal.ofReal p) (volume.restrict K) := hgx K (Set.subset_univ _) hK
-    haveI : IsFiniteMeasure (volume.restrict K) := by
+    have : IsFiniteMeasure (volume.restrict K) := by
       constructor; rw [Measure.restrict_apply_univ]; exact hK.measure_lt_top
     exact hmemlp.integrable hp_one_le
   have hgyloc : LocallyIntegrable gy (volume : Measure ℂ) := by
     rw [locallyIntegrable_iff]
     intro K hK
     have hmemlp : MemLp gy (ENNReal.ofReal p) (volume.restrict K) := hgy K (Set.subset_univ _) hK
-    haveI : IsFiniteMeasure (volume.restrict K) := by
+    have : IsFiniteMeasure (volume.restrict K) := by
       constructor; rw [Measure.restrict_apply_univ]; exact hK.measure_lt_top
     exact hmemlp.integrable hp_one_le
   have hfloc : LocallyIntegrable f (volume : Measure ℂ) := hf.locallyIntegrable
@@ -165,7 +165,6 @@ theorem exists_morrey_oscillation_bound {p : ℝ} (hp : 2 < p) {f gx gy : ℂ �
       rw [convolution_def, ContinuousLinearMap.integral_apply hintCLM]
       refine integral_congr_ae (Filter.Eventually.of_forall fun t => ?_)
       simp only [ContinuousLinearMap.precompL_apply, ContinuousLinearMap.lsmul_apply]
-      rfl
     rw [hstep2]
     -- step 3: substitute s = z - t  (volume is neg- and left-invariant)
     have hsubst :
@@ -213,7 +212,6 @@ theorem exists_morrey_oscillation_bound {p : ℝ} (hp : 2 < p) {f gx gy : ℂ �
     rw [hfinal]
     -- step 5: RHS = (φ ⋆ g) z  via convolution_lsmul_swap
     rw [convolution_lsmul_swap]
-    rfl
   -- INLINED PILLAR 2 (molli_bound)
   have molli_bound : ∀ {p : ℝ} (hp : 1 ≤ p) {φ : ℂ → ℝ}
     (hφnonneg : ∀ w, 0 ≤ φ w) (hφint : ∫ w, φ w = 1)
@@ -235,7 +233,7 @@ theorem exists_morrey_oscillation_bound {p : ℝ} (hp : 2 < p) {f gx gy : ℂ �
       simp only [ne_eq, ENNReal.ofReal_eq_zero, not_le]; linarith
     have hp_toReal : (ENNReal.ofReal p).toReal = p := ENNReal.toReal_ofReal hp_pos.le
     -- volume on ℂ is invariant under negation
-    haveI hneg : (volume : Measure ℂ).IsNegInvariant := by infer_instance
+    have hneg : (volume : Measure ℂ).IsNegInvariant := by infer_instance
     -- abbreviations
     set G : ℂ → ℝ := fun u => ‖g u‖ ^ p with hG
     have hGnonneg : ∀ u, 0 ≤ G u := fun u => by positivity
@@ -413,6 +411,7 @@ theorem exists_morrey_oscillation_bound {p : ℝ} (hp : 2 < p) {f gx gy : ℂ �
             hAESM.prod_swap
           have hres := hswap.norm.integral_prod_right'
           convert hres using 2
+          simp
         · filter_upwards with w
           rw [Real.norm_eq_abs, abs_of_nonneg]
           · exact hbound w
@@ -533,12 +532,12 @@ theorem exists_morrey_oscillation_bound {p : ℝ} (hp : 2 < p) {f gx gy : ℂ �
     have hinner : ∫ (y : ℝ) in Ioi (0:ℝ), y ^ (2 - 1) • f y = R ^ (2 - q) / (2 - q) := by
       have hsub : ∫ (y : ℝ) in Ioi (0:ℝ), y ^ (2 - 1) • f y
                 = ∫ (y : ℝ) in Ioo (0:ℝ) R, y ^ (2 - 1) • f y := by
-        apply setIntegral_eq_of_subset_of_forall_diff_eq_zero measurableSet_Ioi
+        apply setIntegral_eq_of_subset_of_forall_sdiff_eq_zero measurableSet_Ioi
         · intro x hx
           simp only [mem_Ioo, mem_Ioi] at *
           exact hx.1
         · intro x hx
-          simp only [mem_Ioi, mem_Ioo, mem_diff, not_and, not_lt] at hx
+          simp only [mem_Ioi, mem_Ioo, mem_sdiff, not_and, not_lt] at hx
           obtain ⟨hx0, hxR⟩ := hx
           have hnlt : ¬ (x < R) := not_lt.mpr (hxR hx0)
           rw [hf]; simp only [if_neg hnlt, smul_zero]
@@ -678,6 +677,8 @@ theorem exists_morrey_oscillation_bound {p : ℝ} (hp : 2 < p) {f gx gy : ℂ �
           ((s:ℝ) • ContinuousLinearMap.id ℝ ℂ) a := by
         have := ContinuousLinearMap.hasFDerivAt ((s:ℝ) • ContinuousLinearMap.id ℝ ℂ) (x := a)
         convert this using 1
+        ext z
+        simp
       have hall : HasFDerivAt (fun a : ℂ => (s:ℝ) • a + (y - (s:ℝ) • y))
           ((s:ℝ) • ContinuousLinearMap.id ℝ ℂ) a :=
         (hasFDerivAt_add_const_iff (y - (s:ℝ) • y)).mpr hbase
@@ -690,7 +691,7 @@ theorem exists_morrey_oscillation_bound {p : ℝ} (hp : 2 < p) {f gx gy : ℂ �
       exact sub_left_inj.mp h2
     have hdet : ((s:ℝ) • (ContinuousLinearMap.id ℝ ℂ)).det = s^2 := by
       rw [ContinuousLinearMap.det]
-      simp only [ContinuousLinearMap.coe_smul, ContinuousLinearMap.coe_id]
+      simp only [ContinuousLinearMap.toLinearMap_smul, ContinuousLinearMap.coe_id]
       rw [LinearMap.det_smul]
       simp [Complex.finrank_real_complex, sq]
     have himg : (fun a => y + (s:ℂ) • (a - y)) '' (Metric.ball x r)
@@ -782,7 +783,7 @@ theorem exists_morrey_oscillation_bound {p : ℝ} (hp : 2 < p) {f gx gy : ℂ �
       by_cases hs1 : s ∈ Ioo (0:ℝ) 1
       · rw [Set.indicator_of_mem hs1]
         by_cases hcond : z ∈ Metric.ball (y + (s:ℂ) • (x - y)) (s * r)
-        · rw [Set.indicator_of_mem (Set.mem_setOf_eq ▸ hcond)]
+        · rw [Set.indicator_of_mem (Set.mem_ofPred_eq ▸ hcond)]
           have hspos : 0 < s := hs1.1
           have hlt : ‖z - y‖ < 2 * s * r := by
             rw [Metric.mem_ball, Complex.dist_eq] at hcond
@@ -797,8 +798,8 @@ theorem exists_morrey_oscillation_bound {p : ℝ} (hp : 2 < p) {f gx gy : ℂ �
           have hsmem : s ∈ Ioi t0 := by
             rw [mem_Ioi, ht0def, div_lt_iff₀ (by positivity : (0:ℝ) < 2*r)]; linarith [hlt]
           rw [Set.indicator_of_mem hsmem]
-        · rw [Set.indicator_of_notMem (by rw [Set.mem_setOf_eq]; exact hcond)]; exact zero_le _
-      · rw [Set.indicator_of_notMem hs1]; exact zero_le _
+        · rw [Set.indicator_of_notMem (by rw [Set.mem_ofPred_eq]; exact hcond)]; exact zero_le
+      · rw [Set.indicator_of_notMem hs1]; exact zero_le
     refine hstep1.trans ?_
     have hint : (∫⁻ s in Ioi t0, ENNReal.ofReal ((s^3)⁻¹)) = ENNReal.ofReal (1 / (2 * t0^2)) := by
       have hcongr : ∀ s ∈ Ioi t0, ENNReal.ofReal ((s^3)⁻¹) = ENNReal.ofReal (s^(-3:ℝ)) := by
@@ -897,9 +898,9 @@ theorem exists_morrey_oscillation_bound {p : ℝ} (hp : 2 < p) {f gx gy : ℂ �
       intro s _
       simp only []
       by_cases hc : z ∈ Metric.ball (y + (s:ℂ) • (x - y)) (s * r)
-      · rw [Set.indicator_of_mem hc, Set.indicator_of_mem (Set.mem_setOf_eq ▸ hc)]
+      · rw [Set.indicator_of_mem hc, Set.indicator_of_mem (Set.mem_ofPred_eq ▸ hc)]
       · rw [Set.indicator_of_notMem hc,
-          Set.indicator_of_notMem (by rw [Set.mem_setOf_eq]; exact hc),
+          Set.indicator_of_notMem (by rw [Set.mem_ofPred_eq]; exact hc),
           mul_zero]
     rw [hpull]
     by_cases hzy : 0 < ‖z - y‖
@@ -909,7 +910,7 @@ theorem exists_morrey_oscillation_bound {p : ℝ} (hp : 2 < p) {f gx gy : ℂ �
               Set.indicator {s : ℝ | z ∈ Metric.ball (y + (s:ℂ) • (x - y)) (s * r)}
               (fun s => ENNReal.ofReal ((s^3)⁻¹)) s
           ≤ (g z * ENNReal.ofReal ‖z - y‖) * ENNReal.ofReal (2 * r^2 / ‖z - y‖^2) := by
-            exact mul_le_mul_of_nonneg_left (morrey_inner_bound x y z r hr hxy hzy) (zero_le _)
+            exact mul_le_mul_of_nonneg_left (morrey_inner_bound x y z r hr hxy hzy) (zero_le)
         _ = ENNReal.ofReal (2 * r ^ 2) * (g z * ENNReal.ofReal ‖z - y‖⁻¹) := by
             have hkey : ENNReal.ofReal ‖z - y‖ * ENNReal.ofReal (2 * r^2 / ‖z - y‖^2)
                 = ENNReal.ofReal (2 * r ^ 2) * ENNReal.ofReal ‖z - y‖⁻¹ := by
@@ -1133,7 +1134,7 @@ theorem exists_morrey_oscillation_bound {p : ℝ} (hp : 2 < p) {f gx gy : ℂ �
         show (ENNReal.ofReal r ^ 2 : ENNReal) = ENNReal.ofReal (r ^ 2) by
           rw [ENNReal.ofReal_pow hr.le],
         ENNReal.toReal_ofReal (by positivity)]
-      simp [NNReal.pi]; ring
+      simp [mul_comm]
     have hbd := single_point_bound hp pp hpq hpp0 hpp2 hu x hr y hy
     refine hbd.trans (le_of_eq ?_)
     -- constant extraction

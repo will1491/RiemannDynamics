@@ -58,7 +58,7 @@ theorem exists_smooth_approx_L2grad_local {f gx gy : ℂ → ℂ}
         rcases lt_or_eq_of_le hR0 with hRneg | hR0'
         · rw [Metric.closedBall_eq_empty.mpr hRneg]; simp
         · rw [hR0', Metric.closedBall_zero]; simp
-      rw [setLIntegral_measure_zero _ _ hnull]; exact zero_le _
+      rw [setLIntegral_measure_zero _ _ hnull]; exact zero_le
   -- ====================================================================
   -- The genuine case `R > 0`.
   -- ====================================================================
@@ -77,7 +77,7 @@ theorem exists_smooth_approx_L2grad_local {f gx gy : ℂ → ℂ}
     intro h hmem
     rw [locallyIntegrableOn_univ, locallyIntegrable_iff]
     intro k hk
-    haveI : IsFiniteMeasure (volume.restrict k) :=
+    have : IsFiniteMeasure (volume.restrict k) :=
       ⟨by rw [Measure.restrict_apply_univ]; exact hk.measure_lt_top⟩
     exact memLp_one_iff_integrable.mp
       ((hmem k (Set.subset_univ _) hk).mono_exponent (by norm_num))
@@ -156,7 +156,7 @@ theorem exists_smooth_approx_L2grad_local {f gx gy : ℂ → ℂ}
   have hGy_cs : HasCompactSupport Gy :=
     HasCompactSupport.of_support_subset_isCompact hK_compact hGy_supp
   -- Finite measure of the restriction to the compact `K`.
-  haveI hKfin : IsFiniteMeasure (volume.restrict K) :=
+  have hKfin : IsFiniteMeasure (volume.restrict K) :=
     ⟨by rw [Measure.restrict_apply_univ]; exact hK_compact.measure_lt_top⟩
   -- `gx`, `gy` are `L²` on the compact `K`.
   have hgxK : MemLp gx 2 (volume.restrict K) := hgx K (Set.subset_univ _) hK_compact
@@ -269,7 +269,7 @@ theorem exists_smooth_approx_L2grad_local {f gx gy : ℂ → ℂ}
           ((fderiv ℝ ρ (z - w)).comp (-ContinuousLinearMap.id ℝ ℂ)) w :=
         (hρ_diff (z - w)).hasFDerivAt.comp w hsub
       rw [hcomp.fderiv]
-      simp only [ContinuousLinearMap.comp_apply, ContinuousLinearMap.neg_apply,
+      simp only [ContinuousLinearMap.comp_apply, neg_apply,
         ContinuousLinearMap.id_apply, map_neg]
     have hint_eq :
         (∫ w, ((fderiv ℝ ρ (z - w)) v) • F w ∂volume)
@@ -291,7 +291,6 @@ theorem exists_smooth_approx_L2grad_local {f gx gy : ℂ → ℂ}
         (fun t => (L (ρ t)) (gv (z - t))) volume z]
     refine MeasureTheory.integral_congr_ae (Filter.Eventually.of_forall (fun w => ?_))
     simp only [hφz, sub_sub_cancel, hL, ContinuousLinearMap.lsmul_apply]
-    rfl
   -- ====================================================================
   -- (C) `L²` mollification convergence `‖ρ_n ⋆ G - G‖₂ → 0` for `G ∈ L²`.
   -- ====================================================================
@@ -364,7 +363,7 @@ theorem exists_smooth_approx_L2grad_local {f gx gy : ℂ → ℂ}
         intro z hz
         have h1 : z ∈ tsupport ((φ n).normed volume) := subset_tsupport _ hz
         rwa [(φ n).tsupport_normed_eq] at h1
-      haveI : MeasureTheory.IsFiniteMeasure (volume.restrict Kset) := by
+      have : MeasureTheory.IsFiniteMeasure (volume.restrict Kset) := by
         constructor; rw [MeasureTheory.Measure.restrict_apply_univ]; exact hKfin'
       set D : ℕ → ℂ → ℂ := fun n => Cn n - h with hD
       have hrestrict : ∀ᶠ n in Filter.atTop,
@@ -387,7 +386,7 @@ theorem exists_smooth_approx_L2grad_local {f gx gy : ℂ → ℂ}
           refine ⟨(M.toNNReal + 1), fun n => ?_⟩
           have hempty : {x | (M.toNNReal + 1 : ℝ≥0) ≤ ‖Cn n x‖₊} = (∅ : Set ℂ) := by
             ext x
-            simp only [Set.mem_setOf_eq, Set.mem_empty_iff_false, iff_false, not_le]
+            simp only [Set.mem_ofPred_eq, Set.mem_empty_iff_false, iff_false, not_le]
             have hb' : ‖Cn n x‖₊ ≤ M.toNNReal := by
               rw [← NNReal.coe_le_coe, Real.coe_toNNReal M hM0]; exact hCnbd n x
             exact lt_of_le_of_lt hb' (by simp)
@@ -896,7 +895,7 @@ theorem courantLebesgue_smallEnergyCircle {f gx gy : ℂ → ℂ}
       refine lintegral_add_left' ?_ _
       exact (((hPx_cont n).aemeasurable.sub
         hgx_mem.aestronglyMeasurable.aemeasurable).enorm.pow_const 2).congr
-        (by filter_upwards with z using by rw [enorm_eq_nnnorm])
+        (by filter_upwards with z using by simp [enorm_eq_nnnorm])
     have htot : Dxn n ^ 2 + Dyn n ^ 2 ≤ ENNReal.ofReal (1 / (n + 1 : ℝ)) := by
       rw [← hsplit]; exact hG_energy n
     exact ⟨le_trans (self_le_add_right _ _) htot, le_trans (self_le_add_left _ _) htot⟩
@@ -929,14 +928,14 @@ theorem courantLebesgue_smallEnergyCircle {f gx gy : ℂ → ℂ}
   have hDxn_zero : Tendsto Dxn atTop (𝓝 0) := by
     have hsq_zero : Tendsto (fun n => Dxn n ^ 2) atTop (𝓝 0) :=
       tendsto_of_tendsto_of_tendsto_of_le_of_le tendsto_const_nhds hofReal_tendsto
-        (fun n => zero_le _) (fun n => (hDxy_bound n).1)
+        (fun n => zero_le) (fun n => (hDxy_bound n).1)
     have := hsq_zero.ennrpow_const (1 / 2 : ℝ)
     rw [ENNReal.zero_rpow_of_pos (by norm_num : (0:ℝ) < 1 / 2)] at this
     simpa only [hroot] using this
   have hDyn_zero : Tendsto Dyn atTop (𝓝 0) := by
     have hsq_zero : Tendsto (fun n => Dyn n ^ 2) atTop (𝓝 0) :=
       tendsto_of_tendsto_of_tendsto_of_le_of_le tendsto_const_nhds hofReal_tendsto
-        (fun n => zero_le _) (fun n => (hDxy_bound n).2)
+        (fun n => zero_le) (fun n => (hDxy_bound n).2)
     have := hsq_zero.ennrpow_const (1 / 2 : ℝ)
     rw [ENNReal.zero_rpow_of_pos (by norm_num : (0:ℝ) < 1 / 2)] at this
     simpa only [hroot] using this
@@ -951,7 +950,7 @@ theorem courantLebesgue_smallEnergyCircle {f gx gy : ℂ → ℂ}
       ((hPx_cont n).aestronglyMeasurable.sub hgx_mem.aestronglyMeasurable) hone_le
     have heq : (gx + (Px n - gx)) = Px n := by funext w; simp
     rw [heq] at htri
-    simpa only [hNxn_def, hNx_def, hDxn_def] using htri
+    simpa only [hNxn_def, hNx_def, hDxn_def] using! htri
   have hNyn_le : ∀ n, Nyn n ≤ Ny + Dyn n := by
     intro n
     have htri := eLpNorm_add_le (μ := volume.restrict B) (p := 2)
@@ -959,7 +958,7 @@ theorem courantLebesgue_smallEnergyCircle {f gx gy : ℂ → ℂ}
       ((hPy_cont n).aestronglyMeasurable.sub hgy_mem.aestronglyMeasurable) hone_le
     have heq : (gy + (Py n - gy)) = Py n := by funext w; simp
     rw [heq] at htri
-    simpa only [hNyn_def, hNy_def, hDyn_def] using htri
+    simpa only [hNyn_def, hNy_def, hDyn_def] using! htri
   -- The dominating bound `bound n := (Nx + Dxn n)² + (Ny + Dyn n)²` satisfies `En n ≤ bound n`
   -- and `bound n → E`.
   set bound : ℕ → ℝ≥0∞ := fun n => (Nx + Dxn n) ^ 2 + (Ny + Dyn n) ^ 2 with hbound_def

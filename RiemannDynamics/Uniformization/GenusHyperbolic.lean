@@ -120,7 +120,6 @@ theorem no_compact_line_quotient {X : Type*} [TopologicalSpace X] [CompactSpace 
       rw [ht]
     · intro C
       refine ⟨((|C| + 1 : ℝ) : ℂ), ?_⟩
-      change C < ‖((|C| + 1 : ℝ) : ℂ)‖
       rw [Complex.norm_real, Real.norm_eq_abs]
       calc C ≤ |C| := le_abs_self C
         _ < |C| + 1 := lt_add_one _
@@ -129,7 +128,6 @@ theorem no_compact_line_quotient {X : Type*} [TopologicalSpace X] [CompactSpace 
     refine descend (fun z => |(z * (starRingEnd ℂ) b).im|) ?_ ?_ ?_
     · exact (Complex.continuous_im.comp (continuous_id.mul continuous_const)).abs
     · intro z w hzw
-      change |(z * (starRingEnd ℂ) b).im| = |(w * (starRingEnd ℂ) b).im|
       obtain ⟨t, ht⟩ := hfib z w hzw
       have him : (w * (starRingEnd ℂ) b).im = (z * (starRingEnd ℂ) b).im := by
         have h2 : w * (starRingEnd ℂ) b - z * (starRingEnd ℂ) b
@@ -144,8 +142,6 @@ theorem no_compact_line_quotient {X : Type*} [TopologicalSpace X] [CompactSpace 
     · intro C
       have hs : (0 : ℝ) < Complex.normSq b := Complex.normSq_pos.mpr hb
       refine ⟨(((|C| + 1) / Complex.normSq b : ℝ) : ℂ) * Complex.I * b, ?_⟩
-      change C < |((((|C| + 1) / Complex.normSq b : ℝ) : ℂ) * Complex.I * b *
-        (starRingEnd ℂ) b).im|
       have hval : ((((|C| + 1) / Complex.normSq b : ℝ) : ℂ) * Complex.I * b *
           (starRingEnd ℂ) b) = ((|C| + 1 : ℝ) : ℂ) * Complex.I := by
         rw [mul_assoc, mul_assoc, Complex.mul_conj]
@@ -165,8 +161,8 @@ theorem no_compact_line_quotient {X : Type*} [TopologicalSpace X] [CompactSpace 
 /-- The projection of the path cover is a quotient map. -/
 theorem isQuotientMap_pathCoverProj (x₀ : M) [ChartedSpace ℂ M] [ConnectedSpace M] :
     IsQuotientMap (pathCoverProj x₀) := by
-  haveI : LocPathConnectedSpace M := ChartedSpace.locPathConnectedSpace ℂ M
-  haveI : PathConnectedSpace M := PathConnectedSpace.of_locPathConnectedSpace
+  have : LocallyPathConnectedSpace M := ChartedSpace.locallyPathConnectedSpace ℂ M
+  have : PathConnectedSpace M := PathConnectedSpace.of_locallyPathConnectedSpace
   exact (pathCoverProj_isCoveringMap x₀).isQuotientMap
     fun y => ⟨⟨y, ⟦PathConnectedSpace.somePath x₀ y⟧⟩, rfl⟩
 
@@ -343,7 +339,7 @@ theorem discreteTopology_deck_translations {N : Type*} [TopologicalSpace N]
       E (pathCoverDeck x₀ γ pc) = E pc + ψ γ) :
     DiscreteTopology ↥(Set.range ψ) := by
   classical
-  haveI hfib : DiscreteTopology ↥(pathCoverProj x₀ ⁻¹' {x₀}) :=
+  have hfib : DiscreteTopology ↥(pathCoverProj x₀ ⁻¹' {x₀}) :=
     (pathCoverProj_isCoveringMap x₀ x₀).1
   have hmem : ∀ τ : ↥(Set.range ψ),
       E.symm ((τ : ℂ) + E (pathCoverBase x₀)) ∈ pathCoverProj x₀ ⁻¹' {x₀} := by
@@ -429,10 +425,10 @@ theorem not_pathCover_plane (g : ℕ) [NeZero g] (hg : 2 ≤ g) :
       intro z
       rw [← SetLike.mem_coe, hset]
     -- Discreteness, from the discreteness of the fiber.
-    haveI hdiscR : DiscreteTopology ↥(Set.range ψ) :=
+    have hdiscR : DiscreteTopology ↥(Set.range ψ) :=
       discreteTopology_deck_translations (vertexPoint g) E.toHomeomorph ψ
         (fun γ pc => hdeck γ pc)
-    haveI hdiscL : DiscreteTopology ↥L :=
+    have hdiscL : DiscreteTopology ↥L :=
       DiscreteTopology.of_continuous_injective (β := ↥(Set.range ψ))
         (f := fun x => ⟨(x : ℂ), (hmemL x).mp x.2⟩)
         (Continuous.subtype_mk continuous_subtype_val _)
@@ -474,7 +470,7 @@ theorem not_pathCover_plane (g : ℕ) [NeZero g] (hg : 2 ≤ g) :
       refine le_antisymm le_top ?_
       calc (⊤ : Submodule ℝ ℂ) = Submodule.span ℝ (Set.range ![ψ γ₁, ψ γ₂]) := h2.symm
         _ ≤ Submodule.span ℝ (L : Set ℂ) := Submodule.span_mono hsub
-    haveI : IsZLattice ℝ L := ⟨hspan⟩
+    have : IsZLattice ℝ L := ⟨hspan⟩
     have hrk : Module.finrank ℤ ↥L = 2 :=
       (ZLattice.rank ℝ L).trans Complex.finrank_real_complex
     -- The transported surjection onto `ℤ³`.
@@ -499,7 +495,7 @@ theorem not_pathCover_plane (g : ℕ) [NeZero g] (hg : 2 ≤ g) :
       have h2 : ν ⟨ψ γ, hγL⟩ = μ (γof ⟨ψ γ, hγL⟩) := rfl
       rw [h2, hinj h1, hγ]
     -- Rank contradiction: a rank-two lattice cannot surject onto `ℤ³`.
-    haveI : Module.Finite ℤ ↥L := ZLattice.module_finite ℝ L
+    have : Module.Finite ℤ ↥L := ZLattice.module_finite ℝ L
     have hle : Module.finrank ℤ ↥(LinearMap.range ν) ≤ Module.finrank ℤ ↥L :=
       ν.finrank_range_le
     rw [LinearMap.range_eq_top.mpr hνsurj, finrank_top, Module.finrank_pi,
@@ -510,13 +506,13 @@ theorem not_pathCover_plane (g : ℕ) [NeZero g] (hg : 2 ≤ g) :
 path cover leaves only the disc branch. -/
 theorem isHyperbolic_genusSurface (g : ℕ) [NeZero g] (hg : 2 ≤ g) :
     IsHyperbolic (GenusSurface g) := by
-  haveI : T2Space (PathCover (vertexPoint g)) := t2space_pathCover (vertexPoint g)
-  haveI : PathConnectedSpace (PathCover (vertexPoint g)) :=
+  have : T2Space (PathCover (vertexPoint g)) := t2space_pathCover (vertexPoint g)
+  have : PathConnectedSpace (PathCover (vertexPoint g)) :=
     pathConnectedSpace_pathCover (vertexPoint g)
-  haveI : ConnectedSpace (PathCover (vertexPoint g)) := PathConnectedSpace.connectedSpace
-  haveI : SimplyConnectedSpace (PathCover (vertexPoint g)) :=
+  have : ConnectedSpace (PathCover (vertexPoint g)) := PathConnectedSpace.connectedSpace
+  have : SimplyConnectedSpace (PathCover (vertexPoint g)) :=
     simplyConnectedSpace_pathCover (vertexPoint g)
-  haveI : SecondCountableTopology (PathCover (vertexPoint g)) :=
+  have : SecondCountableTopology (PathCover (vertexPoint g)) :=
     secondCountableTopology_pathCover (vertexPoint g)
   rcases uniformization_trichotomy (PathCover (vertexPoint g)) with h | h | h
   · exact isHyperbolic_of_nonempty_diffeomorph_disc h

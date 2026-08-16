@@ -1126,7 +1126,7 @@ theorem cIntegralLogDeriv_eq_divisor_sum_of_nonzero_on_rectMinusUpperHalfDisk
       intro x hx
       rw [Set.uIcc_of_le (by linarith : a ≤ e.re - R₀)] at hx
       exact h_logDeriv_r_eq _ (h_bot_left_mem x hx) (hg_bot_left x hx)
-    rw [h_pointwise, intervalIntegral.integral_finset_sum h_summand_int_bot_left]
+    rw [h_pointwise, intervalIntegral.integral_finsetSum h_summand_int_bot_left]
     apply Finset.sum_congr rfl
     intro u _
     simp_rw [div_eq_mul_inv]
@@ -1145,7 +1145,7 @@ theorem cIntegralLogDeriv_eq_divisor_sum_of_nonzero_on_rectMinusUpperHalfDisk
       intro x hx
       rw [Set.uIcc_of_le (by linarith : e.re + R₀ ≤ b)] at hx
       exact h_logDeriv_r_eq _ (h_bot_right_mem x hx) (hg_bot_right x hx)
-    rw [h_pointwise, intervalIntegral.integral_finset_sum h_summand_int_bot_right]
+    rw [h_pointwise, intervalIntegral.integral_finsetSum h_summand_int_bot_right]
     apply Finset.sum_congr rfl
     intro u _
     simp_rw [div_eq_mul_inv]
@@ -1164,7 +1164,7 @@ theorem cIntegralLogDeriv_eq_divisor_sum_of_nonzero_on_rectMinusUpperHalfDisk
       intro x hx
       rw [Set.uIcc_of_le hab.le] at hx
       exact h_logDeriv_r_eq _ (h_top_mem x hx) (hg_top x hx)
-    rw [h_pointwise, intervalIntegral.integral_finset_sum h_summand_int_top]
+    rw [h_pointwise, intervalIntegral.integral_finsetSum h_summand_int_top]
     apply Finset.sum_congr rfl
     intro u _
     simp_rw [div_eq_mul_inv]
@@ -1183,7 +1183,7 @@ theorem cIntegralLogDeriv_eq_divisor_sum_of_nonzero_on_rectMinusUpperHalfDisk
       intro y hy
       rw [Set.uIcc_of_le h_e_im_lt_d.le] at hy
       exact h_logDeriv_r_eq _ (h_right_mem y hy) (hg_right y hy)
-    rw [h_pointwise, intervalIntegral.integral_finset_sum h_summand_int_right]
+    rw [h_pointwise, intervalIntegral.integral_finsetSum h_summand_int_right]
     apply Finset.sum_congr rfl
     intro u _
     simp_rw [div_eq_mul_inv]
@@ -1202,7 +1202,7 @@ theorem cIntegralLogDeriv_eq_divisor_sum_of_nonzero_on_rectMinusUpperHalfDisk
       intro y hy
       rw [Set.uIcc_of_le h_e_im_lt_d.le] at hy
       exact h_logDeriv_r_eq _ (h_left_mem y hy) (hg_left y hy)
-    rw [h_pointwise, intervalIntegral.integral_finset_sum h_summand_int_left]
+    rw [h_pointwise, intervalIntegral.integral_finsetSum h_summand_int_left]
     apply Finset.sum_congr rfl
     intro u _
     simp_rw [div_eq_mul_inv]
@@ -1240,7 +1240,7 @@ theorem cIntegralLogDeriv_eq_divisor_sum_of_nonzero_on_rectMinusUpperHalfDisk
             (_root_.circleMap e R₀ θ - u) *
             (Complex.I * R₀ * Complex.exp (Complex.I * θ))) from by
       funext θ; rw [Finset.sum_mul]]
-    rw [intervalIntegral.integral_finset_sum h_summand_int_arc]
+    rw [intervalIntegral.integral_finsetSum h_summand_int_arc]
     apply Finset.sum_congr rfl
     intro u _
     simp_rw [div_eq_mul_inv]
@@ -1638,7 +1638,7 @@ theorem one_le_divisor_sum_toNat_of_zero_on_rectMinusUpperHalfDisk
       rcases Nat.eq_zero_or_pos n with h0 | h1
       · exfalso; apply h_ord_ne_zero; rw [← hn, h0]; rfl
       · exact h1
-    rw [← hn, ENat.map_coe]
+    rw [← hn, ENat.map_natCast]
     simp only [WithTop.untop₀_coe]
     exact_mod_cast hn_pos
   -- The total divisor sum dominates the single value at z₀.
@@ -1692,7 +1692,7 @@ theorem divisor_sum_toNat_le_one_of_unique_simple_zero_on_rectMinusUpperHalfDisk
           (h_simple hz₀_zero)
       rw [MeromorphicOn.divisor_apply hg_mer hz₀_in,
         (hg z₀ hz₀_in).meromorphicOrderAt_eq, h_ord,
-        show (1 : ℕ∞) = ((1 : ℕ) : ℕ∞) from rfl, ENat.map_coe]
+        show (1 : ℕ∞) = ((1 : ℕ) : ℕ∞) from rfl, ENat.map_natCast]
       rfl
     · rw [MeromorphicOn.divisor_apply hg_mer hz₀_in,
         (hg z₀ hz₀_in).meromorphicOrderAt_eq,
@@ -1785,7 +1785,7 @@ theorem two_le_divisor_sum_toNat_of_two_zeros_on_rectMinusUpperHalfDisk
       rcases Nat.eq_zero_or_pos n with h0 | h1
       · exfalso; apply h_ord_ne_zero; rw [← hn, h0]; rfl
       · exact h1
-    rw [← hn, ENat.map_coe]
+    rw [← hn, ENat.map_natCast]
     simp only [WithTop.untop₀_coe]
     exact_mod_cast hn_pos
   -- Sum over the support dominates the two-point sum.
@@ -1901,7 +1901,7 @@ theorem two_le_divisor_sum_toNat_of_double_zero_on_rectMinusUpperHalfDisk
     have h_ord_ge_two : 2 ≤ analyticOrderAt g z₀ := by
       rw [← h_key]
       have h_one_le : 1 ≤ analyticOrderAt (deriv g) z₀ :=
-        ENat.one_le_iff_ne_zero.mpr h_deriv_ord_ne_zero
+        Order.one_le_iff_ne_zero.mpr h_deriv_ord_ne_zero
       calc (2 : ℕ∞) = 1 + 1 := by norm_num
         _ ≤ analyticOrderAt (deriv g) z₀ + 1 :=
             add_le_add h_one_le (le_refl 1)
@@ -1915,7 +1915,7 @@ theorem two_le_divisor_sum_toNat_of_double_zero_on_rectMinusUpperHalfDisk
     have hn_ge : 2 ≤ n := by
       rw [← hn] at h_ord_ge_two
       exact_mod_cast h_ord_ge_two
-    rw [← hn, ENat.map_coe]
+    rw [← hn, ENat.map_natCast]
     simp only [WithTop.untop₀_coe]
     exact_mod_cast hn_ge
   have h_single := single_le_finsum z₀

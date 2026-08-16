@@ -254,7 +254,7 @@ private theorem cutoff_sobolev_oscL2 :
     (hχcd.continuous_fderiv (by norm_num)).clm_apply continuous_const
   obtain ⟨hxweak, hyweak⟩ :=
     cutoff_weak_partials (c := c) hFmem hGxmem hGymem hGxweak hGyweak hχcd
-  haveI hHT221 : ENNReal.HolderTriple 2 2 1 := ⟨by
+  have hHT221 : ENNReal.HolderTriple 2 2 1 := ⟨by
     rw [show (1 : ℝ≥0∞)⁻¹ = 1 from inv_one]
     rw [ENNReal.inv_two_add_inv_two]⟩
   -- `MemLp` membership of the cutoff product `u` and its two partials, via Hölder products
@@ -356,8 +356,8 @@ private theorem cutoff_commutator_bound :
   set gradInt : ℝ≥0∞ := ∫⁻ z in B2, ((‖Gx z‖₊ : ℝ≥0∞) + (‖Gy z‖₊ : ℝ≥0∞)) ∂volume
     with hgradInt_def
   -- Integrability of `F` (hence of `F − c₂`) on the finite-measure ball `B2`.
-  haveI : IsFiniteMeasure (volume.restrict B2) := isFiniteMeasure_restrict.2 hVolB2top
-  haveI : IsFiniteMeasure (volume.restrict B) := isFiniteMeasure_restrict.2 hVolBtop
+  have : IsFiniteMeasure (volume.restrict B2) := isFiniteMeasure_restrict.2 hVolB2top
+  have : IsFiniteMeasure (volume.restrict B) := isFiniteMeasure_restrict.2 hVolBtop
   have hF_intB2 : IntegrableOn F B2 volume := (hFmem.restrict B2).integrable (by norm_num)
   have hF_intB : IntegrableOn F B volume := (hFmem.restrict B).integrable (by norm_num)
   have hconst_intB : IntegrableOn (fun _ : ℂ => c2) B volume :=
@@ -404,7 +404,7 @@ private theorem cutoff_commutator_bound :
     -- Lift the real inequality to `ℝ≥0∞` using `ENNReal.ofReal` and `toReal` round-trips.
     have hlhs_eq : (‖c - c2‖₊ : ℝ≥0∞) * volume B
         = ENNReal.ofReal (‖c - c2‖ * volume.real B) := by
-      rw [ENNReal.ofReal_mul (norm_nonneg _), ofReal_norm_eq_enorm, enorm_eq_nnnorm,
+      rw [ENNReal.ofReal_mul (norm_nonneg _), ofReal_norm, enorm_eq_nnnorm,
         Measure.real, ENNReal.ofReal_toReal hVolBtop]
     rw [hlhs_eq, ← ENNReal.ofReal_toReal hintE_lt.ne]
     exact ENNReal.ofReal_le_ofReal hreal
@@ -488,14 +488,14 @@ private theorem cutoff_partial_l1_le {F G : ℂ → ℂ} {c : ℂ} {χ : ℂ →
         rw [Complex.real_smul, enorm_mul]
         calc (‖(χ z : ℂ)‖ₑ) * ‖G z‖ₑ ≤ 1 * ‖G z‖ₑ := by
               gcongr
-              rw [← ofReal_norm_eq_enorm, Complex.norm_real, Real.norm_eq_abs,
+              rw [← ofReal_norm, Complex.norm_real, Real.norm_eq_abs,
                 abs_of_nonneg (hχ0 z)]
               exact ENNReal.ofReal_le_one.2 (hχ1 z)
           _ = ‖G z‖ₑ := one_mul _
       · -- `‖(∂_v χ z) • (F z − c)‖ₑ ≤ (Cχ/r)·‖F z − c‖ₑ`.
         rw [Complex.real_smul, enorm_mul,
           show ‖((fderiv ℝ χ z) v : ℂ)‖ₑ = ENNReal.ofReal |(fderiv ℝ χ z) v| from by
-            rw [← ofReal_norm_eq_enorm, Complex.norm_real, Real.norm_eq_abs]]
+            rw [← ofReal_norm, Complex.norm_real, Real.norm_eq_abs]]
         gcongr
         calc |(fderiv ℝ χ z) v| = ‖(fderiv ℝ χ z) v‖ := (Real.norm_eq_abs _).symm
           _ ≤ ‖fderiv ℝ χ z‖ * ‖v‖ := (fderiv ℝ χ z).le_opNorm v
@@ -597,11 +597,11 @@ theorem sobolevPoincare_ball :
   set c : ℂ := ⨍ w in B, F w ∂volume with hc_def
   -- Local integrability facts on the (finite-measure) ball `B2`, needed throughout.
   have hF_intB2 : IntegrableOn F B2 volume := by
-    haveI : IsFiniteMeasure (volume.restrict B2) :=
+    have : IsFiniteMeasure (volume.restrict B2) :=
       isFiniteMeasure_restrict.2 hVolB2top
     exact (hFmem.restrict B2).integrable (by norm_num)
   have hF_intB : IntegrableOn F B volume := by
-    haveI : IsFiniteMeasure (volume.restrict B) :=
+    have : IsFiniteMeasure (volume.restrict B) :=
       isFiniteMeasure_restrict.2 hVolBtop
     exact (hFmem.restrict B).integrable (by norm_num)
   -- ====================================================================

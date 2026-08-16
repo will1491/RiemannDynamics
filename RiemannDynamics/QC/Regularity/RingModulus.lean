@@ -44,6 +44,10 @@ here and is part of the extremal theory.) Two canonical extremal rings are recor
 * `grotzschModulus s`, `teichmullerModulus t` — their moduli.
 -/
 
+-- With the v4.33 toolchain `rw`/kabstract respects transparency, which breaks rewrites through
+-- the `NNReal` alias and its re-derived order instances; restore the pre-4.33 behaviour.
+set_option backward.isDefEq.respectTransparency false
+
 open MeasureTheory
 open scoped ENNReal NNReal Topology Real
 
@@ -233,28 +237,28 @@ theorem ringModulus_roundAnnulus {z₀ : ℂ} {r R : ℝ} (hr : 0 < r) (hrR : r 
       refine ⟨fun s => γ s - z₀, ⟨?_, ?_, ?_, ?_, ?_⟩, ?_⟩
       · exact hcont.sub continuous_const
       · exact lipComp_ac hLipχ hac
-      · simp only [innerCircle, Set.mem_setOf_eq, hdistχ]
+      · simp only [innerCircle, Set.mem_ofPred_eq, hdistχ]
         simpa [innerCircle] using h0
-      · simp only [outerCircle, Set.mem_setOf_eq, hdistχ]
+      · simp only [outerCircle, Set.mem_ofPred_eq, hdistχ]
         simpa [outerCircle] using h1
       · intro t ht
-        simp only [RoundAnnulus, Set.mem_setOf_eq, hdistχ]
+        simp only [RoundAnnulus, Set.mem_ofPred_eq, hdistχ]
         simpa [RoundAnnulus] using hsub t ht
       · funext s; simp [hφ]
     · rintro ⟨γ₀, ⟨hcont, hac, h0, h1, hsub⟩, rfl⟩
       refine ⟨?_, ?_, ?_, ?_, ?_⟩
       · have : Continuous (fun s => φ (γ₀ s)) := hLipφ.continuous.comp hcont
-        simpa [hφ, Function.comp] using this
+        simpa [hφ, Function.comp_def] using this
       · have : AbsolutelyContinuousOnInterval (fun s => φ (γ₀ s)) 0 1 := lipComp_ac hLipφ hac
-        simpa [hφ, Function.comp] using this
-      · simp only [Function.comp_apply, hφ, innerCircle, Set.mem_setOf_eq]
+        simpa [hφ, Function.comp_def] using this
+      · simp only [Function.comp_apply, hφ, innerCircle, Set.mem_ofPred_eq]
         rw [show γ₀ 0 + z₀ = φ (γ₀ 0) from rfl, hdistφ]
         simpa [innerCircle] using h0
-      · simp only [Function.comp_apply, hφ, outerCircle, Set.mem_setOf_eq]
+      · simp only [Function.comp_apply, hφ, outerCircle, Set.mem_ofPred_eq]
         rw [show γ₀ 1 + z₀ = φ (γ₀ 1) from rfl, hdistφ]
         simpa [outerCircle] using h1
       · intro t ht
-        simp only [Function.comp_apply, hφ, RoundAnnulus, Set.mem_setOf_eq]
+        simp only [Function.comp_apply, hφ, RoundAnnulus, Set.mem_ofPred_eq]
         rw [show γ₀ t + z₀ = φ (γ₀ t) from rfl, hdistφ]
         simpa [RoundAnnulus] using hsub t ht
   rw [hreduce]
@@ -285,7 +289,7 @@ theorem ringModulus_roundAnnulus {z₀ : ℂ} {r R : ℝ} (hr : 0 < r) (hrR : r 
       simp only [hrho0, smul_eq_mul]
       by_cases hmem : Complex.polarCoord.symm p ∈ RoundAnnulus 0 r R
       · have hmemIoo : p.1 ∈ Set.Ioo r R := by
-          simp only [RoundAnnulus, Set.mem_setOf_eq, dist_zero_right, hnorm] at hmem
+          simp only [RoundAnnulus, Set.mem_ofPred_eq, dist_zero_right, hnorm] at hmem
           exact ⟨hmem.1, hmem.2⟩
         rw [Set.indicator_of_mem hmem, Set.indicator_of_mem hmemIoo, hnorm]
         rw [← ENNReal.ofReal_pow (by positivity), ← ENNReal.ofReal_mul (le_of_lt hp1)]
@@ -294,7 +298,7 @@ theorem ringModulus_roundAnnulus {z₀ : ℂ} {r R : ℝ} (hr : 0 < r) (hrR : r 
         rw [hL] at *
         field_simp
       · have hmemIoo : p.1 ∉ Set.Ioo r R := by
-          simp only [RoundAnnulus, Set.mem_setOf_eq, dist_zero_right, hnorm] at hmem
+          simp only [RoundAnnulus, Set.mem_ofPred_eq, dist_zero_right, hnorm] at hmem
           simpa only [Set.mem_Ioo] using hmem
         rw [Set.indicator_of_notMem hmem, Set.indicator_of_notMem hmemIoo]
         simp
@@ -385,9 +389,9 @@ theorem ringModulus_roundAnnulus {z₀ : ℂ} {r R : ℝ} (hr : 0 < r) (hrR : r 
     intro γ hac h0 h1 hsub
     set u : ℝ → ℝ := fun t => ‖γ t‖ with hu
     have hu0 : u 0 = r := by
-      simp only [hu, innerCircle, Set.mem_setOf_eq, dist_zero_right] at h0 ⊢; exact h0
+      simp only [hu, innerCircle, Set.mem_ofPred_eq, dist_zero_right] at h0 ⊢; exact h0
     have hu1 : u 1 = R := by
-      simp only [hu, outerCircle, Set.mem_setOf_eq, dist_zero_right] at h1 ⊢; exact h1
+      simp only [hu, outerCircle, Set.mem_ofPred_eq, dist_zero_right] at h1 ⊢; exact h1
     have hubound : ∀ t ∈ Set.Icc (0 : ℝ) 1, r ≤ u t ∧ u t ≤ R := by
       intro t ht
       rcases eq_or_lt_of_le ht.1 with h0t | h0t
@@ -395,7 +399,7 @@ theorem ringModulus_roundAnnulus {z₀ : ℂ} {r R : ℝ} (hr : 0 < r) (hrR : r 
       rcases eq_or_lt_of_le ht.2 with h1t | h1t
       · rw [show t = 1 from h1t, hu1]; exact ⟨hrR.le, le_refl _⟩
       · have := hsub t ⟨h0t, h1t⟩
-        simp only [RoundAnnulus, Set.mem_setOf_eq, dist_zero_right] at this
+        simp only [RoundAnnulus, Set.mem_ofPred_eq, dist_zero_right] at this
         exact ⟨this.1.le, this.2.le⟩
     have huAC : AbsolutelyContinuousOnInterval u 0 1 := lipComp_ac lipschitzWith_one_norm hac
     have humaps : ∀ t ∈ Set.uIcc (0 : ℝ) 1, u t ∈ Set.Icc r R := by
@@ -412,7 +416,8 @@ theorem ringModulus_roundAnnulus {z₀ : ℂ} {r R : ℝ} (hr : 0 < r) (hrR : r 
         have hx0 : 0 < x := lt_of_lt_of_le hr hx.1
         rw [Real.deriv_log]
         rw [← NNReal.coe_le_coe]
-        simp only [coe_nnnorm, Real.norm_eq_abs, NNReal.coe_mk]
+        simp only [coe_nnnorm, Real.norm_eq_abs]
+        change |x⁻¹| ≤ 1 / r
         rw [abs_of_pos (by positivity), one_div]
         exact inv_anti₀ hr hx.1
     set v : ℝ → ℝ := fun t => Real.log (u t) with hv
@@ -450,7 +455,7 @@ theorem ringModulus_roundAnnulus {z₀ : ℂ} {r R : ℝ} (hr : 0 < r) (hrR : r 
       have huD : DifferentiableAt ℝ u t := htu htuIcc
       have hann : γ t ∈ RoundAnnulus 0 r R := hsub t htmem
       have hut_pos : 0 < u t := by
-        simp only [RoundAnnulus, Set.mem_setOf_eq, dist_zero_right] at hann
+        simp only [RoundAnnulus, Set.mem_ofPred_eq, dist_zero_right] at hann
         exact lt_trans hr hann.1
       have hrhoval : rho0 (γ t) = ENNReal.ofReal (1 / (u t * L)) := by
         simp only [hrho0, Set.indicator_of_mem hann, hu]
@@ -471,7 +476,7 @@ theorem ringModulus_roundAnnulus {z₀ : ℂ} {r R : ℝ} (hr : 0 < r) (hrR : r 
       rw [key1]
       gcongr
       rw [show (‖deriv γ t‖₊ : ℝ≥0∞) = ENNReal.ofReal ‖deriv γ t‖ from by
-        rw [ofReal_norm_eq_enorm, enorm_eq_nnnorm]]
+        rw [ofReal_norm, enorm_eq_nnnorm]]
       exact ENNReal.ofReal_le_ofReal hdu_le
     calc (1 : ℝ≥0∞)
         = ENNReal.ofReal (1 / L) * ENNReal.ofReal L := by
@@ -479,6 +484,7 @@ theorem ringModulus_roundAnnulus {z₀ : ℂ} {r R : ℝ} (hr : 0 < r) (hrR : r 
             ENNReal.ofReal_one]
       _ ≤ ENNReal.ofReal (1 / L) * ∫⁻ t in Set.Ioo (0 : ℝ) 1, ENNReal.ofReal |deriv v t| := by
           gcongr ?_ * ?_
+          · exact le_rfl
           rw [← hFTC]
           calc ENNReal.ofReal (∫ t in (0 : ℝ)..1, deriv v t)
               ≤ ENNReal.ofReal (∫ t in Set.Ioo (0 : ℝ) 1, |deriv v t|) := by
@@ -559,19 +565,20 @@ theorem ringModulus_roundAnnulus {z₀ : ℂ} {r R : ℝ} (hr : 0 < r) (hrR : r 
       rw [show ((r + x * (R - r) : ℝ) : ℂ) - ((r + y * (R - r) : ℝ) : ℂ)
           = (((x - y) * (R - r) : ℝ) : ℂ) from by push_cast; ring]
       rw [Complex.norm_real, Real.norm_eq_abs, abs_mul, abs_of_pos (show (0:ℝ) < R - r by linarith)]
-      rw [NNReal.coe_mk, Real.norm_eq_abs]
+      change |x - y| * (R - r) ≤ (R - r) * ‖x - y‖
+      rw [Real.norm_eq_abs]
       rw [mul_comm]
     have hacγ : AbsolutelyContinuousOnInterval γ 0 1 :=
       (hlipγ.lipschitzOnWith (s := Set.uIcc 0 1)).absolutelyContinuousOnInterval
     have hmemf : γ ∈ connectingCurveFamily (innerCircle 0 r) (outerCircle 0 R)
         (RoundAnnulus 0 r R) := by
       refine ⟨hcontγ, hacγ, ?_, ?_, ?_⟩
-      · simp only [innerCircle, Set.mem_setOf_eq, dist_zero_right, hnormγ]
+      · simp only [innerCircle, Set.mem_ofPred_eq, dist_zero_right, hnormγ]
         rw [show r + (0:ℝ) * (R - r) = r by ring, abs_of_pos hr]
-      · simp only [outerCircle, Set.mem_setOf_eq, dist_zero_right, hnormγ]
+      · simp only [outerCircle, Set.mem_ofPred_eq, dist_zero_right, hnormγ]
         rw [show r + (1:ℝ) * (R - r) = R by ring, abs_of_pos (by linarith)]
       · intro t ht
-        simp only [RoundAnnulus, Set.mem_setOf_eq, dist_zero_right, hnormγ]
+        simp only [RoundAnnulus, Set.mem_ofPred_eq, dist_zero_right, hnormγ]
         have hpos : 0 < r + t * (R - r) := by nlinarith [ht.1, ht.2, hrR]
         rw [abs_of_pos hpos]
         exact ⟨by nlinarith [ht.1, hrR], by nlinarith [ht.2, hrR]⟩
@@ -616,7 +623,7 @@ theorem ringModulus_roundAnnulus {z₀ : ℂ} {r R : ℝ} (hr : 0 < r) (hrR : r 
       apply lintegral_congr
       intro t
       rw [show (‖deriv γ t‖₊ : ℝ≥0∞) = ENNReal.ofReal ‖deriv γ t‖ from by
-        rw [ofReal_norm_eq_enorm, enorm_eq_nnnorm], hnormderiv, mul_comm]
+        rw [ofReal_norm, enorm_eq_nnnorm], hnormderiv, mul_comm]
     rw [← harc]
     exact hadm
   -- ===================================================================
@@ -862,9 +869,9 @@ theorem isAdmissibleDensity_radialDensity_roundAnnulus {z₀ : ℂ} {r R : ℝ}
   · rintro γ ⟨_, hac, h0, h1, hsub⟩
     set u : ℝ → ℝ := fun t => ‖γ t - z₀‖ with hu
     have hu0 : u 0 = r := by
-      simp only [hu, innerCircle, Set.mem_setOf_eq, dist_eq_norm] at h0 ⊢; exact h0
+      simp only [hu, innerCircle, Set.mem_ofPred_eq, dist_eq_norm] at h0 ⊢; exact h0
     have hu1 : u 1 = R := by
-      simp only [hu, outerCircle, Set.mem_setOf_eq, dist_eq_norm] at h1 ⊢; exact h1
+      simp only [hu, outerCircle, Set.mem_ofPred_eq, dist_eq_norm] at h1 ⊢; exact h1
     have hubound : ∀ t ∈ Set.Icc (0 : ℝ) 1, r ≤ u t ∧ u t ≤ R := by
       intro t ht
       rcases eq_or_lt_of_le ht.1 with h0t | h0t
@@ -872,7 +879,7 @@ theorem isAdmissibleDensity_radialDensity_roundAnnulus {z₀ : ℂ} {r R : ℝ}
       rcases eq_or_lt_of_le ht.2 with h1t | h1t
       · rw [show t = 1 from h1t, hu1]; exact ⟨hrR.le, le_refl _⟩
       · have := hsub t ⟨h0t, h1t⟩
-        simp only [RoundAnnulus, Set.mem_setOf_eq, dist_eq_norm] at this
+        simp only [RoundAnnulus, Set.mem_ofPred_eq, dist_eq_norm] at this
         exact ⟨this.1.le, this.2.le⟩
     have huAC : AbsolutelyContinuousOnInterval u 0 1 := lipComp_ac hLipShift hac
     have humaps : ∀ t ∈ Set.uIcc (0 : ℝ) 1, u t ∈ Set.Icc r R := by
@@ -889,7 +896,8 @@ theorem isAdmissibleDensity_radialDensity_roundAnnulus {z₀ : ℂ} {r R : ℝ}
         have hx0 : 0 < x := lt_of_lt_of_le hr hx.1
         rw [Real.deriv_log]
         rw [← NNReal.coe_le_coe]
-        simp only [coe_nnnorm, Real.norm_eq_abs, NNReal.coe_mk]
+        simp only [coe_nnnorm, Real.norm_eq_abs]
+        change |x⁻¹| ≤ 1 / r
         rw [abs_of_pos (by positivity), one_div]
         exact inv_anti₀ hr hx.1
     set v : ℝ → ℝ := fun t => Real.log (u t) with hv
@@ -927,7 +935,7 @@ theorem isAdmissibleDensity_radialDensity_roundAnnulus {z₀ : ℂ} {r R : ℝ}
       have huD : DifferentiableAt ℝ u t := htu htuIcc
       have hann : γ t ∈ RoundAnnulus z₀ r R := hsub t htmem
       have hut_pos : 0 < u t := by
-        simp only [RoundAnnulus, Set.mem_setOf_eq, dist_eq_norm] at hann
+        simp only [RoundAnnulus, Set.mem_ofPred_eq, dist_eq_norm] at hann
         exact lt_trans hr hann.1
       have hrhoval : radialDensity z₀ r R (γ t) = ENNReal.ofReal (1 / (u t * L)) := by
         simp only [radialDensity, Set.indicator_of_mem hann, hu, hL]
@@ -948,7 +956,7 @@ theorem isAdmissibleDensity_radialDensity_roundAnnulus {z₀ : ℂ} {r R : ℝ}
       rw [key1]
       gcongr
       rw [show (‖deriv γ t‖₊ : ℝ≥0∞) = ENNReal.ofReal ‖deriv γ t‖ from by
-        rw [ofReal_norm_eq_enorm, enorm_eq_nnnorm]]
+        rw [ofReal_norm, enorm_eq_nnnorm]]
       exact ENNReal.ofReal_le_ofReal hdu_le
     calc (1 : ℝ≥0∞)
         = ENNReal.ofReal (1 / L) * ENNReal.ofReal L := by
@@ -956,6 +964,7 @@ theorem isAdmissibleDensity_radialDensity_roundAnnulus {z₀ : ℂ} {r R : ℝ}
             ENNReal.ofReal_one]
       _ ≤ ENNReal.ofReal (1 / L) * ∫⁻ t in Set.Ioo (0 : ℝ) 1, ENNReal.ofReal |deriv v t| := by
           gcongr ?_ * ?_
+          · exact le_rfl
           rw [← hFTC]
           calc ENNReal.ofReal (∫ t in (0 : ℝ)..1, deriv v t)
               ≤ ENNReal.ofReal (∫ t in Set.Ioo (0 : ℝ) 1, |deriv v t|) := by
@@ -988,12 +997,12 @@ theorem lintegral_radialDensity_sq {z₀ : ℂ} {r R : ℝ} (hr : 0 < r) (hrR : 
     unfold radialDensity
     by_cases hz : z ∈ RoundAnnulus z₀ r R
     · have hz0 : z - z₀ ∈ RoundAnnulus 0 r R := by
-        simp only [RoundAnnulus, Set.mem_setOf_eq, dist_zero_right] at *
+        simp only [RoundAnnulus, Set.mem_ofPred_eq, dist_zero_right] at *
         rw [show ‖z - z₀‖ = dist z z₀ from (dist_eq_norm z z₀).symm]; exact hz
       rw [Set.indicator_of_mem hz, Set.indicator_of_mem hz0]
       simp [sub_zero]
     · have hz0 : z - z₀ ∉ RoundAnnulus 0 r R := by
-        simp only [RoundAnnulus, Set.mem_setOf_eq, dist_zero_right] at *
+        simp only [RoundAnnulus, Set.mem_ofPred_eq, dist_zero_right] at *
         rw [show ‖z - z₀‖ = dist z z₀ from (dist_eq_norm z z₀).symm]; exact hz
       rw [Set.indicator_of_notMem hz, Set.indicator_of_notMem hz0]
   have htrans : ∫⁻ z, (radialDensity z₀ r R z) ^ 2 = ∫⁻ z, (radialDensity 0 r R z) ^ 2 := by
@@ -1023,7 +1032,7 @@ theorem lintegral_radialDensity_sq {z₀ : ℂ} {r R : ℝ} (hr : 0 < r) (hrR : 
     simp only [hrho0, smul_eq_mul]
     by_cases hmem : Complex.polarCoord.symm p ∈ RoundAnnulus 0 r R
     · have hmemIoo : p.1 ∈ Set.Ioo r R := by
-        simp only [RoundAnnulus, Set.mem_setOf_eq, dist_zero_right, hnorm] at hmem
+        simp only [RoundAnnulus, Set.mem_ofPred_eq, dist_zero_right, hnorm] at hmem
         exact ⟨hmem.1, hmem.2⟩
       rw [Set.indicator_of_mem hmem, Set.indicator_of_mem hmemIoo, hnorm]
       rw [← ENNReal.ofReal_pow (by positivity), ← ENNReal.ofReal_mul (le_of_lt hp1)]
@@ -1031,7 +1040,7 @@ theorem lintegral_radialDensity_sq {z₀ : ℂ} {r R : ℝ} (hr : 0 < r) (hrR : 
       rw [div_pow, one_pow, mul_pow]
       field_simp
     · have hmemIoo : p.1 ∉ Set.Ioo r R := by
-        simp only [RoundAnnulus, Set.mem_setOf_eq, dist_zero_right, hnorm] at hmem
+        simp only [RoundAnnulus, Set.mem_ofPred_eq, dist_zero_right, hnorm] at hmem
         simpa only [Set.mem_Ioo] using hmem
       rw [Set.indicator_of_notMem hmem, Set.indicator_of_notMem hmemIoo]
       simp
@@ -1189,7 +1198,7 @@ theorem Quadrilateral.ofRoundAnnulus_leftSide_subset {z₀ : ℂ} {r R : ℝ} (h
     (Quadrilateral.ofRoundAnnulus z₀ hr hrR).leftSide ⊆ innerCircle z₀ r := by
   rintro w ⟨p, hp, rfl⟩
   simp only [Set.mem_prod, Set.mem_singleton_iff] at hp
-  simp only [innerCircle, Set.mem_setOf_eq, Quadrilateral.dist_ofRoundAnnulus_toFun hr hrR, hp.1]
+  simp only [innerCircle, Set.mem_ofPred_eq, Quadrilateral.dist_ofRoundAnnulus_toFun hr hrR, hp.1]
   rw [show Real.log r + (0 : ℝ) * (Real.log R - Real.log r) = Real.log r by ring, Real.exp_log hr]
 
 /-- **The right side of the exponential annulus quadrilateral lies on the outer circle.** At
@@ -1199,7 +1208,7 @@ theorem Quadrilateral.ofRoundAnnulus_rightSide_subset {z₀ : ℂ} {r R : ℝ} (
     (hrR : r < R) : (Quadrilateral.ofRoundAnnulus z₀ hr hrR).rightSide ⊆ outerCircle z₀ R := by
   rintro w ⟨p, hp, rfl⟩
   simp only [Set.mem_prod, Set.mem_singleton_iff] at hp
-  simp only [outerCircle, Set.mem_setOf_eq, Quadrilateral.dist_ofRoundAnnulus_toFun hr hrR, hp.1]
+  simp only [outerCircle, Set.mem_ofPred_eq, Quadrilateral.dist_ofRoundAnnulus_toFun hr hrR, hp.1]
   rw [show Real.log r + (1 : ℝ) * (Real.log R - Real.log r) = Real.log R by ring,
     Real.exp_log (lt_trans hr hrR)]
 
@@ -1315,11 +1324,11 @@ theorem Quadrilateral.isAdmissibleDensity_radialDensity_ofRoundAnnulus {z₀ : �
     set u : ℝ → ℝ := fun t => ‖γ t - z₀‖ with hu
     have hu0 : u 0 = r := by
       have hmem := Quadrilateral.ofRoundAnnulus_leftSide_subset hr hrR h0
-      simp only [innerCircle, Set.mem_setOf_eq, dist_eq_norm] at hmem
+      simp only [innerCircle, Set.mem_ofPred_eq, dist_eq_norm] at hmem
       simp only [hu]; exact hmem
     have hu1 : u 1 = R := by
       have hmem := Quadrilateral.ofRoundAnnulus_rightSide_subset hr hrR h1
-      simp only [outerCircle, Set.mem_setOf_eq, dist_eq_norm] at hmem
+      simp only [outerCircle, Set.mem_ofPred_eq, dist_eq_norm] at hmem
       simp only [hu]; exact hmem
     have hubound : ∀ t ∈ Set.Icc (0 : ℝ) 1, r ≤ u t ∧ u t ≤ R := by
       intro t ht
@@ -1340,7 +1349,8 @@ theorem Quadrilateral.isAdmissibleDensity_radialDensity_ofRoundAnnulus {z₀ : �
         rw [Set.mem_Icc] at hx
         have hx0 : 0 < x := lt_of_lt_of_le hr hx.1
         rw [Real.deriv_log, ← NNReal.coe_le_coe]
-        simp only [coe_nnnorm, Real.norm_eq_abs, NNReal.coe_mk]
+        simp only [coe_nnnorm, Real.norm_eq_abs]
+        change |x⁻¹| ≤ 1 / r
         rw [abs_of_pos (by positivity), one_div]
         exact inv_anti₀ hr hx.1
     set v : ℝ → ℝ := fun t => Real.log (u t) with hv
@@ -1403,7 +1413,7 @@ theorem Quadrilateral.isAdmissibleDensity_radialDensity_ofRoundAnnulus {z₀ : �
         rw [key1]
         gcongr
         rw [show (‖deriv γ t‖₊ : ℝ≥0∞) = ENNReal.ofReal ‖deriv γ t‖ from by
-          rw [ofReal_norm_eq_enorm, enorm_eq_nnnorm]]
+          rw [ofReal_norm, enorm_eq_nnnorm]]
         exact ENNReal.ofReal_le_ofReal hdu_le
       · -- Boundary point: `v` attains an extreme value at `t`, so `deriv v t = 0`.
         have hvderiv0 : deriv v t = 0 := by
@@ -1441,6 +1451,7 @@ theorem Quadrilateral.isAdmissibleDensity_radialDensity_ofRoundAnnulus {z₀ : �
             ENNReal.ofReal_one]
       _ ≤ ENNReal.ofReal (1 / L) * ∫⁻ t in Set.Ioo (0 : ℝ) 1, ENNReal.ofReal |deriv v t| := by
           gcongr ?_ * ?_
+          · exact le_rfl
           rw [← hFTC]
           calc ENNReal.ofReal (∫ t in (0 : ℝ)..1, deriv v t)
               ≤ ENNReal.ofReal (∫ t in Set.Ioo (0 : ℝ) 1, |deriv v t|) := by

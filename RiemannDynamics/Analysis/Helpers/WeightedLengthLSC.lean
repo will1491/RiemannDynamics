@@ -55,7 +55,7 @@ theorem exists_subseq_tendstoUniformlyOn_of_lipschitzWith {γ : ℕ → ℝ → 
       TendstoUniformlyOn (fun j => γ (φ j)) γ₀ atTop (Set.Icc 0 1) := by
   classical
   set I : Set ℝ := Set.Icc (0 : ℝ) 1 with hI
-  haveI hcs : CompactSpace (↥I) := isCompact_iff_compactSpace.mp isCompact_Icc
+  have hcs : CompactSpace (↥I) := isCompact_iff_compactSpace.mp isCompact_Icc
   -- Lift the curves (restricted to the compact `[0,1]`) to bounded continuous functions.
   set F : ℕ → BoundedContinuousFunction (↥I) ℂ :=
     fun n => BoundedContinuousFunction.mkOfCompact
@@ -72,7 +72,7 @@ theorem exists_subseq_tendstoUniformlyOn_of_lipschitzWith {γ : ℕ → ℝ → 
         LipschitzWith L (fun (x : ↥I) => ((↑c : BoundedContinuousFunction (↥I) ℂ)) x) := by
       rintro ⟨f, n, rfl⟩
       intro a b
-      simpa [hFdef, BoundedContinuousFunction.mkOfCompact] using (hlip n) (a : ℝ) (b : ℝ)
+      simpa [hFdef, BoundedContinuousFunction.mkOfCompact] using! (hlip n) (a : ℝ) (b : ℝ)
     exact (LipschitzWith.uniformEquicontinuous _ L hlipA).equicontinuous
   -- Arzelà–Ascoli: the closure of the family is compact; extract a convergent subsequence.
   have hcompact : IsCompact (closure A) :=
@@ -166,7 +166,7 @@ theorem arcLengthLineIntegral_le_liminf_of_tendstoUniformlyOn {g : ℂ → ℝ}
         rw [dist_comm, dist_eq_norm, hw]
         exact norm_zero
       rw [h0, ENNReal.ofReal_zero]
-      exact zero_le _
+      exact zero_le
     · set w : ℂ := δ b - δ a with hwdef
       have hwnorm : ‖w‖ ≠ 0 := norm_ne_zero_iff.mpr hw
       set cu : ℂ := (starRingEnd ℂ) ((‖w‖⁻¹ : ℝ) • w) with hcu
@@ -212,7 +212,7 @@ theorem arcLengthLineIntegral_le_liminf_of_tendstoUniformlyOn {g : ℂ → ℝ}
         have hd1 : HasDerivAt (fun s => cu * δ s) (cu * deriv δ t) t := hd.const_mul cu
         have hd2 : HasDerivAt p ((cu * deriv δ t).re) t := by
           have := (Complex.reCLM.hasFDerivAt (x := cu * δ t)).comp_hasDerivAt t hd1
-          simpa [hp] using this
+          simpa [hp] using! this
         rw [hd2.deriv]
         calc (cu * deriv δ t).re ≤ ‖cu * deriv δ t‖ := Complex.re_le_norm _
           _ = ‖deriv δ t‖ := by rw [norm_mul, hcunorm, one_mul]
@@ -237,7 +237,7 @@ theorem arcLengthLineIntegral_le_liminf_of_tendstoUniformlyOn {g : ℂ → ℝ}
             ((intervalIntegrable_iff_integrableOn_Ioc_of_le hab).mp hint)
             (Eventually.of_forall fun t => norm_nonneg _)]
         refine lintegral_congr fun t => ?_
-        rw [ofReal_norm_eq_enorm, enorm_eq_nnnorm]
+        rw [ofReal_norm, enorm_eq_nnnorm]
       calc ENNReal.ofReal (dist (δ a) (δ b))
           ≤ ENNReal.ofReal (∫ t in a..b, ‖deriv δ t‖) := by
             apply ENNReal.ofReal_le_ofReal
@@ -460,7 +460,7 @@ theorem arcLengthLineIntegral_le_liminf_of_tendstoUniformlyOn {g : ℂ → ℝ}
       ENNReal.Tendsto.const_mul (ENNReal.tendsto_ofReal hstraddle)
         (Or.inr ENNReal.ofReal_ne_top)
     have h2 : ENNReal.ofReal ‖deriv γ₀ s‖ = ((‖deriv γ₀ s‖₊ : ℝ≥0) : ℝ≥0∞) := by
-      rw [ofReal_norm_eq_enorm, enorm_eq_nnnorm]
+      rw [ofReal_norm, enorm_eq_nnnorm]
     rw [← h2]
     refine h1.congr' ?_
     filter_upwards [eventually_ge_atTop 1] with M hM
@@ -589,7 +589,7 @@ theorem arcLengthLineIntegral_le_liminf_of_tendstoUniformlyOn {g : ℂ → ℝ}
                 (fun s' => ENNReal.ofReal (g (γ₀ s')) *
                   ENNReal.ofReal ((m : ℝ) *
                     dist (γ₀ ((k : ℝ) / m)) (γ₀ (((k : ℝ) + 1) / m)))) s :=
-            MeasureTheory.lintegral_finset_sum _ fun k _ =>
+            MeasureTheory.lintegral_finsetSum _ fun k _ =>
               (((hg.comp hlip₀.continuous).measurable.ennreal_ofReal).mul_const _).indicator
                 measurableSet_Ico
         _ = ∑ k ∈ Finset.range m, ∫⁻ s in Set.Ico ((k : ℝ) / m) (((k : ℝ) + 1) / m),
@@ -772,7 +772,7 @@ theorem arcLengthLineIntegral_le_liminf_of_tendstoUniformlyOn {g : ℂ → ℝ}
         ENNReal.ofReal (dist (γ j ((k : ℝ) / m)) (γ j (((k : ℝ) + 1) / m)))) atTop
         (𝓝 (∑ k ∈ Finset.range m, ENNReal.ofReal (g (w k)) *
           ENNReal.ofReal (dist (γ₀ ((k : ℝ) / m)) (γ₀ (((k : ℝ) + 1) / m))))) := by
-      apply tendsto_finset_sum
+      apply tendsto_finsetSum
       intro k hk
       have hk' := Finset.mem_range.mp hk
       have hmem1 : (k : ℝ) / m ∈ Set.Icc (0 : ℝ) 1 := hnode k hk'.le
@@ -892,7 +892,7 @@ theorem exists_lipschitz_interpolation {n : ℕ} (hn : 1 ≤ n) (z : Fin (n + 1)
     have hzlast : z (Fin.last n) = z 0 := by
       rw [← hZn, ← hZ0]
       exact hZconst n le_rfl
-    refine ⟨fun _ => z 0, rfl, by rw [hzlast], (LipschitzWith.const (z 0)).weaken (zero_le _),
+    refine ⟨fun _ => z 0, rfl, by rw [hzlast], (LipschitzWith.const (z 0)).weaken (zero_le),
       ?_, ?_⟩
     · intro t _
       refine ⟨⟨0, hn⟩, ?_⟩
@@ -904,7 +904,7 @@ theorem exists_lipschitz_interpolation {n : ℕ} (hn : 1 ≤ n) (z : Fin (n + 1)
       have hzero : arcLengthLineIntegral (fun w => ENNReal.ofReal (g w)) (fun _ => z 0) = 0 := by
         simp [arcLengthLineIntegral]
       rw [hzero]
-      exact zero_le _
+      exact zero_le
   · -- Main case: positive total length, arclength-proportional parametrization.
     have hSpos : 0 < S := lt_of_le_of_ne hS0 (Ne.symm hSzero)
     -- Cumulative breakpoints.
@@ -1207,7 +1207,7 @@ theorem exists_lipschitz_interpolation {n : ℕ} (hn : 1 ≤ n) (z : Fin (n + 1)
                 rw [hderiv.deriv, hnsmul,
                   abs_of_nonneg (div_nonneg hS0 (hd0 k)), hZnorm k,
                   div_mul_cancel₀ _ hdk]
-              rw [← hnorm, ofReal_norm_eq_enorm, enorm_eq_nnnorm]
+              rw [← hnorm, ofReal_norm, enorm_eq_nnnorm]
             -- Weight bound along the segment.
             have hseg : dist (γ t) (Z k) ≤ d k := by
               rw [hpiece k hkn t ht.1.le ht.2.le, dist_eq_norm, add_sub_cancel_left,

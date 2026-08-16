@@ -105,7 +105,7 @@ theorem sq_integral_abs_le {g : ℝ → ℝ} {t b : ℝ} (htb : t ≤ b)
     have hi2 : IntervalIntegrable (fun s => (2 * x) * |g s|) volume t b :=
       hg.abs.const_mul (2 * x)
     have hi3 : IntervalIntegrable (fun _ : ℝ => (1 : ℝ)) volume t b :=
-      intervalIntegral.intervalIntegrable_const
+      intervalIntegrable_const
     have hnn : (0 : ℝ) ≤ ∫ s in t..b, (x * |g s| + 1) ^ 2 := by
       apply intervalIntegral.integral_nonneg htb
       intro s _
@@ -199,6 +199,7 @@ theorem exists_seq_weight_deriv_sq_lt {f : ℝ → ℝ} {a b : ℝ} (hab : a < b
       have hsab : s ∈ Ioo a b := hsub hs
       have hlt : b - s < ε := lt_of_lt_of_le (by have := hs.1; linarith) hδε
       have hbound := hcon s hsab hlt
+      change ‖ε * (b - s)⁻¹‖ ≤ (deriv f s) ^ 2
       rw [Real.norm_eq_abs, abs_of_nonneg (mul_nonneg hεpos.le (inv_nonneg.mpr hbs.le))]
       rw [← div_eq_mul_inv, div_le_iff₀ hbs]
       calc ε ≤ (b - s) * (deriv f s) ^ 2 := hbound
@@ -320,7 +321,7 @@ theorem boundary_term_liminf_zero_left {f : ℝ → ℝ} {a b : ℝ} (hab : a < 
   have hFcont : ContinuousOn F (Icc a b) := by
     apply hcont.comp ((continuous_const.sub continuous_id).continuousOn)
     intro s hs
-    simp only [id_eq, mem_Icc] at hs ⊢
+    simp only [Pi.sub_apply, id_eq, mem_Icc] at hs ⊢
     constructor <;> linarith [hs.1, hs.2]
   have hFb : F b = 0 := by
     have : a + b - b = a := by ring
@@ -461,7 +462,7 @@ theorem integral_mul_deriv_eq_integral_sq_of_endpoints_zero {f g g' : ℝ → �
   -- integrability of the interior integrands on `(a, b)`
   have hg2int : IntegrableOn (fun t => (g t) ^ 2) (Ioo a b) := by
     refine hf2.congr_fun (fun t ht => ?_) measurableSet_Ioo
-    rw [hfg t ht]; ring
+    simp only [hfg t ht]; ring
   have hfmeas : AEStronglyMeasurable f (volume.restrict (Ioo a b)) :=
     ((hcont.mono Ioo_subset_Icc_self).aestronglyMeasurable measurableSet_Ioo)
   have hfg'int : IntegrableOn (fun t => f t * g' t) (Ioo a b) := by
@@ -658,7 +659,7 @@ theorem integral_uexp_re_deriv_expGrad_arc {u : ℂ → ℝ} {U : Set ℂ} {ξ a
     intro θ hθ
     have hD := hasDerivAt_expGrad_angular (hdiffC θ hθ)
     have hcomp := Complex.imCLM.hasFDerivAt.comp_hasDerivAt θ hD
-    simpa [hgdef, hg'def, Function.comp, Complex.mul_im] using hcomp
+    simpa [hgdef, hg'def, Function.comp, Complex.mul_im] using! hcomp
   -- `g` is continuous, hence measurable, on the open arc
   have hgcont : ContinuousOn g (Ioo a b) := fun θ hθ =>
     (hgderiv θ hθ).continuousAt.continuousWithinAt
@@ -679,7 +680,7 @@ theorem integral_uexp_re_deriv_expGrad_arc {u : ℂ → ℝ} {U : Set ℂ} {ξ a
     simpa [hgdef] using this
   -- `g` is integrable: `|g| ≤ (1 + g²)/2` dominates it by an integrable function
   have hg2int : IntegrableOn (fun θ => (g θ) ^ 2) (Ioo a b) :=
-    hf2.congr_fun (fun θ hθ => by rw [hfg θ hθ]; simp [hgdef]) measurableSet_Ioo
+    hf2.congr_fun (fun θ hθ => by simp only [hfg θ hθ]; simp [hgdef]) measurableSet_Ioo
   have hgint : IntegrableOn g (Ioo a b) := by
     have hvol : volume (Ioo a b) ≠ ⊤ := by rw [Real.volume_Ioo]; exact ENNReal.ofReal_ne_top
     have hconst : IntegrableOn (fun _ : ℝ => (1 : ℝ) / 2) (Ioo a b) :=
@@ -894,7 +895,7 @@ theorem setIntegral_slice_uexp_re_deriv_expGrad {u : ℂ → ℝ} {U : Set ℂ} 
     fun_prop
   have hOopen : IsOpen O := by
     have : O = Ioo (-π) π ∩ (fun θ : ℝ => Complex.exp ((ξ : ℂ) + (θ : ℂ) * Complex.I)) ⁻¹' U := by
-      ext θ; simp only [hO, mem_setOf_eq, mem_inter_iff, mem_preimage]
+      ext θ; simp only [hO, mem_ofPred_eq, mem_inter_iff, mem_preimage]
     rw [this]; exact isOpen_Ioo.inter (hU.preimage hcontmap)
   have hOsub : O ⊆ Ioo (-π) π := fun θ hθ => hθ.1
   obtain ⟨S, hcount, hdisj, hunion, hSend⟩ := isOpen_eq_iUnion_Ioo hOopen hOsub
@@ -1072,7 +1073,7 @@ theorem isOpen_angularSlice {U : Set ℂ} (hU : IsOpen U) (ξ : ℝ) :
     fun_prop
   have hrw : angularSlice U ξ
       = Ioo (-π) π ∩ (fun θ : ℝ => Complex.exp ((ξ : ℂ) + (θ : ℂ) * Complex.I)) ⁻¹' U := by
-    ext θ; simp only [angularSlice, mem_setOf_eq, mem_inter_iff, mem_preimage]
+    ext θ; simp only [angularSlice, mem_ofPred_eq, mem_inter_iff, mem_preimage]
   rw [hrw]; exact isOpen_Ioo.inter (hU.preimage hcontmap)
 
 /-- The angular slice is contained in `(−π, π)`, hence measurable. -/
@@ -1113,7 +1114,7 @@ theorem roughFlux_eq_setIntegral_slice {u : ℂ → ℝ} {U : Set ℂ} (hU : IsO
   rw [angularSlice]
   refine (ae_eq_set.mpr ⟨?_, ?_⟩) <;>
     · refine measure_mono_null (fun θ hθ => ?_) (measure_empty)
-      simp only [mem_diff, mem_inter_iff, mem_setOf_eq] at hθ
+      simp only [Set.mem_sdiff, mem_inter_iff, mem_ofPred_eq] at hθ
       tauto
 
 end RiemannDynamics

@@ -50,7 +50,7 @@ theorem nonnegWinding_transport₂ (hW : NonnegWindingPrinciple₂) {ρ g : ℝ 
       have hmem : 1 - t ∈ Set.Icc (0:ℝ) 1 :=
         ⟨by linarith [ht.2], by linarith [ht.1]⟩
       have h := (hd (1 - t) hmem).scomp t hin
-      convert h using 1
+      convert! h using 1
       rw [neg_smul, one_smul]
     have hgc' : ContinuousOn (fun u : ℝ => -(g (1 - u))) (Set.Icc 0 1) := by
       refine ContinuousOn.neg ?_
@@ -919,11 +919,9 @@ theorem arc_cross_once {q : ℂ → ℂ}
       · refine traj_mono ?_ (Set.subset_univ _)
         have h3 := traj_shift ur hσ
         rwa [Set.preimage_univ] at h3
-      · change σ (0 + ur) = A (T' + al)
-        rw [zero_add, hT'def, sub_add_cancel]
+      · rw [zero_add, hT'def, sub_add_cancel]
         exact hr
-      · change σ (ul - ur + ur) = A (0 + al)
-        rw [sub_add_cancel, zero_add]
+      · rw [sub_add_cancel, zero_add]
         exact hl
     · have hAeq : A ar = A al := by
         rw [← hr, hu, hl]
@@ -932,10 +930,8 @@ theorem arc_cross_once {q : ℂ → ℂ}
       · refine traj_mono ?_ (Set.subset_univ _)
         have h3 := traj_shift ul hσ
         rwa [Set.preimage_univ] at h3
-      · change σ (0 + ul) = A (T' + al)
-        rw [zero_add, hT'def, sub_add_cancel, hl, ← hAeq]
-      · change σ (0 + ul) = A (0 + al)
-        rw [zero_add, zero_add]
+      · rw [zero_add, hT'def, sub_add_cancel, hl, ← hAeq]
+      · rw [zero_add, zero_add]
         exact hl
     · refine hbigonH (fun w => σ (w + ul)) (fun w => A (ar - w)) (ur - ul)
         (ar - al) μ (by linarith) (by linarith) hμ ?_ ?_ ?_ ?_
@@ -956,11 +952,9 @@ theorem arc_cross_once {q : ℂ → ℂ}
         constructor
         · linarith [hw.2, hal.1]
         · linarith [hw.1, har.2]
-      · change A (ar - 0) = σ (ur - ul + ul)
-        rw [sub_zero, sub_add_cancel]
+      · rw [sub_zero, sub_add_cancel]
         exact hr.symm
-      · change A (ar - (ar - al)) = σ (0 + ul)
-        rw [show ar - (ar - al) = al from by ring, zero_add]
+      · rw [show ar - (ar - al) = al from by ring, zero_add]
         exact hl.symm
   have haa : a₁ = a₂ := by
     rcases lt_trichotomy a₁ a₂ with h | h | h
@@ -981,10 +975,8 @@ theorem arc_cross_once {q : ℂ → ℂ}
       constructor
       · linarith [hw.1, ha₁.1]
       · linarith [hw.2, ha₁.2]
-    · change A (0 + a₁) = σ (v₂ - v₁ + v₁)
-      rw [zero_add, sub_add_cancel, h₂, haa]
-    · change A (0 + a₁) = σ (0 + v₁)
-      rw [zero_add, zero_add]
+    · rw [zero_add, sub_add_cancel, h₂, haa]
+    · rw [zero_add, zero_add]
       exact h₁.symm
   · refine hbigonH (fun w => σ (w + v₂)) (fun w => A (w + a₁)) (v₁ - v₂) 0 μ
       (by linarith) le_rfl hμ ?_ ?_ ?_ ?_
@@ -997,11 +989,9 @@ theorem arc_cross_once {q : ℂ → ℂ}
       constructor
       · linarith [hw.1, ha₁.1]
       · linarith [hw.2, ha₁.2]
-    · change A (0 + a₁) = σ (v₁ - v₂ + v₂)
-      rw [zero_add, sub_add_cancel]
+    · rw [zero_add, sub_add_cancel]
       exact h₁.symm
-    · change A (0 + a₁) = σ (0 + v₂)
-      rw [zero_add, zero_add, h₂, haa]
+    · rw [zero_add, zero_add, h₂, haa]
   -- both orientations of the repeated parameter close a loop against the seed
 
 /-- **Evaluation of the four-sided loop**: the concatenated closed loop agrees with

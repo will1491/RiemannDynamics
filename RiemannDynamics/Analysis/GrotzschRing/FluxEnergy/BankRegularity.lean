@@ -557,7 +557,7 @@ theorem roundAnnulus_full_eq_iUnion {s : ℝ} (hs0 : 0 < s) (hs1 : s < 1) :
   have hgt : ∀ n : ℕ, s < Real.exp (Real.log s * ((n : ℝ) + 1) / ((n : ℝ) + 2)) := fun n =>
     (Real.log_lt_iff_lt_exp hs0).mp (hgtL n)
   ext z
-  simp only [RoundAnnulus, Set.mem_setOf_eq, Set.mem_iUnion]
+  simp only [RoundAnnulus, Set.mem_ofPred_eq, Set.mem_iUnion]
   constructor
   · rintro ⟨h1, h2⟩
     have hzpos : 0 < dist z 0 := lt_trans hs0 h1
@@ -672,7 +672,7 @@ theorem continuousOn_slice_of_continuousOn_stripBox {F : ℂ → ℝ} {a b c d :
   have hmapsto : Set.MapsTo (fun t : ℝ => ((x : ℂ) + (t : ℂ) * Complex.I))
       (Icc c d) (stripBox a b c d) := by
     intro s hs
-    simp only [stripBox, Set.mem_setOf_eq, re_logPolar, im_logPolar]
+    simp only [stripBox, Set.mem_ofPred_eq, re_logPolar, im_logPolar]
     exact ⟨hx1, hx2, hs.1, hs.2⟩
   exact hF.comp (by fun_prop) hmapsto
 
@@ -690,7 +690,7 @@ theorem exists_bound_on_stripBox {F : ℂ → ℝ} {a b c d : ℝ}
   have hKsub : K ⊆ stripBox a b c d := by
     rintro w ⟨p, hp, rfl⟩
     have hmem := hδsub hp.1
-    simp only [stripBox, Set.mem_setOf_eq, re_logPolar, im_logPolar]
+    simp only [stripBox, Set.mem_ofPred_eq, re_logPolar, im_logPolar]
     exact ⟨hmem.1, hmem.2, hp.2.1, hp.2.2⟩
   obtain ⟨C, hC⟩ := hKcpt.exists_bound_of_continuousOn (hF.mono hKsub)
   exact ⟨C, fun x hx t ht => hC _ ⟨(x, t), ⟨hx, ht⟩, rfl⟩⟩
@@ -1211,13 +1211,14 @@ theorem continuousOn_reflectReal_bankBall {s x₀ : ℝ} (hs0 : 0 < s) (hs1 : s 
     · have hvz : v z = 0 := hv0 z him hbz.1 hbz.2.1
       rw [reflectReal_of_im_nonneg (le_of_eq him.symm), hvz]
       have hzfix : (starRingEnd ℂ) z = z := Complex.conj_eq_iff_im.mpr him
+      change (0 : ℝ) = -v ((starRingEnd ℂ) z)
       rw [hzfix, hvz, neg_zero]
     · rw [reflectReal, if_neg (by linarith)]
   have hcover : Metric.closedBall ((x₀ : ℝ) : ℂ) ρ
       = (Metric.closedBall ((x₀ : ℝ) : ℂ) ρ ∩ {z : ℂ | 0 ≤ z.im})
         ∪ (Metric.closedBall ((x₀ : ℝ) : ℂ) ρ ∩ {z : ℂ | z.im ≤ 0}) := by
     rw [← Set.inter_union_distrib_left]
-    ext z; simp only [Set.mem_inter_iff, Set.mem_union, Set.mem_setOf_eq]
+    ext z; simp only [Set.mem_inter_iff, Set.mem_union, Set.mem_ofPred_eq]
     constructor
     · intro hz; exact ⟨hz, le_total 0 z.im⟩
     · intro hz; exact hz.1
@@ -1334,7 +1335,7 @@ theorem norm_gradC_conj {s : ℝ} (hs0 : 0 < s) (hs1 : s < 1) {v : ℂ → ℝ}
     have := Complex.conjLIE.toContinuousLinearEquiv.hasFDerivAt (x := z)
     refine this.congr_fderiv ?_
     ext w
-    simp [Complex.conjLIE_apply, Complex.conjCLE_apply]
+    simp [Complex.conjLIE_apply]
   have hcomp : HasFDerivAt v
       ((fderiv ℝ v ((starRingEnd ℂ) z)).comp
         (Complex.conjLIE.toLinearIsometry.toContinuousLinearMap)) z :=
@@ -1343,6 +1344,7 @@ theorem norm_gradC_conj {s : ℝ} (hs0 : 0 < s) (hs1 : s < 1) {v : ℂ → ℝ}
       = (fderiv ℝ v ((starRingEnd ℂ) z)).comp
           (Complex.conjLIE.toLinearIsometry.toContinuousLinearMap) := hcomp.fderiv
   rw [norm_gradC_eq_norm_fderiv, norm_gradC_eq_norm_fderiv, hfeq,
+    LinearIsometryEquiv.toContinuousLinearMap_toLinearIsometry,
     ContinuousLinearMap.opNorm_comp_linearIsometryEquiv]
 
 /-- **Local off-axis bound for the gradient near the annulus.** For the Grötzsch potential `v` and

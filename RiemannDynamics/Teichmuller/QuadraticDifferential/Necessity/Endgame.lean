@@ -75,7 +75,7 @@ theorem ae_eq_upper_of_ae_eq_dirichlet (hΓ : IsFuchsianGroup Γ)
       (UpperHalfPlane.coe '' dirichletDomain Γ UpperHalfPlane.I)), f z = g z) :
     ∀ᵐ z ∂(volume.restrict {z : ℂ | 0 < z.im}), f z = g z := by
   classical
-  haveI : Countable ↥Γ := IsFuchsianGroup.countable hΓ
+  have : Countable ↥Γ := IsFuchsianGroup.countable hΓ
   obtain ⟨ε, hε, hgap⟩ := exists_trace_gap hΓ hfree hcc
   obtain ⟨R, hR, hdense⟩ := exists_orbit_density_bound hΓ hε hgap hcc UpperHalfPlane.I
   have hU : MeasurableSet {z : ℂ | 0 < z.im} :=
@@ -152,7 +152,7 @@ theorem ae_eq_upper_of_ae_eq_dirichlet (hΓ : IsFuchsianGroup Γ)
     rw [← hzζ, hfl, hgl, hfg]
   rw [ae_restrict_iff' hU, ae_iff]
   refine measure_mono_null (fun z hz => ?_) hnull
-  rw [Set.mem_setOf_eq] at hz
+  rw [Set.mem_ofPred_eq] at hz
   push Not at hz
   exact hcover z hz.1 hz.2
 

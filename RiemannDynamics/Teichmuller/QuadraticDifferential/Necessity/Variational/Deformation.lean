@@ -329,7 +329,7 @@ theorem exists_trivial_deformation (hΓ : IsFuchsianGroup Γ)
       exact (((hW3 z hz u hu').congr hev).differentiableAt).differentiableWithinAt
     · intro hκ0
       have h0mem : (0 : ℂ) ∈ {u : ℂ | ‖u‖ < (1 - m) / Mv} := by
-        simp only [Set.mem_setOf_eq, norm_zero]
+        simp only [Set.mem_ofPred_eq, norm_zero]
         exact div_pos (by linarith only [hm1]) hMv
       have hev : (fun v => Λ (fun ζ => κ ζ + v * ν ζ) z) =ᶠ[nhds (0 : ℂ)]
           (fun v => schwarzian (W v) z) := by
@@ -416,7 +416,7 @@ theorem exists_trivial_deformation (hΓ : IsFuchsianGroup Γ)
         rw [det_fderiv_eq_wirtinger, dzbar_eq_zero_of_differentiableAt hdiff,
           dz_eq_deriv_of_differentiableAt hdiff]
         have hd : deriv (fun w : ℂ => c * w) 0 = c := by
-          simpa using ((hasDerivAt_id (0 : ℂ)).const_mul c).deriv
+          simp
         rw [hd]
         simp [Complex.normSq_eq_norm_sq]
       have hdetL : LinearMap.det
@@ -598,7 +598,7 @@ theorem exists_trivial_deformation (hΓ : IsFuchsianGroup Γ)
       have hu0 : ∀ᵐ z : ℂ, c₂ * z + d₂ ≠ 0 := by
         rw [ae_iff]
         refine measure_mono_null (fun z hz => ?_) (measure_singleton (-d₂ / c₂))
-        rw [Set.mem_setOf_eq, not_not] at hz
+        rw [Set.mem_ofPred_eq, not_not] at hz
         have hzval : z = -d₂ / c₂ := by
           rw [eq_div_iff hc₂ne]
           linear_combination hz

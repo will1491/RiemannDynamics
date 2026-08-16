@@ -58,12 +58,12 @@ private theorem ae_deriv_eq_zero_of_level_set (r : ℝ → ℝ) (c : ℝ) :
         ext z; simp only [mem_inter_iff, mem_compl_iff, mem_empty_iff_false, iff_false]
         rintro ⟨hzc, hzA, _⟩; exact hzc hzA
       rwa [heq] at hmem
-    exact (countable_setOf_isolated_right_within).mono hsub
+    exact (countable_setOfPred_isolated_right_within).mono hsub
   have hnull : volume A = 0 := hAcount.measure_zero volume
   rw [ae_iff]
   apply measure_mono_null _ hnull
   intro t ht
-  simp only [mem_setOf_eq] at ht ⊢
+  simp only [mem_ofPred_eq] at ht ⊢
   push Not at ht
   obtain ⟨hdiff, hrt⟩ := ht.1
   exact ⟨hdiff, hrt, ht.2⟩
@@ -309,7 +309,7 @@ theorem curveModulus_crossing_annulus_le {p : ℂ} {R₁ R₂ : ℝ} (hR₁ : 0 
     have hΨLip : LipschitzWith ((1 / (R₁ * L)).toNNReal) (fun s => Real.log (cl s) / L) := by
       rw [← lipschitzOnWith_univ]
       have hcomp := hlogLip.comp (hclLip.lipschitzOnWith (s := Set.univ)) hclmaps
-      simpa [Function.comp, mul_one] using hcomp
+      simpa [Function.comp, mul_one] using! hcomp
     have hHLip : LipschitzWith ((1 / (R₁ * L)).toNNReal * 1) H := hΨLip.comp hnormLip
     -- ===== AC composition: Lipschitz ∘ AC curve is AC =====
     have hLipComp : ∀ (l : ℂ → ℝ) (K : ℝ≥0), LipschitzWith K l →
@@ -461,7 +461,7 @@ theorem curveModulus_crossing_annulus_le {p : ℂ} {R₁ R₂ : ℝ} (hR₁ : 0 
     change (‖deriv G t‖₊ : ℝ≥0∞) ≤
       (if R₁ ≤ r t ∧ r t ≤ R₂ then ENNReal.ofReal (1 / (r t * L)) else 0) * (‖deriv γ t‖₊ : ℝ≥0∞)
     rw [show (‖deriv G t‖₊ : ℝ≥0∞) = ENNReal.ofReal |deriv G t| from by
-      rw [← enorm_eq_nnnorm, ← ofReal_norm_eq_enorm, Real.norm_eq_abs]]
+      rw [← enorm_eq_nnnorm, ← ofReal_norm, Real.norm_eq_abs]]
     calc ENNReal.ofReal |deriv G t|
         ≤ ENNReal.ofReal ((if R₁ ≤ r t ∧ r t ≤ R₂ then (1 / (r t * L)) else 0)
           * ‖deriv γ t‖) := ENNReal.ofReal_le_ofReal hfinal
@@ -470,7 +470,7 @@ theorem curveModulus_crossing_annulus_le {p : ℂ} {R₁ R₂ : ℝ} (hR₁ : 0 
           by_cases hc : R₁ ≤ r t ∧ r t ≤ R₂
           · rw [if_pos hc, if_pos hc, ENNReal.ofReal_mul (by
               have : 0 < r t := lt_of_lt_of_le hR₁ hc.1
-              positivity), ← enorm_eq_nnnorm, ← ofReal_norm_eq_enorm]
+              positivity), ← enorm_eq_nnnorm, ← ofReal_norm]
           · rw [if_neg hc, if_neg hc]; simp
   -- ============================ CONCLUSION ============================
   calc curveModulus Γ ≤ ∫⁻ z, (ρ z) ^ 2 := iInf₂_le ρ hρadm
@@ -582,7 +582,7 @@ theorem curveModulus_radialFamily_ge {p : ℂ} {R₁ R₂ : ℝ} (hR₁ : 0 < R�
         exact (h1.mul_const (Complex.exp (θ * Complex.I))).const_add p
       rw [hd.deriv, show (‖((R₂ - R₁ : ℝ) : ℂ) * Complex.exp (θ * Complex.I)‖₊ : ℝ≥0∞)
           = ENNReal.ofReal ‖((R₂ - R₁ : ℝ) : ℂ) * Complex.exp (θ * Complex.I)‖ from by
-        rw [← enorm_eq_nnnorm, ← ofReal_norm_eq_enorm]]
+        rw [← enorm_eq_nnnorm, ← ofReal_norm]]
       rw [norm_mul, Complex.norm_exp_ofReal_mul_I, mul_one, Complex.norm_real, Real.norm_eq_abs,
         abs_of_pos (by linarith)]
     simp only [hderiv] at hadm0
@@ -753,7 +753,7 @@ theorem measurePreserving_reflectIm :
     have h2 : MeasureTheory.MeasurePreserving (Neg.neg : ℝ → ℝ) volume volume :=
       Measure.measurePreserving_neg _
     have := h1.prod h2
-    simpa [Measure.volume_eq_prod, Prod.map] using this
+    simpa [Measure.volume_eq_prod, Prod.map] using! this
   have hcomp : reflectIm
       = e.symm ∘ (fun p : ℝ × ℝ => (p.1, -p.2)) ∘ e := by
     funext z
@@ -844,10 +844,10 @@ private theorem lintegral_lowerHalf_eq_upperOpen (h : ℂ → ℝ≥0∞) (hmeas
   show {a : ℂ | a.im < 0}.indicator h z = {a : ℂ | 0 < a.im}.indicator h (reflectIm z)
   by_cases hz : z ∈ {a : ℂ | a.im < 0}
   · have hz' : reflectIm z ∈ {a : ℂ | 0 < a.im} := by
-      simp only [mem_setOf_eq, reflectIm, conj_im] at *; linarith
+      simp only [mem_ofPred_eq, reflectIm, conj_im] at *; linarith
     rw [Set.indicator_of_mem hz, Set.indicator_of_mem hz', hinv]
   · have hz' : reflectIm z ∉ {a : ℂ | 0 < a.im} := by
-      simp only [mem_setOf_eq, reflectIm, conj_im, not_lt] at *; linarith
+      simp only [mem_ofPred_eq, reflectIm, conj_im, not_lt] at *; linarith
     rw [Set.indicator_of_notMem hz, Set.indicator_of_notMem hz']
 
 /-- The closed and open upper-half-plane integrals agree (differing only on the null real axis). -/
@@ -857,7 +857,7 @@ private theorem lintegral_upperClosed_eq_open (h : ℂ → ℝ≥0∞) :
   apply measure_symmDiff_eq_zero_iff.mp
   apply measure_mono_null _ volume_line_imZero_eq_zero
   intro z hz
-  simp only [mem_symmDiff, mem_setOf_eq] at hz ⊢
+  simp only [mem_symmDiff, mem_ofPred_eq] at hz ⊢
   rcases hz with ⟨h1, h2⟩ | ⟨h1, h2⟩
   · rw [not_lt] at h2; linarith
   · linarith
@@ -929,11 +929,11 @@ theorem lintegral_polarize_sq {ρ : ℂ → ℝ≥0∞} (hρ : Measurable ρ) :
   have e1 : ∫⁻ z in {w : ℂ | 0 ≤ w.im}, (polarizeDensity ρ z) ^ 2
       = ∫⁻ z in {w : ℂ | 0 ≤ w.im}, (max (ρ z) (ρ (reflectIm z))) ^ 2 := by
     apply setLIntegral_congr_fun hUmeas
-    intro z hz; simp only [mem_setOf_eq] at hz; simp only [polarizeDensity, if_pos hz]
+    intro z hz; simp only [mem_ofPred_eq] at hz; simp only [polarizeDensity, if_pos hz]
   have e2 : ∫⁻ z in {w : ℂ | w.im < 0}, (polarizeDensity ρ z) ^ 2
       = ∫⁻ z in {w : ℂ | w.im < 0}, (min (ρ z) (ρ (reflectIm z))) ^ 2 := by
     apply setLIntegral_congr_fun hLmeas
-    intro z hz; simp only [mem_setOf_eq] at hz
+    intro z hz; simp only [mem_ofPred_eq] at hz
     have hne : ¬ (0 ≤ z.im) := by linarith
     simp only [polarizeDensity, if_neg hne]
   have hsplit : ∫⁻ z, (polarizeDensity ρ z) ^ 2
@@ -1007,7 +1007,7 @@ private theorem deriv_reflectIm_comp (γ : ℝ → ℂ) (t : ℝ) :
         ((Complex.conjCLE : ℂ →L[ℝ] ℂ) (deriv γ t)) t := by
       have hf := h.hasDerivAt.hasFDerivAt
       have hcomp := (Complex.conjCLE : ℂ →L[ℝ] ℂ).hasFDerivAt.comp t hf
-      rw [hasDerivAt_iff_hasFDerivAt]; convert hcomp using 1; ext1; simp
+      rw [hasDerivAt_iff_hasFDerivAt]; convert! hcomp using 1; ext1; simp
     change deriv (fun s => (Complex.conjCLE : ℂ →L[ℝ] ℂ) (γ s)) t = _
     rw [hd.deriv]; rfl
   · have hnd : ¬ DifferentiableAt ℝ (fun s => reflectIm (γ s)) t := by
@@ -1490,7 +1490,7 @@ theorem curveModulus_ge_coarea_invLength
         apply lintegral_mono; intro c
         by_cases hc : c ∈ S
         · rw [Set.indicator_of_mem hc]; exact hperlevel c hc
-        · rw [Set.indicator_of_notMem hc]; exact zero_le _
+        · rw [Set.indicator_of_notMem hc]; exact zero_le
     _ ≤ ∫⁻ z, (ρ z) ^ 2 * (‖fderiv ℝ u z‖₊ : ℝ≥0∞) := hcoarea
     _ ≤ ∫⁻ z, (ρ z) ^ 2 := hRHSle
 
@@ -1613,7 +1613,7 @@ theorem circle_arcLength_eq_angularProfile_integral {p : ℂ} {r : ℝ} (hr : 0 
       exact ((h1.cexp.const_mul (r : ℂ)).const_add p)
     rw [hd.deriv,
       show (‖v‖₊ : ℝ≥0∞) = ENNReal.ofReal ‖v‖ from by
-        rw [← enorm_eq_nnnorm, ← ofReal_norm_eq_enorm]]
+        rw [← enorm_eq_nnnorm, ← ofReal_norm]]
     congr 1
     rw [hv]
     rw [norm_mul, norm_mul, Complex.norm_exp_ofReal_mul_I, one_mul, norm_mul, Complex.norm_real,

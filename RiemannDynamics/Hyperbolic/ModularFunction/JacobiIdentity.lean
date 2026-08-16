@@ -1389,22 +1389,19 @@ theorem modularLambdaH_cusp_deriv_sub_two_term_le_widened {q : ℂ}
     simpa using (hasDerivAt_id q).const_mul (16 : ℂ)
   have h_quad_hasDeriv : HasDerivAt (fun z : ℂ => 128 * z^2) (256 * q) q := by
     have h_pow : HasDerivAt (fun z : ℂ => z^2) (2 * q) q := by
-      have := (hasDerivAt_id q).pow 2
-      simpa using this
+      simpa using hasDerivAt_pow 2 q
     have := h_pow.const_mul (128 : ℂ)
-    convert this using 1; ring
+    convert! this using 1; ring
   have h_cube_hasDeriv : HasDerivAt (fun z : ℂ => 704 * z^3) (2112 * q^2) q := by
     have h_pow : HasDerivAt (fun z : ℂ => z^3) (3 * q^2) q := by
-      have := (hasDerivAt_id q).pow 3
-      simpa using this
+      simpa using hasDerivAt_pow 3 q
     have := h_pow.const_mul (704 : ℂ)
-    convert this using 1; ring
+    convert! this using 1; ring
   have h_quart_hasDeriv : HasDerivAt (fun z : ℂ => 3072 * z^4) (12288 * q^3) q := by
     have h_pow : HasDerivAt (fun z : ℂ => z^4) (4 * q^3) q := by
-      have := (hasDerivAt_id q).pow 4
-      simpa using this
+      simpa using hasDerivAt_pow 4 q
     have := h_pow.const_mul (3072 : ℂ)
-    convert this using 1; ring
+    convert! this using 1; ring
   have h_f_hasDeriv : HasDerivAt f
       (deriv modularLambdaH_cusp q - 16 + 256 * q - 2112 * q^2 + 12288 * q^3) q := by
     have h1 : HasDerivAt (fun z : ℂ => modularLambdaH_cusp z - 16 * z)
@@ -1584,10 +1581,9 @@ theorem modularLambdaH_cusp_deriv_sub_lead_le {q : ℂ}
     simpa using (hasDerivAt_id q).const_mul (16 : ℂ)
   have h_quad_hasDeriv : HasDerivAt (fun z : ℂ => 128 * z^2) (256 * q) q := by
     have h_pow : HasDerivAt (fun z : ℂ => z^2) (2 * q) q := by
-      have := (hasDerivAt_id q).pow 2
-      simpa using this
+      simpa using hasDerivAt_pow 2 q
     have := h_pow.const_mul (128 : ℂ)
-    convert this using 1; ring
+    convert! this using 1; ring
   have h_f_hasDeriv : HasDerivAt f (deriv modularLambdaH_cusp q - 16 + 256 * q) q := by
     have h_sub : HasDerivAt (fun z : ℂ => modularLambdaH_cusp z - 16 * z)
         (deriv modularLambdaH_cusp q - 16) q :=
@@ -1687,16 +1683,14 @@ theorem modularLambdaH_cusp_deriv_sub_two_term_le {q : ℂ}
     simpa using (hasDerivAt_id q).const_mul (16 : ℂ)
   have h_quad_hasDeriv : HasDerivAt (fun z : ℂ => 128 * z^2) (256 * q) q := by
     have h_pow : HasDerivAt (fun z : ℂ => z^2) (2 * q) q := by
-      have := (hasDerivAt_id q).pow 2
-      simpa using this
+      simpa using hasDerivAt_pow 2 q
     have := h_pow.const_mul (128 : ℂ)
-    convert this using 1; ring
+    convert! this using 1; ring
   have h_cube_hasDeriv : HasDerivAt (fun z : ℂ => 704 * z^3) (2112 * q^2) q := by
     have h_pow : HasDerivAt (fun z : ℂ => z^3) (3 * q^2) q := by
-      have := (hasDerivAt_id q).pow 3
-      simpa using this
+      simpa using hasDerivAt_pow 3 q
     have := h_pow.const_mul (704 : ℂ)
-    convert this using 1; ring
+    convert! this using 1; ring
   have h_f_hasDeriv : HasDerivAt f
       (deriv modularLambdaH_cusp q - 16 + 256 * q - 2112 * q^2) q := by
     have h_sub1 : HasDerivAt (fun z : ℂ => modularLambdaH_cusp z - 16 * z)
@@ -1876,16 +1870,14 @@ theorem modularLambdaH_cusp_iteratedDeriv_three_zero :
       simpa using (hasDerivAt_id q).const_mul (256 : ℂ)
     have h_quad_hasDeriv : HasDerivAt (fun z : ℂ => 2112 * z^2) (4224 * q) q := by
       have h_pow : HasDerivAt (fun z : ℂ => z^2) (2 * q) q := by
-        have := (hasDerivAt_id q).pow 2
-        simpa using this
+        simpa using hasDerivAt_pow 2 q
       have := h_pow.const_mul (2112 : ℂ)
-      convert this using 1; ring
+      convert! this using 1; ring
     have h_g_hasDeriv : HasDerivAt g
         (deriv (deriv modularLambdaH_cusp) q + 256 - 4224 * q) q := by
       have h_sub1 : HasDerivAt (fun z : ℂ => deriv modularLambdaH_cusp z - 16)
           (deriv (deriv modularLambdaH_cusp) q) q := by
-        have := h_dderiv_hasDeriv.sub h_const_hasDeriv
-        convert this using 1; ring
+        simpa using h_dderiv_hasDeriv.fun_sub h_const_hasDeriv
       have h_add : HasDerivAt (fun z : ℂ => deriv modularLambdaH_cusp z - 16 + 256 * z)
           (deriv (deriv modularLambdaH_cusp) q + 256) q := h_sub1.add h_lin_hasDeriv
       have h_sub2 : HasDerivAt

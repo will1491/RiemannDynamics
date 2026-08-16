@@ -503,7 +503,7 @@ theorem has_primitives_of_unbounded_components {T : Set ℂ} (hT : IsOpen T)
       | cons q t =>
         intro hL
         obtain ⟨M, hM⟩ := hrefL_head_cons q t
-        have hadjpq : GridAdj p q := List.IsChain.rel_head hL
+        have hadjpq : GridAdj p q := List.IsChain.rel hL
         have htail : IsGridPath (q :: t) := List.IsChain.tail hL
         have hih := ih htail
         rw [hM] at hih

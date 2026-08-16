@@ -43,6 +43,10 @@ Main declarations:
 open Metric Topology Filter TopologicalSpace
 open scoped Manifold ContDiff unitInterval
 
+-- `Path.Homotopic.Quotient` is a semireducible alias of `Quotient (Path.Homotopic.setoid _ _)`;
+-- rewriting `trans`/`trans_assoc` across `⟦_⟧` terms needs the pre-4.33 unifier behavior.
+set_option backward.isDefEq.respectTransparency false
+
 namespace RiemannDynamics
 
 variable {M : Type*} [TopologicalSpace M]
@@ -274,8 +278,8 @@ theorem pathCoverProj_isCoveringMap : IsCoveringMap (pathCoverProj x₀) := by
   intro x
   obtain ⟨V, -, hVopen, hxV, hlinE, hhomo⟩ := hdisc x Set.univ isOpen_univ (Set.mem_univ x)
   choose lin hlin using hlinE
-  letI : TopologicalSpace (Path.Homotopic.Quotient x₀ x) := ⊥
-  haveI : DiscreteTopology (Path.Homotopic.Quotient x₀ x) := ⟨rfl⟩
+  let this : TopologicalSpace (Path.Homotopic.Quotient x₀ x) := ⊥
+  have : DiscreteTopology (Path.Homotopic.Quotient x₀ x) := ⟨rfl⟩
   -- Retraction to the fiber is constant along sheets over V.
   have hret : ∀ (qc : PathCover x₀) (hq : qc.pt ∈ V) (rc : PathCover x₀),
       rc ∈ pathCoverSheet x₀ qc V → ∀ hr : rc.pt ∈ V,
@@ -571,7 +575,7 @@ theorem exists_pathCover_openPartialHomeomorph (pc : PathCover x₀) :
   · intro y hy
     rw [dif_pos hy]
     rfl
-  · rw [continuousOn_iff_continuous_restrict]
+  · rw [continuousOn_iff_continuous_domRestrict]
     refine (hslice pc V hVopen hpcV lin hlin hhomo).congr fun y => ?_
     change (⟨y.val, pc.cls.trans ⟦lin pc.pt hpcV y.val y.2⟧⟩ : PathCover x₀) =
       if h : (y : M) ∈ V then ⟨(y : M), pc.cls.trans ⟦lin pc.pt hpcV (y : M) h⟧⟩ else pc
@@ -739,16 +743,7 @@ theorem pathConnectedSpace_pathCover [ConnectedSpace M] :
           rw [Path.trans_apply]
           split_ifs with h
           · rw [hspfun t₀]
-            change γ.extend (2 * (u : ℝ) * (t₀ : ℝ)) =
-              γ.extend (if (u : ℝ) ≤ 1 / 2 then 2 * (u : ℝ) * (t₀ : ℝ)
-                else (1 - (2 * (u : ℝ) - 1)) * (t₀ : ℝ) + (2 * (u : ℝ) - 1) * (t : ℝ))
-            rw [if_pos h]
           · rw [hcfun]
-            change γ.extend
-                ((1 - (2 * (u : ℝ) - 1)) * (t₀ : ℝ) + (2 * (u : ℝ) - 1) * (t : ℝ)) =
-              γ.extend (if (u : ℝ) ≤ 1 / 2 then 2 * (u : ℝ) * (t₀ : ℝ)
-                else (1 - (2 * (u : ℝ) - 1)) * (t₀ : ℝ) + (2 * (u : ℝ) - 1) * (t : ℝ))
-            rw [if_neg h]
       refine ⟨η₀.trans c, htmem, ?_⟩
       have hfin : (⟦sp t⟧ : Path.Homotopic.Quotient x₀ (γ t)) =
           pc.cls.trans ⟦η₀.trans c⟧ := by
@@ -955,16 +950,7 @@ theorem simplyConnectedSpace_pathCover [ConnectedSpace M] :
           rw [Path.trans_apply]
           split_ifs with h
           · rw [hspfun t₀]
-            change γ.extend (2 * (u : ℝ) * (t₀ : ℝ)) =
-              γ.extend (if (u : ℝ) ≤ 1 / 2 then 2 * (u : ℝ) * (t₀ : ℝ)
-                else (1 - (2 * (u : ℝ) - 1)) * (t₀ : ℝ) + (2 * (u : ℝ) - 1) * (t : ℝ))
-            rw [if_pos h]
           · rw [hcfun]
-            change γ.extend
-                ((1 - (2 * (u : ℝ) - 1)) * (t₀ : ℝ) + (2 * (u : ℝ) - 1) * (t : ℝ)) =
-              γ.extend (if (u : ℝ) ≤ 1 / 2 then 2 * (u : ℝ) * (t₀ : ℝ)
-                else (1 - (2 * (u : ℝ) - 1)) * (t₀ : ℝ) + (2 * (u : ℝ) - 1) * (t : ℝ))
-            rw [if_neg h]
       refine ⟨η₀.trans c, htmem, ?_⟩
       have hfin : d.trans (⟦sp t⟧ : Path.Homotopic.Quotient a (γ t)) =
           rc.cls.trans ⟦η₀.trans c⟧ := by
@@ -1042,8 +1028,8 @@ projection is a continuous surjection. -/
 theorem noncompactSpace_pathCover [ConnectedSpace M] [NoncompactSpace M] :
     NoncompactSpace (PathCover x₀) := by
   have hcov := pathCoverProj_isCoveringMap x₀
-  haveI : LocPathConnectedSpace M := ChartedSpace.locPathConnectedSpace ℂ M
-  haveI : PathConnectedSpace M := PathConnectedSpace.of_locPathConnectedSpace
+  have : LocallyPathConnectedSpace M := ChartedSpace.locallyPathConnectedSpace ℂ M
+  have : PathConnectedSpace M := PathConnectedSpace.of_locallyPathConnectedSpace
   have hsurj : Function.Surjective (pathCoverProj x₀) := fun y =>
     ⟨⟨y, ⟦PathConnectedSpace.somePath x₀ y⟧⟩, rfl⟩
   refine ⟨fun hcomp => ?_⟩

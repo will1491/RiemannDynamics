@@ -50,7 +50,7 @@ theorem setOf_dist_le_eq_of_im_eq {a b : UpperHalfPlane} (him : a.im = b.im)
     {τ : UpperHalfPlane | dist τ a ≤ dist τ b}
       = {τ : UpperHalfPlane | τ.re ≤ (a.re + b.re) / 2} := by
   ext τ
-  simp only [Set.mem_setOf_eq]
+  simp only [Set.mem_ofPred_eq]
   rw [dist_le_dist_iff_quadratic]
   have ha : 0 < a.im := a.im_pos
   have hda : dist (τ : ℂ) (a : ℂ) ^ 2 = (τ.re - a.re) ^ 2 + (τ.im - a.im) ^ 2 := by
@@ -751,7 +751,7 @@ theorem setOf_dist_le_eq_of_im_eq' {a b : UpperHalfPlane} (him : a.im = b.im)
     {τ : UpperHalfPlane | dist τ a ≤ dist τ b}
       = {τ : UpperHalfPlane | (a.re + b.re) / 2 ≤ τ.re} := by
   ext τ
-  simp only [Set.mem_setOf_eq]
+  simp only [Set.mem_ofPred_eq]
   rw [dist_le_dist_iff_quadratic]
   have ha : 0 < a.im := a.im_pos
   have hda : dist (τ : ℂ) (a : ℂ) ^ 2 = (τ.re - a.re) ^ 2 + (τ.im - a.im) ^ 2 := by
@@ -861,7 +861,7 @@ theorem geodSeg_subset_setOf_dist_le {p q a b : UpperHalfPlane}
           dist z (g • p) ≤ dist z (g • q) ↔ z.re ≤ 0 := by
         intro z
         have h := Set.ext_iff.mp hset z
-        simp only [Set.mem_setOf_eq] at h
+        simp only [Set.mem_ofPred_eq] at h
         rw [hmid] at h
         exact h
       have hare : (g • a).re ≤ 0 := (hsub _).mp ((key a).mp ha)
@@ -873,7 +873,7 @@ theorem geodSeg_subset_setOf_dist_le {p q a b : UpperHalfPlane}
           dist z (g • p) ≤ dist z (g • q) ↔ 0 ≤ z.re := by
         intro z
         have h := Set.ext_iff.mp hset z
-        simp only [Set.mem_setOf_eq] at h
+        simp only [Set.mem_ofPred_eq] at h
         rw [hmid] at h
         exact h
       have hare : 0 ≤ (g • a).re := (hsub _).mp ((key a).mp ha)
@@ -928,7 +928,7 @@ theorem bisector_re_eq_zero {p q : UpperHalfPlane} {g : SL(2, ℝ)}
       (by rw [hre]; linarith)
     have h1 := Set.ext_iff.mp hle (g • z)
     have h2 := Set.ext_iff.mp hge (g • z)
-    simp only [Set.mem_setOf_eq] at h1 h2
+    simp only [Set.mem_ofPred_eq] at h1 h2
     rw [hmid] at h1
     rw [hmid'] at h2
     constructor
@@ -944,7 +944,7 @@ theorem bisector_re_eq_zero {p q : UpperHalfPlane} {g : SL(2, ℝ)}
       (by rw [hre]; linarith)
     have h1 := Set.ext_iff.mp hle (g • z)
     have h2 := Set.ext_iff.mp hge (g • z)
-    simp only [Set.mem_setOf_eq] at h1 h2
+    simp only [Set.mem_ofPred_eq] at h1 h2
     rw [hmid'] at h1
     rw [hmid] at h2
     constructor

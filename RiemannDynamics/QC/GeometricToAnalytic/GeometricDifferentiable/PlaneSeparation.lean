@@ -91,6 +91,7 @@ theorem reversePath_ac {δ : ℝ → ℂ} (hδ : AbsolutelyContinuousOnInterval 
     rw [hlenscale]; exact hlen
   have hkey := hD' (E.1, IL) hEmem hlen'
   convert hkey using 2 with i hi
+  exact rfl
 
 /-- **A.e. differentiability of an absolutely continuous `ℂ`-valued curve.** Its real and imaginary
 parts are absolutely continuous (compose with the `1`-Lipschitz coordinate projections), hence
@@ -145,9 +146,9 @@ theorem arcLengthLineIntegral_reversePath (ρ : ℂ → ℝ≥0∞) (hρ : Measu
       exact ⟨by linarith [ht.1, ht.2], by linarith [ht.1, ht.2]⟩
     have hdiff := hbt hmem
     have haff : HasDerivAt (fun u : ℝ => 1 - u) (-1) t := by
-      simpa using (hasDerivAt_const t (1:ℝ)).sub (hasDerivAt_id t)
+      simpa using! (hasDerivAt_const t (1:ℝ)).sub (hasDerivAt_id t)
     have hHD : HasDerivAt (reversePath δ) (-1 • deriv δ (1 - t)) t := by
-      simpa [reversePath, Function.comp] using (hdiff.hasDerivAt.scomp t haff)
+      simpa [reversePath, Function.comp] using! (hdiff.hasDerivAt.scomp t haff)
     change ρ (δ (1 - t)) * (‖deriv (reversePath δ) t‖₊ : ℝ≥0∞)
         = ρ (δ (1 - t)) * (‖deriv δ (1 - t)‖₊ : ℝ≥0∞)
     rw [hHD.deriv]
@@ -249,7 +250,7 @@ private theorem rectLevel_exists_isClopen_separating {K : Type*} [TopologicalSpa
 /-- `rectLevelRect a b s t` is the product `[a, b] ×ℂ [s, t]`. -/
 private theorem rectLevel_rect_eq_reProdIm (a b s t : ℝ) :
     rectLevelRect a b s t = Set.Icc a b ×ℂ Set.Icc s t := by
-  ext z; simp only [rectLevelRect, mem_setOf_eq, Complex.mem_reProdIm, Set.mem_Icc]
+  ext z; simp only [rectLevelRect, mem_ofPred_eq, Complex.mem_reProdIm, Set.mem_Icc]
 
 /-- The coordinate rectangle `[a, b] × [s, t]` is compact. -/
 private theorem rectLevel_isCompact_rect (a b s t : ℝ) : IsCompact (rectLevelRect a b s t) := by
@@ -301,7 +302,7 @@ private theorem rectLevel_split_of_no_continuum {K Bot Top : Set ℂ} (hK : IsCo
       (S ∩ Bot).Nonempty → (S ∩ Top).Nonempty → False) :
     ∃ K₁ K₂ : Set ℂ, IsCompact K₁ ∧ IsCompact K₂ ∧ Disjoint K₁ K₂ ∧
       K₁ ∪ K₂ = K ∧ Bot ⊆ K₁ ∧ Top ⊆ K₂ := by
-  haveI : CompactSpace K := isCompact_iff_compactSpace.mp hK
+  have : CompactSpace K := isCompact_iff_compactSpace.mp hK
   set P : Set K := Subtype.val ⁻¹' Bot with hP
   set Q : Set K := Subtype.val ⁻¹' Top with hQ
   have hPc : IsClosed P := hBotcl.preimage continuous_subtype_val
@@ -724,14 +725,14 @@ private theorem rectLevel_no_split {a b s t : ℝ} (hab : a ≤ b) (hst : s ≤ 
   -- Edge closedness.
   have hbotEdge_closed : IsClosed botEdge := by
     have : botEdge = {z : ℂ | a ≤ z.re} ∩ {z : ℂ | z.re ≤ b} ∩ {z : ℂ | z.im = s} := by
-      ext z; simp only [hbotEdge, Set.mem_setOf_eq, Set.mem_inter_iff, and_assoc]
+      ext z; simp only [hbotEdge, Set.mem_ofPred_eq, Set.mem_inter_iff, and_assoc]
     rw [this]
     exact ((isClosed_le continuous_const Complex.continuous_re).inter
       (isClosed_le Complex.continuous_re continuous_const)).inter
       (isClosed_eq Complex.continuous_im continuous_const)
   have htopEdge_closed : IsClosed topEdge := by
     have : topEdge = {z : ℂ | a ≤ z.re} ∩ {z : ℂ | z.re ≤ b} ∩ {z : ℂ | z.im = t} := by
-      ext z; simp only [htopEdge, Set.mem_setOf_eq, Set.mem_inter_iff, and_assoc]
+      ext z; simp only [htopEdge, Set.mem_ofPred_eq, Set.mem_inter_iff, and_assoc]
     rw [this]
     exact ((isClosed_le continuous_const Complex.continuous_re).inter
       (isClosed_le Complex.continuous_re continuous_const)).inter
@@ -759,8 +760,8 @@ private theorem rectLevel_no_split {a b s t : ℝ} (hab : a ≤ b) (hst : s ≤ 
       have hzK : z ∈ K := hK₁₂union ▸ Set.mem_union_right _ hzK₂
       exact (Set.disjoint_left.mp hK₁₂disj (hbotEdge_K z hzbot hzK)) hzK₂
     · -- z ∈ botEdge ∩ topEdge: z.im = s and z.im = t with s < t.
-      rw [hbotEdge, Set.mem_setOf_eq] at hzbot
-      rw [htopEdge, Set.mem_setOf_eq] at hztop
+      rw [hbotEdge, Set.mem_ofPred_eq] at hzbot
+      rw [htopEdge, Set.mem_ofPred_eq] at hztop
       exact absurd (hzbot.2.symm.trans hztop.2) (ne_of_lt hst_lt)
   -- Urysohn function: `g = 0` on `P`, `g = 1` on `Q`, `g ∈ [0,1]`.
   obtain ⟨g, hgP, hgQ, hg01⟩ := exists_continuous_zero_one_of_isClosed hP_closed hQ_closed hPQ_disj
@@ -973,10 +974,10 @@ theorem continuousOn_variationOnFromTo {γ : ℝ → ℂ} {s : Set ℝ}
     have hR := (BoundedVariationOn.tendsto_eVariationOn_Icc_zero_right hbv x hcR)
     have hLr : Filter.Tendsto (fun y => (eVariationOn γ (s ∩ Icc y x)).toReal) (𝓝[s] x) (𝓝 0) := by
       have := (ENNReal.tendsto_toReal (by simp : (0 : ℝ≥0∞) ≠ ∞)).comp hL
-      simpa using this
+      simpa using! this
     have hRr : Filter.Tendsto (fun y => (eVariationOn γ (s ∩ Icc x y)).toReal) (𝓝[s] x) (𝓝 0) := by
       have := (ENNReal.tendsto_toReal (by simp : (0 : ℝ≥0∞) ≠ ∞)).comp hR
-      simpa using this
+      simpa using! this
     rw [Metric.tendsto_nhds]
     intro ε hε
     filter_upwards [hLr.eventually (Metric.ball_mem_nhds 0 hε),
@@ -1344,7 +1345,7 @@ theorem constantSpeedReparam_of_finiteVariation {γ : ℝ → ℂ}
     have hmaps : MapsTo (fun τ => T (L * clamp01 τ)) s s := fun τ _ => hTmem τ
     have := eVariationOn.comp_le_of_monotoneOn γ (s := s) (t := s)
       (fun τ => T (L * clamp01 τ)) (hs ▸ hreparmono) hmaps
-    simpa [hδdef, Function.comp] using this
+    simpa [hδdef, Function.comp] using! this
   -- constant-speed identity: `variationOnFromTo δ s 0 τ = L * τ` for `τ ∈ [0,1]`.
   -- On `s = [0,1]`, `δ = δ₀ ∘ φ` where `δ₀ = naturalParameterization γ s 0` has *unit* speed on
   -- `S '' s = Icc 0 L`, and `φ τ = L * τ` is the affine scaling onto `Icc 0 L`.
@@ -1429,7 +1430,7 @@ theorem ediam_le_hausdorffMeasure_one_of_isPreconnected {Γ : Set ℂ} (hΓ : Is
   rw [hedist]
   rcases eq_or_lt_of_le hd0 with hd | hdpos
   · -- `d = 0`: trivial.
-    rw [← hd, ENNReal.ofReal_zero]; exact zero_le _
+    rw [← hd, ENNReal.ofReal_zero]; exact zero_le
   · -- `d > 0`: project along `w = x - y` by the real inner product `pr z = ⟪z, w⟫_ℝ`.
     set w : ℂ := x - y with hwdef
     have hwnorm : ‖w‖ = d := rfl

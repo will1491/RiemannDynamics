@@ -120,7 +120,7 @@ theorem chainPotential_limit_one
       · linarith
       · exact h
     obtain ⟨c, hcmem, hclt⟩ := exists_lt_of_csInf_lt hne hsinf
-    simp only [chainCosts, Set.mem_setOf_eq] at hcmem
+    simp only [chainCosts, Set.mem_ofPred_eq] at hcmem
     obtain ⟨m, z, hzD, hzstep, hz0, hzlast, rfl⟩ := hcmem
     rcases Nat.eq_zero_or_pos m with rfl | hm
     · -- A zero-step chain forces `w k ∈ E`; pad with the constant one-step chain at `w k`.
